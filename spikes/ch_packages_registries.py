@@ -29,7 +29,7 @@ import urllib.request
 import zipfile
 
 CONTACT = os.environ.get("PICKFIT_CONTACT")
-UA = "pickfit-spike/0.1" + (f" (mailto:{CONTACT})" if CONTACT else " (+https://github.com/ncchen99/pickfit)")
+UA = "pickfit-spike/0.1" + (f" (mailto:{CONTACT})" if CONTACT else "")
 NOW = dt.datetime.now(dt.timezone.utc)
 
 

@@ -128,19 +128,26 @@ def rss2(url, since):
 
 
 def noise(since):
-    out = {}
-    items, _, span = rss2("https://v2.velog.io/rss", since)
     spam = re.compile(r"[一-鿿].*(薇|飞机|官网|上门|外围)|点com")
-    out["velog 全站 RSS"] = {"items": len(items), "covers_hours": round(span, 2),
-                             "spam_like": sum(bool(spam.search(i["title"])) for i in items)}
-    items, in7, span = rss2("https://habr.com/ru/rss/hubs/open_source/articles/", since)
-    out["Habr open_source hub"] = {"items": len(items), "in_7d": len(in7), "covers_hours": round(span),
-                                   "github_in_desc": sum(bool(repo_of(i["desc"])) for i in in7)}
-    items, in7, span = rss2("https://www.oschina.net/news/rss", since)
-    out["OSChina 资讯 RSS"] = {"items": len(items), "in_7d": len(in7), "covers_hours": round(span),
-                              "release_posts": sum("发布" in i["title"] for i in in7),
-                              "github_in_desc": sum(bool(repo_of(i["desc"])) for i in in7),
-                              "gitee_in_desc": sum("gitee.com/" in i["desc"] for i in in7)}
+    jobs = {
+        "velog 全站 RSS": ("https://v2.velog.io/rss", lambda items, in7, span: {
+            "items": len(items), "covers_hours": round(span, 2),
+            "spam_like": sum(bool(spam.search(i["title"])) for i in items)}),
+        "Habr open_source hub": ("https://habr.com/ru/rss/hubs/open_source/articles/", lambda items, in7, span: {
+            "items": len(items), "in_7d": len(in7), "covers_hours": round(span),
+            "github_in_desc": sum(bool(repo_of(i["desc"])) for i in in7)}),
+        "OSChina 资讯 RSS": ("https://www.oschina.net/news/rss", lambda items, in7, span: {
+            "items": len(items), "in_7d": len(in7), "covers_hours": round(span),
+            "release_posts": sum("发布" in i["title"] for i in in7),
+            "github_in_desc": sum(bool(repo_of(i["desc"])) for i in in7),
+            "gitee_in_desc": sum("gitee.com/" in i["desc"] for i in in7)}),
+    }
+    out = {}
+    for name, (url, fn) in jobs.items():
+        try:
+            out[name] = fn(*rss2(url, since))
+        except Exception as ex:  # OSChina 偶爾 connection reset
+            out[name] = {"error": str(ex)}
     return out
 
 

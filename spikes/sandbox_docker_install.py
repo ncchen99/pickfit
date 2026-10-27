@@ -129,7 +129,7 @@ TOOLS = {
                      "ln -sf $PWD/$B/llama-server ~/.local/bin/ && command -v llama-server", 20),
             ("version", "llama-server --version", 30),
             ("model", f"cd ~/llama && {FETCH} {GGUF_URL} stories260K.gguf", 120),
-            ("serve", "cd ~/llama && nohup llama-server -m stories260K.gguf --host 127.0.0.1 --port 8080 -c 256 -t 2 "
+            ("serve", "cd ~/llama; nohup llama-server -m stories260K.gguf --host 127.0.0.1 --port 8080 -c 256 -t 2 "
                       "> server.log 2>&1 & P=$!; for i in $(seq 1 60); do python3 -c \"import urllib.request;"
                       "print(urllib.request.urlopen('http://127.0.0.1:8080/health',timeout=2).read().decode())\" 2>/dev/null && exit 0; "
                       "kill -0 $P 2>/dev/null || break; sleep 1; done; tail -20 server.log; exit 1", 90),
@@ -490,17 +490,17 @@ def verify(slug, a, out_dir, max_attempts=3):
 
 
 # ---------- 防護自我檢查：在同樣受限的容器裡故意做壞事，確認限制真的生效 ----------
-PROBES = [
+PROBES = [  # fork bomb 放最後：子程序會佔滿 pids 上限，之後的指令都 fork 不出來
     ("whoami", "id; cat /proc/self/status | grep -E 'CapEff|NoNewPrivs'", 10),
     ("env_secrets", "env | grep -i -E 'key|token|secret|passw|proxy' || echo 'no secret-like env'", 10),
     ("write_rootfs", "touch /usr/local/bin/evil 2>&1; echo exit=$?", 10),
     ("disk_fill", "dd if=/dev/zero of=$HOME/fill bs=1M count=4000 2>&1 | tail -1; df -h $HOME | tail -1; rm -f $HOME/fill", 60),
     ("mem_hog", "python3 -c \"b=[]\nwhile True: b.append(bytearray(100*1024*1024))\" ; echo exit=$?", 60),
-    ("fork_bomb", "python3 -c \"import os,time\nn=0\ntry:\n  while True:\n    if os.fork()==0: time.sleep(30); os._exit(0)\n    n+=1\n"
-                  "except OSError as e: print('fork stopped after',n,'children:',e)\"; sleep 1; ps -e --no-headers 2>/dev/null | wc -l || true", 60),
     ("cpu_burn", "timeout 5 python3 -c \"import multiprocessing as m\nimport itertools\n"
                  "def f(_):\n  [x*x for x in itertools.count()]\nm.Pool(8).map(f,range(8))\"; cat /sys/fs/cgroup/cpu/cpu.cfs_quota_us /sys/fs/cgroup/cpu.max 2>/dev/null", 30),
     ("metadata_ip", "python3 -c \"import urllib.request;print(urllib.request.urlopen('http://169.254.169.254/',timeout=3).status)\" 2>&1 | tail -1", 15),
+    ("fork_bomb", "python3 -c \"import os,time\nn=0\ntry:\n  while True:\n    if os.fork()==0: time.sleep(30); os._exit(0)\n    n+=1\n"
+                  "except OSError as e: print('fork stopped after',n,'children:',e)\"; sleep 1; ps -e --no-headers 2>/dev/null | wc -l || true", 60),
 ]
 
 

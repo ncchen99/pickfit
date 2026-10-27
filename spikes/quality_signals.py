@@ -13,8 +13,9 @@
 分數是 docs/research/notes/quality-scoring.md 的草案；沙盒驗證結果在這裡一律是「未驗證」。
 
 執行：
-    python3 spikes/quality_signals.py                           # 跑預設的 7 個 repo
+    python3 spikes/quality_signals.py                           # 跑預設的 8 個 repo
     python3 spikes/quality_signals.py owner/repo:cli owner/repo:local-ai --json out.json
+    python3 spikes/quality_signals.py --from-file repos.txt --classify-only    # 大量只跑分類
 環境變數：GH_TOKEN（選填）、PICKFIT_CONTACT=<email>（選填，ecosyste.ms polite pool）。
 只用標準函式庫；不寫入任何金鑰。
 """
@@ -36,8 +37,8 @@ NOW = dt.datetime.now(dt.timezone.utc)
 ECO = "https://{svc}.ecosyste.ms/api/v1/hosts/GitHub/repositories/{r}"
 
 DEFAULT = ["derekwisong/datui:cli", "shdwfruit/convkit:cli", "ahmetomerv/photoc:cli",
-           "sawfwair/mere-run:local-ai", "sharkdp/bat:cli",
-           "okunix/gollama:local-ai", "agarrharr/awesome-cli-apps:cli"]
+           "sawfwair/mere-run:local-ai", "blairjordan/pasteface:local-ai", "sharkdp/bat:cli",  # bat = 知名對照
+           "okunix/gollama:local-ai", "agarrharr/awesome-cli-apps:cli"]                       # 反例：函式庫、清單
 
 # 知名度的參考上限（達到就算 100 分），依類別校正。本地 AI 類的星數普遍較高。
 POP_REF = {
@@ -179,8 +180,9 @@ INSTALL_CMD = re.compile(r"\b(brew install|cargo (b)?install|pipx install|uv too
                          r"docker (run|compose)|curl [^\n|]*\|\s*(ba|z)?sh|make install|cmake --build)", re.I)
 NEG = [("awesome_list", re.compile(r"^awesome[-_]|\bawesome[- ]list\b|curated list", re.I)),
        ("homework", re.compile(r"homework|assignment|coursework|\bcourse\b|exercises?\b|leetcode|bootcamp|作業|\blab\d", re.I)),
-       ("tutorial", re.compile(r"tutorial|learning[- ]|\blearn[- ]|教學|cheat ?sheet|interview", re.I)),
-       ("template", re.compile(r"template|starter|boilerplate|scaffold|skeleton", re.I)),
+       ("tutorial", re.compile(r"tutorial|教學|cheat ?sheet|interview[- ]prep|for beginners|\d+[- ]days[- ]of|"
+                               r"\blearn[- ](to[- ]code|rust|go|python|javascript|react)\b", re.I)),
+       ("template", re.compile(r"(^|[\s/_-])(template|starter|boilerplate|skeleton)([\s_-]|$)", re.I)),
        ("dotfiles", re.compile(r"dotfiles|my (neo)?vim config|\.config\b", re.I)),
        ("demo", re.compile(r"\bdemo\b|proof[- ]of[- ]concept|\bpoc\b|\bexample(s)?\b|sample", re.I))]
 BIN_ASSET = re.compile(r"(darwin|macos|apple|linux|windows|win64|x86_64|amd64|aarch64|arm64|\.dmg$|\.exe$|\.msi$|\.deb$|"
@@ -191,7 +193,6 @@ TOOL_TOPICS = {"cli", "command-line", "command-line-tool", "terminal", "tui", "a
 
 def classify(s):
     files, readme = s["files"], s["readme"] or ""
-    text = " ".join([s["repo"].split("/")[1], s.get("description") or "", " ".join(s.get("topics") or [])])
     pos, neg = [], []
     if INSTALL_H.search(readme): pos.append(("readme_install_section", 2))
     if USAGE_H.search(readme): pos.append(("readme_usage_section", 1))
@@ -216,7 +217,7 @@ def classify(s):
     if go_main: entry.append("go main")
     if any(f.endswith((".xcodeproj/project.pbxproj", "tauri.conf.json", "Package.swift")) for f in files): entry.append("app project")
     if entry: pos.append(("entry_point:" + ",".join(entry), 3))
-    elif pyt and "[project]" in pyt: neg.append(("python_library_no_scripts", 2))
+    elif pyt and "[project]" in pyt: neg.append(("python_library_no_scripts", 1))  # 弱：很多 app 用 python -m 或 docker 跑
     elif s.get("Cargo.toml") and "src/lib.rs" in files and "src/main.rs" not in files: neg.append(("cargo_lib_only", 2))
     elif "go.mod" in files and not go_main: neg.append(("go_no_main", 2))
     if re.search(r"\bgo get (-u )?[\w.]+/|^\s*(from \w+ import|import \w+$)|require\(['\"]", readme, re.M) \
@@ -224,20 +225,25 @@ def classify(s):
         neg.append(("readme_shows_library_usage", 2))
     if any(p["ecosystem"] in DISTROS for p in s["packages"]): pos.append(("packaged_in_distro", 2))
     if TOOL_TOPICS & set(s.get("topics") or []): pos.append(("tool_topic", 1))
+    name_topics = " ".join([s["repo"].split("/")[1], " ".join(s.get("topics") or [])])
     for name, rx in NEG:
-        if rx.search(text): neg.append((name, 4 if name != "demo" else 2))
+        if rx.search(name_topics): neg.append((name, 4 if name != "demo" else 2))   # 名稱、topic 命中：強
+        elif rx.search(s.get("description") or ""): neg.append((name, 2))           # 只在描述裡：弱
+    if re.search(r"\b(library|sdk|framework|bindings?|api client|client for)\b|函式庫", s.get("description") or "", re.I):
+        neg.append(("desc_says_library", 2))
     if s.get("template"): neg.append(("github_template_flag", 4))
     code = [f for f in files if re.search(r"\.(go|rs|py|ts|js|swift|c|cc|cpp|zig|java|kt|rb|sh)$", f)]
     if files and not code: neg.append(("no_source_files", 4))
     links = len(re.findall(r"^\s*[-*] \[.+?\]\(http", readme, re.M))
     if links > 40: neg.append((f"readme_is_link_list({links})", 3))
-    is_lib = lambda n: n.endswith(("library_no_bin", "no_scripts", "lib_only", "no_main", "library_usage"))
+    is_lib = lambda n: n.endswith(("library_no_bin", "no_scripts", "lib_only", "no_main", "library_usage", "says_library"))
+    strong_tool = any(n.startswith(("entry_point", "release_binaries", "packaged_in_distro")) for n, _ in pos)
     P = sum(w for _, w in pos)
     N = sum(w for n, w in neg if not is_lib(n))  # 非軟體（清單、作業、模板…）
     L = sum(w for n, w in neg if is_lib(n))      # 函式庫
     if N >= 4 and N >= P: label = "non_software"
-    elif L >= 2 and P < 5: label = "library"
-    elif P >= 5 and N < 4: label = "tool"
+    elif L >= 4 and not strong_tool: label = "library"
+    elif N < 4 and L < 2 and (strong_tool or P >= 4): label = "tool"
     else: label = "uncertain(交給模型)"
     return {"label": label, "pos": pos, "neg": neg, "P": P, "N": N, "L": L}
 
@@ -262,7 +268,8 @@ def quality(s, cls, verification=None):
                                  + 0.15 * ("readme_install_command" in pos) + 0.25 * has_bin
                                  + 0.15 * min(1, len(readme) / 3000), 3) if s["readme"] else 0.0
     # 3 維護（只看「有沒有」，不獎勵數量：防刷 release/commit）
-    rel = [r for r in s["releases"] if not r["prerelease"]] or s["releases"]
+    rels = sorted(s["releases"], key=lambda r: r["published_at"] or "", reverse=True)
+    rel = [r for r in rels if not r["prerelease"]] or rels
     last_rel = days_since(rel[0]["published_at"]) if rel else None
     rel_365 = sum(1 for r in rel if (days_since(r["published_at"]) or 9999) <= 365)
     cadence = 1.0 if rel_365 >= 2 else 0.5 if rel_365 == 1 else 0.0
@@ -273,7 +280,7 @@ def quality(s, cls, verification=None):
     ci = any(f.startswith(".github/workflows/") or f in (".gitlab-ci.yml", ".circleci/config.yml", ".travis.yml")
              for f in files)
     tests = any(re.search(r"(^|/)(tests?|spec|__tests__)/|_test\.(go|py)$|(^|/)test_[^/]+\.py$|\.(test|spec)\.[jt]sx?$|"
-                          r"Tests/.+\.swift$", f) for f in files) or bool(re.search(r"#\[(cfg\()?test", readme))
+                          r"Tests/.+\.swift$", f) for f in files)  # 只看檔案樹；Rust 的 inline #[test] 看不到
     lic = bool(s.get("license")) and str(s.get("license")).lower() not in ("other", "noassertion", "none")
     changelog = bool(s["eco_files"].get("changelog")) or any(re.match(r"(?i)changelog|changes|history", f) for f in files) \
         or any(r["body_len"] > 80 for r in rel[:3])
@@ -384,7 +391,24 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("repos", nargs="*", default=DEFAULT, help="owner/repo[:cli|local-ai]")
     ap.add_argument("--json", help="把完整結果寫到這個路徑")
+    ap.add_argument("--from-file", help="從檔案讀 repo 清單（一行一個）")
+    ap.add_argument("--classify-only", action="store_true", help="只跑分類並統計（8 執行緒）")
     a = ap.parse_args()
+    if a.from_file:
+        a.repos = [l.strip() for l in open(a.from_file) if l.strip()]
+    if a.classify_only:
+        import collections
+        import concurrent.futures as cf
+
+        def one(spec):
+            s = collect(spec.partition(":")[0])
+            return spec, (classify(s)["label"] if "created_at" in s else "no_data")
+        with cf.ThreadPoolExecutor(8) as ex:
+            res = dict(ex.map(one, a.repos))
+        print(collections.Counter(res.values()))
+        if a.json:
+            json.dump(res, open(a.json, "w"), ensure_ascii=False, indent=1)
+        return
     out = []
     for spec in a.repos:
         repo, _, cat = spec.partition(":")

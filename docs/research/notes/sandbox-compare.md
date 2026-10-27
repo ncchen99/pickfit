@@ -10,11 +10,11 @@
 
 ## 0. 結論
 
-1. **主要沙盒選 Modal Sandbox。** 比賽給 $100 credits（前 1,000 人），Starter 方案每月另含 $30。官方定位就是「執行不受信任程式的安全容器」，預設用 gVisor 隔離。可以「安裝時開網路、執行時斷網」，有 GPU、有 Volume 可快取模型，Python SDK 直接接進管線。（已確認）
+1. **主要沙盒選 Modal Sandbox。** 比賽給 $100 credits（前 1,000 人），Starter 方案每月另含 $30。官方定位就是「執行不受信任程式的安全容器」，runtime 是 gVisor 或 VM（不指定時「let Modal choose」，文件沒寫預設是哪個）。可以「安裝時開網路、執行時斷網」，有 GPU（GPU 沙盒只能用 gVisor，而且會被搶占）、有 Volume 可快取模型，Python SDK 直接接進管線。（已確認；查核修正：原寫「預設用 gVisor」）
 2. **Linux 備案選 E2B。** 免信用卡、送 $100 一次性 credits、Firecracker microVM、Python SDK 用法和 Modal 很像。缺點：沒有 GPU、Hobby 方案單次最長 1 小時、磁碟 10 GiB。（已確認）
 3. **錄 demo 的保底是本機 Docker**（`--network none`），不靠任何雲端帳號。它和主機共用 kernel，只能跑 demo 要用的那幾個專案，不要拿來大量跑陌生程式。（實測：啟動 0.3–0.5 秒）
-4. **macOS 驗證：GitHub Actions 的 macOS runner 是唯一「免費、不用租 24 小時」的雲端做法，但不是唯一做法。** 其他雲端 Mac（AWS EC2 Mac、Daytona 透過 use.computer）都要**至少租 24 小時**。如果念誠有 Apple silicon 的 Mac，用 Tart 跑 macOS VM 也可以（Apple 授權允許每台 Mac 跑 2 個 macOS VM 做開發與測試）。（已確認）
-5. **GitHub Actions 的條款是灰色地帶。** 原文限制 GitHub-hosted runner 只能做「與該 repo 的軟體專案的開發、測試、部署、發布相關」的事；macOS 另有「只能用來開發與測試你的應用程式」。拿來驗證 pickfit 自己產出的安裝指南，勉強說得通；拿來大量掃第三方軟體，不符合。**只用在 demo 的少數幾筆。**（條款已確認；適用與否是我的解讀）
+4. **macOS 驗證：GitHub Actions 的 macOS runner 免費、按分鐘計，但不是唯一這樣的雲端做法。** CI 服務也按分鐘：CircleCI Free 每月 30,000 credits，macOS M4 Pro Medium 200 credits／分，約 150 分鐘，macOS 並行 1；Codemagic 個人免費方案每月 500 分鐘 M2，並行 1。**整台出租的 Mac**（AWS EC2 Mac、Daytona 透過 use.computer）才要**至少租 24 小時**，原因是 Apple 授權第 3 節規定出租「minimum period of twenty-four (24) consecutive hours」。如果念誠有 Apple silicon 的 Mac，用 Tart 跑 macOS VM 也可以（Apple 授權允許每台 Mac 另跑 2 個 macOS VM，用途限開發、開發中的測試、macOS Server、個人非商業）。（已確認；查核修正：原寫「GitHub Actions 是唯一免費、不用租 24 小時的雲端做法」。CircleCI、Codemagic 的使用條款未驗證）
+5. **GitHub Actions 的條款是灰色地帶。** 原文限制 GitHub-hosted runner 只能做「與該 repo 的軟體專案的開發、測試、部署、發布相關」的事；同一節另有「只能用來開發與測試你的應用程式」（條文沒有限定 macOS，查核修正）。違反時 GitHub 可停 job、停用 repo，甚至停權帳號；交件要用 GitHub repo，風險不能忽略。拿來驗證 pickfit 自己產出的安裝指南，勉強說得通；拿來大量掃第三方軟體，不符合。**只用在 demo 的少數幾筆。**（條款已確認；適用與否是我的解讀）
 6. **不選 Daytona 當主要沙盒。** Tier 1、2 的對外網路被限制在「必要服務」清單，**沙盒層級無法覆寫**；要完全開放得到 Tier 3（儲值 $500）。照 README 跑 `curl https://某專案網域/install.sh` 這類安裝會被擋，造成誤判。預設隔離也只是容器（namespaces）。（已確認）
 7. **每次驗證（5 分鐘、2 vCPU、4 GiB）約 $0.014–0.03**：Modal 約 $0.020、E2B 約 $0.014、Daytona 約 $0.014、Vercel Pro 約 $0.01–0.03。$100 credits 夠跑幾千次，錢不是限制，**時間才是**。（估算，第 3 節）
 8. **本地 AI 工具不要下載大模型。** 驗證「裝得起來、能回一句話」用最小的模型就夠（< 1 GB）。需要 CUDA 才用 Modal 的 T4／L4（$0.59／$0.80 每小時），模型放 Volume 快取。（價格已確認；做法是建議）
@@ -41,15 +41,15 @@
 
 | 方案 | 隔離技術 | 能否安全跑不受信任程式（官方說法） | 啟動時間 | 最長執行 | 費用（CPU／記憶體／免費額度／比賽 credits） | GPU | 網路 | 套件與映像檔 | 作業系統 | SDK | 並行上限 | 整合成本（估算） |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| **Modal Sandbox** | gVisor（預設）；可選 VM（獨立 kernel） | 「secure containers for executing untrusted code」 | 未公布沙盒數字；容器「about one second」；快照可讓大型 image「under a second」 | 預設 5 分鐘，最長 24 小時 | 沙盒是一般價 3 倍：$0.142／core-h（1 core＝2 vCPU，約 $0.071／vCPU-h）、$0.024／GiB-h；Starter 每月含 $30；**比賽 $100** | 有，只限 gVisor；T4 $0.59、L4 $0.80、A10 $1.10、L40S $1.95、A100 $2.10–2.50、H100 $3.95／h | 預設可出網；`block_network`、CIDR allowlist、網域 allowlist（Beta）；執行中可改政策（Alpha） | Image builder（apt／pip／Dockerfile／registry）；檔案系統、目錄、記憶體快照 | Linux | Python、JS/TS、Go | Starter 100 containers、GPU 10 | 4–6 h |
-| **E2B** | Firecracker microVM | 「Every sandbox is a Firecracker microVM … safe to run code an LLM wrote or a user supplied」 | 從 template 快照載入約 80 ms | Hobby 1 小時、Pro 24 小時（暫停後重算） | $0.0504／vCPU-h、$0.0162／GiB-h；Hobby 送 $100 一次、免信用卡；Pro $150／月 | **沒有** | 預設可出網；可全關；allow／deny 清單（IP、CIDR、網域）；執行中可改 | Template（Dockerfile 式）；pip／npm／apt；暫停（含記憶體）可無限保存、snapshot、fork | Linux | Python、JS/TS | Hobby 20、Pro 100–1,100；建立速率 Hobby 1／秒 | 3–5 h |
-| **Daytona** | 預設**容器**（Linux namespaces）；可選 Linux VM、Windows VM | 首頁「Secure Infrastructure for Running AI-Generated Code」；網路文件提醒「unrestricted network access may pose security risks when executing untrusted code」 | 「<90ms」 | 無固定上限；閒置 15 分鐘自動停止（可設 0） | $0.0504／vCPU-h、$0.0162／GiB-h、磁碟 5 GiB 後 $0.000108／GiB-h；送 $200（不能用在 GPU） | 有：RTX 4090／5090、RTX PRO 6000、H100、H200、B200、B300、MI355X；隨需 $0.99–6.25／h | **Tier 1、2 只能連「必要服務」清單，沙盒層級不能覆寫**；Tier 3（儲值 $500）才全開 | Docker image／Dockerfile 建 snapshot；VM snapshot；Volume（FUSE＋S3） | Linux、Windows；macOS 經 use.computer（另一套 API） | Python、TS、Ruby、Go、Java | Tier 1：10 vCPU／20 GiB／30 GiB | 3–5 h，加網路限制的處理 |
-| **Cloudflare Sandbox（Containers）** | Firecracker microVM（每個 instance 獨立 kernel） | 「Execute untrusted or generated code in Linux virtual machines」 | 冷啟動「often in the 1-3 second range」 | 不保證；閒置逾時最長 6 小時；容器內的程式不算「活動」 | 需 Workers Paid（$5／月）；$0.072／vCPU-h（只算實際使用）、$0.009／GiB-h；每月含 375 vCPU-分、25 GiB-h | 文件未列 GPU（未驗證是否另有） | 範例預設 `enableInternet: false`；可由 Worker 攔截並放行特定主機 | 自己的 Docker image（≤ 磁碟大小，帳號總共 50 GB）；容器快照 Beta（≤ 20 GB、30 天） | Linux | 只有 Worker 裡的 TS（其他語言要經自己的 Worker API） | 帳號 1,500 vCPU 同時 | 10–16 h |
+| **Modal Sandbox** | gVisor 或 VM（獨立 kernel）；不指定時由 Modal 決定 | 「secure containers for executing untrusted code」 | 未公布沙盒數字；容器「about one second」；快照可讓大型 image「under a second」 | 預設 5 分鐘，最長 24 小時 | 沙盒是一般價 3 倍：$0.142／core-h（1 core＝2 vCPU，約 $0.071／vCPU-h）、$0.024／GiB-h；Starter 每月含 $30；**比賽 $100** | 有，只限 gVisor，**GPU 沙盒會被搶占**；T4 $0.59、L4 $0.80、A10 $1.10、L40S $1.95、A100 $2.10–2.50、H100 $3.95／h | 預設可出網；`block_network`、CIDR allowlist、網域 allowlist（Beta）；執行中可改政策（Alpha） | Image builder（apt／pip／Dockerfile／registry）；檔案系統、目錄、記憶體快照 | Linux | Python、JS/TS、Go | Starter 100 containers、GPU 10 | 4–6 h |
+| **E2B** | Firecracker microVM | 「Every sandbox is a Firecracker microVM … safe to run code an LLM wrote or a user supplied」 | 從 template 快照載入約 80 ms | Hobby 1 小時、Pro 24 小時（暫停後重算） | $0.0504／vCPU-h、$0.0162／GiB-h；Hobby 送 $100 一次、免信用卡；Pro $150／月 | **沒有** | 預設可出網；可全關；allow 清單（IP、CIDR、網域）、deny 清單（只有 IP、CIDR）；執行中可改 | Template（Dockerfile 式）；pip／npm／apt；暫停（含記憶體）可無限保存、snapshot、fork | Linux | Python、JS/TS | Hobby 20、Pro 100–1,100；建立速率 Hobby 1／秒 | 3–5 h |
+| **Daytona** | 預設**容器**（Linux namespaces）；可選 Linux VM、Windows VM | 首頁「Secure Infrastructure for Running AI-Generated Code」；網路文件提醒「unrestricted network access may pose security risks when executing untrusted code」 | 「<90ms」 | 無固定上限；閒置 15 分鐘自動停止（可設 0） | $0.0504／vCPU-h、$0.0162／GiB-h、磁碟 5 GiB 後 $0.000108／GiB-h；送 $200（不能用在 GPU） | 有：RTX 4090／5090、RTX PRO 6000、H100、H200、B200、B300、MI355X；隨需 $0.99–6.25／h；可搶占 $0.57 起（需 Tier 2） | **Tier 1、2 只能連「必要服務」清單，沙盒層級不能覆寫，執行中也不能改**；Tier 3（儲值 $500）才全開 | Docker image／Dockerfile 建 snapshot；VM snapshot；Volume（FUSE＋S3） | Linux、Windows；macOS 經 use.computer（另一套 API） | Python、TS、Ruby、Go、Java | Tier 1：10 vCPU／20 GiB／30 GiB | 3–5 h，加網路限制的處理 |
+| **Cloudflare Sandbox（Containers）** | Firecracker microVM（每個 instance 獨立 kernel） | 「Execute untrusted or generated code in Linux virtual machines」 | 冷啟動「often in the 1-3 second range」 | 不保證；閒置逾時最長 6 小時；容器內的程式不算「活動」 | 需 Workers Paid（$5／月）；$0.072／vCPU-h（只算實際使用）、$0.009／GiB-h；每月含 375 vCPU-分、25 GiB-h；磁碟另計（含 200 GB-h） | 文件未列 GPU（未驗證是否另有） | 範例預設 `enableInternet: false`；可由 Worker 攔截並放行特定主機 | 自己的 Docker image（≤ 磁碟大小，帳號總共 50 GB）；容器快照 Beta（≤ 20 GB、30 天） | Linux | 只有 Worker 裡的 TS（其他語言要經自己的 Worker API） | 帳號 1,500 vCPU 同時 | 10–16 h |
 | **Vercel Sandbox** | Firecracker microVM | 「Designed for untrusted code; microVM boundary prevents escapes」 | 「milliseconds」（沒有數字） | 預設 5 分鐘；Hobby 45 分鐘、Pro 24 小時 | Active CPU $0.128／h、記憶體 $0.0212／GB-h；Hobby 每月免費 5 CPU-h、420 GB-h；下載免費 | **沒有**（文件未提） | 預設全開；可 deny-all 或自訂（網域、CIDR）；執行中可改 | 預設 Ubuntu image；自訂 OCI image（Vercel Container Registry）；root；快照、持久沙盒 | Linux | JS/TS、Python | Hobby 10、Pro 10,000 | 4–6 h |
 | **GitHub Actions** | 每個 job 一台新 VM（ephemeral） | 「ephemeral and clean isolated virtual machines」；但**條款限制用途**（第 5 節） | 未公布（排隊＋開機，未驗證） | 每個 job 6 小時 | **public repo 用標準 runner 免費**；private：Linux 2 核 $0.006／分、macOS $0.062／分；Free 方案每月 2,000 分鐘 | 只有付費的大型 runner（Linux 4 核 GPU $0.052／分，需 Team 以上） | 全開，沒有內建 egress 限制 | 預裝 image（macos-15 已有 Homebrew 6.0.22）；passwordless sudo；cache 每 repo 10 GB | Linux、Windows、**macOS**（M1 3 核 7 GB；Intel 4 核 14 GB） | REST API、`gh` CLI（任何語言） | Free：20 個 job、其中 macOS 5 個 | 4–6 h（macOS 部分） |
 | **Fly.io（Machines／Sprites）** | Firecracker microVM（GPU 機器用 Cloud Hypervisor） | Sprites：「Run it in a hardware-isolated VM … Egress-locked and disposable」 | 未查到官方數字（未驗證） | 不限 | 無免費額度（試用 2 小時或 7 天）；shared-cpu-1x 1 GB $6.70／月；Sprites $0.0385／CPU-h、$0.0219／GB-h | GPU Machines 還在但不再擴充（官方部落格）；型號與價格未驗證 | Machines 的 egress 控制未驗證；Sprites 有 egress policy | 任何 OCI image；Volume；Sprites 有檢查點 | Linux | Machines REST API／Go；Sprites 有 Python、JS/TS、Go | 未驗證 | 8–12 h |
 | **本機 Docker（runc）** | 容器，與主機共用 kernel | Vercel 文件：容器「Suitable for trusted code; container escapes are possible」 | **實測 0.30–0.50 秒** | 不限 | $0 | 看主機；Mac 上的 Docker 用不到 Apple GPU（未驗證） | `--network none` 可全斷；allowlist 要自己架 proxy | 任何 image | Linux 容器（Mac 上跑在 Docker Desktop 的 Linux VM 裡） | Docker CLI／Python SDK | 看主機 | 1–3 h |
-| **本機 Docker＋gVisor** | gVisor（使用者空間 kernel） | gVisor：「additional defense against the exploitation of kernel bugs by untrusted userspace code」 | **實測 `runsc do` 0.08–0.12 秒** | 不限 | $0 | 看主機 | 同上 | 同上 | **只支援 Linux 主機**（x86_64／ARM64，kernel 5.6+） | 同上 | 看主機 | 再加 2–4 h |
+| **本機 Docker＋gVisor** | gVisor（使用者空間 kernel） | gVisor：「additional defense against the exploitation of kernel bugs by untrusted userspace code」 | **實測 `runsc do` 0.08–0.16 秒**（兩輪合計，見第 8 節） | 不限 | $0 | 看主機 | 同上 | 同上 | **只支援 Linux 主機**（x86_64／ARM64，kernel 5.6+） | 同上 | 看主機 | 再加 2–4 h |
 
 ---
 
@@ -80,7 +80,7 @@
 | 項目 | 內容 | 狀態 |
 |---|---|---|
 | 定位 | 「secure containers for executing untrusted code on Modal」 | 已確認 |
-| Runtime | gVisor（「provides strong isolation and is suitable for most workloads」）或 VM（自己的 Linux kernel，可跑 Docker、FUSE）。不指定時由 Modal 決定。**GPU 沙盒只能用 gVisor**。Enterprise 才有巢狀虛擬化 | 已確認 |
+| Runtime | gVisor（「provides strong isolation and is suitable for most workloads」）或 VM（自己的 Linux kernel，可跑 Docker、FUSE）。不指定時由 Modal 決定。**GPU 沙盒只能用 gVisor，而且「subject to preemption」**（CPU 沙盒不會被搶占；資料來源：sandbox-resources）。Enterprise 才有巢狀虛擬化 | 已確認 |
 | 生命週期 | 預設 5 分鐘，`timeout` 最長 24 小時；可設 `idle_timeout`；有 readiness probe | 已確認 |
 | 網路 | 預設不能被連入、可以連出。三種限制：`block_network=True`、`outbound_cidr_allowlist`、`outbound_domain_allowlist`（Beta，只看 TLS SNI，443 port）。**DNS 除非全擋，否則不受限制**。執行中改政策：`sb._experimental_set_outbound_network_policy(...)`（Alpha），建立時要先設 `["*"]` 與 `["0.0.0.0/0"]` 才能之後收緊 | 已確認 |
 | 資源 | `cpu`（physical core，1 core＝2 vCPU）、`memory`（MiB）；可設上限防止失控。磁碟與一般容器相同，**沙盒不能加大**；VM runtime 根目錄固定 512 GiB | 已確認 |
@@ -99,7 +99,7 @@
 | 隔離 | 「Every sandbox is a Firecracker microVM, not a container. Each one boots its own kernel」；kernel 為 LTS 6.1 | 已確認 |
 | 啟動 | template 是「已在執行的沙盒快照」，「load the sandbox in ~80ms」 | 已確認 |
 | 方案 | Hobby：免費、$100 一次性 credits、免信用卡、單次 1 小時、20 個並行、最多 8 vCPU／8 GiB、磁碟 10 GiB、建立 1 個／秒。Pro：$150／月、24 小時、100–1,100 並行、磁碟 20 GiB | 已確認 |
-| 網路 | 預設可出網；`allow_internet_access=False` 全關；`network.allow_out`／`deny_out` 支援 IP、CIDR、網域（網域只看 80 的 Host 與 443 的 SNI，且要把 `0.0.0.0/0` 放進 deny）；執行中可 `update_network` | 已確認 |
+| 網路 | 預設可出網；`allow_internet_access=False` 全關；`network.allow_out` 支援 IP、CIDR、網域，`deny_out` 只支援 IP、CIDR（「Domains are not supported in the deny lists」）；網域只看 80 的 Host 與 443 的 SNI，且要把 `0.0.0.0/0` 放進 deny；執行中可 `update_network` | 已確認 |
 | GPU | 「No. E2B sandboxes are CPU-only.」 | 已確認 |
 | 持久化 | 暫停會存檔案系統與記憶體，暫停中的沙盒無限期保存；有 snapshot、fork。Volume 還在 private beta（要寫信申請） | 已確認 |
 | 自訂環境 | `Template().from_template(...).pip_install(...).npm_install(...)`；也可從 Dockerfile／base image | 已確認 |
@@ -112,10 +112,10 @@
 | 隔離 | 預設 **Linux 容器**（「Isolated container with dedicated namespaces」）；VM 類別（Linux VM、Windows）有獨立 kernel；GPU 沙盒是容器 | 已確認 |
 | 啟動 | 文件標示「<90ms」 | 已確認（未說明測量條件） |
 | 預設大小 | 1 vCPU／1 GB／3 GiB；組織上限 4 vCPU／8 GB／10 GB | 已確認 |
-| 網路 | **Tier 1、2：網路受限，沙盒層級設定無法覆寫**，只能連「必要服務」（GitHub、`*.githubusercontent.com`、ghcr.io、PyPI、npm、crates.io、Go proxy、Ubuntu／Debian 套件庫、Hugging Face 等）。清單沒有 Homebrew API（formulae.brew.sh）、也沒有一般專案網域。Tier 3、4 才預設全開 | 已確認 |
+| 網路 | **Tier 1、2：網路受限，沙盒層級設定無法覆寫**，只能連「必要服務」（GitHub、`*.githubusercontent.com`、ghcr.io、PyPI、npm、crates.io、Go proxy、Ubuntu／Debian 套件庫、Hugging Face 等）。清單沒有 Homebrew API（formulae.brew.sh）、也沒有一般專案網域。Tier 1、2 也不能在執行中改網路政策（API 回錯誤），所以做不到「先開網路、再斷網」。Tier 3、4 才預設全開 | 已確認 |
 | Tier | Tier 1：驗證 email；Tier 2：綁卡＋儲值 $25；Tier 3：儲值 $500；Tier 4：每 30 天儲值 $2,000。同一份文件兩張表對 Tier 1 記憶體寫 10 GiB 與 20 GiB，不一致 | 已確認 |
 | 價格 | vCPU $0.0504／h、記憶體 $0.0162／GiB-h；送 $200；free credits「not available for GPU sandboxes」 | 已確認 |
-| GPU | H100、B200、RTX PRO 6000、RTX 4090／5090、AMD MI355X；最多 8 張；GPU 沙盒是 ephemeral（停止即刪） | 已確認 |
+| GPU | H100、B200、RTX PRO 6000、RTX 4090／5090、AMD MI355X；最多 8 張；GPU 沙盒是 ephemeral（停止即刪）。價格頁：隨需 RTX 4090 $0.99／h 起；可搶占（spot）RTX 4090 $0.57／h 起，spot 需 Tier 2 | 已確認 |
 | macOS | 不由 Daytona 管理，要另外申請 use.computer 的 API key、先「reserve a Mac」。use.computer API 的租用時數「minimum 24」 | 已確認；價格未驗證 |
 
 ### 4.4 Cloudflare Sandbox（Containers）
@@ -126,8 +126,8 @@
 | 隔離 | 「Each container instance runs in a Firecracker microVM with its own kernel and network」 | 已確認 |
 | 冷啟動 | 「often in the 1-3 second range」，看 image 大小 | 已確認 |
 | 壽命 | Durable Object 不活動後，instance 最多再跑 `setInactivityTimeout()` 設的時間（上限 6 小時）；**容器裡跑的程式不算活動**；Cloudflare 不保證執行時間 | 已確認 |
-| 規格 | 最大 4 vCPU／12 GiB／20 GB；image 不能超過 instance 磁碟；帳號 image 總量 50 GB | 已確認 |
-| 價格 | 需 Workers Paid（$5／月）；CPU 只算實際使用 | 已確認 |
+| 規格 | 最大 4 vCPU／12 GiB／20 GB（文件說這些是預設上限，可申請提高）；image 不能超過 instance 磁碟；帳號 image 總量 50 GB | 已確認 |
+| 價格 | 需 Workers Paid（$5／月）；CPU 只算實際使用；記憶體與磁碟按 instance type 的配置量計 | 已確認 |
 | 網路 | 沙盒範例用 `enableInternet: false`；可用 `interceptOutboundHttps()` 讓 Worker 決定放行哪些主機 | 已確認 |
 | 整合 | 要寫 Worker＋Durable Object＋container image，用 wrangler 部署；Python 管線要透過自己的 HTTP API 呼叫。和 brief 第 11 節「MCP server 放 Cloudflare Worker」同平台是加分，但工時最高 | 估算 |
 
@@ -176,12 +176,14 @@
 
 ## 5. 問題 1：驗證 macOS 安裝，只能靠 GitHub Actions 嗎？
 
-**不是唯一，但是唯一免費、可按分鐘計費的雲端做法。**
+**不是唯一。按分鐘計費、有免費額度的雲端做法至少有三個：GitHub Actions、CircleCI、Codemagic。**（查核修正：原寫「唯一免費、可按分鐘計費的雲端做法」）
 
 | 做法 | 真的 macOS？ | 最低費用 | 隔離 | 對 6 天的可行性 |
 |---|---|---|---|---|
 | GitHub Actions `macos-15`（public repo） | 是，M1、已裝 Homebrew | $0 | 每個 job 一台新 VM | 高，但受條款限制 |
 | GitHub Actions（private repo） | 是 | $0.062／分（扣免費分鐘） | 同上 | 高 |
+| CircleCI Free | 是，M4 Pro Medium（6 CPU、28 GB RAM） | $0：每月 30,000 credits，macOS 200 credits／分 → 約 150 分鐘；macOS 並行 1 | CI VM（細節未驗證） | 中：要另開帳號、寫 config；使用條款未驗證 |
+| Codemagic 個人免費 | 是，Mac mini M2 | $0：每月 500 分鐘，並行 1；超過 $0.095／分 | CI VM（細節未驗證） | 中：偏向行動 App CI；使用條款未驗證 |
 | AWS EC2 Mac（Dedicated Host） | 是 | **最少租 24 小時**：mac2（M1）$0.65／h → 至少 $15.6；mac-m4 $1.23／h → 至少 $29.5 | 整台 Mac | 中：要開 AWS 帳號、設定 SSH |
 | Daytona → use.computer macOS sandbox | 是 | **最少租 24 小時**，價格未公開 | 每台 Mac 上的 VM | 低：價格不明、另一套 API |
 | 自己的 Apple silicon Mac＋Tart（macOS VM） | 是 | $0（Tart 在個人電腦上免授權費） | VM | 高，**前提是念誠有 Apple silicon Mac** |
@@ -189,7 +191,10 @@
 
 依據：
 - AWS：「Mac instances are available only as bare metal instances on Dedicated Hosts, with a minimum allocation period of 24 hours」。價格取自 AWS 公開的 Dedicated Host 隨需價（US East Ohio／US West Oregon）。（已確認）
-- use.computer API：`hours` 欄位「Lease duration in hours (minimum 24)」。（已確認）
+- use.computer API：`hours` 欄位「Lease duration in hours (minimum 24)」。（已確認）價格：官網是 SPA，抓不到價格（未驗證）。
+- 24 小時的來源：Apple macOS Tahoe 26 授權第 3 節「Leasing for Permitted Developer Services」：出租 macOS 時「each lease period must be for a minimum period of twenty-four (24) consecutive hours」。（已確認）
+- CircleCI：價格頁 Free 方案「30,000 credits」、macOS VM「M4 Pro Medium … 200 credits/min」、macOS 並行 1。（已確認：circleci.com/pricing、circleci.com/pricing/price-list）
+- Codemagic：個人方案「500 free macOS M2 minutes / month」、「Max 1 parallel build」；pay-as-you-go「Mac mini M2 minutes $0.095/minute」。（已確認：codemagic.io/pricing）
 - Apple macOS Tahoe 26 授權第 2B(iii) 條：允許在你擁有或控制的每台 Mac 上，在虛擬環境中再跑「up to two (2) additional copies or instances」，用途限「(a) software development; (b) testing during software development; (c) using macOS Server; or (d) personal, non-commercial use」，且不得用於「service bureau, time-sharing … or other similar types of services」。（已確認）
 - Tart：「Usage on personal computers including personal workstations is royalty-free」，超過 100 個 CPU core 的伺服器安裝才要付費。（已確認）
 
@@ -205,16 +210,19 @@
 > - Any activity that places a burden on our servers, where that burden is disproportionate to the benefits provided to users (for example, don't use Actions as a content delivery network or as part of a serverless application, but a low benefit Action could be ok if it's also low burden); or
 > - If using GitHub-hosted runners, any other activity unrelated to the production, testing, deployment, or publication of the software project associated with the repository where GitHub Actions are used.
 
-同一節的 Apple 相關段落：
+同一節緊接的段落（標題「Use for Development and Testing」，條文本身沒有限定 macOS；下一段是 Apple 的「Authorized Developer」）：
 
 > **Use for Development and Testing**
 > You may only access and use GitHub Actions to develop and test your application(s). Only one licensed user may access a virtual machine provided by Actions at any time.
+
+同一節也寫：「GitHub may monitor your use of GitHub Actions. Misuse of GitHub Actions may result in termination of jobs, restrictions in your ability to use GitHub Actions, disabling of repositories … or in some cases, suspension or termination of your GitHub account.」（已確認）
 
 **解讀（不是法律意見）**：
 - 用 Actions 大量安裝、驗證**第三方**軟體來建資料庫，和「該 repo 的軟體專案」無關，也不是「your application(s)」。**不符合條款。**
 - 把它定位成「測試 pickfit 自己產出的安裝指南」（`get_install_guide` 的輸出是 pickfit 的產品），在 pickfit 自己的 repo 裡跑少量 CI，**說得通但仍是灰色地帶**。
 - 做法：只驗證 demo 那 2–5 筆；workflow 放在 pickfit 自己的 repo；README 寫清楚用途；不做排程、不做大量掃描；`permissions: {}`、不放 secrets。
-- 另一條路：如果念誠有 Apple silicon Mac，用 Tart 在本機跑 macOS VM，就沒有 GitHub 條款問題（Apple 授權允許「testing during software development」）。
+- 另一條路：如果念誠有 Apple silicon Mac，用 Tart 在本機跑 macOS VM，就沒有 GitHub 條款問題。但 Apple 授權的 VM 用途是「software development」「testing during software development」「personal, non-commercial use」等，並禁止「service bureau, time-sharing … or other similar types of services」。驗證**第三方**軟體算不算其中一種，和 GitHub 條款是同一類解讀問題；只跑 demo 幾筆、不對外提供服務，風險較低。（條文已確認；適用與否是解讀，查核補充）
+- 也可以改用 CircleCI 或 Codemagic 的免費 macOS 分鐘數；它們的使用條款沒有查（未驗證）。
 
 **另外的限制**：macOS runner 只有 7 GB RAM，不能巢狀虛擬化；Metal／GPU 在 runner 裡能不能用，未驗證。本地 AI 工具只能跑很小的模型。
 
@@ -244,7 +252,7 @@
 |---|---|---|
 | **主要** | **Modal Sandbox** | 比賽 $100＋每月 $30；gVisor 隔離，官方明說給不受信任程式用；「先開網路安裝、再斷網執行」有 API；GPU 與 Volume 都有，本地 AI 類別用得到；Python SDK；brief 第 11 節本來就建議 |
 | **Linux 備案** | **E2B** | 免信用卡、$100 credits、microVM、API 幾乎可以一對一替換（create → run → kill）。Modal 的 credits 沒發下來、或遇到 gVisor 不相容時切過去 |
-| **macOS** | **GitHub Actions `macos-15`**（只跑 demo 的幾筆）；若念誠有 Apple silicon Mac，改用 **Tart** | 唯一免費、不必租 24 小時的雲端 macOS；條款限制見第 5 節 |
+| **macOS** | **GitHub Actions `macos-15`**（只跑 demo 的幾筆）；若念誠有 Apple silicon Mac，改用 **Tart** | 免費、按分鐘、已裝 Homebrew、`gh` 已在手上；條款限制見第 5 節。備選：CircleCI／Codemagic 免費分鐘數（條款未驗證） |
 | **錄影保底** | **本機 Docker `--network none`** | 不靠網路與帳號；只跑已確認的 demo 專案 |
 
 不選的理由（一句話）：
