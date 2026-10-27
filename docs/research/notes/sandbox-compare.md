@@ -288,9 +288,9 @@
 
 | 測試 | 結果 |
 |---|---|
-| `docker run --rm python:3.12-slim true`（runc） | 0.30–0.50 秒（8 次） |
-| `docker run --rm --network none python:3.12-slim python -c 'print(1)'` | 0.23–0.28 秒（6 次） |
-| `runsc --network=none do python3 -c 'print(1)'`（gVisor，不經 Docker） | 0.11–0.12 秒；同一指令直接在主機跑 0.02 秒 |
+| `docker run --rm python:3.12-slim true`（runc） | 0.30–0.50 秒（8 次）；查核重跑 2 輪各 8 次：0.30–0.40 秒，另有一次 0.77 秒 |
+| `docker run --rm --network none python:3.12-slim python -c 'print(1)'` | 0.23–0.28 秒（6 次）；查核重跑 2 輪各 8 次：0.22–0.28 秒 |
+| `runsc --network=none do python3 -c 'print(1)'`（gVisor，不經 Docker） | 原測 0.11–0.12 秒（腳本註解寫 0.08–0.12，兩處不一致）；查核重跑 8 次：0.10–0.16 秒；同一指令直接在主機跑 0.02 秒 |
 | `runsc do` 回報的 kernel | `4.19.0-gvisor`，dmesg 第一行「Starting gVisor...」，確認真的在 gVisor 裡 |
 | Docker 搭 gVisor shim（`--runtime io.containerd.runsc.v1`） | 失敗：寫 `oom_score_adj` 被拒（這個 VM 的限制） |
 | gVisor `--network=host` 下 `pip install` | 失敗：Network is unreachable（這個 VM 的限制） |
@@ -336,6 +336,7 @@
 6. GitHub Actions macOS runner 的排隊與開機時間；private repo 的 macOS 分鐘數是否還有倍數。
 7. GitHub macOS runner 裡 Metal／GPU 能不能用（影響 MLX 類工具）。
 8. use.computer 的 Mac 租用價格。
+8a. CircleCI、Codemagic 的使用條款是否允許拿 macOS 分鐘數驗證第三方軟體；它們的 VM 隔離細節。
 9. Cloudflare Containers 是否有 GPU（文件沒列）。
 10. Fly.io GPU 目前的型號、價格與可用性；Fly Machines 的啟動時間與 egress 控制。
 11. Mac 上的 Docker Desktop 能否使用 Apple GPU（推論不行）。
@@ -430,3 +431,8 @@
 - AWS Dedicated Host 隨需價（價格頁使用的公開 JSON）：https://b0.p.awsstatic.com/pricing/2.0/meteredUnitMaps/ec2/USD/current/dedicatedhost-ondemand.json
 - Apple macOS Tahoe 26 授權：https://www.apple.com/legal/sla/docs/macOSTahoe.pdf
 - Tart 授權：https://tart.run/licensing/
+
+**其他按分鐘計費的 macOS CI（查核時補上）**
+- CircleCI 價格：https://circleci.com/pricing/
+- CircleCI 資源類別價目：https://circleci.com/pricing/price-list/
+- Codemagic 價格：https://codemagic.io/pricing/
