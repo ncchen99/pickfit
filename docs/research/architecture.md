@@ -8,15 +8,15 @@
 
 ## 0. 目前的結論
 
-**狀態（2026-10-28 06:30 台北）**：A（部分）、C、D、F 已有查證過的結論；B、E 查核中；G（整體架構）評審中。
+**狀態（2026-10-28 09:00 台北）**：A–F 都已調研並查核；G（整體架構）評審中。
 
 | 問題 | 目前的結論 | 狀態 |
 |---|---|---|
-| A. 管道 | 黑客松接 5 條：**GitHub search API**、**Homebrew 第三方 tap analytics**（有真實安裝數、星數中位數 1）、**Show HN**（官方 API）、**PyPI**（`console_scripts`）、**提交入口**（只收 GitHub 連結）。補資料用 ecosyste.ms、deps.dev。Threads／Facebook **不能主動發現**，只能用 oEmbed 嵌入 | 社群、Meta 已查核；託管、套件查核中 |
-| B. 品質 | 規則訊號（release、CI、文件、維護）＋沙盒驗證結果；知名度另外算 | 查核中 |
+| A. 管道 | 黑客松接 5 條：**GitHub search API**、**Show HN**（官方 API）、**Homebrew 第三方 tap analytics**（有安裝數、星數中位數 1，以 CLI 為主）、**PyPI**（本地 AI 為主）、**提交入口**。補資料用 GitHub API、deps.dev；ecosyste.ms 要先取得書面同意。Threads／Facebook **不能主動發現**，只能用 oEmbed 嵌入。GH Archive 等公開資料集已失準 | 已查核 |
+| B. 品質 | 規則先分出「可用的軟體」；用規則算的品質會飽和，所以品質主要靠**沙盒驗證（35%）**與**模型 rubric 評文件（20%）**；知名度用 7 個訊號對數正規化另外算；寶藏 = 驗證通過＋品質 ≥70＋知名度 ≤45。Scorecard API 只涵蓋約 3% 的長尾 repo | 已查核 |
 | C. 沙盒 | **Modal Sandbox** 主力（gVisor、網域 allowlist、可先開網路安裝再斷網執行），E2B 備案；Mac 只在 demo 那幾筆另外驗證。本機 Docker spike 實際驗證了 4 款真實工具，其中 2 款要先修正 README 才裝得起來 | 已查核 |
 | D. Meta 模型 | `muse-spark-1.3`（Meta API，OpenAI 相容）做抽取、驗證 agent（Responses API＋tool calling）、截圖判讀、文件評分、配對；**Muse Spark Open @ Baseten** 只做大量初篩（同價，為了 credits 與加碼獎）；Glimmer 不用 | 已查核；**沒有 key，模型呼叫未實測** |
-| E. MCP | 無狀態 Streamable HTTP，部署在 Cloudflare Workers | 查核中 |
+| E. MCP | 規格 `2026-07-28` 本身已無狀態，但多數客戶端仍走舊 handshake → 用官方 TS SDK v2 的 `createMcpHandler` 同時服務兩代，部署在 Cloudflare Workers（不需 Durable Objects）。brief 的 4 個工具＋`submit_software` | 已查核；spike 本機通過，未部署 |
 | F. 儲存與配對 | git 裡每款一份 JSON 當正本，建置成索引打包進 Worker；事件寫 D1；配對是「條件篩選＋BM25 候選卡＋Muse Spark 取捨」，**不用向量搜尋** | 已調研 |
 
 **最大的風險**：台灣帳號能否開 Meta Model API 未確認（第一件事就要註冊）；這個雲端 session 的 GitHub API 只開放本 repo，發現管線要在本機跑。
