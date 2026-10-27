@@ -124,7 +124,7 @@ def cmd_awesome(args):
             d = ensure_clone(repo)
         except subprocess.CalledProcessError:
             print(f"| {repo} | clone 失敗 | | | | | |"); continue
-        last = git(d, "log", "-1", "--format=%ad", "--date=short").strip()
+        last = git(d, "log", "-1", "--format=%cd", "--date=short").strip()  # committer date，與 rev-list --since 一致
         counts = [git(d, "rev-list", "--count", f"--since={today - dt.timedelta(days=n)}", "HEAD").strip()
                   for n in (30, 90, 365)]
         base = git(d, "rev-list", "-1", f"--before={since}", "HEAD").strip()

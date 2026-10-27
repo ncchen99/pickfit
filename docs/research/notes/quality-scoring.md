@@ -6,9 +6,9 @@
 
 ## 一句話結論
 
-- **規則只能做第一層篩選。** 在 227 個最近一年的 Show HN repo 上，規則判定 142 個是工具、34 個要交給模型、1 個是函式庫。「函式庫還是工具」用規則很難分，要交給 Muse Spark。
-- **用規則算品質會飽和。** 今年的小專案多半有 CI、測試、changelog、release，這些用 AI 很容易做出來。實測 5 個小工具「若驗證通過」的品質是 80–100，知名的 bat 是 90，分不開。**品質排序要靠沙盒驗證，再加上模型依 rubric 讀文件；規則只當門檻。**
-- **OpenSSF Scorecard 幾乎不涵蓋長尾。** 227 個 Show HN repo 只有 7 個（3%）在 REST API 查得到，連 ollama/ollama 都是 404。可以自己跑 CLI：`--local` 模式不需要 token，不到 1 秒就跑完 11 個 check。適合在沙盒 clone 後順便跑。
+- **規則只能做第一層篩選。** 在 227 個 Show HN repo（貼文日期 2026-02 – 10 月，多數是最近 2 個月；見 1.3）上，規則判定 142 個是工具、34 個要交給模型、1 個是函式庫。「函式庫還是工具」用規則很難分，要交給 Muse Spark。
+- **用規則算品質會飽和。** 今年的小專案多半有 CI、測試、changelog、release，這些用 AI 很容易做出來。實測 5 個小工具「若驗證通過」的品質是 79.7–100，知名的 bat 是 89.6，分不開。**品質排序要靠沙盒驗證，再加上模型依 rubric 讀文件；規則只當門檻。**
+- **OpenSSF Scorecard 幾乎不涵蓋長尾。** 227 個 Show HN repo 只有 7 個（3%）在 REST API 查得到，而且 7 個全是作者自己用 Scorecard Action 發布的；每週掃描清單一個都沒收。連 ollama/ollama 都是 404。可以自己跑 CLI：`--local` 模式不需要 token，小型 repo 約 1–2 秒跑完 11 個 check。適合在沙盒 clone 後順便跑。
 - **ecosyste.ms 一個來源就涵蓋大部分欄位**：repo、release（含下載數）、issue 關閉時間、committer、各套件庫的下載量、檔案列表。227 個 repo 中涵蓋 177 個（78%）。授權是 CC-BY-SA-4.0。
 - **寶藏的定義**：必須是工具、沙盒驗證通過、品質 ≥ 70、知名度 ≤ 45，排序看「品質 − 知名度」。防灌水的原則是不獎勵數量，README 一律當成不可信的輸入。
 
@@ -79,6 +79,8 @@ Go 的 `examples/*/main.go` 不算執行入口。第一版把它算進去，結�
 
 樣本：用 HN Algolia API 查 2025-10-01 之後、`tags=show_hn` 的貼文，關鍵字為 cli、terminal、local llm、ollama、offline、command line、llama.cpp，取網址是 GitHub repo 的貼文，去重後 227 個。指令：`python3 spikes/quality_signals.py --from-file repos.txt --classify-only`，約 60 秒。
 
+> 查核補充（2026-10-28）：每個關鍵字只取最新 80 筆（`hitsPerPage=80`），所以實際貼文日期是 2026-02-14 – 2026-10-27，不是「2025-10 以後的全部」。`cli` 有 7,298 筆命中，80 筆只涵蓋最近約 1 天；`terminal` 約 3 週；`local llm` 約 6 週。樣本偏向「剛發表」的 repo，這會壓低 ecosyste.ms 與 Scorecard 的涵蓋率。來源：查核者重讀原 agent 存下的 Algolia 回應（params 與 hits 的 `created_at`）。`repos.txt` 沒有進 repo，重跑時要先自己產生。
+
 | 結果 | 數量 | 說明 |
 |---|---|---|
 | 工具 | 142 | 占有資料的 177 個中的 80% |
@@ -123,15 +125,19 @@ Go 的 `examples/*/main.go` 不算執行入口。第一版把它算進去，結�
 - 端點是 `https://api.scorecard.dev/projects/github.com/{owner}/{repo}`。只有兩種 repo 查得到：
   1. 在每週掃描清單裡的 repo。清單在 [ossf/scorecard-infra](https://github.com/ossf/scorecard-infra/blob/main/CONTRIBUTING.md) 的 `cron/internal/data/projects.csv`，今天下載有 1,310,430 列。README 寫的是「more than 1.3 million repositories every week」。
   2. 自己安裝 [Scorecard Action](https://github.com/ossf/scorecard-action) 並設定 `publish_results: true` 的 repo。
-- 每週掃描的結果省略 CI-Tests、Contributors、Dependency-Update-Tool（README：「due to the API costs」）。實測 bat 的 API 結果只有 14 個 check，**連 Vulnerabilities 也沒有**；這點文件沒寫，是觀察結果。
-- BigQuery 公開資料集已停止提供（[README](https://github.com/ossf/scorecard#public-data)）。API 的資料授權是 CDLA-Permissive-2.0。
-- **覆蓋率實測**：227 個 Show HN repo 中只有 7 個有資料（3.1%）。其中 derekwisong/datui 有資料，是因為它自己裝了 scorecard-action，所以有完整 18 個 check。ollama/ollama（184,617 星）回 404，因為它不在清單裡。
+- 每週掃描的結果省略 CI-Tests、Contributors、Dependency-Update-Tool（README：「due to the API costs」）。實測 bat 的 API 結果只有 14 個 check，**連 Vulnerabilities 也沒有**。
+  - 查核更正：README 只寫了 3 個，但實際設定檔 [scorecard-infra `deploy/cron/config-aws.yaml`](https://raw.githubusercontent.com/ossf/scorecard-infra/main/deploy/cron/config-aws.yaml) 寫的是 `blacklisted-checks: CI-Tests,Contributors,Dependency-Update-Tool,Vulnerabilities,Webhooks`，共 5 個。註解說 Vulnerabilities「is slow on repos with lots of dependencies」，而且 GCP 時期的結果就已經是 14 個 check。SBOM 在 v5.6.0 要設 `SCORECARD_EXPERIMENTAL` 才會跑（原始碼 `checks/sbom.go`）。所以 20 個 check 扣掉這 6 個，剩 14 個。
+- BigQuery 公開資料集已停止提供（[README](https://github.com/ossf/scorecard#public-data)；[issue #5208](https://github.com/ossf/scorecard/issues/5208)：託管服務 2026-09 從 GCP 搬到 AWS）。API 的資料授權是 CDLA-Permissive-2.0。
+- **覆蓋率實測**：227 個 Show HN repo 中只有 7 個有資料（3.1%）。查核補充：這 7 個（pezhik/skilltotal、donislawdev/BeanNetworkTester、anulum/director-ai、arvarik/contrack、darshi1337/apogee、derekwisong/datui、777dimas/gridhour）**都不在 projects.csv，全是自己裝 Scorecard Action 發布的**，所以都有 18 個 check。227 個中被每週掃描收錄的是 0 個。ollama/ollama（deps.dev 記 184,617 星）回 404，因為它不在清單裡。
 
 **自己跑 CLI**
 
 - `go install github.com/ossf/scorecard/v5@latest` 成功裝好 v5.6.0，約 3 分鐘。
+  - 查核補充：v5.6.0 是 Go proxy 的 `@latest`（2026-10-11 發布）。它的 go.mod 要求 `go 1.26.5`，本機是 go1.24.7，是靠 Go 自動下載新版 toolchain 才裝得起來（binary 顯示 GoVersion go1.26.10）。README 列的正式安裝方式是 release 執行檔、Docker、Homebrew／Nix／AUR，沒有 `go install`。沙盒用 release 執行檔應該比較快（未實測）。
 - `--repo` 模式需要 GitHub token（環境變數 `GITHUB_AUTH_TOKEN`、`GITHUB_TOKEN`、`GH_AUTH_TOKEN` 或 `GH_TOKEN`；classic PAT 建議用 `public_repo` scope，見 [README](https://github.com/ossf/scorecard#authentication)），而且會呼叫 GraphQL。本 session 的 GraphQL 被擋，所以跑不起來。
-- `--local=<資料夾>` 模式**不需要 token**，0.9 秒跑完 11 個檔案型 check：Binary-Artifacts、Dangerous-Workflow、Dependency-Update-Tool、Fuzzing、License、Packaging、Pinned-Dependencies、SAST、Security-Policy、Token-Permissions、Vulnerabilities。其中 Vulnerabilities 會連到 OSV。
+- `--local=<資料夾>` 模式**不需要 token**，跑 11 個檔案型 check：Binary-Artifacts、Dangerous-Workflow、Dependency-Update-Tool、Fuzzing、License、Packaging、Pinned-Dependencies、SAST、Security-Policy、Token-Permissions、Vulnerabilities。其中 Vulnerabilities 會連到 OSV。README 沒寫這個旗標，定義在原始碼 `options/flags.go`（「local folder to check」）。
+  - 查核更正：原本寫的「0.9 秒」是在只有 2 個檔案的測試資料夾上量的，不是真的 repo。查核者清掉所有 token 環境變數後重跑：同一個測試資料夾 0.6 秒；datui 的 579 個檔案（workflow、manifest、Cargo.lock 等，從 raw.githubusercontent.com 抓）1.9 秒。
+  - `--local` 和 API 的結果不一樣：datui 的 SAST 本機 0 分、API 10 分（本機看不到 commit 紀錄）；Vulnerabilities 本機 0 分、API 1 分。不能混著比。
 - Maintained 對建立未滿 90 天的 repo 直接給最低分。原始碼 `checks/evaluation/maintained.go`（v5.6.0）寫的是：「project was created within the last 90 days. Please review its contents carefully」。
 
 **各 check 對小專案是否公平**（說明出自 [docs/checks.md](https://github.com/ossf/scorecard/blob/main/docs/checks.md)）
@@ -143,7 +149,7 @@ Go 的 `examples/*/main.go` 不算執行入口。第一版把它算進去，結�
 | CI-Tests | Low | 適合 | 看最近約 30 個 commit 的 CheckRuns；每週掃描不跑這項 |
 | CII-Best-Practices | Low | 不公平 | 要另外申請徽章，小專案幾乎都是 0 分 |
 | Code-Review | High | 不公平 | 單人直接 push，datui 的結果是「0/30 approved」 |
-| Contributors | Low | 不公平 | 要求 3 家不同公司的貢獻者，官方文件自己也承認小專案做不到 |
+| Contributors | Low | 不公平 | 要求 3 家不同公司的貢獻者，官方文件自己也承認小專案做不到（checks.md 與 v5.6.0 `checks/evaluation/contributors.go` 的 `numberCompaniesForTopScore = 3`；README 的 check 表寫「at least two different organizations」，兩份官方文件不一致） |
 | Dangerous-Workflow | Critical | 適合 | 有 workflow 才計分 |
 | Dependency-Update-Tool | High | 部分 | Dependabot、Renovate 很容易設定，有設定不代表品質好 |
 | Fuzzing | Medium | 不公平 | CLI 工具很少做 fuzz |
@@ -152,14 +158,14 @@ Go 的 `examples/*/main.go` 不算執行入口。第一版把它算進去，結�
 | Packaging | Medium | 適合 | 只看 GitHub workflow 是否發布套件；用 tap 或手動上傳的會漏掉 |
 | Pinned-Dependencies | Medium | 部分 | — |
 | SAST | Medium | 部分 | 要 CodeQL 之類的工具，小專案很少用 |
-| SBOM | Medium | 不採用 | CLI `--checks` 的預設清單沒有這項 |
+| SBOM | Medium | 不採用 | v5.6.0 要設環境變數 `SCORECARD_EXPERIMENTAL` 才會跑（`checks/sbom.go`）；每週掃描與 Action 的結果都沒有這項 |
 | Security-Policy | Medium | 部分 | 加一個 SECURITY.md 很容易 |
 | Signed-Releases | High | 部分 | 有 release 才計分 |
 | Token-Permissions | High | 適合 | workflow 權限是否最小化 |
 | Vulnerabilities | High | 適合 | 用 OSV 查已知漏洞（datui 有 9 個） |
 | Webhooks | Critical | 不採用 | 要 admin token |
 
-**建議**：只取「適合」與「部分」中的 10 項（見 spike 的 `SC_FAIR`）算平均，占工程衛生分數的 20%。查不到 Scorecard 就不算，不扣分。
+**建議**：只取「適合」與「部分」中的 10 項（見 spike 的 `SC_FAIR`，排除 Dependency-Update-Tool 與 SAST）算平均，占工程衛生分數的 20%。查不到 Scorecard 就不算，不扣分。注意：每週掃描的結果沒有 CI-Tests 和 Vulnerabilities，所以這類 repo 實際只用 8 項平均；自己發布的 repo 用 10 項。兩者不完全可比。
 
 ### 2.2 CHAOSS 指標
 
@@ -167,10 +173,10 @@ Go 的 `examples/*/main.go` 不算執行入口。第一版把它算進去，結�
 |---|---|---|---|---|
 | [Issue Response Time](https://chaoss.community/kb/metric-issue-response-time/) | 開 issue 後，多久得到「作者以外的人」第一次回應 | 外部使用者開的 issue，維護者第一次回覆時間的中位數 | GitHub issues＋comments API（ecosyste.ms 只有關閉時間） | 採用。issue 少於 3 筆就不算。本環境**沒有實測** |
 | [Time to First Response](https://chaoss.community/kb/metric-time-to-first-response/) | 同上，也包含 PR | 同上 | 同上 | 和上一項合併 |
-| [Change Request Closure Ratio](https://chaoss.community/kb/metric-change-request-closure-ratio/) | 是否跟得上 PR | 合併的 PR 數 ÷ PR 總數 | issues.ecosyste.ms | 採用（PR ≥ 3 才算） |
+| [Change Request Closure Ratio](https://chaoss.community/kb/metric-change-request-closure-ratio/) | 是否跟得上 PR | 合併的 PR 數 ÷ PR 總數（查核註：CHAOSS 原定義是「期間內關閉的 PR 數 ÷ 期間內開著的 PR 數」，pickfit 的算法是改寫，不是同一個指標） | issues.ecosyste.ms | 採用（PR ≥ 3 才算） |
 | [Change Requests Duration](https://chaoss.community/kb/metric-change-requests-duration/) | 被接受的 PR 從開到合併要多久 | `avg_time_to_close_pull_request` | issues.ecosyste.ms | 只顯示 |
 | [Release Frequency](https://chaoss.community/kb/metric-release-frequency/) | 多久發一次 release | 一年內發 ≥ 2 次就滿分 | release 列表 | 採用，但**不獎勵更多次**（防刷） |
-| [Contributor Absence Factor](https://chaoss.community/kb/metric-contributor-absence-factor/)（原名 Bus Factor） | 貢獻 50% commit 的最少人數 | 排除 bot 後計算 | commits.ecosyste.ms | **不計分**。小專案一定是 1，而小專案正是我們要找的；只顯示 |
+| [Contributor Absence Factor](https://chaoss.community/kb/metric-contributor-absence-factor/)（原名 Bus Factor） | 貢獻 50% 的最少人數（CHAOSS 允許用 commit、issue、留言等任一種貢獻計算；pickfit 用 commit） | 排除 bot 後計算 | commits.ecosyste.ms | **不計分**。單人專案一定是 1，小專案多半也是 1，而小專案正是我們要找的；只顯示 |
 | [Issue Age](https://chaoss.community/kb/metric-issue-age/) | 開著的 issue 開了多久 | — | GitHub | 之後擴充 |
 | [Libyears](https://chaoss.community/kb/metric-libyears/) | 依賴套件落後最新版多久 | — | deps.dev、ecosyste.ms manifests | 之後擴充 |
 | [Documentation Usability](https://chaoss.community/kb/metric-documentation-usability/) | 文件內容與結構是否好用 | 模型依 rubric 打分 | README | 採用，對應「文件完整度」 |
@@ -187,21 +193,27 @@ Go 的 `examples/*/main.go` 不算執行入口。第一版把它算進去，結�
 | commits | `commits.ecosyste.ms/…` | total_commits、total_committers、dds、past_year_*、committers[] | 75（33%） |
 | packages | `packages.ecosyste.ms/api/v1/packages/lookup?repository_url=` | ecosystem、downloads＋downloads_period（npm、PyPI、Homebrew 是 last-month，cargo 是 total）、dependent_repos_count、dependent_packages_count、rankings、first／latest_release_published_at | — |
 | archives | `archives.ecosyste.ms/api/v1/archives/list?url=<tarball>` | 檔案路徑列表 | — |
-| timeline | `timeline.ecosyste.ms/api/v1/events/{owner}/{repo}` | GH Archive 事件，包含 WatchEvent | datui 只回 26 筆，實際有 137 星。**資料不完整，不能用來偵測星數暴增** |
+| timeline | `timeline.ecosyste.ms/api/v1/events/{owner}/{repo}` | GH Archive 事件，包含 WatchEvent | datui 的 WatchEvent 只有 26 筆（查核重跑：`per_page=1000` 共 597 筆事件，其中 WatchEvent 26），實際有 137 星。**資料不完整，不能用來偵測星數暴增** |
 
 **限制**
 
 - **同步有延遲**：convkit 的同步日是 10-12，photoc 是 10-06。很新的 repo 不一定查得到；呼叫 `repositories/lookup` 也不會立刻補上（minebender 查完仍是 404）。
-- **速率限制**（看回應 header）：匿名 5,000 次／小時；在 User-Agent 或參數帶 `mailto` 會進 polite pool，15,000 次／小時（[ecosyste.ms API 頁](https://ecosyste.ms/api)）。
+- **速率限制**（看回應 header）：匿名 5,000 次／小時；在 User-Agent 或參數帶 `mailto` 會進 polite pool，15,000 次／小時。
+  - 查核更正來源：[ecosyste.ms API 頁](https://ecosyste.ms/api) 只說明 polite pool 與 common pool 的分法，以及三種進 polite pool 的方式（`mailto=` 參數、User-Agent 帶 `mailto:`、`From` header），**沒有寫數字**。5,000 與 15,000 來自回應 header：`x-ratelimit-limit`、`x-ratelimit-tier: anonymous／polite`，`x-ratelimit-reset` 落在整點，所以推定是每小時。
+  - 查核實測：`mailto=` 參數與 User-Agent 帶 `mailto:` 都拿到 `polite`、15000；只設 `From: <email>` 仍是 `anonymous`（原因未驗證）。
+  - 回應會被 Cloudflare 快取（`cf-cache-status: HIT`、`cache-control: max-age=86400`）。快取命中時 header 裡的配額數字是舊的，資料本身也可能晚幾小時。
 - **授權**：CC-BY-SA-4.0（API 頁與 OpenAPI 的 `info.license`）。存進我們的 YAML 並公開時要標示來源；衍生資料可能也要採用同樣的授權（**沒有請教法律意見**）。另有商用 API。
+  - 查核補充條文（仍是**未驗證**，不是法律意見）：[CC BY-SA 4.0 legalcode](https://creativecommons.org/licenses/by-sa/4.0/legalcode.en) 第 3(a) 節要求標示來源；第 3(b) 節的 ShareAlike 只適用於「Adapted Material」；第 4 節說，如果把資料庫內容的「全部或大部分」放進自己享有 sui generis 資料庫權的資料庫，那個資料庫（不含個別內容）就算 Adapted Material。實務上的降險做法：星數、release 等事實盡量直接從 GitHub API 取；ecosyste.ms 只補少量欄位並標示來源。是否觸發 ShareAlike 仍待確認。
 - **結論**：正式環境以 GitHub API 為主（即時、完整），ecosyste.ms 用來補 issue 統計、下載量與套件庫收錄。
 
 ### 2.4 deps.dev
 
-- `GET https://api.deps.dev/v3/projects/{github.com%2Fowner%2Frepo}` 回傳 openIssuesCount、starsCount、forksCount、license、description、homepage、scorecard（又是另一份副本；datui 的是 2026-08-24 版）（[API v3 文件](https://docs.deps.dev/api/v3/)：「when known to us」）。
-- 只有被 npm、PyPI、Go、Maven、Cargo、NuGet、RubyGems 套件連到的 repo 才查得到。227 個中有 64 個（28%）；photoc、mere-run 都是 404。
+- `GET https://api.deps.dev/v3/projects/{github.com%2Fowner%2Frepo}` 回傳 openIssuesCount、starsCount、forksCount、license、description、homepage，有時有 scorecard（又是另一份副本）（[API v3 文件](https://docs.deps.dev/api/v3/)：「when known to us」）。
+  - 查核更正：原本寫「datui 的是 2026-08-24 版」是錯的。datui 在 deps.dev **沒有** scorecard 欄位；2026-08-24 版是 gum、bat、awesome-cli-apps 的（2026-10-28 實測）。這個日期在 2026-09 的 GCP→AWS 搬遷之前，而 api.scorecard.dev 上 bat 已是 2026-10-19 版。推測 deps.dev 的副本在搬遷後就沒更新（推測，未驗證）。
+- 只有被 npm、PyPI、Go、Maven、Cargo、NuGet、RubyGems 套件連到的 repo 才查得到（推論；文件只寫「when known to us」）。227 個中有 64 個（28%）；photoc、mere-run 都是 404。
 - `:packageversions` 會列出連到這個 repo 的套件版本，以及 SLSA provenance 和 attestations。
-- 對 pickfit 的用途有限：拿來交叉核對星數，以及當作「有沒有發布到套件庫」的旁證。資料授權**未查**。
+- 對 pickfit 的用途有限：拿來交叉核對星數，以及當作「有沒有發布到套件庫」的旁證。
+- 資料授權（查核補上）：[API v3 文件的 Data／Terms 段](https://docs.deps.dev/api/v3/)寫明 deps.dev 自己產生的資料（解析後的依賴、advisory 統計、實體關聯等）是 CC-BY 4.0；從 GitHub、npm 等來源彙整的資料要看各來源的條款；API 使用受 Google API Terms of Service 規範，並「expressly permitted to cache」。
 
 ### 2.5 pickfit 自己的訊號
 
@@ -279,8 +291,8 @@ Go 的 `examples/*/main.go` 不算執行入口。第一版把它算進去，結�
 
 依據：
 
-- StarScout 研究（[arXiv 2412.13459](https://arxiv.org/abs/2412.13459)，標題「Six Million (Suspected) Fake Stars in GitHub」）。假星活動在 2024 年暴增。參與的帳號活動模式很單薄。除了釣魚與惡意程式，假星多半被拿來推 **AI/LLM、工具與 App、教學與 demo** repo，正好是我們的兩個類別。假星只在短期（不到兩個月）有效。
-- GitHub [Acceptable Use Policies](https://docs.github.com/en/site-policy/acceptable-use-policies/github-acceptable-use-policies) 第 4 節禁止「inauthentic interactions, such as fake accounts and automated inauthentic activity」。可以向 GitHub 檢舉。
+- StarScout 研究（[arXiv 2412.13459](https://arxiv.org/abs/2412.13459)，標題「Six Million (Suspected) Fake Stars in GitHub」；v1 2024-12-18，v2 2025-09-06）。假星活動在 2024 年暴增。參與的帳號活動模式很單薄。摘要原文：**大多數**假星用來推短命的釣魚惡意程式 repo；其餘多半用來推 **AI/LLM、區塊鏈、工具與 App、教學與 demo** repo，其中 AI/LLM 與工具正好是我們的兩個類別。假星只在短期（不到兩個月）有推廣效果，長期反而是負擔。
+- GitHub [Acceptable Use Policies](https://docs.github.com/en/site-policy/acceptable-use-policies/github-acceptable-use-policies) 第 4 節禁止「inauthentic interactions, such as fake accounts and automated inauthentic activity」，同一節也明列「rank abuse, such as automated starring or following」。可以向 GitHub 檢舉。
 
 ### 3.5 試算（spike 實測，2026-10-28）
 
@@ -313,7 +325,7 @@ Scorecard API 只有 datui（7.2，自己發布的）、bat（5.5）、awesome-c
 
 **解讀**
 
-- **品質用規則分不開**：小工具「若驗證通過」是 80–100，bat 是 90。這 5 個小工具都有 CI、測試、授權、release notes，衛生分數 0.85–1.0。能拉開差距的只剩沙盒驗證和模型 rubric。
+- **品質用規則分不開**：小工具「若驗證通過」是 79.7–100，bat 是 89.6。這 5 個小工具都有 CI、測試、授權；除了 pasteface（沒有 changelog，也沒有 release）都有 release notes；photoc 沒有 lockfile。衛生分數 0.85–1.0。能拉開差距的只剩沙盒驗證和模型 rubric。
 - **知名度分得很開**：小工具 9–38，bat 96，awesome 清單 78。門檻 45 目前合理。datui（137 星、9 個月）是 38，已經接近門檻。
 - photoc 只有 11 星，但 Show HN 拿到 66 分，HN 這一項把知名度拉到 24.8。HN 是一次性的曝光，權重 0.1 算合理。
 - bat 的維護分是 0.71，因為最後一次 release 是 2025-12（10 個月前）。成熟工具發版慢不代表差，所以 release 的時間窗放寬到 180／365／730 天。
@@ -327,7 +339,7 @@ Scorecard API 只有 datui（7.2，自己發布的）、bat（5.5）、awesome-c
 
 1. **發現 agent（10/29）**：規則分類當第一層，可以省下 Muse Spark 的呼叫。只把「工具」和「交給模型」送給 Muse Spark；函式庫和不是軟體的直接丟掉，但記錄原因。
 2. **資料**：GitHub API（自己的 PAT）＋ ecosyste.ms 的 issues 與 packages（帶 mailto）＋ raw README。Scorecard API 只當加分資料，不要依賴它。
-3. **驗證 agent（10/31）**：沙盒 clone 之後順便跑 `scorecard --local=.`（不需要 token，不到 1 秒）。安裝步驟數和失敗原因直接寫進 `verification`。
+3. **驗證 agent（10/31）**：沙盒 clone 之後順便跑 `scorecard --local=.`（不需要 token；小型 repo 約 1–2 秒，大型 repo 未實測）。安裝步驟數和失敗原因直接寫進 `verification`。
 4. **`scores` 欄位**：存各分項、confidence、notes，以及每個數字的來源與取得時間（brief 第 8 節）。
 5. **評測（brief 第 10 節）**：拿「交給模型」的 34 筆和目測判錯的幾筆，當成分類器的小評測集。
 6. **demo**：用 3.5 的表格示範「品質與知名度分開算」：bat 品質高但知名度 96，所以不是寶藏；convkit 驗證通過後就是寶藏。
@@ -340,8 +352,9 @@ Scorecard API 只有 datui（7.2，自己發布的）、bat（5.5）、awesome-c
 | 知名度的 ref 值與寶藏門檻 | 初始猜測，要用分布校準 |
 | 用 GitHub API 計算 issue first response | 本環境 API 被擋，沒有實測 |
 | ecosyste.ms 的 CC-BY-SA 對我們資料庫的影響 | 沒有請教法律意見 |
-| deps.dev 的資料授權 | 沒查 |
-| 每週掃描的 Scorecard 結果為什麼沒有 Vulnerabilities | 觀察結果，文件沒寫 |
+| deps.dev 的資料授權 | 查核已補：自產資料 CC-BY 4.0，彙整資料依各來源條款（見 2.4） |
+| 每週掃描的 Scorecard 結果為什麼沒有 Vulnerabilities | 查核已補：scorecard-infra 的 `deploy/cron/config-aws.yaml` 把它列進 `blacklisted-checks`（見 2.1） |
+| ecosyste.ms 只帶 `From` header 為什麼進不了 polite pool | 查核時發現，沒查 |
 | timeline.ecosyste.ms 為什麼資料不完整 | 沒查 |
 | Scorecard CLI 用 `--repo` 對長尾 repo 跑一次要多久、耗多少 API 次數 | 本環境 GraphQL 被擋，沒有實測 |
 
@@ -361,3 +374,57 @@ Scorecard API 只有 datui（7.2，自己發布的）、bat（5.5）、awesome-c
 - GitHub：[REST 速率限制](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api)、[Starring API](https://docs.github.com/en/rest/activity/starring)、[Community profile metrics](https://docs.github.com/en/rest/metrics/community)（`health_percentage`）、[Acceptable Use Policies](https://docs.github.com/en/site-policy/acceptable-use-policies/github-acceptable-use-policies)
 - 假星研究：[arXiv 2412.13459](https://arxiv.org/abs/2412.13459)
 - 樣本：[HN Algolia API](https://hn.algolia.com/api)
+
+## 查核紀錄（2026-10-28）
+
+查核者：另一個調研 agent，預設懷疑，逐條查官方文件、原始碼，或在本環境重跑。台北 2026-10-28 凌晨＝2026-10-27 UTC 20–21 時。沒有執行任何 git 指令。
+
+### 逐條結果
+
+| # | 主張 | 結果 | 依據 |
+|---|---|---|---|
+| 1 | Scorecard API 只對每週清單或 `publish_results: true` 的 repo 有資料；projects.csv 1,310,430 列；BigQuery 停止 | 正確 | README〈Public Data〉〈Scorecard REST API〉；重新下載 [projects.csv](https://raw.githubusercontent.com/ossf/scorecard-infra/main/cron/internal/data/projects.csv)：1,310,431 行（含標題）。另有 gitlab-projects.csv，1,310,430 只算 GitHub |
+| 1a | 每週掃描省略 3 個 check | **不完整，已改** | README 寫 3 個；實際設定 [config-aws.yaml](https://raw.githubusercontent.com/ossf/scorecard-infra/main/deploy/cron/config-aws.yaml) 排除 5 個（加上 Vulnerabilities、Webhooks）；SBOM 要 `SCORECARD_EXPERIMENTAL` |
+| 2 | 227 個 repo：Scorecard 7、deps.dev 64；ollama 404 | 數字正確（重跑一致） | 查核者另寫腳本重打 227×5 個端點，約 27 秒：Scorecard 7／220、deps.dev 64／163、ecosyste.ms repos 177、issues 100（另 1 筆 202）、commits 75 |
+| 2a | 樣本是「2025-10 以後」 | **誤導，已補** | 每個關鍵字只取最新 80 筆，實際日期 2026-02-14 – 2026-10-27 |
+| 2b | 7 個有 Scorecard 的 repo | **已補** | 7 個都不在 projects.csv，全是自己發布（18 個 check）；227 個中每週清單收錄 0 個 |
+| 3 | bat 只有 14 個 check、沒有 Vulnerabilities | 正確；「文件沒寫」已改 | `api.scorecard.dev/projects/github.com/sharkdp/bat`，掃描日 2026-10-19；原因見 1a |
+| 4 | Maintained 未滿 90 天給最低分；Code-Review、Contributors（3 家）、CII 對單人不公平 | 正確 | v5.6.0 `checks/evaluation/maintained.go`（`CreateMinScoreResult`）、`contributors.go`（`numberCompaniesForTopScore = 3`）、[checks.md](https://github.com/ossf/scorecard/blob/main/docs/checks.md)。README 的 check 表寫「two」，與 checks.md 不一致，已註明 |
+| 5 | CLI v5.6.0 可 `go install`；`--repo` 要 token 與 GraphQL；`--local` 不要 token，0.9 秒跑 11 個 check | **部分更正** | v5.6.0 是 Go proxy `@latest`；go.mod 要 go 1.26.5（靠自動 toolchain）。不帶任何 token 重跑 `--local`：11 個 check。0.9 秒是 2 個檔案的測試資料夾；datui 579 個檔案 1.9 秒 |
+| 6 | ecosyste.ms 涵蓋各欄位；涵蓋率 78%／44%／33% | 正確 | 重跑一致；releases 的 `assets[].download_count`、issues 的 `avg_time_to_close_issue`、`merged_pull_requests_count`、commits 的 `committers[]`、packages 的 `downloads_period` 都實際取到。OpenAPI 對 asset 只寫 `type: object`，欄位以實際回應為準 |
+| 7 | CC-BY-SA-4.0；匿名 5,000／polite 15,000 每小時 | 數字正確；**來源已改** | 授權見 API 頁與 repos OpenAPI `info.license`。數字只出現在回應 header，API 頁沒寫。User-Agent 帶 `mailto:` 與 `mailto=` 參數都拿到 polite；`From` header 沒有 |
+| 8 | CC-BY-SA 對公開 YAML 的影響 | 仍**未驗證** | 補上 legalcode 第 3(a)、3(b)、4 節的條文摘要；不是法律意見 |
+| 9 | Contributor Absence Factor＝原 Bus Factor，50% 的最少人數 | 正確；措辭已修 | CHAOSS 頁：「previously called "Bus Factor"」。「小專案一定是 1」改成「單人專案一定是 1，小專案多半是 1」 |
+| 10 | 規則品質飽和：5 個小工具 80–100，bat 90.0 | **數字小錯，已改** | 重跑 spike：79.7、94.1、95.0、98.1、100.0；bat 89.6。pasteface 沒有 changelog／release，photoc 沒有 lockfile |
+| 11 | 分類器 142 工具、34 交給模型；目測 32／40 | 計數正確；精確率仍**未驗證** | `--classify-only` 重跑 56 秒：tool 142、uncertain 34、library 1、no_data 50；no_data 中 46 個 README 仍在（重查一致）。目測紀錄沒有留存，無法覆核 |
+| 12 | 知名度 ref 與寶藏門檻是初始猜測 | 仍**未驗證**（本來就是猜測） | spike 的 `POP_REF` 與 3.2 表一致 |
+| 13 | StarScout：約 600 萬顆假星、2024 暴增、推 AI/LLM、工具、教學 demo、不到兩個月有效 | 大致正確；**漏了重點，已補** | [arXiv 摘要](https://arxiv.org/abs/2412.13459)：「majority」用於短命的釣魚惡意程式 repo；其餘還包括區塊鏈 |
+| 14 | 本 session：GitHub REST 只有本 repo 200、其他 403；GraphQL、codeload 403；raw 200 | 正確 | curl 重測：`repos/ncchen99/pickfit` 200；`repos/sharkdp/bat` 403；`/graphql` 403；codeload 403；raw 200。github.com 網頁本身也 403（WebFetch 可讀） |
+
+### 其他順手更正
+
+| 位置 | 原文 | 更正 |
+|---|---|---|
+| 2.4 deps.dev | datui 的 scorecard 是 2026-08-24 版 | datui 沒有 scorecard 欄位；2026-08-24 版是 gum、bat、awesome-cli-apps |
+| 2.4 deps.dev | 資料授權未查 | 自產資料 CC-BY 4.0；彙整資料依來源；可快取 |
+| 2.2 CHAOSS | Change Request Closure Ratio＝合併 PR ÷ PR 總數 | CHAOSS 原定義是期間內關閉數 ÷ 開著的數；pickfit 是改寫 |
+| 2.3 timeline | datui 只回 26 筆 | WatchEvent 26 筆（總事件 597 筆） |
+| 2.3 速率限制 | 未提快取 | 回應經 Cloudflare 快取，配額 header 與資料可能是舊的 |
+| 2.1 建議 | SC_FAIR 10 項 | 每週掃描的 repo 缺 CI-Tests、Vulnerabilities，實際只有 8 項 |
+
+### spike 重跑
+
+| 指令 | 結果 | 與檔案一致？ |
+|---|---|---|
+| `python3 -I spikes/quality_signals.py`（8 個 repo） | 19 秒，exit 0。8 個 repo 的未封頂品質、若驗證通過、confidence、知名度、gap、原始值、Absence Factor、Scorecard 分數都和 3.5 的表一致 | 是（檔案寫約 23 秒） |
+| `python3 -I spikes/quality_signals.py --from-file <227 個> --classify-only` | 56 秒；142／34／1／50 | 是 |
+| `scorecard --local`（清掉 `GH_TOKEN`、`GITHUB_TOKEN`、`GITHUB_AUTH_TOKEN`、`GH_AUTH_TOKEN`） | 11 個 check；0.6 秒（測試資料夾）、1.9 秒（datui 579 檔） | 「0.9 秒」的情境已改寫 |
+
+- 金鑰檢查：`spikes/quality_signals.py` 只從環境變數讀 `GH_TOKEN`／`GITHUB_TOKEN`，沒有寫死任何金鑰或 email；`PICKFIT_CONTACT` 也是環境變數。
+- 重跑限制：spike 的 227 個 repo 清單（`repos.txt`）沒有進 repo，查核者用的是原 agent 留在 scratchpad 的清單。要在別的環境重跑，得先用 HN Algolia 重新產生，結果會因為時間不同而變。
+
+### 查核者沒有做的事
+
+- 沒有重新安裝 Scorecard CLI（沿用原 agent 裝好的 v5.6.0 執行檔，`scorecard version` 確認版本）；「約 3 分鐘」沒有重測。
+- 沒有覆核 1.3 節「目測 40 個」的判斷，也沒有覆核 1.1 節各套件慣例文件的細節。
+- 沒有查 `repositories/lookup` 不會即時補資料（minebender）這一點。
