@@ -6,18 +6,19 @@
 
 標記：**已驗證**＝親自讀了官方文件原文，或親自打了 API 看到回應。**未驗證**＝沒親自確認。
 
-> **環境限制（影響實測）**：這個雲端 session 的代理只放行 `api.github.com` 上的本專案 repo，打別人的 `/repos/...` 回 403（「GitHub access to this repository is not enabled for this session」）。所以 **GitHub API 對改名 repo 回 301 這件事本 session 沒辦法親眼看到**。腳本已寫好 API 路徑（不自動 follow redirect，直接印出 301 與 `Location`），在念誠自己的電腦設 `GH_TOKEN` 跑即可。本 session 改用 `git ls-remote`、ecosyste.ms、deps.dev 做旁證。
+> **環境限制（影響實測）**：這個雲端 session 的代理只放行 `api.github.com` 上的本專案 repo，打別人的 `/repos/...` 回 403（「GitHub access to this repository is not enabled for this session」）。所以 **GitHub API 對改名 repo 回 301 這件事本 session 沒辦法親眼看到**。腳本已寫好 API 路徑（不自動 follow redirect，直接印出 301 與 `Location`），在念誠自己的電腦設 `GH_TOKEN` 跑即可。本 session 改用 `git ls-remote`、ecosyste.ms、deps.dev 做旁證。〔查核 2026-10-28 重測：`/repos/{別人}` 仍 403；`/repositories/{id}` 回「Numeric-ID repository paths … are not supported through this proxy」；`/search/*`、`/users/*` 也 403；只有 `/rate_limit` 回 200。〕
 
 ---
 
 ## 一句話結論
 
-- **主鍵用 GitHub 的數字 repo ID，不是網址。** 實測 Show HN 7 天的 271 個 repo 裡有 **39 個（14%）已經改過名或轉移過**；ecosyste.ms 與 deps.dev 都**不會**把舊名導到新名（舊名查無，或當成另一個專案）。只有 GitHub API 的 301 能可靠拿到現名，所以正式管線一定要走 GitHub API。
+- **主鍵用 GitHub 的數字 repo ID，不是網址。** 實測 Show HN 7 天的 271 個 repo 裡有 **39 個（14%）已經改過名或轉移過**；ecosyste.ms 與 deps.dev 都**不會**把舊名導到新名（舊名查無，或當成另一個專案）。只有 GitHub API 的 301 能可靠拿到現名，所以正式管線一定要走 GitHub API。〔查核補充：這 7 天資料裡，Show HN 貼文用舊名連結的實例是 0（查得到的 271 個 repo，貼文網址全是現名）；實際會造成重複的是套件宣告舊名（4.3）。〕
 - **套件 → repo 先看簽章 provenance，再看自填欄位。** PyPI 最新 39 個新專案有 27 個有 Trusted Publishing provenance，與自填欄位 0 衝突；4 個只能靠 provenance 才對得到 repo。
 - **增量抓取不難，難在 PyPI RSS 只涵蓋約 1 小時**：要 20–30 分鐘輪詢一次，否則會漏。HN Algolia 用 `created_at_i` 當 cursor；有 ETag 的來源（PyPI、crates、Homebrew、npm、raw.githubusercontent）用 `If-None-Match` 省流量。
-- **排程：本機 cron 或 Modal cron 跑發現；提交走事件觸發，不等排程。** GitHub Actions 跑爬取型工作落在條款灰色地帶（「unrelated to the production … of the software project」），Cloudflare Workers Free 每次只能發 50 個子請求（轉址每一跳都算），跑不動抓取管線。
+- **排程：本機 cron 或 Modal cron 跑發現；提交走事件觸發，不等排程。** GitHub Actions 用 GitHub-hosted runner 跑爬取型工作落在條款灰色地帶（「unrelated to the production … of the software project」），Cloudflare Workers Free 每次只能發 50 個子請求（轉址每一跳都算），跑不動抓取管線。
 - **提交入口只做一條路**：MCP `submit_software`＋GitHub Issue Form 共用同一個佇列。Threads 連結只存 permalink 供 oEmbed 嵌入，**一定要附 GitHub 或官網連結**（Threads 貼文內容沒有合規的方法交給模型讀，見 [channels-meta-platforms.md](channels-meta-platforms.md)）。驗證失敗不收錄；提交次數不加分。
 - **不要裝 RSSHub、Huginn、changedetection.io、GH Archive。** RSSHub 的 GitHub trending／topics／search、Threads、HN、Product Hunt 路由都是抓 HTML（讀過原始碼），違反各來源條款；GH Archive 從 2025-10 起每小時 0 筆新 repo 事件（本次再測一次仍是 0）。
+- **〔查核新增〕ecosyste.ms 先取得書面同意才放進管線。** 它的 [Terms](https://ecosyste.ms/terms) §9 禁止「Develop or use any third-party applications that interact with our Platform without our prior written consent, including any scripts designed to scrape or extract data from our Platform」，§11(c) 的授權只限「your own personal use」。和 API 頁公開提供 API 的說法衝突。處理方式和 [channels-packages.md](channels-packages.md) 2.12 一致：寄信 support@ecosyste.ms 取得同意前，改用 GitHub API（metadata）與 deps.dev（repo → 套件反查）。
 
 ---
 
@@ -28,7 +29,7 @@
 | 管道 | 訊號品質 | 新作品多寡 | 雜訊 | 取得方式 | 限制（ToS／授權／費用／rate limit／權限） | 整合成本 | 建議 |
 |---|---|---|---|---|---|---|---|
 | **MCP `submit_software` 工具** | 高：使用者或作者主動推薦，附需求情境 | 少，靠使用者主動 | 中：會有自我推銷與重複 | MCP tool → 佇列 | 匿名；Worker rate limit binding 計數只在單一機房、最終一致；不記 IP（brief 11） | 1–2 | **黑客松接** |
-| **GitHub Issue Form（提交）** | 高：有 GitHub 帳號、可追蹤、公開透明 | 少 | 中 | Issue Form＋Actions `issues: opened` | Issue forms 官方標示 public preview；**private repo 只有協作者能開 issue**；`GITHUB_TOKEN` 1,000 次／時／repo；要防 script injection | 1–2 | **黑客松接**（repo 公開後，或開一個公開的 submissions repo） |
+| **GitHub Issue Form（提交）** | 高：有 GitHub 帳號、可追蹤、公開透明 | 少 | 中 | Issue Form＋repo webhook（`issues` 事件）→ Modal 端點；或 Actions `issues: opened` 只做轉送（〔查核修正〕見 2.2） | Issue forms 官方標示 public preview；**private repo 只有協作者能開 issue**；`GITHUB_TOKEN` 1,000 次／時／repo；要防 script injection；Actions 條款（GitHub-hosted runner 不得做與 repo 軟體專案無關的事） | 1–2 | **黑客松接**（repo 公開後，或開一個公開的 submissions repo） |
 | 網頁表單（Worker＋Turnstile） | 中：匿名 | 少 | 中高 | HTTPS 表單 | Turnstile 免費、20 個 widget；要自己做頁面 | 2–3 | 之後擴充（展示頁有做才做） |
 | 提交的連結：GitHub／GitLab／Codeberg repo | 高 | — | 低 | GitHub API（其他 forge 單筆 API） | GitHub API 5,000 次／時；GitLab API Terms 1.3.9 禁止 bulk collection，單筆查詢可以 | 2–3（正規化＋改名解析） | **黑客松接** |
 | 提交的連結：套件頁（PyPI／npm／crates／Homebrew） | 高：provenance 可證明對應的 repo | — | 低 | 各 registry API（不爬網頁） | npm 條款禁止自動化存取網站，要走 registry API | 2 | **黑客松接**（PyPI、npm、Homebrew） |
@@ -36,11 +37,11 @@
 | 提交的連結：Threads 貼文 | 無（讀不到內容） | — | — | 只存 permalink；展示時 oEmbed 嵌入 | oEmbed 內容「any purpose other than providing a front-end view … is strictly prohibited」 | 0.5 | **只當附件**；必須另附 repo 或官網 |
 | 提交的連結：任意官網 | 中低：可能是閉源 SaaS 或 landing page | — | 高 | 抓一次該頁（守 robots.txt）找 repo／下載連結，或交模型 | 每個網站條款不同；只抓作者提交的那一頁 | 2 | 黑客松選做（先標 `needs_info`） |
 | 短網址展開 | — | — | — | HEAD 逐跳、不自動 follow | 要擋私有 IP（SSRF）；實測 tinyurl 指到裸 IP | 0.5 | **黑客松接**（放進正規化） |
-| **ecosyste.ms**（repos／packages lookup） | 中高（補資料）：fork／archived／template／README／license、`previous_names`、反查「這個 repo 發了哪些套件」 | 新 repo 覆蓋 70%（271／386） | 低 | API | 程式碼 AGPL-3、**資料 CC BY-SA 4.0**；匿名 5,000 次／時，加 `?mailto=` 15,000 次／時 | 1–2 | **黑客松接**（GitHub API 的備援與反查） |
-| deps.dev | 中（補資料）：有簽章的 repo 對應 | — | 中：**改名後舊名、新名是兩個專案** | API v3 | Google API ToS；資料 CC-BY 4.0；文件沒寫 rate limit | 1 | 之後擴充（PyPI／npm 已能自己拿 provenance） |
+| **ecosyste.ms**（repos／packages lookup） | 中高（補資料）：fork／archived／template／README／license、`previous_names`、反查「這個 repo 發了哪些套件」 | 新 repo 覆蓋 70%（271／386） | 低 | API | 程式碼 AGPL-3、**資料 CC BY-SA 4.0**；**Terms §9 禁止未經書面同意的第三方程式／腳本擷取資料，§11(c) 只授權個人使用**；rate limit 官方頁沒寫數字，回應標頭見 2.10（〔查核修正〕原寫「匿名 5,000、加 `?mailto=` 15,000」，重測不成立） | 1–2 | **條件式**：寄信取得書面同意後才接；之前改用 GitHub API＋deps.dev（〔查核修正〕原寫「黑客松接」） |
+| deps.dev | 中（補資料）：有簽章的 repo 對應；`projects/{key}:packageversions` 可從 repo 反查套件（查核實測） | — | 中：**改名後舊名、新名是兩個專案** | API v3 | Google API ToS；資料 CC-BY 4.0；文件沒寫 rate limit | 1 | 之後擴充；ecosyste.ms 未取得同意前，反查套件改用它（〔查核修正〕） |
 | PyPI Integrity API／npm attestations | **高**：Trusted Publishing 簽章證明的來源 repo | 新套件常有（PyPI 27／39） | 低 | API | 無金鑰 | 1 | **黑客松接** |
 | GH Archive（每小時 dump） | **低**：公開事件流已看不到新 repo | 2026-10-27 17:00 UTC 一小時 3,251 筆事件、**新 repo 0** | — | 每小時 `.json.gz`、BigQuery | 程式碼 MIT、網站 CC-BY-4.0；BigQuery 每月 1 TB 免費查詢 | — | **避開** |
-| OpenSSF Scorecard（API／CLI） | 高（品質訊號）但**新 repo 沒有資料** | API 抽 40 個 Show HN repo：**0 個有分數** | 低 | REST API；CLI 自己跑 | Apache-2.0；API 資料 CDLA-Permissive-2.0；BigQuery 資料集已停；CLI 要 GitHub token、吃 API 額度 | 1–2（CLI） | 之後擴充（驗證通過後才跑 CLI） |
+| OpenSSF Scorecard（API／CLI） | 高（品質訊號）但**新 repo 沒有資料** | API 抽 40 個 Show HN repo：**0 個有分數**（查核重抽 40 個、用原始大小寫：仍 0） | 低 | REST API（**路徑區分大小寫**，要用 API 回的 `full_name`）；CLI 自己跑 | Apache-2.0；API 資料 CDLA-Permissive-2.0；BigQuery 資料集已停；CLI 要 GitHub token、吃 API 額度 | 1–2（CLI） | 之後擴充（驗證通過後才跑 CLI） |
 | RSSHub | 低：多數相關路由是爬網頁 | — | — | 自架 feed 轉換器 | AGPL-3.0；github trending／topic／search、threads、hackernews、producthunt 路由都抓 HTML | — | **避開** |
 | changedetection.io | 低（對本專案） | — | — | 自架網頁監看 | Apache-2.0；本質是定期抓網頁 | — | 避開（我們的來源都有 API／RSS） |
 | Huginn | 低（對本專案） | — | — | 自架 agent 平台（Rails） | MIT；維運重 | — | 避開 |
@@ -65,6 +66,7 @@
 - **便宜**：零後端。一個 `.github/ISSUE_TEMPLATE/submit.yml`＋一個 `on: issues: types: [opened]` 的 workflow，用 label 當狀態（`submitted` → `processing` → `verified`／`failed`／`needs-info`）。public repo 用標準 runner 免費（已驗證，見 3.2）。
 - **身分與防灌水**：一定要有 GitHub 帳號。可用 interaction limits：「Limits activity for users with accounts that are less than 24 hours old」「Limits activity for users who have not previously contributed」，期間「24 hours, 3 days, 1 week, 1 month, or 6 months」（[Limiting interactions](https://docs.github.com/en/communities/moderating-comments-and-conversations/limiting-interactions-in-your-repository)，已驗證）。
 - **資安**：issue 標題與內文是不可信輸入。官方把 `github.event.issue.title`、`…body` 列為會造成 script injection 的 context（[Script injections](https://docs.github.com/en/actions/concepts/security/script-injections)，已驗證）。workflow 只能透過環境變數把內容交給腳本，不能直接寫進 `run:`；處理提交的 job 不要拿得到 Meta API key 以外的祕密。
+- **〔查核修正〕不要在 Actions 裡處理提交。** Actions 條款原文：用 GitHub-hosted runner 時不得做「any other activity unrelated to the production, testing, deployment, or publication of the software project associated with the repository」，並以「don't use Actions as a content delivery network or as part of a serverless application」為例（[Additional Products Terms](https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features)，查核已讀）。在 Actions 裡呼叫 Meta 模型、跑驗證，等於把 Actions 當成服務後端。建議改用 repo webhook（`issues` 事件）直接打 Modal 的 web 端點；或 workflow 只做「加 label＋轉送 issue 編號」，不放 Meta API key。
 - **卡點**：pickfit repo 目前 private，外人開不了 issue。黑客松期間要嘛等 11/4 轉 public，要嘛在開發期間另開一個公開的 `pickfit-submissions` repo（10/26 之後建立，符合規則）。
 - `GITHUB_TOKEN`：「The rate limit for GITHUB_TOKEN is 1,000 requests per hour per repository」（[REST rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api)，已驗證）。處理提交夠用。
 
@@ -92,7 +94,7 @@
 
 ### 2.7 提交的連結：Threads 貼文
 
-- 只存 permalink（`threads:<code>`），展示時用 oEmbed 嵌入。oEmbed 條款原文：「Using metadata and post content (or their derivations) from the endpoint for any purpose other than providing a front-end view of the post is strictly prohibited.」，而且回傳的 html 沒有貼文文字（[channels-meta-platforms.md](channels-meta-platforms.md) 2.2，已由該組驗證）。
+- 只存 permalink（`threads:<code>`），展示時用 oEmbed 嵌入。oEmbed 條款原文：「Using metadata and post content (or their derivations) from the endpoint for any purpose other than providing a front-end view of the post is strictly prohibited.」，而且回傳的 html 沒有貼文文字（[channels-meta-platforms.md](channels-meta-platforms.md) 2.2，已由該組驗證）。〔查核 2026-10-28：條款原文在 [Embed a Threads Post](https://developers.facebook.com/documentation/threads/tools-and-resources/embed-a-threads-post)（Updated Mar 3, 2026）親自讀過，一致；同頁寫「You can make up to 1,000 requests every hour」，私人、停用、年齡限制、地區限定的貼文不支援。重跑 `spikes/ch_meta_probe.py`：免 token 回 200，html 3,094 bytes，可見文字只有「View on Threads」。只驗了官方範例貼文 1 則。〕
 - **所以 brief 4.1「貼一個 GitHub 或 Threads 連結」要改成「貼 GitHub（或官網）連結，可另附 Threads 貼文」**。只有 Threads 連結的提交，狀態設 `needs_info`，回覆提交者補 repo。
 - 實測：Show HN 最近 24 小時就有 1 則附 Threads 連結（`threads_post` 1 筆），作者確實會跨平台貼。
 
@@ -110,11 +112,12 @@
 
 ### 2.10 ecosyste.ms
 
-- **為什麼黑客松要接**：(1) 本調研環境打不到 GitHub API 時的備援；(2) `previous_names`（改名歷史）；(3) packages lookup 可以**從 repo 反查它發了哪些套件**，這是「同一專案出現在 GitHub、PyPI、npm」合併的關鍵。
-- 實測 Show HN 7 天 386 個 GitHub repo：查得到 271（70%）。查不到的多是剛建立的 repo，正式管線要以 GitHub API 為主。反查到套件的 repo 78 個（扣掉 Go module 後 66 個）：有 npm 套件 48、Go 17、cargo 15、PyPI 9、Homebrew 1。
+- **〔查核新增〕條款先決**：[ecosyste.ms Terms](https://ecosyste.ms/terms) §9 列為禁止：「Develop or use any third-party applications that interact with our Platform without our prior written consent, including any scripts designed to scrape or extract data from our Platform」；§11(c)：授權只限「your own personal use」，不含「commercially use」與「use any data mining, robots or similar data gathering or extraction methods」；§11(b)：資料 CC BY-SA，要「attributing 'ecosyste.ms' as the source of data」。[commercial 頁](https://ecosyste.ms/commercial) 又說社群可在 AGPL／CC-BY-SA 下免費使用。文字互相衝突，以較嚴的 Terms 為準。**寄信取得書面同意前，不放進自動化管線**；下面「為什麼要接」是取得同意後的理由。替代：metadata 用 GitHub API；repo → 套件反查用 deps.dev `GET /v3/projects/{key}:packageversions`（查核實測：`sturnus-dev/sturnus` 回 cargo `sturnus`；`astral-sh/ruff` 回 1,500 筆就截斷、沒有 `nextPageToken`，PyPI 的 `ruff` 不在裡面，大 repo 會漏）。
+- **為什麼黑客松要接**（取得同意後）：(1) 本調研環境打不到 GitHub API 時的備援；(2) `previous_names`（改名歷史）；(3) packages lookup 可以**從 repo 反查它發了哪些套件**，這是「同一專案出現在 GitHub、PyPI、npm」合併的關鍵。
+- 實測 Show HN 7 天 386 個 GitHub repo：查得到 271（70%）。查不到的多是剛建立的 repo，正式管線要以 GitHub API 為主。〔查核補充：舊名查詢也會 404，所以 115 個查不到的裡面可能混有用舊名連結的 repo，比例未驗證。〕反查到套件的 repo 78 個（扣掉 Go module 後 66 個）：有 npm 套件 48、Go 17、cargo 15、PyPI 9、Homebrew 1。
 - **改名**：對 5 組已知改名的 repo，舊名 lookup 全部 404；現名的 `previous_names` 有 4 組包含舊名（whisper.cpp 沒有）。所以它**只能「從現名查到舊名」，不能「從舊名找現名」**。
-- `uuid` 欄位的值看起來是 GitHub 的數字 repo ID（ruff 是 523043277），但文件沒寫，**未驗證**。
-- 授權：「Code: AGPL-3」「Data: CC BY-SA 4.0」。rate limit：官方「To access the polite pool … Add mailto=you@example.com as a parameter to your API request, or Add mailto:you@example.com somewhere in your user-agent」（[API 頁](https://ecosyste.ms/api)，已驗證）。**實測 UA 帶 mailto 仍是 anonymous 5,000 次／時，加 `?mailto=` 參數才變成 polite 15,000 次／時。**
+- `uuid` 欄位就是 GitHub REST 的數字 `id`。〔查核修正：原標未驗證。原始碼 [ecosyste-ms/repos](https://github.com/ecosyste-ms/repos) `app/models/hosts/github.rb`（commit `5f869a7`）寫 `hash[:uuid] = hash[:id]`，資料來自 GitHub API 的 repo 回應。〕
+- 授權：「Code: AGPL-3」「Data: CC BY-SA 4.0」。rate limit：官方「To access the polite pool … Add mailto=you@example.com as a parameter to your API request, or Add mailto:you@exmaple.com somewhere in your user-agent request header, or Configure your from request header」，另有 common pool（[API 頁](https://ecosyste.ms/api)，已驗證）。**官方頁沒寫 5,000、15,000 這些數字，只能看回應標頭。** 〔查核修正：原寫「實測 UA 帶 mailto 仍是 anonymous 5,000 次／時，加 `?mailto=` 參數才變成 polite 15,000 次／時」。2026-10-28 重測：repos 服務**不帶任何 mailto** 也回 `x-ratelimit-tier: polite`、`x-ratelimit-limit: 15000`、`x-ratelimit-consumer: anonymous`；packages 服務回 `tier: parlay`、15000。pool 怎麼判定（可能依 IP 記住）**未驗證**，不要依賴「加參數才升級」的說法。另外 Cloudflare 會擋 Python 預設 UA（`Python-urllib/3.x` 回 403、error code 1010），一定要自訂 UA。〕
 - CC BY-SA 的 share-alike 影響見第 10 節第 2 點。
 
 ### 2.11 deps.dev
@@ -138,13 +141,13 @@
 ### 2.14 OpenSSF Scorecard
 
 - 官方 README：「Scorecard scans more than 1.3 million repositories every week」；「The BigQuery public dataset is no longer available」；「Data provided by the REST API is licensed under the CDLA Permissive 2.0」（[ossf/scorecard README](https://github.com/ossf/scorecard)，已驗證）。
-- **實測覆蓋率**：Show HN 7 天的 repo 隨機抽 40 個，`api.scorecard.dev` **0 個有資料**；`junegunn/fzf` 有（6.5 分，2026-10-26）。連 `astral-sh/ruff` 都 404。
+- **實測覆蓋率**：Show HN 7 天的 repo 隨機抽 40 個，`api.scorecard.dev` **0 個有資料**；`junegunn/fzf` 有（6.5 分，2026-10-26）。連 `astral-sh/ruff` 都 404。〔查核補充：API 路徑**區分大小寫**：`BurntSushi/ripgrep` 200、`burntsushi/ripgrep` 404；`junegunn/fzf` 200、`JUNEGUNN/FZF` 404。用我們的小寫 key 查會誤判成「沒資料」。查核用 ecosyste.ms 回的 `full_name`（原始大小寫）重抽 40 個，仍是 0／40。〕
 - 結論：對「默默無聞」的新 repo 沒有現成分數。要用就得自己跑 CLI（要 `GITHUB_AUTH_TOKEN`、每個 repo 吃一批 API 額度），只對驗證通過的少數 repo 跑。品質分數主要靠我們自己的沙盒驗證。
 
 ### 2.15 RSSHub
 
 - 授權 AGPL-3.0（LICENSE 檔，已驗證）。
-- **讀了路由原始碼（commit `1d73c7c`，2026-10-27）**：`github/trending.tsx` 抓 `https://github.com/trending/...` 並用 cheerio 解析；`github/topic.ts` 抓 `github.com/topics/...`；`github/search.ts` 打 `github.com` 網頁搜尋的內部 JSON；`threads/index.ts`、`threads/search.ts` 抓 `www.threads.com/@user`、`/search?q=`；`hackernews/index.ts` 抓 `news.ycombinator.com` HTML；`producthunt/today.tsx` 抓 `www.producthunt.com`。這些都是爬網頁，分別違反 GitHub AUP（只開放研究與封存用途）、Meta 的自動化資料收集條款、YC ToU、Product Hunt 條款。
+- **讀了路由原始碼（commit `1d73c7c`，2026-10-27）**：`github/trending.tsx` 抓 `https://github.com/trending/...` 並用 cheerio 解析；`github/topic.ts` 抓 `github.com/topics/...`；`github/search.ts` 打 `github.com` 網頁搜尋的內部 JSON；`threads/index.ts`、`threads/search.ts` 抓 `www.threads.com/@user`、`/search?q=`；`hackernews/index.ts` 抓 `news.ycombinator.com` HTML；`producthunt/today.tsx` 抓 `www.producthunt.com`。這些都是爬網頁，分別違反 GitHub AUP（只開放研究與封存用途）、Meta 的自動化資料收集條款、YC ToU、Product Hunt 條款。〔查核 2026-10-28：sparse clone 同一個 commit `1d73c7c`（2026-10-27T15:18:49Z）逐檔確認上述抓取目標屬實；`github/trending.tsx` 抓 HTML 後再打 `api.github.com/graphql`。Product Hunt 條款本次沒有重讀，**未驗證**。GitHub AUP §7 的用途清單連 API 取得的資料也適用，見 [channels-hosting.md](channels-hosting.md) 2.1。〕
 - 走官方 API 的路由（例如 `npm/package.tsx` 打 `registry.npmjs.org`、`github/repos.ts` 打 `api.github.com`）我們自己寫也只要幾行。**沒有理由裝。**
 
 ### 2.16 changedetection.io、Huginn
@@ -172,14 +175,14 @@
 | GitHub `/repos/{o}/{r}`、releases | API | ETag | 本 session 測不到 | 每個候選每天最多 1 次 | 官方：「Making a conditional request does not count against your primary rate limit」，條件是回 304 且帶 `Authorization`（同上，已驗證） |
 | HN（Algolia） | API | `numericFilters=created_at_i>{cursor}`，按天切片（單次最多 1,000 筆） | 沒有 ETag／LM | 每 1–3 小時 | 每 IP 10,000 次／時（[channels-communities.md](channels-communities.md)）；spike 已實作 |
 | HN（Firebase） | API | `/v0/newstories`（最新 500 筆，約 6.6 小時）；`/v0/maxitem` 往回走 | 沒有（`cache-control: no-cache`） | 每 1–3 小時 | 官方：「The current largest item id is at /v0/maxitem. You can walk backward from here」（已驗證） |
-| PyPI 新專案 | RSS | ETag | **304** | **每 20–30 分鐘** | 40 筆只涵蓋約 1 小時（[channels-packages.md](channels-packages.md)）；spike 兩次相隔 2 分鐘就換了 ETag。官方：「For periodically checking for new packages … use our RSS feeds. No new integrations should use the XML-RPC APIs as they are planned for deprecation」（[PyPI API](https://docs.pypi.org/api/)，已驗證）。漏掉的用 ecosyste.ms 每天回補（PyPI 延遲約 34 小時） |
+| PyPI 新專案 | RSS | ETag | **304** | **每 20–30 分鐘** | 40 筆只涵蓋約 1 小時（[channels-packages.md](channels-packages.md)）；spike 兩次相隔 2 分鐘就換了 ETag。官方：「For periodically checking for new packages … use our RSS feeds. No new integrations should use the XML-RPC APIs as they are planned for deprecation」（[PyPI API](https://docs.pypi.org/api/)，已驗證）。漏掉的用 ecosyste.ms 每天回補（PyPI 延遲約 34 小時；〔查核〕要先取得 ecosyste.ms 書面同意，見 2.10）。查核重測：40 筆涵蓋 49 分鐘（20:28–21:17 UTC），ETag 重打回 304 |
 | PyPI JSON | API | ETag | **304**（`max-age=900`） | 依需要 | — |
-| crates.io 新 crate | RSS | ETag／Last-Modified | **304／304** | 每 30 分鐘 | RSS「past 60 minutes, but at least 50」 |
+| crates.io 新 crate | RSS | ETag／Last-Modified | **304／304** | 每 30 分鐘 | RSS「past 60 minutes, but at least 50」〔查核：feed 本身只寫「Newest crates registered on the crates.io package registry」，這句引文出處不明；原始碼證實行為相同：60 分鐘內的全收、至少 50 筆（查核時 79 筆）〕 |
 | npm | changes feed | `_changes?since=<seq>`（只回 id） | packument：INM **304**、IMS 200 | 每 30–60 分鐘 | 量太大，黑客松選做 |
 | Homebrew analytics | 每日 JSON | 和昨天的 formula 名單做差集 | **304／304**（`max-age=600`） | 每天 1 次 | — |
 | dev.to | API | 依 `published_at` | 弱 ETag **304** | 每天 | 黑客松選做 |
 | raw.githubusercontent.com | 檔案 | ETag | **304** | — | AUP 的爬取疑慮見 [channels-packages.md](channels-packages.md) 2.1；正式版走 contents API |
-| ecosyste.ms | API | `created_after` | 弱 ETag 回 200（**沒生效**）；IMS **304**（`max-age=86400`） | 每天 | — |
+| ecosyste.ms | API | `created_after` | 弱 ETag 回 200（**沒生效**）；IMS **304**（`max-age=86400`） | 每天 | 〔查核〕取得書面同意前不排程（2.10） |
 | deps.dev | API | — | 沒有 ETag（`max-age=3600`） | — | — |
 | GH Archive | 每小時 dump | 最後處理的小時 | **304／304** | — | 資料已沒用（2.13） |
 
@@ -192,7 +195,7 @@
 
 | 方案 | 限制（官方） | 費用（官方） | 適合 pickfit 的什麼 |
 |---|---|---|---|
-| **GitHub Actions cron** | 「The shortest interval you can run scheduled workflows is once every 5 minutes」；「can be delayed during periods of high loads」；「will only run on the default branch」；public repo「automatically disabled when no repository activity has occurred in 60 days」；job 6 小時 | public repo 標準 runner 免費；private repo Free 方案每月 2,000 分鐘，Linux 2 核 $0.006／分 | 只適合「重建索引、commit 收錄檔」這類輕工作。**條款**：Actions 不得用於「any other activity unrelated to the production, testing, deployment, or publication of the software project associated with the repository」，也不得當「part of a serverless application」（[Additional Products Terms](https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features)，已驗證）。定期爬外部來源是灰色地帶 |
+| **GitHub Actions cron** | 「The shortest interval you can run scheduled workflows is once every 5 minutes」；「can be delayed during periods of high loads」，「some queued jobs may be dropped」（查核補）；「will only run on the default branch」；public repo「automatically disabled when no repository activity has occurred in 60 days」；job 6 小時 | public repo 標準 runner 免費；private repo Free 方案每月 2,000 分鐘，Linux 2 核 $0.006／分 | 只適合「重建索引、commit 收錄檔」這類輕工作。**條款**：用 GitHub-hosted runner 時，Actions 不得用於「any other activity unrelated to the production, testing, deployment, or publication of the software project associated with the repository」；另一條禁止「disproportionate」負擔的活動，舉例「don't use Actions as a content delivery network or as part of a serverless application, but a low benefit Action could be ok if it's also low burden」（[Additional Products Terms](https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features)，已驗證；〔查核補〕原文前者限定 GitHub-hosted runner，後者是「負擔不成比例」的舉例，不是無條件禁止）。定期爬外部來源是灰色地帶 |
 | **Modal cron** | `modal.Period`、`modal.Cron`（可設 timezone）；「To activate the schedule, deploy your App」；Period 在重新部署時重算；function 預設 timeout 300 秒、最長 24 小時 | Starter 每月 $30 credits、「5 deployed crons」；CPU $0.0000131／core／秒、記憶體 $0.00000222／GiB／秒；比賽另有 $100 | **發現管線＋事件觸發的驗證**。和 Modal Sandbox 同一個帳號，Python 直接寫 |
 | **Cloudflare Cron Triggers** | Free：每帳號 5 個、CPU 10 ms（「Waiting on network requests … does not count toward CPU time」）、子請求 **50**／次（「Each subrequest in a redirect chain counts」）、wall clock 15 分；Paid：250 個、CPU 30 秒（間隔 <1 小時）或 15 分（≥1 小時）、子請求 10,000；「Cron Triggers execute on UTC time」；變更「up to 15 minutes to propagate」 | Free；Paid 每月最低 $5 | 只適合在 MCP Worker 裡做小事（例如每小時清過期資料）。**Free 方案一次只能發 50 個請求，跑不動抓取管線** |
 | **本機 cron／launchd** | 電腦要開著、有網路 | $0 | **黑客松最省事**：發現每 30 分鐘一次，跑在念誠的電腦上；GitHub API 在本機沒有本 session 的代理限制 |
@@ -245,11 +248,12 @@ Show HN 7 天實際觸發的規則（去重前 1,202 個網址）：大小寫 12
 
 **官方行為（已驗證的部分）**：
 
-- 改名：「all existing information, with the exception of project site URLs, is automatically redirected to the new name」；git「operations targeting the previous location will continue to function as if made on the new location」；**若有人在舊名建新 repo，「redirects to the renamed repository will no longer work」**（[Renaming a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/renaming-a-repository)）。
-- 轉移：「All links to the previous repository location are automatically redirected」；在舊位置建新 repo 或 fork 時「the redirects to the transferred repository will be permanently deleted」（[Transferring a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/transferring-a-repository)）。
+- 改名：「all existing information, with the exception of project site URLs, is automatically redirected to the new name」；git「operations targeting the previous location will continue to function as if made on the new location」；**若有人在舊名建新 repo，「redirects to the renamed repository will no longer work」**（[Renaming a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/renaming-a-repository)）。〔查核補：原文是「If you create a new repository under your account in the future, do not reuse the original name」，指同一帳號重用舊名；同頁另寫「GitHub will not redirect calls to an action hosted by a renamed repository」，Pages 的 project site 網址也不轉。〕
+- 轉移：「All links to the previous repository location are automatically redirected」；在舊位置建新 repo 或 fork 時「the redirects to the transferred repository will be permanently deleted」（[Transferring a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/transferring-a-repository)）。〔查核補：同頁「we don't redirect GitHub Pages associated with the repository」；轉移前一週超過 100 次 clone 或 Actions 使用、或含 Marketplace action 的 repo，舊的 `OWNER/REPOSITORY-NAME` 會被永久保留不能再用。對「默默無聞」的新 repo 通常不適用，所以舊名被別人佔走、redirect 消失是真實風險。轉移頁沒有提到 Actions 不轉址。〕
 - API：「Get a repository」的狀態碼表列了 **301「Moved permanently」**（[Repos API](https://docs.github.com/en/rest/repos/repos#get-a-repository)）。2015 年的公告：用舊位置呼叫 API「receive either a 301 or 307 HTTP redirect, depending on the type of request」，適用於改 repo 名、改帳號名、轉移三種情況（[Preview repository redirects](https://developer.github.com/changes/2015-04-17-preview-repository-redirects/)、[Automatic redirects](https://developer.github.com/changes/2015-07-21-automatic-redirects-for-renamed-repositories/)）。
 - 一般原則：「A 301 status code indicates permanent redirection」，要更新存下來的 URL（[Best practices](https://docs.github.com/en/rest/using-the-rest-api/best-practices-for-using-the-rest-api)）。
-- **未驗證**：301 的 `Location` 是不是 `https://api.github.com/repositories/{id}`（印象如此，本 session 打不到）。spike 的 `github` 子命令會印出來。
+- 〔查核補〕「Get a repository」的路徑參數說明寫「The name is not case sensitive」（owner 與 repo 都是），這是 key 用小寫的官方依據，比 `git ls-remote` 旁證更直接。
+- **未驗證**：301 的 `Location` 是不是 `https://api.github.com/repositories/{id}`（印象如此，本 session 打不到）。spike 的 `github` 子命令會印出來。〔查核：官方 REST 文件與 2015 年三篇公告（含 [changes/21](https://developer.github.com/changes/21/)）都沒寫 `Location` 的格式；仍是未驗證。設計上不要依賴它：拿到 301 後照 `Location` 再打一次，從回應的 `id`、`full_name` 取值即可。〕
 
 **實測（本 session 能做的旁證）**：
 
@@ -263,7 +267,7 @@ Show HN 7 天實際觸發的規則（去重前 1,202 個網址）：大小寫 12
 | `BURNTSUSHI/RIPGREP` → `BurntSushi/ripgrep` | 是 | 找得到 | — | — |
 
 - 套件裡的舊名是真的會遇到：PyPI `flake8-to-ruff` 宣告 `charliermarsh/ruff`；npm `whisper.cpp` 宣告 `ggerganov/whisper.cpp`，而 Homebrew `whisper.cpp` 宣告 `ggml-org/whisper.cpp`。**不解析改名，同一個專案會變成兩筆。**
-- 新作品改名很常見：Show HN 7 天、ecosyste.ms 查得到的 271 個 repo 中 **39 個（14%）** 的 `previous_names` 有別的名字（例：`vinhnx/vtagent` → `vinhnx/VTCode`、`byerlikaya/claude-starter-kit` → `crewforth/crewforth`）。
+- 新作品改名很常見：Show HN 7 天、ecosyste.ms 查得到的 271 個 repo 中 **39 個（14%）** 的 `previous_names` 有別的名字（例：`vinhnx/vtagent` → `vinhnx/VTCode`、`byerlikaya/claude-starter-kit` → `crewforth/crewforth`）。〔查核：用 spike 上次的輸出離線重算，39／271 屬實；其中 17 個 owner 也變了（轉移或帳號改名）。注意 `previous_names` 會含現名本身（ruff 的清單是 `astral-sh/ruff`、`charliermarsh/ruff`），要排除現名再算。另外這 271 個的貼文網址全是現名，7 天內因「貼文用舊名」造成的重複是 0；14% 是「這個 repo 曾改過名」，不是「重複率」。〕
 - **做法**：每個 repo 候選都打一次 `GET /repos/{o}/{r}`（不自動 follow），遇到 301 就記下 `Location`、再打一次拿現名與 ID，舊名進 `aliases`。之後的更新都用 ID 查。這一步每個 repo 1–2 次 core 請求。
 
 ### 4.4 fork、mirror、template
@@ -288,7 +292,7 @@ Show HN 7 天實際觸發的規則（去重前 1,202 個網址）：大小寫 12
 |---|---|---|---|
 | 1 | 簽章 provenance：PyPI Integrity API `publisher.repository`；npm `dist.attestations` 的 SLSA `workflow.repository` | 高（發布流程證明） | PyPI 新專案 27／39 有；與自填 0 衝突。npm 範例 5／9 有 |
 | 2 | 自填欄位：PyPI `project_urls`，標籤先依 PEP 753 正規化（「deleting all ASCII punctuation and whitespace, and then converting the result to lowercase」），找 `source`（別名 `repository`、`sourcecode`、`github`），再找 `homepage`；npm `repository`（含 `directory`）；Homebrew `urls.head.url` → `urls.stable.url` → `homepage` | 中（自填，可能填錯、冒名、過期） | PyPI 範例 10／11；npm 9／9；Homebrew 8／8（全部靠 `urls.head`） |
-| 3 | 反查：ecosyste.ms packages lookup `?repository_url=` | 中 | Show HN 的 386 個 GitHub repo 有 78 個查得到套件 |
+| 3 | 反查：ecosyste.ms packages lookup `?repository_url=`（〔查核〕要先取得書面同意）；替代 deps.dev `projects/{key}:packageversions` | 中 | Show HN 的 386 個 GitHub repo 有 78 個查得到套件（ecosyste.ms）；deps.dev 對大 repo 截斷在 1,500 筆（2.10） |
 | 4 | 交給模型讀 README 判斷 | 低 | — |
 
 - PEP 753 標籤與別名：[Well-known Project URLs](https://packaging.python.org/en/latest/specifications/well-known-project-urls/)（已驗證）。
@@ -488,8 +492,8 @@ verified ──30 天後或有新 release──► 重新驗證（brief 13：維
 | 3 抽取 | 150 → 約 140 | `muse-spark-1.3` 讀 README 等，填欄位 | 3,000 RPM 不是瓶頸；並行 10 約 10–20 分鐘 | 150 × $0.022–0.025 ≈ **$3.3–3.8／天** | 同上 4.2 |
 | 4 沙盒驗證 | **每天上限 30–50**（依優先順序） | 驗證 agent＋Modal Sandbox | 每筆 4–8 分鐘；10 並行，30 筆約 15–25 分鐘 | 每筆 agent $0.10–0.27＋沙盒約 $0.02 → 30 筆 **$3.6–8.7／天** | [meta-usage-design.md](meta-usage-design.md)、[sandbox-compare.md](sandbox-compare.md) |
 
-- **合計約 $9–15／天**（Meta $7–13＋Baseten $2）。6 天約 $55–90，在 Meta $150 credits 內。
-- 如果 140 筆全驗證：每天 $17–41，6 天會超過 $150。**所以驗證要設每日上限**，優先順序：提交的 > 兩個類別且初篩高信心 > 其他。
+- **合計約 $9–15／天**（Meta 約 $6–12＋Baseten 約 $2＋Modal 沙盒約 $0.6）。6 天約 $55–90；其中 Meta 部分 6 天約 $38–72，在 Meta $150 credits 內。〔查核修正：原寫「Meta $7–13」，把沙盒費算進 Meta。逐項：抽取 $3.3–3.8＋驗證 agent 30 × $0.10–0.27 = $3.0–8.1。〕
+- 如果 140 筆全驗證：光驗證每天 $17–41（agent＋沙盒）；Meta 部分每天約 $17–42，6 天約 $104–250。**估算低端仍在 $150 內，中段以上就超過**。〔查核修正：原寫「6 天會超過 $150」，只在估算中高段成立。〕**所以驗證要設每日上限**，優先順序：提交的 > 兩個類別且初篩高信心 > 其他。
 - 所有成本是估算：Meta 模型推理 token 未實測（沒有 key），兩類別篩選比例未量測。
 - 成本控制在程式端：每層一個每日上限與累計花費（Meta 的 Spend Limit「只是通知，不會自動停止扣款」，見 [hackathon-rules.md](../../hackathon-rules.md) 第 6 節）。
 
@@ -562,7 +566,7 @@ body:
     attributes: { label: 它解決什麼問題、適合誰（選填） }
 ```
 
-處理的 workflow 只用環境變數把 `github.event.issue.body` 交給 Python 腳本（2.2 的 script injection）。
+處理的 workflow 只用環境變數把 `github.event.issue.body` 交給 Python 腳本（2.2 的 script injection）。〔查核：workflow 只做轉送，模型呼叫與驗證放在 Modal，理由見 2.2 的 Actions 條款。〕
 
 ---
 
@@ -662,9 +666,9 @@ python3 spikes/ch_integration_merge.py --days 1 --out /tmp/x.jsonl --state /tmp/
 | 規則初篩 | 免費刷掉 13–25% 的明顯雜訊，省模型錢 | 1–2 h |
 | 排程：本機 cron＋提交事件觸發 Modal | 最省事；提交要「幾分鐘內」 | 1 h |
 | 提交：MCP `submit_software`＋GitHub Issue Form（同一佇列） | demo 第 5 幕；Issue Form 幾乎零成本、有身分 | 3–4 h |
-| ecosyste.ms（備援、`previous_names`、反查套件） | 免 GitHub token 也拿得到 metadata；跨管道合併的關鍵 | 1–2 h |
+| ~~ecosyste.ms（備援、`previous_names`、反查套件）~~ → 〔查核修正〕repo → 套件反查改用 deps.dev `:packageversions`；ecosyste.ms 取得書面同意後才接 | 跨管道合併的關鍵；ecosyste.ms Terms §9 要求書面同意（2.10） | 1–2 h |
 
-合計約 16–22 h。若時間不夠，依序砍：Issue Form（只留 MCP）→ crates RSS → ecosyste.ms 反查。
+合計約 16–22 h（〔查核〕數字不變，只是第 8 列換成 deps.dev）。若時間不夠，依序砍：Issue Form（只留 MCP）→ crates RSS → 套件反查。
 
 ### 9.2 之後擴充
 
@@ -684,7 +688,8 @@ python3 spikes/ch_integration_merge.py --days 1 --out /tmp/x.jsonl --state /tmp/
 | RSSHub | 相關路由（GitHub trending／topic／search、Threads、HN、Product Hunt）都是爬網頁（讀過原始碼），違反各來源條款；AGPL-3.0 |
 | GH Archive／GitHub events | 實測 2026-10-27 一小時 0 筆新 repo 事件 |
 | changedetection.io、Huginn | 本質是爬網頁或維運太重；我們的來源都有 API／RSS |
-| 用 GitHub Actions 定期爬外部來源 | Actions 條款限定與該 repo 軟體專案的產出、測試、部署、發布有關的活動，且不得當 serverless 應用的一部分 |
+| 用 GitHub Actions 定期爬外部來源，或在 Actions 裡處理提交 | Actions 條款：用 GitHub-hosted runner 時，限定與該 repo 軟體專案的產出、測試、部署、發布有關的活動；造成不成比例負擔的用法（例如當 serverless 應用的一部分）也不行（〔查核〕補上原文的限定條件） |
+| 未取得書面同意就用 ecosyste.ms API | 〔查核新增〕Terms §9 禁止未經書面同意的腳本擷取，§11(c) 只授權個人使用 |
 | Cloudflare Workers Free 跑抓取管線 | 每次最多 50 個子請求（轉址每跳都算）；Paid（$5／月）才有 10,000 |
 | 用 deps.dev 或 ecosyste.ms 的 key 當主鍵 | 舊名、新名會變成兩筆 |
 | 只靠 Threads 連結收錄 | 讀不到內容，oEmbed 條款禁止拿來做顯示以外的事 |
@@ -695,7 +700,7 @@ python3 spikes/ch_integration_merge.py --days 1 --out /tmp/x.jsonl --state /tmp/
 ## 10. 給主控者：需要決定或修正的地方
 
 1. **brief 4.1 與 5 的「貼 Threads 連結」**：改成「貼 GitHub（或官網）連結，可另附 Threads 貼文」。和 [channels-meta-platforms.md](channels-meta-platforms.md) 的結論一致。
-2. **ecosyste.ms 的 CC BY-SA**：若把它的欄位（星數、`previous_names`、套件清單）寫進公開的 YAML，衍生資料可能要 BY-SA。建議 GitHub API 為主、ecosyste.ms 只做查詢不存值（[channels-packages.md](channels-packages.md) 第 6 節同一問題）。
+2. **ecosyste.ms 的條款與 CC BY-SA**：〔查核新增〕先決問題是 Terms §9 要求腳本存取前取得書面同意，要不要寄信由主控者決定（同 [channels-packages.md](channels-packages.md) 2.12）。拿到同意後才談授權：若把它的欄位（星數、`previous_names`、套件清單）寫進公開的 YAML，衍生資料可能要 BY-SA。建議 GitHub API 為主、ecosyste.ms 只做查詢不存值（[channels-packages.md](channels-packages.md) 第 6 節同一問題）。
 3. **brief 11 補欄位**：`repo_id`、`aliases`、`packages`、`first_seen_at`（5.3）。
 4. **候選與收錄檔分開存**：候選（每天上千筆、狀態常變）放 SQLite；只有 verified 寫 YAML 進 git。否則 commit 歷史會被候選淹沒。
 5. **提交用的公開 repo**：pickfit repo 11/4 前是 private，外人開不了 issue。要不要另開一個公開的 submissions repo？
@@ -743,6 +748,10 @@ python3 spikes/ch_integration_merge.py --days 1 --out /tmp/x.jsonl --state /tmp/
 - Homebrew formula API：`https://formulae.brew.sh/api/formula/<name>.json`（實測）
 - crates.io RSS：<https://static.crates.io/rss/crates.xml>（實測 ETag／304）
 - ecosyste.ms API 與 polite pool：<https://ecosyste.ms/api>（已驗證＋實測）；repos／packages lookup（實測）
+- ecosyste.ms Terms §9、§11：<https://ecosyste.ms/terms>；commercial：<https://ecosyste.ms/commercial>（查核已讀）
+- ecosyste.ms `uuid` 對應：<https://github.com/ecosyste-ms/repos> `app/models/hosts/github.rb`，commit `5f869a7`（查核讀原始碼）
+- deps.dev 反查：`https://api.deps.dev/v3/projects/<key>:packageversions`（查核實測）
+- crates.io RSS 規則：<https://github.com/rust-lang/crates.io> `src/worker/jobs/rss/sync_crates_feed.rs`（`ALWAYS_INCLUDE_AGE` 60 分、`NUM_ITEMS` 50，commit `d21c1ec`，查核讀原始碼）
 - deps.dev API v3：`https://api.deps.dev/v3/projects/<key>`（實測）
 - OpenSSF Scorecard README：<https://github.com/ossf/scorecard>（已驗證）；API：`https://api.scorecard.dev/projects/github.com/<o>/<r>`（實測）
 - GH Archive：<https://www.gharchive.org/>（已驗證）；README 授權：<https://github.com/igrigorik/gharchive.org>（已驗證）；`https://data.gharchive.org/2026-10-27-17.json.gz`（實測）
@@ -765,3 +774,62 @@ python3 spikes/ch_integration_merge.py --days 1 --out /tmp/x.jsonl --state /tmp/
 - [channels-meta-platforms.md](channels-meta-platforms.md)：Threads oEmbed 與權限
 - [meta-usage-design.md](meta-usage-design.md)：模型單價與每層 token 估算
 - [sandbox-compare.md](sandbox-compare.md)：沙盒單價與時間
+
+---
+
+## 查核紀錄（2026-10-28）
+
+查核者：另一個調研 agent，預設懷疑。方法：讀官方文件原文（GitHub docs 用 `docs.github.com/api/article/body` 取 markdown；Cloudflare 用 `index.md`）、實際打 API、讀原始碼、重跑 spike。時間 2026-10-27 21:00–21:30 UTC（台北 10-28 05:00–05:30）。
+
+### 逐條結果
+
+| # | 主張 | 判定 | 依據與修改 |
+|---|---|---|---|
+| 1 | Get a repository 狀態碼表有 301；2015 公告舊位置回 301／307；Location 格式未實測 | **成立** | 文件表列「301 - Moved permanently」；兩篇公告原文一致。Location 格式在官方文件與 [changes/21](https://developer.github.com/changes/21/) 都查不到，維持未驗證。本 session 重打 `/repos/charliermarsh/ruff` 仍 403，`/repositories/{id}` 代理明確不支援。補上官方「The name is not case sensitive」 |
+| 2 | 舊位置建新 repo／fork 後 redirect 失效；Pages、被呼叫的 Actions 不轉 | **大致成立，補精確度** | 改名頁：同一帳號重用舊名才失效；Actions 不轉只寫在改名頁；轉移頁寫 fork 也會讓 redirect 永久刪除、Pages 不轉，另有「熱門 repo 舊名永久保留」規則。已在 4.3 補 |
+| 3 | 271 個中 39 個（14%）改過名；5 組舊名 ecosyste.ms 404；4 組 deps.dev 兩個專案 | **成立，補解讀** | 離線重算上次輸出：39／271；重跑 `github` 子命令：5 組舊名 404、deps.dev 4 組各自 200。補：`previous_names` 含現名要排除；271 個的貼文網址全是現名，「14%」不是重複率 |
+| 4 | GitHub rate limit 60／5,000／1,000；304＋Authorization 不計；序列化、Link 分頁 | **成立** | 原文逐字對到。「要求」原文是「should」（建議） |
+| 5 | Actions 條款「unrelated…」與「serverless」 | **成立，補限定條件** | 「unrelated」那條只適用 GitHub-hosted runner；serverless 是「不成比例負擔」的舉例，附「low burden 可以」。另發現 2.2 建議在 Actions 裡處理提交（帶 Meta key）與這條衝突，改成 webhook → Modal 或 Actions 只轉送 |
+| 6 | schedule 5 分鐘、延遲、預設分支、60 天停用；public 免費、private 2,000 分 | **成立** | 另補「some queued jobs may be dropped」。job 上限 6 小時也對（[Actions limits](https://docs.github.com/en/actions/reference/limits)） |
+| 7 | Workers Free 5 個 Cron、10 ms、50 子請求（轉址每跳算）；Paid $5、10,000、250 | **成立** | limits／pricing 的 markdown 原文一致；Paid 子請求可調到 10M |
+| 8 | Modal Starter $30、5 個 cron；timeout 預設 300 秒、最長 24 小時；Period 重部署重算 | **成立** | pricing 頁「Cron jobs 5 deployed crons」；cron、timeouts 頁原文一致 |
+| 9 | PyPI 建議 RSS、XML-RPC 將棄用；packages.xml ETag／304；約 1 小時 | **成立** | 原文一致。重測 40 筆涵蓋 49 分鐘、重打 304；JSON `max-age=900`、304。官方另寫「no rate limiting of PyPI APIs at the edge」，但要設可識別的 UA、避免短時間上千次 |
+| 10 | PyPI provenance 27／39、0 衝突、4 個只能靠 provenance；JSON 無 verified 標記 | **成立（數字會隨時間變）** | `pip` 的 Integrity API 回 `{kind: GitHub, repository: pypa/pip, workflow: release.yml}`；JSON `info` 欄位沒有 verified 標記。重跑 `recent`：40 個，provenance 24、只有 provenance 5、衝突 0 |
+| 11 | ecosyste.ms CC BY-SA 4.0、AGPL-3；polite 15,000；UA 帶 mailto 仍 anonymous 5,000 | **部分不成立＋條款衝突** | 授權成立。rate limit：官方頁沒寫數字；重測不帶 mailto 也回 polite 15,000，原主張無法重現，已改。**Terms §9／§11(c) 禁止未經書面同意的腳本擷取**，原文建議「黑客松接」與條款衝突，已改成「取得同意後才接」，反查改用 deps.dev |
+| 12 | Scorecard 130 萬、BigQuery 停、CDLA-Permissive-2.0；40 個 0 有分數 | **成立，補一個坑** | README 原文一致。API 路徑**區分大小寫**，小寫 key 會誤判；用原始大小寫重抽 40 個仍 0 |
+| 13 | RSSHub 那些路由抓 HTML（commit `1d73c7c`） | **成立** | sparse clone 同一 commit 逐檔看過；LICENSE 是 AGPL-3.0。Product Hunt 條款本次沒讀，標未驗證 |
+| 14 | GH Archive 2026-10-27-17 有 3,251 筆、新 repo 0 | **成立** | 重新下載：3,251 筆，CreateEvent 0（連 branch 都沒有）、PushEvent 0；ETag 重打 304 |
+| 15 | Threads oEmbed 不含文字、條款禁止顯示以外用途（原標未驗證） | **成立（改為已驗證）** | 官方頁原文親自讀過；重跑 `spikes/ch_meta_probe.py`：html 可見文字只有「View on Threads」 |
+
+### 其他自行抽查的事實
+
+| 項目 | 結果 |
+|---|---|
+| ecosyste.ms `uuid` 是否等於 GitHub repo ID | 成立：原始碼 `hash[:uuid] = hash[:id]`。原標未驗證，已改 |
+| crates.io RSS「60 分鐘、至少 50 筆」 | 行為成立（原始碼常數），但引號內的英文句子出處不明，已註記 |
+| 成本 6.2 | 算術有兩處錯：Meta 每天應是 $6–12（原 $7–13，沙盒費被算進 Meta）；「全驗證 6 天超過 $150」只在估算中高段成立。已改 |
+| Issue forms public preview、interaction limits、OAuth no scope、script injection、Turnstile 20 widgets、HN「no rate limit」、PEP 753 正規化、npm `repository` 正規化與 `directory` | 原文都對得上 |
+| Codeberg robots.txt `Disallow: /api/` | 成立 |
+| GitHub AUP §7 | 現行原文的用途清單寫「regardless of whether the information was scraped, collected through our API」，API 取得的資料也受限；本檔 2.15 已加指向 [channels-hosting.md](channels-hosting.md) 2.1 |
+
+### spike 重跑
+
+| 腳本 | 指令 | 結果 | 與本檔是否一致 |
+|---|---|---|---|
+| `ch_integration_normalize.py` | `all` | 59 秒跑完，exit 0。selftest 25／25；GitHub API 403 → 自動走 git＋ecosyste.ms；7 組 git HEAD 相同；短網址 5／5 | 一致。`recent` 數字隨 RSS 視窗變動（見上表第 10 條） |
+| `ch_integration_merge.py` | 以上次的狀態檔增量、`--enrich 0`（不打 ecosyste.ms，避開條款問題） | Show HN cursor 後 3 則；PyPI 200、40 個；候選 1,149 → 1,172 | 可重跑、增量正確 |
+| 同上，再跑一次 | 同上 | Show HN 0 則；PyPI **304**；候選 1,172 → 1,172 | 冪等成立 |
+| 同上，`--reset --days 1 --enrich 0` | 首次路徑 | 5 秒；Show HN 24 小時 189 則、候選 251 | 首次路徑可跑 |
+
+- 兩支腳本都不含金鑰；`GH_TOKEN`、`PICKFIT_CONTACT` 都從環境變數讀。輸出寫在系統暫存目錄，不進 repo。
+- 已知限制：merge 腳本的 `--enrich` 預設 1,000，會對 ecosyste.ms 發約 800 次請求。條款問題解決前，重跑請加 `--enrich 0`。`--enrich 0` 時初篩原因會顯示「ecosyste.ms 查無」，這是腳本文字，不代表真的查過。
+
+### 本次修改清單
+
+1. 一句話結論：補「14% 不是重複率」、Actions 限定 GitHub-hosted runner、新增 ecosyste.ms 條款一條。
+2. 比較表：Issue Form 取得方式、ecosyste.ms（條款、rate limit、建議改為條件式）、deps.dev（反查）、Scorecard（大小寫）。
+3. 2.2 新增「不要在 Actions 裡處理提交」；7.4 加註。
+4. 2.7 Threads：改為親自驗證，補 rate limit 與不支援的貼文類型。
+5. 2.10 ecosyste.ms：新增條款段、deps.dev 替代與實測、`uuid` 改為已驗證、rate limit 主張改寫、查無 115 個的解讀。
+6. 2.14、2.15、3.1、3.2、4.3、4.6、6.2、9.1、9.3、10、11：見各處〔查核〕標記。
+7. 沒有動 brief.md、hackathon-rules.md、architecture.md、spikes/README.md 與任何 spike 腳本。
