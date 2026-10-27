@@ -2,7 +2,7 @@
 """調研 spike：Hugging Face Spaces、Codeberg、GitLab.com 最近 7/14 天的新作品量與抽樣。
 
 只用 Python 標準函式庫，不需要金鑰（HF_TOKEN 若有設就帶上，可提高 HF rate limit）。
-請求量刻意壓低（HF 約 15 次、Codeberg 約 10 次、GitLab 約 6 次），不是爬蟲。
+請求量刻意壓低（HF API 約 12 次＋讀約 70 份 README、Codeberg 6 次、GitLab 5 次），不是爬蟲。
 
     python3 spikes/ch_hosting_hf_forges.py            # 全部
     python3 spikes/ch_hosting_hf_forges.py hf         # 只跑 Hugging Face
@@ -68,7 +68,7 @@ def hf():
         items = json.loads(body)
         n7, n14 = window(items, "createdAt")
         print(f"| {kind}={val} | {n7} | {n14} |")
-        if val != "mcp-server":  # mcp-server 不屬於兩個 demo 類別，只計數
+        if val not in ("mcp-server", "cli"):  # 這兩個不算「本地 AI」，只計數（search=cli 也會比對到 client 等字）
             for x in items:
                 if x["createdAt"] >= D7:
                     pool[x["id"]] = x
@@ -95,6 +95,15 @@ def hf():
         desc = (x.get("cardData") or {}).get("short_description", "")
         print(f"- {x['id']} · {x['createdAt'][:10]} · likes {x.get('likes', 0)} · {x.get('sdk')} · "
               f"{(x.get('runtime') or {}).get('stage')} · {desc} · GitHub: {x['_gh'][:1]}")
+    # 換個角度：trending 前 1000 名裡「14 天內才建立」且看起來是本地／瀏覽器端 AI 的
+    st, _, body = get(f"{base}?sort=trendingScore&direction=-1&limit=1000{exp}&expand[]=trendingScore", hdr)
+    tr = json.loads(body)
+    new = [x for x in tr if x["createdAt"] >= D14]
+    kw = re.compile(r"local|offline|webgpu|in[- ]browser|your browser|on-device|gguf|ollama|llama\.cpp|mlx", re.I)
+    hits = [x for x in new if kw.search(json.dumps(x.get("cardData") or {}) + x["id"])]
+    print(f"\ntrending 前 1000 名：14 天內建立 {len(new)} 個（7 天內 {sum(1 for x in new if x['createdAt'] >= D7)}）；其中描述像本地／瀏覽器端 AI：{len(hits)}")
+    for x in hits[:8]:
+        print(f"- {x['id']} · {x['createdAt'][:10]} · likes {x.get('likes', 0)} · trending {x.get('trendingScore')} · {(x.get('cardData') or {}).get('short_description', '')}")
 
 
 # ---------------------------------------------------------------- Codeberg (Forgejo)
@@ -121,8 +130,17 @@ def codeberg():
     print(f"\nRateLimit 標頭（最後一次）：{hd.get('RateLimit') or hd.get('ratelimit')} / {hd.get('RateLimit-Policy') or hd.get('ratelimit-policy')}")
     items = list(pool.values())
     print(f"7 天內（去重）：{len(items)} 筆；stars≥1：{sum(1 for x in items if x['stars_count'] >= 1)}；有描述：{sum(1 for x in items if x['description'])}；有 release：{sum(1 for x in items if x.get('release_counter', 0) > 0)}")
-    print("抽樣 5 筆（stars 高者優先）：")
-    for x in sorted(items, key=lambda x: (-x["stars_count"], x["full_name"]))[:5]:
+    owners = {}
+    for x in items:
+        owners[x["owner"]["login"]] = owners.get(x["owner"]["login"], 0) + 1
+    print(f"同一作者 7 天內建 ≥3 個 repo 的帳號：{ {k: v for k, v in owners.items() if v >= 3} }")
+    print("抽樣 5 筆（每位作者最多 1 筆，stars 高者優先）：")
+    seen, picks = set(), []
+    for x in sorted(items, key=lambda x: (-x["stars_count"], x["full_name"])):
+        if x["owner"]["login"] not in seen:
+            seen.add(x["owner"]["login"])
+            picks.append(x)
+    for x in picks[:5]:
         print(f"- {x['full_name']} · {x['created_at'][:10]} · ★{x['stars_count']} · {x['language']} · {x['description'][:80]}")
 
 
@@ -136,6 +154,9 @@ def gitlab():
     for t in GL_TOPICS:
         url = f"https://gitlab.com/api/v4/projects?topic={t}&visibility=public&order_by=created_at&sort=desc&per_page=100&simple=true"
         st, hd, body = get(url)
+        if st == 429:  # 依 Retry-After 等一次再試
+            time.sleep(min(int(hd.get("Retry-After") or hd.get("retry-after") or 60), 120))
+            st, hd, body = get(url)
         if st != 200:
             print(f"| {t} | HTTP {st}（{body[:60]}） | | |")
         else:

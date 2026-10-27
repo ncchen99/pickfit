@@ -2,6 +2,7 @@
 
 2026-10-28（台北）· 查證日一律為 2026-10-28。資料來自 Meta 官方文件與 Help Center，第三方來源會標出。
 **沒有 API key，所有模型呼叫都是「未實測」**；只用 curl 打了不需認證的端點（`/v1/status`、401 錯誤訊息）。
+已由第二位 agent 逐條對官方文件查核並修正，見文末「查核紀錄（2026-10-28）」。
 
 ---
 
@@ -12,7 +13,7 @@
 | 1 | 官方文件在 `https://dev.meta.ai/docs`。舊網址 `ai.developer.meta.com/docs`、`llama.developer.meta.com/docs` 都轉址過來。每頁網址加 `.md` 就有純文字版，索引在 `https://dev.meta.ai/llms.txt` | 之後查文件直接 curl `.md`，不必爬 HTML |
 | 2 | API 與 OpenAI 相容：base URL `https://api.meta.ai/v1`，有 `/chat/completions` 和 `/responses`；另有 Anthropic 相容的 `/v1/messages` | 不需要專用 SDK；Python 用 `openai` 套件改 `base_url` 就好 |
 | 3 | 主力模型 `muse-spark-1.3`：吃文字、圖片、影片、PDF（音訊在 1.3 品質會變差），支援 tool calling、JSON schema（constrained decoding）、streaming，context 1,048,576 | 抽取、截圖判讀、配對都能用同一個模型 |
-| 4 | 價格：`muse-spark-1.3` 每百萬 token input $1.25 / cached $0.15 / output $4.25；Contributor 版 `muse-spark-1.3-contributor` 為 $0.10 / $0.002 / $0.20 | Contributor 版便宜約 12–21 倍，但 150 RPM、內容會被拿去訓練、不可送個資 |
+| 4 | 價格：`muse-spark-1.3` 每百萬 token input $1.25 / cached $0.15 / output $4.25；Contributor 版 `muse-spark-1.3-contributor` 為 $0.10 / $0.002 / $0.20 | Contributor 版輸入便宜 12.5 倍、輸出 21 倍，但 150 RPM、內容可能被 Meta 拿去訓練、不可送個資 |
 | 5 | Muse Spark Open、Muse Glimmer 是開放權重，**不在 Meta Model API 上** | 要另外走 Baseten / Modal / Together 等，或自架 |
 | 6 | Baseten、Modal 上 Muse Spark Open 的價格 = Meta 標準版（$1.25 / $0.15 / $4.25） | 開放權重路徑不會比 Meta API 便宜，用途是爭取 Open Weight 獎與展示 |
 | 7 | `tool_choice` 只能是 `"auto"`；`stop`、`n>1`、`logprobs` 都會回 400 | 不能強制模型呼叫某工具；要固定格式就用 structured output |
@@ -20,7 +21,8 @@
 | 9 | Chat Completions 不跨回合保留推理；官方建議多步工具迴圈用 Responses API | 驗證 agent（安裝、讀錯誤、修正）用 Responses API |
 | 10 | 沒有硬性花費上限；Spend Limit 只寄 email | 程式要自己記帳、超過門檻就停 |
 | 11 | 文件沒有 Batch API 端點；長任務用 Responses 的 `background: true` | 大量處理就是並行呼叫 + rate limit 控制 |
-| 12 | 台灣不在地理限制名單；但 7/8 上線時只開放美國開發者 | 台灣帳號能不能註冊與付款：**未驗證**，申請時第一件事確認 |
+| 12 | 台灣不在地理限制名單。7/8 上線時只開放美國；8/5 Muse Code 部落格宣布「expanding global access」。Help Center：在「Meta AI 可用且支援付款」的地區開放，以地理政策為準 | 台灣帳號能不能註冊與付款：**未驗證**，申請時第一件事確認 |
+| 13 | $150 credits 的 Credit Terms（公開 PDF）：用表單申領，要填 Team ID；11/4 9:00 PM ET 截止；2 個工作天內入帳；入帳後不過期；先扣 credits 再扣卡 | 先註冊、綁卡、抄 Team ID，再填表；用完會直接刷卡 |
 
 ---
 
@@ -50,24 +52,25 @@ Llama 不在 Model API 上（Help Center「Is Llama available on Meta Model API?
 
 | 模型 | model ID（請求裡填的字串） | 在哪 | 輸入 | 輸出 | tool calling | JSON schema | streaming | context | 最大輸出 |
 |---|---|---|---|---|---|---|---|---|---|
-| Muse Spark 1.3 | `muse-spark-1.3` | Meta API | 文字、圖片、影片、音訊¹、PDF | 文字 | 有 | 有 | 有 | 1,048,576 | 131,072² |
-| Muse Spark 1.3 Contributor | `muse-spark-1.3-contributor` | Meta API | 同上 | 文字 | 有 | 有 | 有 | 1,048,576 | 131,072² |
+| Muse Spark 1.3 | `muse-spark-1.3` | Meta API | 文字、圖片、影片、音訊¹、PDF | 文字 | 有 | 有 | 有 | 1,048,576 | 131,072²（未驗證） |
+| Muse Spark 1.3 Contributor | `muse-spark-1.3-contributor` | Meta API | 同上 | 文字 | 有 | 有 | 有 | 1,048,576 | 131,072²（未驗證） |
 | Muse Spark 1.2 | `muse-spark-1.2` | Meta API | 文字、圖片、影片、音訊、PDF | 文字 | 有 | 有 | 有 | 1,048,576 | 未驗證 |
 | Muse Spark 1.2 Contributor | `muse-spark-1.2-contributor` | Meta API | 同上 | 文字 | 有 | 有 | 有 | 1,048,576 | 未驗證 |
 | Muse Spark 1.1 | `muse-spark-1.1` | Meta API | 文字、圖片、影片、音訊、PDF | 文字 | 有 | 有 | 有 | 1,048,576 | 未驗證 |
-| Muse Wonder（preview） | `muse-wonder-1.0` | Meta API；南韓不可用 | 文字、圖片、影片、音訊、PDF | 文字 | 有 | 有 | 有 | 1,048,576 | 未驗證 |
+| Muse Wonder（preview） | `muse-wonder-1.0` | Meta API；南韓不可用（出自 models.md，地理政策沒列） | 文字、圖片、影片、音訊、PDF | 文字 | 有 | 有 | 有 | 1,048,576 | 未驗證 |
 | Muse Image | `muse-image-1.0` | Meta API；印度不可用 | 文字、圖片 | 圖片 | — | — | 未查 | — | — |
 | Muse Voice Transcribe | `muse-voice-transcribe-1.0` | Meta API（`/v1/asr/*`） | 音訊 | 逐字稿 | 無 | 無 | 有（WebSocket、SSE） | — | — |
 | SAM 3.1 | `sam-3.1` | Meta API（Responses） | 文字提示、圖片、影片 | 框與遮罩 | — | — | 有 | — | — |
-| Muse Spark Open | HF：`meta-models/Muse-Spark-Open-816B-A42B`（`-NVFP4`）；Baseten/Together/Groq/Nebius：`meta-models/muse-spark-open`；Fireworks：`accounts/fireworks/models/muse-spark-open` | 開放權重 | 文字、圖片、影片、音訊 | 文字 | 有（vLLM/SGLang 用 `--tool-call-parser muse`） | 看 runtime³ | 看 runtime | 1,048,576 | 未驗證 |
+| Muse Spark Open | HF：`meta-models/Muse-Spark-Open-816B-A42B`（`-NVFP4`）；Baseten/Together/Groq/Nebius：`meta-models/muse-spark-open`；Fireworks：`accounts/fireworks/models/muse-spark-open` | 開放權重 | 文字、圖片、影片、音訊（依託管商⁴） | 文字 | 有（vLLM/SGLang 用 `--tool-call-parser muse`） | 看 runtime³ | 看 runtime | 1,048,576（Groq 上 131,072⁴） | 未驗證 |
 | Muse Glimmer | HF / Together：`meta-models/Muse-Glimmer-30B` | 開放權重 | 文字、圖片 | 文字 | 有，一回合只能一個 call，不支援平行 | 看 runtime，未驗證 | 看 runtime | 預設 128K（可設更長） | 未驗證 |
 
 1. Muse Spark 1.3 的音訊理解「not fully supported」，品質可能變差；官方建議音訊用 1.2 或 Muse Voice Transcribe。
-2. 131,072 出現在官方的 coding agent 設定範例（`Limits: context 1048576, output 131072`），不是規格表。輸出上限和輸入共用 context，`input + max_output` 不能超過 1,048,576。
-3. TensorRT-LLM 文件寫支援 JSON mode 與 JSON schema（xgrammar）；Baseten、Modal 上是否支援：未驗證。
+2. **未驗證**。131,072 只出現在 quickstart 與 coding-agents 頁的設定範例（`Limits: context 1048576, output 131072`），不是規格表。API reference 只寫「超過 model's configured maximum 回 400」，沒給數字；`GET /v1/models` 的 Model 物件也沒有 context / 輸出上限欄位。輸出上限和輸入共用 context，`input + max_output` 不能超過 1,048,576（error-handling.md）。
+3. TensorRT-LLM 文件寫支援 JSON mode 與 JSON schema（xgrammar）。Baseten 部落格寫支援 tool calling、reasoning output、1M context；Baseten、Modal 上是否支援 `json_schema`：未驗證。
+4. 依 muse-spark-open/deploy.md：Baseten 收文字、圖片、影片、音訊，1M context；Fireworks 寫「text and images」，1M context；Groq 上 context 131,072，支援 tool calling、structured outputs、圖片輸入。
 
 各版本差異：
-- `muse-spark-1.3`：官方「Recommended for new work」，支援 `reasoning_effort: "max"`（Contributor 版不支援 `max`）。
+- `muse-spark-1.3`：官方「Recommended for new work」，支援 `reasoning_effort: "max"`（`muse-wonder-1.0` 也支援；`muse-spark-1.3-contributor` 不支援 `max`）。
 - `muse-spark-1.1`：只有 Standard 版，不在 Muse Code 裡。
 - Muse Wonder：最強、最貴，Model API 上只有 Standard 版；Muse Wonder Full 只在 Muse Code 訂閱。
 
@@ -79,7 +82,7 @@ Rate limit 以 **team** 計，不是以 key 計；每個模型各自獨立。
 |---|---|---|---|---|---|---|
 | `muse-wonder-1.0` | $4.00 | $0.20 | $20.00 | 3,000 | 4,000,000 | |
 | `muse-spark-1.3`、`1.2`、`1.1` | $1.25 | $0.15 | $4.25 | 3,000 | 4,000,000 | |
-| `muse-spark-1.3-contributor`、`1.2-contributor` | $0.10 | $0.002 | $0.20 | **150** | 3,000,000 | 內容會用於訓練 |
+| `muse-spark-1.3-contributor`、`1.2-contributor` | $0.10 | $0.002 | $0.20 | **150** | 3,000,000 | 內容可能用於訓練 |
 | `muse-image-1.0` | $0.01 / 張 | | | 150 | 無 | |
 | `muse-voice-transcribe-1.0` | $0.18 / 小時音訊（約 $0.003 / 分鐘），整秒計 | | | 無 | 無 | 同時 256 串流；每小時 16,000 串流 |
 | `sam-3.1` | 圖片 $2.50 / 1,000 張；影片 $0.20 / 1,000 幀（每次至少 50 幀） | | | 3,000 | 無 | |
@@ -88,10 +91,11 @@ Rate limit 以 **team** 計，不是以 key 計；每個模型各自獨立。
 | Muse Spark Open @ Modal Shared Endpoint | $1.25 | $0.15 | $4.25 | | | |
 | Muse Glimmer @ Together | $0.35 | $0.04 | $1.50 | | | Meta 文件轉載 Together 頁面的數字 |
 
-其他計費規則（官方 pricing 頁）：
-- 長 context 不加價。
-- 推理 token 算在 output。
-- Meta 會在每個 prompt 注入少量 steering context，不計費、也不算進 `usage`。
+其他計費規則：
+- 長 context 不加價（pricing 頁）。
+- 推理 token 算在 output 並計費（reasoning.md；quickstart 的 `usage` 範例也算在 `output_tokens`）。pricing 頁本身沒寫這條。
+- Meta 會在每個 prompt 注入少量 steering context，不計費、也不算進 `usage`（pricing 頁）。
+- Muse Voice Transcribe、Muse Wonder 在 Model API 上沒有 Contributor 版（pricing 頁）。
 
 ---
 
@@ -103,10 +107,10 @@ Rate limit 以 **team** 計，不是以 key 計；每個模型各自獨立。
 |---|---|
 | 取得方式 | 只在 Meta Model API（與 Muse Code）；無權重 |
 | 輸入 / 輸出 | 文字、圖片、影片（mp4）、音訊（mp3、wav）、PDF → 文字 |
-| 推理 | 永遠推理。`reasoning_effort`：`minimal`、`low`、`medium`、`high`、`xhigh`、`max`（只有 1.3 Standard）；`none` 回 400 |
+| 推理 | 永遠推理。Chat 用頂層 `reasoning_effort`，Responses 用 `reasoning.effort`。值：`minimal`、`low`、`medium`、`high`、`xhigh`、`max`（Muse Spark 只有 `muse-spark-1.3` 支援，Contributor 版不行）；`none` 回 400 |
 | 功能 | tool calling、structured output、streaming、prompt caching、search grounding（Responses/Messages）、computer-use 工具（Responses）、圖片定位（0–1000 座標） |
 | 取樣 | `temperature` 預設 1.0，官方建議不要調；不支援 `stop`、`n>1`、`logprobs`、`logit_bias`、`frequency_penalty`、`presence_penalty` |
-| Standard vs Contributor | 用 model ID 切換。Contributor 版內容會被用來訓練；Help Center 要求不得送個資或機密 |
+| Standard vs Contributor | 用 model ID 切換。Contributor 版內容可能被用來訓練（"may be used to train future Meta models"）；Help Center 要求不得送個資或機密；ZDR team 不能用 |
 
 ### 3.2 Muse Spark Open（開放權重）
 
@@ -116,7 +120,7 @@ Rate limit 以 **team** 計，不是以 key 計；每個模型各自獨立。
 | 授權 | Muse Model License + Acceptable Use Policy（**不是** Apache） |
 | 權重大小 | BF16 約 1.65 TB（8×B300）；NVFP4 約 537 GB（單一 4-GPU Blackwell 節點）。個人自架不實際 |
 | 託管 | Together、Fireworks、Baseten、Groq（需核准）、Nebius、Modal、OpenRouter |
-| 比賽 credits | Baseten $100 + 2M TPM（需審核）；Modal $100（前 1,000 人）；Fireworks $25（少數入選） |
+| 比賽 credits | Baseten $100 + 2M TPM；Modal $100；Fireworks $25。公開活動頁只寫「select participants」；「Baseten 限 2,000 人、Modal 前 1,000 人」出自需登入的 Participant Guide（未驗證） |
 | Baseten model ID | 公開文件：`meta-models/muse-spark-open`；hackathon-rules 第 6 節：比賽要用 `meta-models/muse-spark-open-1026`（來自需登入的 Participant Guide，未驗證） |
 | 與 Muse Spark 1.x 的對應 | 文件沒寫是哪一版（未驗證） |
 
@@ -141,7 +145,8 @@ Rate limit 以 **team** 計，不是以 key 計；每個模型各自獨立。
 | 語言 | 25 種，含 Mandarin Chinese、English、Japanese、Korean，支援 code-switching |
 | 即時 | `wss://api.meta.ai/v1/asr/realtime`；送 16-bit mono PCM（16 或 24 kHz）；一個 session 最長 60 分鐘 |
 | 檔案 | `POST /v1/asr/transcribe`（multipart）；**只吃 WAV**（mono、16-bit PCM、16 或 24 kHz）；≤ 10 分鐘；≤ 32 MB |
-| tool / JSON | 無 |
+| tool / JSON | 不支援 tool calling，也沒有 JSON schema 結構化輸出。回應格式由 `Accept` 選：JSON（預設，含 `turns`）、SSE、純文字 |
+| 計價 | $0.18 / 小時音訊，整秒計；沒有 Contributor 版 |
 | 對 pickfit | brief 的「作者影片介紹轉文字」可改用 `muse-spark-1.2` 直接讀 mp4（影片內音訊會一起讀），少一步轉檔；Voice Transcribe 留給需要逐字稿的情況 |
 
 ---
@@ -202,13 +207,13 @@ GET https://api.meta.ai/v1/status          → 200 {"is_alive":true,"service_sta
 
 | 功能 | 支援情況 |
 |---|---|
-| 結構化輸出 | Chat：`response_format: {"type":"json_schema","json_schema":{"name","schema","strict"}}`；Responses：`text.format: {"type":"json_schema","name","schema","strict"}`。也有舊的 `{"type":"json_object"}`。**decoding 受 schema 約束，保證符合**。不支援遞迴 schema。上限：巢狀 10 層、5,000 個 property、enum 值共 1,000 個 |
+| 結構化輸出 | Chat：`response_format: {"type":"json_schema","json_schema":{"name","schema","strict"}}`；Responses：`text.format: {"type":"json_schema","name","schema","strict"}`。兩邊參數不能混用（Responses 收到 `response_format` 不會生效）。也有舊的 `{"type":"json_object"}`，**只保證是合法 JSON，不保證符合 schema**。`json_schema` 的 **decoding 受 schema 約束，保證符合**。不支援遞迴 schema（400）。上限：巢狀 10 層、5,000 個 property、字串總長 120,000、enum 值共 1,000 個（可申請調高）；超過回 400。這些上限也套用在 function tool 的 `parameters` |
 | `strict` | 預設 `false`。對結構化輸出，`false` 與 `true` 的輸出一樣受約束；`true` 只多做 schema 子集檢查（`additionalProperties: false`、`required` 列出全部 key） |
 | Tool calling | `tools`（`function` 型）；Chat 包在 `function` 底下，Responses 是平的。`tool_choice` 只能 `auto`；`parallel_tool_calls` 預設 `true`；函式名稱最多一個 `.`。**參數不保證符合 schema，要自己驗證** |
 | 內建工具 | `web_search`、`tool_search`（Responses/Messages）、`computer`（Responses） |
-| Streaming | `stream: true`，SSE。非 streaming 請求有伺服器時間上限，超過回 504 `gateway_timeout`；streaming 只要第一個事件準時就不受限 |
+| Streaming | `stream: true`，SSE。非 streaming 請求有伺服器時間上限，超過回 504 `gateway_timeout`；streaming 只要第一個事件準時就不受限；`background: true` 兩種上限都不受（error-handling.md） |
 | Prompt caching | 自動前綴快取，不用設定。`usage.prompt_tokens_details.cached_tokens`（Chat）/ `usage.input_tokens_details.cached_tokens`（Responses）。可選 `prompt_cache_key`、`prompt_cache_retention: "24h"`（提示，不保證） |
-| Batch | 沒有文件化的 batch 端點。Files API 接受 `purpose=batch`，但 API reference 沒有 `/v1/batches`（未驗證）。官方替代：Responses `background: true`（每 team 每分鐘 600 次提交） |
+| Batch | 文件索引（`llms.txt`）與 `sitemap.xml` 都沒有 batch 端點頁；`/docs/api-reference/batches.md` 回 404。Files schema 的 `purpose=batch` 寫「for Batch input files」，但沒有對應端點文件。`/v1/batches` 是否存在：**未驗證**（未帶 key 任何路徑都回 401）。可用替代：Responses `background: true`（每 team 每分鐘 600 次提交；建立請求的 body 上限 **1 MiB**，大檔改用 `file_id`；不能同時 `stream: true`） |
 | Token 計算 | `POST /v1/responses/input_tokens`；`POST /v1/messages/count_tokens` |
 | 檔案 | inline ≤ 50 MB；Files API ≤ 1 GiB；team 總量 100 GiB；上傳檔預設不過期，可設 `expires_after`（1 小時–30 天） |
 | PDF | 前 100 頁抽文字，前 50 頁轉圖 |
@@ -222,7 +227,7 @@ GET https://api.meta.ai/v1/status          → 200 {"is_alive":true,"service_sta
 | 位置 | **只能放在 `user` 訊息** |
 | 單張大小 | inline（URL 或 base64）≤ 50 MB；Files API ≤ 1 GiB |
 | 每次請求張數 | ≤ 50 張（超過回 400） |
-| MIME | `image/jpeg`、`image/png`、`image/gif`、`image/webp`、`image/x-icon` |
+| MIME | `image/jpeg`、`image/jpg`、`image/png`、`image/gif`、`image/webp`、`image/x-icon` |
 | Token 估計 | 約 1280px 的圖 ≈ 1,300–1,500 tokens；1×1 ≈ 3 tokens |
 | 定位 | 可要求回傳 0–1000 正規化座標（點、框、計數） |
 | computer-use 截圖 | base64 PNG/JPEG，≤ 25 MiB |
@@ -365,9 +370,9 @@ curl https://api.meta.ai/v1/status
 | 步驟 | 做法 | 來源 |
 |---|---|---|
 | 1. 註冊 | https://dev.meta.ai/ → **Start building** → 保持 **Individual** → 用 email/手機，或 Facebook / Google / GitHub 登入。需年滿 18、在支援地區 | Help：sign-up |
-| 2. 綁卡 | **Billing** → **Add payment method** → 填卡 → Save → 填 business information（非公司就填本名與郵寄地址） | Help：set-up-billing |
+| 2. 綁卡 | **Billing** → **Add payment method** → 填卡 → Save → 填 business information（非公司就填本名與郵寄地址）。所有帳號都要有付款方式才能用（Credit Terms 1.2）。「綁卡會有暫時預授權」只出現在 Participant Guide，公開文件沒寫（未驗證） | Help：set-up-billing；Credit Terms |
 | 3. 建 key | **API keys** → **Create API key** → 命名 → 複製（只顯示一次） | Help：create-api-key；Docs：authentication |
-| 4. 領 $150 credits | 每位成員自己填表，不能代領；截止 11/4 9:00 PM ET；綁卡時會有暫時預授權 | hackathon-rules 第 6 節（來源是需登入的 Participant Guide） |
+| 4. 領 $150 credits | 用「Claim Form」申領（表單連結在錄取後的 know-before-you-go email，公開頁沒有）。要填姓名、報名用的 email、**帳號的 Team ID**。每人一份、每帳號一份，隊員各自領。截止 **2026-11-04 9:00 PM ET**。核准後 2 個工作天內入帳（分批，量大會更久）。入帳後**不過期**。可用於 API Terms 允許的任何 Services 用途（條款沒排除 Contributor 版與 `web_search`）。credits 先扣，用完直接刷卡、按標準價 | Credit Terms PDF（連結見第 9 節）；公開活動頁的 Official Rules 另寫「valid for a 10-day development window」，與 Credit Terms 3.5「不過期」矛盾，以 Credit Terms 為準但不要依賴 |
 | 5. 設 Spend Limit | **Billing** → **Spend Limits** 設每月金額。**只寄 email，不會停止扣款**；超過的費用仍要付 | Help：spend-limit-alert |
 | 6. 看用量 | **Usage** 頁可按模型、日期看 token 與請求數；**Limits** 頁看本 team 的 RPM/TPM | Help：api-usage、rate-limits |
 | 7. 本機設定 | key 放 repo 根目錄 `.env`（`.gitignore` 已有 `.env*`），變數名 `MODEL_API_KEY` | — |
@@ -418,8 +423,8 @@ Use of Meta AI Tooling（25%）可展示、且有文件支持的能力：constra
 - **Chat Completions 結構驗證較嚴**：assistant 的 `tool_calls` 與後面的 `tool` 結果要一一配對，否則 400。
 - **不支援的參數會 400**：`stop`、`n>1`、`logprobs`、`logit_bias`、`modalities`、`verbosity`、`prediction`、`web_search_options`；`frequency_penalty`、`presence_penalty` 不要設。
 - **非 streaming 有時間上限**（秒數文件沒寫）：長輸出用 streaming 或 `background`。
-- **Contributor 版**：150 RPM；內容會被用來訓練；Help Center 要求不得送個資或機密；ZDR team 不能用。
-- **地區**：限制名單沒有台灣（Geographic Use Policy，2026-10-12 更新）；Muse Wonder 南韓不可用；Muse Image 印度不可用。
+- **Contributor 版**：150 RPM；內容可能被用來訓練；Help Center 要求不得送個資或機密；ZDR team 不能用。
+- **地區**：限制名單沒有台灣（Geographic Use Policy，2026-10-12 更新；第 2.2 節只列 Muse Image：印度）。Muse Wonder 南韓不可用出自 models.md。Help Center 寫「在 Meta AI 可用且支援付款的國家開放」，台灣實際能否註冊仍未驗證。Credit Terms 1.1(c) 要求居住地在地理政策允許的國家。
 - **服務條款**（Help Center 的 Contributor mode 頁所摘要的條款）：開發者與最終使用者都須滿 18 歲；產品要有隱私權政策。完整條款見 https://dev.meta.ai/legal/terms-of-service（未逐條讀）。
 - **沒有硬性花費上限**。
 - **Muse Glimmer** 不支援平行工具呼叫；預設 context 只有 128K。
@@ -432,13 +437,13 @@ Use of Meta AI Tooling（25%）可展示、且有文件支持的能力：constra
 | # | 項目 | 為什麼未驗證 / 怎麼確認 |
 |---|---|---|
 | 1 | 所有模型呼叫（spike 四個測試） | 沒有 key。拿到 key 後跑 `python3 spikes/meta_api_hello.py` |
-| 2 | 台灣帳號能否註冊、綁卡 | 7/8 部落格說 public preview 只開放美國；現行地理政策沒限制台灣。註冊時確認 |
-| 3 | $150 credits 的表單網址、入帳位置、是否涵蓋 Contributor 版與 `web_search` | 在需登入的 Participant Guide；領到後看 Billing 頁 |
-| 4 | 綁卡預授權金額 | 文件沒寫 |
+| 2 | 台灣帳號能否註冊、綁卡 | 7/8 部落格說 public preview 只開放美國；8/5 Muse Code 部落格說擴大到全球（沒列國家）；現行地理政策沒限制台灣；Help Center 另以「Meta AI 可用且支援付款」為條件。註冊時確認 |
+| 3 | $150 credits 的表單網址、實際入帳畫面、Contributor 版實際能否扣抵 | Credit Terms 已確認：表單在錄取 email、要 Team ID、可用於任何 Services 用途。表單網址與實際扣抵要領到後看 Billing 頁 |
+| 4 | 綁卡預授權金額 | 公開文件沒寫；只出現在 Participant Guide |
 | 5 | 最大輸出 token 的正式數字 | 131,072 只出現在 agent 設定範例；Muse Wonder、1.1、1.2 沒寫 |
-| 6 | Batch API 是否存在 | Files API 接受 `purpose=batch`，但沒有 `/v1/batches` 文件；未認證時任何路徑都回 401，無法從外部判斷 |
+| 6 | Batch API 是否存在 | Files API 接受 `purpose=batch`，但 `llms.txt`、`sitemap.xml` 都沒有 batch 端點頁；未認證時任何路徑（含 `/v1/batches`）都回 401，無法從外部判斷 |
 | 7 | Baseten 比賽用 model ID `meta-models/muse-spark-open-1026` | 只出現在 Participant Guide；公開文件是 `meta-models/muse-spark-open` |
-| 8 | Baseten / Modal 上 Spark Open 的 tool calling、`json_schema` 支援 | 文件只確認 OpenAI 相容與多模態輸入 |
+| 8 | Baseten / Modal 上 Spark Open 的 `json_schema` 支援 | Baseten 部落格已寫支援 tool calling；`json_schema` 兩家都沒寫。Modal 的 tool calling 也沒寫 |
 | 9 | Muse Glimmer 在 vLLM / llama.cpp 的 structured output | 文件只提 tool calling |
 | 10 | Muse Spark Open 對應哪個 Muse Spark 版本 | 文件沒寫 |
 | 11 | 各模型知識截止日 | Help Center 說看 Models 頁，但 Models 頁沒寫。對 pickfit 很重要（「模型不認識今年的專案」） |
@@ -447,6 +452,7 @@ Use of Meta AI Tooling（25%）可展示、且有文件支持的能力：constra
 | 14 | Meta 官方 GitHub 組織 `github.com/meta-models` 的 repo 清單 | 本環境的 GitHub 存取受限，沒查到；文件說不需要專用 SDK |
 | 15 | 新帳號送 $20 credits | 只見於第三方新聞（americancompanies.com），官方文件沒寫 |
 | 16 | Voice Transcribe 的 Mandarin 是否輸出繁體字 | 文件只寫「Mandarin Chinese」 |
+| 17 | $150 credits 的有效期 | Credit Terms 3.5 寫入帳後不過期；公開活動頁 Official Rules 寫「valid for a 10-day development window」。兩者矛盾，比賽期間用完最保險 |
 
 ---
 
@@ -504,6 +510,12 @@ Use of Meta AI Tooling（25%）可展示、且有文件支持的能力：constra
 | Help：Llama 與 Model API | https://dev.meta.ai/help/about-model-api/llama-and-model-api |
 | 地理使用政策（2026-10-12 版） | https://dev.meta.ai/legal/geographic-use-policy |
 | Muse Spark 上線部落格（2026-07-08，只開放美國） | https://dev.meta.ai/resources/blog/build-with-muse-spark |
+| Muse Code 部落格（2026-08-05，擴大全球開放） | https://dev.meta.ai/resources/blog/build-with-muse-code |
+| Help：Zero Data Retention | https://dev.meta.ai/help/policies-and-privacy/zero-data-retention |
+| 錯誤處理（504、context 超出） | https://dev.meta.ai/docs/error-handling.md |
+| 文件 sitemap（確認沒有 batch 頁） | https://dev.meta.ai/sitemap.xml |
+| 比賽 Credit Terms（PDF，Meta 撰寫，連結自 Cerebral Valley 公開頁 Official Rules 的「Credit Terms」；fbcdn 簽名網址會過期，需從活動頁重新點） | https://cerebralvalley.ai/e/meta-ai-developer-hackathon |
+| Baseten 上線部落格（第三方，tool calling 與 1M context） | https://www.baseten.co/blog/muse-spark-open-launch/ |
 | Muse Spark 1.3 模型頁 | https://dev.meta.ai/models/muse-spark |
 | Meta 比賽頁 | https://dev.meta.ai/events/global-hackathon |
 | Cerebral Valley 公開活動頁（合作夥伴 credits） | https://cerebralvalley.ai/e/meta-ai-developer-hackathon |
@@ -511,3 +523,50 @@ Use of Meta AI Tooling（25%）可展示、且有文件支持的能力：constra
 | Modal：Muse Spark Open（第三方，價格） | https://modal.com/library/meta/muse-spark-open |
 | 新聞：新帳號 $20 credits（第三方，未驗證） | https://americancompanies.com/news/meta-launches-paid-muse-spark-1-1-api-for-developers/ |
 | 實測（curl） | `https://api.meta.ai/v1/status`（200）、`https://api.meta.ai/v1/models`（401 `invalid_api_key`） |
+
+---
+
+## 查核紀錄（2026-10-28）
+
+查核者：第二位 agent。方法：用 curl 下載官方 `.md` 文件與 Help Center / legal 頁面重新比對，不採用原筆記的轉述。沒有 API key，沒有呼叫任何模型。
+
+### 重新實測（未帶 key）
+
+| 請求 | 結果 |
+|---|---|
+| `GET /v1/models` | 401 `{"error":{"code":"invalid_api_key","message":"Unauthorized","param":null,"type":"authentication_error"}}` |
+| `POST /v1/chat/completions`、`POST /v1/responses`、`GET /v1/batches` | 401，同上（任何路徑都先擋認證，無法藉此判斷端點存不存在） |
+| `POST /v1/messages` | 401，Anthropic 格式：`{"error":{"message":"Unauthorized","type":"authentication_error"},"type":"error"}` |
+| `GET /v1/status` | 200 `{"is_alive":true,"service_status":"operational",...}` |
+| 舊文件網址 | `ai.developer.meta.com/docs/models/` → `dev.meta.ai/docs/models`；`llama.developer.meta.com/docs/` → `dev.meta.ai/docs/overview` |
+
+### 逐條結果
+
+| # | 主張 | 結果 | 依據 |
+|---|---|---|---|
+| 1 | base URL `https://api.meta.ai/v1`；Chat / Responses / Messages 三種格式同模型同價 | 確認 | protocols.md、api-reference.md |
+| 2 | Bearer 認證、key 格式 `LLM_<數字>_<secret>`、變數名 `MODEL_API_KEY`、用 openai SDK、未帶 key 回 401 | 確認 | authentication.md、sdks.md、api-reference.md、curl |
+| 3 | 9 個 model ID；新專案用 `muse-spark-1.3` | 確認 | models.md |
+| 4 | Muse Spark 各版本輸入文字/圖/影/音/PDF、1M context、tool calling、structured output；1.3 音訊 not fully supported | 確認（streaming 寫在 protocols / sdks，不在 models.md） | models.md、sdks.md |
+| 5 | 最大輸出 131,072 | **仍未驗證**。只在設定範例出現；API reference 只說超過 configured maximum 回 400；`/v1/models` 不回傳上限 | quickstart.md、coding-agents.md、api-reference/responses/schemas.md、api-reference/models/schemas.md |
+| 6 | 價格 | 確認。修正來源：「推理 token 算輸出」出自 reasoning.md，不是 pricing 頁 | pricing-rate-limits.md、reasoning.md |
+| 7 | Rate limit | 確認（含 background 600 次/分鐘、`x-ratelimit-*` 只在成功的 token 計費回應） | pricing-rate-limits.md |
+| 8 | Contributor 版用於訓練、不得送個資、ZDR 不能用 | 確認，措辭修正為「可能被用來訓練」 | pricing-rate-limits.md、Help：contributor-tier、Help：zero-data-retention |
+| 9 | 結構化輸出 | 確認。補充：`json_object` 只保證合法 JSON；上限也套用到 tool `parameters` | structured-output.md、chat-completions/schemas.md、responses/schemas.md |
+| 10 | Tool calling：`tool_choice` 只能 `auto`、參數不保證符合 schema | 確認 | tool-calling.md |
+| 11 | 一定推理；`stop`、`n>1`、`logprobs`、`logit_bias` 400；Chat 不跨回合保留推理 | 確認。補充：Responses 用 `reasoning.effort`；`max` 也支援 `muse-wonder-1.0` | protocols/chat-completions.md、reasoning.md |
+| 12 | 圖片輸入限制 | 確認。補上 MIME `image/jpg` | image-understanding.md |
+| 13 | 自動前綴快取；沒有 Batch 端點文件；background 600 次/分鐘 | 前兩項確認（llms.txt、sitemap 都沒有 batch 頁）；`/v1/batches` 實際存在與否仍未驗證。補充：background body 上限 1 MiB | prompt-caching.md、files/schemas.md、protocols/responses.md、sitemap.xml |
+| 14 | Spark Open / Glimmer 規格、授權、託管商、ID | 確認。補充：Groq 上 context 只有 131,072；Fireworks 只寫文字+圖片 | muse-spark-open.md、muse-spark-open/deploy.md、muse-glimmer.md、muse-glimmer/deploy.md、muse-glimmer/prompting.md |
+| 15 | Baseten、Modal 價格 = $1.25 / $0.15 / $4.25 | 確認（第三方頁面） | baseten.co/library/muse-spark-open、modal.com/library/meta/muse-spark-open |
+| 16 | 比賽用 `meta-models/muse-spark-open-1026` | **仍未驗證**。公開文件、Baseten 頁、Cerebral Valley 公開頁、網路搜尋都找不到這個字串 | — |
+| 17 | Voice Transcribe | 確認。措辭修正：「沒有 JSON 輸出」改為「沒有 JSON schema 結構化輸出」，因為預設回應就是 JSON | models.md、speech-to-text.md、api-reference/voice/transcribe.md |
+| 18 | 沒有硬性花費上限 | 確認 | Help：spend-limit-alert |
+| 19 | 台灣與地理政策 | 名單部分確認。**補上漏掉的事實**：2026-08-05 Muse Code 部落格宣布擴大到全球；Help 以「Meta AI 可用且支援付款」為條件。台灣能否註冊仍未驗證 | legal/geographic-use-policy、blog/build-with-muse-code、Help：supported-countries |
+| 20 | $150 credits | **大部分已可確認**（原筆記標未驗證）：找到 Meta 的公開 Credit Terms PDF。表單在錄取 email、要 Team ID、截止 11/4 9 PM ET、2 個工作天入帳、不過期、可用於任何 Services。預授權、表單網址仍未驗證；10 天效期與不過期互相矛盾 | Credit Terms PDF、Cerebral Valley 公開頁 |
+
+### 沒有發現的問題
+
+- 沒有把舊 Llama API 的資訊套到 Muse 模型（Help Center 也確認 Llama 不在 Model API 上）。
+- 沒有發現憑記憶補上的 model ID 或價格；所有數字都能在官方頁面找到。
+- 第 6 節成本估算重算過，數字正確（仍是估算）。
