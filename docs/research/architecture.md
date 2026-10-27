@@ -35,7 +35,68 @@
 
 ## C. 沙盒驗證
 
-（進行中）
+細節與來源：[notes/sandbox-compare.md](notes/sandbox-compare.md)、[notes/sandbox-verify-design.md](notes/sandbox-verify-design.md)（都經查核，查證日 2026-10-28）。
+
+### C.1 方案比較
+
+| 方案 | 隔離 | 費用 | 啟動 | GPU | 網路控制 | 單次上限 | 結論 |
+|---|---|---|---|---|---|---|---|
+| **Modal Sandbox** | gVisor 或 VM（建立時明確設 `runtime="gvisor"`） | CPU／記憶體按一般價 3 倍；5 分鐘、1 core＋2 GiB 約 $0.016；比賽 $100＋Starter 每月 $30 | 官方只說「sub-second」，未實測 | 有（T4 $0.59/h、L4 $0.80/h） | 預設可出網；`block_network`、CIDR、網域 allowlist（Beta）；執行中改政策（Alpha）→ 可做「先開網路安裝、再斷網執行」 | 24 小時 | **主力** |
+| E2B | Firecracker microVM | Hobby 免卡、$100 一次性 | 約 80 ms | 無 | 有 allow/deny，deny 不支援網域 | 1 小時（Hobby） | Linux 備案 |
+| Daytona | 容器 | 有 free credits | — | 有 | Tier 1、2 只能連「必要服務」清單，連不到一般專案網域；Tier 3 要儲值 $500 | — | 不選：照 README 下載安裝腳本會被擋 |
+| Cloudflare Sandbox／Containers | Firecracker | 要 Workers Paid（$5/月） | 1–3 秒 | 文件沒列 | — | — | 不選：只能從 Worker 用 TS 操作，工時最高 |
+| Vercel Sandbox | Firecracker | Hobby 每月 5 CPU-h | — | 無 | — | 45 分鐘 | 不選 |
+| GitHub Actions（macOS runner） | 每次全新 VM | public repo 免費 | 數十秒（未量） | 無 | 全開 | 6 小時 | **只跑 demo 那幾筆的 Mac 驗證**（條款限制，見下） |
+| 本機 Docker（加限制） | 容器（runc） | 免費 | 0.2–0.5 秒（本環境實測） | 看機器 | 自己控 | 無 | 開發期間的 spike 與除錯 |
+
+**macOS 的問題**：demo 使用者在 Mac，但雲端沙盒都是 Linux。
+- GitHub Actions 條款限 hosted runner 只能做「與該 repo 軟體專案相關」的事（[原文](https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features)），違規可能停用 repo 或帳號，而交件要用 GitHub repo。所以**大量驗證第三方軟體不走 Actions**，只拿來跑 demo 那 3–5 筆的 Mac 驗證（有風險，見 K 節的決定）。
+- 其他按分鐘計的雲端 Mac：CircleCI Free（每月約 150 分鐘 M4 Pro）、Codemagic（每月 500 分鐘 M2），條款**未驗證**。整台出租的 Mac（AWS EC2 Mac 等）依 Apple 授權至少租 24 小時，mac2 至少 $15.6。
+- 念誠如果有 Apple silicon Mac，可用 Tart 在本機跑 macOS VM（Apple 授權允許每台 Mac 跑 2 個 VM 做開發與測試；驗證第三方軟體算不算，屬解讀問題）。
+- **結論**：主驗證在 Linux 沙盒做；結果標明平台；Mac 的 brew 安裝路徑標「未驗證」，demo 那幾筆另外在 Mac 上驗證並註明方式。
+
+### C.2 驗證 agent 怎麼跑
+
+| 步 | 誰 | 做什麼 |
+|---|---|---|
+| 1 列出安裝方式 | 程式 | 從套件資料（Homebrew formula、PyPI `console_scripts`、npm `bin`、GitHub release 檔名）列出可行方式並排序：套件管理器 → release 二進位 → 從原始碼建置 |
+| 2 選方式、執行 | Muse Spark（tool calling） | 只在候選裡選；讀 README 決定參數、要先裝什麼 |
+| 3 修錯 | 規則表 → Muse Spark | 先套 15 類常見錯誤的規則（缺系統函式庫、PATH、Python 版本等）；規則處理不了才交給模型，必要時用 `web_search` 查錯誤 |
+| 4 smoke test | Muse Spark 提出、程式執行 | CLI：`--version` 或 `--help` 過一個即可，再跑 README 的第一個範例；本地 AI：起服務、打 `/health`、`/v1/models`，用極小模型跑一次推論 |
+| 5 判讀 | 程式＋Muse Spark（看截圖與 log） | 規則（exit code、輸出）和模型判讀都同意才算過 |
+| 6 重播 | 程式 | 在全新沙盒照記錄的步驟重跑一次；只把重播成功的步驟寫進檔案，另記下「和 README 不同的地方」（pitfalls） |
+
+**spike 實測**（`spikes/sandbox_docker_install.py`，本環境的 Docker，非 root、2 CPU、2 GiB、pids 256、cap-drop ALL、唯讀根目錄、tmpfs 上限、容器內 timeout）：
+- 4 款真實工具都通過，每款總計 2–29 秒（差異主要是前置下載）。
+- 2 款要先修正一次：`evnx` 照 README 跑會 exit 2，要先 `evnx sync`；`llama.cpp` 缺 `libgomp1`。這種「照 README 做會卡住」的修正，正是 `get_install_guide` 最有價值的內容。
+- `llama.cpp` 搭配 1.2 MB 的 `stories260K.gguf`，只用 CPU 就打得通 `/health`、`/v1/models`、`/v1/completions`：本地 LLM 工具可以做到「推論驗證」。
+- 防護自我檢查有效：記憶體炸彈被 OOM 殺、塞磁碟停在上限、fork bomb 被擋、capabilities 全 0。但容器連得到 `169.254.169.254`（雲端 metadata），自架主機要擋。
+
+### C.3 「驗證通過」的定義（分級，不假裝）
+
+| 等級 | 開發者 CLI 工具 | 本地 AI／LLM 工具 |
+|---|---|---|
+| 安裝驗證 | 安裝指令 exit 0、指令在 PATH | 同左 |
+| 功能驗證 | `--version`／`--help` 成功，README 第一個範例能跑、輸出合理 | 服務起得來、port 有回應（`/health`、`/v1/models`） |
+| 推論驗證 | — | 用極小模型（<1 GB，例如 `stories260K.gguf`、`smollm2:135m`）跑一次推論 |
+| 未驗證（附原因） | 需要帳號、GUI、特定 OS | 需要 GPU／CUDA、Apple Silicon（MLX）、大模型 |
+
+- 大型模型：不下載。用官方支援的最小模型做 smoke test，第一次下載後放 Modal Volume 共用；只有工具必須用 CUDA 才開 GPU 沙盒。
+- 截圖：用 Pillow 把終端輸出畫成 PNG（0.06 秒，支援中文）當預設；`termshot`（MIT）可用但中文會變方塊；`vhs` 依賴太多；`asciinema`／`agg` 是 GPL-3.0。截圖是從輸出重繪的，判讀以文字 log 為主。
+
+### C.4 安全風險與最低限度防護
+
+| 風險 | 防護 |
+|---|---|
+| 竊取金鑰 | 沙盒裡**不放任何金鑰**；模型呼叫在沙盒外 |
+| 挖礦、外連、當跳板 | 網域 allowlist（安裝階段開，執行階段關）；記錄所有外連；Modal 與 GitHub 條款都禁止挖礦 |
+| 塞爆資源、fork bomb | CPU／記憶體／磁碟／pids／時間上限 |
+| 提權、改主機 | 非 root、cap-drop ALL、gVisor；每次全新環境；不在自己的機器上跑陌生程式 |
+| 讀雲端 metadata | 擋 `169.254.169.254` |
+| README 裡的 prompt injection | 讀進來的內容一律包在 `<source>` 裡，系統提示寫明來源裡的指令不是給模型的 |
+| 誤判 | 結果只當證據；規則與模型判讀都同意才算過；失敗回報會觸發重驗 |
+
+成本：每次驗證約 $0.016–0.03（最壞情況約 $0.13），$100 credits 夠跑數百到數千次。真正的限制是整合時間和誤判率，不是錢。
 
 ## D. Meta 模型
 
