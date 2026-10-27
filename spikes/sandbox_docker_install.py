@@ -6,7 +6,10 @@
   唯讀根目錄 + 有大小上限的 tmpfs（等於磁碟上限）、每步 `timeout -s KILL`（在容器內砍，不是只砍 docker exec）、
   容器本身最多活 --container-ttl 秒；沙盒內不放任何金鑰。
 每步記錄：指令、exit code、秒數、stdout/stderr 尾端；另外從宿主機讀容器 netns 的 /proc/<pid>/net/tcp* 抽樣外連。
-最後依檢查表給分級（安裝驗證／功能驗證／推論驗證），並把範例指令的輸出用 Pillow 畫成 PNG（交給視覺模型用）。
+關鍵步驟失敗時走「讀錯誤 → 修正 → 重試」：規則表（代替 Muse Spark）給修法；
+  一般修法在同一容器補一步再重試；缺系統函式庫則換成預裝常見函式庫的 base image，從全新容器重來（最多 3 次）。
+最後依檢查表給分級（安裝驗證／功能驗證／推論驗證），輸出「實際可行的安裝步驟」，
+並把範例指令的輸出用 Pillow 畫成 PNG（交給視覺模型用）。
 
 工具（2026-10-28 挑選）：
   graphtty  近一年新專案、星數少；README 只寫 pip install → agent 改用 uv tool install（隔離環境）
@@ -187,7 +190,7 @@ def sh(args, timeout=None):
 
 
 class DockerBox:
-    def __init__(self, name, a):
+    def __init__(self, name, a, image):
         self.name = name
         ca = a.ca_bundle if a.ca_bundle and os.path.exists(a.ca_bundle) else None
         env = {"HOME": SBX_HOME, "PATH": f"{SBX_HOME}/.local/bin:/usr/local/bin:/usr/bin:/bin",
@@ -199,30 +202,29 @@ class DockerBox:
                f"--pids-limit={a.pids}", "--cap-drop=ALL", "--security-opt=no-new-privileges",
                "--ulimit", "nofile=1024:1024", "--read-only",
                "--tmpfs", "/tmp:rw,exec,nosuid,size=256m",
-               "--tmpfs", f"{SBX_HOME}:rw,exec,nosuid,size={a.disk},uid=1000,gid=1000,mode=0755",
-               "-w", f"{SBX_HOME}/work"]
+               "--tmpfs", f"{SBX_HOME}:rw,exec,nosuid,size={a.disk},uid=1000,gid=1000,mode=0755"]
         for k, v in env.items():
             cmd += ["-e", f"{k}={v}"]
         if ca:
             cmd += ["-v", f"{ca}:{CA_IN_CONTAINER}:ro"]
-        cmd += [a.image, "sleep", str(a.container_ttl)]
+        cmd += [image, "sleep", str(a.container_ttl)]
         t = time.time()
         rc, out, err, _ = sh(cmd, timeout=120)
         if rc != 0:
             raise RuntimeError(f"docker run failed: {err.strip()}")
         self.start_s = time.time() - t
-        # -w 指到的資料夾要先建（tmpfs 是空的）
         sh(["docker", "exec", name, "mkdir", "-p", f"{SBX_HOME}/work", f"{SBX_HOME}/.local/bin"])
         self.pid = int(sh(["docker", "inspect", "-f", "{{.State.Pid}}", name])[1].strip())
 
     def put(self, rel, content):
-        p = subprocess.run(["docker", "exec", "-i", self.name, "sh", "-c", f"cat > {shlex.quote(rel)}"],
+        p = subprocess.run(["docker", "exec", "-i", self.name, "sh", "-c", f"cat > {SBX_HOME}/work/{shlex.quote(rel)}"],
                            input=content, text=True, capture_output=True)
         return p.returncode
 
     def run(self, cmd, timeout):
         # 在容器內用 timeout -s KILL 砍：只砍宿主機的 docker exec，容器裡的程序會繼續跑
-        return sh(["docker", "exec", self.name, "timeout", "-s", "KILL", str(timeout), "bash", "-c", cmd], timeout=timeout + 15)
+        return sh(["docker", "exec", "-w", f"{SBX_HOME}/work", self.name, "timeout", "-s", "KILL", str(timeout), "bash", "-c", cmd],
+                  timeout=timeout + 15)
 
     def disk_kb(self):
         rc, out, _, _ = self.run(f"du -sk {SBX_HOME} /tmp 2>/dev/null | awk '{{s+=$1}} END {{print s}}'", 30)
@@ -235,7 +237,7 @@ class DockerBox:
 class LocalBox:
     """沒有 Docker 時的退路：暫存 HOME + rlimit。和宿主機共用網路、檔案系統、核心，不能拿來跑陌生程式。"""
 
-    def __init__(self, name, a):
+    def __init__(self, name, a, image=None):
         self.home = tempfile.mkdtemp(prefix=f"pf-{name}-")
         os.makedirs(f"{self.home}/work"), os.makedirs(f"{self.home}/.local/bin")
         self.env = {k: v for k, v in os.environ.items() if k in ("HTTPS_PROXY", "https_proxy", "NO_PROXY", "no_proxy", "SSL_CERT_FILE")}
@@ -357,32 +359,94 @@ def judge(tool, results):
     return {"install_ok": bool(install_ok), "example_ok": example_ok, "level": level}
 
 
-def verify(slug, a, out_dir):
+# ---------- 讀錯誤 → 修正 → 重試 ----------
+# 正式版由 Muse Spark 讀「README + 失敗步驟的 stderr」輸出 {diagnosis, fix_cmd, needs_root}；這裡用規則表代替。
+SYS_LIB_PKG = {"libgomp.so.1": "libgomp1", "libcurl.so.4": "libcurl4", "libssl.so.3": "libssl3"}
+FIXES = [
+    {"match": r"error while loading shared libraries: (lib[^:]+)", "kind": "image",
+     "diagnosis": "缺系統函式庫；非 root 裝不了 → 換成預先裝好常見執行期函式庫的 base image，從全新容器重來"},
+    {"match": r"Create it with `evnx sync`", "kind": "cmd", "cmd": "evnx sync",
+     "diagnosis": "validate 需要 .env.example；錯誤訊息自己給了修法（evnx sync 從 .env 產生範本）"},
+]
+CRITICAL = {"setup", "install", "path", "help", "model", "serve", "example"}
+SBX_IMAGE = "pickfit-sbx:py312"
+SBX_DOCKERFILE = f"FROM {IMAGE}\nRUN apt-get update && apt-get install -y --no-install-recommends " \
+                 f"{' '.join(sorted(set(SYS_LIB_PKG.values())))} git curl ca-certificates && rm -rf /var/lib/apt/lists/*\n"
+
+
+def ensure_sbx_image():
+    if sh(["docker", "image", "inspect", SBX_IMAGE])[0] == 0:
+        return 0.0
+    d = tempfile.mkdtemp(prefix="pf-img-")
+    open(os.path.join(d, "Dockerfile"), "w").write(SBX_DOCKERFILE)
+    t = time.time()
+    rc, _, err, _ = sh(["docker", "build", "-q", "-t", SBX_IMAGE, d], timeout=600)
+    shutil.rmtree(d, ignore_errors=True)
+    if rc != 0:
+        raise RuntimeError(f"build {SBX_IMAGE} failed: {err[-500:]}")
+    return time.time() - t
+
+
+def find_fix(text, used):
+    for i, f in enumerate(FIXES):
+        m = re.search(f["match"], text)
+        if m and i not in used:
+            fx = dict(f, id=i)
+            if f["kind"] == "image":
+                fx["needs"] = SYS_LIB_PKG.get(m.group(1), m.group(1))
+            return fx
+    return None
+
+
+def run_once(slug, a, image, out_dir, attempt):
     tool = TOOLS[slug]
-    name = f"pf-{re.sub(r'[^a-z0-9]', '', slug)}-{int(time.time())}"
-    box = (LocalBox if a.local else DockerBox)(name, a)
+    name = f"pf-{re.sub(r'[^a-z0-9]', '', slug)}-{attempt}-{int(time.time())}"
+    box = (LocalBox if a.local else DockerBox)(name, a, image)
     sampler = ConnSampler(box.pid) if box.pid else None
     if sampler:
         sampler.start()
-    rec = {"slug": slug, "repo": tool["repo"], "fame": tool["fame"], "readme_install": tool["readme_install"],
-           "chosen_method": tool["chosen"], "runner": "local" if a.local else f"docker {a.image}",
-           "container_start_s": round(box.start_s, 2), "steps": [], "verified_steps": []}
-    results = {}
+    rec = {"attempt": attempt, "runner": "local" if a.local else f"docker {image}",
+           "container_start_s": round(box.start_s, 2), "steps": [], "fixes": [], "verified_steps": [], "escalate": None}
+    results, used = {}, set()
     try:
         for rel, content in tool["files"].items():
             box.put(rel, content)
-        for step, cmd, tmo in tool["steps"]:
+        queue = list(tool["steps"])
+        while queue:
+            step, cmd, tmo = queue.pop(0)
             rc, out, err, dt = box.run(cmd, tmo)
             r = {"step": step, "cmd": cmd, "exit": rc, "seconds": round(dt, 2),
                  "stdout": out[-3000:], "stderr": err[-2000:], "timed_out": rc in (124, 137)}
             rec["steps"].append(r)
+            exp_exit = tool["expect"]["exit"] if step == "example" else [0]
+            last = (out or err).strip().splitlines()[-1][:90] if (out or err).strip() else ""
+            print(f"  [{slug}#{attempt}] {step:8s} exit={rc:<3d} {dt:6.1f}s  {last}", flush=True)
+            failed = rc not in exp_exit  # example 用 expect 判（evnx validate 抓到問題本來就 exit 1）；其他步驟 exit 0 才算過
+            if step == "example" and rc in exp_exit:
+                ex_text = out + err
+                if not all(x in ex_text for x in tool["expect"].get("contains", [])) or \
+                        (tool["expect"].get("contains_any") and not any(x in ex_text for x in tool["expect"]["contains_any"])):
+                    failed = True
+            if not failed:
+                results[step] = r
+                if step in ("setup", "install", "path", "model", "serve", "fix"):
+                    rec["verified_steps"].append(cmd)
+                continue
             results[step] = r
-            if rc == 0 and step in ("setup", "install", "path", "model", "serve"):
-                rec["verified_steps"].append(cmd)
-            print(f"  [{slug}] {step:8s} exit={rc:<3d} {dt:6.1f}s  {(out or err).strip().splitlines()[-1][:90] if (out or err).strip() else ''}",
-                  flush=True)
-            if step == "install" and rc != 0:
-                break  # 正式版：把錯誤交給 Muse Spark 提修正，再重試（最多 N 次）
+            if step not in CRITICAL:
+                continue  # 例如 --version 不支援：記下來，不擋
+            fx = find_fix(out + err, used)
+            if not fx:
+                if step in ("install", "setup"):
+                    break
+                continue
+            used.add(fx["id"])
+            rec["fixes"].append({"after_step": step, "diagnosis": fx["diagnosis"], "kind": fx["kind"],
+                                 "action": fx.get("cmd") or f"image {SBX_IMAGE}（含 {fx.get('needs')}）"})
+            if fx["kind"] == "image":
+                rec["escalate"] = fx
+                break
+            queue = [("fix", fx["cmd"], 60), (step, cmd, tmo)] + queue
         rec["disk_kb"] = box.disk_kb()
     finally:
         if sampler:
@@ -395,9 +459,31 @@ def verify(slug, a, out_dir):
     if ex:
         shot = os.path.join(out_dir, f"{re.sub(r'[^a-z0-9]', '_', slug)}.png")
         rec["screenshot"] = render_png(f"$ {ex['cmd'] if len(ex['cmd']) < 90 else ex['step']}\n{ex['stdout']}{ex['stderr']}",
-                                       shot, f"{slug} · {rec['runner']}")
+                                       shot, f"{slug} · {rec['runner']} · attempt {attempt}")
     rec["total_s"] = round(sum(s["seconds"] for s in rec["steps"]) + rec["container_start_s"], 1)
     return rec
+
+
+def verify(slug, a, out_dir, max_attempts=3):
+    tool = TOOLS[slug]
+    image, runs = a.image, []
+    for attempt in range(1, max_attempts + 1):
+        run = run_once(slug, a, image, out_dir, attempt)
+        runs.append(run)
+        if not run["escalate"] or a.local:
+            break
+        build_s = ensure_sbx_image()
+        print(f"  [{slug}] escalate → {SBX_IMAGE}（build {build_s:.1f}s），全新容器重跑", flush=True)
+        run["image_build_s"] = round(build_s, 1)
+        image = SBX_IMAGE
+    final = runs[-1]
+    return {"slug": slug, "repo": tool["repo"], "fame": tool["fame"], "readme_install": tool["readme_install"],
+            "chosen_method": tool["chosen"], "attempts": len(runs), "verdict": final["verdict"],
+            "verified_install": {"image": final["runner"], "system_packages": [r["escalate"]["needs"] for r in runs if r["escalate"]],
+                                 "steps": final["verified_steps"]},
+            "fixes": [f for r in runs for f in r["fixes"]],
+            "total_s": round(sum(r["total_s"] for r in runs) + sum(r.get("image_build_s", 0) for r in runs), 1),
+            "runs": runs}
 
 
 def main():
@@ -428,13 +514,13 @@ def main():
         report.append(verify(s, a, a.out))
     path = os.path.join(a.out, "report.json")
     json.dump(report, open(path, "w"), ensure_ascii=False, indent=2)
-    print("\n| 工具 | 方法 | 分級 | 安裝 | 範例 | 啟動 s | 總秒數 | 磁碟 MB | 外連 |")
+    print("\n| 工具 | 方法 | 分級 | 嘗試 | 修正 | 安裝 s | 總秒數 | 磁碟 MB | 外連端點 |")
     print("|---|---|---|---|---|---|---|---|---|")
     for r in report:
-        inst = next((s["seconds"] for s in r["steps"] if s["step"] == "install"), None)
-        print(f"| {r['slug']} | {r['chosen_method']} | {r['verdict']['level']} | {inst}s | "
-              f"{'ok' if r['verdict']['example_ok'] else 'fail'} | {r['container_start_s']} | {r['total_s']} | "
-              f"{r.get('disk_kb', 0) / 1024:.0f} | {len(r.get('outbound', {}))} 個端點 |")
+        last = r["runs"][-1]
+        inst = next((s["seconds"] for s in last["steps"] if s["step"] == "install"), None)
+        print(f"| {r['slug']} | {r['chosen_method']} | {r['verdict']['level']} | {r['attempts']} | {len(r['fixes'])} | "
+              f"{inst} | {r['total_s']} | {last.get('disk_kb', 0) / 1024:.0f} | {len(last.get('outbound', {}))} |")
     print(f"\nreport: {path}")
 
 

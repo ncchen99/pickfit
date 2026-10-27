@@ -1,0 +1,59 @@
+# Spike：在 GitHub Actions 的 macOS runner 上驗證 brew 安裝。
+#
+# 驗證什麼：
+#   1. 從 workflow_dispatch 到 job 開始要排多久、brew install 要多久（GitHub 沒有公開排隊時間）。
+#   2. macos-15（Apple M1、3 核、7 GB RAM、14 GB SSD、已裝 Homebrew）能不能照 README 裝起來並跑 smoke test。
+#
+# 這個檔案放在 spikes/，不會自動執行。要試時：
+#   1. 複製到一個 public repo 的 .github/workflows/verify-macos.yml
+#      （public repo 用標準 runner 免費；private repo 的 macOS 是 $0.062/分鐘）。
+#   2. gh workflow run verify-macos.yml -R <owner>/<repo> -f formula=<formula> -f smoke="<cmd>"
+#   3. gh run watch / gh run download 取回 log。
+#
+# 條款提醒（docs/research/notes/sandbox-compare.md 第 5 節）：GitHub-hosted runner 只能用在
+# 「與該 repo 的軟體專案的開發、測試、部署、發布相關」的活動；macOS 部分另有「只能用來開發與測試你的應用程式」。
+# 只拿來驗證 demo 用的少數幾筆，不要拿來大量掃第三方軟體。
+#
+# 狀態：未實測（2026-10-28）。
+name: verify-macos-brew (spike)
+
+on:
+  workflow_dispatch:
+    inputs:
+      formula:
+        description: "brew formula，例如 ripgrep 或 owner/tap/formula"
+        required: true
+      smoke:
+        description: "smoke test 指令，例如 rg --version"
+        required: true
+
+permissions: {}  # 不給 GITHUB_TOKEN 任何權限；不要在這個 repo 放 secrets
+
+jobs:
+  verify:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - name: Install with Homebrew
+        env:
+          FORMULA: ${{ inputs.formula }}  # 經由環境變數傳入，避免 script injection
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+          HOMEBREW_NO_ANALYTICS: "1"
+        run: |
+          set -o pipefail
+          { sw_vers; uname -m; brew --version; } | tee log.txt
+          start=$(date +%s)
+          brew install "$FORMULA" 2>&1 | tee -a log.txt
+          echo "install_seconds=$(( $(date +%s) - start ))" | tee -a log.txt
+      - name: Smoke test
+        env:
+          SMOKE: ${{ inputs.smoke }}
+        run: |
+          set -o pipefail
+          bash -c "$SMOKE" 2>&1 | tee -a log.txt
+      - name: Upload log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-log
+          path: log.txt

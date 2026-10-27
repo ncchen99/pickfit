@@ -13,6 +13,7 @@
 1. **兩個模型都能讀圖片、都支援 tool calling、都一定會推理（關不掉）。** Spark Open 還能吃影片和音訊。（已確認）
 2. **Baseten 上的 Spark Open 不強制 JSON schema。** `json_schema` 和 `json_object` 都收，但不約束輸出。要靠提示詞加程式端驗證，或改用強制 tool calling 來拿結構化結果。（已確認：Baseten 文件；tool calling 是否有約束則未驗證）
 3. **用開放權重模型「省錢」這個理由不成立。** Baseten／Modal／Fireworks 上的 Spark Open 牌價都是 $1.25／$4.25 每百萬 token，和 Meta Model API 上的 Muse Spark（Standard 模式）一樣。Muse Spark 的 Contributor 模式反而便宜約 15 倍。走開放權重的理由是：**合作夥伴另外給的 credits、獨立的 rate limit，以及 $10K 的開放權重加碼獎**。（已確認：價格）
+   - 查核補註：「獨立的 rate limit」不代表比較高。Meta Model API 的 `muse-spark-1.3` Standard 是 3,000 RPM／4M TPM；Baseten 預設帳號只有 15–120 RPM（見 4.3）。要的是吞吐量，Meta API 反而較寬。（已確認：https://dev.meta.ai/docs/pricing-rate-limits.md ；https://docs.baseten.co/inference/model-apis/pricing-and-limits.md ）
 4. **Glimmer 沒有任何比賽合作夥伴提供按 token 計費的服務。** Baseten 和 Modal 只能部署專用 GPU；Fireworks 的 serverless 已在 2026-09-25 下架。按 token 計費的只有 Together 和 DeepInfra，但它們不在比賽的合作夥伴名單上。（已確認）
 5. **建議**：大量初篩用 **Baseten 上的 Spark Open**，`reasoning_effort` 一律設 `low`。不自己架 GPU。一個人只有 6 天，架 Glimmer 的時間不划算（第 9 節）。
 6. **用 Spark Open 必須在產品或文件中顯示「Built with Muse Spark Open」**（Muse Model License 第 2 條）。README 要加這行。（已確認）
@@ -31,12 +32,12 @@
 | Context | 1,048,576 token | 131,072（Meta 文件寫「預設 128K，支援更長」） |
 | 輸入模態 | 文字、圖片、影片、音訊 | 文字、圖片 |
 | 輸出 | 文字 | 文字 |
-| 推理 | 一定會推理。`reasoning_effort` 可設 `low`／`medium`／`high`／`xhigh`，**預設 xhigh**；分別對應強度 8／32／256／512 | 一定會推理。強度 low／medium／high／xhigh，**預設 high**；用 system prompt 寫 `Reasoning strength: low`，或用 `chat_template_kwargs` 設定 |
+| 推理 | 一定會推理。`reasoning_effort` 可設 `low`／`medium`／`high`／`xhigh`，**預設 xhigh**；分別對應強度 8／32／256／512 | 一定會推理。強度 low／medium／high／xhigh，**預設 high**；用 system prompt 寫 `Reasoning strength: low`，或送 `chat_template_kwargs: {"reasoning_strength": "low"}`。**參數名是 `reasoning_strength`，不是 `reasoning_effort`**；llama.cpp 不實作 `reasoning_effort`，ExecuTorch 會回 400（查核補註，來源：https://dev.meta.ai/docs/muse-glimmer/deploy.md ） |
 | Tool calling | 支援（原生 ATEM 格式，伺服器端解析成 OpenAI 的 `tool_calls`） | 支援（ATEM；vLLM 用 `muse_glimmer` parser） |
 | 知識截止 | 2026-01-04（chat template 的預設值） | 2026-01-04 |
 | 建議取樣 | temperature 1.0、top_p 1.0、不設 top_k | temperature 1.0、top_p 0.95、top_k 64；**不要用 greedy**（會鬼打牆） |
 | 停止 token | `<\|eot\|>`、`<\|end_of_text\|>`；**不能在 `<\|eom\|>` 停** | 同左 |
-| HF repo | `meta-models/Muse-Spark-Open-816B-A42B`（BF16）、`-NVFP4`；**需人工審核才能下載**（要填法定姓名、生日、組織） | `meta-models/Muse-Glimmer-30B`（BF16）、`-GGUF`、`-assistant`（DFlash）、`-ExecuTorch-PTE`；不需審核 |
+| HF repo | `meta-models/Muse-Spark-Open-816B-A42B`（BF16）、`-NVFP4`；**需人工審核才能下載**（HF `gated: manual`；表單要填姓名、生日、國家、所屬組織、職稱。也可在 dev.meta.ai 登入、接受授權後下載） | `meta-models/Muse-Glimmer-30B`（BF16）、`-GGUF`、`-assistant`（DFlash）、`-ExecuTorch-PTE`；不需審核 |
 | 授權 | Muse Model License（見第 2 節） | Apache 2.0 |
 
 ### 硬體需求
@@ -64,15 +65,15 @@ Glimmer 官方的量化品質損失：K-Quant-Dynamic 為 0.2%，K-Quant-17GB �
 | 條款 | 內容 | 對 pickfit 的影響 |
 |---|---|---|
 | 授權範圍 | 可以使用、修改、微調、蒸餾、散布、販售 | 可以商用 |
-| 第 1 條 | 必須遵守 Usage Policy（附件 A） | 禁止用途見下 |
-| 第 2 條 | 使用本模型或衍生物的產品或服務，**必須在 UI、文件、網站或設定選單中明顯標示「Built with Muse Spark Open」** | README 與展示頁要加這行 |
-| 第 3 條 | 以 API 對外提供模型（Model as a Service），而且年營收超過 2,000 萬美元，才需要另外和 Meta 簽約。內部使用，或拿模型當自家產品的功能，不在此限 | 不影響 |
+| 第 1 條 | 必須遵守 Usage Policy（附件 A）；散布本軟體或衍生物（Derivatives）時，要附上版權聲明、本授權與 Usage Policy | 禁止用途見下；pickfit 不散布權重，只透過 API 用 |
+| 第 2 條 | 使用本模型或衍生物的產品或服務，**必須在 UI、文件、網站或設定選單中明顯標示「Built with Muse Spark Open」**。「衍生物」包含用本模型的**輸出**訓練出來的模型 | README 與展示頁要加這行；若日後拿輸出訓練模型，那個模型也算衍生物 |
+| 第 3 條 | 對第三方以 API 等方式提供模型（Model as a Service），**而且授權方與關係企業的合計總營收**在任連續 12 個月超過 2,000 萬美元，才需要先通知 Meta 並另簽書面協議。門檻是公司總營收，不是 MaaS 營收。內部使用、研究、非 MaaS 的商業活動，或拿模型當自家產品（非 MaaS）的功能，不在此限 | 不影響 |
 | 第 4 條 | Meta 不主張輸出的所有權 | — |
-| Usage Policy | 不開放 18 歲以下使用；禁止惡意程式、詐騙、垃圾訊息、假評論與假互動、冒充他人、無照執業（醫療、法律、金融）、未經授權推論個人敏感資訊、軍事用途等 | 「不做醫療建議」本來就在 brief 的排除清單；注意不能產生假評論或假互動 |
+| Usage Policy | 不適用 18 歲以下（原文「not intended for individuals under the age of 18」）；禁止把模型輸出說成人寫的；禁止惡意程式、詐騙、垃圾訊息、假評論與假互動、冒充他人、無照執業（醫療、法律、金融）、未經授權推論個人敏感資訊、軍事用途等 | 「不做醫療建議」本來就在 brief 的排除清單；注意不能產生假評論或假互動 |
 
 ### Muse Glimmer：Apache 2.0
 
-- 可以商用、修改、再散布，不需顯示標語；要保留授權與 NOTICE。
+- 可以商用、修改、再散布，不需顯示標語；再散布時要保留 LICENSE。HF repo 沒有 NOTICE 檔（查核補註：repo 檔案清單只有 LICENSE、README、USAGE_POLICY.md 等；https://huggingface.co/api/models/meta-models/Muse-Glimmer-30B ）。
 - repo 另附 `USAGE_POLICY.md`，內容和上面的 Usage Policy 類似。它和 Apache 2.0 之間的法律關係，文件沒有寫清楚。（未驗證）
 
 ---
@@ -84,11 +85,11 @@ Glimmer 官方的量化品質損失：K-Quant-Dynamic 為 0.2%，K-Quant-17GB �
 | **Baseten** | Model APIs（按 token 計費）：`meta-models/muse-spark-open`，$1.25 輸入／$0.15 快取輸入／$4.25 輸出（每百萬 token） | 只有專用部署：BF16 跑在單張 H100 上（vLLM＋DFlash），按分鐘計費，H100 每小時 $6.50 | 是：$100 credits＋2M TPM |
 | **Modal** | Shared Endpoint（按 token 計費），價格同上；NVFP4 | Dedicated Endpoint：BF16 或 RadixArk NVFP4，按秒計 GPU 費；**模型庫頁面只列文字模態** | 是：$100 credits（「透過 Endpoints 使用 Meta 開放權重模型」） |
 | **Fireworks** | Serverless：`accounts/fireworks/models/muse-spark-open`，價格同上，context 1040K，支援圖片與 function calling | **Serverless 已於 2026-09-25 下架**，只剩 on-demand 部署；提供免費 SFT 到 11/30 | 是：$25，少數入選 |
-| Together AI | `meta-models/muse-spark-open` | Serverless：`meta-models/Muse-Glimmer-30B`，$0.35／$0.04／$1.50（數字取自 Meta 文件引用 Together 的頁面）；伺服器端用 FP8；單次輸出上限 32,768 token | 否（但是 Meta 的發布夥伴） |
+| Together AI | `meta-models/muse-spark-open` | Serverless：`meta-models/Muse-Glimmer-30B`，$0.35／$0.04／$1.50（Together 模型頁與 Meta 文件一致，查核時直接讀過 Together 頁面）；伺服器端用 FP8（MLP 量化，attention 與視覺塔維持 bf16）；單次輸出上限 32,768 token（後兩項取自 Meta 部署文件轉述 Together 的說法） | 否（但是 Meta 的發布夥伴） |
 | Groq | 需要組織先通過審核；context 131,072；支援 tool calling、structured outputs、圖片 | — | 否 |
 | Nebius、OpenRouter | 有 | OpenRouter 有列（Meta 文件的發布夥伴名單） | 否 |
 | DeepInfra | — | $0.30／$0.04／$1.20；131,072；頁面標示支援 JSON 與 Function | 否 |
-| HF Inference Providers | 只透過 Baseten（HF 標示：toolCalling 是 true，structuredOutput 是 false，約 172 tok/s） | Together、DeepInfra、Featherless（Together 和 DeepInfra 的 structuredOutput 是 true） | — |
+| HF Inference Providers | 只透過 Baseten（HF router：`supports_tools` true、`supports_structured_output` false、約 172 tok/s、首 token 約 357 ms） | HF router `/v1/models` 只列 DeepInfra（tools 與 structured output 都是 true）和 Featherless；Together 在 `inferenceProviderMapping` 標 live，但 router 清單沒有它，structured output 未驗證 | — |
 
 ---
 
@@ -113,12 +114,12 @@ Glimmer 官方的量化品質損失：K-Quant-Dynamic 為 0.2%，K-Quant-17GB �
 | JSON schema（`response_format: json_schema`） | ❌ | 「accepts `json_schema` but doesn't enforce the schema」 |
 | JSON mode（`json_object`） | ❌ | 「accepts `json_object` but doesn't constrain output to JSON」 |
 | 推理 | 一定開 | `reasoning_effort` 可設 low／medium／high／xhigh，預設 xhigh；`none` 和 `minimal` 會當成 `low`；推理內容放在 `reasoning_content` |
-| 圖片 | ✅ | JPEG、PNG、WebP、GIF（只取第一格）、BMP、TIFF；每次最多 8 張，每張 URL 最大 10 MB |
+| 圖片 | ✅ | JPEG、PNG、WebP、GIF（只取第一格）、BMP、TIFF；每次最多 8 張，每張 URL 最大 10 MB；圖片＋影片＋音訊合計 200 MB，base64 時整個 request body 上限 100 MiB |
 | 影片 | ✅ | 每次最多 2 支、每支 200 MB、最長 300 秒；最多取 96 格；720p 約每秒 144 token，上限約 6.9K token |
 | 音訊 | ✅ | WAV、MP3、FLAC、OGG、M4A；最多 4 個檔，每個 25 MB、5 分鐘 |
 | PDF | ❌ | 先自己抽出文字 |
 | 其他限制 | — | `n` 大於 1 會回 400；`logprobs` 會被忽略；`seed` 和 `temperature: 0` 都不保證可重現 |
-| Context | 1M | Baseten 部落格寫「the full 1M context window」，用 NVFP4 提供服務 |
+| Context | 1M | Baseten 部落格寫「the full 1M context window」，用 NVFP4 提供服務。文件的 supported models 表：context 1,048K、max output 1,048K；可用取樣參數 temperature、top_p、top_k、stop、presence_penalty、frequency_penalty（查核補註，來源：https://docs.baseten.co/inference/model-apis/overview 的 HTML 表格） |
 | 資料保存 | 零保存 | 同步請求不保存輸入與輸出 |
 
 ### 4.3 價格與限制
@@ -133,9 +134,10 @@ Glimmer 官方的量化品質損失：K-Quant-Dynamic 為 0.2%，K-Quant-17GB �
 | Basic（已驗證） | 120 | 500,000 |
 | Pro | 120 | 1,000,000 |
 
+- 上表只是帳號預設值。文件寫「A model, service tier, or organization-specific configuration can set different limits」，所以 Spark Open 的實際限制可能不同；可用 `GET /v1/model_apis/{model_api_name}` 查有效限制。
 - 比賽給 **2M TPM**，但 **RPM 會不會一起提高沒有寫**（未驗證）。從回應的 `x-ratelimit-limit-requests` 和 `x-ratelimit-limit-tokens` header 可以看到實際的限制。
 - 可以設月預算；開啟「enforce」後，達到預算時會拒絕 Model API 請求。這和 Meta 的 Spend Limit 不同，真的會停止扣款。
-- 錯誤碼：429 是超過 rate limit，529 是服務過載。都要退避後重試。
+- 錯誤碼：429 是超過 rate limit，529 是服務過載。都要退避後重試。402 是需要付款（credits 用完時可能出現，未實測）。
 
 ### 4.4 比賽的 credits 怎麼申請
 
@@ -151,12 +153,13 @@ Glimmer 官方的量化品質損失：K-Quant-Dynamic 為 0.2%，K-Quant-17GB �
 
 | 方式 | 模型 | 怎麼建立 | 計費 |
 |---|---|---|---|
-| Shared Endpoint | Muse Spark Open（文字、圖片、音訊） | `modal endpoint create --shared --model meta-models/Muse-Spark-Open-816B-A42B` | 按 token：$1.25／$0.15／$4.25 |
+| Shared Endpoint | Muse Spark Open（Shared Endpoint 表列文字、圖片、音訊；模型庫頁的規格另列影片，Shared Endpoint 是否收影片未驗證） | `modal endpoint create --shared --model meta-models/Muse-Spark-Open-816B-A42B` | 按 token：$1.25／$0.15／$4.25 |
 | Dedicated Endpoint | Muse Glimmer 30B BF16 | `modal endpoint create --model meta-models/Muse-Glimmer-30B` | 按秒計 GPU；沒請求時縮到 0，不收費 |
 | Dedicated Endpoint | Muse Glimmer 30B NVFP4（只有文字） | `modal endpoint create --model RadixArk/Muse-Glimmer-NVFP4` | 同上 |
 
 - 認證：先執行 `modal workspace proxy-tokens create`，再用 `Authorization: Bearer wk-<id>.ws-<secret>`。
-- Shared Endpoint 的 base URL 是 `https://inference.us-west.modal.direct/v1`，`model` 欄位填端點的 hostname（例如 `my-endpoint.us-west.modal.direct`）。實測 curl：不帶憑證時 `/v1/models` 回 401 `{"error":"invalid proxy auth credentials"}`。
+- Shared Endpoint 的 base URL 是 `https://inference.us-west.modal.direct/v1`，`model` 欄位填端點的 hostname（例如 `my-endpoint.us-west.modal.direct`）。來源是 https://modal.com/docs/guide/endpoint-integrations.md （endpoints.md 只寫「填 dashboard 上顯示的值」）。實測 curl：不帶憑證時 `/v1/models` 回 401 `{"error":"invalid proxy auth credentials"}`（2026-10-28 重測一致）。
+- Shared Endpoint 有「每個模型的並行請求上限」，整個 workspace 共用，超過回 429；數字文件沒寫（未驗證）。
 - **注意**：Modal 文件寫「Credits included with your plan cannot be used for Shared Endpoint usage」。比賽的 $100 能不能拿來付 Shared Endpoint 的費用，**未驗證**（活動頁只寫「through Endpoints」）。
 - Shared Endpoint 的 tool calling 與 JSON schema 支援，Modal 文件沒寫。（未驗證）
 - Dedicated Endpoint 用哪種 GPU 由 Modal 的 recipe 決定，文件沒寫。（未驗證）
@@ -192,6 +195,8 @@ sglang serve --model-path meta-models/Muse-Glimmer-30B \
 | H200 141 GB | $4.54 | 22 | SGLang 驗證過 BF16 |
 | B200 | $6.25 | 16 | 驗證過 BF16 與 NVFP4 |
 
+上表只算 GPU。Modal 的 CPU 與記憶體另外按秒計費，實際花費會略高。
+
 另外，Baseten 的 H100 每小時 $6.50、B200 每小時 $9.98，按分鐘計費。
 
 ### 5.4 Cold start（估算）
@@ -211,6 +216,7 @@ sglang serve --model-path meta-models/Muse-Glimmer-30B \
 
 - Spark Open 有 serverless：base URL 是 `https://api.fireworks.ai/inference/v1`，model 是 `accounts/fireworks/models/muse-spark-open`。價格 $1.25／$0.15／$4.25，只用美國的算力。
 - 支援 tool calling、圖片、`reasoning_effort`；Meta 文件寫 JSON mode（`json_object`）可以用。`json_schema` 是否支援未驗證。
+- Fireworks serverless 只收文字和圖片（不收影片、音訊）；`reasoning_effort: "none"` 會被拒絕（Baseten 則是把 `none`／`minimal` 當成 `low`）。（Meta 部署文件與 Fireworks 模型頁）
 - Glimmer 只能用 on-demand 部署（serverless 已下架），但可以免費 SFT 到 11/30。
 - 比賽 credits：$25，以團隊為單位，入選才有，會收到 email。
 
@@ -291,7 +297,7 @@ sglang serve --model-path meta-models/Muse-Glimmer-30B \
 | RPM 15（未驗證帳號） | 約 107 分鐘 |
 | TPM 2M（比賽） | 至少約 2 分鐘 |
 | TPM 500k | 約 9 分鐘 |
-| 單次請求延遲 | 約 3–6 秒（HF 量到 Baseten 約 172 tok/s；400–900 token 的輸出），並行 5–10 個就能用滿 120 RPM |
+| 單次請求延遲 | 約 3–6 秒（HF 量到 Baseten 約 172 tok/s、首 token 約 0.36 秒；400–900 token 的輸出），並行約 6–12 個就能用滿 120 RPM（120 RPM＝每秒 2 個 × 3–6 秒）。注意：同一個 `x-session-affinity` 文件建議每分鐘最多約 60 個請求，批次要分多個 session |
 
 → **瓶頸是 RPM，不是 TPM。** 拿到金鑰後先看 `x-ratelimit-limit-requests`。
 
@@ -384,8 +390,8 @@ client.chat.completions.create(model="<your-endpoint>.us-west.modal.direct", mes
 | 10 | 開放權重加碼獎在提交時要怎麼標；Together 或 DeepInfra 算不算合作夥伴 | Discord #questions |
 | 11 | Glimmer 自架的實際吞吐量（第 8 節的 5k／600 tok/s 是推估） | 實測 |
 | 12 | Fireworks 上的 Spark Open 是否支援 `json_schema` | 實測，或查 Fireworks 文件 |
-| 13 | Glimmer 的 `USAGE_POLICY.md` 對 Apache 2.0 授權有沒有約束力 | 讀 LICENSE 與 NOTICE；有疑慮就照 Usage Policy 做 |
-| 14 | Baseten 推理文件的矛盾：一張表寫 Spark Open 推理「Control: None」，另一張表列出可用的 `reasoning_effort` 值 | spike 實測：`low` 和 `xhigh` 的推理 token 數有沒有差 |
+| 13 | Glimmer 的 `USAGE_POLICY.md` 對 Apache 2.0 授權有沒有約束力 | 讀 LICENSE（repo 沒有 NOTICE 檔）；有疑慮就照 Usage Policy 做 |
+| 14 | ~~Baseten 推理文件的矛盾~~（查核：不是矛盾）。「Control reasoning」表的 Control 欄指的是**開關推理**的方式；Spark Open 一直開著，所以是 None。推理**深度**看「Set reasoning depth」表，`low`／`medium`／`high`／`xhigh` 都照送出的值執行。仍值得實測 | spike 實測：`low` 和 `xhigh` 的推理 token 數差多少 |
 
 ---
 
@@ -408,12 +414,13 @@ Baseten：
 - 價格與限制：https://docs.baseten.co/inference/model-apis/pricing-and-limits.md
 - Structured outputs：https://docs.baseten.co/inference/structured-outputs.md ；JSON mode：https://docs.baseten.co/inference/json-mode.md ；Function calling：https://docs.baseten.co/inference/function-calling.md ；推理：https://docs.baseten.co/inference/model-apis/reasoning.md ；視覺：https://docs.baseten.co/inference/model-apis/vision.md
 - 模型庫頁面：https://www.baseten.co/library/muse-spark-open ；https://www.baseten.co/library/muse-glimmer-30b/
+- 全文索引（搜尋「1026」用）：https://docs.baseten.co/llms-full.txt ；supported models 表（HTML 內嵌資料）：https://docs.baseten.co/inference/model-apis/overview ；音訊：https://docs.baseten.co/inference/model-apis/audio.md
 - 價格頁：https://www.baseten.co/pricing
 - 部落格：https://www.baseten.co/blog/muse-spark-open-launch/
 
 Modal：
 - 模型庫：https://modal.com/library/meta/muse-spark-open ；https://modal.com/library/meta/muse-glimmer-30b-bf16 ；https://modal.com/library/meta/muse-glimmer-30b-nvfp4
-- 支援的模型：https://modal.com/docs/guide/supported-models.md ；Endpoints：https://modal.com/docs/guide/endpoints.md ；Shared Endpoints：https://modal.com/docs/guide/shared-endpoints.md ；Dedicated Endpoints：https://modal.com/docs/guide/dedicated-endpoints.md
+- 支援的模型：https://modal.com/docs/guide/supported-models.md ；Endpoints：https://modal.com/docs/guide/endpoints.md ；Shared Endpoints：https://modal.com/docs/guide/shared-endpoints.md ；Dedicated Endpoints：https://modal.com/docs/guide/dedicated-endpoints.md ；Shared Endpoint 的 base URL：https://modal.com/docs/guide/endpoint-integrations.md
 - 價格頁：https://modal.com/pricing
 - Cold start：https://modal.com/docs/guide/cold-start.md ；https://modal.com/docs/guide/high-performance-llm-inference.md
 - 範例：https://modal.com/docs/examples/llm_inference.md ；https://modal.com/docs/examples/vllm_throughput.md
@@ -425,5 +432,56 @@ Fireworks：https://fireworks.ai/models/fireworks/muse-spark-open ；https://fir
 - Together：https://www.together.ai/models/muse-glimmer （價格數字取自 Meta 部署文件的引用）
 - DeepInfra：https://deepinfra.com/meta-models/Muse-Glimmer-30B
 - vLLM recipe：https://recipes.vllm.ai/meta-models/Muse-Glimmer-30B
+- HF Inference Providers 的路由清單：https://router.huggingface.co/v1/models
 
 比賽：公開活動頁 https://cerebralvalley.ai/e/meta-ai-developer-hackathon （合作夥伴的 credits）；`docs/hackathon-rules.md` 第 5、6 節。
+
+---
+
+## 查核紀錄（2026-10-28）
+
+查核者：另一個 agent，預設懷疑、逐條對第一手來源。全部用 curl 抓原文（Meta 文件 `.md`、HF API／model card、Baseten／Modal 文件 `.md` 與 HTML、Fireworks／Together／DeepInfra 模型頁）。沒有 API key，沒有做任何付費呼叫。
+
+### 逐條結果
+
+| # | 主張 | 結果 | 依據（2026-10-28 讀取） |
+|---|---|---|---|
+| 1 | Spark Open：816B／42B active、256 expert 選 8、1,048,576 context、輸入文字＋圖片＋影片＋音訊、輸出文字 | 確認 | HF model card；https://dev.meta.ai/docs/muse-spark-open.md ；settings.md（62 層＝46 SWA＋16 全域） |
+| 2 | Glimmer：29.6B dense、131,072 context、文字＋圖片、Apache 2.0、知識截止 2026-01-04 | 確認 | HF model card（`Context length 131,072+`）；Meta 文件寫「30B」「128K by default」 |
+| 3 | 授權：第 2 條標語；只有 MaaS 且年營收超過 $20M 才要另簽 | **部分修正** | 營收門檻是「授權方＋關係企業合計總營收、任連續 12 個月」，不是 MaaS 營收；另需先通知 Meta。第 1 條還要求散布時附授權與 Usage Policy；「衍生物」含用輸出訓練的模型。已改第 2 節 |
+| 4 | 兩者一定推理；Spark 預設 xhigh（low＝8）；Glimmer 預設 high | 確認＋補充 | chat template（`reasoning_effort` 預設 `xhigh`；Glimmer `reasoning_strength` 預設 `high`）；GGUF README「Reasoning cannot be switched off」。補：Glimmer 的參數名是 `reasoning_strength` |
+| 5 | Baseten base URL、Bearer；無金鑰 401、錯金鑰 403 | 確認（重測） | `GET /v1/models` 無 header → 401 `No Authorization header provided`；錯金鑰 `POST /v1/chat/completions` → 403 `{"error":"please check the api-key you provided"}` |
+| 6 | Baseten 上 Spark Open 支援 tool calling；`json_schema`／`json_object` 收但不強制 | 確認 | overview.md「All except Muse Spark Open support structured outputs and JSON mode」；structured-outputs.md；json-mode.md |
+| 7 | Spark Open $1.25／$0.15／$4.25（Baseten、Modal、Fireworks）＝Muse Spark Standard；Contributor $0.10／$0.20 | 確認 | Baseten pricing 頁內嵌資料 `perfCost 1.25／perfCostOutput 4.25／perfCostCacheInput 0.15`；Modal supported-models.md；Fireworks 模型頁；Meta pricing-rate-limits.md（Contributor 快取輸入 $0.002） |
+| 8 | Baseten 預設 15／120／120 RPM、100K／500K／1M TPM；比賽 2M TPM、RPM 不明 | 數字確認；RPM 是否提高仍未驗證 | pricing-and-limits.md；活動頁只寫「$100 in credits and 2M TPM rate limits」。補：模型層級設定可能不同 |
+| 9 | `meta-models/muse-spark-open-1026` 不在 Baseten 公開文件與 HF | 確認找不到（仍未驗證是否存在） | llms-full.txt 與 overview HTML 搜尋「1026」0 筆；HF API 搜尋無此 ID；HF provider mapping 是 `meta-models/muse-spark-open`；WebSearch 無結果 |
+| 10 | Glimmer 沒有夥伴按 token 提供；Baseten 專用 H100 BF16；Modal 只有 Dedicated（只列文字）；Fireworks serverless 2026-09-25 下架 | 確認 | Baseten 模型庫 `availability: ["dedicated"]`、「single H100」；Modal supported-models.md；Fireworks FAQ「Only on serverless, starting on September 25, 2026」 |
+| 11 | Together $0.35／$1.50、DeepInfra $0.30／$1.20（JSON、Function）；都不是比賽夥伴 | 確認 | Together 模型頁（直接讀到 $0.35／$0.04／$1.50）；DeepInfra 頁；活動頁夥伴只列 Baseten、Modal、Fireworks |
+| 12 | Modal Shared Endpoint 指令、base URL、proxy token；plan credits 不能付 Shared Endpoint | 確認；比賽 $100 能否支付仍未驗證 | shared-endpoints.md「Credits included with your plan cannot be used for Shared Endpoint usage」；base URL 來源補為 endpoint-integrations.md；無憑證 curl → 401 `invalid proxy auth credentials` |
+| 13 | Glimmer BF16 需 72 GB；Modal GPU 價；cold start 估計 | 價格與 VRAM 確認；cold start 仍是估算 | Meta deploy.md「about 72 GB of VRAM」；Modal pricing 每秒價換算：RTX PRO 6000 $3.031、H100 $3.949、H200 $4.540、B200 $6.250。補：只算 GPU，CPU／記憶體另計 |
+| 14 | Spark Open 自架 NVFP4 約 537 GB（4×B300）、BF16 約 1.65 TB（8×B300） | 確認 | get-the-model.md；hardware-platforms.md；model card「at least 700GB of VRAM for NVFP4 and 2TB for BF16」 |
+| 15 | 每 1000 筆 3.56M 入／0.75M 出、約 $7.6（快取約 $6.7）、$100 約 1.3 萬筆、120 RPM 約 13 分、15 RPM 約 107 分 | 算式重算無誤（仍是估算） | 4.20＋2.835＋0.581＝$7.62；1,600 次÷120＝13.3 分；÷15＝106.7 分。修正並行數 5–10 → 約 6–12 |
+| 16 | 開放權重加碼獎的條件；夥伴是 Baseten／Modal／Fireworks；提交怎麼標不明 | 夥伴名單確認；標示方式仍未驗證 | 公開活動頁 Partners 段落；獎項條件只在 rules 第 5 節（Participant Guide 需登入），公開頁沒有這段 |
+| 17 | Baseten 上 Spark Open：最多 8 張圖（每張 10 MB）、2 支影片（300 秒）、4 個音訊、不收 PDF、n>1 回 400、忽略 logprobs | 確認＋補充 | vision.md、audio.md、overview.md。補：媒體合計 200 MB、base64 時 body 上限 100 MiB |
+
+### 其他修正
+
+| 位置 | 原文 | 改成 | 依據 |
+|---|---|---|---|
+| 第 0 節第 3 點 | 「獨立的 rate limit」當成走開放權重的理由 | 補註：Meta API 的 Muse Spark Standard 是 3,000 RPM／4M TPM，遠高於 Baseten 預設 | Meta pricing-rate-limits.md |
+| 第 1 節 HF repo | 「要填法定姓名、生日、組織」 | 表單欄位是姓名、生日、國家、所屬組織、職稱；也可從 dev.meta.ai 下載 | HF API `extra_gated_fields`；get-the-model.md |
+| 第 2 節 Glimmer | 「要保留授權與 NOTICE」 | repo 沒有 NOTICE 檔，保留 LICENSE 即可 | HF API 檔案清單 |
+| 第 3 節 HF Providers | Glimmer 有 Together／DeepInfra／Featherless，Together structured output true | router 清單只有 DeepInfra 與 Featherless；Together 只在 mapping 標 live | https://router.huggingface.co/v1/models |
+| 第 11 節 #14 | Baseten 推理文件「矛盾」 | 不是矛盾：Control 欄是開關方式，深度另一張表 | reasoning.md |
+
+### 沒查到、維持未驗證
+
+- `-1026` 是否存在、價格與 `muse-spark-open` 是否相同（需金鑰跑 `/v1/models`）。
+- 比賽 2M TPM 是否連帶提高 RPM。
+- Modal 比賽 credits 能否付 Shared Endpoint；Shared Endpoint 的並行上限、tool calling、JSON schema。
+- Baseten 上強制 `tool_choice` 對 Spark Open 是否有效、參數是否合 schema。
+- `low` 推理實際用多少 token（第 8 節成本誤差最大的來源）。
+
+### Spike 狀態
+
+`spikes/meta_baseten_hello.py`：沒有金鑰時印說明、exit 0；帶錯的金鑰時 `GET /models` 回 403 並印出說明、exit 1（2026-10-28 重跑）。正常路徑仍**未實測**。
