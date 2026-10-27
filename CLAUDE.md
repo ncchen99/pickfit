@@ -2,7 +2,12 @@
 
 本專案正在參加 Meta Global AI Developer Hackathon（開發期間 2026-10-27 – 11-04 ET）。
 
-動手前先讀 [docs/hackathon-rules.md](docs/hackathon-rules.md)，特別是第 9 節的工作守則：
+動手前先讀：
+
+1. [docs/brief.md](docs/brief.md)：這次要做什麼、目標、範圍、時程與待決定事項。
+2. [docs/hackathon-rules.md](docs/hackathon-rules.md)：比賽規則，特別是第 9 節的工作守則。
+
+最重要的守則：
 
 - 不要竄改任何時間紀錄（commit 時間、歷史、檔案時間），也不要把賽前資料寫成比賽期間的成果。
 - **這個 repo 只放比賽期間的成果。** 不要把賽前的研究、規格、評測題目或素材複製進來；需要參考時，只取知識，不搬檔案。
