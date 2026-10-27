@@ -243,7 +243,7 @@ python3 spikes/ch_hosting_hf_forges.py hf           # 可選：export HF_TOKEN=.
 
 - 全站：最新 100 個 public project 橫跨 11–15 分鐘（三次量測，約 9,500–13,500 個／天）。
 - 第一次跑時 `command-line`、`llm` 兩個請求 429；腳本改成依 `Retry-After` 等一次再試後才拿到。
-- 查核重跑（2026-10-27 20:47 UTC）：`cli` 11／17／0、`command-line` 0／0／0 與上表一致；`ollama` 0／1／0 一致；`llm` 等 120 秒重試後仍 429，全站估計那一行也 429（原腳本遇到非 200 會不印任何東西，已補上印出狀態）。原因見 2.6：未登入每 IP 60 次／時。
+- 查核重跑（2026-10-27 20:47 UTC）：`cli` 11／17／0、`command-line` 0／0／0 與上表一致；`ollama` 0／1／0 一致；`llm` 等 120 秒重試後仍 429，全站估計那一行也 429（原腳本遇到非 200 會不印任何東西，已補上印出狀態）。原因見 2.6：未登入每 IP 60 次／時。整點重置後再跑一次（21:01 UTC）：`cli` 11／17／0、`llm` 9／40／1，與上表一致；`command-line` 改成 429（共用出口 IP）；全站最新 100 個橫跨 16 分鐘（約 8,800 個／天，略低於原文的 9,500–13,500）。
 
 ---
 
@@ -356,7 +356,7 @@ python3 spikes/ch_hosting_hf_forges.py hf           # 可選：export HF_TOKEN=.
 | 8 | fine-grained PAT 不勾權限也能讀所有公開 repo | 正確 | PAT 文件原文「Tokens always include read-only access to all public repositories on GitHub」 | 無 |
 | 9 | HF rate limit 匿名 500／免費 1,000／PRO 2,500（5 分鐘窗）；標頭 q=500;w=300 | 正確 | hub-docs `rate-limits.md` 原文；實測標頭 `"fixed window";"api";q=500;w=300`。文件註明匿名與免費額度會隨平台狀況調整 | 無 |
 | 10 | HF ToS 無禁止爬取；robots `Allow: /`；授權限「through our Services and functionalities」 | 正確 | ToS 全文搜尋 scrap／crawl／automat／robot 無禁止條文；生效日 2022-09-15；robots.txt 實取 | 無 |
-| 11 | HF Spaces 數字（1,315 Space／天、5,637 model／天、本地 AI 20 筆、RUNNING 16、likes≥1 2、GitHub 6、可安裝 0、trending 124） | **大致可重現，兩處結論錯** | 重跑：1,313／天、5,929／天、20、16、2、6、trending 14 天 123 | 「README 連到 GitHub 6 筆」中只有 3 筆是作者自己的 repo；「可安裝的工具 0」不成立，`felixfufu723/ollama-hud` 是可安裝的本地 AI 工具 |
+| 11 | HF Spaces 數字（1,315 Space／天、5,637 model／天、本地 AI 20 筆、RUNNING 16、likes≥1 2、GitHub 6、可安裝 0、trending 124） | **大致可重現，兩處結論錯** | 重跑：1,313／天、5,929／天、20、16、2、6、trending 14 天 123 | 「README 連到 GitHub 6 筆」中只有 3 筆是作者自己的 repo；「可安裝的工具 0」不成立，`felixfufu723/ollama-hud` 依 README 是可安裝的本地 AI 工具（未實際安裝） |
 | 12 | GitLab API Terms 1.3.9；無 `created_after`；未登入 `/projects` 400／10 分 | **條款正確，rate limit 過時** | API Terms 原始檔逐字比對；projects.md 參數表；GitLab 官方 blog（2026-09-17）：未登入 60 次／時／IP，10-19 生效；實測 429 標頭 `unauthenticated_traffic_per_ip`、整點重置 | 2.6、比較表、5.2 改成 60 次／時；補 `id_after` |
 | 13 | Codeberg robots `Disallow: /api/`、封鎖 GPTBot／ClaudeBot；ToU 自由授權；2,000 次／600 秒；topic:cli 15、llm 9；一帳號一週 9 個農場工具 | **大致正確，兩處低估** | robots.txt 實取（另封鎖 meta-externalagent、facebookexternalhit 等）；ToU 原文；標頭 `"baseline";q=2000;w=600`；重跑 cli 16、llm 9 | ToU 有 NC／ND 例外；`0xgetz` 實際 48 個 repo、40 個同一天建立、31 個含 bulk |
 | 14 | SourceHut 自動收集只限索引／研究／封存，禁營利；禁 LLM 相關內容 | 正確 | man.sr.ht/terms.md 原文 | 無 |
@@ -371,7 +371,8 @@ python3 spikes/ch_hosting_hf_forges.py hf           # 可選：export HF_TOKEN=.
 | `ch_hosting_github.py counts`（本 session） | 第一個請求 403 後結束 | 與結果 A 一致 |
 | `ch_hosting_github.py counts／sample／slice`（本機 mock server） | 可以 | 流程正常；真實數字仍需念誠用自己的 PAT 跑 |
 | `ch_hosting_github.py gharchive 2026-10-26-15 2025-06-16-15 2025-10-20-15` | 可以（17 秒） | 三列數字完全一致 |
-| `ch_hosting_hf_forges.py`（全部） | 可以（4 分 46 秒） | HF、Codeberg 數字與檔案相差 ≤3%（時間窗移動）；GitLab `llm` 與全站估計 429 |
+| `ch_hosting_hf_forges.py`（全部） | 可以（4 分 46 秒） | HF、Codeberg 數字與檔案幾乎一致（時間窗移動造成 ±1–2 筆，model／天 5,929 vs 5,637）；GitLab `llm` 與全站估計 429 |
+| `ch_hosting_hf_forges.py gitlab`（修改後，整點重置後） | 可以 | `cli`、`llm`、`ollama` 與檔案完全一致；`command-line` 429；全站約 8,800 個／天 |
 | 金鑰 | — | 兩支腳本都沒有寫死金鑰；GitHub 讀 `GH_TOKEN`／`GITHUB_TOKEN`，HF 讀 `HF_TOKEN` |
 
 對 `spikes/ch_hosting_hf_forges.py` 的修改（只動 GitLab 與錯誤處理）：可選 `GITLAB_TOKEN`（`PRIVATE-TOKEN` 標頭）；全站估計非 200 時印出狀態與 `ratelimit-name`；`get()` 遇到代理斷線或逾時回 0 而不是整支中斷（查核時第一次重跑就因 gitlab.com 讀取逾時而中斷）；docstring 執行時間改為 2–5 分鐘。`hf()` 的全站估計與 trending 兩段仍未檢查 HTTP 狀態，遇到錯誤會中斷（未改）。
