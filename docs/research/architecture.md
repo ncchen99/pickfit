@@ -27,19 +27,33 @@
 
 ## A. 軟體從哪裡來：管道盤點
 
-完整盤點（6 組、約 50 個管道）與要避開的清單：[channels.md](channels.md)。原始筆記在 [notes/](notes/)。**狀態**：社群、區域、Meta 平台已查核；託管、套件查核中；策展資料集、整合工程調研中。
+完整盤點（7 組、約 70 個管道）、要避開的清單、整合方式：[channels.md](channels.md)。原始筆記在 [notes/](notes/)。**7 組都已調研並查核。**
 
-### A.1 黑客松期間接的 5 條
+### A.1 黑客松期間接的 5 條（依優先順序）
 
 | # | 管道 | 理由 | 工時 |
 |---|---|---|---|
-| 1 | GitHub search API（＋ repo、release、README） | 兩個類別的新作品主要在這；可直接篩「今年建立、最近有 push、星數 5–300」 | 6–9 h |
-| 2 | Homebrew 第三方 tap（官方 analytics）＋ homebrew-core | 唯一同時有「真實安裝數」和「默默無聞」的訊號：30 天安裝 10–1000 次的新 tap formula 有 437 個，抽樣星數中位數 1；直接對上 Mac demo | 3–4 h |
-| 3 | Hacker News Show HN（官方 API） | 作者本人發表、別人能試用；兩類別且連 GitHub 約 75 篇／週；86% ≤3 分 | 2–4 h |
-| 4 | PyPI 新專案（`console_scripts` 篩 CLI） | 本地 AI 工具主要在這 | 3–4 h |
-| 5 | 提交入口（MCP 工具＋GitHub Issue Form） | 供給端；只收 GitHub 連結，Threads 連結只嵌入 | 2–3 h |
+| 1 | GitHub search API（＋ repo、release、README） | 兩個類別的新作品主要在這；可直接篩「今年建立、最近有 push、星數 5–300」；再用 stargazers 的 `starred_at` 自算星數曲線，取代已失準的公開資料集 | 6–9 h |
+| 2 | Hacker News Show HN（官方 API） | 作者本人發表、別人能試用；兩類別且連 GitHub 約 75 篇／週；86% ≤3 分 | 2–4 h |
+| 3 | Homebrew 第三方 tap（官方 analytics）＋ homebrew-core | 唯一同時有「安裝數」和「默默無聞」的訊號：30 天安裝 10–1000 次的新 tap formula 有 437 個，抽樣星數中位數 1；以 CLI 為主；直接對上 Mac demo | 3–4 h |
+| 4 | PyPI 新專案（RSS 每 20–30 分鐘；`console_scripts` 篩 CLI） | 本地 AI 工具主要在這；provenance 能確認套件 ↔ repo | 3–4 h |
+| 5 | 提交入口（MCP `submit_software`＋GitHub Issue Form） | 供給端；收 GitHub／套件／官網連結，Threads 連結只嵌入 | 2–3 h |
 
-補資料：ecosyste.ms、deps.dev、OpenSSF Scorecard。時間夠再加：V2EX、Qiita、阮一峰周刊（共 3.5–5 h）。
+- 時間夠再加：`awesome-tuis`、`awesome-ollama` 的 diff（2–3 h，只取連結）；V2EX、Qiita、阮一峰周刊（3.5–5 h）。
+- 補資料：GitHub REST API、deps.dev、Scorecard CLI `--local`。**ecosyste.ms 的條款 §9 禁止未經書面同意的腳本擷取**，寄信取得同意前不放進管線。
+- 條款共同做法：只走官方 API／feed，只存自己抽出的事實＋連結，不轉貼全文、不存個資。GitHub AUP §7 對 API 取得的資料也限制用途，推薦服務算不算在內有解讀空間（未驗證）。
+
+### A.4 怎麼大量整合（摘要）
+
+| 問題 | 做法 |
+|---|---|
+| 主鍵 | **GitHub 數字 repo ID**；URL 只當暫時 key（Show HN 7 天有 14% 的 repo 改過名） |
+| 跨來源合併 | union-find 合併 repo、套件（purl）、HN、Threads、官網等 key；每個來源留出處與首次看見時間 |
+| 套件 → repo | 先看發布簽章 provenance，再看自填欄位 |
+| 增量 | 每個來源一個 cursor／ETag，整批成功才前進；PyPI RSS 每 20–30 分鐘 |
+| 排程 | 本機 cron 跑發現；提交事件直接觸發 Modal；GitHub Actions 只重建索引 |
+| 漏斗 | 規則（$0）→ Spark Open 初篩（約 $2／天）→ Muse Spark 抽取（約 $3.5／天）→ 沙盒驗證（**每天上限 30–50 筆**）；每天約 $9–15 |
+| 提交 | 一個佇列；驗證失敗不收錄；重複提交不加分；每日上限；人工抽查 |
 
 ### A.2 Meta 平台（Threads、Facebook）實際開放到什麼程度
 
@@ -52,7 +66,7 @@
 ### A.3 重要限制
 
 - 這個雲端 session 的 GitHub API 只開放本 repo，GitHub search 的實際筆數沒量到；發現管線要在念誠本機或 Modal 用自己的 PAT 跑。
-- GitHub 公開事件流（GH Archive）2025-10 起每小時 0 筆新 repo 事件（查核中），不能靠它找新 repo。
+- GitHub 公開事件流已經抓不到新 repo：GH Archive 的新 repo 事件 2025-10-09 起歸零，2026-10-26 起每小時事件驟降到約 2,800 筆；BigQuery、ClickHouse、OSS Insight 跟著失準。「星數剛開始長」要自己用 GitHub API 算。
 
 ## B. 怎麼判斷「可用的軟體」與「品質好」
 
