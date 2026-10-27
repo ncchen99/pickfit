@@ -1,27 +1,51 @@
 # 技術調研：pickfit 的架構與技術選型
 
-2026-10-28 · 調研進行中。每完成一節就更新並 push；中途中斷時，以「目前的結論」為準。
-
-需求來源：[docs/brief.md](../brief.md)、[docs/hackathon-rules.md](../hackathon-rules.md)。
+2026-10-28 · 調研完成（A–K 都已寫好）。需求來源：[docs/brief.md](../brief.md)、[docs/hackathon-rules.md](../hackathon-rules.md)。管道的詳細盤點在 [channels.md](channels.md)，各題的原始筆記、來源與查核紀錄在 [notes/](notes/)，實驗腳本在 [spikes/](../../spikes/)。
 
 ---
 
 ## 0. 目前的結論
 
-**狀態（2026-10-28 09:00 台北）**：A–F 都已調研並查核；G（整體架構）評審中。
+**狀態（2026-10-28 台北）**：A–K 都已完成。每個事實都由一個 agent 查官方文件或實測，另一個 agent 反向查核；整體架構由 3 個提案、3 位評審選出。**沒有任何 API key，所有模型、沙盒、部署的線上行為都還沒實測**（spike 已寫好，設好環境變數就能跑）。
 
-| 問題 | 目前的結論 | 狀態 |
-|---|---|---|
-| A. 管道 | 黑客松接 5 條：**GitHub search API**、**Show HN**（官方 API）、**Homebrew 第三方 tap analytics**（有安裝數、星數中位數 1，以 CLI 為主）、**PyPI**（本地 AI 為主）、**提交入口**。補資料用 GitHub API、deps.dev；ecosyste.ms 要先取得書面同意。Threads／Facebook **不能主動發現**，只能用 oEmbed 嵌入。GH Archive 等公開資料集已失準 | 已查核 |
-| B. 品質 | 規則先分出「可用的軟體」；用規則算的品質會飽和，所以品質主要靠**沙盒驗證（35%）**與**模型 rubric 評文件（20%）**；知名度用 7 個訊號對數正規化另外算；寶藏 = 驗證通過＋品質 ≥70＋知名度 ≤45。Scorecard API 只涵蓋約 3% 的長尾 repo | 已查核 |
-| C. 沙盒 | **Modal Sandbox** 主力（gVisor、網域 allowlist、可先開網路安裝再斷網執行），E2B 備案；Mac 只在 demo 那幾筆另外驗證。本機 Docker spike 實際驗證了 4 款真實工具，其中 2 款要先修正 README 才裝得起來 | 已查核 |
-| D. Meta 模型 | `muse-spark-1.3`（Meta API，OpenAI 相容）做抽取、驗證 agent（Responses API＋tool calling）、截圖判讀、文件評分、配對；**Muse Spark Open @ Baseten** 只做大量初篩（同價，為了 credits 與加碼獎）；Glimmer 不用 | 已查核；**沒有 key，模型呼叫未實測** |
-| E. MCP | 規格 `2026-07-28` 本身已無狀態，但多數客戶端仍走舊 handshake → 用官方 TS SDK v2 的 `createMcpHandler` 同時服務兩代，部署在 Cloudflare Workers（不需 Durable Objects）。brief 的 4 個工具＋`submit_software` | 已查核；spike 本機通過，未部署 |
-| F. 儲存與配對 | git 裡每款一份 JSON 當正本，建置成索引打包進 Worker；事件寫 D1；配對是「條件篩選＋BM25 候選卡＋Muse Spark 取捨」，**不用向量搜尋** | 已調研 |
+### 推薦的架構（一句話）
 
-**最大的風險**：台灣帳號能否開 Meta Model API 未確認（第一件事就要註冊）；這個雲端 session 的 GitHub API 只開放本 repo，發現管線要在本機跑。
+念誠本機的 **Python 批次管線**從 GitHub、Show HN 與提交收候選 → **Muse Spark Open @ Baseten** 初篩 → **`muse-spark-1.3`** 讀懂並抽取 → 驗證 agent（`muse-spark-1.3`，Responses API＋tool calling）在 **Modal gVisor 沙盒**裡照 README 安裝、讀錯誤、自己修好，另一次呼叫判讀截圖，程式在乾淨沙盒重播 → 規則＋模型 rubric 計分（品質、知名度分開）→ **git 裡每款一份 JSON** → 建置時打包進 **Cloudflare Worker**，用官方 **TS MCP SDK v2** 提供 5 個工具 → 使用者的 agent 推薦、安裝、回報；回報失敗觸發重驗，留下 git diff。資料流圖見 G.3。
 
-**調研方式**：每個主題由一個 agent 查官方文件並實測，另一個 agent 反向查核（找錯、標「未驗證」），最後由主控者整合。原始筆記在 [notes/](notes/)。
+### 為什麼這樣選
+
+| 決定 | 理由 |
+|---|---|
+| 本機管線＋Modal 沙盒＋Cloudflare MCP（不全放一個平台） | 三位評審都選它；關鍵路徑只用跑過的 spike；跑陌生程式的平台和對外服務分開，一邊出事另一邊照常 |
+| Meta 模型在 6 個環節做決定 | 初篩、抽取、驗證 agent、畫面判讀、文件評分、配對；程式只做守門與記帳。產品執行期不用任何非 Meta 的 LLM（D.3） |
+| 不用向量搜尋 | Meta 沒有 embedding 模型（未驗證）；「向量庫＋LLM」正是基本 RAG 的樣子；條件篩選＋模型取捨在 spike 裡夠用（F.3） |
+| 驗證是核心賣點，也是最大風險 | 本機 Docker spike：4 款真實工具都裝起來，2 款要先修正 README；所以 10/30 就先做驗證 agent，10/31 設硬關卡（H.2） |
+
+### 各題的結論
+
+| 問題 | 結論 |
+|---|---|
+| A. 管道 | 一定接 **GitHub search API**、**提交入口**、**Show HN**（官方 API）；超前才接 **Homebrew 第三方 tap**（有安裝數、星數中位數 1）、**PyPI**。Threads／Facebook **不能主動發現**（keyword search 要審核且用途不符；oEmbed 沒有貼文文字），只能用 oEmbed 嵌入。GH Archive 等公開資料集已失準。ecosyste.ms 要先取得書面同意 |
+| B. 品質 | 規則先分出「可用的軟體」；用規則算的品質會飽和（小工具和 bat 都是 80–100 分），所以品質主要靠**沙盒驗證（35%）**與**模型 rubric 評文件（20%）**；知名度用 7 個訊號對數正規化另外算；寶藏 = 驗證通過＋品質 ≥70＋知名度 ≤45。Scorecard API 只涵蓋約 3% 的長尾 repo |
+| C. 沙盒 | **Modal Sandbox** 主力（gVisor、網路 allowlist、可先開網路安裝再斷網執行），E2B 備案。雲端沙盒都是 Linux；demo 那 3 筆在念誠的 Mac 上人工驗證並照實標示 |
+| D. Meta 模型 | API 在 `https://api.meta.ai/v1`，OpenAI 相容；`muse-spark-1.3` 支援圖片、tool calling、強制 JSON schema，$1.25／$4.25 每百萬 token。**Muse Spark Open @ Baseten** 只做初篩（同價，為了 credits 與 Best Open Weight 獎）；Glimmer 不用（合作夥伴沒有按 token 的服務） |
+| E. MCP | 規格 `2026-07-28` 已經無狀態，但多數客戶端仍走舊 handshake → 用官方 TS SDK v2 的 `createMcpHandler` 同時服務兩代，部署在 Cloudflare Workers（`McpAgent` 已 deprecated）。brief 的 4 個工具＋`submit_software` |
+| F. 儲存與配對 | git 裡每款一份 JSON 當正本，建置成索引打包進 Worker；事件寫 D1；配對是「硬條件篩選 → `muse-spark-1.3` 一次呼叫取捨 → 程式守門」，**不用向量搜尋** |
+| G–H. 架構與時程 | 核心 64.5 h＋計畫內 7.5 h，容量 78 h，緩衝 6 h。兩個關卡：**10/28 晚上** Meta API 能不能用；**10/31 晚上** ≥5 筆在 Modal 通過驗證並重播。11/2 功能凍結、11/3 錄影、**台北 11/4 22:00 交件**（離截止 12 小時） |
+| 花費（估算） | Meta $25–88（$150 credits 內，程式硬停 $100）；Baseten $2–5；Modal $4–9；credits 都到位時自付 $0–5 |
+
+### 念誠今天要做的事（細節見 K）
+
+1. **註冊 Meta Model API 並領 $150 credits**：台灣帳號能否註冊**未驗證**，這決定第一輪 pass/fail。不行就全部改走 Baseten 上的 Spark Open（+3–4 h）。
+2. 申請 Baseten（審核制）、Modal、Cloudflare、GitHub fine-grained PAT、E2B（備案）。
+3. **寫好並 commit 20 題評測題組**（比賽期間新寫，不搬賽前草稿），今晚凍結。
+4. 確認有沒有 Apple silicon Mac、每天能投入幾小時。
+5. 寄信給 ecosyste.ms 詢問能否用腳本存取（選做）。
+6. 在本機跑 `spikes/ch_hosting_github.py counts`（這個雲端 session 的 GitHub API 只開放本 repo，GitHub search 的實際量還沒量到）。
+
+### 本報告沒能確認的事
+
+模型實際的推理 token 用量與成本、Baseten 比賽 model ID `muse-spark-open-1026` 是否存在、Modal 沙盒啟動時間與網路政策是否穩定、Workers Free 冷啟動 CPU、Claude Code／Codex 實際連上遠端 MCP、GitHub search 兩個類別的實際量、Threads 未審核時能否讀到非 tester 的回覆。全部列在各節的「未驗證」與 D.4、I 節。
 
 ---
 
@@ -29,17 +53,20 @@
 
 完整盤點（7 組、約 70 個管道）、要避開的清單、整合方式：[channels.md](channels.md)。原始筆記在 [notes/](notes/)。**7 組都已調研並查核。**
 
-### A.1 黑客松期間接的 5 條（依優先順序）
+### A.1 黑客松期間接的管道
 
-| # | 管道 | 理由 | 工時 |
-|---|---|---|---|
-| 1 | GitHub search API（＋ repo、release、README） | 兩個類別的新作品主要在這；可直接篩「今年建立、最近有 push、星數 5–300」；再用 stargazers 的 `starred_at` 自算星數曲線，取代已失準的公開資料集 | 6–9 h |
-| 2 | Hacker News Show HN（官方 API） | 作者本人發表、別人能試用；兩類別且連 GitHub 約 75 篇／週；86% ≤3 分 | 2–4 h |
-| 3 | Homebrew 第三方 tap（官方 analytics）＋ homebrew-core | 唯一同時有「安裝數」和「默默無聞」的訊號：30 天安裝 10–1000 次的新 tap formula 有 437 個，抽樣星數中位數 1；以 CLI 為主；直接對上 Mac demo | 3–4 h |
-| 4 | PyPI 新專案（RSS 每 20–30 分鐘；`console_scripts` 篩 CLI） | 本地 AI 工具主要在這；provenance 能確認套件 ↔ repo | 3–4 h |
-| 5 | 提交入口（MCP `submit_software`＋GitHub Issue Form） | 供給端；收 GitHub／套件／官網連結，Threads 連結只嵌入 | 2–3 h |
+依 H 節的工時，**一定接 3 條、時間夠再接 2 條**（工時是 G.4 的最低版本；完整版見 [channels.md](channels.md)）：
 
-- 時間夠再加：`awesome-tuis`、`awesome-ollama` 的 diff（2–3 h，只取連結）；V2EX、Qiita、阮一峰周刊（3.5–5 h）。
+| # | 管道 | 層級 | 理由 | 工時 |
+|---|---|---|---|---|
+| 1 | GitHub search API（＋ repo、release、README） | 核心 | 兩個類別的新作品主要在這；可直接篩「今年建立、最近有 push、星數 5–300」；之後可用 stargazers 的 `starred_at` 自算星數曲線，取代已失準的公開資料集 | 4 h（完整版 6–9 h） |
+| 2 | 提交入口（MCP `submit_software`；GitHub Issue Form 選做） | 核心 | 供給端，也是 demo 第 5 幕；收 GitHub repo 連結，Threads 連結只嵌入 | 2 h |
+| 3 | Hacker News Show HN（官方 Algolia／Firebase API） | 計畫內 | 作者本人發表、別人能試用；兩類別且連 GitHub 約 75 篇／週；86% ≤3 分，正是沒人注意到的；spike 已寫好 | 1.5 h |
+| 4 | Homebrew 第三方 tap（官方 analytics） | 超前才做 | 唯一同時有「安裝數」和「默默無聞」的訊號：30 天安裝 10–1000 次的新 tap formula 有 437 個，抽樣星數中位數 1；以 CLI 為主（本地 AI 約 3／40）；對上 Mac demo | 2 h |
+| 5 | PyPI 新專案（RSS 每 20–30 分鐘；`console_scripts` 篩 CLI） | 超前才做 | 本地 AI 工具很多在這；provenance 能確認套件 ↔ repo | 3 h |
+
+- 本地 AI 類別在最低版本靠 GitHub search 的 topic（`ollama`、`llama-cpp`、`local-llm` 等）與 Show HN 涵蓋。
+- 之後擴充：`awesome-tuis`、`awesome-ollama` 的 diff（2–3 h，只取連結）；V2EX、Qiita、阮一峰周刊（3.5–5 h）；Bluesky @mention 提交。
 - 補資料：GitHub REST API、deps.dev、Scorecard CLI `--local`。**ecosyste.ms 的條款 §9 禁止未經書面同意的腳本擷取**，寄信取得同意前不放進管線。
 - 條款共同做法：只走官方 API／feed，只存自己抽出的事實＋連結，不轉貼全文、不存個資。GitHub AUP §7 對 API 取得的資料也限制用途，推薦服務算不算在內有解讀空間（未驗證）。
 
@@ -119,7 +146,7 @@ Muse Spark 判斷：類型（18 類 enum）、給終端使用者還是給開發�
 
 **popularity（0–100）**：7 個訊號各自對數正規化 `100 × log10(1+x) ÷ log10(1+ref)` 後加權：stars 0.35、每月下載 0.15、forks 0.10、dependents 0.10、release 下載 0.10、HN 最高分 0.10、收錄套件庫數 0.10。ref 依類別不同（本地 AI 的星數普遍較高）；建立滿 3 個月加 25% 的成長速度。ref 是**未校準的初始猜測**，收完候選後改用類別內 P95。
 
-**寶藏**：工具＋驗證通過＋未 archived，且 quality ≥ 70、popularity ≤ 45；排序看 `gap = quality − popularity`。推薦時先配對條件，寶藏只在合格候選中加分（「推薦是配對，不是排名」）。
+**寶藏**：工具＋驗證通過＋未 archived，且 quality ≥ 70、popularity ≤ 45。寶藏之間的排序值用 `T = quality × (1 − popularity/100)`（schema 已測過；筆記裡的 `gap = quality − popularity` 是同一個概念的另一種寫法，統一用 T），並記 `formula_version`。推薦時先配對條件，寶藏只在合格候選中加分（「推薦是配對，不是排名」）。
 
 **試算**（spike，假設驗證通過）：datui、convkit、photoc、mere-run、pasteface 的知名度 9–38，都是寶藏候選；bat 品質 90 但知名度 96，不是；gollama（函式庫）、awesome-cli-apps（清單、archived）被正確封頂。
 
@@ -302,7 +329,7 @@ brief 的 4 個工具合理。建議加 `submit_software`（供給端，demo 第
 
 共通原則：
 - description 用英文，第一句寫何時呼叫、第二句寫呼叫前最多問什麼（OS；必須免費或離線）、第三句寫下一步呼叫誰。
-- `rec_id` 由 server 用 HMAC 簽發（內容加密或只放 nonce），7 天有效；Worker 不存狀態就能把 `report_outcome` 綁回某次推薦。
+- `rec_id`：把 `report_outcome` 綁回某次推薦。筆記建議用 HMAC 簽發（Worker 不存狀態）；推薦架構（G）改成 `find_*` 時寫一列 D1、回報時查這列，少一把密鑰。兩種都是 7 天有效。
 - 每個推薦都帶驗證證據與分開的品質／知名度分數，這是「不是基本 RAG」最直接的證明。
 - server instructions 約 430 字元（Codex 只保證讀前 512 字元），草稿在筆記 5.3 節。
 - 回應裡不放推薦碼、廣告、付費排序。
@@ -339,7 +366,7 @@ Cloudflare 免費額度（[Workers limits](https://developers.cloudflare.com/wor
 |---|---|---|
 | A 解析需求 | Muse Spark | 自然語言 → 條件（OS、預算、隱私、類別、必要功能、目前在用的工具）＋英文 `search_terms` |
 | B 硬條件篩選 | 程式 | 只留 `listed`、該 OS 驗證過、符合本機執行／免費等條件的 |
-| C 取候選 | 程式 | 在合格清單上用 BM25 查 `search_terms`，取前 25 張候選卡（每張約 350 tokens） |
+| C 取候選 | 程式 | 黑客松最低版本：該類別合格的 ≤60 筆就全部送進模型（不截斷、不依寶藏分數排序）；超過 60 筆才用 BM25 查 `search_terms` 取前 25 張候選卡（每張約 350 tokens）。A＋E 合成一次模型呼叫，降低延遲 |
 | D 該不該問 | 程式＋Muse Spark | 程式先找「前 5 名在這個屬性上不同、但需求沒說」的屬性；沒有就不准問；有的話由模型判斷問了會不會改變第一名 |
 | E 比較取捨 | Muse Spark | 選 1–3 個，每個理由附對應欄位；寫和知名工具的取捨、最好的免費選項、「不需要新軟體」的情況 |
 | F 守門 | 程式 | slug 必須在候選裡、理由對得上欄位；模型失敗就退回寶藏分數排序＋模板理由，標 `generated_by: rules` |

@@ -8,19 +8,22 @@
 
 ## 0. 結論
 
-**黑客松期間接這 5 條**（依優先順序；理由見第 2 節）：
+**值得接的 5 條**（理由見第 2 節）。依 [architecture.md](architecture.md) H 節的工時，**一定接前 3 條，第 4、5 條進度超前才接**：
 
-| # | 管道 | 為什麼 | 工時 |
-|---|---|---|---|
-| 1 | **GitHub search API**（＋ repo、release、README 補資料） | 兩個類別的新作品主要都在這；能直接篩「今年建立、最近有 push、星數 5–300」；16 條 query 已寫好 | 6–9 h |
-| 2 | **Hacker News Show HN**（官方 Firebase API＋Algolia） | 規則要求「你親自做的、別人能試用的」；每週約 990 篇，兩類別且連 GitHub 約 75 篇；86% 只有 ≤3 分 | 2–4 h |
-| 3 | **Homebrew 第三方 tap**（官方 analytics）＋ homebrew-core 當知名度基準 | 唯一同時有「真實安裝數」和「默默無聞」的訊號：30 天內新出現 4,066 個 tap formula，437 個安裝 10–1000 次；抽 40 個，36 個今年才建、星數中位數 1。**以 CLI 為主**（本地 AI 約 3／40）；直接對上 Mac demo | 3–4 h |
-| 4 | **PyPI 新專案**（RSS 每 20–30 分鐘輪詢；看 wheel 的 `console_scripts`） | 本地 AI 工具主要在這；約每小時 40 個新專案；27／39 個有 Trusted Publishing provenance，可確認套件 ↔ repo | 3–4 h |
-| 5 | **提交入口**（MCP `submit_software`＋GitHub Issue Form，共用一個佇列） | 供給端；只收 GitHub／套件／官網連結；Threads 貼文連結只用官方 oEmbed **嵌入**，不讀內容 | 2–3 h |
+| # | 管道 | 層級 | 為什麼 | 工時（最低版本／完整版） |
+|---|---|---|---|---|
+| 1 | **GitHub search API**（＋ repo、release、README 補資料） | 核心 | 兩個類別的新作品主要都在這；能直接篩「今年建立、最近有 push、星數 5–300」；16 條 query 已寫好 | 4 h／6–9 h |
+| 2 | **提交入口**（MCP `submit_software`；GitHub Issue Form 選做，共用一個佇列） | 核心 | 供給端，也是 demo 第 5 幕；收 GitHub repo 連結；Threads 貼文連結只用官方 oEmbed **嵌入**，不讀內容 | 2 h／2–3 h |
+| 3 | **Hacker News Show HN**（官方 Firebase API＋Algolia） | 計畫內 | 規則要求「你親自做的、別人能試用的」；每週約 990 篇，兩類別且連 GitHub 約 75 篇；86% 只有 ≤3 分；spike 已寫好 | 1.5 h／2–4 h |
+| 4 | **Homebrew 第三方 tap**（官方 analytics）＋ homebrew-core 當知名度基準 | 超前才做 | 唯一同時有「安裝數」和「默默無聞」的訊號：30 天內新出現 4,066 個 tap formula，437 個安裝 10–1000 次；抽 40 個，36 個今年才建、星數中位數 1。**以 CLI 為主**（本地 AI 約 3／40）；對上 Mac demo | 2 h／3–4 h |
+| 5 | **PyPI 新專案**（RSS 每 20–30 分鐘輪詢；看 wheel 的 `console_scripts`） | 超前才做 | 本地 AI 工具很多在這；約每小時 40 個新專案；27／39 個有 Trusted Publishing provenance，可確認套件 ↔ repo | 3 h／3–4 h |
 
-**時間夠再加（依序）**：
+本地 AI 類別在最低版本靠 GitHub search 的 topic（`ollama`、`llama-cpp`、`local-llm` 等）與 Show HN 涵蓋。
+
+**之後擴充（依序）**：
 1. awesome 清單的 diff：`rothgar/awesome-tuis`（CLI，近 90 天新增 51 筆、星數中位數 42）、`EndoTheDev/awesome-ollama`（本地 AI，新增 43 筆、中位數 12）。兩份都沒有授權檔，只取 repo 連結當內部訊號，不轉載描述、不公開重建清單。約 2–3 h。
 2. V2EX「分享创造」＋ Qiita `個人開発` ＋ 阮一峰周刊「工具」（讓「全球」不只是英文圈）。約 3.5–5 h。
+3. Bluesky @mention 提交、dev.to `#showdev`（先取得 DEV 書面同意）、crates.io、npm、winget、Hugging Face Spaces（只看連回作者 GitHub 的）、Console.dev（先寫信）。
 
 **補資料（不是發現來源）**：GitHub REST API（metadata、release、README）、deps.dev（套件 ↔ repo 的對應有沒有發布簽章；只有它自產的關聯資料是 CC-BY 4.0）、Scorecard CLI `--local`（沙盒裡順便跑）。**ecosyste.ms 要先寄信取得書面同意**才放進管線（條款 §9 禁止未經同意的腳本擷取）。
 
@@ -132,16 +135,16 @@
 
 ## 2. 為什麼是這 5 條
 
-| 評估角度 | GitHub search | Show HN | Homebrew tap | PyPI | 提交 |
+| 評估角度 | GitHub search | 提交 | Show HN | Homebrew tap | PyPI |
 |---|---|---|---|---|---|
-| 新作品多 | 極多 | 每週約 990 | 每月數千 | 每小時約 40 | 靠作者 |
-| 默默無聞 | 可用星數篩 | 86% ≤3 分 | 星數中位數 1 | 用下載量篩 | 作者自選 |
-| 有使用訊號 | 星數、星數曲線 | 分數、留言 | 安裝數（含 CI） | 下載量 | 無 |
-| 兩個 demo 類別 | 兩類都多 | 兩類約 75 篇／週 | CLI 為主 | 本地 AI 多 | 兩類 |
-| 條款風險 | 低（只走 API，用途有解讀空間） | 低（只走 API） | 低（官方 JSON） | 低（RSS） | 低 |
-| 一個人接上 | 6–9 h | 2–4 h | 3–4 h | 3–4 h | 2–3 h |
+| 新作品多 | 極多 | 靠作者與使用者 | 每週約 990 | 每月數千 | 每小時約 40 |
+| 默默無聞 | 可用星數篩 | 自選 | 86% ≤3 分 | 星數中位數 1 | 用下載量篩 |
+| 有使用訊號 | 星數、星數曲線 | 無 | 分數、留言 | 安裝數（含 CI） | 下載量 |
+| 兩個 demo 類別 | 兩類都多 | 兩類 | 兩類約 75 篇／週 | CLI 為主 | 本地 AI 多 |
+| 條款風險 | 低（只走 API，用途有解讀空間） | 低 | 低（只走 API） | 低（官方 JSON） | 低（RSS） |
+| 一個人接上（最低版本） | 4 h | 2 h | 1.5 h | 2 h | 3 h |
 
-合計約 16–24 小時。第 2 天先接 GitHub＋Show HN，第 4–5 天補 Homebrew、PyPI、提交入口。
+前 3 條約 7.5 h：10/29 接 GitHub，10/30 接 Show HN，11/1 接提交入口（見 architecture.md H.2）。
 
 ---
 
