@@ -245,7 +245,53 @@ spike：`spikes/meta_api_hello.py`（文字、JSON schema、tool calling、圖�
 
 ## E. MCP server
 
-（進行中）
+細節、完整 JSON Schema 與 spike：[notes/mcp-server.md](notes/mcp-server.md)（經查核，查證日 2026-10-28）、`spikes/mcp_stateless/`。
+
+### E.1 規格與 SDK 現況
+
+| 事實 | 對 pickfit 的意思 |
+|---|---|
+| MCP Current 版本是 **`2026-07-28`**：拿掉 `initialize` handshake 與 `Mcp-Session-Id`，協定本身就是無狀態；新增必備的 `server/discover`，請求要帶 `MCP-Protocol-Version`、`Mcp-Method` header（[規格](https://modelcontextprotocol.io/specification/2026-07-28/server/tools.md)） | brief「無狀態」已經是規格預設 |
+| 但很多客戶端還走舊的 `initialize`（legacy）：TS SDK v2 client、MCP Inspector 預設 legacy；Claude Code 的 v2 runtime 才會先問新版（v2.1.274 起預設） | server 要**同時服務兩代**。官方 SDK v2 的 `createMcpHandler` 預設就這樣做，legacy 那一路也不發 session id（spike 實測） |
+| 官方 SDK：TS 拆成 `@modelcontextprotocol/server`／`client` 2.4.0（Apache-2.0）；Python `mcp` 2.3.0（MIT），`FastMCP` 改名 `MCPServer` | 網路上大量 v1 範例已過時，照 v2 文件寫 |
+| Cloudflare：`McpAgent`（Durable Objects）**已 deprecated**；新做法是 `agents/mcp/server` 的 `createMcpHandler`，每請求建新 server、不需 DO（[文件](https://developers.cloudflare.com/agents/model-context-protocol/apis/handler-api/)） | 照 brief 部署在 Workers，不需要 Durable Objects |
+| 舊版規定 `outputSchema` 根節點必須是 object | 輸出一律 object 根節點，並同時回 JSON 文字版 `content` |
+| 無狀態 legacy 連線上 server 不能主動對 client 發請求（elicitation、sampling） | 不用 elicitation；server 在結果裡回 `clarifying_question` |
+
+**spike**（`spikes/mcp_stateless/`）：同一份 `worker.mjs` 在 Node 與 `wrangler dev`（workerd）都通過 legacy 與 modern 共 9 項檢查；官方 TS client 三種模式、Python client 兩種模式都能呼叫。**還沒部署上線，也沒用 Claude Code／Codex 實際連線**（需要公開 URL）。
+
+**建議**：TypeScript SDK v2＋Cloudflare Workers（spike 已在 workerd 驗證）。管線照常用 Python，產出 JSON 索引給 Worker 讀。
+
+### E.2 部署與連線
+
+| 項目 | 內容 |
+|---|---|
+| Workers Free | 每天 10 萬請求、每請求 10 ms CPU、50 個 subrequest；超過回 Error 1027。本機暖機後每請求 1–8 ms；**冷啟動是否超過 10 ms 未驗證**；demo 週建議開 Paid（$5/月） |
+| 防濫用 | 不登入時只能用 IP 當限流 key（Rate Limiting binding，Free 方案可不可用未驗證）。最該保護的是 Meta credits：`find_*` 有**每日預算上限**，超過就降級成規則排序並標 `degraded: true` |
+| Claude Code | `claude mcp add --transport http pickfit https://<host>/mcp` |
+| Codex | `codex mcp add pickfit --url https://<host>/mcp`，或 `~/.codex/config.toml` 寫 `[mcp_servers.pickfit]` `url = "…"`（CLI 0.165.0 實測寫得出設定；實際連線未測） |
+| Cursor | `mcp.json` 的 `url`；可做「Add to Cursor」一鍵連結 |
+| Claude（網頁、Desktop） | custom connector，從 Anthropic 雲端連線，**URL 必須公開** |
+| MCP Registry | 還是 preview；已有 toolradar 這類同類 server；交件前順手登錄（約 30 分鐘），不排進關鍵路徑 |
+
+### E.3 工具設計（brief 4.4 的 4 個＋1 個）
+
+brief 的 4 個工具合理。建議加 `submit_software`（供給端，demo 第 5 幕要用）。共 5 個，不再加。
+
+| 工具 | 主要輸入 | 主要輸出 | annotations |
+|---|---|---|---|
+| `find_software` | `need`（必填，使用者原話描述要做的事）、`category`、`os`、`arch`、`budget`、`must_run_locally` | `rec_id`、`picks[]`（slug、why、tradeoffs、platforms、pricing、processing、`verification`、`scores.quality`／`popularity`）、`best_free`、`no_install_option`、`clarifying_question`、`degraded` | `readOnlyHint: true` |
+| `find_alternatives` | `current_software`、`pain_points`（都必填）＋共用條件 | 同上＋`keep_current`（沒有更好的就直說） | `readOnlyHint: true` |
+| `get_install_guide` | `slug`、`os`（必填）、`rec_id` | `verification`（在哪個 OS、何時）、`applies_to_user_system`、`steps[]`（agent 可執行）、`manual_steps[]`（例如權限授權）、`verify`（驗證指令）、`first_task` | `readOnlyHint: true` |
+| `report_outcome` | `slug`、`stage`（installed／install_failed／first_run_ok／…／replaced）必填；`rec_id`、`satisfaction`、`os`、`error_excerpt`（去掉使用者名稱、路徑、token） | 收到與否、是否排入重驗 | `idempotentHint: true`（server 端真的去重） |
+| `submit_software` | `url`（**GitHub repo**；Threads 貼文連結只當附加、用來嵌入，不讀內容）、`note` | `slug`、狀態（排隊、讀懂中、驗證中、已收錄、拒絕＋原因）；同一個 URL 重送就是查進度 | `idempotentHint: true`、`openWorldHint: true` |
+
+共通原則：
+- description 用英文，第一句寫何時呼叫、第二句寫呼叫前最多問什麼（OS；必須免費或離線）、第三句寫下一步呼叫誰。
+- `rec_id` 由 server 用 HMAC 簽發（內容加密或只放 nonce），7 天有效；Worker 不存狀態就能把 `report_outcome` 綁回某次推薦。
+- 每個推薦都帶驗證證據與分開的品質／知名度分數，這是「不是基本 RAG」最直接的證明。
+- server instructions 約 430 字元（Codex 只保證讀前 512 字元），草稿在筆記 5.3 節。
+- 回應裡不放推薦碼、廣告、付費排序。
 
 ## F. 儲存與配對
 
