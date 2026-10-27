@@ -364,7 +364,199 @@ Cloudflare 免費額度（[Workers limits](https://developers.cloudflare.com/wor
 
 ## G. 整體架構
 
-（進行中）
+依據：三個 agent 各從一個角度提出完整架構（[最小可行](notes/arch-proposal-mvp.md)、[demo 優先](notes/arch-proposal-demo.md)、[單一平台](notes/arch-proposal-single.md)），三位評審（務實派、黑客松評審、事實查核）交叉打分，再由綜合者移植好點子、修正評審找到的 18 個事實錯誤（[notes/architecture-synthesis.md](notes/architecture-synthesis.md)）。整合進本文時，主控者又修正了 4 處和 A–F 節不一致的地方（見 G.5）。
+
+### G.1 三個架構的比較
+
+三者的產品核心幾乎一樣（`muse-spark-1.3` 做抽取、驗證 agent、截圖判讀、文件評分、配對，都會在乾淨沙盒重播）。差別在部署方式、工時，以及 Meta 模型在 demo 裡看不看得到。
+
+| | 最小可行（mvp） | demo 優先 | 單一平台（全放 Modal） |
+|---|---|---|---|
+| 一句話 | 本機 Python 管線 → git JSON 正本 → 索引打包進 Cloudflare Worker（TS MCP） | 管線跑在 Modal；D1 overlay 讓提交不必重新部署；run viewer、看板；trace 放 R2 | 管線、沙盒、MCP（Python SDK）全在一個 Modal App；git 改成每天匯出的快照 |
+| 雲端服務 | Meta、Modal、Cloudflare（Workers＋D1）、GitHub | ＋Baseten、R2、Static Assets | Meta、Baseten、Modal、GitHub |
+| 開發時間（評審重算） | 最低版本約 70 h，緩衝約 4.5 h | 82 h，等於全部可用時數；有隱藏工時 | 79.5 h；Python MCP 不行時退回 TS 要再多 5–7 h |
+| 成本（估算） | Meta $22–76；Modal $4–8 | Meta $49–91；Modal $11–23 | Meta $49–93；Modal 約 $18 |
+| 主要風險 | Meta 模型露出不足；驗證擠在一天 | 跨平台接點最多；MCP 到 11/1 才上線 | Python MCP 在 Modal 上沒實測；陌生程式和 MCP 共用一個帳號，被停權就全停 |
+| demo 效果 | 終端機逐步輸出 | 最好：每一步有模型徽章、證據框 | 好 |
+| 規則與條款 | 最保守 | 第 5 幕的規則最清楚 | 同 mvp |
+
+評審平均分數（3 位評審，0–10，未加權）：
+
+| 項目 | mvp | demo | single |
+|---|---:|---:|---:|
+| 可行性 | **7.17** | 4.50 | 5.33 |
+| 成本 | **8.67** | 7.17 | 7.00 |
+| 風險（高分＝風險低） | **7.33** | 4.83 | 4.83 |
+| demo 效果 | 6.00 | **9.00** | 7.33 |
+| 和評分標準的契合度 | 6.17 | **9.00** | 7.67 |
+| 規則與條款安全度 | **8.33** | 8.00 | 8.00 |
+| **6 項平均** | **7.28** | 7.08 | 6.69 |
+| 評審選誰當基礎 | **3／3** | 0 | 0 |
+
+### G.2 推薦架構
+
+**一句話**：念誠電腦上的 Python 批次管線先用 **Muse Spark Open** 初篩，再由 **`muse-spark-1.3`** 讀懂軟體、在 **Modal gVisor 沙盒**裡自己安裝、修錯、判讀截圖；程式在乾淨沙盒重播後，寫成 **git 裡每款一份 JSON**，建置時打包進 **Cloudflare Worker**。Worker 用官方 **TS MCP SDK v2** 提供 5 個工具：推薦由 `muse-spark-1.3` 取捨、每筆附驗證證據；回報失敗會觸發重驗，留下一個 git diff。
+
+**為什麼選它**：
+1. **最可能如期交出能動的作品**：三位評審都選它；可行性、成本、風險三項最高。
+2. **關鍵路徑只用跑過的 spike**：MCP（`spikes/mcp_stateless/`）在 Node 與 workerd 都通過新舊兩代協定檢查；沙盒沿用已實測 4 款真實工具的 Docker spike 介面。
+3. **跑陌生程式的平台和對外服務分開**：Modal 帳號出事時只有驗證停，MCP 照常。
+4. **退路多半只改設定**：Meta 與 Baseten 都是 OpenAI 相容；沙盒換實作即可（Modal → E2B → 本機 Docker）。
+5. **弱點補得起來**：Meta 模型露出不足、開放權重排太晚、沒有回報閉環，約 8 h 就能從另兩案移植補上；另兩案的弱點是結構性的。
+
+**從另兩案移植的做法**（A＝核心、B＝計畫內、C＝超前才做）：
+
+| 移植的做法 | 層級 | 哪天 |
+|---|---|---|
+| 10/28 就把 hello MCP 部署到 `workers.dev`，用 Claude Code 實際連一次 | A | 10/28 |
+| 開放權重初篩進主流程（漏斗第一層），抽 5% 和 `muse-spark-1.3` 比一致率 | B | 10/29 |
+| 驗證 agent 提前：10/30 先在本機 Docker 跑，目標是「照 README 失敗 → 讀錯誤 → 自己修好」 | A | 10/30 |
+| 主鍵用 GitHub 數字 repo ID | A | 10/29 |
+| pydantic 當唯一 schema 來源，產生 Meta strict schema 與 JSON Schema | A | 10/28 |
+| MCP 回應加 `how_we_know`、`evidence_url`、`matched_by` | A | 11/1 |
+| 回報 → 重驗 → 新步驟 commit（git diff） | B | 11/2 |
+| run page：從 trace 產生靜態 HTML，顯示每一步的模型、推理摘要、工具呼叫、exit code、花費、judge 證據框 | B | 11/2 |
+| 評測加第三組「關掉模型、只用規則排序」 | B | 11/2 |
+| 影片的即時／回放標示規則與 3 分鐘分鏡（H.4） | A | 11/3 |
+| 評審期防護：Worker 每日 Meta 上限＋評審期總額＋限流 | A | 11/1 |
+| 提交改在 Modal 用 `spawn()` 處理，評審期不必開著筆電 | C | 11/3 前 |
+
+**不採用**：D1 overlay＋R2＋webhook（3 個沒驗證過的接點）；Python MCP 掛在 Modal（沒實測，SSE 撞 150 秒上限的行為未知）；git 降成快照（偏離 brief 第 11 節）；向量搜尋（F.3）。
+
+### G.3 資料流
+
+實線是核心（A），虛線是計畫內（B）。藍色節點會呼叫 Meta 模型。
+
+```mermaid
+flowchart TB
+  subgraph SRC["① 發現：只走官方 API"]
+    GH["GitHub search API＋repo、README、release"]
+    HN["Show HN（B）"]
+    BREW["Homebrew 第三方 tap analytics（超前才做）"]
+  end
+
+  subgraph LOCAL["念誠本機：Python 批次管線（pickfit run／watch）"]
+    WATCH["pickfit watch<br/>每 60 秒讀 D1 submissions"]
+    NORM["正規化、去重<br/>主鍵 GitHub repo ID（程式）"]
+    RULE["規則前置過濾（程式）"]
+    TRI["② 初篩（B）<br/>Muse Spark Open @ Baseten"]
+    EXT["③ 抽取<br/>muse-spark-1.3<br/>Responses＋json_schema，每欄附引用"]
+    ACT["④a 驗證 agent<br/>muse-spark-1.3<br/>Responses＋function tools"]
+    JUD["④b 畫面判讀<br/>muse-spark-1.3<br/>截圖＋schema，回證據框"]
+    REP["④c 重播<br/>程式，不用模型"]
+    SCO["⑤ 計分<br/>規則＋muse-spark-1.3 文件 rubric"]
+    PUB["publish<br/>驗 schema → commit → build_index → wrangler deploy"]
+    REV["⑩ 重驗（B）<br/>muse-spark-1.3 驗證 agent<br/>帶回報的錯誤摘要重跑"]
+  end
+
+  SBX[("Modal Sandbox<br/>gVisor、零金鑰、每筆全新")]
+  GIT[("⑥ 儲存：git 正本<br/>data/software/*.json")]
+
+  subgraph CF["Cloudflare"]
+    MCP["⑦ MCP 配對：Worker＋TS SDK v2<br/>硬條件篩選 → muse-spark-1.3 取捨 → 程式守門"]
+    INS["⑧ 安裝：get_install_guide<br/>只回重播過的步驟，不用模型"]
+    D1[("D1：events、submissions、<br/>reverify_queue、meta_budget")]
+  end
+
+  AG["使用者的 agent<br/>Claude Code／Codex／Cursor"]
+
+  GH --> NORM
+  HN -.-> NORM
+  BREW -.-> NORM
+  WATCH --> NORM
+  NORM --> RULE --> TRI
+  TRI -->|"約 30% 通過；低信心交 1.3 複查"| EXT
+  EXT --> ACT
+  ACT <-->|"run_command 等工具"| SBX
+  ACT -->|"finish"| JUD
+  JUD --> REP
+  REP <--> SBX
+  REP --> SCO --> PUB --> GIT
+  GIT -->|"索引打包進 Worker"| MCP
+  GIT -->|"完整檔案"| INS
+  AG <-->|"find_software／find_alternatives"| MCP
+  AG -->|"get_install_guide"| INS
+  INS -->|"agent 經使用者同意後執行"| AG
+  AG -->|"⑨ report_outcome、submit_software"| MCP
+  MCP -->|"寫事件"| D1
+  D1 -->|"submissions"| WATCH
+  D1 -.->|"失敗回報 → reverify_queue"| REV
+  REV <-.-> SBX
+  REV -.->|"新步驟 → git diff"| PUB
+
+  classDef meta fill:#e8f0fe,stroke:#1a73e8,color:#0b2a5b
+  class TRI,EXT,ACT,JUD,SCO,MCP,REV meta
+```
+
+每一步用的模型：
+
+| 步 | 模型 | 模型做的決定 | 程式做的事 |
+|---|---|---|---|
+| ① 發現 | 不用 | — | GitHub search（序列化、間隔 2 秒）、Show HN、Homebrew analytics、正規化、repo ID、規則前置 |
+| ② 初篩 | Muse Spark Open @ Baseten（`meta-models/muse-spark-open-1026`，**未驗證**；備案公開 ID），`reasoning_effort: low` | 是不是可用的軟體、哪一類（不給星數） | pydantic 驗證；低信心送 1.3 複查；抽 5% 比一致率 |
+| ③ 抽取 | `muse-spark-1.3`，Responses，`text.format` strict，`effort: low` | 讀 README、manifest、release notes，填欄位並附逐字引用 | 檢查引用確實出現在來源；事實欄位用 API 值 |
+| ④a 驗證 agent | `muse-spark-1.3`，Responses＋`previous_response_id`，`effort: medium` | 每一步跑什麼、錯了怎麼修、何時結束 | 程式先排安裝方式＋規則表；25 回合、15 指令、20 分鐘、$0.50 上限 |
+| ④b 畫面判讀 | `muse-spark-1.3`，圖片＋schema（另一次呼叫） | 截圖裡的軟體是否真的在運作，框出證據 | Pillow 重繪終端 PNG；exit code、judge、重播三者都過才算 verified |
+| ④c 重播 | 不用 | — | 在全新沙盒照 `install_steps` 重跑 |
+| ⑤ 計分 | `muse-spark-1.3`（文件 rubric 8 項，0／1／2 分，附引用） | 文件完整度；寫 `why_worth_it` | 驗證、維護、知名度、寶藏分數由規則算 |
+| ⑦ 配對 | `muse-spark-1.3`，`store: false`，一次呼叫 | 解析需求、比較取捨、找最好的免費選項、最多問 1 題 | 硬條件篩選；slug 必須在候選裡、理由要對得上欄位；超預算或失敗退回規則排序，標 `degraded` |
+| ⑧ 安裝、⑨ 回報 | 不用 | — | 只回重播過的步驟；回報必須帶 `rec_id`、去重 |
+| ⑩ 重驗 | `muse-spark-1.3`（同 ④a，多帶錯誤摘要） | 依使用者的錯誤修正步驟 | 新步驟 commit 回 git |
+
+三條路徑（時間都是估算、未實測）：
+
+| 路徑 | 觸發 | 時間 |
+|---|---|---|
+| 批次 | 手動 `uv run pickfit run --daily`（本機） | 驗證 30 筆約 15–25 分鐘（10 個沙盒並行） |
+| 提交 | `submit_software` 寫 D1 → `pickfit watch` 每 60 秒讀 → 單筆跑完 → `wrangler deploy` | 約 10 分鐘 |
+| 回饋 | `report_outcome` 失敗 → `reverify_queue` → 重驗 → commit | 單筆 5–10 分鐘 |
+
+### G.4 元件與技術
+
+工時是一個人的人時（估算）。A＝核心、B＝計畫內。
+
+| 元件 | 技術 | 最低版本 | 加分版本 | 工時 |
+|---|---|---|---|---:|
+| 帳號與 spike 實測 | Meta、Baseten、Modal、Cloudflare、GitHub PAT、E2B；5 支 spike（`meta_api_hello`、`meta_responses_agent_probe`、`meta_baseten_hello`、`sb_modal_verify`、`ch_hosting_github`） | 把 D.4 的未驗證項變成數字 | — | 1.5 A |
+| 專案骨架＋schema | Python 3.12、`uv`、`pydantic` v2（產生 Meta strict schema 與 `schema/software.v1.json`） | 一份 schema 三處用 | — | 2 A |
+| hello MCP 上線 | `spikes/mcp_stateless/` → `wrangler deploy`；`claude mcp add --transport http` | Claude Code 看得到 hello 工具 | Codex 實連 | 0.5 A |
+| `call_meta` | `openai` Python SDK，`base_url` = `https://api.meta.ai/v1` 或 `https://inference.baseten.co/v1` | 記帳（`usage` × 單價）、trace JSONL、429 退避、504 改 streaming；每日 $25、總額 $100 硬停 | `prompt_cache_key` | 2.5 A |
+| 發現：GitHub | `httpx`；REST search、repos、readme、releases；fine-grained PAT | 每類別 3 條 query | 16 條 query＋切日期 | 4 A |
+| 發現：Show HN | Algolia `search_by_date`；沿用 `spikes/ch_comm_hn_showhn.py` | 每天按日切片 | — | 1.5 B |
+| 發現：Homebrew tap | formulae.brew.sh analytics；沿用 `spikes/ch_packages_brew_taps.py` | 安裝數只當弱訊號 | ＋homebrew-core 當知名度基準 | 2（超前才做） |
+| 正規化、去重、候選庫 | `sqlite3`（`runs/pipeline.db`）；沿用 `ch_integration_normalize.py` | 主鍵 `gh:<repo id>`、舊名進 `aliases`、合併 `sources[]` | provenance 對應套件；大量建 repo 的作者降權 | 2.5 A |
+| 規則前置 | 沿用 `spikes/quality_signals.py` | fork、archived、template、沒 README | — | 1 A |
+| 初篩（開放權重） | Muse Spark Open @ Baseten；pydantic | 規則通過的全跑；低信心送 1.3 | 人工標 30 筆算準確率 | 2 B |
+| 抽取 | `muse-spark-1.3`，Responses，`text.format` strict | README（≤8K tokens）＋manifest＋最近 3 則 release notes | 讀 README 截圖；公開 README 改用 `-contributor`（便宜 12–20 倍） | 4 A |
+| 沙盒 | `modal` SDK：`Sandbox.create(runtime="gvisor", timeout=1200)`；事先建好 image（`python:3.12-slim`＋常用系統函式庫＋uv、pipx、node）；本機 `DockerBox` 沿用 spike | 建立時同時設 `outbound_domain_allowlist=["*"]` 與 `outbound_cidr_allowlist=["0.0.0.0/0"]`（只設網域會擋掉 http），跑範例前收成空清單 | E2B 備案；GPU 沙盒 | 3.5 A |
+| 驗證 agent | `muse-spark-1.3`，Responses，`reasoning: {effort: medium, summary: auto}`；工具 `list_dir`、`read_file`、`run_command`、`run_background`、`finish` | 程式先排安裝方式，再套 6–8 條常見錯誤規則，最後才問模型；終端機逐步印出模型、指令、exit code、花費 | 內建 `web_search` 查錯誤；失敗時用 `muse-wonder-1.0` 重試 | 6 A |
+| 畫面判讀 | Pillow 重繪 PNG；`muse-spark-1.3`＋圖片＋schema | 1 張終端截圖 | 證據框畫在截圖上 | 1.5 A |
+| 重播 | 同一個 Box 介面 | 每筆一次 | — | 1 A |
+| 批次驗證 | `pickfit verify --batch N --concurrency 5` | 每天上限 30–50 筆，demo 類別優先 | 並行 10 | 1 A |
+| Mac 驗證（demo 那 3 筆） | 念誠的 Mac 開一個新使用者帳號，人工照 `get_install_guide` 跑 | log 存證，標 `method: human` | — | 1 A |
+| 計分 | 規則＋`muse-spark-1.3` 文件 rubric | B.3 的權重 | 搜尋可見度；類別內百分位校準 | 2.5 A |
+| 正本、索引、發布 | `data/software/<slug>.json`；`jsonschema`；`scripts/build_index.mjs`（`ajv`）；`wrangler deploy` | `pickfit publish` 手動部署 | Workers Builds 自動部署；BM25 | 2.5 A |
+| 事件 | D1：`events`、`submissions`、`reverify_queue`、`meta_budget`（DDL 見 [notes/storage-matching.md](notes/storage-matching.md)） | 不記 IP、不存需求原文 | `sync_outcomes` 寫回 JSON | 1 A |
+| MCP server | TypeScript；`@modelcontextprotocol/server` 2.4.0 `createMcpHandler`；`zod` 4；Workers | 5 個工具；硬條件篩選後該類別 ≤60 張卡全送、一次模型呼叫、程式守門；`rec_id` 存 D1；Worker 每日 $3 | BM25＋`search_terms`；Rate Limiting binding（Paid）；MCP Registry | 7 A |
+| 提交處理 | `pickfit watch`（每 60 秒讀 D1） | 只收 `github.com/<owner>/<repo>`；同一 URL 冪等 | 改在 Modal `spawn()`（C） | 2 A |
+| 回報 → 重驗 | `reverify_queue`＋`pickfit watch`＋驗證 agent | 每天最多 5 筆 | — | 1.5 B |
+| run page | `scripts/render_runs.py`：trace → 靜態 HTML（Workers Static Assets） | demo 用的 3–5 筆 | 漏斗看板；公開寶藏列表 | 2 B |
+| trace 與用量報表 | `runs/traces/*.jsonl`；`scripts/meta_usage_report.py` | README 與影片的數字由 trace 產生 | — | 1 A |
+| 評測 | `eval/questions.yaml`（10/28 凍結）；Claude Code 無頭模式（旗標**未驗證**）；用重播執行器實跑安裝 | 對照組 vs 實驗組 | 第三組 rules-only（0.5 B） | 5.5 A |
+| README、影片、交件 | — | H.4 的分鏡 | — | 11 A |
+
+合計：A 64.5 h、B 7.5 h，A＋B 72 h；容量 78 h，緩衝 6 h（見 H.1）。
+
+**超前才做（C，依序）**：Homebrew 第三方 tap（2 h）→ 提交搬到 Modal `spawn()`（3–4 h）→ Codex、Cursor、Claude.ai connector 實連與 MCP Registry（1 h）→ Workers Builds 自動部署（0.5 h）→ BM25＋分歧屬性（2.5 h）→ 公開寶藏列表＋Threads oEmbed 嵌入與分享按鈕（2.5 h）→ 搜尋可見度（2 h）→ PyPI RSS（3 h）。
+
+### G.5 整合時主控者的修正
+
+| 項目 | 綜合筆記寫的 | 本文改成 | 理由 |
+|---|---|---|---|
+| Show HN、Homebrew tap | Show HN 超前才做（C）；Homebrew 計畫內（B） | 對調：Show HN 計畫內（B，10/30，1.5 h）；Homebrew 超前才做 | Show HN 有現成 spike、作者本人發表、可試用，是「今年才出現、沒人注意」最直接的來源；Homebrew 以 CLI 為主，而 GitHub topic 已涵蓋兩個類別。兩者排不進同一天 |
+| ecosyste.ms | 「只查不存」當回補 | 取得書面同意前**不用** | Terms §9 禁止未經同意的腳本擷取，查而不存也算（A.1） |
+| 寶藏排序 | gap 與 T 兩種寫法 | 標記：Q ≥ 70 且 N ≤ 45；排序：`T = Q × (1 − N/100)`，記 `formula_version` | B.3 已同步 |
+| `rec_id`、配對候選數 | — | `rec_id` 存 D1（不用 HMAC）；最低版本送 ≤60 張卡、一次呼叫；超過才加 BM25 | E.3、F.2 已加註 |
 
 ## H. 每天的實作計畫
 
