@@ -47,6 +47,9 @@ def http(url, headers=None, method="GET", follow=True):
     """回傳 (status, headers（key 小寫）, body_bytes)。follow=False 時看得到 3xx 本身。"""
     h = {"User-Agent": UA}
     h.update(headers or {})
+    if CONTACT and "ecosyste.ms/" in url and "mailto=" not in url:
+        # 實測：UA 帶 mailto 仍是 anonymous（5,000／時）；加 ?mailto= 才進 polite pool（15,000／時）
+        url += ("&" if "?" in url else "?") + "mailto=" + urllib.parse.quote(CONTACT)
     req = urllib.request.Request(url, headers=h, method=method)
     opener = urllib.request.build_opener() if follow else _OPENER
     try:
