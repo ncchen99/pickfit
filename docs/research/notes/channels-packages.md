@@ -89,7 +89,7 @@
 ### 2.7 crates.io
 
 - **新 crate**：RSS `static.crates.io/rss/crates.xml`（「the past 60 minutes, but at least 50 new crates」）；API `?sort=new` 用 seek 分頁。實測 7 天 5,947 個、24 小時 808 個、91% 的 repository 是 GitHub。
-- **可執行判斷**：版本的 `bin_names`（ripgrep → `["rg"]`）與 `has_lib`。db dump 的 `versions.bin_names` 是 public 欄位。抽樣 30 筆新 crate 只有 3 筆是 CLI（多為函式庫與名稱保留）。用 category `command-line-utilities` 可先縮小。
+- **可執行判斷**：版本的 `bin_names`（ripgrep → `["rg"]`）與 `has_lib`。db dump 的 `versions.bin_names` 是 public 欄位。抽樣 30 筆新 crate 只有 3 筆是 CLI（多為函式庫與名稱保留；查核重跑 6／29，CLI 約 10–20%）。用 category `command-line-utilities` 可先縮小。
 - **條款**：「A maximum of 1 request per second」＋「A user-agent header that identifies your application」；sparse index「No rate limits」；db dump「updated every 24 hours」（crates.io Data Access 頁，原始碼 `svelte/src/routes/data-access/+page.svelte`）。不帶 UA 實測直接被拒（查核時重測：HTTP 403，訊息「We require that all requests include a `User-Agent` header」）。同頁要求「Please try them in the order below」：先 sparse index → db dump → API 最後。[Policies](https://crates.io/policies) 另禁止「excessive automated bulk activity」。資料授權未明示。查核時以原生 API 重數：7 天 5,961 個、24 h 834 個、GitHub 90.5%（與原文一致）。`trustpub_data` 在 db dump 是 private，只能從 API 拿。
 - 適合「Rust 寫的 CLI」，對本地 AI 類別普通。
 
@@ -168,8 +168,8 @@
 | Homebrew tap | formula 的 `bin.install`、`url` 指向 `releases/download` | 讀 tap repo 的 `.rb` | 抽樣 29／40 用預編譯檔 |
 | PyPI | wheel `entry_points.txt` 的 `[console_scripts]`／`[gui_scripts]` | HTTP Range 讀 wheel | 抽樣 12／30 |
 | npm | 最新版 `bin` | abbreviated packument | 抽樣 7／30 |
-| crates.io | `bin_names`（非空）、`has_lib` | `/api/v1/crates/{name}/{ver}` 或 db dump | 抽樣 3／30；ripgrep `["rg"]` |
-| Go | 有 `name == "main"` 的 package | pkg.go.dev `/v1/packages/{mod}?filter=...` | 抽樣 11／25 |
+| crates.io | `bin_names`（非空）、`has_lib` | `/api/v1/crates/{name}/{ver}` 或 db dump | 抽樣 3／30（重跑 6／29）；ripgrep `["rg"]` |
+| Go | 有 `name == "main"` 的 package | pkg.go.dev `/v1/packages/{mod}?filter=...` | 抽樣 11／25（重跑 14／21） |
 | winget | `InstallerType: portable`、`Commands`、`PortableCommandAlias` | installer manifest | 28／84（含 GUI portable） |
 | Nixpkgs | `meta.mainProgram` | packages.json | 26,969／150,656 |
 | GitHub release | release assets 有各平台壓縮檔 | ecosyste.ms repos `/releases`（免 GitHub token，但要先取得書面同意）；正式管線改用 GitHub REST API | y509 有 darwin／linux／windows |
@@ -248,8 +248,10 @@ python3 spikes/ch_packages_registries.py --only pypi,crates --sample 20 --days 3
 | PyPI | 2,091（ecosyste.ms） | 71% | 12／30 有 console_scripts | 原生約 40／小時 ≈ 6,700／週；ecosyste.ms 延遲 34 h 而漏很多 |
 | npm | 27,393（ecosyste.ms） | 64% | 7／30 有 bin | 5 筆抽樣中 3 筆是 staged publishing placeholder |
 | crates.io | 5,041（ecosyste.ms）；原生 API 5,947 | 91% | 3／30 有 bin_names | 名稱保留的 crate 不少 |
-| Go | 35,583 個版本事件、9,795 module、5,154 有 tag | 91%（tag module） | 11／25 有 main | 5 個在 pkg.go.dev 查不到 |
+| Go | 35,583 個版本事件、9,795 module、5,154 有 tag | 91%（tag module） | 11／25 有 main | 30 個抽樣中 5 個在 pkg.go.dev 查不到 |
 | AUR | 831 | 80% | — | `-bin` 240、`-git` 122 |
+
+查核時重跑（2026-10-27 21:10 UTC，預設參數，6 分 14 秒）：PyPI 2,091／71%／12 of 30；npm 27,484／64%／8 of 28；crates 5,067／91%／**6 of 29**；Go 36,480 事件、9,703 module、5,167 有 tag、查得到 21／30、**14 有 main**；AUR 821／80%（`-bin` 238、`-git` 121）；RSS 39 筆／64 分。數量與比例一致；抽樣比例因時間窗移動而變（crates 3→6、Go 11→14），小樣本只看量級。
 
 另外手動量測（不在腳本裡）：
 
@@ -353,3 +355,62 @@ python3 spikes/ch_packages_registries.py --only pypi,crates --sample 20 --days 3
 | Google APIs ToS | https://developers.google.com/terms （Last modified 2021-11-09） | 查核時已讀 |
 | BigQuery 價格 | https://cloud.google.com/bigquery/pricing | 查核時已讀 |
 | crates.io Policies | https://crates.io/policies （原始碼 `svelte/src/routes/policies/+page.svelte`） | 查核時已讀 |
+
+---
+
+## 查核紀錄（2026-10-28）
+
+查核者：另一個 agent，預設懷疑。實測時間 2026-10-27 20:50–21:16 UTC（台北 10/28 04:50–05:16）。一律直接打官方 API 或讀官方文件；GitHub 檔案用 raw 或 shallow clone（本 session 的 GitHub API 只能打本 repo，查核時重測仍回 403，屬實）。沒執行任何 git commit／push／checkout。
+
+### 關鍵主張逐條
+
+| # | 主張 | 判定 | 依據／改了什麼 |
+|---|---|---|---|
+| 1 | Homebrew analytics 收第三方 tap；12,264 個、7,858 個 tap、4,066 個近 30 天新 | **成立，補但書** | 重抓 30／90／365d JSON，數字完全一致；清單 `sum(count)`＝`total_count`，沒有截斷。補：公開查詢沒排除 CI（brew 原始碼），「真的有人裝」改成「有安裝紀錄」 |
+| 2 | API 文件無 rate limit／條款／授權；analytics 匿名彙總、收 non-private tap 名 | 成立 | formulae.brew.sh/docs/api/ 全文沒有相關字；docs.brew.sh/Analytics 原文相符。formulae.brew.sh repo 是 BSD-2-Clause，但 analytics JSON 不在 repo 裡（建置時產生），資料授權仍未明示 |
+| 3 | homebrew-core 門檻 30/30/75、自薦 90/90/225、未滿 30 天不收、建議第三方 tap | 成立 | Package Acceptance Policy 原文相符。補：官方明講第三方 tap 不代表 Homebrew 背書 |
+| 4 | crates.io API 1 req/s、必須帶 UA；sparse index／static 無 rate limit；dump 每 24h；`bin_names` public | 成立 | data-access 原始碼相符；不帶 UA 回 403；dump-db.toml `bin_names = "public"`。補：官方要求先用 index、dump，API 最後 |
+| 5 | PyPI ToS 停權與 spam 條款；edge 無 rate limit、不要幾分鐘上千次、UA 可識別 | 成立，**但漏了關鍵一句** | 原文都相符。漏掉 API Preference：「No new integrations should use the XML-RPC APIs」。原文建議用 XML-RPC 回補，已改成 RSS 為主、XML-RPC 只當一次性回補 |
+| 6 | RSS 40 筆約 64 分；`changelog` 停用；22.4h 901 create；JSON 無 entry points、downloads −1 | 成立，補細節 | 查核時 RSS 39 筆／74 分；`changelog` 回「deprecated, use changelog_since_serial」；`changelog_since_serial` 22.8h 909 create。補：單次上限 50,000 筆，原文窗口其實止於呼叫前約 4 小時 |
+| 7 | pypistats 依 IP 限速 60、留 180 天、大量抓「DON'T」改用 BigQuery | 成立 | 回應頭 `x-ratelimit-limit: 60`；/api 頁原文相符 |
+| 8 | npm 條款：不准自動化存取網站、可用 Public APIs 複製、500 萬次不合理、不得當通用資料庫、安全資料只能自用 | **部分錯** | 前三項與最後一項相符。「不得當通用資料庫」在 Acceptable Content，是限制上傳內容，不是讀取；已改。補：crawlers 政策允許 ≤1 req/s 實驗性爬蟲（由 npm 裁量） |
+| 9 | replicate `_changes` 只回 id／rev、`include_docs` 回 400；bulk 128、不支援 scoped、最多 365 天 | 成立（主張清單正確，**檔案內文寫錯**） | 實測相符。檔案原寫「bulk…最多 18 個月」，官方是 bulk 365 天、非 bulk 18 個月；已改 |
+| 10 | pkg.go.dev `/v1` 能用 `name == "main"` 篩、45 QPS／IP block；index 單次最多 2000 | 成立 | fzf 回 1 個 main；cobra `importedByCounts.modules` 99,323；`limit=5000` 回 400；index 頁「Default = 2000, Max = 2000」 |
+| 11 | ecosyste.ms CC BY-SA 4.0、AGPL-3；匿名 5,000、polite 15,000；延遲 34／2.1／0.4 h | 數字成立，**建議與條款衝突** | 回應頭與延遲重測一致（32.9／2.6／0.3 h）。但 Terms §9 禁止未經書面同意的腳本擷取資料，§11(c) 只授權個人使用、不含資料探勘。原文建議「黑客松接」，已改成「取得書面同意後才接」 |
+| 12 | deps.dev 受 Google API ToS、CC-BY 4.0、可快取、無 rate limit、7 個生態系、provenance 分類 | 成立，**授權範圍寫太寬** | vite 有 `SLSA_ATTESTATION`、llm 有 `PYPI_PUBLISH_ATTESTATION`；Homebrew 回 404。但 CC-BY 4.0 只涵蓋 deps.dev 產生的資料，星數來自 GitHub；Google APIs ToS §5(e) 禁止用 API 內容建資料庫或公開展示。第 6 節「改用 deps.dev（CC-BY）」已改 |
+| 13 | libraries.io 要 key、60/min、search 無 key 401；CC-BY-SA 4.0；dump 1.6.0（2020-01-12） | 成立 | search 401、單一專案 200；首頁頁尾原文相符；Zenodo API 1.6.0／2020-01-12／cc-by-4.0 |
+| 14 | winget MIT、無 notability 門檻、無安裝數、7 天 87 個；Scoop Main 500+150、Extras 100 和/或 50 | 成立 | LICENSE、政策原文、wiki、issue template 相符；shallow clone 重數 87。「winget 沒有公開安裝數」是查不到官方來源，不是官方明文 |
+| 15 | AUR RPC 預設 4,000／日／IP；正式站未驗證 | 成立（維持未驗證） | `conf/config.defaults` 相符；正式站 RPC 回應頭沒有 rate limit 資訊，仍未驗證 |
+
+### 其他影響決策的事實
+
+| 項目 | 判定 | 說明 |
+|---|---|---|
+| Homebrew 抽樣「15 筆和 AI 相關」 | 數字約略成立，**解讀過頭** | 人工重數 16 筆，多數是 coding agent 周邊工具；真的屬於本地 AI／LLM 工具的約 3 筆。已改 2.1 與結論 |
+| homebrew-core 7 天 13 個新 formula | 成立 | shallow clone 重數 13。「不少是作者自薦」只部分可信，zvec-grep 對不上；已改為未逐一確認 |
+| ripgrep 30 天 48,775 | 成立，補欄位 | 那是 `install`（含依賴）；`install_on_request` 是 37,725 |
+| crates.io 原生 7 天 5,947、91% GitHub | 成立 | 以 1 req/s 重數 5,961、90.5% |
+| AUR／ArchWiki 有 Anubis | **未驗證** | 查核時兩邊都直接 200，沒出現挑戰頁；已標未驗證 |
+| GitHub AUP 第 7 節 | 成立 | 原文：Scraping＝自動化擷取，不含 API；研究（需開放取用）與封存可用 |
+| BigQuery 免費額度（原文未查證） | 已補 | 查詢每月 1 TiB、儲存 10 GiB 免費 |
+| PyPI BigQuery 資料授權 | 已補 | docs 連到 CC BY 4.0 |
+| Docker Hub `x-ratelimit-limit: 180`、ollama pull 數 | 成立 | 重測 180；pull_count 192,697,916 |
+| npm staged publishing 2026-10-02 | 頁面存在 | 與 placeholder 的關係仍是推測 |
+
+### 腳本重跑
+
+| 腳本 | 結果 | 金鑰 |
+|---|---|---|
+| `spikes/ch_packages_brew_taps.py`（預設參數） | 18.5 秒跑完；所有數字與第 4.1 節完全一致（20,334／12,264／7,858／4,066／437；39／36／29／36；中位數 1、32／36、最大 3,510）；前 5 筆相同 | 無；只讀 `PICKFIT_CONTACT`、`PICKFIT_JSON` |
+| `spikes/ch_packages_registries.py`（預設參數） | 6 分 14 秒跑完；數量與比例一致，小樣本比例有變動（見 4.2 下方） | 無；只讀 `PICKFIT_CONTACT` |
+
+腳本的小問題（不影響本次結果）：analytics、RSS、Go index 抓取失敗時 `get()` 回 `None`，後面直接取值會丟例外；兩支腳本都呼叫 ecosyste.ms，若主控者決定在取得同意前不用它，正式管線不要沿用這兩支腳本的做法。查核重跑沒有帶 `PICKFIT_CONTACT`。
+
+### 改了什麼（摘要）
+
+1. ecosyste.ms 從「黑客松接」改成「取得書面同意後才接」；工時合計從 10–12 h 改成 8–10 h（不含 ecosyste.ms）。
+2. PyPI 改成 RSS 輪詢為主；XML-RPC 只當一次性回補，並註明 50,000 筆上限。
+3. deps.dev 的 CC-BY 4.0 範圍縮到它自己產生的資料；第 6 節選項 (c) 改正。
+4. Homebrew 安裝數補「含 CI」；本地 AI 類別在 tap 裡只有約 3 筆。
+5. npm 條款「通用資料庫」誤用改正；downloads API 期間上限改正。
+6. AUR Anubis 改標未驗證；BigQuery 免費額度補上；crates／Go 重跑數字補上。
