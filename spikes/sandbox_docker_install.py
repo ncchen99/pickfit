@@ -23,6 +23,7 @@
     python3 spikes/sandbox_docker_install.py --with-llm          # 加上 llama.cpp 推論驗證
     python3 spikes/sandbox_docker_install.py --only evnx --out /tmp/pf-verify
     python3 spikes/sandbox_docker_install.py --local             # 沒有 Docker：本機 subprocess + 暫存 HOME（不是隔離！）
+    python3 spikes/sandbox_docker_install.py --limits-test       # 防護自我檢查：fork bomb、塞磁碟、吃記憶體、吃 CPU、讀 env
 環境需要 HTTPS 中間人 proxy 時（例如 Claude Code 雲端環境），--ca-bundle 指向 CA 檔，會唯讀掛進容器。
 只用標準函式庫；Pillow 有裝才產生 PNG。不需要任何金鑰。
 """
@@ -128,10 +129,10 @@ TOOLS = {
                      "ln -sf $PWD/$B/llama-server ~/.local/bin/ && command -v llama-server", 20),
             ("version", "llama-server --version", 30),
             ("model", f"cd ~/llama && {FETCH} {GGUF_URL} stories260K.gguf", 120),
-            ("serve", "cd ~/llama && (nohup llama-server -m stories260K.gguf --host 127.0.0.1 --port 8080 -c 256 -t 2 "
-                      "> server.log 2>&1 &) && for i in $(seq 1 60); do python3 -c \"import urllib.request;"
-                      "print(urllib.request.urlopen('http://127.0.0.1:8080/health',timeout=2).read().decode())\" && exit 0; "
-                      "sleep 1; done; tail -20 server.log; exit 1", 90),
+            ("serve", "cd ~/llama && nohup llama-server -m stories260K.gguf --host 127.0.0.1 --port 8080 -c 256 -t 2 "
+                      "> server.log 2>&1 & P=$!; for i in $(seq 1 60); do python3 -c \"import urllib.request;"
+                      "print(urllib.request.urlopen('http://127.0.0.1:8080/health',timeout=2).read().decode())\" 2>/dev/null && exit 0; "
+                      "kill -0 $P 2>/dev/null || break; sleep 1; done; tail -20 server.log; exit 1", 90),
             ("models", "python3 -c \"import urllib.request;print(urllib.request.urlopen('http://127.0.0.1:8080/v1/models').read().decode()[:400])\"", 20),
             ("example", "python3 -c \"import json,urllib.request;r=urllib.request.Request('http://127.0.0.1:8080/v1/completions',"
                         "data=json.dumps({'prompt':'Once upon a time','max_tokens':24,'temperature':0}).encode(),"
@@ -241,7 +242,9 @@ class LocalBox:
         self.home = tempfile.mkdtemp(prefix=f"pf-{name}-")
         os.makedirs(f"{self.home}/work"), os.makedirs(f"{self.home}/.local/bin")
         self.env = {k: v for k, v in os.environ.items() if k in ("HTTPS_PROXY", "https_proxy", "NO_PROXY", "no_proxy", "SSL_CERT_FILE")}
-        self.env.update({"HOME": self.home, "PATH": f"{self.home}/.local/bin:/usr/local/bin:/usr/bin:/bin", "PIP_NO_INPUT": "1"})
+        # --user 裝進暫存 HOME/.local，不碰系統的 site-packages（Ubuntu 24.04 的 PEP 668 會擋 --user，這裡明確放行）
+        self.env.update({"HOME": self.home, "PATH": f"{self.home}/.local/bin:/usr/local/bin:/usr/bin:/bin", "PIP_NO_INPUT": "1",
+                         "PIP_BREAK_SYSTEM_PACKAGES": "1"})
         if a.ca_bundle and os.path.exists(a.ca_bundle):
             self.env.update({k: a.ca_bundle for k in ("SSL_CERT_FILE", "REQUESTS_CA_BUNDLE", "PIP_CERT")})
         self.mem = _parse_size(a.memory)
@@ -323,7 +326,7 @@ def render_png(text, path, title=""):
     rows = rows[:80]
     wide = lambda ch: ord(ch) > 0x2E80  # 粗略：CJK 與全形佔兩格
     cols = max([sum(2 if wide(c) else 1 for c, _, _ in r) for r in rows] + [40])
-    W, H = int(min(cols, 140) * cw) + 40, len(rows) * lh + 60
+    W, H = int(max(min(cols, 140), len(title[:100]) + 8) * cw) + 40, len(rows) * lh + 60
     img = Image.new("RGB", (W, H), "#1e2127")
     d = ImageDraw.Draw(img)
     for i, c in enumerate(("#ff5f56", "#ffbd2e", "#27c93f")):
@@ -486,6 +489,35 @@ def verify(slug, a, out_dir, max_attempts=3):
             "runs": runs}
 
 
+# ---------- 防護自我檢查：在同樣受限的容器裡故意做壞事，確認限制真的生效 ----------
+PROBES = [
+    ("whoami", "id; cat /proc/self/status | grep -E 'CapEff|NoNewPrivs'", 10),
+    ("env_secrets", "env | grep -i -E 'key|token|secret|passw|proxy' || echo 'no secret-like env'", 10),
+    ("write_rootfs", "touch /usr/local/bin/evil 2>&1; echo exit=$?", 10),
+    ("disk_fill", "dd if=/dev/zero of=$HOME/fill bs=1M count=4000 2>&1 | tail -1; df -h $HOME | tail -1; rm -f $HOME/fill", 60),
+    ("mem_hog", "python3 -c \"b=[]\nwhile True: b.append(bytearray(100*1024*1024))\" ; echo exit=$?", 60),
+    ("fork_bomb", "python3 -c \"import os,time\nn=0\ntry:\n  while True:\n    if os.fork()==0: time.sleep(30); os._exit(0)\n    n+=1\n"
+                  "except OSError as e: print('fork stopped after',n,'children:',e)\"; sleep 1; ps -e --no-headers 2>/dev/null | wc -l || true", 60),
+    ("cpu_burn", "timeout 5 python3 -c \"import multiprocessing as m\nimport itertools\n"
+                 "def f(_):\n  [x*x for x in itertools.count()]\nm.Pool(8).map(f,range(8))\"; cat /sys/fs/cgroup/cpu/cpu.cfs_quota_us /sys/fs/cgroup/cpu.max 2>/dev/null", 30),
+    ("metadata_ip", "python3 -c \"import urllib.request;print(urllib.request.urlopen('http://169.254.169.254/',timeout=3).status)\" 2>&1 | tail -1", 15),
+]
+
+
+def limits_test(a):
+    box = DockerBox(f"pf-probe-{int(time.time())}", a, a.image)
+    out = []
+    try:
+        for name, cmd, tmo in PROBES:
+            rc, o, e, dt = box.run(cmd, tmo)
+            last = " | ".join((o + e).strip().splitlines()[-3:])[:220]
+            out.append({"probe": name, "exit": rc, "seconds": round(dt, 1), "tail": last})
+            print(f"| {name} | {rc} | {dt:.1f} | {last} |", flush=True)
+    finally:
+        box.close()
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", help="逗號分隔，例如 graphtty,evnx")
@@ -499,10 +531,15 @@ def main():
     ap.add_argument("--container-ttl", type=int, default=900)
     ap.add_argument("--ca-bundle", default=os.environ.get("PICKFIT_CA_BUNDLE", "/root/.ccr/ca-bundle.crt"))
     ap.add_argument("--out", default=os.path.join(tempfile.gettempdir(), "pickfit-verify"))
+    ap.add_argument("--limits-test", action="store_true", help="只跑防護自我檢查（fork bomb、塞磁碟、吃記憶體…）")
     a = ap.parse_args()
     if not a.local and sh(["docker", "info"], timeout=20)[0] != 0:
         sys.exit("docker daemon 沒在跑；先啟動 dockerd，或加 --local")
     os.makedirs(a.out, exist_ok=True)
+    if a.limits_test:
+        print("| probe | exit | 秒 | 結果 |\n|---|---|---|---|")
+        json.dump(limits_test(a), open(os.path.join(a.out, "limits.json"), "w"), ensure_ascii=False, indent=2)
+        return
     slugs = a.only.split(",") if a.only else ["graphtty", "evnx", "ripgrep"] + (["llama.cpp"] if a.with_llm else [])
     if not a.local:
         t = time.time()

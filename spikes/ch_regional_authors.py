@@ -25,7 +25,7 @@ from datetime import datetime, timedelta, timezone
 
 UA = "pickfit-research/0.1 (hackathon spike; contact via GitHub)"
 ATOM = {"a": "http://www.w3.org/2005/Atom"}
-GH = re.compile(r"github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)", re.I)
+GH = re.compile(r"(?<![\w.-])github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)", re.I)
 GH_SKIP = {"features", "orgs", "topics", "sponsors", "marketplace", "settings", "apps", "login", "about"}
 CLI = re.compile(r"\b(cli|tui|terminal|shell|command[- ]line)\b|命令行|命令列|终端|終端|コマンドライン|ターミナル|터미널|커맨드", re.I)
 LOCAL_AI = re.compile(r"ollama|llama\.cpp|gguf|\bmlx\b|lm ?studio|local (llm|model|ai)|本地(大)?模型|本地 ?llm|离线|離線|"

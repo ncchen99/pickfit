@@ -2,14 +2,14 @@
 """各地區「策展／聚合」型管道：最近 7 天有幾筆 GitHub repo、雜訊多少。
 
 只打無需金鑰的官方 RSS 或公開檔案（Python 標準函式庫，不需任何金鑰）：
-- Hatena Bookmark：/site/github.com/?mode=rss&sort=new（日本使用者新收藏的 GitHub 頁面；每頁 30 筆，robots Crawl-delay 5 秒）
+- Hatena Bookmark：/site/github.com/?mode=rss&sort=new（日本使用者新收藏的 GitHub 頁面；只回最新 30 筆、不能翻頁）
 - 阮一峰《科技爱好者周刊》：GitHub raw 的 docs/issue-N.md，解析「工具」小節（每週五一期）
 - HelloGitHub 月刊：GitHub raw 的 content/HelloGitHubN.md（每月 28 號一期）
 - 雜訊對照：velog 全站 RSS、Habr open_source hub RSS、OSChina 資訊 RSS
 
 用法：
   python3 spikes/ch_regional_curated.py
-  python3 spikes/ch_regional_curated.py --only hatena --hatena-pages 4
+  python3 spikes/ch_regional_curated.py --only hatena,ruanyf --ruanyf-issues 1
 """
 import argparse
 import email.utils
@@ -22,7 +22,7 @@ from datetime import datetime, timedelta, timezone
 
 UA = "pickfit-research/0.1 (hackathon spike)"
 RAW = "https://raw.githubusercontent.com"
-GH = re.compile(r"github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)", re.I)
+GH = re.compile(r"(?<![\w.-])github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)", re.I)  # 排除 hellogithub.com
 GH_SKIP = {"features", "orgs", "topics", "sponsors", "marketplace", "settings", "apps", "login", "about", "ruanyf"}
 CLI = re.compile(r"\b(cli|tui|terminal|shell|command[- ]line)\b|命令行|终端|コマンドライン|ターミナル", re.I)
 LOCAL_AI = re.compile(r"ollama|llama\.cpp|gguf|\bmlx\b|local (llm|model|ai)|本地(大)?模型|本地 ?llm|离线|ローカル ?llm", re.I)
@@ -43,25 +43,17 @@ def repo_of(text):
     return None
 
 
-def hatena(since, max_pages):
-    rows, page = [], 1
-    while page <= max_pages:
-        raw = fetch(f"https://b.hatena.ne.jp/site/github.com/?mode=rss&sort=new&page={page}")
-        items = ET.fromstring(raw).findall("rss:item", RSS1)
-        if not items:
-            break
-        for it in items:
-            rows.append({
-                "title": it.findtext("rss:title", "", RSS1),
-                "url": it.findtext("rss:link", "", RSS1),
-                "date": datetime.fromisoformat(it.findtext("dc:date", "", RSS1).replace("Z", "+00:00")),
-                "users": int(it.findtext("hatena:bookmarkcount", "0", RSS1) or 0),
-            })
-        if rows[-1]["date"] < since:
-            break
-        page += 1
-        time.sleep(5)  # robots.txt: Crawl-delay: 5
+def hatena(since):
+    # 實測（2026-10-27）：site feed 的 page／of 參數都被忽略，永遠只回最新 30 筆，所以只抓一頁
+    raw = fetch("https://b.hatena.ne.jp/site/github.com/?mode=rss&sort=new")
+    rows = [{
+        "title": it.findtext("rss:title", "", RSS1),
+        "url": it.findtext("rss:link", "", RSS1),
+        "date": datetime.fromisoformat(it.findtext("dc:date", "", RSS1).replace("Z", "+00:00")),
+        "users": int(it.findtext("hatena:bookmarkcount", "0", RSS1) or 0),
+    } for it in ET.fromstring(raw).findall("rss:item", RSS1)]
     in7 = [r for r in rows if r["date"] >= since]
+    span_h = (max(r["date"] for r in rows) - min(r["date"] for r in rows)).total_seconds() / 3600 if rows else 0
     repos = {}
     for r in in7:
         rp = repo_of(r["url"])
@@ -69,7 +61,9 @@ def hatena(since, max_pages):
             repos.setdefault(rp, r)
     users = sorted(r["users"] for r in in7)
     res = {
-        "pages": page, "entries_7d": len(in7), "unique_repos_7d": len(repos),
+        "fetched": len(rows), "covers_hours": round(span_h, 1),
+        "est_repos_7d": round(len(repos) / span_h * 24 * 7) if span_h else None,
+        "entries_7d": len(in7), "unique_repos_7d": len(repos),
         "users_median": users[len(users) // 2] if users else None,
         "users_le_3": sum(u <= 3 for u in users),
         "cli_kw": sum(bool(CLI.search(r["title"])) for r in repos.values()),
@@ -153,7 +147,6 @@ def noise(since):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", default="hatena,ruanyf,hellogithub,noise")
-    ap.add_argument("--hatena-pages", type=int, default=8)
     ap.add_argument("--ruanyf-issues", type=int, default=3)
     args = ap.parse_args()
     now = datetime.now(timezone.utc)
@@ -161,7 +154,7 @@ def main():
     print(f"# now={now:%Y-%m-%d %H:%M} UTC, window=7d\n")
     only = args.only.split(",")
     if "hatena" in only:
-        res, repos = hatena(since, args.hatena_pages)
+        res, repos = hatena(since)
         print("## Hatena Bookmark：新收藏的 github.com 頁面\n" + json.dumps(res, ensure_ascii=False))
         for rp, r in repos[:: max(1, len(repos) // 5)][:5]:
             print(f"  - {r['date']:%m-%d} users={r['users']} {rp} | {r['title'][:60]}")
