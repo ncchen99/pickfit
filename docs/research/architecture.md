@@ -56,7 +56,60 @@
 
 ## B. 怎麼判斷「可用的軟體」與「品質好」
 
-（進行中）
+細節、規則表與試算：[notes/quality-scoring.md](notes/quality-scoring.md)（經查核，查證日 2026-10-28）。spike：`spikes/quality_signals.py`。
+
+### B.1 「可用的軟體」vs 函式庫、demo、作業、模板
+
+先用規則做第一層，判不準的交給 Muse Spark：
+
+| 類型 | 規則訊號（例） |
+|---|---|
+| 工具（正向） | README 有安裝／用法小節與安裝指令（`brew install`、`pipx`、`cargo install`…）；**強訊號**：release 附二進位檔、套件中繼資料有執行入口（npm `bin`、`[project.scripts]`、Cargo `src/main.rs`、Go `cmd/*/main.go`）、被套件庫收錄 |
+| 不是軟體 | 名稱或 topics 有 awesome、homework、assignment、tutorial、template、starter、dotfiles；`is_template`；README 大多是連結清單；沒有程式碼檔 |
+| 函式庫 | `main`／`exports` 但沒有 `bin`；只有 `src/lib.rs`；README 只示範 `import`／`go get`；描述寫 library、SDK |
+
+判定順序：不是軟體 → 函式庫（要多個訊號且沒有強訊號）→ 工具 → 其他交給模型。
+
+**實測**（227 個 2026 年的 Show HN GitHub repo）：工具 142、交給模型 34、函式庫 1、沒資料 50。目測 40 個「工具」中 32 個正確、4 個錯（benchmark 網站、模型權重等）。**精確率未驗證**（沒有標註集）。規則漏掉的類型（benchmark、模型權重、MCP server、韌體）要靠模型。
+
+Muse Spark 判斷：類型（18 類 enum）、給終端使用者還是給開發者 import、成熟度（alpha、PoC）、處理在本機還是雲端、平台與前置需求、文件完整度；每個判斷附 README 原文。**分數由程式算，不讓模型直接給 0–100**；README 視為不可信輸入。
+
+### B.2 和知名度無關的品質訊號
+
+| 來源 | 對長尾專案的實用度 | 理由 |
+|---|---|---|
+| OpenSSF Scorecard API | **低** | 只涵蓋每週掃描清單（約 131 萬個 repo）或自己發布的 repo；227 個 Show HN repo 只有 7 個（3.1%）有資料，ollama 也是 404。Maintained 對建立未滿 90 天的 repo 給 0；Code-Review、Contributors 對單人專案不公平 |
+| Scorecard CLI `--local` | 中 | 不需要 token，小 repo 1–2 秒；可在沙盒 clone 後順便跑 |
+| CHAOSS 指標 | 中（挑著用） | Issue Response Time、Change Request Closure、Release Frequency 可用；Bus Factor 小專案一定是 1，不計分 |
+| ecosyste.ms | **高（補資料）** | 一個來源就有 release 下載數、issue 關閉時間、套件下載量、檔案列表；涵蓋率 repos 78%、issues 44%；資料 CC BY-SA 4.0 |
+| deps.dev | 中 | 涵蓋 28%；能確認套件 ↔ repo 對應有沒有發布簽章 |
+| **pickfit 自己的** | **最高** | 沙盒驗證結果、安裝步驟數、README 和實際操作的差距、模型依 rubric 評的文件完整度、`report_outcome` 成功率 |
+
+**關鍵發現**：用規則算的品質會飽和。5 個 2026 年的小工具「若驗證通過」是 80–100 分，bat 是 90，分不開。CI、測試、changelog 用 AI 很容易做出來。所以品質要靠**沙盒驗證**和**模型 rubric**拉開。
+
+### B.3 計分草案
+
+**quality（0–100）**
+
+| 分項 | 權重 | 怎麼算 |
+|---|---|---|
+| 沙盒驗證 | 35 | 通過且 ≤3 步 1.0；4–6 步 0.85；>6 步 0.7；要修正 README 才成功再 ×0.8；失敗 0 |
+| 安裝與文件 | 20 | Muse Spark 依 8 項 rubric 評 0／1／2 分（做什麼、適合誰、前置需求、各 OS 安裝、第一次執行範例、設定與金鑰、疑難排解與移除、授權與平台） |
+| 維護 | 15 | 最近 push、最近 release、一年 ≥2 次 release；**不計 commit 數** |
+| 工程衛生 | 10 | CI、測試、OSI 授權、changelog、lockfile |
+| 回應 | 10 | 外部使用者 issue 的關閉比例與時間（≥2 筆才算） |
+| 使用結果 | 10 | `report_outcome` 成功率（≥3 筆才算） |
+
+- 缺資料的分項從分母拿掉後重新正規化，另外輸出 `confidence`。
+- 上限：archived 30；驗證失敗 40；不是工具 50；**還沒驗證 69**（剛好低於寶藏門檻）。
+
+**popularity（0–100）**：7 個訊號各自對數正規化 `100 × log10(1+x) ÷ log10(1+ref)` 後加權：stars 0.35、每月下載 0.15、forks 0.10、dependents 0.10、release 下載 0.10、HN 最高分 0.10、收錄套件庫數 0.10。ref 依類別不同（本地 AI 的星數普遍較高）；建立滿 3 個月加 25% 的成長速度。ref 是**未校準的初始猜測**，收完候選後改用類別內 P95。
+
+**寶藏**：工具＋驗證通過＋未 archived，且 quality ≥ 70、popularity ≤ 45；排序看 `gap = quality − popularity`。推薦時先配對條件，寶藏只在合格候選中加分（「推薦是配對，不是排名」）。
+
+**試算**（spike，假設驗證通過）：datui、convkit、photoc、mere-run、pasteface 的知名度 9–38，都是寶藏候選；bat 品質 90 但知名度 96，不是；gollama（函式庫）、awesome-cli-apps（清單、archived）被正確封頂。
+
+**防灌水**：星數只算進知名度；不計 commit 數；release 只看有沒有；只計外部使用者開的 issue；星數暴增（單週 >50% 且 >200）或 forks／stars 異常就人工抽查。StarScout 研究（[arXiv 2412.13459](https://arxiv.org/abs/2412.13459)）指出假星常用來推 AI/LLM 與工具類 repo，正是我們的兩個類別。
 
 ## C. 沙盒驗證
 
