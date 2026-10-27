@@ -298,6 +298,8 @@
 
 測完已移除 runsc 與 shim，沒有留下容器。
 
+查核重跑（2026-10-28，同一台 VM）：gVisor 官方安裝文件的 `releases/release/latest/x86_64/runsc` 回 404；release-20261019.0 改成發 `gvisor.tar.bz2`（含 `runsc`、`containerd-shim-runsc-v1`），sha512 驗證通過。runsc 只解到暫存目錄、跑完刪除，沒有裝進系統；`runsc do uname -r` 回 `4.19.0-gvisor`。
+
 ---
 
 ## 9. Spikes
@@ -436,3 +438,46 @@
 - CircleCI 價格：https://circleci.com/pricing/
 - CircleCI 資源類別價目：https://circleci.com/pricing/price-list/
 - Codemagic 價格：https://codemagic.io/pricing/
+
+---
+
+## 查核紀錄（2026-10-28）
+
+查核者：另一個 agent，預設懷疑。方法：用 curl 重新抓官方文件、價格頁、條款原文（Modal、E2B、Daytona、Cloudflare、Vercel、GitHub、AWS、Apple、Tart、use.computer），逐條比對；重跑 `spikes/sb_local_timing.sh`。沒有任何雲端沙盒金鑰，雲端服務仍**未實測**。
+
+### 逐條結果
+
+| # | 主張 | 結果 | 依據（2026-10-28 讀取） |
+|---|---|---|---|
+| 1 | Modal 沙盒 CPU／記憶體是一般價 3 倍：$0.00003942／core／秒、$0.00000667／GiB／秒；GPU 一般價；Starter 每月含 $30 | 正確。一般價 $0.0000131、$0.00000222，乘 3 相符 | https://modal.com/pricing |
+| 2 | Modal「預設用 gVisor」、可選 VM；GPU 只限 gVisor；預設 5 分鐘、最長 24 小時 | **部分錯**：文件寫「leave unset to let Modal choose for you」，沒說預設是 gVisor。其餘正確。**補**：GPU 沙盒「subject to preemption」 | https://modal.com/docs/guide/sandbox ; https://modal.com/docs/guide/sandbox-resources |
+| 3 | Modal 網路：預設可出網；三種限制；執行中可改（Alpha）；DNS 除全擋外不受限 | 正確 | https://modal.com/docs/guide/sandbox-networking |
+| 4 | 比賽 Modal credits $100、前 1,000 人、不保證 | 正確 | docs/hackathon-rules.md 第 6 節 |
+| 5 | E2B：Firecracker、約 80 ms、Hobby 免卡 $100、1 小時、20 並行、10 GiB、無 GPU | 正確。**補**：deny 清單不支援網域 | https://e2b.dev/docs/sandbox/security ; https://docs.e2b.dev/billing.md ; https://e2b.dev/pricing ; https://e2b.dev/docs/template/how-it-works.md ; https://e2b.dev/docs/faq/gpu-support.md ; https://e2b.dev/docs/sandbox/internet-access.md |
+| 6 | Daytona：Tier 1、2 網路受限且不能覆寫；清單無 Homebrew；Tier 3 要 $500；預設是容器 | 正確。**補**：Tier 1、2 也不能在執行中改網路政策 | https://www.daytona.io/docs/en/network-limits.md ; https://www.daytona.io/docs/en/limits.md ; https://www.daytona.io/docs/en/isolation.md |
+| 7 | Cloudflare：Firecracker、冷啟動 1–3 秒、Workers Paid $5、最大 4 vCPU／12 GiB／20 GB、無 GPU | 正確。**補**：上限是預設值、可申請提高；磁碟另計 | https://developers.cloudflare.com/containers/concepts/architecture/ ; https://developers.cloudflare.com/containers/platform/limits/ ; https://developers.cloudflare.com/containers/platform/pricing/ |
+| 8 | Vercel：Firecracker；Hobby 5 active CPU-h、10 並行、45 分鐘；下載免費；文件未提 GPU | 正確 | https://vercel.com/docs/sandbox/pricing ; https://vercel.com/docs/sandbox/concepts |
+| 9 | GitHub：public 標準 runner 免費；private macOS $0.062／分；macos-15 M1 3 核 7 GB 14 GB、Homebrew 6.0.22；Free 同時 5 個 macOS job | 正確（Homebrew 版本來自 image 20260907.0337.1） | https://docs.github.com/en/billing/concepts/product-billing/github-actions ; https://docs.github.com/en/billing/reference/actions-runner-pricing ; https://docs.github.com/en/actions/reference/runners/github-hosted-runners ; https://docs.github.com/en/actions/reference/limits ; https://github.com/actions/runner-images/blob/main/images/macos/macos-15-arm64-Readme.md |
+| 10 | GitHub 條款原文；「macOS 另限」develop and test your application(s) | 原文正確。**「macOS 另限」錯**：該段沒有限定 macOS，適用整個 Actions。**補**：違規可停權帳號 | https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features |
+| 11 | 「其他雲端 macOS 都至少租 24 小時」；AWS mac2 $0.65／h、至少 $15.6；use.computer 最少 24 小時 | **錯**：CircleCI Free（約 150 分鐘 M4 Pro／月）、Codemagic 個人免費（500 分鐘 M2／月）都按分鐘。24 小時只適用整台出租的 Mac（Apple 授權第 3 節）。AWS 數字、use.computer 最少 24 小時正確；use.computer 價格仍未驗證 | https://circleci.com/pricing/ ; https://circleci.com/pricing/price-list/ ; https://codemagic.io/pricing/ ; https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-mac-instances.html ; https://b0.p.awsstatic.com/pricing/2.0/meteredUnitMaps/ec2/USD/current/dedicatedhost-ondemand.json ; https://api.use.computer/openapi.yaml ; https://www.apple.com/legal/sla/docs/macOSTahoe.pdf |
+| 12 | Apple 授權允許 2 個 macOS VM，用途含 testing during software development；所以可用 Tart | 條文正確。**推論過頭**：原文寫「就沒有條款問題」。驗證第三方軟體是否屬於「software development」用途、是否算「service bureau」，是解讀問題，已改寫 | https://www.apple.com/legal/sla/docs/macOSTahoe.pdf ; https://tart.run/licensing/ |
+| 13 | GPU：Modal T4 $0.59、L4 $0.80、H100 $3.95；Daytona RTX 4090 $0.99 起、free credits 不能用；E2B、Vercel 沒有；Cloudflare 沒列 | 正確。**補**：Daytona 可搶占 RTX 4090 $0.57／h（需 Tier 2）；Modal GPU 沙盒會被搶占 | https://modal.com/pricing ; https://www.daytona.io/pricing ; https://www.daytona.io/docs/en/billing.md ; https://www.daytona.io/docs/en/limits.md |
+| 14 | 本機實測：docker run 0.30–0.50 秒；runsc do 0.11–0.12 秒；Modal 沙盒啟動時間沒公布 | Docker 重跑相符（0.30–0.40，一次 0.77）。**runsc 範圍不一致**：第 2 節與腳本寫 0.08–0.12、第 8 節寫 0.11–0.12；重跑 0.10–0.16，已改成 0.08–0.16。Modal：沙盒沒有數字；產品頁只寫「Sub-second cold-starts even on custom and large images」 | 重跑 `spikes/sb_local_timing.sh`（N=8，兩輪）；https://modal.com/products/sandboxes ; https://modal.com/docs/guide/cold-start |
+| 15 | 一次驗證（5 分鐘、2 vCPU、4 GiB）：Modal $0.020、E2B $0.014、Daytona $0.014；$100 約 5,000–7,000 次 | 算術正確（仍是估算）：Modal $0.0198 → $100 約 5,000 次；E2B $0.0138 → 約 7,200 次；Daytona $0.0138 | 上列價格頁 |
+
+### Spike 檢查
+
+| 腳本 | 做了什麼 | 結果 |
+|---|---|---|
+| `spikes/sb_local_timing.sh` | 重跑 2 輪（N=8）；第 2 輪把 runsc 解到暫存目錄後加進 PATH | 與文件量級一致；runsc 範圍見上表第 14 列。腳本註解的「0.08–0.12」沒改（不在本次修改範圍） |
+| `spikes/sb_modal_verify.py` | 語法檢查；無憑證時執行 | 正常印出「沒有 Modal 憑證」並回傳 2；沒有實際呼叫 Modal |
+| `spikes/sb_gha_macos_brew.yml` | 讀過內容 | `permissions: {}`、輸入走環境變數；未實際觸發 |
+| 金鑰掃描 | 對三個 spike 與本檔搜尋常見金鑰格式（`sk-`、`ghp_`、`github_pat_`、`AKIA`、`Bearer …` 等） | 沒有找到；金鑰都從環境變數或 `~/.modal.toml` 讀 |
+
+### 本次修改
+
+- 第 0 節第 1、4、5 點；第 2 節表格（Modal 隔離與 GPU、E2B 網路、Daytona GPU 與網路、Cloudflare 費用、gVisor 實測）。
+- 第 4.1、4.2、4.3、4.4 節對應列。
+- 第 5 節：結論、表格加 CircleCI／Codemagic、依據加 Apple 第 3 節、條款段落的 macOS 標註、帳號停權風險、Tart 的解讀。
+- 第 7 節 macOS 角色的理由；第 8 節實測數字與重跑說明；第 11 節加第 8a 項；第 12 節加來源。
+- 沒有改 brief、rules、architecture、spikes/README.md；沒有執行 git 指令。

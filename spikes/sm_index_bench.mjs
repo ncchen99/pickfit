@@ -10,7 +10,8 @@
 //       所以這裡的召回是「下限」）。只在執行時下載到暫存目錄，不進 repo。
 // 驗證狀態是依名稱雜湊產生的假資料，只用來量篩選比例。
 //
-// 用法：node spikes/sm_index_bench.mjs [--n 3000]   （不需要金鑰、不需要 npm install）
+// 用法：node spikes/sm_index_bench.mjs [--n 3000] [--out /tmp/index.json]
+//       （不需要金鑰、不需要 npm install；--out 把索引寫出去給 sm_worker_startup.sh 用）
 
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -146,6 +147,8 @@ for (const size of SIZES) {
   const buildMs = ms(t0);
   const raw = JSON.stringify(ix);
   const gz = gzipSync(raw).length;
+  const OUT = process.argv.indexOf("--out");
+  if (OUT > 0) writeFileSync(process.argv[OUT + 1], raw);
   const cardsOnly = JSON.stringify(cards);
 
   const parseTimes = [];
