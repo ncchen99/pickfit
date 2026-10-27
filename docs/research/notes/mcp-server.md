@@ -10,17 +10,17 @@
 | # | 事實 | 對 pickfit 的意思 |
 |---|---|---|
 | 1 | MCP 目前的 **Current 版本是 `2026-07-28`**。這版拿掉 `initialize` handshake 與 `Mcp-Session-Id`，協定本身就是無狀態；每個請求自帶版本與能力（`_meta`），另有必備的 `server/discover` | brief 4.4／11 節「無狀態」已經是規格的預設，不用自己發明 |
-| 2 | 但多數客戶端還會用舊的 `initialize`（2025-11-25 以前，稱 legacy）。TS SDK v2 client 預設就是 legacy；Claude Code 只有在 v2 runtime 才會先問 server 支不支援新版 | server 必須**同時服務兩個世代**。官方 SDK v2 的 `createMcpHandler` 預設就這樣做，而且 legacy 那一路也是每請求一個實例、**不發 session id**（spike 實測） |
+| 2 | 但不少客戶端還會用舊的 `initialize`（2025-11-25 以前，稱 legacy）。TS SDK v2 client 與 MCP Inspector 預設都是 legacy。Claude Code 要在 v2 runtime 才會先問 server 支不支援新版：會抓 feature flag 的 session 從 v2.1.232 起用 v2，其他 session 從 v2.1.274 起預設 v2（查核修正，見 4 節） | server 必須**同時服務兩個世代**。官方 SDK v2 的 `createMcpHandler` 預設就這樣做，而且 legacy 那一路也是每請求一個實例、**不發 session id**（spike 實測） |
 | 3 | 官方 TS SDK 拆成 `@modelcontextprotocol/server`／`client`（2.4.0）；Python SDK 是 `mcp` 2.3.0，`FastMCP` 改名 `MCPServer`。兩者都以 2026-07-28 為主、相容舊版 | 新程式直接用 v2；網路上大量 v1 範例（`StreamableHTTPServerTransport`、`FastMCP`）已過時 |
 | 4 | Cloudflare 官方：**`McpAgent`（Durable Objects）已 deprecated、功能凍結**；新做法是 `agents/mcp/server` 的 `createMcpHandler`，每請求建新 server、不需 DO | 照 brief 部署在 Workers 是對的，而且不需要 Durable Objects |
 | 5 | spike：同一份 `worker.mjs` 在 Node 與 `wrangler dev`（workerd）都通過 legacy 與 modern 兩套檢查；官方 TS client（legacy／auto／pin）與 Python client（legacy／auto）都能呼叫 | 10/30「4 個工具上線，接上 Claude Code」的骨架可以直接從 spike 長出來，估半天 |
-| 6 | Workers Free：每天 10 萬次請求、每次 **10 ms CPU**、50 個 subrequest；超過每日上限回 Error 1027。Paid 最低每月 5 美元 | 本機量到暖機後每次約 1–8 ms（不是線上 CPU 數字）。冷啟動可能超過 10 ms：**未驗證**。demo 週考慮直接開 Paid |
+| 6 | Workers Free：每天 10 萬次請求、每次 **10 ms CPU**、50 個 subrequest；超過每日上限回 Error 1027。Paid 最低每月 5 美元 | 本機量到暖機後每次約 1–8 ms（不是線上 CPU 數字）。`wrangler check startup` 本機量到 global scope 啟動約 57 ms CPU（另有 1 秒啟動上限）。冷啟動的請求是否超過 10 ms：**未驗證**。demo 週考慮直接開 Paid |
 | 7 | 不登入時，能用的限流 key 幾乎只剩 IP。Workers 有 Rate Limiting binding（10 或 60 秒週期，每個機房各自計數、近似值）；WAF 免費方案只有 1 條、以 IP 計、10 秒週期 | 最該保護的是 **Meta API credits**：`find_*` 會呼叫 Muse Spark，要有每日預算上限與降級路徑，不只擋請求數 |
 | 8 | 客戶端都支援遠端 Streamable HTTP：Claude Code `claude mcp add --transport http`、Codex `[mcp_servers.x] url = …`、Cursor `mcp.json` 的 `url`、Claude（含 Desktop）的 custom connector | demo 用一個公開 URL 就能接所有 agent；Claude custom connector 從 Anthropic 雲端連線，**URL 必須公開可達** |
 | 9 | Tool annotations 會實際影響客戶端：Claude Code 對 `readOnlyHint` 的工具會並行執行、斷線時可重試；Codex 的 `writes` 核准模式只對沒標 read-only 的工具跳確認 | 3 個查詢工具標 `readOnlyHint: true`；寫入型工具標 `idempotentHint` 並在 server 端真的去重 |
 | 10 | 舊版（2025-11-25）規定 `outputSchema` 根節點必須是 `type: object`、`structuredContent` 必須是 object；新版放寬 | 為了相容 legacy 客戶端，**輸出一律用 object 根節點**，並同時回傳 JSON 文字版 `content` |
 | 11 | 在無狀態 legacy 連線上，server 不能主動對 client 發請求（elicitation、sampling） | **不要用 elicitation 問使用者**。改成：description 告訴 agent 先問什麼；server 在結果裡回 `clarifying_question` |
-| 12 | MCP Registry 仍是 preview；主要給下游 aggregator 每小時抓取，不是給 host 直接用。用 GitHub 登入即可用 `io.github.<帳號>/pickfit` 命名空間登錄遠端 server。Registry 裡已經有 `toolradar`、`topalternativesto` 這類軟體比價／替代品 server | 登錄成本低（約 30 分鐘），對評審曝光幫助有限；差異化仍要靠「長尾」與「實際驗證」 |
+| 12 | MCP Registry 仍是 preview；主要給下游 aggregator 定期抓取（文件舉例：每小時一次），不是給 host 直接用。用 GitHub 登入即可用 `io.github.<帳號>/pickfit` 命名空間登錄遠端 server。Registry 裡已經有 `toolradar`、`topalternativesto` 這類軟體比價／替代品 server | 登錄成本低（約 30 分鐘），對評審曝光幫助有限；差異化仍要靠「長尾」與「實際驗證」 |
 | 13 | brief 的 4 個工具大致合理。建議加第 5 個 `submit_software`（同一個 URL 重送就是查進度，冪等），用 server 簽發的 `rec_id` 把 `report_outcome` 綁回某次推薦 | 供給端與回饋都能在 agent 裡 demo；`rec_id` 用 HMAC 簽章就不需要 server 存 session |
 
 ---
@@ -69,7 +69,7 @@
 | session id 可以省略嗎？ | modern：規格裡已經沒有這個 header。legacy（2025-11-25）：server「**MAY** assign a session ID」，本來就可以不發 | [2025-11-25 Transports](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports.md) |
 | 同一個端點能服務兩代嗎？ | 可以（dual-era）。帶 modern `_meta` 的請求走無狀態；`initialize` 走 legacy | [Versioning and Compatibility](https://modelcontextprotocol.io/specification/2026-07-28/basic/versioning.md) |
 | legacy client 遇到只支援 modern 的 server？ | 失敗，legacy client 沒有往新版升級的機制 | 同上，相容矩陣 |
-| modern client 遇到 legacy server？ | dual-era client 會在 HTTP 400 後退回 `initialize` | 同上 |
+| modern client 遇到 legacy server？ | 只支援 modern 的 client：失敗。dual-era client：modern 請求回 4xx、且 body 不是可辨識的 modern 錯誤時，才退回 `initialize`（查核修正：原寫「HTTP 400 後」） | 同上 |
 
 結論：pickfit 的 server 一定要 dual-era。官方 SDK v2 預設就是。
 
@@ -84,7 +84,7 @@
 | `@modelcontextprotocol/server` | 2.4.0 | Apache-2.0 | v2 server；依賴 `zod ^4.2.0` |
 | `@modelcontextprotocol/client` | 2.4.0 | Apache-2.0 | v2 client；`versionNegotiation` 預設 legacy |
 | `@modelcontextprotocol/node` | 2.1.2 | Apache-2.0 | `toNodeHandler`、localhost Host／Origin 檢查 |
-| `@modelcontextprotocol/sdk` | 1.32.2 | — | v1，舊 |
+| `@modelcontextprotocol/sdk` | 1.32.2 | MIT（查核補上） | v1，舊 |
 | `mcp`（PyPI） | 2.3.0（2026-10-02） | MIT | v2.0.0 於 2026-07-28 發布 |
 | `agents`（Cloudflare） | 0.31.0 | MIT | peer 依賴**固定** `@modelcontextprotocol/server@2.3.1` |
 | `mcp-handler`（Vercel） | 2.3.0 | Apache-2.0 | peer 依賴 `@modelcontextprotocol/server ^2.0.0` |
@@ -212,6 +212,16 @@ app = mcp.streamable_http_app(stateless_http=True)   # uvicorn server:app
 
 本機量測（spike `bench.mjs`、`wrangler dev`）：暖機後 1–8 ms，第一次請求 14 ms（workerd wall time）到 55 ms（Node）。線上 CPU time 會不會在冷啟動時超過 10 ms：**未驗證**，部署後看 dashboard 的 Invocation Statuses。
 
+查核補充（2026-10-28 重跑）：
+
+| 量測 | 結果 | 備註 |
+|---|---|---|
+| `node bench.mjs` 兩次 | 暖機 1.25–1.41 ms；第一次 `tools/list` 55–58 ms | Node wall time |
+| `wrangler dev` 本機 traces（63 筆） | 0–14 ms，平均 3.2 ms | 本機 trace 的 `cpu_time_ms` 都是 0，量不到 CPU |
+| `wrangler check startup`（wrangler 4.153.0） | bundle 670 KiB（gzip 134 KiB）；global scope 啟動 active 57.2 ms | 本機 CPU。Workers 另有「啟動 1 秒」上限（[Limits › Worker startup time](https://developers.cloudflare.com/workers/platform/limits/index.md)）。啟動時間是否算進 Free 的每請求 10 ms：文件沒寫，**未驗證** |
+
+TS SDK 文件建議 factory 要便宜、無副作用，連線池與快取放 module scope（[Serve over HTTP](https://ts.sdk.modelcontextprotocol.io/v2/serving/http.md)）。正式版的工具清單與 schema 也照這個原則，減少每請求的 CPU。
+
 ### 3.3 其他部署選項
 
 | 選項 | 做法 | 優點 | 缺點 | 查證 |
@@ -227,7 +237,7 @@ brief 4.4：黑客松期間不登入。規格對工具的要求：server **MUST*
 | 層 | 做法 | 備註 |
 |---|---|---|
 | Schema | 所有字串 `maxLength`、陣列 `maxItems`、enum | SDK 自動驗證（spike M5） |
-| Worker 限流 | [Rate Limiting binding](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/index.md)：key = `hash(cf-connecting-ip) + 工具名稱`（工具名稱可讀 `Mcp-Name` header，但只對 2026-07-28 請求可信，legacy 要解析 body）。例：查詢工具 60 次／60 秒，寫入工具 10 次／60 秒 | 週期只能 10 或 60 秒；每個機房各自計數、是近似值。Cloudflare 不建議用 IP 當 key，但沒有登入就沒有別的 key。Free 方案能不能用：文件沒寫限制，**未驗證** |
+| Worker 限流 | [Rate Limiting binding](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/index.md)：key = `hash(cf-connecting-ip) + 工具名稱`（工具名稱可讀 `Mcp-Name` header，但只對 2026-07-28 請求可信，legacy 要解析 body）。例：查詢工具 60 次／60 秒，寫入工具 10 次／60 秒 | 週期只能 10 或 60 秒；每個機房各自計數、是近似值；要全球嚴格上限得自己用 Durable Object 做。Cloudflare 不建議用 IP 當 key，但沒有登入就沒有別的 key。binding 2025-09-19 GA（[changelog](https://developers.cloudflare.com/changelog/post/2025-09-19-ratelimit-workers-ga/index.md)）。Free 方案能不能用：binding 頁、Limits、Pricing 都沒寫，**未驗證** |
 | Meta 預算 | 每日呼叫數／token 計數（D1 或 KV）；超過門檻就跳過 Muse Spark，改用確定性排序與模板理由，並在結果標 `degraded: true` | $150 credits 是硬限制；Meta 的 Spend Limit 只寄信（見 [meta-model-api.md](meta-model-api.md)） |
 | 寫入防灌水 | `report_outcome` 必須帶 server 簽發的 `rec_id`，同一 `rec_id`＋`stage` 只記一次；`submit_software` 同一 URL 冪等、每 IP 每小時上限 | 回報只當弱訊號，品質分數以沙盒驗證為主（brief 13 節） |
 | WAF | Free 方案 1 條 rate limiting rule，以 IP 計、10 秒週期（[文件](https://developers.cloudflare.com/waf/rate-limiting-rules/index.md)） | 要自訂網域的 zone；`workers.dev` 能不能套：未驗證 |
@@ -240,8 +250,8 @@ brief 4.4：黑客松期間不登入。規格對工具的要求：server **MUST*
 
 | 客戶端 | 加遠端 server | 協定世代 | 跟我們有關的細節 | 來源 |
 |---|---|---|---|---|
-| Claude Code | `claude mcp add --transport http pickfit https://<host>/mcp`（加 `--scope user` 就全域）；`.mcp.json` 的 `type` 可寫 `http` 或 `streamable-http` | v1 runtime（TS SDK 1.x）走 legacy。v2 runtime（v2.1.232 起依 feature flag；部分情境 v2.1.274 起預設）會先問 server 支不支援 2026-07-28。可用 `MCP_SDK_GENERATION`、`MCP_PROTOCOL_NEGOTIATION` 控制 | server instructions 與預先載入的工具 description 截在 4,096 字元，tool search 載入的 description 截在 16,384 字元；關鍵字放前面。`readOnlyHint` → 並行；`idempotentHint`／`readOnlyHint` → 斷線可重送 | [Claude Code MCP](https://code.claude.com/docs/en/mcp.md) |
-| Codex（CLI、IDE、ChatGPT desktop 共用設定） | `~/.codex/config.toml`：`[mcp_servers.pickfit]` + `url = "https://<host>/mcp"`；CLI 有 `codex mcp add <name> --url <url>`（文件範例都帶 OAuth 參數，不帶的寫法未實測） | 文件寫「reads the MCP `instructions` field returned during initialization」，暗示走 handshake。Codex 釘的 rmcp 3.5.1 已支援 2026-07-28，但 client 預設用哪一代：**未驗證**（dual-era server 不受影響） | `instructions` 前 512 字元要能獨立看懂；`default_tools_approval_mode = "writes"` 只對沒標 read-only 的工具跳確認；`tool_timeout_sec` 預設 60 | [Codex MCP](https://developers.openai.com/codex/mcp.md)、[Codex Cargo.toml](https://raw.githubusercontent.com/openai/codex/main/codex-rs/Cargo.toml)、[rmcp CHANGELOG](https://raw.githubusercontent.com/modelcontextprotocol/rust-sdk/main/crates/rmcp/CHANGELOG.md) |
+| Claude Code | `claude mcp add --transport http pickfit https://<host>/mcp`（加 `--scope user` 就全域）；`.mcp.json` 的 `type` 可寫 `http` 或 `streamable-http` | v1 runtime（TS SDK 1.x）走 legacy。v2 runtime 會先問 HTTP、stdio、claude.ai connector server 支不支援 2026-07-28，支援就用。哪個 session 用 v2：會抓 feature flag 的 session 從 v2.1.232 起；不抓 flag 的 session（Bedrock、Google Agent Platform、Foundry、Claude apps gateway、關掉 telemetry）從 v2.1.274 起預設。Anthropic 可用 flag 讓個別 server 留在舊協定。可用 `MCP_SDK_GENERATION`（v1／v2）、`MCP_PROTOCOL_NEGOTIATION`（auto／legacy）控制（查核修正：原寫「v2.1.232 起依 feature flag」，易誤解為逐步開放） | server instructions 與預先載入的工具 description 截在 4,096 字元，tool search 載入的 description 截在 16,384 字元；關鍵字放前面。`readOnlyHint` → 並行；`idempotentHint`／`readOnlyHint` → 斷線可重送 | [Claude Code MCP](https://code.claude.com/docs/en/mcp.md) |
+| Codex（CLI、IDE、ChatGPT desktop 共用設定） | `~/.codex/config.toml`：`[mcp_servers.pickfit]` + `url = "https://<host>/mcp"`；CLI 有 `codex mcp add <name> --url <url>`，OAuth 參數是選用（查核實測 Codex CLI 0.165.0：寫出 `[mcp_servers.pickfit]` + `url = …`，`codex mcp list` 顯示 Auth `Unsupported`；實際連線與呼叫工具未測，需 OpenAI 登入） | 文件寫「reads the MCP `instructions` field returned during initialization」，暗示走 handshake。Codex 釘的 rmcp 3.5.1 已支援 2026-07-28，但 client 預設用哪一代：**未驗證**（dual-era server 不受影響） | `instructions` 前 512 字元要能獨立看懂；`default_tools_approval_mode = "writes"` 只對沒標 read-only 的工具跳確認；`tool_timeout_sec` 預設 60 | [Codex MCP](https://developers.openai.com/codex/mcp.md)、[Codex Cargo.toml](https://raw.githubusercontent.com/openai/codex/main/codex-rs/Cargo.toml)、[rmcp CHANGELOG](https://raw.githubusercontent.com/modelcontextprotocol/rust-sdk/main/crates/rmcp/CHANGELOG.md) |
 | Cursor | `~/.cursor/mcp.json` 或 `.cursor/mcp.json`：`{"mcpServers":{"pickfit":{"url":"https://<host>/mcp"}}}`；也能做一鍵安裝連結 `cursor://anysphere.cursor-deeplink/mcp/install?name=pickfit&config=<base64>` | 未查 | README 可放「Add to Cursor」按鈕 | [Cursor MCP](https://cursor.com/docs/mcp.md)、[Install links](https://cursor.com/docs/mcp/install-links.md) |
 | Claude（claude.ai、Desktop、Cowork、手機） | Customize › Connectors › Add custom connector，貼 URL | 未查 | Free 方案限 1 個 custom connector；**從 Anthropic 雲端連線，URL 必須公開** | [Custom connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) |
 | MCP Inspector | 可選 `legacy`／`auto`／`modern` | 預設 legacy | 除錯兩代行為 | [Protocol eras](https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector/protocol-eras.md) |
@@ -253,7 +263,7 @@ brief 4.4：黑客松期間不登入。規格對工具的要求：server **MUST*
 | 項目 | 內容 |
 |---|---|
 | 狀態 | **preview**，可能有破壞性變更或資料重置 |
-| 定位 | 只放 metadata；主要給下游 aggregator（市集）每小時左右抓一次；「not intended to be directly consumed by host applications」 |
+| 定位 | 只放 metadata；主要給下游 aggregator（市集）定期抓取（文件舉例每小時一次）；「not intended to be directly consumed by host applications」 |
 | 登錄遠端 server | `server.json` 的 `remotes: [{ "type": "streamable-http", "url": "https://…/mcp" }]`；URL 必須公開可達 |
 | 命名空間 | GitHub 登入 → `io.github.<帳號>/*`；DNS 驗證 → 反向網域（如 `dev.pickfit/*`） |
 | 工具 | `mcp-publisher login github` → `mcp-publisher publish`（可用 Homebrew 或 GitHub release 二進位安裝） |
@@ -284,7 +294,7 @@ brief 4.4：黑客松期間不登入。規格對工具的要求：server **MUST*
 - **問問題**：agent 只在不知道時問 1–2 題（作業系統；必須免費或離線）。其他交給 server：模糊時 server 回 `clarifying_question`（由 Muse Spark 挑最能分開候選的那一題），agent 問完再呼叫一次。
 - **Meta 模型的位置**：`find_*` 先用索引做確定性過濾（OS、價格、本機執行），再用 Muse Spark 重排、寫理由、挑追問。Meta 失敗或超預算時降級，結果標 `degraded: true`。
 - **回傳證據**：每個推薦帶 `verification`（狀態、哪個 OS、何時、證據連結）與分開的 `quality`／`popularity`。這是「不是基本 RAG」最直接的證明。
-- **`rec_id`**：server 簽發的 opaque handle（HMAC 簽章，內含推薦的 slug 與時間，7 天有效）。Worker 不用存狀態就能驗證；符合規格 Stateful Tools 一節「無認證 server 的 handle 要高熵、有期限，並在 description 寫明期限」。
+- **`rec_id`**：server 簽發的 opaque handle（HMAC 簽章，內含推薦的 slug 與時間，7 天有效）。Worker 不用存狀態就能驗證；符合規格 Stateful Tools 一節「無認證 server 的 handle 要高熵、有期限，並在 description 寫明期限」。查核補充：同一節也建議 handle 不透露內部結構（Opacity），因為可讀的結構會引來解析或猜測。slug 與時間若以明文放在 token 裡，建議加密，或只放隨機 nonce＋HMAC（[Tools 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/server/tools.md)）。
 - **中立**：description 與結果都不放推薦碼、廣告、付費排序。
 
 ### 5.3 Server instructions（Codex 只保證讀前 512 字元）
@@ -694,7 +704,7 @@ annotations：`{ "readOnlyHint": false, "destructiveHint": false, "idempotentHin
 |---|---|---|
 | 線上 Workers Free 的冷啟動 CPU 是否超過 10 ms | 超過會回 Error 1102 | 部署後看 dashboard；或直接開 Paid（每月 5 美元） |
 | Workers Rate Limiting binding 在 Free 方案能不能用 | 防濫用主力 | 部署時試 |
-| Codex 預設用哪個協定世代；`codex mcp add <name> --url <url>` 不帶 OAuth 參數是否可用 | 影響 README 的安裝說明 | 本機裝 Codex CLI 試 |
+| Codex 預設用哪個協定世代（`codex mcp add <name> --url <url>` 不帶 OAuth 已確認可寫入設定，見 4 節） | 影響 README 的安裝說明 | 登入 Codex 後實連 |
 | Claude Code 實際把 `content` 還是 `structuredContent` 給模型 | 決定理由要寫在哪 | 兩者都放（已是建議做法） |
 | Claude Desktop custom connector、Cursor 對 2026-07-28 的支援 | dual-era server 下影響不大 | 部署後實連 |
 | WAF rate limiting rule 能否套在 `workers.dev` | 第二道防線 | 部署時看 |
@@ -736,3 +746,55 @@ annotations：`{ "readOnlyHint": false, "destructiveHint": false, "idempotentHin
 | Cursor MCP、install links | https://cursor.com/docs/mcp.md 、https://cursor.com/docs/mcp/install-links.md |
 | Claude custom connectors | https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp |
 | MCP Registry | https://modelcontextprotocol.io/registry/about.md 、…/remote-servers.md 、…/authentication.md 、…/registry-aggregators.md 、https://registry.modelcontextprotocol.io/v0.1/servers |
+
+---
+
+## 查核紀錄（2026-10-28）
+
+查核者：另一個 agent，預設懷疑。方法：用 curl 抓官方文件原文比對；`npm view`、PyPI、crates.io 查套件；spike 全部重跑一次。
+
+### 關鍵主張
+
+| # | 主張 | 結果 | 依據 |
+|---|---|---|---|
+| 1 | Current 版本是 2026-07-28；draft changelog 是空的 | 正確 | [Versioning](https://modelcontextprotocol.io/docs/2026-07-28/learn/versioning.md)：「The current protocol version is 2026-07-28」；[draft changelog](https://modelcontextprotocol.io/specification/draft/changelog.md) 只有一句 |
+| 2 | 移除 `initialize` 與 `Mcp-Session-Id`（SEP-2567、SEP-2575）；`_meta` 帶版本與能力；server MUST 實作 `server/discover` | 正確 | [2026-07-28 changelog](https://modelcontextprotocol.io/specification/2026-07-28/changelog.md) Major changes 1–3 |
+| 3 | POST 要帶 `MCP-Protocol-Version`、`Mcp-Method`；`tools/call` 要 `Mcp-Name`；不符回 400 `-32020` | 正確 | [Streamable HTTP](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http.md) Server Validation；`Mcp-Name` 也用在 `resources/read`、`prompts/get`。spike M4 重跑一致 |
+| 4 | 只支援 modern 的 server 讓 legacy client 失敗；dual-era 可同端點服務兩代 | 正確 | [Versioning and Compatibility](https://modelcontextprotocol.io/specification/2026-07-28/basic/versioning.md) 相容矩陣。順手修正 1.3 節「modern client 遇到 legacy server」一列 |
+| 5 | TS SDK v2 `createMcpHandler` 每請求一個 server，`legacy` 預設 `'stateless'`；legacy `initialize` 不回 `Mcp-Session-Id`；Node 與 workerd 都可用 | 正確 | [Legacy clients](https://ts.sdk.modelcontextprotocol.io/v2/serving/legacy-clients.md)。重跑：Node 與 `wrangler dev` 的 `initialize`（2025-11-25、2025-03-26）都 200、沒有 session header；legacy `GET /mcp` 405 |
+| 6 | TS client `versionNegotiation` 預設 legacy，`auto` 才探測 `server/discover` | 正確 | [Protocol versions](https://ts.sdk.modelcontextprotocol.io/v2/protocol-versions.md)：「Absent, or mode: 'legacy' … No probe」 |
+| 7 | Claude Code 只有 v2 runtime 會問並使用 2026-07-28 | 正確，措辭已修 | [Claude Code MCP › MCP client runtimes](https://code.claude.com/docs/en/mcp.md)。原文是「會抓 feature flag 的 session 在 v2.1.232 起用 v2」，不是「依 flag 逐步開放」；不抓 flag 的 session 在 v2.1.274 起預設 v2。已改 0 節 #2 與 4 節 |
+| 8 | `McpAgent` deprecated、feature-frozen；改用 `agents/mcp/server` 的 `createMcpHandler`（無狀態、不需 DO）；固定 `@modelcontextprotocol/server@2.3.1` | 正確 | [McpAgent](https://developers.cloudflare.com/agents/model-context-protocol/apis/agent-api/index.md)、[createMcpHandler](https://developers.cloudflare.com/agents/model-context-protocol/apis/handler-api/index.md)（皆 Last updated Oct 27, 2026）。`npm view agents@0.31.0 peerDependencies`：server／client `2.3.1`、sdk `1.32.1` |
+| 9 | Workers Free：10 萬請求／天（超過 Error 1027）、10 ms CPU、50 subrequest；Paid 最低 5 美元／月 | 正確 | [Limits](https://developers.cloudflare.com/workers/platform/limits/index.md)（Oct 12, 2026）、[Pricing](https://developers.cloudflare.com/workers/platform/pricing/index.md)（Oct 2, 2026） |
+| 10 | 線上冷啟動 CPU 是否超過 10 ms | 仍未驗證 | 需部署。新增本機 `wrangler check startup` 數據（啟動 active 57.2 ms），見 3.2 節 |
+| 11 | Rate Limiting binding 10／60 秒、各機房分開、近似；不建議 IP 當 key；Free 可否用文件沒寫 | 前半正確；Free 仍未驗證 | [Rate Limiting](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/index.md)（Oct 21, 2026）；Limits、Pricing 頁也沒提。補 GA 日期 2025-09-19 |
+| 12 | 2025-11-25 `outputSchema` 根節點限 object、`structuredContent` 是 object；2026-07-28 放寬 | 正確 | [2025-11-25 schema](https://modelcontextprotocol.io/specification/2025-11-25/schema.md)「Currently restricted to type: "object" at the root level」；2026-07-28 changelog Minor 10（SEP-2106） |
+| 13 | Codex `[mcp_servers.<name>] url=`；`writes` 只對沒標 read-only 的工具跳確認；`instructions` 前 512 字元自足 | 正確 | [Codex MCP](https://developers.openai.com/codex/mcp.md)。另實測 Codex CLI 0.165.0：`codex mcp add pickfit --url …` 不帶 OAuth 可寫入設定（暫存 `CODEX_HOME`，已刪） |
+| 14 | Claude custom connector 從 Anthropic 雲端連線、URL 要公開；Free 限 1 個 | 正確 | [Custom connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp)：「Free users are limited to one custom connector」「must be reachable over the public internet from Anthropic's IP ranges」 |
+| 15 | Registry preview、主要給 aggregator；GitHub 登入得 `io.github.<帳號>/*`；已有 toolradar、topalternativesto | 正確，措辭小修 | [About](https://modelcontextprotocol.io/registry/about.md)、[Authentication](https://modelcontextprotocol.io/registry/authentication.md)；API 搜尋 `toolradar` 回 3 筆（含 `streamable-http` remote）、`topalternativesto` 1 筆。「每小時」是文件的舉例，已改 |
+
+### 其他順手查的
+
+| 項目 | 結果 |
+|---|---|
+| 1.1 版本表（2025-03-26 引入 Streamable HTTP；2025-06-18 引入 structured output、elicitation、版本 header、移除 batching） | 正確（兩版 changelog） |
+| 2.1 套件版本：server／client 2.4.0、node 2.1.2、sdk 1.32.2、`mcp` 2.3.0（2026-10-02，MIT；2.0.0 於 2026-07-28）、`mcp-handler` 2.3.0、zod 4.6.7 | 正確。`@modelcontextprotocol/sdk` 授權原寫「—」，實為 MIT，已補 |
+| zod ≥4.5.0 省記憶體 | 正確，出處是 Workers Limits 頁的 Memory 一節 |
+| Python SDK：`FastMCP` → `MCPServer`；`stateless_http=True` 只影響 legacy；Host 不在 allowlist 回 421；`content` 是模型唯一看得到的部分 | 正確（what's new、legacy clients、deploy、structured output 各頁） |
+| Claude Code：instructions 與預載 description 4,096 字元、tool search 16,384；`readOnlyHint` 並行；`idempotentHint`／`readOnlyHint` 斷線可重送一次；輸出 10k 警告、25k 上限、50,000 字元存檔 | 正確 |
+| 規格 Tools：server MUST 驗證輸入、存取控制、限流、清理輸出；structured content SHOULD 另附 JSON 文字 | 正確。另補 handle 的 Opacity 建議到 5.2 節 |
+| WAF Free：1 條規則、以 IP 計、10 秒週期 | 正確（[Rate limiting rules › Availability](https://developers.cloudflare.com/waf/rate-limiting-rules/index.md)） |
+| Inspector 預設 `legacy` | 正確 |
+| Codex 釘 rmcp `=3.5.1` | 正確（Codex `Cargo.toml`；rmcp 3.5.1 changelog 有 2026-07-28 相關修正）。Codex client 預設用哪一代仍未驗證 |
+| Scorecard／CHAOSS／ecosyste.ms | 本檔沒有相關主張，未查 |
+
+### Spike 重跑（`spikes/mcp_stateless/`）
+
+| 檢查 | Node 22.22.0 | `wrangler dev`（wrangler 4.153.0） |
+|---|---|---|
+| `curl.sh` L1–L3、M1–M6 | 與 README 一致 | 與 README 一致 |
+| `client.mjs` legacy／auto／pin | 全過；era 為 legacy／modern／modern | 全過 |
+| `py_client.py`（`mcp==2.3.0`） | legacy 2025-11-25、auto 2026-07-28，全過 | 未跑 |
+| `bench.mjs` | 暖機 1.25–1.41 ms；首次 `tools/list` 55–58 ms | — |
+
+金鑰檢查：spike 目錄（不含 `node_modules`、`.wrangler`）沒有 key、token、secret；`.gitignore` 排除 `node_modules/`、`.wrangler/`。重跑沒有在 spike 目錄留下新檔。

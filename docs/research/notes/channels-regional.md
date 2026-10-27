@@ -7,10 +7,10 @@
 ## 一句話結論
 
 - 有「作者發表作品」專區、又有免金鑰官方入口的只有三個：**V2EX「分享创造」**（Atom 全文）、**Qiita `個人開発` tag**（API v2）、**GeekNews「Show GN」**（RSS，但沒有原始連結）。
-- **阮一峰《科技爱好者周刊》的「工具」小節**是每週人工精選，近 3 期 45 個工具有 40 個是 GitHub repo、33 個是作者自己投稿，CLI 比例高。
+- **阮一峰《科技爱好者周刊》的「工具」小節**是每週人工精選，近 3 期 45 個工具有 40 個是 GitHub repo、33 個標「投稿」（其中 27 個投稿者就是 repo owner），CLI 關鍵字 8/45。**混有爆紅大專案**（40 個 repo 星數 46–396,732★，中位數 358），知名度門檻照樣要算。
 - **黑客松接 3 個**：V2EX、Qiita、阮一峰周刊，含共用 adapter 合計約 3.5–5 人時。GeekNews 可選（再加 2 人時）。
-- **避開**：掘金（用戶協議明文禁止機器人、蜘蛛）、Dcard（沒有公開 API，Cloudflare 403）、PTT（沒有 API、feed 幾乎都 522、內容訊號禁止 AI 訓練）、velog（全站 RSS 被垃圾灌滿）、iThome 鐵人賽（2026 賽季已結束）。
-- **共同限制**：中、日、韓社群的條款都把著作權留給作者。只能拿「連結、標題、日期」當線索；軟體的事實一律回 GitHub README 與沙盒驗證取得；展示頁只放回連，不轉貼原文。
+- **避開**：掘金（用戶協議明文禁止機器人、蜘蛛）、Dcard（沒有公開 API，Cloudflare 403）、PTT（沒有 API、feed 時好時壞、內容訊號禁止 AI 訓練並擋 AI 代理）、velog（全站 RSS 被垃圾灌滿）、iThome 鐵人賽（2026 賽季已結束）。
+- **共同限制**：有寫明歸屬的條款（Qiita、Zenn、掘金、velog、Gitee）都把著作權留給作者；V2EX 找不到一般條款，GeekNews 條款沒寫歸屬，但都不該轉貼原文。只能拿「連結、標題、日期」當線索；軟體的事實一律回 GitHub README 與沙盒驗證取得；展示頁只放回連，不轉貼原文。
 
 ---
 
@@ -20,21 +20,21 @@
 
 | 管道 | 訊號品質 | 新作品多寡 | 雜訊 | 取得方式 | 限制 | 整合成本 | 建議 |
 |---|---|---|---|---|---|---|---|
-| **V2EX「分享创造」**（node `create`） | **高**：節點說明寫「欢迎你在这里发布自己的最新作品」，幾乎都是作者本人發文；feed 有全文 | 約 270 篇／週（50 篇涵蓋 31 小時外推）；40% 連 GitHub repo | 中：AI 影片站、小遊戲、小程式不少 | RSS（Atom，免金鑰）；API v1（只回 10 篇）；API 2.0（要 token） | API 公平使用規則「反对将 API 输出的结果用于填充你的商业或是个人网站的内容」；v1 文件寫 120 次／小時，回應標頭是 600；沒有正式 ToS 全文 | 1–1.5 h | **黑客松接** |
-| **Qiita `tag:個人開発`** | **中高**：作者寫的開發記錄；likes 中位數 1（真的沒人知道）；但很多是 App、網頁、連載 | 約 200 篇／週；29% 連 GitHub repo | 中 | API v2（免金鑰 60 次／小時／IP；token 1,000 次／小時，免審核） | 利用規約第 8 條：著作權法第 21–28 條的權利留給作者；授權只給 Qiita；不可轉貼 | 1–1.5 h | **黑客松接** |
-| **阮一峰周刊「工具」**（ruanyf/weekly） | **高**：人工精選；近 3 期 45 個工具中 40 個連 GitHub、33 個是作者投稿；抽樣 57–1,926★ | 12–18 個／週（每週五一期） | 低 | GitHub raw 檔（git，免金鑰）；作者投稿走 GitHub issues | 部落格版標 CC BY-NC-ND 3.0；repo 沒有 LICENSE 檔；只取連結，不抄描述 | 0.5–1 h | **黑客松接** |
-| **GeekNews「Show GN」**（news.hada.io） | **高**：規則要求「直接做的、別人能實際試用的」，同專案限期內不能重貼 | 約 70 篇／週；Show 頁 20 篇中 6 篇是 github.com | 低–中：SaaS、App、網頁也多 | RSS（`/rss/news` 全站，要篩標題）；沒有 Show 專用 RSS、沒有公開 API | RSS 不含原始連結，要另讀 topic 頁；條款只禁止「造成過大負荷的自動化存取、爬取」；robots `Content-Signal: ai-train=no, search=yes, ai-input=yes`；韓文 | 2 h | **可選**（黑客松第二優先） |
+| **V2EX「分享创造」**（node `create`） | **高**：節點說明寫「欢迎你在这里发布自己的最新作品」，幾乎都是作者本人發文；feed 有全文 | 約 270 篇／週（50 篇涵蓋 31 小時外推）；40% 連 GitHub repo | 中：AI 影片站、小遊戲、小程式不少 | RSS（Atom，免金鑰）；API v1（只回 10 篇）；API 2.0（要 token） | API 公平使用規則「反对将 API 输出的结果用于填充你的商业或是个人网站的内容」；v1 文件寫 120 次／小時，回應標頭是 600；`topics/show.json` 不在現行 v1 文件頁；找不到一般 ToS（`/terms` 轉到站內字典頁） | 1–1.5 h | **黑客松接** |
+| **Qiita `tag:個人開発`** | **中高**：作者寫的開發記錄；likes 中位數 1（真的沒人知道）；但很多是 App、網頁、連載 | 約 200 篇／週；29% 連 GitHub repo | 中 | API v2（免金鑰 60 次／小時／IP；token 1,000 次／小時，免審核） | 利用規約第 8 條：著作權法第 21–28 條的權利留給作者；第 7 條的全文授權只給 Qiita（可再授權）；直接授權給其他登錄使用者的只限程式碼類；不可轉貼 | 1–1.5 h | **黑客松接** |
+| **阮一峰周刊「工具」**（ruanyf/weekly） | **中高**：人工精選；近 3 期 45 個工具中 40 個連 GitHub、33 個標「投稿」；40 個 repo 46–396,732★（中位數 358；11 個 ≥1,000★，含 `morluto/rea` 396,732★、`tt-a1i/archify` 90,375★） | 12–18 個／週（每週五一期） | 低–中：混有爆紅大專案 | GitHub raw 檔（git，免金鑰）；作者投稿走 GitHub issues | 部落格版標 CC BY-NC-ND 3.0；repo 沒有 LICENSE 檔；只取連結，不抄描述 | 0.5–1 h | **黑客松接** |
+| **GeekNews「Show GN」**（news.hada.io） | **高**：規則要求「直接做的、別人能實際試用的」，同專案限期內不能重貼 | 約 70 篇／週；Show 頁 20 篇中 6 篇是 github.com | 低–中：SaaS、App、網頁也多 | RSS（`/rss/news` 全站，要篩標題）；沒有 Show 專用 RSS、沒有公開 API | RSS 不含原始連結，要另讀 topic 頁；條款只禁止「造成過大負荷的自動化存取、爬取」；robots `Content-Signal: ai-train=no, search=yes, ai-input=yes`，整站擋 `meta-externalagent`、`FacebookBot` 等訓練爬蟲；韓文 | 2 h | **可選**（黑客松第二優先） |
 | **Zenn topic feed**（`cli`、`個人開発`、`ollama`、`localllm`） | 中：`cli` 主題有作者自製 CLI（1–2★）；`ollama`、`localllm` 多是教學與實測，可當「使用者提及」 | `個人開発` 估約 370 篇／週；`cli` 約 33 篇／週 | 中 | RSS（每個 topic 只回 20 篇）；沒有官方公開 API | 利用規約第 6 條第 3 項禁止無斷轉載、二次配布；feed 只有摘要，取 GitHub 連結要讀文章頁 | 1.5–2 h | 之後擴充 |
-| **Hatena Bookmark `site/github.com`** | 中：日本使用者新收藏的 GitHub 頁面；18/30 筆 ≤3 users，但混有千星專案 | 30 筆涵蓋 4.5 天（估 45 個 repo／週） | 中：含 blob 頁、大專案、疑似灌星專案 | RSS（只回最新 30 筆，`page`、`of` 都無效） | Developer Center 規約禁止把取得的資訊提供給第三方、禁止宣傳或商用目的；不是作者發表 | 0.5–1 h | 之後擴充（只當線索） |
+| **Hatena Bookmark `site/github.com`** | 中：日本使用者新收藏的 GitHub 頁面；18/30 筆 ≤3 users，但混有千星專案 | 30 筆涵蓋 4.5 天（估 45 個 repo／週） | 中：含 blob 頁、大專案、疑似灌星專案 | RSS（只回最新 30 筆，`page`、`of` 都無效） | Developer Center 規約禁止把取得的資訊提供給第三方、禁止宣傳或商用目的；不是作者發表 | 0.5–1 h | 之後擴充（先向はてな書面確認） |
 | **HelloGitHub 月刊** | 中：39 個專案 100% 是 GitHub，但混有 2 萬星老專案 | 約 39 個／月（每月 28 日）；最新一期在 7 天窗外 | 低 | GitHub raw 檔；`hellogithub.com/rss` 只到期數 | CC BY-NC-ND 4.0（非商業、禁止演繹） | 0.5 h | 之後擴充 |
-| **Gitee** | 低–中：中國開源多在這，但沒有「新作品」專區 | 未量（搜尋回 0 筆） | — | API v5 | 未帶 token 時搜尋回 0 筆（實測）；排序不能依建立時間；60 次／小時；repo 不在 GitHub，沙盒從海外下載可能慢（未驗證） | 2–3 h | 之後擴充 |
+| **Gitee** | 低–中：中國開源多在這，但沒有「新作品」專區 | 未量（搜尋回 0 筆） | — | API v5 | 未帶 token 時搜尋回 0 筆（實測）；排序不能依建立時間；未帶 token 標頭 `X-RateLimit-Limit: 60`（時間窗未驗證）；repo 不在 GitHub，沙盒從海外下載可能慢（未驗證） | 2–3 h | 之後擴充 |
 | **OSChina** | 低：以資訊為主，有「XX 发布」的軟體更新稿 | 50 篇／5 天，21 篇是「发布」稿 | 高 | RSS（`/news/rss`，連線常被 reset） | 條款沒找到（未驗證）；robots 允許 | 1 h | 避開（黑客松） |
 | **掘金**（juejin.cn） | — | 多（未量） | — | 沒有官方公開 API | 用戶協議 10.1 禁止「通过任何机器人、蜘蛛等程序或设备监视、复制……」；2.6 禁止垂直搜索、鏡像 | — | **避開** |
-| **PTT**（Soft_Job 等） | 低：沒有作品專區；`[分享]` 很少；Soft_Job 是職涯版 | Linux 版 20 篇跨 8 個月 | 高 | 沒有官方 API；網頁版 Atom（非正式，多數請求 522） | robots `Content-Signal: search=yes,ai-train=no,use=reference`，並擋 `meta-externalagent`、`Claude-User` 等；網頁版使用者條款找不到（未驗證） | 1–2 h | **避開** |
+| **PTT**（Soft_Job 等） | 低：沒有作品專區；`[分享]` 很少；Soft_Job 是職涯版 | Linux 版 20 篇跨 8 個月 | 高 | 沒有官方 API；網頁版 Atom（非正式；10-27 20:13–20:26 UTC 多數 522，20:31 UTC 再測 8/8 成功，時好時壞） | robots `Content-Signal: search=yes,ai-train=no,use=reference`，並擋 `meta-externalagent`、`Claude-User` 等；網頁版使用者條款找不到（未驗證） | 1–2 h | **避開** |
 | **Dcard** | 低 | 未量 | — | 沒有公開 API；內部 API 與條款頁都回 Cloudflare 403 | 條款讀不到（未驗證） | — | **避開** |
 | **iThome 鐵人賽** | 低：教學系列為主；有「SideProject30」組 | 一年一次，2026 已結束 | 中 | iT 邦幫忙 RSS（20 篇，0 篇連 GitHub） | 條款頁 404（未驗證） | 1 h | 避開（黑客松） |
 | **velog** | 低 | — | **極高**：全站 RSS 兩次抽樣 20/20、7/20 是中文色情廣告 | RSS（全站、每位作者）；GraphQL 非官方 | 條款：著作權歸會員 | — | **避開** |
-| **Habr** | 低–中：`open_source` hub 有作者文 | 40 篇／55 小時；7/40 摘要含 GitHub | 中 | RSS（hub） | 使用者協議禁止商業目的使用內容，只允許個人非商業使用；俄文 | 1 h | 避開 |
+| **Habr** | 低–中：`open_source` hub 有作者文 | 40 篇／55 小時；7/40 摘要含 GitHub | 中 | RSS（hub） | 使用者協議禁止商業目的使用內容（除非取得 Habr 許可），只允許個人非商業使用；俄文 | 1 h | 避開 |
 
 ---
 
@@ -43,28 +43,28 @@
 ### 2.1 V2EX「分享创造」（中國、全球華語）
 
 - **作者專區**：節點 API 回傳 `header`：「欢迎你在这里发布自己的最新作品！」，累計 38,235 篇。實測 50 篇中 40% 附 GitHub repo，多數 0 回覆。抽樣的 `fulln/health-native` 發文當天建立、0★。
-- **取得**：`https://www.v2ex.com/feed/create.xml`（Atom，免金鑰）回最新 50 篇、**含全文 HTML**，涵蓋約 31 小時，每 6 小時輪詢一次就不漏。API v1 `/api/topics/show.json?node_name=create` 只回 10 篇、不能翻頁。API 2.0 `/api/v2/nodes/create/topics?p=N` 可以翻頁，但要 Personal Access Token（實測未帶 token 回 401 `Token not found`）。
-- **條款**：V2EX 沒有一般 ToS，只有 [API 公平使用規則](https://www.v2ex.com/p/7v9TEc53)：「我们鼓励将 V2EX API 用于学术研究、手机应用及浏览器扩展」「我们反对将 API 输出的结果用于填充你的商业或是个人网站的内容……只是不希望 V2EX 的数据被用在垃圾站和 content farm」。社區規則也寫「这里绝对不会全文转载任何文章，而只会以链接方式分享」。
+- **取得**：`https://www.v2ex.com/feed/create.xml`（Atom，免金鑰）回最新 50 篇、**含全文 HTML**，涵蓋約 31 小時，每 6 小時輪詢一次就不漏。API v1 `/api/topics/show.json?node_name=create` 只回 10 篇、不能翻頁（加 `&p=2` 回同樣 10 篇；這個端點不在現行 v1 文件頁，文件只列 hot、latest、nodes/show、members/show）。API 2.0 `/api/v2/nodes/create/topics?p=N` 可以翻頁，但要 Personal Access Token（實測未帶 token 回 401 `Token not found`）。
+- **條款**：找不到 V2EX 的一般 ToS（頁尾只有 About、Help、FAQ、Privacy；`/terms` 轉到 `/d/terms`，是站內英漢字典頁），只有 [API 公平使用規則](https://www.v2ex.com/p/7v9TEc53)：「我们鼓励将 V2EX API 用于学术研究、手机应用及浏览器扩展」「我们反对将 API 输出的结果用于填充你的商业或是个人网站的内容……只是不希望 V2EX 的数据被用在垃圾站和 content farm」。社區規則也寫「这里绝对不会全文转载任何文章，而只会以链接方式分享」。
 - **含意**：拿來當發現線索可以；**展示頁不能放 V2EX 原文**，只放 repo 自己的描述與回連。
 - **Rate limit**：v1 文件寫每 IP 每小時 120 次；實測回應標頭 `X-Rate-Limit-Limit: 600`。API 2.0 文件寫 600 次。feed 走 CDN，影響不大。
 - **兩個 demo 類別**：CLI 關鍵字 5/50（例如 `heydeer/pngdeer`，Rust PNG 壓縮 CLI，10-25 建立，255★）；本地 AI 3/50。CLI 類好用，本地 AI 類量少。
-- **要 token 時**：到 `https://www.v2ex.com/settings/tokens` 自己產生，免審核，效期 30–180 天。黑客松用 Atom 就夠，不需要。
+- **要 token 時**：到 `https://www.v2ex.com/settings/tokens` 自己產生（[說明頁](https://www.v2ex.com/help/personal-access-token)沒寫路徑；實測該路徑未登入時 302 到登入頁），說明頁沒提到審核，效期 30／60／90／180 天，最多 10 個。黑客松用 Atom 就夠，不需要。
 
 ### 2.2 Qiita `個人開発` tag（日本）
 
-- **作者專區**：沒有專區，但 `個人開発` 是約定俗成的 tag。實測 2026-10-20 起 236 篇；7 天內 198 篇，29% 連 GitHub repo，likes 中位數 1。抽樣 repo 都是 0★（`Morishita-mm/Yushario`、`cuculhart/sagbal`、`HidekiMorisaki/sph`）。
+- **作者專區**：沒有專區，但 `個人開発` 是約定俗成的 tag。實測 2026-10-20 起 236 篇（查核重跑時 235，應是有文章被刪）；7 天內 198 篇（重跑 197），29% 連 GitHub repo，likes 中位數 1。抽樣 repo 都是 0★（`Morishita-mm/Yushario`、`cuculhart/sagbal`、`HidekiMorisaki/sph`）。
 - **取得**：`GET https://qiita.com/api/v2/items?query=tag:個人開発 created:>=YYYY-MM-DD&per_page=100&page=N`，回應標頭 `total-count` 直接給總數，body 有 Markdown 全文。
 - **Rate limit**：官方文件「60 is on non-authenticated request per its IP address」，帶 token 1,000 次；`per_page` 最大 100，`page` 最大 100。token 在 `https://qiita.com/settings/applications` 自己產生，免審核。
-- **條款**：[利用規約](https://qiita.com/terms) 第 8 條「著作権法第21条から第28条までにおいて定義される権利については、ユーザー又は第三者に留保されます」；第 7 條的授權對象是 Qiita 與其他登錄使用者，而且只限「コード、スニペットなどプログラムに類するもの」。規約沒有提到 API 或爬取。結論：可讀、可抽連結，不可轉貼全文。
+- **條款**：[利用規約](https://qiita.com/terms) 第 8 條「著作権法第21条から第28条までにおいて定義される権利については、ユーザー又は第三者に留保されます」；第 7 條第 1 項是使用者把**全部**投稿內容授權給 Qiita（含由 Qiita 再授權給其他登錄使用者）；第 3 項直接授權給其他登錄使用者的，才只限「コード、スニペットなどプログラムに類するもの」。規約沒有提到 API、爬取或機器學習；相關的只有第 11 條第 4 項「当社の承諾無く本サービスを転用・売却又は再販する行為」與第 18 條第 2 項（不得超出私的使用範圍複製當社或第三者的智慧財產），兩條都以登錄使用者為對象。結論：可讀、可抽連結，不可轉貼全文。
 - **兩個 demo 類別**：同期間 `tag:CLI` 13 篇、`tag:ローカルLLM` 21 篇、`tag:Ollama` 14 篇。本地 LLM 類多是教學與實測（例如「LM Studio MTP 投機的デコーディング」），比較適合當「真實使用者提及」的品質訊號（brief 4.3），不是新作品來源。
 
 ### 2.3 阮一峰《科技爱好者周刊》「工具」小節（中國）
 
-- **作者專區**：每期固定有「工具」小節。第 414–416 期共 45 個工具，40 個是 GitHub repo，**33 個標「投稿」**（作者在 [GitHub issues](https://github.com/ruanyf/weekly/issues) 自薦，由阮一峰挑選）。
-- **新與冷**：抽樣 7 個 repo 是 57–1,926★，多數 2026 年建立（`CLoaKY233/siltop` 10-16 建立 80★；`lyuangg/tui-dashboard` 57★）。比 V2EX、Qiita 有名一點，但多半不在模型訓練資料裡。
+- **作者專區**：每期固定有「工具」小節。第 414–416 期共 45 個工具，40 個是 GitHub repo，**33 個標「投稿」**（在 [GitHub issues](https://github.com/ruanyf/weekly/issues) 投稿，由阮一峰挑選）。投稿者 handle 與 repo owner 相同的 27 個；其餘 6 個是他人或組織成員投稿（例如 `tt-a1i/archify` 由 `zhengxin-wang` 投稿），不一定是作者本人。
+- **新與冷（查核修正）**：原文「抽樣 7 個 57–1,926★」只是挑樣。查核用 GitHub 搜尋查了全部 40 個 repo（2026-10-27 UTC）：46–396,732★，中位數 358；24 個 <500★、11 個 ≥1,000★、2 個 ≥10,000★（第 415 期 `morluto/rea` 396,732★、第 416 期 `tt-a1i/archify` 90,375★）。投稿的 32 個 repo 中位數 276★（46–90,375）；非投稿的 8 個中位數 1,702★（80–396,732），多是阮一峰自己挑的熱門專案。比 V2EX、Qiita 有名得多；**要只取「投稿」條目，並照常套知名度門檻**。
 - **取得**：`https://raw.githubusercontent.com/ruanyf/weekly/master/docs/issue-N.md`，Markdown 格式固定：`N、[名稱](連結)` 加一段描述。週五出刊。部落格也有 Atom（`/blog/atom.xml`），但只回 3 期。
 - **條款／授權**：repo 沒有 LICENSE 檔（實測 404）；部落格每篇文末寫「版权声明：自由转载-非商用-非衍生-保持署名（创意共享3.0许可证）」。**只取 repo 連結這個事實，不抄描述**，就不涉及演繹。
-- **兩個 demo 類別**：CLI 好用（第 416 期 12 個工具有 5 個是命令列：`glincker/sslx`、`CLoaKY233/siltop`、`wx4766/html-to-video` 等）。本地 AI 少（3 期只有 `leemysw/yovoice`，本地 TTS，1,926★）。
+- **兩個 demo 類別**：CLI 關鍵字 3 期合計 8/45；第 416 期較多（12 個工具有 5 個是命令列：`glincker/sslx`、`CLoaKY233/siltop`、`wx4766/html-to-video` 等）。本地 AI 少（3 期只有 `leemysw/yovoice`，本地 TTS，1,926★）。
 - **未做**：issues API 在本環境被代理擋住，沒量到每週投稿 issue 數（未驗證）。
 
 ### 2.4 GeekNews「Show GN」（韓國）
@@ -72,7 +72,7 @@
 - **作者專區**：[使用指南](https://news.hada.io/guidelines)：「본인 또는 소속 조직이 만든 서비스, 제품, 앱, 오픈소스, 도구를 소개할 때는 뉴스가 아니라 Show로 등록해야 합니다」「직접 사용해 볼 수 있는 작업물만 등록해 주세요」「같은 프로젝트는 일정 기간 내에 다시 등록할 수 없습니다」。品質門檻比 V2EX 高。
 - **量**：RSS 50 篇涵蓋 23 小時，其中 Show GN 10 篇，外推約 70 篇／週。Show 頁第 1 頁 20 篇（1–2 天內）有 6 篇連 github.com、2 篇 github.io。
 - **取得的問題**：只有全站 `https://news.hada.io/rss/news`，沒有 Show 專用 RSS；Atom 的 `link` 指向 GeekNews 自己的 topic 頁，`content` 是截斷的介紹文，**不含原始連結**（實測 10 篇只抽到 1 個 repo）。要拿 repo 連結得每篇再讀一次 topic 頁 HTML。
-- **條款**：[이용약관](https://news.hada.io/terms) 第 6 條只禁止「서비스에 과도한 부하를 주는 자동화 접근, 크롤링, 스크립트 실행 행위」；robots 允許 `/topic`、`/show`，只擋 `/api/`；robots 開頭宣告 `Content-Signal: ai-train=no, search=yes, ai-input=yes`，餵給模型做抽取符合宣告，不能拿來訓練。
+- **條款**：[이용약관](https://news.hada.io/terms) 第 6 條只禁止「서비스에 과도한 부하를 주는 자동화 접근, 크롤링, 스크립트 실행 행위」；robots 對一般 UA 允許 `/topic`、`/show`、`/rss/news`，擋 `/api/` 與登入、設定、留言表單等頁；整站擋 `meta-externalagent`、`FacebookBot`、`GPTBot`、`ClaudeBot` 等訓練爬蟲（我們的抓取程式不可冒用這些 UA）；robots 開頭宣告 `Content-Signal: ai-train=no, search=yes, ai-input=yes`，餵給模型做抽取符合宣告，不能拿來訓練。條款最終修改日 2026-08-16。
 - **兩個 demo 類別**：本週樣本以 SaaS、App 為主，CLI 1/10，本地 AI 0/10。韓文，需要模型讀韓文（Muse Spark 的韓文能力未驗證）。
 
 ### 2.5 Zenn topic feed（日本）
@@ -88,7 +88,7 @@
 - **不是作者專區**，是日本使用者的收藏。`https://b.hatena.ne.jp/site/github.com/?mode=rss&sort=new` 回最新 30 筆 GitHub 頁面（頁面 `<link rel=alternate>` 也有官方 RSS 連結）。實測 `page`、`of` 參數都被忽略，**只能拿到最新 30 筆**（約 4.5 天），要定期輪詢累積。
 - **品質**：30 筆中 18 筆 ≤3 users。抽樣有 0–2★ 的新作（`azu/chizu`），也有本地 AI 工具 `KrushnaVardhanReddy/PaperPilot`（649★）。還有 `impacifist/Windows-GPU-UNLOCK`：一週前建立，剛好 1,000★、100 forks，**疑似灌星**，正好說明 brief 13 節「品質判斷會被灌水」。
 - **條款**：[Hatena Developer Center 規約](https://developer.hatena.ne.jp/license/) 第 4 條禁止開發「宣伝や商用を目的とした内容」，禁止「本サービスを利用して得られる本サイト上の情報を、第三者に開示・提供する行為」。[はてな利用規約](https://policies.hatena.ne.jp/rule) 第 8 條把「APIやRSSフィードとしての公開、配信」列為官方的發布方式；robots 對一般 UA 設 `Crawl-delay: 5`。
-- **含意**：只能把 GitHub URL 當內部線索，**不能在 MCP 回應或展示頁顯示收藏數、留言**。之後擴充。
+- **含意**：只能把 GitHub URL 當內部線索，**不能在 MCP 回應或展示頁顯示收藏數、留言**。第 4 條字面上禁止「本サービスを利用して得られる本サイト上の情報を、第三者に開示・提供する行為」；只因 Hatena 才發現的 repo 出現在推薦結果裡算不算「提供」，查核者無法確認（未驗證）。保守做法：黑客松不接；要接前先向はてな（cs@hatena.ne.jp）書面確認。第 2 條另寫取得的資訊不得再許諾給第三方。
 
 ### 2.7 HelloGitHub 月刊（中國）
 
@@ -100,25 +100,26 @@
 
 ### 2.8 Gitee、OSChina（中國）
 
-- **Gitee**：[OpenAPI v5](https://gitee.com/api/v5/swagger) 的 `search/repositories` 文件寫 `access_token` 非必填，但實測未帶 token 回 `total_count: 0`。`sort` 只有 `last_push_at`、`stars_count` 等，不能依建立時間找新 repo。未登入 `X-RateLimit-Limit: 60`。[用户协议](https://gitee.com/terms) 沒有爬取條款，只說「上传的内容的版权均归上传者所有」。沒有作者發表專區；repo 不在 GitHub，沙盒從海外拉可能慢（未驗證）。之後擴充。
+- **Gitee**：[OpenAPI v5](https://gitee.com/api/v5/swagger) 的 `search/repositories` 文件寫 `access_token` 非必填，但實測未帶 token 回 `total_count: 0`。`sort` 只有 `last_push_at`、`stars_count`、`forks_count`、`watches_count`，不能依建立時間找新 repo。未登入 `X-RateLimit-Limit: 60`（標頭沒給時間窗，swagger 也沒寫，「每小時」未驗證）。[用户协议](https://gitee.com/terms) 沒有爬取條款，只說「上传的内容的版权均归上传者所有」。沒有作者發表專區；repo 不在 GitHub，沙盒從海外拉可能慢（未驗證）。之後擴充。
 - **OSChina**：`/news/rss` 50 篇涵蓋 5 天，21 篇是「XX vN 发布」軟體更新稿（多是國內企業軟體、作者自投），摘要裡 0 個 GitHub、2 個 Gitee 連結。連線常被 reset（本次 3 次有 2 次失敗）。用戶協議沒找到（未驗證）。黑客松避開。
 
 ### 2.9 掘金（中國）
 
 - 沒有官方公開 API（`/rss` 回的是前端殼頁）。
-- [用户服务协议](https://lf3-cdn-tos.draftstatic.com/obj/ies-hotsoon-draft/juejin/86857833-55f6-4d9e-9897-45cfe9a42be4.html)（2025-12-24 生效）10.1：「未经公司许可，任何人不得擅自使用（包括但不限于通过任何机器人、蜘蛛等程序或设备监视、复制、传播、展示、镜像、上载、下载）"稀土掘金"及相关服务中的内容」；2.6 禁止「垂直搜索、镜像」。
+- [稀土掘金用户协议](https://lf3-cdn-tos.draftstatic.com/obj/ies-hotsoon-draft/juejin/86857833-55f6-4d9e-9897-45cfe9a42be4.html)（2025-12-10 更新、2025-12-24 生效；`juejin.cn/terms` 301 轉到此）10.1：「未经公司许可，任何人不得擅自使用（包括但不限于通过任何机器人、蜘蛛等程序或设备监视、复制、传播、展示、镜像、上载、下载）"稀土掘金"及相关服务中的内容」；2.6 禁止「垂直搜索、镜像」；2.8 只給「个人的、不可转让的、非独占的和非商业的」使用權。
 - 結論：條款明文禁止，**避開**。作者若想被收錄，走我們的提交入口。
 
 ### 2.10 PTT（台灣）
 
-- 沒有官方 API。網頁版有 Atom（`https://www.ptt.cc/atom/<board>.xml`），沒有正式文件。今天約 20 次請求只有 1 次成功（Linux 版），其餘都是 Cloudflare 522。
-- 成功那次：Linux 版最新 20 篇跨 8 個月，`[分享]` 自製工具只有 1–2 篇。Soft_Job 是求職與職涯討論，不是作品發表。
+- 沒有官方 API。網頁版有 Atom（`https://www.ptt.cc/atom/<board>.xml`），沒有正式文件。調研時（10-27 20:13–20:19 UTC）約 20 次請求只有 1 次成功（Linux 版），其餘都是 Cloudflare 522；查核重跑腳本（20:26 UTC）4 個版 3 個 522，但 20:31 UTC 再打 8 次全部 200（含 Soft_Job、Python、Programming）。**是暫時性故障，不是常態**；避開的理由改看下面的條款與內容。
+- 成功那次：Linux 版最新 20 篇跨 8 個月，`[分享]` 自製工具只有 1–2 篇。Soft_Job 是求職與職涯討論，不是作品發表（查核抽看 Soft_Job 最新 19 篇，偶有自製作品，例如「[閒聊] 做了一個 GalGame 陪伴 Leetcode 刷題」，但沒有固定分類）。
+- robots 對 `User-agent: *` 沒有給 `ai-input` 訊號；依檔頭說明，沒給的用途「既不授權也不限制」。但整站擋 `Claude-User`、`ChatGPT-User`、`meta-externalfetcher` 這類「使用者觸發的 AI 抓取」，意向很清楚。
 - [robots.txt](https://www.ptt.cc/robots.txt) 開頭：「As a condition of accessing this website, you agree to abide by the following content signals」，`User-agent: *` 設 `Content-Signal: search=yes,ai-train=no,use=reference`，並整站擋 `meta-externalagent`、`meta-externalfetcher`、`Claude-User`、`ChatGPT-User` 等 AI 代理。
 - 使用者條款網頁版沒找到（未驗證）。量少、不穩、條款不明：**避開**。
 
 ### 2.11 Dcard（台灣）
 
-- 沒有公開 API。網路上流傳的 `/service/api/v2/...` 是網站內部 API，實測回 Cloudflare「Attention Required」403。條款頁（`/service/terms` 等三個網址）也都 403，條款內容未驗證。
+- 沒有公開 API。網路上流傳的 `/service/api/v2/...` 是網站內部 API，實測回 Cloudflare「Attention Required」403。條款頁（`/service/terms` 等三個網址）也都 403，條款內容未驗證。查核補充：首頁 `www.dcard.tw/` 與 `about.dcard.tw` 從本環境也是 403，所以這是對本環境出口 IP 的整站阻擋，不能當成「API 特別被擋」的證據；`robots.txt` 可讀，只擋 `/emails/activate`。WebFetch 也是 403，網路搜尋找不到官方條款全文（未驗證）。
 - 學生、年輕上班族為主，不是開發者作品發表的地方。**避開**。
 
 ### 2.12 iThome 鐵人賽（台灣）
@@ -134,7 +135,7 @@
 ### 2.14 Habr（俄語）
 
 - `open_source` hub RSS 40 篇涵蓋 55 小時，7 篇摘要含 GitHub。俄文；作者文有，但沒有專區。
-- [使用者協議](https://account.habr.com/info/agreement/)：「Пользователь не вправе воспроизводить, повторять и копировать, продавать, а также использовать для каких-либо коммерческих целей какие-либо части Приложений (включая Контент……)」，只允許「личное некоммерческое использование」。**避開**。
+- [使用者協議](https://account.habr.com/info/agreement/)：「Пользователь не вправе воспроизводить, повторять и копировать, продавать, а также использовать для каких-либо коммерческих целей какие-либо части Приложений (включая Контент……)」，例外是「когда Пользователь получил такое разрешение от Хабра」；只允許「личное некоммерческое использование」。協議最新版是 2021-03-09。**避開**。
 
 ---
 
@@ -147,7 +148,8 @@
 | `spikes/ch_regional_authors.py` | V2EX Atom＋API v1、GeekNews RSS、Qiita API v2、Zenn topic feed、PTT Atom | `python3 spikes/ch_regional_authors.py`（可加 `--only v2ex,qiita --samples 5`） |
 | `spikes/ch_regional_curated.py` | Hatena site RSS、阮一峰周刊 raw md、HelloGitHub raw md、velog／Habr／OSChina RSS | `python3 spikes/ch_regional_curated.py`（可加 `--only hatena,ruanyf --ruanyf-issues 1`） |
 
-- 只用 Python 標準函式庫，不需要任何金鑰。全部跑完約 1 分鐘，Qiita 用掉 6–7 次（未登入額度 60 次／小時）。
+- 只用 Python 標準函式庫，不需要任何金鑰。全部跑完約 1.5 分鐘（查核重跑：authors 82 秒、curated 11 秒），Qiita 用掉 6–7 次（未登入額度 60 次／小時）。需要 Python 3.11 以上（查核時修掉 `ch_regional_curated.py` 一處 f-string 內反斜線，原本只能在 3.12 以上跑）。
+- `ch_regional_curated.py` 輸出的 `author_submitted` 其實是「標『投稿』的條目數」，不代表投稿者就是作者。
 - 「連 GitHub」＝內文或連結裡有 `github.com/<owner>/<repo>`（排除 `hellogithub.com`）。CLI、本地 AI 用關鍵字粗分，只當參考。
 - 視窗不足 7 天的管道，用「抓到的篇數 ÷ 涵蓋小時 × 168」外推，表中標「估」。
 - 星數另用 GitHub MCP 的 `search_repositories` 查（腳本本身不打 GitHub API，因為本環境的代理擋住匿名 `api.github.com`）。
@@ -166,7 +168,7 @@
 | Hatena site:github.com | 30 | 4.5 天 | 30 | 29 個不重複 repo | 3 | 1 | 估 45 repo |
 | 阮一峰周刊 416／415／414 期「工具」 | 12／15／18 | 每週一期 | 1 期 | 11／13／16 | 5／1／2 | 0／0／1 | 12–18 |
 | HelloGitHub 第 126 期 | 39 | 每月一期 | 0 期（9-28 出刊） | 39（100%） | 6 | 0 | — |
-| PTT Soft_Job／Linux／Python／Programming | — | — | — | — | — | — | 全部 522 |
+| PTT Soft_Job／Linux／Python／Programming | — | — | — | — | — | — | 調研時全部 522；查核重跑 3/4 為 522（Linux 成功：20 篇跨 247 天、7 天內 1 篇）；5 分鐘後 8/8 成功 |
 | velog 全站 RSS | 20 | 3.5 h | — | — | — | — | 垃圾 7/20（前一次 20/20） |
 | Habr open_source hub | 40 | 55 h | 40 | 7（18%） | — | — | — |
 | OSChina 资讯 RSS | 50 | 5 天 | 50 | 0（Gitee 2） | — | — | 「发布」稿 21 篇；第二次連線被 reset |
@@ -192,9 +194,11 @@
 | 阮一峰 416 | `CLoaKY233/siltop` | 80 | 2026-10-16 | TUI（Apple Silicon 監控） | 好候選，只限 macOS |
 | 阮一峰 416 | `wx4766/html-to-video` | 146 | 2026-10-11 | CLI（HTML 動畫轉 MP4） | 好候選，可在 Linux 沙盒驗 |
 | 阮一峰 414 | `leemysw/yovoice` | 1,926 | 2026-09-15 | 本地 AI TTS 桌面 App | 本地 AI 類，GUI |
+| 阮一峰 415 | `morluto/rea` | 396,732 | 2026-04-14 | 逆向工程 agent（非投稿） | **查核補列**：已經爆紅，不是寶藏 |
+| 阮一峰 416 | `tt-a1i/archify` | 90,375 | 2026-04-15 | 圖表 agent skill（他人投稿） | **查核補列**：已經很有名 |
 | HelloGitHub | `rakyll/hey`、`Canop/broot` | 20,739、13,105 | 2016、2018 | CLI | 已經很有名，不是寶藏 |
 
-**讀法**：作者發表區（V2EX、Qiita、Zenn）抽到的是 0–255★ 的新作，真的「沒人知道」，但雜訊也多，要 Meta 模型先判斷「是不是可用的軟體」。人工精選（阮一峰）落在 57–1,926★，品質穩、CLI 多。HelloGitHub 混有萬星老專案，不適合當「新作品」來源。
+**讀法**：作者發表區（V2EX、Qiita、Zenn）抽到的是 0–255★ 的新作，真的「沒人知道」，但雜訊也多，要 Meta 模型先判斷「是不是可用的軟體」。人工精選（阮一峰）全部 40 個 repo 落在 46–396,732★（中位數 358），投稿條目多在數十到數百★，非投稿條目常是爆紅專案；品質比作者發表區穩，但不能直接當「沒人知道」。HelloGitHub 混有萬星老專案，不適合當「新作品」來源。
 
 ---
 
@@ -208,7 +212,7 @@
 |---|---|---|
 | **V2EX「分享创造」Atom** | 唯一明確寫「發布自己的最新作品」的中文專區；免金鑰、有全文；40% 附 repo；每週約 270 篇 | 1–1.5 h（含 6 小時輪詢） |
 | **Qiita API v2 `tag:個人開発`** | 官方 API、免金鑰就夠用；每週約 200 篇；likes 中位數 1，最符合「默默無聞」；可順便查 `tag:CLI`、`tag:ローカルLLM` 當使用者提及 | 1–1.5 h |
-| **阮一峰周刊「工具」** | 每週 12–18 個人工精選、九成是 GitHub、一半以上作者投稿、CLI 多；raw md 格式固定，解析最簡單 | 0.5–1 h |
+| **阮一峰周刊「工具」** | 每週 12–18 個人工精選、九成是 GitHub、七成標「投稿」；raw md 格式固定，解析最簡單。只取標「投稿」的條目，並照常套知名度門檻（非投稿條目常是 10 萬★級專案） | 0.5–1 h |
 | （可選）**GeekNews Show GN** | 品質門檻最高（自製、可試用、不得重貼）；但要每篇多讀一次 topic 頁才拿得到原始連結，且是韓文 | 2 h |
 
 合計 3.5–5 h（不含 GeekNews）。這三個來源都附原文連結，正好讓 demo 呈現「Meta 模型讀中文、日文的作者貼文，找出可用的軟體」，比只接 GitHub 更貼近「Build for Your World」。多語能力要先用 Muse Spark 實測（未驗證）。
@@ -218,7 +222,7 @@
 | 管道 | 什麼時候值得接 |
 |---|---|
 | Zenn `cli`、`個人開発` topic feed | 有排程器可每小時輪詢、再讀文章頁時；`cli` topic 的作品品質很好 |
-| Hatena `site/github.com` | 只把 URL 當內部線索；不得顯示收藏數或留言（Developer Center 規約）；也可當「日本使用者有在收藏」的品質訊號，但要先確認條款允許 |
+| Hatena `site/github.com` | 先向はてな書面確認：規約第 4 條字面上禁止把取得的資訊提供給第三方，連「只因 Hatena 才發現的 repo 出現在推薦結果」都可能算；確認前不接，也不拿收藏數當品質訊號 |
 | HelloGitHub 月刊 | 一次性匯入當「已被策展」的弱訊號；CC BY-NC-ND，只取 URL |
 | Gitee | 要支援 Gitee 託管的軟體時；先申請 token 並確認沙盒下載速度 |
 | V2EX API 2.0 | 需要回補 7 天以上歷史時；Personal Access Token 免審核 |
@@ -229,7 +233,7 @@
 |---|---|
 | 掘金 | 用戶協議 10.1 明文禁止用機器人、蜘蛛取用內容；沒有公開 API |
 | Dcard | 沒有公開 API；內部 API 與條款頁都被 Cloudflare 擋（403）；不是開發者作品社群 |
-| PTT | 沒有 API；Atom 非正式且幾乎都 522；robots 的內容訊號 `ai-train=no`、整站擋 Meta 的 AI 代理；沒有作品專區 |
+| PTT | 沒有 API；Atom 非正式、時好時壞（有時大量 522）；robots 的內容訊號 `ai-train=no`、整站擋 Meta 與其他家的 AI 代理；沒有作品專區 |
 | velog | 全站 RSS 被垃圾廣告灌滿；只有每位作者的 RSS |
 | iThome 鐵人賽 | 2026 賽季已結束；內容是教學系列 |
 | OSChina | 以資訊為主，連線不穩；條款未確認 |
@@ -239,6 +243,7 @@
 
 - **展示頁與 MCP 回應不要轉貼社群原文**（V2EX 公平使用規則、Qiita 第 8 條、Zenn 第 6 條都指向這點）。`sources` 欄只放貼文 URL 與日期。
 - **灌星要防**：Hatena 抽樣就碰到一週 1,000★ 的 repo。知名度分數不能只看星數，至少加「星數成長速度 vs. 建立天數」的異常檢查。
+- **策展來源也會混入爆紅專案**：阮一峰周刊第 415 期有 39.7 萬★的 `morluto/rea`。所有來源的候選都要過同一道知名度門檻，不能因為「來自策展」就當寶藏。
 - **本地 AI 類**在這些社群多是教學與實測文，不是作品發表。它們適合當品質訊號（「有人寫文章實測過」），新作品還是要靠 GitHub 本身。
 
 ---
@@ -257,6 +262,8 @@
 | V2EX | https://www.v2ex.com/api/nodes/show.json?name=create | 實測：節點說明「欢迎你在这里发布自己的最新作品！」、38,235 篇 |
 | V2EX | https://www.v2ex.com/api/v2/nodes/create/topics | 實測：未帶 token 回 401 |
 | V2EX | https://www.v2ex.com/robots.txt | 實測：只擋後台與登入頁 |
+| V2EX | https://www.v2ex.com/help/personal-access-token | 查核：token 效期最長 180 天 |
+| V2EX | https://www.v2ex.com/d/terms | 查核：`/terms` 轉到這裡，是英漢字典頁，不是條款 |
 | Qiita | https://qiita.com/api/v2/docs | rate limit 60／1,000、per_page／page 上限、token 取得 |
 | Qiita | https://qiita.com/terms | 利用規約第 7、8、11 條 |
 | Qiita | https://qiita.com/api/v2/items?query=tag:個人開発%20created:>=2026-10-20 | 實測：`total-count: 236` |
@@ -279,10 +286,11 @@
 | 阮一峰周刊 | https://github.com/ruanyf/weekly | 投稿方式（issues）；repo 無 LICENSE（raw 實測 404） |
 | 阮一峰周刊 | https://raw.githubusercontent.com/ruanyf/weekly/master/docs/issue-416.md | 實測：「工具」12 個 |
 | 阮一峰周刊 | https://www.ruanyifeng.com/blog/atom.xml | 實測：文末 CC BY-NC-ND 3.0 聲明 |
+| 阮一峰周刊 | GitHub 搜尋（GitHub MCP `search_repositories`，`repo:` 批次查詢） | 查核：414–416 期 40 個 repo 星數 |
 | HelloGitHub | https://github.com/521xueweihan/HelloGitHub | README：CC BY-NC-ND 4.0、每月 28 號 |
 | HelloGitHub | https://raw.githubusercontent.com/521xueweihan/HelloGitHub/master/content/HelloGitHub126.md | 實測：39 個專案 |
 | HelloGitHub | https://hellogithub.com/rss | 實測：只到期數層級 |
-| 掘金 | https://lf3-cdn-tos.draftstatic.com/obj/ies-hotsoon-draft/juejin/86857833-55f6-4d9e-9897-45cfe9a42be4.html | 用户服务协议 2.6、6.2、10.1（`juejin.cn/terms` 轉址到此） |
+| 掘金 | https://lf3-cdn-tos.draftstatic.com/obj/ies-hotsoon-draft/juejin/86857833-55f6-4d9e-9897-45cfe9a42be4.html | 稀土掘金用户协议 2.6、2.8、6.2、10.1（`juejin.cn/terms` 轉址到此） |
 | 掘金 | https://juejin.cn/robots.txt | 實測 |
 | Gitee | https://gitee.com/api/v5/swagger | OpenAPI v5 文件；實測搜尋未帶 token 回 0 筆、限 60 次 |
 | Gitee | https://gitee.com/terms | 用户协议（版權歸上傳者） |
@@ -296,3 +304,60 @@
 | iThome | https://ithelp.ithome.com.tw/rss/articles | 實測：20 篇、0 個 GitHub |
 | Habr | https://account.habr.com/info/agreement/ | 使用者協議（禁止商業使用） |
 | Habr | https://habr.com/ru/rss/hubs/open_source/articles/ | 實測：40 篇、55 小時 |
+
+---
+
+## 查核紀錄（2026-10-28）
+
+查核者：另一個調研 agent，預設懷疑。查證時間 2026-10-28（台北），即 2026-10-27 UTC 20:26–20:40。方法：curl 直接讀官方文件、條款與 API 回應；星數用 GitHub MCP `search_repositories`；兩支腳本實際重跑。
+
+### 逐條結果
+
+| # | 主張 | 判定 | 依據與修正 |
+|---|---|---|---|
+| 1 | V2EX API v1 免認證；`node_name=create` 只回 10 篇、不能翻頁；公平使用規則原文；文件 120 次／小時、實測標頭 600 | 屬實，補充 | 文件與標頭都對上（`x-rate-limit-limit: 600`）。`&p=2` 回同樣 10 篇。補：`topics/show.json` 不在現行 v1 文件頁（[v1 文件](https://www.v2ex.com/p/7v9TEc53)只列 hot、latest、nodes/show、members/show） |
+| 2 | V2EX API 2.0 要 token、未帶回 401 `Token not found`、600 次、`/settings/tokens` 免審核 | 屬實，補充 | 401 與 600 都重現。[說明頁](https://www.v2ex.com/help/personal-access-token)沒寫 `/settings/tokens` 路徑，實測未登入 302 到登入頁，路徑存在；說明頁沒提審核；效期 30／60／90／180 天 |
+| 3 | 分享创造 Atom 免金鑰、50 篇、全文、約 31 小時；20/50 附 repo；節點說明 | 屬實 | 重跑：50 篇、31.3 h、20 篇附 repo；content 中位數 1,047 字元，是全文 HTML |
+| 4 | Qiita 未認證 60、認證 1,000；`per_page`、`page` 最大 100；`/settings/applications`；`tag:個人開発` 自 10-20 起 236 | 屬實（數字微差） | [文件](https://qiita.com/api/v2/docs)原文對上；`per_page=101`、`page=101` 都回 400。重跑 `total-count` 為 235（應是有文章被刪），已在 2.2 註明 |
+| 5 | Qiita 規約第 8 條；第 7 條授權對象只有 Qiita 與其他登錄使用者、且限程式碼類；沒提 API 或爬取 | **部分錯誤，已改** | 第 8 條對。第 7 條第 1 項是**全部**投稿內容授權給 Qiita（可再授權給其他登錄使用者）；只有第 3 項直接給其他登錄使用者的授權限程式碼類。原文把兩項混在一起。「沒提 API 或爬取」屬實，但補上第 11 條第 4 項（禁止未經同意轉用、轉售）與第 18 條第 2 項。改了比較表與 2.2 |
+| 6 | Zenn topic feed 約 20 篇、`?all=1` 只對使用者 feed 有效；規約第 6 條第 3 項 | 屬實 | [官方說明](https://zenn.dev/zenn/articles/zenn-feed-rss)只在使用者 feed 段落寫 `all=1`；實測使用者 feed 20→25 篇，topic feed 不變。[規約](https://zenn.dev/terms)第 6 條第 3 項原文對上，2025-06-05 改定 |
+| 7 | Hatena Developer Center 規約第 4 條；site RSS 只回 30 筆、`page`／`of` 無效 | 屬實，建議加嚴 | [規約](https://developer.hatena.ne.jp/license/)第 4 條兩項原文對上（2023-05-24 改定）；`page=2`、`of=30` 都回同樣 30 筆。「只當內部線索」仍可能落入「第三方に開示・提供」，改成「先書面確認，確認前不接」 |
+| 8 | GeekNews Show GN 規則；條款第 6 條只禁過度負荷的自動化存取；Content-Signal；RSS 無原始連結 | 屬實，補充 | [指南](https://news.hada.io/guidelines)三句原文對上；[條款](https://news.hada.io/terms)（2026-08-16 修改）第 6 條關於自動化的只有那一項；RSS 10 篇 Show GN 的 `link` 都指向 topic 頁。補：robots 整站擋 `meta-externalagent`、`FacebookBot` 等，原文寫「只擋 `/api/`」不精確，已改 |
+| 9 | 掘金協議 10.1、2.6、2025-12-24 生效 | 屬實，名稱小錯 | 原文對上。正式名稱是「稀土掘金用户协议」（不是「用户服务协议」），2025-12-10 更新；另補 2.8 非商業使用權。已改 |
+| 10 | PTT 沒有 API；Atom 約 20 次只成功 1 次；robots Content-Signal 與擋 Meta 代理 | robots 屬實；**可用性結論過度推論，已改** | [robots](https://www.ptt.cc/robots.txt)原文對上。重跑腳本時 3/4 為 522，但 5 分鐘後連打 8 次全部 200。522 是暫時性故障，不是「幾乎都 522」。避開的結論不變（條款、內容訊號、沒有作品區），理由改寫 |
+| 11 | Dcard 沒有公開 API，內部 API 與條款頁 403 | 403 屬實；條款仍未驗證 | 首頁、`about.dcard.tw` 也 403，是對本環境出口的整站阻擋，不是 API 特有；`robots.txt` 可讀（只擋 `/emails/activate`）；WebFetch 也 403；搜尋找不到條款全文。維持「未驗證」 |
+| 12 | HelloGitHub CC BY-NC-ND 4.0、每月 28 日；第 126 期 39 個都是 GitHub；含 20,739★ 的 `rakyll/hey` | 屬實 | README 原文對上；腳本重跑 39/39；GitHub 搜尋 `rakyll/hey` 20,739★、`Canop/broot` 13,105★ |
+| 13 | 阮一峰周刊 repo 無 LICENSE（404）；部落格 CC BY-NC-ND 3.0；414–416 期 45 個、40 個 repo、33 個作者投稿 | 授權屬實；**「作者投稿」與星數範圍錯誤，已改** | `LICENSE`、`LICENSE.md`、`LICENSE.txt`、`COPYING` 都 404；部落格 Atom 文末聲明對上。45／40／33 對上，但 33 個是「標投稿」，投稿者等於 repo owner 的只有 27 個。原文「抽樣 57–1,926★」漏掉 39.7 萬★的 `morluto/rea` 與 9 萬★的 `tt-a1i/archify`；全部 40 個是 46–396,732★、中位數 358。改了一句話結論、比較表、2.3、3.3、4.1、4.4 |
+| 14 | Gitee 文件寫 `access_token` 非必填、未帶回 0；不能依建立時間排序；未登入每小時 60 次 | 大致屬實 | swagger `access_token` required=false；搜尋 `q=cli` 回 `total_count: 0`；`sort` 只有 4 種，沒有建立時間。`X-RateLimit-Limit: 60` 屬實，但標頭和 swagger 都沒寫時間窗，「每小時」標未驗證 |
+| 15 | Habr 協議禁止商業目的使用，只允許個人非商業 | 屬實，補例外 | [協議](https://account.habr.com/info/agreement/)原文對上，但有「取得 Habr 許可」的例外；最新版 2021-03-09。已補 |
+
+### 其他順手查的
+
+| 項目 | 結果 |
+|---|---|
+| V2EX 社區規則「只会以链接方式分享」 | [/about](https://www.v2ex.com/about) 原文對上 |
+| Hatena 利用規約第 8 條「APIやRSSフィードとしての公開、配信」 | [原文](https://policies.hatena.ne.jp/rule)對上（第 8 條第 4 項 c） |
+| velog 條款著作權歸會員 | [第 5 條](https://velog.io/policy/terms)原文對上；全站 RSS 重跑 20/20 是垃圾廣告 |
+| iThome 鐵人賽「告一段落」 | [2026 頁](https://ithelp.ithome.com.tw/2026ironman)原文對上 |
+| Gitee 使用条款沒有爬取條款 | [/terms](https://gitee.com/terms) 沒有「爬、抓取、机器人、蜘蛛」等字；版權歸上傳者屬實 |
+| 3.3 表原有的 20 個 repo 星數與建立日 | 用 GitHub 搜尋逐一查，全部對上（`impacifist/Windows-GPU-UNLOCK` 現在 1,001★、100 forks） |
+| GeekNews Show 頁 20 篇中 6 篇 github.com、2 篇 github.io | 對上；但列表頁只顯示網域與 owner，完整 repo URL 仍要讀 topic 頁 |
+| 「CLI 比例高」 | 3 期 CLI 關鍵字只有 8/45（18%），和 Qiita 17% 差不多。改成寫實數 |
+| 條款衝突 | 原文沒有建議違反條款的抓取。Hatena 的「只當內部線索」可能仍違反第 4 條，已改成先書面確認。掘金、PTT、Dcard、Habr 維持避開 |
+
+### 腳本重跑
+
+| 腳本 | 結果 | 與筆記一致嗎 |
+|---|---|---|
+| `spikes/ch_regional_authors.py` | Python 3.13 跑完，82 秒，exit 0 | 一致：V2EX 50／31.3 h／20 repo／估 268；GeekNews 10／估 73；Qiita 235（原 236）、7 天 197（原 198）、29%、likes 中位數 1；Zenn 各 topic 與原表相差 0–1 篇；PTT 3/4 為 522 |
+| `spikes/ch_regional_curated.py` | Python 3.13 跑完，11 秒，exit 0；**Python 3.11 原本 SyntaxError**（f-string 內有反斜線），已修，3.11 重跑正常 | 一致：Hatena 30／108 h／29 repo／18 筆 ≤3 users；阮一峰 12／15／18 個、11／13／16 repo、投稿 6／11／16；HelloGitHub 39／39；Habr 40／55 h／7；OSChina 50／120 h／21 篇「发布」 |
+| 金鑰 | 兩支都沒有金鑰、token 或 Authorization 標頭 | — |
+
+### 改了什麼（摘要）
+
+1. 一句話結論：阮一峰的投稿數與星數範圍、PTT 可用性、著作權歸屬的概括。
+2. 比較表：V2EX（無 ToS、v1 端點未列在文件）、Qiita 第 7 條、阮一峰（訊號品質改「中高」、雜訊改「低–中」）、GeekNews robots、Gitee 時間窗、PTT、Habr、Hatena 建議。
+3. 2.1、2.2、2.3、2.4、2.6、2.8、2.9、2.10、2.11、2.14 的對應段落。
+4. 3.1 執行時間與 Python 版本；3.2 PTT 列；3.3 補 2 個高星 repo 與讀法。
+5. 4.1 阮一峰列加「只取投稿＋知名度門檻」；4.2 Hatena；4.3 PTT；4.4 加「策展來源也會混入爆紅專案」。
+6. `spikes/ch_regional_curated.py` 修一行，讓 Python 3.11 也能跑；沒有改邏輯或輸出。

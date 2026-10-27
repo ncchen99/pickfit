@@ -11,13 +11,13 @@
 | # | 決定 | 理由（細節見後） |
 |---|---|---|
 | 1 | **正本：git 裡每款一份 JSON**（`data/software/<slug>.json`），不用 YAML | diff 就是審計紀錄，也是「比賽期間做的」證據；JSON 不必處理 YAML 的隱式型別；Python、JS、JSON Schema 都原生支援 |
-| 2 | **MCP 讀的是建置產物**：`build_index` 把全部檔案轉成一個 `index.json`（候選卡＋BM25 倒排），**打包進 Worker**（JSON import） | 幾千筆約 1 MB；本機 `wrangler check startup` 量到啟動遠低於 1 秒上限；不用 KV／R2／D1 讀取，沒有額度問題 |
-| 3 | 完整檔案（安裝步驟、驗證細節）：1,000 筆以內一起打包；超過就放 **Workers Static Assets**（`/p/<slug>.json`） | 靜態資產請求免費、不限量，每版 20,000 個檔、單檔 25 MiB；順便當展示頁 |
+| 2 | **MCP 讀的是建置產物**：`build_index` 把全部檔案轉成一個 `index.json`（候選卡＋BM25 倒排），**打包進 Worker**（JSON import） | spike 3,000 筆約 1 MB（精簡卡片；真實卡片估 3–5 MB）；本機 `wrangler check startup` 量到啟動遠低於 1 秒上限；不用 KV／R2／D1 讀取，沒有額度問題 |
+| 3 | 完整檔案（安裝步驟、驗證細節）：1,000 筆以內一起打包；超過就放 **Workers Static Assets**（`/p/<slug>.json`） | 範例檔壓縮後 5.5 KB，1,000 筆約 5.5 MB、3,000 筆約 16.6 MB；靜態資產請求免費、不限量，每版 20,000 個檔、單檔 25 MiB；順便當展示頁 |
 | 4 | **事件寫 D1**：`events`（查詢、安裝指南、回報、提交）、`reverify_queue`、`meta_budget` 三張表 | 需要 SQL 彙總與去重；KV 免費版每天只能寫 1,000 個 key、最終一致，不適合計數 |
 | 5 | **更新路徑**：管線寫 JSON → commit／push → Workers Builds 自動 `validate → build_index → deploy` | 不用自己寫同步程式；建置失敗就不部署，壞資料進不了線上 |
 | 6 | **回報回流到正本**：`sync_outcomes` 把 D1 的彙總寫回每份 JSON 的 `outcomes`；失敗回報進 `reverify_queue`，驗證 agent 重跑後 commit | 「回報 → 重驗 → 安裝步驟被修正」會留下一個 git diff，是 demo 中「不是 RAG」最直接的證據 |
 | 7 | **配對：條件篩選 → BM25 取 25 張候選卡 → Muse Spark 取捨** | 程式管硬條件與證據，模型管語意與取捨（第 2 節） |
-| 8 | **不用向量搜尋** | Meta 沒有 embedding 模型；spike：模型改寫查詢後，8,198 筆裡 10/10 題的好答案都進前 25 名（第 3 節） |
+| 8 | **不用向量搜尋** | Meta 官方文件沒有 embedding 模型（沒有 key，未用 `/v1/models` 確認）；spike：模型改寫查詢後，8,198 筆裡 10/10 題的好答案都進前 25 名（第 3 節） |
 | 9 | 不用 Postgres（Neon／Supabase）、不在 Worker 裡用 SQLite 檔 | 幾千筆不需要；多一個服務、多一條連線，換不到東西 |
 
 估計工時（單人）：schema＋驗證 1 h、`build_index` 1.5 h、D1 表＋`report_outcome` 寫入 1.5 h、Workers Builds 0.5 h、`sync_outcomes` 1 h。配對本身算在 MCP 工作裡。
@@ -31,7 +31,7 @@
 | | git 中的 JSON（每款一檔） | SQLite 檔 | Cloudflare D1 | Postgres（Neon／Supabase） |
 |---|---|---|---|---|
 | 開發時間 | 最短：寫檔＋commit | 短，但要 schema 遷移 | 中：建表、遷移、管線要走 REST 或 wrangler | 最長：多一個服務、連線、遷移 |
-| MCP（Worker）怎麼讀 | 建置時轉索引，打包或當靜態資產 | Worker 不能直接開 SQLite 檔；要 sql.js（WASM，npm 解壓約 31 MB）或先轉 JSON | binding 直接查；每次呼叫最多 50 個查詢（Free） | 要走 HTTP driver 或 Hyperdrive（未查） |
+| MCP（Worker）怎麼讀 | 建置時轉索引，打包或當靜態資產 | Worker 不能直接開 SQLite 檔；要 sql.js（WASM，npm 解壓約 31 MB）或先轉 JSON。spike：3,000 筆 SQLite＋FTS5 檔 928 KiB，和 JSON 索引（972 KiB）差不多，沒有大小優勢 | binding 直接查；每次呼叫最多 50 個查詢（Free） | 要走 HTTP driver 或 Hyperdrive（未查） |
 | 管線（Python，本機或 Modal）怎麼寫 | 寫檔；遠端（Modal）用 GitHub Contents API `PUT /repos/{owner}/{repo}/contents/{path}` | 寫本機檔，再轉出 | REST `POST …/d1/database/{id}/query` 或 `wrangler d1 execute --remote --json`；REST 全域限 1,200 次／5 分鐘 | psycopg |
 | 可審計性與 diff | **最好**：每次改動一個 commit，`git log -p` 看得到誰、何時、改了哪個欄位 | 二進位，diff 看不懂 | Time Travel 只能還原（Free 7 天），看不到逐欄位變更 | 要自己做 audit 表 |
 | 人工抽查、修正 | 開檔改、PR review | 要 SQL | 要 SQL | 要 SQL |
@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS meta_budget (
 | 操作 | SQL 重點 | 每次寫入列數（估算） |
 |---|---|---|
 | `find_*` | `INSERT INTO events`；`INSERT INTO meta_budget … ON CONFLICT(day) DO UPDATE SET calls = calls + 1, cost_usd = cost_usd + ? RETURNING cost_usd`，超過門檻就走規則排序 | 約 4（表 1＋索引 2＋budget 1） |
-| `report_outcome` | `INSERT OR IGNORE`（同一 `rec_id`＋`slug`＋`stage` 只記一次）；`success = 0` 且有 `error_excerpt` → `INSERT INTO reverify_queue … ON CONFLICT DO UPDATE SET done_at = NULL …` | 約 4–6 |
+| `report_outcome` | `INSERT … ON CONFLICT (rec_id, slug, stage) WHERE type = 'outcome' DO NOTHING`（同一次推薦的同一階段只記一次）。**不要用 `INSERT OR IGNORE`**：spike 實測它連 CHECK 失敗也默默略過（寫入 0 列、不報錯）。`success = 0` 且有 `error_excerpt` → `INSERT INTO reverify_queue … ON CONFLICT(slug, os) DO UPDATE SET done_at = NULL … WHERE done_at IS NOT NULL` | 約 4–6 |
 | `sync_outcomes` | `GROUP BY slug, os` 彙總成功率 | 讀取 |
 
 - Free 每天 10 萬列寫入 → 約 2 萬次查詢／天，demo 用不完。超過時 D1 回錯誤，要在 Worker 裡 catch，不要讓推薦失敗。
@@ -170,8 +170,8 @@ CREATE TABLE IF NOT EXISTS meta_budget (
 |---|---|---|---|
 | A 解析需求 | **Muse Spark 1.3** | 自然語言 → 條件（`os`、`budget`、`privacy`、`category`、`must_have`…）＋ **`search_terms`**（英文關鍵字，把「會議錄音轉文字」改寫成 `speech recognition transcription whisper`）＋ `current_tool` | `need` |
 | B 硬條件篩選 | 程式 | `status = listed`；`install.<os>.status ∈ {verified, partial, needs_manual_step}`（使用者 OS 未知時看任一 OS）；`privacy=local_only` → `processing = local` 且 `requirements.network ≠ required`；`budget=free_only` → `pricing.model = free`；有 `current_tool` 時加 `alternatives_to` 比對 | 合格清單 |
-| C 取候選 | 程式 | 在合格清單上用 BM25 查 `search_terms`（欄位：name×3、tags×2、summary、use_cases、alternatives_to），取前 25；命中少於 5 筆且該類別合格數 ≤ 60 時，改成整個類別依寶藏分數排序送出 | ≤25 張候選卡（每張約 350 tokens） |
-| D 該不該問 | 程式＋**Muse Spark** | 程式先算「分歧屬性」：`need` 裡未知、而前 5 名在這個屬性上值不同（例如 OS 未知、前 5 名有的只驗證過 Linux）。沒有分歧屬性就**不准問**。有的話交給 C 步的模型判斷問了會不會改變第一名、並寫成一題附選項 | `clarifying_question` 或 null |
+| C 取候選 | 程式 | 在合格清單上用 BM25 查 `search_terms`（欄位：name×3、tags×2、summary、use_cases、alternatives_to），取前 25；命中少於 5 筆且該類別合格數 ≤ 60 時，改成整個類別依寶藏分數排序送出 | ≤25 張候選卡（每張約 350 tokens；後備時最多 60 張） |
+| D 該不該問 | 程式＋**Muse Spark** | 程式先算「分歧屬性」：`need` 裡未知、而前 5 名在這個屬性上值不同（例如 OS 未知、前 5 名有的只驗證過 Linux）。沒有分歧屬性就**不准問**。有的話連同候選卡交給 E 步（同一次 Muse Spark 呼叫），由模型判斷問了會不會改變第一名，並寫成一題附選項 | `clarifying_question` 或 null |
 | E 比較取捨 | **Muse Spark 1.3** | 選 1–3 個、每個理由附 `field_ref`、寫和知名工具的取捨、`best_free_option`、`no_new_software_needed` | `compare` |
 | F 守門 | 程式 | slug 在候選裡；`field_ref` 存在且值對得上；違反硬條件的剔除；E 失敗 → 寶藏分數排序＋模板理由，標 `generated_by: rules` | MCP 回應（含 `verification` 證據、`rec_id`） |
 | G 安裝 | 程式（不呼叫模型） | `get_install_guide` 只回傳 `install.<os>` 中重播過的步驟；使用者 OS 沒驗證過就明說，給最接近的已驗證 OS | 步驟、手動步驟、`check`、`first_task` |
@@ -637,7 +637,28 @@ CREATE TABLE IF NOT EXISTS meta_budget (
 | `spikes/sm_worker_startup.sh` | 索引打包進 Worker 後的 bundle 大小與啟動 CPU（wrangler 本機，不登入） | `bash spikes/sm_worker_startup.sh 3000` | 見 1.2 |
 | `spikes/sm_schema_events.py` | 從本文抽出 schema、範例、DDL：範例過 schema、壞資料被擋、程式端規則、D1 表在 SQLite 上的去重與彙總；SQLite＋FTS5 當索引的大小 | `python3 spikes/sm_schema_events.py` | 見下 |
 
-`sm_schema_events.py` 結果：（待填）
+`sm_schema_events.py` 結果（2026-10-28 執行）：
+
+| 檢查 | 結果 |
+|---|---|
+| schema 本身合法（Draft 2020-12）、範例通過 | OK |
+| 7 種壞資料：少 `sources`、slug 有空白、`install` 多了 android、`verified` 卻沒有 `verified_at`、引用超過 200 字、`pricing.model` 不在列舉、sha256 格式錯 | 全部擋下 |
+| `format`（uri、date-time） | **沒檢查**：jsonschema 沒裝 rfc3987／rfc3339-validator 時只當註解。正式用 Python 要裝這兩個，Node 用 ajv＋ajv-formats |
+| 程式端規則：拿掉 `/license` 的 evidence、evidence 指到不存在的來源、重播沒通過卻標 verified、treasure 算錯 | 全部抓到 |
+| 範例大小 | indent=2 共 7,743 bytes、301 行；壓縮 5,540 bytes |
+| DDL 在 SQLite 3.45.1 | 建立 OK；同一 `rec_id`＋`slug`＋`stage` 第二次被忽略；沒有 `rec_id` 的 outcome、`need` 不是 JSON 都被 CHECK 擋下；`meta_budget` upsert＋`RETURNING` 回傳累計值；重驗佇列完成後再失敗會重新排入；`slug`＋`type` 查詢走 covering index |
+| `INSERT OR IGNORE` 的陷阱 | 寫入違反 CHECK 的列時不報錯、寫入 0 列 → 改用 `ON CONFLICT … DO NOTHING` |
+| SQLite＋FTS5 當索引 | 3,000 筆 928 KiB、8,198 筆 2,436 KiB；一次 MATCH 0.3–0.5 ms |
+
+`sm_index_bench.mjs` 與 `sm_worker_startup.sh` 的數字（2026-10-28 執行；本機 Node 22.22.0、wrangler 4.153.0）：
+
+| 筆數 | 索引 JSON（gzip） | 每張卡（不含 tags） | JSON.parse | 查詢中位數 | 啟動時才建索引 | Worker bundle | `check startup` 非 idle |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 500 | 166 KiB（33） | 259 B | 1.0 ms | 0.07 ms | 4.9 ms | 173 KiB | 約 19 ms |
+| 3,000 | 972 KiB（183） | 261 B | 5.3–6.0 ms | 0.27 ms | 36–38 ms | 1,017 KiB | 約 12–23 ms |
+| 8,198 | 2,616 KiB（463） | 261 B | 16.5 ms | 0.61 ms | 117 ms | 2,740 KiB | 約 16 ms |
+
+真實的候選卡會有 tags、use_cases、分數等，估每張 1–1.5 KB（約 350 tokens），3,000 筆的索引約 3–5 MB（估算）。
 
 ---
 

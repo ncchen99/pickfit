@@ -7,6 +7,7 @@
              直接看 301 與 Location）；API 被擋時改用 git ls-remote（比對 HEAD）
              與 ecosyste.ms（previous_names）
   packages   PyPI／npm／Homebrew 套件 → repo：宣告的欄位 vs 簽章 provenance
+  short      真實短網址逐跳展開
   recent     PyPI 最新 40 個專案（RSS）→ 有幾個對得到 repo、幾個有 provenance
   all        以上全部
 
@@ -43,16 +44,16 @@ _OPENER = urllib.request.build_opener(_NoRedirect)
 
 
 def http(url, headers=None, method="GET", follow=True):
-    """回傳 (status, headers, body_bytes)。follow=False 時看得到 3xx 本身。"""
+    """回傳 (status, headers（key 小寫）, body_bytes)。follow=False 時看得到 3xx 本身。"""
     h = {"User-Agent": UA}
     h.update(headers or {})
     req = urllib.request.Request(url, headers=h, method=method)
     opener = urllib.request.build_opener() if follow else _OPENER
     try:
         with opener.open(req, timeout=TIMEOUT) as r:
-            return r.status, dict(r.headers), r.read()
+            return r.status, {k.lower(): v for k, v in r.headers.items()}, r.read()
     except urllib.error.HTTPError as e:
-        return e.code, dict(e.headers or {}), e.read() if e.fp else b""
+        return e.code, {k.lower(): v for k, v in (e.headers or {}).items()}, e.read() if e.fp else b""
     except Exception as e:  # 連線錯誤
         return 0, {}, str(e).encode()
 
@@ -206,6 +207,10 @@ def canon(raw, npm_shorthand=False):
                 repo = repo[:-4]
                 rules.append("strip_.git")
             subpath = None
+            frag = urllib.parse.parse_qs(p.fragment).get("subdirectory")
+            if frag:   # pip 風格：...#subdirectory=crates/foo
+                subpath = frag[0]
+                rules.append("pip_subdirectory")
             if len(segs) > 2:
                 rules.append("drop_subpage:" + segs[2])
                 if segs[2] in ("tree", "blob") and len(segs) > 4:
@@ -252,7 +257,7 @@ def expand_short(url, max_hops=5):
         st, hd, _ = http(hops[-1], method="HEAD", follow=False)
         if st in (405, 403, 400) or st == 0:
             st, hd, _ = http(hops[-1], method="GET", follow=False)
-        loc = hd.get("Location") or hd.get("location")
+        loc = hd.get("location")
         if st in (301, 302, 303, 307, 308) and loc:
             hops.append(urllib.parse.urljoin(hops[-1], loc))
             if urllib.parse.urlsplit(hops[-1]).hostname not in SHORTENERS:
@@ -281,6 +286,7 @@ CASES = [
     ("https://simonw.github.io/llm/", "github.com/simonw/llm"),
     ("https://gitlab.com/group/sub/proj/-/tree/main/cli", "gitlab.com/group/sub/proj"),
     ("https://codeberg.org/Forgejo/forgejo.git", "codeberg.org/forgejo/forgejo"),
+    ("https://github.com/charliermarsh/ruff#subdirectory=crates/flake8_to_ruff", "github.com/charliermarsh/ruff"),
     ("https://l.threads.com/?u=https%3A%2F%2Fgithub.com%2Fsimonw%2Fllm&e=AT0", "github.com/simonw/llm"),
     ("https://www.threads.net/@someone/post/C8abcDEF", "threads:C8abcDEF"),
     ("https://news.ycombinator.com/item?id=42000000", "hn:42000000"),
@@ -346,7 +352,7 @@ def resolve_github(owner, repo):
     st, hd, body = gh_api(f"/repos/{owner}/{repo}")
     r = {"input": f"{owner}/{repo}", "api_status": st}
     if st in (301, 302, 307, 308):
-        loc = hd.get("Location") or hd.get("location")
+        loc = hd.get("location")
         r["api_location"] = loc
         st2, _, body = gh_api(loc)
         st = st2
@@ -437,7 +443,8 @@ def pypi_map(name):
             declared, how = canon(urls[lab]), f"project_urls[{lab}]"
             break
     if not declared:  # 退而求其次：任何一個看起來是 repo 的 URL
-        for k, v in list(urls.items()) + [("home_page", info.get("home_page")), ("download_url", info.get("download_url"))]:
+        order = sorted(urls.items(), key=lambda kv: kv[0] != "homepage")  # homepage 優先
+        for k, v in order + [("home_page", info.get("home_page")), ("download_url", info.get("download_url"))]:
             if v and canon(v)["kind"] == "repo":
                 declared, how = canon(v), f"fallback[{k}]"
                 break
@@ -458,7 +465,10 @@ def pypi_map(name):
                     prov = canon("https://gitlab.com/" + pub["repository"])
             except (KeyError, IndexError):
                 pass
-    return _row(f"pypi:{name}", declared, how, prov)
+    row = _row(f"pypi:{name}", declared, how, prov)
+    if declared and declared.get("subpath"):
+        row["subpath"] = declared["subpath"]
+    return row
 
 
 def npm_map(name):
@@ -514,9 +524,11 @@ def _row(pkg, declared, how, prov):
 
 
 PKGS = {
-    "pypi": ["llm", "ruff", "aider-chat", "open-webui", "mlx-lm", "llama-cpp-python", "ollama", "httpie", "vllm", "pip"],
-    "npm": ["vite", "ollama", "@modelcontextprotocol/inspector", "npm-check-updates", "@openai/codex", "@google/gemini-cli", "zx", "tldr"],
-    "brew": ["ripgrep", "llama.cpp", "ollama", "fzf", "gh", "lazygit", "aider", "whisper-cpp"],
+    "pypi": ["llm", "ruff", "aider-chat", "open-webui", "mlx-lm", "llama-cpp-python", "ollama", "httpie", "vllm", "pip",
+             "flake8-to-ruff"],  # 最後一個：宣告的是改名前的 repo＋#subdirectory
+    "npm": ["vite", "ollama", "@modelcontextprotocol/inspector", "npm-check-updates", "@openai/codex", "@google/gemini-cli", "zx", "tldr",
+            "whisper.cpp"],  # 宣告的是轉移前的 ggerganov/whisper.cpp
+    "brew": ["ripgrep", "llama.cpp", "ollama", "fzf", "gh", "lazygit", "aider", "whisper.cpp"],
 }
 
 
@@ -540,6 +552,8 @@ def packages_cmd():
         g = resolve_github(o, n)
         if g.get("renamed"):
             print(f"{r['pkg']}: {k} → 現名 {g.get('full_name')}（{g['method']}）")
+        elif g["method"] == "fallback" and not g.get("ecosystems"):
+            print(f"{r['pkg']}: {k} → 無法判定（ecosyste.ms 查無此名；git HEAD={str(g.get('git_head'))[:10]}）。需要 GitHub API 的 301 才能拿到現名")
     return rows
 
 
@@ -560,13 +574,33 @@ def recent_cmd():
     prov = sum(1 for r in rows if r.get("provenance"))
     agree = sum(1 for r in rows if r.get("agree"))
     fixed = sum(1 for r in rows if r.get("rules"))
-    print(f"PyPI RSS（ETag {hd.get('ETag')}）：{n} 個新專案")
+    prov_only = sum(1 for r in rows if r.get("provenance") and not r.get("declared"))
+    disagree = [r for r in rows if r.get("agree") is False]
+    keys = [r.get("declared") or r.get("provenance") for r in rows]
+    uniq = {k for k in keys if k}
+    multi = {k: keys.count(k) for k in uniq if keys.count(k) > 1}
+    print(f"PyPI RSS（etag {hd.get('etag')}）：{n} 個新專案")
     print(f"  宣告了 repo：{has_repo}（GitHub {gh}）")
-    print(f"  有 Trusted Publishing provenance：{prov}；provenance 與宣告一致：{agree}")
+    print(f"  有 Trusted Publishing provenance：{prov}；與宣告一致 {agree}；只有 provenance、沒宣告 {prov_only}；不一致 {len(disagree)}")
+    print(f"  宣告或 provenance 任一對得到 repo：{sum(1 for k in keys if k)}／{n}；去重後 {len(uniq)} 個 repo；一個 repo 多個套件：{multi}")
     print(f"  宣告的 URL 需要正規化規則的：{fixed}")
+    for r in disagree:
+        print("  不一致：", json.dumps(r, ensure_ascii=False))
     for r in rows[:8]:
         print("  ", json.dumps(r, ensure_ascii=False))
     return rows
+
+
+SHORT_SAMPLES = [  # 從 HN Algolia 撈到的真實短網址（2026-10-28）
+    "https://t.co/GST3iLv3Zn", "http://lnkd.in/P9b4kD", "http://tinyurl.com/snakesonahyperplane",
+    "https://git.io/JvoOi", "https://buff.ly/2iHXJNm"]
+
+
+def short_cmd():
+    print("== 短網址展開（手動逐跳，不自動 follow） ==")
+    for u in SHORT_SAMPLES:
+        hops = expand_short(canon(u)["url"])
+        print(f"{' → '.join(hops)}  =>  {canon(hops[-1])['key']}")
 
 
 if __name__ == "__main__":
@@ -579,6 +613,9 @@ if __name__ == "__main__":
         print()
     if cmd in ("packages", "all"):
         packages_cmd()
+        print()
+    if cmd in ("short", "all"):
+        short_cmd()
         print()
     if cmd in ("recent", "all"):
         recent_cmd()

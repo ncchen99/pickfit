@@ -39,7 +39,8 @@ def fetch(url, timeout=40):
 def repo_of(text):
     for o, n in GH.findall(text or ""):
         if o.lower() not in GH_SKIP:
-            return f"{o}/{re.sub(r'(\.git)$', '', n)}"
+            name = re.sub(r"\.git$", "", n)  # 不在 f-string 裡放反斜線，Python 3.11 也能跑
+            return f"{o}/{name}"
     return None
 
 

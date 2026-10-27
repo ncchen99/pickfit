@@ -50,14 +50,18 @@ def strip(s):
 
 
 def devto(since, body_sample):
-    arts, page = [], 1
-    while True:
+    # 列表不是嚴格按發布時間排序（2026-10-27 實測第 1 頁有 462 處倒序，第 2、3 頁仍各有 86 篇落在 7 天內），
+    # 所以不能看最後一筆的時間就停；改成翻到某一頁完全沒有新的 7 天內文章為止（最多 10 頁）。
+    arts, seen, page = [], set(), 1
+    while page <= 10:
         batch = get_json(f"https://dev.to/api/articles?tag=showdev&per_page=1000&page={page}")
         if not batch:
             break
-        arts += [a for a in batch if iso(a["published_at"]) >= since]
-        if iso(batch[-1]["published_at"]) < since:
+        new = [a for a in batch if iso(a["published_at"]) >= since and a["id"] not in seen]
+        if not new:
             break
+        seen.update(a["id"] for a in new)
+        arts += new
         page += 1
         time.sleep(1)
     tags = lambda a: set(a.get("tag_list") or [])
