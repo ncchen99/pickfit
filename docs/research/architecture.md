@@ -560,11 +560,127 @@ flowchart TB
 
 ## H. 每天的實作計畫
 
-（進行中）
+### H.1 工時假設
+
+- 10/28 白天已用掉一部分，只排 8 h。10/29–11/3 每天排 10.5 h（10/30 排 11.5 h）。11/4 排 6 h。
+- 台北 11/4 22:00（美東 11/4 09:00）交件，到截止（台北 11/5 10:00）留 12 小時給意外。美國 11/1 結束夏令時間，之後台北與美東差 13 小時。
+
+| 日期 | 容量 | 排入 A | 排入 B | 緩衝 |
+|---|---:|---:|---:|---:|
+| 10/28（三） | 8 | 8 | 0 | 0 |
+| 10/29（四） | 10.5 | 8.5 | 2 | 0 |
+| 10/30（五） | 11.5 | 9.5 | 1.5 | 0.5 |
+| 10/31（六） | 10.5 | 10.5 | 0 | 0 |
+| 11/1（日） | 10.5 | 10.5 | 0 | 0 |
+| 11/2（一） | 10.5 | 6.5 | 4 | 0 |
+| 11/3（二） | 10.5 | 9.5 | 0 | 1 |
+| 11/4（三） | 6 | 1.5 | 0 | 4.5 |
+| **合計** | **78** | **64.5** | **7.5** | **6** |
+
+誠實的判斷：A 層佔容量 83%，能吸收約 20% 的超支；評審認為一個人的估計常偏樂觀 1.5 倍，照這個折扣連 A 層都要約 97 h。所以**每天的檢查點與 H.5 的砍除順序是計畫本身**，不是備案。
+
+### H.2 每天的工作與完成標準
+
+「完成標準」是當天晚上可以 demo 的東西。
+
+| 日期 | 工作（人時） | 晚上背景執行 | 完成標準 | 檢查點：沒達到就… |
+|---|---|---|---|---|
+| **10/28（三）** 8 h | **帳號**：Meta 優先（註冊 → 綁卡 → 建 key → 抄 Team ID → 填 credits 表單 → 設 Spend Limit 通知），再申請 Baseten、Modal、Cloudflare、GitHub PAT、E2B；跑 5 支 spike 1.5 · 骨架＋pydantic schema 2 · hello MCP 部署＋Claude Code 實連 0.5 · **評測 20 題寫好並 commit** 2 · `call_meta` v0（單價、記帳、trace、硬上限）2 | — | 一次真的 `muse-spark-1.3` 呼叫留下 trace 與花費；`eval/questions.yaml` 已 commit；Claude Code 看得到遠端 hello 工具；帳號狀態（含 Baseten model ID、RPM）貼回筆記 | Meta API 今晚不能用 → 10/29 起走 Baseten 全路徑（I #1） |
+| **10/29（四）** 10.5 h | `call_meta` 收尾 0.5 · GitHub search＋補資料 4 · 正規化、repo ID、候選庫 2.5 · 規則前置 1 · **開放權重初篩（B）** 2 · 抽取 prompt 對 5 筆跑通 0.5 | 全量發現 → 規則 → 初篩 | `pickfit discover` 產生 ≥150 筆候選；漏斗每一格標模型與花費；Spark Open 與 1.3 的一致率有第一個數字；5 份抽取檔過 schema | 用第一批 `usage` 換掉成本假設；推理 token 超過估算 2 倍就降 effort。Baseten 沒核准 → 公開 ID 自付；再不行先只用規則 |
+| **10/30（五）** 11.5 h | 抽取完成（引用比對、事實欄位、重試、批次）3.5 · **驗證 agent**（安裝方式排序、規則表、Responses 迴圈、停止條件、`finish`），先在本機 Docker 跑已知工具 6 · **Show HN（B，最後做）** 1.5 | 批次抽取 | `evnx` 這類「照 README 會失敗」的工具，由 Muse Spark 自己讀錯誤、補步驟、呼叫 `finish`，trace 看得到推理摘要；≥30 份 profile 已 commit；挑好 10 筆 demo 候選（能在 Mac 裝、免費、能離線） | actor 修不好 → 10/31 上午繼續修，細路徑 MCP 延到 11/1；用規則表兜底，只做到「安裝驗證」。落後 → 不做 Show HN |
+| **10/31（六）** 10.5 h | ModalBox（gVisor、上限、網路政策、image、`--limits-test`）3.5 · judge＋截圖 1.5 · 重播並寫回 `install`、`verification` 1 · `build_index`＋`pickfit publish` 2.5 · D1 建表 1 · 細路徑 MCP：`find_software`、`get_install_guide` 讀真索引 1 | Modal 批次驗證：先 10 筆 demo 候選，再 30 筆 | 同一筆工具在 Modal 跑完 actor → judge（證據框）→ 重播；Claude Code 問「Mac 上、免費、能離線的 X」，回 2–3 筆真資料 | **硬關卡**：10 筆 demo 候選 ≥5 筆在 Modal 通過並重播成功。沒過 → 停掉所有 B、C，11/1 上午只修驗證；Modal 不能用 → 換 E2B（約 2 h） |
+| **11/1（日）** 10.5 h | MCP 補完：`find_alternatives`、`report_outcome`、`submit_software`、Host／Origin 檢查、Worker 每日上限與 `degraded`、`how_we_know`／`evidence_url`／`matched_by` 6 · 計分：規則分項＋文件 rubric＋寶藏 2.5 · `pickfit watch` 2 | 批次驗證第二輪＋計分 | ≥30 筆 verified（目標 50），每筆有分開的品質、知名度、寶藏分數；在 Claude Code 用 `submit_software` 貼一個第三方 repo，約 10 分鐘內出現在 `find_software` 結果；demo 主案＋2 個備案定案 | 不到 30 筆 → 停止加管道，只補 demo 類別的候選 |
+| **11/2（一）** 10.5 h | 回報 → 重驗 → git diff（B）1.5 · run page（B）2 · 評測 20 題 × 2 組（背景跑）＋評分 3.5 · 第三組 rules-only（B）0.5 · demo 3 筆的 Mac 驗證 1 · Meta 用量報表 1 · 抽查批次結果 1 · 到 Discord 問開放權重獎怎麼標、Community Vote 看哪個頁面 | 修 bug 後重驗失敗的筆 | 評測結果表（含輸的題）與系統數字；一次「回報失敗 → 重驗 → 新 commit」的 git diff；3 份 run page；Mac 驗證有存證。**當晚功能凍結** | ≥2 題「好答案在資料裡卻沒被推薦」→ 只調候選卡或加 BM25，不加新功能 |
+| **11/3（二）** 10.5 h | README（Meta 模型分工與用量、Built with Muse Spark Open、Why this is not RAG、評測、賽前／賽中、授權）3 · 彩排 2 次 1.5 · **錄影**（錄影前最後一次 publish，資料凍結）2.5 · 剪輯 v1 2.5 · 緩衝 1 | — | 3 分鐘影片 v1 上傳（先不公開）；README 完成；用乾淨的 Claude Code 照 README 接得上 | 影片沒完成 → 11/4 上午補；這天是主辦方回答問題的最後一天 |
+| **11/4（三）** 6 h | 規則第 11 節檢查表、金鑰掃描、授權 NOTICE · repo 轉 public 並登出確認 · 提交（Indie Developer）· X 貼文並附在提交頁：共 1.5 · 緩衝 4.5 | — | **台北 11/4 22:00 前送出** | 有問題就用 11/5 00:00–10:00 補救，不再加功能 |
+
+和 brief 第 12 節的差別：驗證 agent 提前到 10/30（本機）與 10/31（Modal），因為它是最大的風險也是 demo 核心；MCP 拆成 10/28 hello、10/31 細路徑、11/1 補完；開放權重初篩從 11/1 提前到 10/29（它是漏斗第一層，晚做要重跑）；demo 故事 11/1 定案。
+
+### H.3 凍結與錄影的時間點
+
+| 時間 | 事件 | 為什麼 |
+|---|---|---|
+| 10/28 晚上 | **凍結評測題組** | brief 第 10 節：題目要在寫資料前凍結；比賽期間新寫，不搬賽前草稿 |
+| 10/31 晚上 | 驗證硬關卡 | 不過就停掉所有 B、C |
+| 11/1 晚上 | demo 故事定案 | 給 Mac 驗證和彩排留時間 |
+| 11/2 晚上 | **功能凍結** | 之後只修 bug、寫 README、錄影 |
+| 11/3 錄影前 | **資料凍結**（最後一次 publish） | 影片和 README 的數字要一致 |
+| 11/4 22:00（台北） | 交件 | 離截止 12 小時 |
+
+### H.4 影片：即時／回放規則與 3 分鐘分鏡
+
+規則：
+- 預跑的畫面標「trace 回放」，即時的畫面標「即時，加速 ×N」。不改任何 trace、時間或 commit（規則第 9 節）。
+- 即時提交那一幕：挑一個**還沒處理過**、第三方、能在 Linux 沙盒驗證的 repo。不能是念誠自己的作品，影片裡是「使用者」提交別人的作品，不扮演作者（brief 第 9 節）。
+- 可以先 dry run 同一筆確認會過；正式錄影前用一個新 commit 把它從 `data/` 移除（不改寫歷史）。dry run 和錄壞的 trace 都保留。錄 2–3 次挑一次。
+
+| 時間 | 畫面 | 即時／預跑 | Meta 模型露出 |
+|---|---|---|---|
+| 0:00–0:10 | 一句話說明賽前有什麼、這週做了什麼（官方要求） | — | — |
+| 0:10–0:25 | 問題：好軟體找不到，agent 也不認識今年的專案 | — | — |
+| 0:25–0:45 | 對照組：同一個 agent 不接 pickfit | 即時錄影（取自評測那次） | — |
+| 0:45–1:25 | 接上 pickfit：`find_software` → 今年的寶藏＋理由＋最好的免費選項＋`how_we_know` → `get_install_guide` → 在 Mac 上裝好，第一次執行就成功 → `report_outcome` | **即時**（安裝可加速） | `matched_by: muse-spark-1.3` |
+| 1:25–1:55 | 「怎麼知道裝得起來」：點 `evidence_url` → run page：照 README 失敗 → 讀錯誤 → 自己修 → judge 證據框 → 重播通過 | trace 回放 | actor、judge 的模型徽章與推理摘要 |
+| 1:55–2:30 | 供給端：使用者用 `submit_software` 提交第三方 repo → Spark Open 初篩 → 抽取 → 驗證 → 收錄 → 再問一次，找得到了 | **即時**（加速＋計時器）；失敗就播上一輪真實 trace，標回放 | 每一步的模型 |
+| 2:30–2:45 | 自我修正：回報失敗 → 驗證 agent 重跑 → git diff 多一個步驟 | 預跑或即時 | `muse-spark-1.3` |
+| 2:45–3:00 | 數字：漏斗、驗證通過率、評測結果、各模型的呼叫數與花費（由 trace 產生） | — | 全部 |
+
+### H.5 時間不夠時依序砍什麼
+
+任何一天結束時落後超過 2 小時，就往下砍一項。
+
+| 順序 | 砍什麼 | 砍掉後的替代 | 省下 |
+|---:|---|---|---:|
+| 1 | 所有 C 項（含 Homebrew tap） | — | — |
+| 2 | Show HN（B） | 只用 GitHub search＋提交 | 1.5 h |
+| 3 | run page（B） | `evidence_url` 指向 repo 裡公開的 trace JSON；影片改用終端機錄影 | 2 h |
+| 4 | 評測第三組 rules-only（B） | README 不寫 Muse Spark 在配對上的貢獻數字 | 0.5 h |
+| 5 | 回報 → 重驗 → git diff（B） | README 說明設計，影片不演 | 1.5 h |
+| 6 | 開放權重初篩（B） | 規則＋抽取輸出的 `kind` 當閘門；失去 Best Open Weight 資格 | 2 h |
+| 7 | 驗證批次規模：50 降到 20 | demo 類別優先 | 背景時間 |
+| 8 | judge 的截圖 | 只看文字 log，README 照實寫 | 1 h |
+| 9 | 文件 rubric | 改用規則近似 | 1 h |
+| 10 | `find_alternatives` 的獨立邏輯 | 共用 `find_software` | 1 h |
+| 11 | 評測的安裝實跑 | 只實跑 ≤10 題，其餘標「未實跑」 | 1.5 h |
+
+**不砍**：驗證 agent＋judge＋重播；`find_software`、`get_install_guide`、`report_outcome`、`submit_software`；凍結的評測題組與結果（含輸的題）；影片；README 的賽前／賽中說明；金鑰與花費硬上限。
+
+### H.6 花費與上限（估算）
+
+規模：300–600 筆候選 → 初篩 200–400 筆 → 抽取 100–150 筆 → 驗證 75–150 次 → 通過 50–100 筆。推理 token 沒實測，是最大的誤差來源。
+
+| 項目 | 估計 | 付款方 | 上限 |
+|---|---:|---|---|
+| Meta（抽取、驗證、重驗、rubric、配對、開發重跑） | $25–88 | $150 credits | 管線每日 $25、總額 $100 硬停；Worker 每日 $3、評審期總額 $40 |
+| Baseten（初篩） | $2–5 | Baseten credits | 月預算 $20，開 enforce |
+| Modal（沙盒） | $4–9（最壞 $38） | Modal credits | `timeout=1200`、並行 ≤5；workspace 上限約 $80 |
+| Cloudflare（Workers Paid＋D1） | $0–5 | 自付 | — |
+| **credits 都到位時自付** | **$0–5** | | |
+
+Meta 的 Spend Limit 只寄信、不停止扣款，所以上限全部由程式執行；Baseten 的 enforce 會真的拒絕請求。
 
 ## I. 風險
 
-（進行中）
+| # | 風險 | 機率 | 影響 | 早期訊號 | 退路 |
+|---|---|---|---|---|---|
+| 1 | 台灣帳號開不了 Meta Model API 或綁卡失敗（**未驗證**） | 中 | 極高：第一輪 pass/fail | 10/28 註冊或綁卡被拒 | 全部改走 Spark Open @ Baseten：抽取用 Chat＋pydantic 重試；actor 改 Chat Completions、每輪重送完整歷史（Baseten 的 `/responses` 是無狀態的）；並行降到 2–6；多 3–4 h |
+| 2 | Meta $150 credits 晚到，或效期矛盾（條款寫不過期、活動頁寫 10 天） | 中 | 中 | claim 後 2 個工作天沒入帳 | 先刷卡（10/28–10/30 估 <$10）；總額硬停 |
+| 3 | Baseten credits 沒核准、`-1026` 不存在、只有 15 RPM | 中 | 低–中：只影響開放權重獎 | 10/29 `/v1/models` 查不到 | 公開 ID 自付（<$5）；15 RPM 時 300 筆約 20 分鐘；最後退回 H.5 #6 |
+| 4 | Modal credits 沒發，或網路政策（網域 allowlist Beta、執行中改政策 Alpha）不穩 | 中 | 中 | 10/31 `--limits-test` 失敗 | Starter 每月含 $30；安裝與執行拆成兩個沙盒（未實測）；換 E2B（約 2 h） |
+| 5 | 驗證 agent 成功率太低 | 中高 | 高：demo 沒料 | 10/30 本機修不好 `evnx` 這類問題；10/31 的 10 筆 <5 筆通過 | 程式先排安裝方式＋規則表；優先挑有 release 二進位或能用 pipx／uv 裝的；接受「安裝驗證」等級；10/31 硬關卡 |
+| 6 | 沙盒都是 Linux，demo 在 Mac | 高 | 中 | 沒有 Apple silicon Mac；照指南在 Mac 失敗 | 在自己的 Mac 開新使用者帳號人工跑（`method: human`）；沒有 Mac → demo 改在 Linux 終端機；Actions macOS 只跑 3 筆並在 README 說明（條款灰色） |
+| 7 | 雲端 session 的 GitHub API 被擋 | 已發生 | 中 | `/search/repositories` 回 403 | 發現管線在念誠本機用自己的 PAT 跑；雲端 session 只寫程式與文件 |
+| 8 | 被看成「基本 RAG」 | 中 | 高 | 彩排時觀眾只記得「查資料庫再回答」 | 影片 1:25 前就秀驗證 trace；run page；回報 → 重驗 → git diff；README 放「Why this is not RAG」（F.2）；沒有向量庫；不用 knowledge base、retrieval 這類詞 |
+| 9 | 工時超支 | 高 | 高 | 任何一天落後 >2 h；10/31 關卡沒過 | H.5；11/2 功能凍結；11/4 22:00 交件，留 12 h |
+| 10 | prompt injection（README、工具輸出、使用者需求） | 中 | 高 | 引用比對失敗率異常；actor 想讀沙盒外的檔案或要金鑰 | 讀進來的內容包在 `<source>` 裡；沙盒零金鑰；judge 不能推翻規則檢查；只回重播過的步驟；`get_install_guide` 不自動執行，由使用者的 agent 經同意才執行 |
+| 11 | 陌生程式在沙盒裡挖礦或作怪，Modal 帳號被停 | 低中 | 中：驗證停，MCP 照常 | Modal 用量異常 | CPU、時間上限；每筆全新沙盒；gVisor；MCP 在 Cloudflare |
+| 12 | `find_*` 太慢，碰到 Codex 預設 60 秒工具逾時 | 中 | 中 | 10/31 量到 >20 秒 | 一次呼叫、`effort: low`、≤60 張卡；逾時退回規則排序 |
+| 13 | Workers Free 冷啟動超過 10 ms CPU；Rate Limiting binding 不能用（**未驗證**） | 低中 | 低 | 部署後看 Invocation Statuses | 開 Paid（每月 $5） |
+| 14 | 評審期預算被刷完，或筆電關機讓提交卡住 | 中 | 中 | `meta_budget` 每天接近上限；`submissions` 堆積 | Worker 每日上限＋評審期總額＋限流；README 寫明評審期提交是每日批次處理；有空做 C 的 Modal `spawn()` |
+| 15 | 推理 token 比估算多 2–3 倍 | 中 | 中 | 10/29 第一批的 `usage` | 降 effort；總額硬停；公開 README 的抽取改用 `-contributor` |
+| 16 | 評測輸了，或題目被說偏 | 中 | 中 | 11/2 結果 | 10/28 先凍結題目；輸的題照實寫進 README |
+| 17 | 錄影時即時提交失敗 | 中 | 高 | 彩排失敗 | 錄 2–3 次；最後播真實 trace，標回放 |
+| 18 | 第三方套件與資料授權沒查（`openai`、`httpx`、`pydantic`、`modal`；ecosyste.ms、Homebrew analytics） | 低 | 中 | — | 加入前查，記在 README 或 `NOTICE`；ecosyste.ms 取得同意前不用 |
 
 ## J. 建議修改 brief
 
