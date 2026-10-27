@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """調研 spike：Hugging Face Spaces、Codeberg、GitLab.com 最近 7/14 天的新作品量與抽樣。
 
-只用 Python 標準函式庫，不需要金鑰（HF_TOKEN 若有設就帶上，可提高 HF rate limit）。
+只用 Python 標準函式庫，不需要金鑰（HF_TOKEN、GITLAB_TOKEN 若有設就帶上，可提高 rate limit）。
+GitLab 遇到 429 會依 Retry-After 最多等 120 秒再試一次，所以全跑約 2–5 分鐘。
 請求量刻意壓低（HF API 約 12 次＋讀約 70 份 README、Codeberg 6 次、GitLab 5 次），不是爬蟲。
 
     python3 spikes/ch_hosting_hf_forges.py            # 全部
@@ -34,6 +35,8 @@ def get(url, headers=None):
             return r.status, dict(r.headers), r.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as e:
         return e.code, dict(e.headers), e.read().decode("utf-8", "replace")
+    except (urllib.error.URLError, TimeoutError, ConnectionError) as e:  # 代理斷線、逾時：回 0，讓呼叫端印出來而不是整支中斷
+        return 0, {}, f"{type(e).__name__}: {e}"
 
 
 def window(items, key):
@@ -149,14 +152,18 @@ GL_TOPICS = ["cli", "command-line", "llm", "ollama"]
 
 
 def gitlab():
-    print("\n## GitLab.com（/api/v4/projects?topic=…&order_by=created_at，未登入，取第 1 頁 100 筆）")
+    # 2026-10-19 起 GitLab.com 未登入每 IP 只有 60 次/小時（共用出口 IP 很快就 429）。
+    # 可選：export GITLAB_TOKEN=...（gitlab.com/-/user_settings/personal_access_tokens，read_api 即可）
+    tok = os.environ.get("GITLAB_TOKEN")
+    hdr = {"PRIVATE-TOKEN": tok} if tok else {}
+    print(f"\n## GitLab.com（/api/v4/projects?topic=…&order_by=created_at，{'已登入' if tok else '未登入'}，取第 1 頁 100 筆）")
     print("| topic | 7 天 | 14 天 | 7 天內 stars≥1 |\n|---|---|---|---|")
     for t in GL_TOPICS:
         url = f"https://gitlab.com/api/v4/projects?topic={t}&visibility=public&order_by=created_at&sort=desc&per_page=100&simple=true"
-        st, hd, body = get(url)
+        st, hd, body = get(url, hdr)
         if st == 429:  # 依 Retry-After 等一次再試
             time.sleep(min(int(hd.get("Retry-After") or hd.get("retry-after") or 60), 120))
-            st, hd, body = get(url)
+            st, hd, body = get(url, hdr)
         if st != 200:
             print(f"| {t} | HTTP {st}（{body[:60]}） | | |")
         else:
@@ -165,8 +172,10 @@ def gitlab():
             s1 = sum(1 for x in items if x["created_at"] >= D7 and x.get("star_count", 0) >= 1)
             print(f"| {t} | {n7} | {n14} | {s1} |")
         time.sleep(5)  # 未登入的 /projects 有 400 次/10 分鐘/IP 的限制，共用出口 IP 時很容易 429
-    st, _, body = get("https://gitlab.com/api/v4/projects?visibility=public&order_by=created_at&sort=desc&per_page=100&simple=true")
-    if st == 200:
+    st, hd, body = get("https://gitlab.com/api/v4/projects?visibility=public&order_by=created_at&sort=desc&per_page=100&simple=true", hdr)
+    if st != 200:
+        print(f"\n全站最新 100 個 public project：HTTP {st}（ratelimit-name={hd.get('ratelimit-name') or hd.get('RateLimit-Name')}，retry-after={hd.get('retry-after') or hd.get('Retry-After')}）")
+    else:
         items = json.loads(body)
         t0 = datetime.fromisoformat(items[0]["created_at"].replace("Z", "+00:00"))
         t1 = datetime.fromisoformat(items[-1]["created_at"].replace("Z", "+00:00"))
