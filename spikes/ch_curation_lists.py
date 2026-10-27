@@ -15,7 +15,7 @@ import argparse, csv, datetime as dt, email.utils, io, json, os, re, shutil, sub
 import urllib.request, xml.etree.ElementTree as ET
 
 CACHE = os.environ.get("PICKFIT_CACHE", os.path.expanduser("~/.cache/pickfit-spikes"))
-UA = "pickfit-spike/0.1 (hackathon research; contact via github.com/ncchen99)"
+UA = "pickfit-spike/0.1 (hackathon research)"
 
 # (repo, 清單檔路徑；以 / 結尾代表「一個檔案一筆」的資料夾, 類別)
 LISTS = [
@@ -229,7 +229,8 @@ def cmd_feeds(args):
         try:
             items = feed_items(fetch(url))
         except Exception as e:  # noqa: BLE001  實測腳本：把錯誤印出來就好
-            print(f"| {name} | 錯誤：{type(e).__name__} {getattr(e, 'code', '')} | | | | | |"); continue
+            why = "不是 RSS／Atom（回 HTML）" if isinstance(e, ET.ParseError) else f"{type(e).__name__} {getattr(e, 'code', '')}"
+            print(f"| {name} | 錯誤：{why} | | | | | |"); continue
         dated = [i for i in items if i["date"]]
         latest = max((i["date"] for i in dated), default=None)
         recent = [i for i in dated if i["date"] >= since]

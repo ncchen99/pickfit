@@ -27,7 +27,32 @@
 
 ## A. 軟體從哪裡來：管道盤點
 
-（進行中）
+完整盤點（6 組、約 50 個管道）與要避開的清單：[channels.md](channels.md)。原始筆記在 [notes/](notes/)。**狀態**：社群、區域、Meta 平台已查核；託管、套件查核中；策展資料集、整合工程調研中。
+
+### A.1 黑客松期間接的 5 條
+
+| # | 管道 | 理由 | 工時 |
+|---|---|---|---|
+| 1 | GitHub search API（＋ repo、release、README） | 兩個類別的新作品主要在這；可直接篩「今年建立、最近有 push、星數 5–300」 | 6–9 h |
+| 2 | Homebrew 第三方 tap（官方 analytics）＋ homebrew-core | 唯一同時有「真實安裝數」和「默默無聞」的訊號：30 天安裝 10–1000 次的新 tap formula 有 437 個，抽樣星數中位數 1；直接對上 Mac demo | 3–4 h |
+| 3 | Hacker News Show HN（官方 API） | 作者本人發表、別人能試用；兩類別且連 GitHub 約 75 篇／週；86% ≤3 分 | 2–4 h |
+| 4 | PyPI 新專案（`console_scripts` 篩 CLI） | 本地 AI 工具主要在這 | 3–4 h |
+| 5 | 提交入口（MCP 工具＋GitHub Issue Form） | 供給端；只收 GitHub 連結，Threads 連結只嵌入 | 2–3 h |
+
+補資料：ecosyste.ms、deps.dev、OpenSSF Scorecard。時間夠再加：V2EX、Qiita、阮一峰周刊（共 3.5–5 h）。
+
+### A.2 Meta 平台（Threads、Facebook）實際開放到什麼程度
+
+- **不能拿來主動發現**：Threads keyword search、IG hashtag、FB 粉專都要 App Review，允許用途也不是建軟體目錄；未審核時 keyword search 只搜得到自己的貼文（[文件](https://developers.facebook.com/documentation/threads/keyword-search)）。
+- **oEmbed 免 token，但只能嵌入**：回傳 html 沒有貼文文字，條款禁止抽取與保存。
+- **「作者用 Threads 登入、讀貼文交給模型」也不行**：`threads_basic` 的允許用途只限把貼文顯示給作者本人。
+- Facebook Groups API 已在 2024-04-22 移除；Meta Content Library 只給研究機構。
+- **能做的**：提交表單收 GitHub 連結，Threads 連結用 oEmbed 嵌入原貼文；Threads 分享按鈕；用自家帳號發「今日寶藏」。這讓 brief 第 5 節 demo 第 5 幕要改寫（見 J 節）。
+
+### A.3 重要限制
+
+- 這個雲端 session 的 GitHub API 只開放本 repo，GitHub search 的實際筆數沒量到；發現管線要在念誠本機或 Modal 用自己的 PAT 跑。
+- GitHub 公開事件流（GH Archive）2025-10 起每小時 0 筆新 repo 事件（查核中），不能靠它找新 repo。
 
 ## B. 怎麼判斷「可用的軟體」與「品質好」
 
