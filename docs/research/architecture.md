@@ -684,8 +684,50 @@ Meta 的 Spend Limit 只寄信、不停止扣款，所以上限全部由程式�
 
 ## J. 建議修改 brief
 
-（進行中）
+本次沒有修改 brief。以下給念誠決定。
+
+| brief 章節 | 現在寫的 | 建議 | 理由 |
+|---|---|---|---|
+| 4.1 提交入口 | 任何人貼一個 GitHub 或 Threads 連結 | 收 GitHub repo 連結；可附 Threads／X 貼文連結，但只用 oEmbed 嵌入、不讀內容；只有 Threads 連結時請補 repo | oEmbed 回傳沒有貼文文字，條款禁止抽取；`threads_basic` 的允許用途不符（A.2） |
+| 4.1 來源 | GitHub、Show HN、Homebrew 與 winget、Threads／Facebook 上的分享 | 黑客松：GitHub search、Show HN、提交；Homebrew tap 超前才做；PyPI、awesome 清單、區域社群之後；winget 不接；Threads／Facebook 不能主動發現 | A.1、[channels.md](channels.md) §0 |
+| 4.4 工具 | 4 個工具 | 5 個：加 `submit_software`（同一個 URL 冪等，重送就是查進度）；推薦一律帶 `how_we_know`、`evidence_url`、`matched_by`、`rec_id` | 第 5 幕可以全程在 agent 裡做；評審點得到證據（E.3） |
+| 4.5 展示頁 | 可選；用於 demo、社群投票 | 拆成 run page（驗證過程，計畫內）與公開寶藏列表（可選）；Community Vote 的「公開展示頁」先到 Discord 確認是不是主辦方的提交頁 | 規則第 5 節沒寫清楚是哪個頁面 |
+| 5 第 4 幕 | agent 照驗證過的步驟幫使用者裝好 | 註明沙盒驗證在 Linux；demo 那 3 筆另外在 Mac 上人工驗證，標 `method: human` | 雲端沙盒都是 Linux（C.1） |
+| 5 第 5 幕 | 作者在 Threads 分享，貼上連結後幾分鐘被推薦 | 使用者在自己的 agent 用 `submit_software` 提交一個第三方 GitHub repo（不扮作者、不用自己的作品）；畫面標「即時，加速 ×N」 | brief 第 9 節；Threads 內容讀不到 |
+| 6 Meta 模型表 | 讀懂與抽取、驗證判讀、大量初篩、配對、（選用）影音 | 改成 6 列：初篩（Spark Open @ Baseten）、抽取、驗證 agent（Responses＋function tools）、畫面判讀（另一次呼叫）、計分（文件 rubric）、配對；影音不做 | 讓評審看出 agent 與判讀是分開的（D.3） |
+| 6 大量初篩 | Muse Spark Open 或 Muse Glimmer（透過 Baseten 或 Modal） | 只寫 Muse Spark Open @ Baseten；Glimmer 不用；README 標「Built with Muse Spark Open」 | 合作夥伴都沒有按 token 計費的 Glimmer；授權要求標示（D.2） |
+| 8 資料來源 | Homebrew、winget-pkgs、Flathub：可以，有安裝數 | winget 沒有公開安裝數；Homebrew analytics 資料授權沒寫明、含 CI 安裝，只當弱訊號、不轉發原始資料；Flathub 未查 | [notes/channels-packages.md](notes/channels-packages.md) |
+| 8 GitHub API | 可以；注意 rate limit | 補一句：GitHub AUP §7 對 API 取得的資料也限制用途；只存自己抽出的事實＋連結，不轉貼 README 全文、不存個資 | [notes/channels-hosting.md](notes/channels-hosting.md) |
+| 8 Hacker News | 用官方 API | 用 Algolia `search_by_date` 或 Firebase `newstories`，不要只用 `showstories`（只是排序過的子集） | [notes/channels-communities.md](notes/channels-communities.md) |
+| 8 Reddit | 條款禁止爬取、建立競爭資料庫或商用 | 理由改成：任何 API 存取都要先申請核准、商用要另簽約、禁止拿去訓練 | 「競爭資料庫」不是條款原文 |
+| 8 awesome 清單 | CC0 的 awesome 清單可以 | 補：沒有授權的清單只取連結當內部訊號、不轉載描述、不公開重建清單 | [notes/channels-curation.md](notes/channels-curation.md) |
+| 8（新增） | — | ecosyste.ms：條款 §9 禁止未經書面同意的腳本擷取，取得同意前不用；PyPI 不用 XML-RPC 做新整合 | [notes/channels-packages.md](notes/channels-packages.md)、[notes/channels-integration.md](notes/channels-integration.md) |
+| 10 評測 | 對照組 vs 實驗組 | 寫明受測 agent（Claude Code 無頭模式，兩組同版本、同提示）；安裝正確性用重播執行器實跑；加第三組「關掉模型、只用規則排序」 | 結果可重現，並量出 Muse Spark 的貢獻 |
+| 11 資料 | 每款一份 YAML（或 JSON）；欄位清單 | 定為 JSON、schema `software.v1`；加 `repo_id`、`aliases`、`first_seen_at`；`verification` 分級（安裝、功能、服務、推論、未驗證＋原因）；候選放 SQLite，只有收錄的寫進 git | F.1、C.3、A.4 |
+| 11 管線 | Python 腳本或 worker；沙盒可考慮 Modal | 本機 Python 批次管線；沙盒用 Modal（明確設 `runtime="gvisor"`）；MCP 用 TS SDK v2 `createMcpHandler`（不用已 deprecated 的 `McpAgent`） | C、E |
+| 12 時程 | 10/30 MCP、10/31 驗證、11/1 提交與初篩 | 照 H.2：10/28 hello MCP；10/29 開放權重初篩；10/30 抽取＋驗證 agent（本機）；10/31 Modal 驗證＋細路徑 MCP；11/1 MCP 補完＋計分＋提交；11/2 評測、功能凍結；11/3 錄影；台北 11/4 22:00 交件 | 先做最大的風險；每天有檢查點 |
+| 13 砍除順序 | 公開展示頁 → Threads 提交入口 → 開放權重初篩 | 照 H.5 | Threads 入口已改成只嵌入，沒有工時可砍；管道與展示才是工時大項 |
+| 14 名稱查核 | 網域要用就盡早買 | 黑客松不需要：`workers.dev` 就能 demo | — |
 
 ## K. 需要念誠決定或提供的東西
 
-（進行中）
+| 項目 | 為什麼需要 | 建議 | 期限 |
+|---|---|---|---|
+| **Meta Model API 帳號、key、$150 credits** | 產品核心；第一輪 pass/fail；台灣能否註冊**未驗證** | [dev.meta.ai](https://dev.meta.ai/) → Start building（Individual）→ Billing 綁卡 → 建 key（發現、驗證、配對各一把）→ 抄 Team ID → 用錄取 email 裡的表單領 credits → Spend Limit 通知設 $50、$100 | **10/28 中午前**確認能註冊；credits 今天就領（截止 11/4 9 PM ET） |
+| Baseten 帳號、比賽 credits | 開放權重初篩 | app.baseten.co 註冊 → 照 Participant Guide 申請（限 2,000 人、要審核）→ 建 key → 月預算 $20 開 enforce → `/v1/models` 查 `muse-spark-open-1026` | 10/28 申請 |
+| Modal 帳號、token、credits | 沙盒 | `modal token new`；領 $100（前 1,000 人）；workspace 上限約 $80 | 10/28 |
+| GitHub fine-grained PAT | 本機發現管線（雲端 session 打不到） | 不勾任何權限（公開 repo 唯讀）；放 `.env` | 10/28 |
+| Cloudflare 帳號、`wrangler login` | MCP Worker、D1 | 用 `workers.dev` 子網域 | 10/28 |
+| E2B 帳號（備案） | Modal 不能用時 | 只註冊（免信用卡） | 10/28 |
+| 有沒有 Apple silicon Mac | 第 4 幕、Mac 驗證 | 有：開一個新的 macOS 使用者帳號人工跑；沒有：demo 改在 Linux | 10/28 |
+| 要不要用 GitHub Actions 跑 demo 那 3 筆的 Mac 驗證 | 條款是灰色地帶，交件又要用 GitHub repo | 有 Mac 就不用；沒有才考慮，只跑 3 筆、README 寫明用途 | 11/1 |
+| 要不要開 Workers Paid（每月 $5） | 冷啟動 10 ms CPU 與 Rate Limiting 都**未驗證**；評審期要穩定 | 開，10/31 部署真資料時 | 10/31 |
+| 要不要寄信給 ecosyste.ms 取得書面同意 | 它的資料最完整，但條款 §9 禁止未經同意的腳本擷取 | 今天寄（support@ecosyste.ms），說明用途；收到前不用，改用 GitHub API＋deps.dev | 10/28 |
+| 要不要買 `pickfit.dev` | 不影響功能 | 黑客松不需要；要買就今天買（名稱隨時可能被搶） | 10/28 |
+| 每天可投入的時數 | H.1 假設 10.5 h | 少於 9 h → 先砍 Show HN 與 run page | 10/28 |
+| Meta 花費上限 | Spend Limit 只寄信 | 管線每日 $25、總額 $100；Worker 每日 $3、評審期總額 $40 | 10/28 |
+| 評測題組 20 題 | 要在比賽期間新寫，寫資料前凍結 | 念誠自己寫，不搬賽前草稿 | **10/28 晚上** |
+| demo 用哪個 agent | 對照組與實驗組要同一個 | Claude Code（Codex 實連沒測過；Muse Code 能不能接遠端 MCP **未驗證**） | 10/31 |
+| 第 5 幕提交哪個 repo | 不能是自己的作品 | 11/1 從發現結果挑一個還沒處理過的第三方 repo | 11/1 |
+| 評審期（11/5–11/8）的提交怎麼處理 | `pickfit watch` 要開著筆電 | 開著筆電跑 watch，README 寫明每日批次處理；有空再搬到 Modal | 11/2 |
+| Discord 要問的兩件事 | 開放權重獎提交時怎麼標；Community Vote 看哪個頁面 | 到 #questions 或 office hours 問 | 11/2（官方最後回答日是美東 11/3） |
