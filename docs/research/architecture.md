@@ -8,20 +8,20 @@
 
 ## 0. 目前的結論
 
-**狀態（2026-10-28 03:50 台北）**：調研剛開始。以下是動手前的**初步假設**，還沒有查證，之後會逐條改成有來源的結論。
+**狀態（2026-10-28 06:30 台北）**：A（部分）、C、D、F 已有查證過的結論；B、E 查核中；G（整體架構）評審中。
 
-| 問題 | 初步假設（未驗證） | 要查證的點 |
+| 問題 | 目前的結論 | 狀態 |
 |---|---|---|
-| A. 管道 | GitHub search API 當主幹；Show HN（官方 API）、Homebrew／PyPI 等套件資料、Hugging Face 補本地 AI 類；使用者貼連結當供給端入口 | 各管道條款、Threads API 能不能搜尋別人的貼文 |
-| B. 品質 | 規則訊號（release、CI、文件、維護）＋ 沙盒驗證結果；知名度另外算 | Scorecard 對小專案的覆蓋率 |
-| C. 沙盒 | Modal Sandbox 當主力（有比賽 credits） | 費用、啟動時間、能否限制網路；macOS 怎麼驗 |
-| D. Meta 模型 | Muse Spark 做抽取、驗證判讀、配對；開放權重模型做初篩 | 官方文件中的實際能力（圖片、tool calling、JSON schema） |
-| E. MCP | 無狀態 Streamable HTTP，部署在 Cloudflare Workers | 規格版本、SDK 用法、Claude Code／Codex 怎麼連 |
-| F. 儲存與配對 | git 裡的 JSON 當正本，建置成索引給 MCP；配對以條件篩選為主 | 是否需要向量搜尋 |
+| A. 管道 | 黑客松接 5 條：**GitHub search API**、**Homebrew 第三方 tap analytics**（有真實安裝數、星數中位數 1）、**Show HN**（官方 API）、**PyPI**（`console_scripts`）、**提交入口**（只收 GitHub 連結）。補資料用 ecosyste.ms、deps.dev。Threads／Facebook **不能主動發現**，只能用 oEmbed 嵌入 | 社群、Meta 已查核；託管、套件查核中 |
+| B. 品質 | 規則訊號（release、CI、文件、維護）＋沙盒驗證結果；知名度另外算 | 查核中 |
+| C. 沙盒 | **Modal Sandbox** 主力（gVisor、網域 allowlist、可先開網路安裝再斷網執行），E2B 備案；Mac 只在 demo 那幾筆另外驗證。本機 Docker spike 實際驗證了 4 款真實工具，其中 2 款要先修正 README 才裝得起來 | 已查核 |
+| D. Meta 模型 | `muse-spark-1.3`（Meta API，OpenAI 相容）做抽取、驗證 agent（Responses API＋tool calling）、截圖判讀、文件評分、配對；**Muse Spark Open @ Baseten** 只做大量初篩（同價，為了 credits 與加碼獎）；Glimmer 不用 | 已查核；**沒有 key，模型呼叫未實測** |
+| E. MCP | 無狀態 Streamable HTTP，部署在 Cloudflare Workers | 查核中 |
+| F. 儲存與配對 | git 裡每款一份 JSON 當正本，建置成索引打包進 Worker；事件寫 D1；配對是「條件篩選＋BM25 候選卡＋Muse Spark 取捨」，**不用向量搜尋** | 已調研 |
 
-各節的調研筆記會先寫進 [notes/](notes/)，查核後再整合進本文。
+**最大的風險**：台灣帳號能否開 Meta Model API 未確認（第一件事就要註冊）；這個雲端 session 的 GitHub API 只開放本 repo，發現管線要在本機跑。
 
-**調研方式**：每個主題由一個 agent 查官方文件並實測，另一個 agent 反向查核（找錯、標「未驗證」），最後由主控者整合。
+**調研方式**：每個主題由一個 agent 查官方文件並實測，另一個 agent 反向查核（找錯、標「未驗證」），最後由主控者整合。原始筆記在 [notes/](notes/)。
 
 ---
 
