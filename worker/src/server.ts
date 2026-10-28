@@ -8,16 +8,27 @@ import { logEvent } from './events.ts';
 import { ERROR_EXCERPT_MAX, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } from './outcome.ts';
 import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './submit.ts';
 
+const ABOUT =
+  'pickfit recommends lesser-known software that it has installed and tested in a sandbox. Scope today: developer CLI tools and local AI/LLM tools. ';
+const RULES = 'Ask at most 1-2 questions first (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars.';
+
 export const INSTRUCTIONS =
-  'pickfit recommends lesser-known software that it has installed and tested in a sandbox. Scope today: developer CLI tools and local AI/LLM tools. ' +
+  ABOUT +
   'Flow: find_software (or find_alternatives when replacing a tool) -> user picks -> get_install_guide -> run steps with the user\'s consent -> report_outcome. ' +
-  'Ask at most 1-2 questions first (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars. ' +
-  'submit_software adds a GitHub project.';
+  RULES +
+  ' submit_software adds a GitHub project.';
+
+/** TOOLS=readonly: no mention of the tools that are not registered. */
+export const READONLY_INSTRUCTIONS =
+  ABOUT +
+  'Flow: find_software (or find_alternatives when replacing a tool) -> user picks -> get_install_guide -> run steps with the user\'s consent. ' +
+  RULES;
 
 const os = z.enum(['macos', 'linux', 'windows']);
 const arch = z.enum(['arm64', 'x86_64']);
 const slug = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(64);
 const recId = z.string().max(200);
+const REC_ID_OUT = "Identifies this response in pickfit's log; pass it to the next pickfit call. Valid 7 days";
 
 const reason = z.object({
   claim: z.string(),
@@ -87,7 +98,7 @@ const alternativesInput = z.object({
 });
 
 const findOutput = z.object({
-  rec_id: z.string().describe('Pass to get_install_guide and report_outcome; valid 7 days'),
+  rec_id: z.string().describe(REC_ID_OUT),
   matched_by: z.string().describe('The Meta model that chose the picks, or "rules"'),
   degraded: z.boolean().describe('true = ranked by rules without the model (off, budget or failure)'),
   degraded_reason: z.string().nullable(),
@@ -118,7 +129,7 @@ const installInput = z.object({
 });
 
 const installOutput = z.object({
-  rec_id: z.string().describe('Pass to report_outcome; valid 7 days'),
+  rec_id: z.string().describe(REC_ID_OUT),
   matched_by: z.literal('rules').describe('No model is used here: these are the steps of a recorded run'),
   slug: z.string(),
   name: z.string(),
@@ -215,7 +226,11 @@ function result(out: object) {
 }
 
 export function buildServer(deps: Deps): McpServer {
-  const server = new McpServer({ name: 'pickfit', version: '0.1.0' }, { instructions: INSTRUCTIONS });
+  const readonly = deps.settings.tools === 'readonly';
+  const server = new McpServer(
+    { name: 'pickfit', version: '0.1.0' },
+    { instructions: readonly ? READONLY_INSTRUCTIONS : INSTRUCTIONS },
+  );
 
   server.registerTool(
     'find_software',
@@ -257,7 +272,8 @@ export function buildServer(deps: Deps): McpServer {
         'Use after the user picks a tool from find_software or find_alternatives. Returns install steps pickfit actually ran (replayed in a fresh sandbox, or done by hand), with the OS, date and evidence, ' +
         'the steps only the user can do (permissions, accounts), a command to verify the install and a first task to try. ' +
         'Show each command to the user before running it, and ask before any step that needs sudo or pipes a script into a shell. ' +
-        'If applies_to_user_system.match is not "exact", tell the user the steps were checked on a different system. After the user tries it, call report_outcome with the rec_id.',
+        'If applies_to_user_system.match is not "exact", tell the user the steps were checked on a different system.' +
+        (readonly ? '' : ' After the user tries it, call report_outcome with the rec_id.'),
       inputSchema: installInput,
       outputSchema: installOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },
@@ -284,6 +300,9 @@ export function buildServer(deps: Deps): McpServer {
       }
     },
   );
+
+  // An evaluation deployment (TOOLS=readonly) exposes no tool that writes user data.
+  if (readonly) return server;
 
   server.registerTool(
     'report_outcome',

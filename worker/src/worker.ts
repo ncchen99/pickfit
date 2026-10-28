@@ -30,7 +30,17 @@ export function makeWorker(indexData: unknown, options: WorkerOptions = {}) {
       const url = new URL(request.url);
       if (url.pathname !== '/mcp') {
         if (url.pathname === '/' && request.method === 'GET') {
-          return Response.json({ name: 'pickfit', mcp: '/mcp', entries: catalog.count, index_built_at: catalog.built_at });
+          // What this deployment serves, so two deployments can be checked for the same data.
+          const config = settings(env);
+          return Response.json({
+            name: 'pickfit',
+            mcp: '/mcp',
+            entries: catalog.count,
+            index_built_at: catalog.built_at,
+            data_sha256: catalog.data_sha256 ?? null,
+            tools: config.tools,
+            match_mode: config.modelEnabled ? 'model' : 'off',
+          });
         }
         return new Response('Not found', { status: 404 });
       }
@@ -40,18 +50,23 @@ export function makeWorker(indexData: unknown, options: WorkerOptions = {}) {
       const origin = validateOriginHeader(request.headers.get('origin'), hosts);
       if (!origin.ok) return forbidden(origin.message);
 
+      const config = settings(env);
       const handler = createMcpHandler(() =>
         buildServer({
           catalog,
           db: env.DB,
-          settings: settings(env),
+          settings: config,
           now: options.now ?? (() => new Date()),
           waitUntil: (promise) => ctx.waitUntil(promise),
           fetch: options.fetch,
           reporter: reporterFrom(request.headers.get('x-pickfit-reporter')),
         }),
       );
-      return handler.fetch(request);
+      // Every call is matched anew; tell any cache on the way not to keep a response.
+      const response = await handler.fetch(request);
+      const uncached = new Response(response.body, response);
+      uncached.headers.set('cache-control', 'no-store');
+      return uncached;
     },
   };
 }

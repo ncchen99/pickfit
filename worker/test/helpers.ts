@@ -62,6 +62,7 @@ export const SETTINGS: Settings = {
   totalCapUsd: 40,
   timeoutMs: 2000,
   submitHourlyCap: 20,
+  tools: 'all',
 };
 
 export interface Harness {

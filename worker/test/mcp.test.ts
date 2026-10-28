@@ -197,6 +197,6 @@ test('Host and Origin allowlists block DNS rebinding', async () => {
 test('other paths: health at /, 404 elsewhere', async () => {
   const { call } = setup();
   const health = await call(new Request('http://127.0.0.1:8787/'));
-  assert.deepEqual(Object.keys(await health.json()).sort(), ['entries', 'index_built_at', 'mcp', 'name']);
+  assert.deepEqual(Object.keys(await health.json()).sort(), ['data_sha256', 'entries', 'index_built_at', 'match_mode', 'mcp', 'name', 'tools']);
   assert.equal((await call(new Request('http://127.0.0.1:8787/other'))).status, 404);
 });
