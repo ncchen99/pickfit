@@ -7,8 +7,10 @@ import pytest
 from pydantic import BaseModel, ValidationError, create_model
 
 from pickfit.schema import (
+    SETUP_MAX,
     Cited,
     ExtractionResult,
+    SmokeTest,
     SoftwareRecord,
     binding_cap,
     meta_strict_schema,
@@ -276,6 +278,21 @@ def test_binding_cap_picks_the_lowest():
 def test_usage_outcomes_weight_tiers():
     weights = {n: usage_outcomes_weight(n) for n in (0, 2, 3, 9, 10, 29, 30, 500)}
     assert weights == {0: 10, 2: 10, 3: 10, 9: 10, 10: 20, 29: 20, 30: 30, 500: 30}
+
+
+def test_smoke_test_setup_and_offline():
+    heredoc = "cat > graph.json <<'EOF'\n" + '{"nodes": ["a"]}\n' * 150 + "EOF"
+    test = SmokeTest.model_validate({
+        "command": "graphtty graph.json", "expected_signal": "a", "exit_code": 0, "passed": True,
+        "setup": [{"command": heredoc}, {"command": "tinyserve --port 8080", "background": True, "port": 8080}],
+        "offline": False})
+    assert len(heredoc) > 500 and test.setup[1].background and test.offline is False
+    assert SmokeTest.model_validate({"command": "x", "expected_signal": "", "exit_code": 0,
+                                     "passed": True}).offline is None  # older runs: not run offline
+    for bad in ({"command": "x" * (SETUP_MAX + 1)}, {"command": "s", "port": 0}, {"command": ""}):
+        with pytest.raises(ValidationError):
+            SmokeTest.model_validate({"command": "x", "expected_signal": "", "exit_code": 0, "passed": True,
+                                      "setup": [bad]})
 
 
 def test_record_schema_forbids_unknown_keys():

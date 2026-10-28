@@ -43,6 +43,8 @@ _ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 _CRASH = re.compile(r"Traceback \(most recent call last\)|panicked at|Segmentation fault|"
                     r": command not found|No module named |Error: Cannot find module")
 _VERSION_HELP = re.compile(r"(?:^|\s)(?:--version|-V|-v|--help|-h|version|help)\s*$")
+# A file a command writes: curl/wget -o/-O/--output, or a shell redirect.
+_WRITES = re.compile(r"(?:\s-o|\s-O|\s--output(?:-document)?|>>?)\s*=?\s*([~$/\w][^\s;&|'\"<>]*)")
 _GENERATION = re.compile(r"/v1/(?:chat/)?completions|/api/(?:generate|chat)|/completion\b|/v1/responses")
 
 
@@ -136,6 +138,11 @@ def _first_word(text: str) -> str:
     return words[0].rsplit("/", 1)[-1] if words else ""
 
 
+def written_paths(command: str) -> set[str]:
+    """Files a command writes with -o/-O/--output or a redirect (not /dev/* or &N)."""
+    return {p for p in _WRITES.findall(command) if not p.startswith("/dev/") and not p[:1].isdigit()}
+
+
 def masked_exit(command: str) -> str | None:
     """Why the recorded exit code of `command` may not be its real result, or None."""
     parts = _top_level(command)
@@ -172,6 +179,26 @@ def masked_exit(command: str) -> str | None:
 def last_command(command: str) -> str:
     parts = [text for _, text in _top_level(command) if text.strip()]
     return parts[-1] if parts else command
+
+
+def split_last(command: str) -> tuple[str, str] | None:
+    """(what runs first, the last command) when they are joined by `&&`, `;` or a newline.
+
+    Running the first part and then the last as two commands does the same work;
+    a pipe cannot be split this way, so it returns None.
+    """
+    parts = [(op, text) for op, text in _top_level(command) if text.strip()]
+    if len(parts) < 2 or parts[-1][0] not in ("&&", ";", "\n"):
+        return None
+    last = parts[-1][1]
+    stripped = command.rstrip()
+    if not stripped.endswith(last.rstrip()):
+        return None
+    head = stripped[: len(stripped) - len(last.rstrip())].rstrip()
+    for op in ("&&", ";"):
+        if head.endswith(op):
+            head = head[: -len(op)].rstrip()
+    return (head, last.strip()) if head else None
 
 
 # ---------------------------------------------------------------- verdict
@@ -302,6 +329,22 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict
             steps_ok = False
             problems.append(f"step {step.command_id} is {len(record.command)} characters; an install step "
                             f"must fit in {COMMAND_MAX} (split it into shorter commands)")
+
+    # A step that runs a file only an uncited command wrote cannot be replayed (a fresh box lacks it).
+    cited = set(step_ids)
+    for sid in step_ids:
+        step = by_id[sid]
+        own = written_paths(step.command)
+        for earlier in commands:
+            if earlier.command_id is None or earlier.command_id >= sid or earlier.command_id in cited:
+                continue
+            missing = sorted(p for p in written_paths(earlier.command) - own if p in step.command
+                             and not any(p in written_paths(by_id[c].command) for c in cited if c < sid))
+            if missing and earlier.exit_code == 0:
+                steps_ok = False
+                problems.append(f"step {sid} uses {missing[0]}, which only command {earlier.command_id} wrote; "
+                                f"cite {earlier.command_id} as a step too, or the replay will not have it")
+                break
 
     checks: list[ResolvedCheck] = []
     has_service = False

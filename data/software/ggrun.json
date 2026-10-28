@@ -69,18 +69,29 @@
       "first_task": "ggrun model.gguf --dry-run"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-ggrun-20261029-012023-b1f9",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/raketenkater/ggrun/main/setup.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/raketenkater/ggrun/main/setup.sh -o /tmp/setup.sh && wc -c /tmp/setup.sh && head -n 200 /tmp/setup.sh",
+          "purpose": "Download setup.sh for inspection (first-ranked script candidate)"
+        },
+        {
+          "command": "bash /tmp/setup.sh 2>&1",
+          "purpose": "Install ggrun via downloaded setup.sh"
+        },
+        {
+          "command": "ln -sf /home/sbx/ggrun/.bin/ggrun /home/sbx/.local/bin/ggrun && which ggrun && ggrun --version",
+          "purpose": "Put ggrun on PATH via ~/.local/bin symlink"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "ggrun model.gguf --dry-run"
+      "check": {
+        "command": "ln -sf /home/sbx/ggrun/.bin/ggrun /home/sbx/.local/bin/ggrun && which ggrun && ggrun --version",
+        "expected_signal": "ggrun 4925fd7"
+      },
+      "first_task": "ggrun recommend"
     },
     "windows": {
       "basis": "readme_claim",
@@ -110,10 +121,109 @@
     "url": "https://github.com/raketenkater/ggrun/releases/tag/v3.2.12"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T01:23:17.124482+08:00",
+    "runs": [
+      {
+        "id": "verify-ggrun-20261029-012023-b1f9",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:23:17.124482+08:00",
+        "tool_version": "ggrun 4925fd7",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/raketenkater/ggrun/main/setup.sh -o /tmp/setup.sh && wc -c /tmp/setup.sh && head -n 200 /tmp/setup.sh",
+            "purpose": "Download setup.sh for inspection (first-ranked script candidate)"
+          },
+          {
+            "command": "bash /tmp/setup.sh 2>&1",
+            "purpose": "Install ggrun via downloaded setup.sh"
+          },
+          {
+            "command": "ln -sf /home/sbx/ggrun/.bin/ggrun /home/sbx/.local/bin/ggrun && which ggrun && ggrun --version",
+            "purpose": "Put ggrun on PATH via ~/.local/bin symlink"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ln -sf /home/sbx/ggrun/.bin/ggrun /home/sbx/.local/bin/ggrun && which ggrun && ggrun --version",
+            "expected_signal": "ggrun 4925fd7",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ggrun 4925fd7",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ggrun --help",
+            "expected_signal": "--claude-code",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ggrun model.gguf --claude-code",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ggrun recommend",
+            "expected_signal": "Recommendation budget: CPU only",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Recommendation budget: CPU only | RAM 1.9 GiB",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ggrun detect",
+            "expected_signal": "\"os\": \"linux\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"os\": \"linux\",",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Install with one curl|bash command, then run 'ggrun ...' (open a new terminal after adding ggrun to PATH)",
+            "actually_needed": "Run 'ln -sf ~/ggrun/.bin/ggrun ~/.local/bin/ggrun' (or 'source ~/ggrun/.env.sh') before 'ggrun' is on PATH; installer warned '/home/sbx/ggrun/.bin is not in PATH' and suggested ~/ggrun/ggrun directly"
+          },
+          {
+            "readme_said": "--help output location not specified",
+            "actually_needed": "'ggrun --help' prints the help text to stderr with exit 0 (stdout empty)"
+          },
+          {
+            "readme_said": "'ggrun detect --bandwidth' listed as an example command (README scopes it to NVIDIA hardware)",
+            "actually_needed": "'ggrun detect --bandwidth' exits 1 with 'Error: bandwidth measurement needs at least one CUDA GPU' on this CPU-only box; plain 'ggrun detect' works"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show expected outputs for recommend, detect, and version commands with exit 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ggrun-20261029-012023-b1f9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ggrun-20261029-012023-b1f9/check-1-cmd7.judged.png",
+            "runs/verify/verify-ggrun-20261029-012023-b1f9/check-2-cmd8.judged.png",
+            "runs/verify/verify-ggrun-20261029-012023-b1f9/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.054897
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -348,5 +458,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-28T23:56:48+08:00"
+  "updated_at": "2026-10-29T01:23:17.130814+08:00"
 }

@@ -40,6 +40,9 @@ def test_only_run_install_guides_are_indexed(data_dir: Path) -> None:
     assert {os: g["basis"] for os, g in runner.items()} == {"macos": "human", "linux": "replayed"}
     assert runner["linux"]["run"]["replayed"] is True
     assert runner["linux"]["run"]["evidence_url"].startswith("https://example.invalid/runs/")
+    assert runner["linux"]["works_offline"] is True and runner["macos"]["works_offline"] is None
+    assert runner["linux"]["first_task_setup"] == [{"command": "fixture-llm-runner pull tiny-test",
+                                                   "background": False}]
 
 
 def test_unlisted_records_are_skipped(data_dir: Path) -> None:
@@ -108,3 +111,17 @@ def test_write_index_round_trips(data_dir: Path, tmp_path: Path) -> None:
     out = tmp_path / "index.json"
     write_index(index, out)
     assert json.loads(out.read_text(encoding="utf-8")) == index
+
+
+def test_works_offline_follows_the_first_task():
+    from pickfit.index import works_offline
+    from pickfit.schema import VerificationRun
+
+    record = json.loads((FIXTURES / "fixture-llm-runner.json").read_text())
+    run = VerificationRun.model_validate(record["verification"]["runs"][0])
+    online = run.smoke_tests[0].model_copy(update={"command": "npx tool@latest", "offline": False})
+    offline = run.smoke_tests[0].model_copy(update={"command": "tool scan --offline", "offline": True})
+    mixed = run.model_copy(update={"smoke_tests": [online, offline]})
+    assert works_offline(mixed, "tool scan --offline") is True
+    assert works_offline(mixed, "npx tool@latest") is False
+    assert works_offline(mixed) is False  # no first task: every passing check must pass offline

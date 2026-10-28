@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 
 from pickfit.verify.agent import CommandRecord, FinishArgs
-from pickfit.verify.verdict import check_kind, log_verdict, masked_exit
+from pickfit.verify.verdict import check_kind, log_verdict, masked_exit, split_last, written_paths
 
 
 @pytest.mark.parametrize("command", [
@@ -175,3 +175,27 @@ def test_long_steps_and_steps_cited_as_setup():
     verdict = log_verdict(claim("install", [3], [{"command_id": 2, "setup_ids": [3], "expected_signal": "1.0"}]),
                           log)
     assert verdict.level == "install" and verdict.problems == []
+
+
+def test_split_last_separates_what_runs_first():
+    heredoc = "cat > g.json <<'EOF'\n{\"a\": 1; \"b\": 2 && 3}\nEOF"
+    assert split_last(f"{heredoc}\ngraphtty g.json") == (heredoc, "graphtty g.json")
+    assert split_last("evnx sync && evnx validate") == ("evnx sync", "evnx validate")
+    assert split_last("cd sub; tool run") == ("cd sub", "tool run")
+    assert split_last("echo '{}' | tinyq .a") is None  # a pipe cannot be split
+    assert split_last("tool --version") is None
+
+
+def test_a_step_that_runs_a_file_only_an_uncited_command_wrote():
+    assert written_paths("curl -fsSL https://x.dev/i.sh -o /tmp/i.sh && head /tmp/i.sh") == {"/tmp/i.sh"}
+    assert written_paths("echo hi > notes.txt 2>&1 >/dev/null") == {"notes.txt"}
+    log = [rec(1, "curl -fsSL https://x.dev/i.sh -o /tmp/i.sh && head -40 /tmp/i.sh", 0, "#!/bin/sh"),
+           rec(2, "sh /tmp/i.sh", 0, "installed rimz"),
+           rec(3, "rimz --version", 0, "rimz 0.4.3")]
+    verdict = log_verdict(claim("install", [2], [{"command_id": 3, "expected_signal": "0.4.3"}]), log)
+    assert verdict.level == "unverified"
+    assert verdict.problems == ["step 2 uses /tmp/i.sh, which only command 1 wrote; cite 1 as a step too, "
+                                "or the replay will not have it"]
+    # Citing the download (even with its head) fixes it.
+    assert log_verdict(claim("install", [1, 2], [{"command_id": 3, "expected_signal": "0.4.3"}]),
+                       log).level == "install"

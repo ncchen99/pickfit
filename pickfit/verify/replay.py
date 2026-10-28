@@ -120,6 +120,7 @@ class CheckResult:
     run: RanCommand | None = None  # the run that decided it (offline, or the online retry)
     problems: list[str] = field(default_factory=list)
     offline_problems: list[str] = field(default_factory=list)  # why it failed offline, when retried
+    setup: list[ReplayCommand] = field(default_factory=list)  # what ran first, in order
 
 
 @dataclass
@@ -205,11 +206,13 @@ class Replayer:
                 result.error = f"setup {setup.command_id} exited {ran.exit_code}: {_one_line(setup.command)}"
                 return
         box.set_network(False)
+        known = {c.command_id: c for c in (*plan.setups, *(k.run for k in plan.checks))}
         for check in plan.checks:
             ran, ok, problems = self._check(check)
             result.checks.append(CheckResult(
                 check.run.command_id, check.run.command, check.kind, check.expected_exit_code,
-                check.expected_signal, passed=ok, offline=ok, run=ran, problems=problems))
+                check.expected_signal, passed=ok, offline=ok, run=ran, problems=problems,
+                setup=[known[i] for i in check.setup_ids if i in known]))
         failed = [c for c in result.checks if not c.passed]
         if failed:
             box.set_network(True)

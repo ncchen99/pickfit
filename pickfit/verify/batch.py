@@ -177,10 +177,19 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
     return items[:limit], skipped
 
 
-def verified_slugs(runs_dir: Path) -> set[str]:
-    """Slugs that already have an outcome under runs/verify/."""
+_RUN_TIME = re.compile(r"-(\d{8}-\d{6})-[0-9a-f]{4}$")
+
+
+def verified_slugs(runs_dir: Path, since: str | None = None) -> set[str]:
+    """Slugs that already have an outcome under runs/verify/, from runs started at `since` or later.
+
+    `since` is Taipei time as in run ids, YYYYmmdd-HHMMSS (a prefix such as 20261029-01 works).
+    """
     slugs = set()
     for path in (runs_dir / "verify").glob("*/outcome.json"):
+        m = _RUN_TIME.search(path.parent.name)
+        if since and (not m or m.group(1) < since):
+            continue
         try:
             slugs.add(json.loads(path.read_text(encoding="utf-8"))["slug"])
         except (OSError, ValueError, KeyError):

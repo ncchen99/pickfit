@@ -73,18 +73,21 @@
       "first_task": "localm doctor"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "pip",
+      "basis": "replayed",
+      "run_id": "verify-localm-20261029-011619-a444",
+      "method": "uv",
       "steps": [
         {
-          "command": "pip install localm",
-          "purpose": null
+          "command": "uv tool install localm 2>&1",
+          "purpose": "Install localm via uv tool install"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "localm doctor"
+      "check": {
+        "command": "localm --version 2>&1",
+        "expected_signal": "localm, version 0.3.1"
+      },
+      "first_task": "localm doctor 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -114,10 +117,88 @@
     "url": "https://github.com/Matlan1/localm/releases/tag/v0.3.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T01:17:50.440607+08:00",
+    "runs": [
+      {
+        "id": "verify-localm-20261029-011619-a444",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:17:50.440607+08:00",
+        "tool_version": "0.3.1",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install localm 2>&1",
+            "purpose": "Install localm via uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "localm --version 2>&1",
+            "expected_signal": "localm, version 0.3.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "localm, version 0.3.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "localm --help 2>&1",
+            "expected_signal": "doctor Check system requirements and report any issues.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "doctor Check system requirements and report any issues.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "localm doctor 2>&1",
+            "expected_signal": "Python 3.12",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ Python 3.12",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "localm info 2>&1",
+            "expected_signal": "plugins_enabled",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "plugins_enabled ['chat']",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "localm prints version 0.3.1, shows extensive help with many commands, and doctor reports Python 3.12 with system checks.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-localm-20261029-011619-a444/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-localm-20261029-011619-a444/check-1-cmd3.judged.png",
+            "runs/verify/verify-localm-20261029-011619-a444/check-2-cmd4.judged.png",
+            "runs/verify/verify-localm-20261029-011619-a444/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.050357
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -392,5 +473,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-28T23:56:48+08:00"
+  "updated_at": "2026-10-29T01:17:50.442740+08:00"
 }

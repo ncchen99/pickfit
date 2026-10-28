@@ -975,6 +975,41 @@
       "title": "Scores",
       "type": "object"
     },
+    "SetupStep": {
+      "additionalProperties": false,
+      "description": "A command a smoke test needs first: an input file, a server to query.",
+      "properties": {
+        "background": {
+          "default": false,
+          "description": "Started detached and left running (a server).",
+          "type": "boolean"
+        },
+        "command": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "type": "string"
+        },
+        "port": {
+          "anyOf": [
+            {
+              "maximum": 65535,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Port waited for when background."
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "title": "SetupStep",
+      "type": "object"
+    },
     "Slug": {
       "maxLength": 64,
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
@@ -1014,8 +1049,28 @@
           ],
           "default": null
         },
+        "offline": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "true: passed with the network off; false: passed only with it on (needs the network); null: not run offline."
+        },
         "passed": {
           "type": "boolean"
+        },
+        "setup": {
+          "default": [],
+          "description": "Run first, in order, with the network on.",
+          "items": {
+            "$ref": "#/$defs/SetupStep"
+          },
+          "type": "array"
         }
       },
       "required": [

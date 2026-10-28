@@ -15,9 +15,13 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--concurrency", type=int, default=5, help="batch: tools verified at once (default 5)")
     v.add_argument("--db", default=None, help="batch: pipeline database (default runs/pipeline.db), read-only")
     v.add_argument("--repo", action="append", help="batch: only this repo id (gh:<id>) or owner/name")
+    v.add_argument("--records", action="store_true",
+                   help="batch: only candidates that have a record in --data-dir (the profiles)")
     v.add_argument("--category", action="append", choices=["dev_cli", "local_ai"],
                    help="batch: only this category (repeatable)")
     v.add_argument("--force", action="store_true", help="batch: also tools that already have a run")
+    v.add_argument("--since", metavar="YYYYmmdd-HHMMSS",
+                   help="batch: skip only tools with a run started at or after this Taipei time")
     v.add_argument("--data-dir", default=None,
                    help="records to take slugs from and write back to (default data/software)")
     v.add_argument("--dry-run", action="store_true", help="batch: list what would run and why others are skipped")
@@ -93,9 +97,15 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
         print(f"pickfit verify: no pipeline database at {db} (use --db)")
         return 2
     data_dir = Path(args.data_dir) if args.data_dir else DATA_DIR
-    skip = set() if args.force else verified_slugs(runs_dir)
-    items, skipped = load_candidates(db, limit=args.batch, repos=args.repo, categories=args.category,
-                                     skip_slugs=skip, known_slugs=record_slugs(data_dir))
+    skip = verified_slugs(runs_dir, since=args.since) if args.since else \
+        set() if args.force else verified_slugs(runs_dir)
+    known = record_slugs(data_dir)
+    repos = [*(args.repo or []), *(known if args.records else [])] or None
+    if args.records and not known:
+        print(f"pickfit verify: no records in {data_dir}")
+        return 2
+    items, skipped = load_candidates(db, limit=args.batch, repos=repos, categories=args.category,
+                                     skip_slugs=skip, known_slugs=known)
     print(f"batch · {len(items)} to verify · {len(skipped)} set aside · {args.runner} · "
           f"concurrency {args.concurrency} · {resolve_model(args.model)}")
     for item in items:

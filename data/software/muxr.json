@@ -52,17 +52,20 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-muxr-20261029-012023-2476",
       "method": "npm",
       "steps": [
         {
-          "command": "npm i -g --ignore-scripts \\\n  @trymuxr/cli@latest",
-          "purpose": null
+          "command": "npm i -g --ignore-scripts @trymuxr/cli@latest",
+          "purpose": "install muxr via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "muxr --version",
+        "expected_signal": "0.2.9"
+      },
       "first_task": "muxr"
     },
     "windows": null
@@ -76,10 +79,92 @@
   "processing": "local",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T01:23:21.529021+08:00",
+    "runs": [
+      {
+        "id": "verify-muxr-20261029-012023-2476",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:23:21.529021+08:00",
+        "tool_version": "0.2.9",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm i -g --ignore-scripts @trymuxr/cli@latest",
+            "purpose": "install muxr via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "muxr --version",
+            "expected_signal": "0.2.9",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.2.9",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "muxr --help",
+            "expected_signal": "muxr — every coding agent on your phone",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "muxr — every coding agent on your phone",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "muxr",
+            "expected_signal": "muxr — every coding agent on your phone",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "muxr — every coding agent on your phone",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "muxr pair --help",
+            "expected_signal": "Create a two-minute native QR/string",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Create a two-minute native QR/string, an eight-hour control-browser link (--browser), an eight-hour view-only browser link (--browser-view), or a 30-day control link for a browser only you use (--browser-personal).",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "muxr link",
+            "actually_needed": "muxr pair [--help shows QR/string pairing options]"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show muxr printing its tagline with full help menu and version 0.2.9 with exit 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-muxr-20261029-012023-2476/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-muxr-20261029-012023-2476/check-1-cmd6.judged.png",
+            "runs/verify/verify-muxr-20261029-012023-2476/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.043762
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -290,5 +375,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:15+08:00",
-  "updated_at": "2026-10-28T23:56:48+08:00"
+  "updated_at": "2026-10-29T01:23:21.531663+08:00"
 }

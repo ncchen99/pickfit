@@ -49,7 +49,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mcp-audit-20261029-011619-86aa",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install mcp-audit-scanner 2>&1",
+          "purpose": "install mcp-audit via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mcp-audit --help 2>&1",
+        "expected_signal": "List all detected MCP clients"
+      },
+      "first_task": "mcp-audit version 2>&1"
+    },
     "windows": null
   },
   "pricing": {
@@ -65,10 +81,102 @@
     "url": "https://github.com/adudley78/mcp-audit/releases/tag/v0.22.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T01:17:10.624845+08:00",
+    "runs": [
+      {
+        "id": "verify-mcp-audit-20261029-011619-86aa",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:17:10.624845+08:00",
+        "tool_version": "0.22.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install mcp-audit-scanner 2>&1",
+            "purpose": "install mcp-audit via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mcp-audit --help 2>&1",
+            "expected_signal": "List all detected MCP clients",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ discover List all detected MCP clients and server configurations. │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mcp-audit version 2>&1",
+            "expected_signal": "mcp-audit 0.22.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mcp-audit 0.22.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mcp-audit discover 2>&1",
+            "expected_signal": "No MCP configurations found on this machine.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No MCP configurations found on this machine.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mcp-audit check 2>&1",
+            "expected_signal": "No MCP config files found on this machine.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No MCP config files found on this machine. Run mcp-audit discover to see where",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mcp-audit scan 2>&1",
+            "expected_signal": "No security issues found",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ ✅ No security issues found │",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "generic `--version` flag works",
+            "actually_needed": "use `mcp-audit version` subcommand (or `mcp-audit --help`); `mcp-audit --version` exits 2 with 'No such option: --version'"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Help lists the discover command, version prints 0.22.0, and discover reports no configurations found.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mcp-audit-20261029-011619-86aa/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mcp-audit-20261029-011619-86aa/check-1-cmd3.judged.png",
+            "runs/verify/verify-mcp-audit-20261029-011619-86aa/check-2-cmd4.judged.png",
+            "runs/verify/verify-mcp-audit-20261029-011619-86aa/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.040387
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -263,5 +371,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-28T23:54:33+08:00"
+  "updated_at": "2026-10-29T01:17:10.626745+08:00"
 }

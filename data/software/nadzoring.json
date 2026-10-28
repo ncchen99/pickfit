@@ -76,18 +76,21 @@
       "first_task": "nadzoring --help"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "pip",
+      "basis": "replayed",
+      "run_id": "verify-nadzoring-20261029-012023-cfcc",
+      "method": "uv",
       "steps": [
         {
-          "command": "pip install nadzoring",
-          "purpose": null
+          "command": "rm -rf ~/nadz-venv ~/.local/bin/nadzoring && uv venv ~/nadz-venv && uv pip install --python ~/nadz-venv/bin/python netifaces-plus aiohttp certifi click cryptography dnspython elevate geopy packaging pandas ping3 pysocks python-dateutil python-whois pyyaml requests scapy tabulate tqdm && uv pip install --python ~/nadz-venv/bin/python --no-deps nadzoring && ln -sf ~/nadz-venv/bin/nadzoring ~/.local/bin/nadzoring",
+          "purpose": "Create venv and install nadzoring with netifaces-plus workaround"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "nadzoring --help"
+      "check": {
+        "command": "nadzoring --help",
+        "expected_signal": "Usage: nadzoring [OPTIONS] COMMAND [ARGS]..."
+      },
+      "first_task": "nadzoring core doctor --format json"
     },
     "windows": {
       "basis": "readme_claim",
@@ -117,10 +120,74 @@
     "url": "https://github.com/alexeev-prog/nadzoring/releases/tag/v0.5.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T01:23:44.832995+08:00",
+    "runs": [
+      {
+        "id": "verify-nadzoring-20261029-012023-cfcc",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:23:44.832995+08:00",
+        "tool_version": "0.5.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf ~/nadz-venv ~/.local/bin/nadzoring && uv venv ~/nadz-venv && uv pip install --python ~/nadz-venv/bin/python netifaces-plus aiohttp certifi click cryptography dnspython elevate geopy packaging pandas ping3 pysocks python-dateutil python-whois pyyaml requests scapy tabulate tqdm && uv pip install --python ~/nadz-venv/bin/python --no-deps nadzoring && ln -sf ~/nadz-venv/bin/nadzoring ~/.local/bin/nadzoring",
+            "purpose": "Create venv and install nadzoring with netifaces-plus workaround"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nadzoring --help",
+            "expected_signal": "Usage: nadzoring [OPTIONS] COMMAND [ARGS]...",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: nadzoring [OPTIONS] COMMAND [ARGS]...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nadzoring core doctor --format json",
+            "expected_signal": "28/33 checks passed",
+            "exit_code": 2,
+            "passed": true,
+            "observed_excerpt": "\"detail\": \"28/33 checks passed (84%)\",",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install nadzoring",
+            "actually_needed": "create venv (uv venv ~/nadz-venv), install prebuilt netifaces-plus plus all other dependencies, then install nadzoring with --no-deps and symlink ~/nadz-venv/bin/nadzoring to ~/.local/bin/nadzoring, because netifaces==0.11.0 has no cp312 manylinux wheels and the box has no gcc or libc headers to co…"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show doctor JSON summary of 28/33 checks passed and help output with usage and commands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nadzoring-20261029-012023-cfcc/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nadzoring-20261029-012023-cfcc/check-1-cmd15.judged.png",
+            "runs/verify/verify-nadzoring-20261029-012023-cfcc/check-2-cmd14.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.148068
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -403,5 +470,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:07:48+08:00",
-  "updated_at": "2026-10-28T23:56:48+08:00"
+  "updated_at": "2026-10-29T01:23:44.836044+08:00"
 }

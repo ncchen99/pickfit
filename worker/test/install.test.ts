@@ -25,6 +25,15 @@ test('replayed sandbox steps carry evidence, pitfalls and a pipe-to-shell warnin
   assert.equal(out.verification.evidence_url, 'https://example.invalid/runs/run-20261028-linux-1');
   assert.equal(out.known_issues.length, 1);
   assert.match(out.warnings.join(' '), /pipes a downloaded script/);
+  assert.equal(out.verification.works_offline, true);
+  assert.equal(out.first_task, 'fixture-llm-runner serve --model tiny-test --once');
+  assert.deepEqual(out.first_task_setup, [{ command: 'fixture-llm-runner pull tiny-test', run_in_background: false }]);
+});
+
+test('a run with no offline check says so', () => {
+  const out = installGuide(catalog, { slug: 'fixture-llm-runner', os: 'macos', arch: 'arm64' });
+  assert.equal(out.verification.works_offline, null);
+  assert.deepEqual(out.first_task_setup, []);
 });
 
 test('README-only steps are never returned: other OS steps come with a note', () => {

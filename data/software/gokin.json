@@ -77,18 +77,25 @@
       "first_task": null
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-gokin-20261029-012655-7f4d",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/ginkida/gokin/main/install.sh | sh",
-          "purpose": null
+          "command": "go version; echo \"---\"; curl -fsSL https://raw.githubusercontent.com/ginkida/gokin/main/install.sh -o /tmp/install-gokin.sh && wc -c /tmp/install-gokin.sh && head -n 100 /tmp/install-gokin.sh",
+          "purpose": "Download install script to /tmp/install-gokin.sh for inspection"
+        },
+        {
+          "command": "sh /tmp/install-gokin.sh",
+          "purpose": "Install gokin binary to ~/.local/bin via inspected script"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": null
+      "check": {
+        "command": "gokin --version",
+        "expected_signal": "gokin version v0.102.1"
+      },
+      "first_task": "gokin doctor"
     },
     "windows": null
   },
@@ -105,10 +112,87 @@
     "url": "https://github.com/ginkida/gokin/releases/tag/v0.102.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T01:28:08.657253+08:00",
+    "runs": [
+      {
+        "id": "verify-gokin-20261029-012655-7f4d",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:28:08.657253+08:00",
+        "tool_version": "v0.102.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "go version; echo \"---\"; curl -fsSL https://raw.githubusercontent.com/ginkida/gokin/main/install.sh -o /tmp/install-gokin.sh && wc -c /tmp/install-gokin.sh && head -n 100 /tmp/install-gokin.sh",
+            "purpose": "Download install script to /tmp/install-gokin.sh for inspection"
+          },
+          {
+            "command": "sh /tmp/install-gokin.sh",
+            "purpose": "Install gokin binary to ~/.local/bin via inspected script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "gokin --version",
+            "expected_signal": "gokin version v0.102.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gokin version v0.102.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "gokin --help",
+            "expected_signal": "help for gokin",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "-h, --help help for gokin",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "gokin doctor",
+            "expected_signal": "System Diagnostics",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "System Diagnostics",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Requirements: Go 1.25+ (build from source)",
+            "actually_needed": "No Go toolchain needed; binary install works with no `go` on PATH (box had no Go)"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show gokin doctor printing System Diagnostics and gokin --version printing gokin version v0.102.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-gokin-20261029-012655-7f4d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-gokin-20261029-012655-7f4d/check-1-cmd5.judged.png",
+            "runs/verify/verify-gokin-20261029-012655-7f4d/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.061208
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -383,5 +467,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-28T23:57:23+08:00"
+  "updated_at": "2026-10-29T01:28:08.658505+08:00"
 }

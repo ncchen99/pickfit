@@ -25,6 +25,10 @@ export interface InstallGuide {
   manual_steps: string[];
   check: { command: string; expected_signal: string } | null;
   first_task: string | null;
+  /** Commands the first task needs first (an input file, a server), from the same run. */
+  first_task_setup: { command: string; background: boolean }[];
+  /** true: every passing check also passed with the network off; null: not checked offline. */
+  works_offline: boolean | null;
   pitfalls: { readme_said: string; actually_needed: string }[];
   run: RunSummary;
 }
