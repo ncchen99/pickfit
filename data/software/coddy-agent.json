@@ -73,19 +73,20 @@
       "first_task": "coddy -t"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-coddy-agent-20261029-030213-c7b1",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://coddy.dev/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://coddy.dev/install.sh -o /tmp/coddy-install.sh && bash /tmp/coddy-install.sh",
+          "purpose": "Download install.sh and install coddy to ~/.local/bin"
         }
       ],
-      "manual_steps": [
-        "Sign in to a provider via /login"
-      ],
-      "check": null,
+      "manual_steps": [],
+      "check": {
+        "command": "coddy --version",
+        "expected_signal": "1.3.60"
+      },
       "first_task": "coddy -t"
     },
     "windows": {
@@ -118,10 +119,94 @@
     "url": "https://github.com/coddy-project/coddy-agent/releases/tag/1.3.60"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T03:04:13.663207+08:00",
+    "runs": [
+      {
+        "id": "verify-coddy-agent-20261029-030213-c7b1",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T03:04:13.663207+08:00",
+        "tool_version": "1.3.60",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://coddy.dev/install.sh -o /tmp/coddy-install.sh && bash /tmp/coddy-install.sh",
+            "purpose": "Download install.sh and install coddy to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "coddy --version",
+            "expected_signal": "1.3.60",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.3.60",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "coddy -t",
+            "expected_signal": "valid, 1 warning",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "/home/sbx/.coddy/config.yaml: valid, 1 warning",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "coddy --dry-run",
+            "expected_signal": "dry run: 1 error",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "dry run: 1 error, 0 warnings, 1 ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -fsSL http://127.0.0.1:12345/docs/ -o /tmp/coddy-docs.html && wc -c /tmp/coddy-docs.html\ncurl -fsSL http://127.0.0.1:12345/v1/models",
+            "expected_signal": "\"object\":\"list\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"object\":\"list\",\"data\":[{\"id\":\"agent\",\"object\":\"model\",\"created\":0,\"owned_by\":\"coddy\",\"max_context_tokens\":128000,\"context_length\":128000},{\"id\":\"plan\",\"object\":\"model\",\"created\":0,\"owned_by\":\"coddy\",\"max_context_tokens\":128000,\"context_length\":128000},{\"id\":\"ask\",\"object\":\"model\",\"created\":0,\"own…",
+            "setup": [
+              {
+                "command": "coddy serve",
+                "background": true,
+                "port": 12345
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show config validation with 1 warning, dry-run reporting 1 error as intended, and version 1.3.60 printed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-coddy-agent-20261029-030213-c7b1/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-coddy-agent-20261029-030213-c7b1/check-1-cmd6.judged.png",
+            "runs/verify/verify-coddy-agent-20261029-030213-c7b1/check-2-cmd7.judged.png",
+            "runs/verify/verify-coddy-agent-20261029-030213-c7b1/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.065415
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -364,5 +449,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T03:04:13.664023+08:00"
 }

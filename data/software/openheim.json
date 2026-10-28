@@ -52,7 +52,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-openheim-20261029-030311-aac5",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fSL https://github.com/weirdstuff-dev/openheim/releases/download/v0.17.1/openheim-v0.17.1-x86_64-unknown-linux-gnu.tar.gz -o /tmp/openheim.tar.gz && mkdir -p /tmp/openheim-rel ~/.local/bin && tar -xzf /tmp/openheim.tar.gz -C /tmp/openheim-rel && cp /tmp/openheim-rel/openheim ~/.local/bin/openheim && chmod +x ~/.local/bin/openheim && ls -l ~/.local/bin/openheim",
+          "purpose": "Download prebuilt Linux x86_64 release and install to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "openheim --help",
+        "expected_signal": "Usage: openheim [OPTIONS] [COMMAND]"
+      },
+      "first_task": "openheim init"
+    },
     "windows": null
   },
   "pricing": {
@@ -68,10 +84,78 @@
     "url": "https://github.com/weirdstuff-dev/openheim/releases/tag/v0.17.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T03:03:58.570501+08:00",
+    "runs": [
+      {
+        "id": "verify-openheim-20261029-030311-aac5",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T03:03:58.570501+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fSL https://github.com/weirdstuff-dev/openheim/releases/download/v0.17.1/openheim-v0.17.1-x86_64-unknown-linux-gnu.tar.gz -o /tmp/openheim.tar.gz && mkdir -p /tmp/openheim-rel ~/.local/bin && tar -xzf /tmp/openheim.tar.gz -C /tmp/openheim-rel && cp /tmp/openheim-rel/openheim ~/.local/bin/openheim && chmod +x ~/.local/bin/openheim && ls -l ~/.local/bin/openheim",
+            "purpose": "Download prebuilt Linux x86_64 release and install to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "openheim --help",
+            "expected_signal": "Usage: openheim [OPTIONS] [COMMAND]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: openheim [OPTIONS] [COMMAND]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "openheim init",
+            "expected_signal": "Config file created at /home/sbx/.openheim/config.toml",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Config file created at /home/sbx/.openheim/config.toml",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install openheim (requires Rust 1.91+)",
+            "actually_needed": "Download prebuilt x86_64-unknown-linux-gnu tarball from GitHub releases v0.17.1 and copy openheim binary to ~/.local/bin; no Rust toolchain needed"
+          },
+          {
+            "readme_said": "Standard --version flag assumed available",
+            "actually_needed": "openheim supports --help but not --version (exits 2 with 'unexpected argument --version'); use openheim --help"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show init creating the config file and --help printing usage with commands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-openheim-20261029-030311-aac5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-openheim-20261029-030311-aac5/check-1-cmd6.judged.png",
+            "runs/verify/verify-openheim-20261029-030311-aac5/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.048216
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -290,5 +374,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-29T02:41:28+08:00"
+  "updated_at": "2026-10-29T03:03:58.571640+08:00"
 }

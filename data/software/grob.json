@@ -70,17 +70,24 @@
       "first_task": "grob status"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-grob-20261029-030326-fcb5",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/azerozero/grob/main/scripts/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/azerozero/grob/main/scripts/install.sh -o /tmp/grob-install.sh",
+          "purpose": "Download install script for inspection"
+        },
+        {
+          "command": "sh /tmp/grob-install.sh",
+          "purpose": "Install grob via script to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "grob --version",
+        "expected_signal": "grob 0.36.129"
+      },
       "first_task": "grob status"
     },
     "windows": null
@@ -98,10 +105,97 @@
     "url": "https://github.com/azerozero/grob/releases/tag/v0.36.129"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T03:04:42.668707+08:00",
+    "runs": [
+      {
+        "id": "verify-grob-20261029-030326-fcb5",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T03:04:42.668707+08:00",
+        "tool_version": "0.36.129",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/azerozero/grob/main/scripts/install.sh -o /tmp/grob-install.sh",
+            "purpose": "Download install script for inspection"
+          },
+          {
+            "command": "sh /tmp/grob-install.sh",
+            "purpose": "Install grob via script to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "grob --version",
+            "expected_signal": "grob 0.36.129",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "grob 0.36.129",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "grob --help",
+            "expected_signal": "Usage: grob [OPTIONS] [COMMAND]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: grob [OPTIONS] [COMMAND]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "grob status",
+            "expected_signal": "Service:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Service: ❌ stopped",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "grob doctor",
+            "expected_signal": "Grob Doctor",
+            "exit_code": 2,
+            "passed": true,
+            "observed_excerpt": "🩺 Grob Doctor — Diagnostic Checks",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "grob setup writes ~/.grob/config.toml",
+            "actually_needed": "grob status auto-creates a default ~/.grob/config.toml on first run (stderr: Created default config file) without running grob setup"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show expected output: status reports Service, doctor runs diagnostics, and version prints grob 0.36.129.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-grob-20261029-030326-fcb5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-grob-20261029-030326-fcb5/check-1-cmd5.judged.png",
+            "runs/verify/verify-grob-20261029-030326-fcb5/check-2-cmd6.judged.png",
+            "runs/verify/verify-grob-20261029-030326-fcb5/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.067722
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -320,5 +414,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:54+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T03:04:42.669463+08:00"
 }

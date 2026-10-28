@@ -73,17 +73,24 @@
       "first_task": "zeph doctor"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "script",
+      "basis": "replayed",
+      "run_id": "verify-zeph-20261029-030213-473a",
+      "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL https://github.com/bug-ops/zeph/releases/latest/download/install.sh | sh",
-          "purpose": null
+          "command": "mkdir -p ~/.local/bin /tmp/z && curl -fsSL --retry 3 -o /tmp/z/zeph.tar.gz https://github.com/bug-ops/zeph/releases/download/v0.22.5/zeph-x86_64-unknown-linux-musl.tar.gz && ls -l /tmp/z/",
+          "purpose": "Download pinned musl binary release"
+        },
+        {
+          "command": "curl -fsSL -o /tmp/z/zeph.sha256 https://github.com/bug-ops/zeph/releases/download/v0.22.5/zeph-x86_64-unknown-linux-musl.tar.gz.sha256 && E=$(cut -d' ' -f1 /tmp/z/zeph.sha256) && A=$(sha256sum /tmp/z/zeph.tar.gz | cut -d' ' -f1) && test \"$E\" = \"$A\" && tar xzf /tmp/z/zeph.tar.gz -C /tmp/z && install -m0755 /tmp/z/zeph ~/.local/bin/zeph && rm -rf /tmp/z",
+          "purpose": "Verify checksum and install to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "zeph --version",
+        "expected_signal": "zeph 0.22.5"
+      },
       "first_task": "zeph doctor"
     },
     "windows": {
@@ -114,10 +121,97 @@
     "url": "https://github.com/bug-ops/zeph/releases/tag/v0.22.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T03:03:34.704630+08:00",
+    "runs": [
+      {
+        "id": "verify-zeph-20261029-030213-473a",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T03:03:34.704630+08:00",
+        "tool_version": "0.22.5",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/z && curl -fsSL --retry 3 -o /tmp/z/zeph.tar.gz https://github.com/bug-ops/zeph/releases/download/v0.22.5/zeph-x86_64-unknown-linux-musl.tar.gz && ls -l /tmp/z/",
+            "purpose": "Download pinned musl binary release"
+          },
+          {
+            "command": "curl -fsSL -o /tmp/z/zeph.sha256 https://github.com/bug-ops/zeph/releases/download/v0.22.5/zeph-x86_64-unknown-linux-musl.tar.gz.sha256 && E=$(cut -d' ' -f1 /tmp/z/zeph.sha256) && A=$(sha256sum /tmp/z/zeph.tar.gz | cut -d' ' -f1) && test \"$E\" = \"$A\" && tar xzf /tmp/z/zeph.tar.gz -C /tmp/z && install -m0755 /tmp/z/zeph ~/.local/bin/zeph && rm -rf /tmp/z",
+            "purpose": "Verify checksum and install to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "zeph --version",
+            "expected_signal": "zeph 0.22.5",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "zeph 0.22.5",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "zeph doctor",
+            "expected_signal": "3 check(s) failed",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "3 check(s) failed, 6 warning(s)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "zeph skill list",
+            "expected_signal": "No skills installed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No skills installed in /home/sbx/.config/zeph/skills.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "zeph router stats",
+            "expected_signal": "No Thompson state found",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No Thompson state found at: /home/sbx/.zeph/router_thompson_state.json",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://github.com/bug-ops/zeph/releases/latest/download/install.sh | sh",
+            "actually_needed": "manually download zeph-x86_64-unknown-linux-musl.tar.gz + .sha256 from v0.22.5, verify checksum, extract zeph to ~/.local/bin (already on PATH)"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show zeph doctor reporting 3 failed checks, skill list reporting no skills installed, and --version printing 0.22.5.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-zeph-20261029-030213-473a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-zeph-20261029-030213-473a/check-1-cmd8.judged.png",
+            "runs/verify/verify-zeph-20261029-030213-473a/check-2-cmd9.judged.png",
+            "runs/verify/verify-zeph-20261029-030213-473a/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.098271
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -376,5 +470,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T03:03:34.705480+08:00"
 }

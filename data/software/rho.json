@@ -51,7 +51,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-rho-20261029-030213-06c2",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/rho-clean && curl -fsSL -o /tmp/rho-clean/rho.tar.gz https://github.com/casonadams/rho/releases/download/v0.12.1/rho-0.12.1-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/rho-clean/rho.tar.gz -C /tmp/rho-clean && cp /tmp/rho-clean/rho ~/.local/bin/rho && chmod +x ~/.local/bin/rho",
+          "purpose": "download x86_64-linux release tarball and install rho to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "rho --version",
+        "expected_signal": "rho 0.12.1"
+      },
+      "first_task": "rho mcp"
+    },
     "windows": null
   },
   "pricing": {
@@ -67,10 +83,83 @@
     "url": "https://github.com/casonadams/rho/releases/tag/v0.12.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T03:03:26.847253+08:00",
+    "runs": [
+      {
+        "id": "verify-rho-20261029-030213-06c2",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T03:03:26.847253+08:00",
+        "tool_version": "0.12.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/rho-clean && curl -fsSL -o /tmp/rho-clean/rho.tar.gz https://github.com/casonadams/rho/releases/download/v0.12.1/rho-0.12.1-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/rho-clean/rho.tar.gz -C /tmp/rho-clean && cp /tmp/rho-clean/rho ~/.local/bin/rho && chmod +x ~/.local/bin/rho",
+            "purpose": "download x86_64-linux release tarball and install rho to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "rho --version",
+            "expected_signal": "rho 0.12.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "rho 0.12.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rho --help",
+            "expected_signal": "Self-Update:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Self-Update:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rho mcp",
+            "expected_signal": "Configured MCP Servers (0 total):",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Configured MCP Servers (0 total):",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install rho",
+            "actually_needed": "download rho-0.12.1-x86_64-unknown-linux-gnu.tar.gz from GitHub releases and copy extracted rho binary to ~/.local/bin"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show expected outputs: empty MCP server list and version rho 0.12.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-rho-20261029-030213-06c2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-rho-20261029-030213-06c2/check-1-cmd14.judged.png",
+            "runs/verify/verify-rho-20261029-030213-06c2/check-2-cmd12.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.077234
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -273,5 +362,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T03:03:26.849334+08:00"
 }
