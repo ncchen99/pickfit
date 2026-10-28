@@ -256,7 +256,8 @@ pickfit records every command with its command_id, exit code and output, and dec
 that record, not from finish: finish only cites command_ids. So run each check (--version, --help, each \
 README example) as its own run_command, and never hide an exit code with `; echo $?`, `|| true`, \
 `|| :`, `if`, a trailing pipe (`| tail`, `| head`, `| grep`) or a trailing `; echo`: pickfit does not \
-count such a command. Chain only dependent steps, with &&. A fresh box replays the cited steps and \
+count such a command. Long output is already cut for you (you see its last {stdout_chars} characters), so \
+never pipe an install or a check into head or tail; to read part of a file, use read_file. Chain only dependent steps, with &&. A fresh box replays the cited steps and \
 smoke tests exactly, the smoke tests with the network off.
 
 Levels: install = installed, on PATH, --version or --help works. function = also a README example ran \
@@ -451,7 +452,8 @@ class VerifyAgent:
         self.call_kwargs = call_kwargs  # client, ledger: test seams passed to call_meta
         self.plan = plan_for(task.extraction, box.os)
         self.instructions = INSTRUCTIONS.format(max_commands=limits.max_commands, max_turns=limits.max_turns,
-                                                minutes=round(limits.max_seconds / 60))
+                                                minutes=round(limits.max_seconds / 60),
+                                                stdout_chars=f"{STDOUT_CHARS:,}")
         self.commands_used = 0
         self.finish_retries = 0
         self.verdict: LogVerdict | None = None
