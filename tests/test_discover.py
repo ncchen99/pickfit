@@ -76,12 +76,19 @@ def no_sleep(monkeypatch: pytest.MonkeyPatch) -> list[float]:
 
 def test_build_queries_fills_dates_per_category() -> None:
     queries = build_queries(date(2026, 10, 28), pushed_days=14)
-    assert [q.id for q in queries] == [
+    ids = [q.id for q in queries]
+    assert ids[:6] == [
         "dev_cli:cli", "dev_cli:tui", "dev_cli:terminal",
         "local_ai:local-llm", "local_ai:ollama", "local_ai:llama-cpp",
     ]
+    assert len(ids) == len(set(ids))
     assert queries[0].q == ("topic:cli created:>=2026-01-01 pushed:>=2026-10-14 stars:5..300 "
                             "fork:false archived:false")
+
+
+def test_build_queries_joins_combined_topics() -> None:
+    by_id = {q.id: q for q in build_queries(date(2026, 10, 28), categories=["local_ai"])}
+    assert by_id["local_ai:ollama+cli"].q.startswith("topic:ollama topic:cli created:>=2026-01-01 ")
 
 
 def test_build_queries_filters_and_rejects_unknown_categories() -> None:
@@ -439,7 +446,8 @@ def test_run_discover_end_to_end(tmp_path: Path) -> None:
     assert funnel["discover"]["candidates"] == 2
     assert funnel["discover"]["by_category"] == {"local_ai": 1, "dev_cli": 1}
     assert funnel["discover"]["in_both_categories"] == 1
-    assert len(funnel["discover"]["queries"]) == 6
+    n_queries = len(build_queries(date(2026, 10, 28)))
+    assert len(funnel["discover"]["queries"]) == n_queries
     assert funnel["rules"] == {**funnel["rules"], "checked": 2, "passed": 1,
                                "by_label": {"tool": 1, "rejected": 1}}
     assert funnel["rules"]["reject_reasons"] == {"reject:fork": 1}
@@ -449,7 +457,7 @@ def test_run_discover_end_to_end(tmp_path: Path) -> None:
     before = len(fake.requests)
     run_discover(token=TOKEN, db_path=tmp_path / "pipeline.db", per_query=10, today=date(2026, 10, 28),
                  gh=fake.client(tmp_path, search_interval_s=0), log=lines.append)
-    assert len(fake.requests) - before == 6
+    assert len(fake.requests) - before == n_queries
 
 
 def test_apply_rules_skips_repos_without_details(tmp_path: Path) -> None:
