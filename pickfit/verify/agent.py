@@ -27,7 +27,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from pickfit.env import REPO_ROOT, get_env
 from pickfit.ledger import BudgetExceeded, taipei_now
@@ -98,7 +98,8 @@ FINISH_TOOL = _fn(
                       "required": ["command", "purpose"], "additionalProperties": False}},
         "smoke_tests": {"type": "array", "description": (
             "Checks you ran after installing: --version/--help, then a README example. setup lists "
-            "the commands it needed first (input files, a prior command), copied exactly."),
+            "the commands it needed first (input files, a prior command), each copied exactly and in "
+            "full, a heredoc with its whole body: a fresh box will replay them."),
             "items": {"type": "object", "properties": {
                 "command": _STR, "setup": {"type": "array", "items": _STR},
                 "expected_signal": _STR, "exit_code": {"type": "integer"},
@@ -162,6 +163,14 @@ class _RunBackgroundArgs(BaseModel):
     wait_s: int = Field(default=30, ge=0)
 
 
+_NULL_STRINGS = {"", "null", "none", "n/a"}
+
+
+def _null_string(value: Any) -> Any:
+    # Muse Spark often sends the string "null" for a nullable tool argument.
+    return None if isinstance(value, str) and value.strip().lower() in _NULL_STRINGS else value
+
+
 class FinishStep(BaseModel):
     command: str = Field(min_length=1)
     purpose: str | None = None
@@ -174,6 +183,11 @@ class FinishSmokeTest(BaseModel):
     exit_code: int | None = None
     passed: bool
     observed_excerpt: str | None = None
+
+    @field_validator("exit_code", "observed_excerpt", mode="before")
+    @classmethod
+    def _null_strings(cls, value: Any) -> Any:
+        return _null_string(value)
 
 
 class FinishPitfall(BaseModel):
@@ -193,6 +207,11 @@ class FinishArgs(BaseModel):
     pitfalls: list[FinishPitfall] = []
     blocking_error: str | None = None
     summary: str = ""
+
+    @field_validator("unverified_reason", "tool_version", "install_method", "blocking_error", mode="before")
+    @classmethod
+    def _null_strings(cls, value: Any) -> Any:
+        return _null_string(value)
 
 
 # ---------------------------------------------------------------- prompt
@@ -367,7 +386,8 @@ def check_finish(finish: FinishArgs, commands: list[CommandRecord]) -> dict[str,
     Every step must appear in a command that exited 0, and every smoke test in
     a command whose exit code matches the claim. A passed level without that
     support is lowered: no supported steps -> unverified; no supported passing
-    smoke test -> install.
+    smoke test -> install. Setup commands missing from the log are problems
+    (replay cannot rerun them) but do not lower the level.
     """
     ran = [c for c in commands if c.tool in ("run_command", "run_background")]
 
@@ -383,6 +403,9 @@ def check_finish(finish: FinishArgs, commands: list[CommandRecord]) -> dict[str,
             problems.append(f"step never seen succeeding: {step.command}")
     smoke_ok = False
     for test in finish.smoke_tests:
+        for setup in test.setup:
+            if not any(c.exit_code == 0 for c in runs_of(setup)):
+                problems.append(f"setup not in the log as written: {_one_line(setup, 120)}")
         seen = runs_of(test.command)
         if not seen:
             problems.append(f"smoke test never ran: {test.command}")
@@ -602,14 +625,15 @@ class VerifyAgent:
             self._say("  finish ignored: called together with other tools")
             return "Not recorded: call finish alone, after reading the outputs of your other calls.", False
         try:
-            args = FinishArgs.model_validate(call.json_arguments())
+            raw = call.json_arguments()
+            if isinstance(raw, dict) and raw.get("level") != "unverified":
+                raw["unverified_reason"] = None  # only meaningful for unverified
+            args = FinishArgs.model_validate(raw)
         except (ValueError, ValidationError) as err:
             self._say(f"  finish rejected: {_one_line(str(err), 200)}")
             return f"finish arguments are invalid: {_one_line(str(err), 600)}. Call finish again.", False
         if args.level == "unverified" and args.unverified_reason is None:
             args.unverified_reason = "other"
-        if args.level != "unverified":
-            args.unverified_reason = None
         if args.level == "failed" and not args.blocking_error:
             args.blocking_error = args.summary or "not given"
         check = check_finish(args, self.report.commands)

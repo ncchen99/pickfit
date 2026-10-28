@@ -350,6 +350,26 @@ def test_check_finish_lowers_unsupported_claims():
     assert check["problems"] == ["smoke test claims exit 1, log shows 2: evnx validate"]
 
 
+def test_finish_accepts_the_string_null_for_nullable_fields():
+    raw = finish(level="function", steps=["pipx install evnx"],
+                 smoke=[{**SMOKE[0], "observed_excerpt": "null"}])[1]
+    raw.update(unverified_reason="null", blocking_error="null", tool_version="None", install_method="")
+    args = FinishArgs.model_validate(raw)
+    assert (args.unverified_reason, args.blocking_error, args.tool_version, args.install_method) == (
+        None, None, None, None)
+    assert args.smoke_tests[0].observed_excerpt is None
+
+
+def test_check_finish_flags_setup_that_replay_cannot_rerun():
+    log = [CommandRecord(1, "run_command", "pipx install evnx", 0, 1.0),
+           CommandRecord(2, "run_command", "printf 'A=1\\n' > .env && evnx sync && evnx validate", 1, 0.1)]
+    claim = FinishArgs.model_validate(finish(steps=["pipx install evnx"], smoke=[
+        {**SMOKE[0], "setup": ["evnx sync", "write a .env with two variables"]}])[1])
+    check = check_finish(claim, log)
+    assert check["level"] == "function" and not check["agrees"]
+    assert check["problems"] == ["setup not in the log as written: write a .env with two variables"]
+
+
 def test_fixtures_load_and_parse():
     for path in FIXTURES.glob("*.json"):
         data = json.loads(path.read_text())
