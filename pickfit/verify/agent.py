@@ -59,6 +59,7 @@ STDERR_CHARS = 2_000
 DEFAULT_COMMAND_TIMEOUT_S = 300
 BACKGROUND_WAIT_S = 90
 MAX_NUDGES = 2
+MAX_FINISH_RETRIES = 1  # a finish the log does not support goes back to the model once
 WRAP_UP_SECONDS = 90  # leave this much of the time limit for the finish-only turn
 
 _ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b[@-Z\\-_]")
@@ -452,6 +453,7 @@ class VerifyAgent:
         self.instructions = INSTRUCTIONS.format(max_commands=limits.max_commands, max_turns=limits.max_turns,
                                                 minutes=round(limits.max_seconds / 60))
         self.commands_used = 0
+        self.finish_retries = 0
         self.verdict: LogVerdict | None = None
         self.error_counts: Counter[str] = Counter()
         self.repeated_error: str | None = None
@@ -501,10 +503,10 @@ class VerifyAgent:
         turn = 0
         while True:
             if turn >= lim.max_turns:
-                self.report.stop_reason = "max_turns"
+                self._stop("max_turns")
                 return
             if self._elapsed() >= lim.max_seconds:
-                self.report.stop_reason = "max_time"
+                self._stop("max_time")
                 return
             if wrap_up is None:
                 wrap_up = self._wrap_up_reason(turn)
@@ -532,18 +534,22 @@ class VerifyAgent:
             pending = []
             if not result.tool_calls:
                 if wrap_up or nudges >= MAX_NUDGES:
-                    self.report.stop_reason = "no_finish"
+                    self._stop("no_finish")
                     return
                 nudges += 1
                 pending.append(_user("Continue with the tools; call finish when you are done."))
                 continue
-            finished = self._handle_calls(result.tool_calls, turn, pending, finish_allowed=True)
+            finished = self._handle_calls(result.tool_calls, turn, pending, can_retry=wrap_up is None)
             if finished:
                 self.report.stop_reason = "finished"
                 return
             if wrap_up:
-                self.report.stop_reason = "no_finish"
+                self._stop("no_finish")
                 return
+
+    def _stop(self, reason: str) -> None:
+        # A finish sent back for a retry still stands if the model never sends another.
+        self.report.stop_reason = "finished" if self.verdict is not None else reason
 
     def _wrap_up_reason(self, turns_done: int) -> str | None:
         lim = self.limits
@@ -598,19 +604,19 @@ class VerifyAgent:
     # -- tool calls
 
     def _handle_calls(self, calls: list[ToolCall], turn: int, outputs: list[dict[str, Any]],
-                      finish_allowed: bool) -> bool:
+                      can_retry: bool) -> bool:
         """Run each call in order, append its output; True once a valid finish is recorded."""
         alone = len(calls) == 1
         finished = False
         for call in calls:
             if call.name == "finish":
-                text, finished = self._finish(call, alone)
+                text, finished = self._finish(call, alone, can_retry)
             else:
                 text = self._dispatch(call, turn)
             outputs.append({"type": "function_call_output", "call_id": call.call_id, "output": text})
         return finished
 
-    def _finish(self, call: ToolCall, alone: bool) -> tuple[str, bool]:
+    def _finish(self, call: ToolCall, alone: bool, can_retry: bool = False) -> tuple[str, bool]:
         if not alone:
             self._say("  finish ignored: called together with other tools")
             return "Not recorded: call finish alone, after reading the outputs of your other calls.", False
@@ -638,6 +644,17 @@ class VerifyAgent:
             self._say(f"    ! {problem}")
         if args.summary:
             self._say(f"    {_one_line(args.summary, 300)}")
+        left = self.limits.max_commands - self.commands_used
+        if (verdict.level != args.level and verdict.problems and can_retry and left > 0
+                and self.finish_retries < MAX_FINISH_RETRIES):
+            self.finish_retries += 1
+            self._say(f"  finish sent back once: {left} commands left to fix it")
+            problems = "\n".join(f"- {p}" for p in verdict.problems)
+            return (f"Not accepted yet: pickfit's command record supports level {verdict.level}, not "
+                    f"{args.level}:\n{problems}\nYou have {left} commands left. Rerun what is needed as its own "
+                    "run_command (an install step with no exploration chained after it; a check with no "
+                    "`; echo`, `| head` or `|| true`), then call finish again citing the new command_ids. "
+                    "If it cannot be fixed, call finish again as it is."), False
         return "Recorded.", True
 
     def _dispatch(self, call: ToolCall, turn: int) -> str:

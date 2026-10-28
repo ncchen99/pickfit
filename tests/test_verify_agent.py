@@ -196,11 +196,47 @@ def test_finish_with_other_calls_is_not_recorded(task, ledger, tmp_path):
     server = FakeServer(
         response("r1", run_cmd("pipx install evnx"), finish(level="install", steps=[1])),
         response("r2", finish(level="install", steps=[1])),
+        response("r3", finish(level="install", steps=[1])),
     )
     report = agent(task, FakeBox(EVNX_BOX), server, ledger, tmp_path, mode="chain").run()
     outputs = [item["output"] for item in server.requests[1]["input"]]
     assert outputs[1].startswith("Not recorded: call finish alone")
-    assert report.stop_reason == "finished" and len(report.turns) == 2
+    # No check in the log: sent back once, then the second identical finish stands.
+    retry = server.requests[2]["input"][0]["output"]
+    assert retry.startswith("Not accepted yet: pickfit's command record supports level unverified, not install")
+    assert report.stop_reason == "finished" and len(report.turns) == 3
+    assert report.verdict["level"] == "unverified"
+
+
+def test_unsupported_finish_goes_back_once_and_a_clean_rerun_counts(task, ledger, tmp_path):
+    box = FakeBox({"pipx install evnx": (0, "installed package evnx 0.10.18", ""),
+                   "evnx --version": (0, "evnx 0.10.18", "")})
+    version = {"setup_ids": [], "expected_signal": "0.10.18", "expected_exit_code": 0, "observed_excerpt": ""}
+    server = FakeServer(
+        response("r1", run_cmd("pipx install evnx; cat README.md | head -5")),
+        response("r2", run_cmd("evnx --version")),
+        response("r3", finish(level="install", steps=[1], smoke=[{**version, "command_id": 2}])),
+        response("r4", run_cmd("pipx install evnx")),
+        response("r5", finish(level="install", steps=[3], smoke=[{**version, "command_id": 2}])),
+    )
+    lines_agent = agent(task, box, server, ledger, tmp_path)
+    report = lines_agent.run()
+    sent_back = server.requests[3]["input"][-1]["output"]
+    assert "step 1 does not show a success (the last command is `cat`" in sent_back
+    assert "You have 13 commands left" in sent_back
+    assert report.stop_reason == "finished" and report.verdict["level"] == "install"
+    assert report.verdict["step_ids"] == [3] and report.verdict["agrees"]
+    assert "  finish sent back once: 13 commands left to fix it" in lines_agent.lines
+
+
+def test_no_send_back_on_the_finish_only_turn(task, ledger, tmp_path):
+    server = FakeServer(
+        response("r1", run_cmd("pipx install evnx || true")),
+        response("r2", finish(level="install", steps=[1])),
+    )
+    report = agent(task, FakeBox(EVNX_BOX), server, ledger, tmp_path, limits=AgentLimits(max_commands=1)).run()
+    assert report.stop_reason == "finished" and report.verdict["level"] == "unverified"
+    assert len(server.requests) == 2
 
 
 def test_invalid_finish_and_bad_tool_arguments_go_back_to_the_model(task, ledger, tmp_path):
