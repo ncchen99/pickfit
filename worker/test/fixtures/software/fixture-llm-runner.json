@@ -1,0 +1,337 @@
+{
+  "schema_version": "software.v1",
+  "slug": "fixture-llm-runner",
+  "repo_id": "gh:900000101",
+  "name": "Fixture LLM Runner",
+  "summary": "(Fake test fixture) Runs small language models offline and serves them through an OpenAI-compatible local HTTP API.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": "beta",
+  "tags": [
+    "llm",
+    "inference",
+    "offline",
+    "openai-api",
+    "gguf"
+  ],
+  "use_cases": [
+    "run a small language model offline on a laptop",
+    "serve a local model behind an OpenAI-compatible HTTP API"
+  ],
+  "alternatives_to": [
+    "Ollama",
+    "LM Studio"
+  ],
+  "why_worth_it": "(Fake) One install command, then a local OpenAI-compatible endpoint; no account or cloud.",
+  "homepage": null,
+  "repo": {
+    "url": "https://example.invalid/fixture/fixture-llm-runner",
+    "full_name": "fixture/fixture-llm-runner",
+    "created_at": "2026-05-01T00:00:00Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": "optional",
+    "apple_silicon_only": false,
+    "min_ram_gb": 8,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "human",
+      "run_id": "run-20261028-macos-1",
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install fixture/tap/fixture-llm-runner",
+          "purpose": "Install from the project's tap"
+        }
+      ],
+      "manual_steps": [
+        "Allow incoming connections if macOS asks (only for access from other devices)"
+      ],
+      "check": {
+        "command": "fixture-llm-runner --version",
+        "expected_signal": "fixture-llm-runner 0.4.1"
+      },
+      "first_task": "fixture-llm-runner serve --model tiny-test"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "run-20261028-linux-1",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL https://example.invalid/fixture/fixture-llm-runner/install.sh | sh",
+          "purpose": "Run the project's install script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "fixture-llm-runner --version",
+        "expected_signal": "fixture-llm-runner 0.4.1"
+      },
+      "first_task": "fixture-llm-runner serve --model tiny-test"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.4.1",
+    "published_at": "2026-10-20T00:00:00Z",
+    "url": "https://example.invalid/fixture/fixture-llm-runner/releases/tag/v0.4.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-28T09:00:00Z",
+    "runs": [
+      {
+        "id": "run-20261028-linux-1",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "debian:12-slim",
+        "checked_at": "2026-10-28T08:00:00Z",
+        "tool_version": "0.4.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://example.invalid/fixture/fixture-llm-runner/install.sh | sh",
+            "purpose": "Run the project's install script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "fixture-llm-runner serve --model tiny-test --once",
+            "expected_signal": "listening on 127.0.0.1:8080",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "listening on 127.0.0.1:8080"
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "make install",
+            "actually_needed": "the install script; make needs a C toolchain the README does not list"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "(Fixture) Terminal shows the expected output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": "https://example.invalid/runs/run-20261028-linux-1"
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.1
+      },
+      {
+        "id": "run-20261028-macos-1",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "human",
+        "runner": "mac-m5",
+        "image": null,
+        "checked_at": "2026-10-28T09:00:00Z",
+        "tool_version": "0.4.1",
+        "install_method": "brew",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "brew install fixture/tap/fixture-llm-runner",
+            "purpose": "Install from the project's tap"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "fixture-llm-runner --version",
+            "expected_signal": "fixture-llm-runner 0.4.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "fixture-llm-runner 0.4.1"
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": "https://example.invalid/runs/run-20261028-macos-1"
+        },
+        "actor_model": null,
+        "cost_usd": null
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "fixture-1",
+    "computed_at": "2026-10-28T12:00:00Z",
+    "quality": {
+      "total": 84,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.9,
+          "weight": 35
+        },
+        "install_docs": {
+          "score": 0.8,
+          "weight": 20
+        },
+        "maintenance": {
+          "score": 0.85,
+          "weight": 15
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 10
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 12,
+      "signals": {
+        "stars": 140,
+        "monthly_downloads": null,
+        "forks": null,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": null,
+        "registries_count": null
+      },
+      "age_days": 180
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 73.92
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "meta",
+      "kind": "github_api",
+      "url": "https://example.invalid/api/repos/fixture/fixture-llm-runner",
+      "fetched_at": "2026-10-28T10:00:00Z"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://example.invalid/fixture/fixture-llm-runner#readme",
+      "fetched_at": "2026-10-28T10:00:00Z"
+    },
+    {
+      "id": "run:run-20261028-linux-1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-10-28T08:00:00Z"
+    },
+    {
+      "id": "run:run-20261028-macos-1",
+      "kind": "human",
+      "url": null,
+      "fetched_at": "2026-10-28T09:00:00Z"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "(Fake quote) Runs small language models offline and serves them through an OpenAI-compatible local HTTP API.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-28T10:01:00Z"
+    },
+    {
+      "field": "/license",
+      "source_id": "meta",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-28T10:00:00Z"
+    }
+  ],
+  "first_seen_at": "2026-10-28T10:00:00Z",
+  "updated_at": "2026-10-28T12:00:00Z"
+}

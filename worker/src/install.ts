@@ -1,0 +1,111 @@
+/**
+ * get_install_guide: only steps pickfit actually ran (replayed in a fresh
+ * sandbox, or done by hand on a real machine). No model call. README claims
+ * that were never run are not in the index, so they cannot leak out here.
+ */
+import { bestGuide, type Arch, type Catalog, type OS } from './catalog.ts';
+
+export interface InstallInput {
+  slug: string;
+  os: OS;
+  arch?: Arch;
+  rec_id?: string;
+}
+
+export interface InstallOutput {
+  slug: string;
+  name: string;
+  verification: {
+    status: 'verified' | 'unverified';
+    level: string | null;
+    os: OS | null;
+    arch: Arch | null;
+    method: 'sandbox' | 'human' | null;
+    replayed: boolean;
+    runner: string | null;
+    checked_at: string | null;
+    tool_version: string | null;
+    evidence_url: string | null;
+  };
+  applies_to_user_system: {
+    match: 'exact' | 'same_os_other_arch' | 'other_os' | 'none';
+    note: string | null;
+  };
+  steps: {
+    order: number;
+    command: string;
+    purpose: string | null;
+    run_by: 'agent';
+    needs_sudo: boolean;
+  }[];
+  manual_steps: { title: string; run_by: 'user' }[];
+  verify: { command: string; expected_contains: string } | null;
+  first_task: string | null;
+  known_issues: { readme_said: string; actually_needed: string }[];
+  warnings: string[];
+  sources: string[];
+}
+
+export class UnknownSlugError extends Error {}
+
+const PIPE_TO_SHELL = /\|\s*(sudo\s+)?(ba|z)?sh\b/;
+
+export function installGuide(catalog: Catalog, input: InstallInput): InstallOutput {
+  const entry = catalog.bySlug.get(input.slug);
+  if (!entry) {
+    throw new UnknownSlugError(`Unknown slug "${input.slug}". Call find_software first and use a slug it returned.`);
+  }
+  const guide = bestGuide(entry, input.os);
+  const run = guide?.run ?? null;
+  let match: InstallOutput['applies_to_user_system']['match'] = 'none';
+  let note: string | null = null;
+  if (!run) {
+    note = `pickfit has not run ${entry.name}'s install steps on any system yet, so it gives no steps. Do not guess them.`;
+  } else if (run.os !== input.os) {
+    match = 'other_os';
+    note = `pickfit has not run ${entry.name}'s install steps on ${input.os}; these steps were checked on ${run.os}. Tell the user before running them, and expect differences.`;
+  } else if (input.arch && run.arch !== input.arch) {
+    match = 'same_os_other_arch';
+    note = `Checked on ${run.os}/${run.arch}, not ${input.arch}.`;
+  } else {
+    match = 'exact';
+  }
+  const steps = (guide?.steps ?? []).map((step, i) => ({
+    order: i + 1,
+    command: step.command,
+    purpose: step.purpose,
+    run_by: 'agent' as const,
+    needs_sudo: /(^|[\s;&|])sudo\s/.test(step.command),
+  }));
+  const warnings: string[] = [];
+  if (steps.some((s) => PIPE_TO_SHELL.test(s.command))) {
+    warnings.push('A step pipes a downloaded script into a shell. Show it to the user and get consent before running it.');
+  }
+  if (steps.some((s) => s.needs_sudo)) {
+    warnings.push('A step uses sudo. Ask the user before running it.');
+  }
+  return {
+    slug: entry.slug,
+    name: entry.name,
+    verification: {
+      status: run ? 'verified' : 'unverified',
+      level: run?.level ?? null,
+      os: run?.os ?? null,
+      arch: run?.arch ?? null,
+      method: run?.method ?? null,
+      replayed: run?.replayed ?? false,
+      runner: run?.runner ?? null,
+      checked_at: run?.checked_at ?? null,
+      tool_version: run?.tool_version ?? null,
+      evidence_url: run?.evidence_url ?? null,
+    },
+    applies_to_user_system: { match, note },
+    steps,
+    manual_steps: (guide?.manual_steps ?? []).map((title) => ({ title, run_by: 'user' as const })),
+    verify: guide?.check ? { command: guide.check.command, expected_contains: guide.check.expected_signal } : null,
+    first_task: guide?.first_task ?? null,
+    known_issues: guide?.pitfalls ?? [],
+    warnings,
+    sources: entry.sources,
+  };
+}
