@@ -72,6 +72,9 @@ without a shell prompt such as "$ " and without comments.
 4. summary.value is your own neutral sentence in English (at most 160 characters, no marketing \
 words); its quote is the passage it is based on.
 5. Prefer null to a guess. A missing fact is fine; a wrong fact is not.
+6. Write every value in English, even when the sources are in another language: summary, \
+use_cases (short jobs such as "browse files on a remote host over SFTP"), alternatives_to, \
+runtimes, system_packages, api_keys and manual_steps. Quotes stay verbatim in the source language.
 """
 
 _SOURCE_TAG = re.compile(r"<(/?)(source)", re.I)
