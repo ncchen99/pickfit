@@ -65,7 +65,7 @@ from pickfit.schema import (
 FORMULA_VERSION = "b3.v1"
 STAGE = "score-rubric"
 REASONING_EFFORT = "low"
-MAX_OUTPUT_TOKENS = 4_000
+MAX_OUTPUT_TOKENS = 8_000  # reasoning shares it; at effort low one call used 4,000 and ran out
 SCOPE_CAP_USD = 0.10  # per record per run; one rubric call is about $0.015
 PROMPT_CACHE_KEY = "pickfit-rubric-v1"
 DEFAULT_CONCURRENCY = 4
@@ -516,6 +516,9 @@ def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: st
             if graded.error:
                 row["rubric_error"] = graded.error
             row["rubric"] = "graded" if graded.rubric else "error"
+            if graded.rubric is None and rubric is None:
+                row["status"] = "error"  # nothing to score install_docs with: leave the file for a retry
+                return row
             rubric = graded.rubric or rubric  # a failed call keeps the earlier answer
         else:
             row["rubric"] = "reused"
@@ -594,6 +597,10 @@ def score_records(data_dir: Path, *, db_path: Path | None, model: str, slugs: li
                 summary.cost_usd += row["cost_usd"]
                 summary.graded += row["rubric"] in ("graded", "error")
                 summary.reused += row["rubric"] == "reused"
+                if row["status"] == "error":
+                    summary.errors[slug] = row["rubric_error"]
+                    log(f"  error {slug}: {row['rubric_error']} ${row['cost_usd']:.4f}")
+                    continue
                 (summary.written if row["status"] == "written" else summary.unchanged).append(slug)
                 log(f"  {row['status']:<9} {slug:<26} Q {row['quality']} (conf {row['confidence']}, "
                     f"cap {row['cap_reason']}) N {row['popularity']} T {row['treasure_value']}"
