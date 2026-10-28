@@ -10,8 +10,8 @@ const RULES: [RegExp, string][] = [
   [/(\/Users\/|\/home\/|\b[A-Za-z]:\\Users\\)[^/\\\s'"]+/g, '$1<user>'],
   [/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, '<email>'],
   // "Bearer x", and key=value / key: value for secret-sounding keys
-  [/\b(bearer)\s+[^\s"',;]+/gi, '$1 <redacted>'],
-  [/\b(token|api[_-]?key|apikey|password|passwd|secret|authorization)(["']?\s*[:=]\s*["']?)(?!bearer\b)[^\s"',;]+/gi, '$1$2<redacted>'],
+  [/\b(bearer)\s+[^\s"',;)\]}]+/gi, '$1 <redacted>'],
+  [/\b(token|api[_-]?key|apikey|password|passwd|secret|authorization)(["']?\s*[:=]\s*["']?)(?!bearer\b)[^\s"',;)\]}]+/gi, '$1$2<redacted>'],
   // Well-known token prefixes, then any long opaque run of characters
   [/\b(sk|pk|rk|ghp|gho|ghu|ghs|ghr|github_pat|xox[abpr]|AKIA|hf)[-_][A-Za-z0-9_-]{8,}/g, '<token>'],
   [/[A-Za-z0-9+/_-]{32,}={0,2}/g, '<token>'],

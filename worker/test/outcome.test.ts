@@ -182,6 +182,7 @@ test('scrub keeps ordinary error text readable', () => {
   assert.equal(scrub('Authorization: Bearer abc.def'), 'Authorization: Bearer <redacted>');
   assert.equal(scrub('C:\\Users\\dave\\bin'), 'C:\\Users\\<user>\\bin');
   assert.equal(scrub('/home/erin/.cache/x'), '/home/<user>/.cache/x');
+  assert.equal(scrub('denied (token=abc123)'), 'denied (token=<redacted>)');
 });
 
 test('unknown slugs are refused; the reporter label comes from a header', async () => {
