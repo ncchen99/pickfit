@@ -47,6 +47,7 @@ from pickfit.verify.box import (
 )
 
 APP_NAME = "pickfit-verify"
+READ_TIMEOUT_S = 20  # read_file: a FIFO or a device would block `head` forever
 # Sandbox prices (3x the function rates), docs/research/notes/sandbox-compare.md, read 2026-10-28.
 # Billed on max(request, use); request = limit here, so this is the cost per second alive.
 CORE_USD_PER_S = 0.00003942
@@ -197,34 +198,65 @@ class ModalBox(Box):
         return ["setpriv", f"--reuid={BOX_UID}", f"--regid={BOX_UID}", "--clear-groups", "--inh-caps=-all",
                 "--no-new-privs", "--", "env", "-i", *env, "bash", "-c", guard]
 
-    def _exec_raw(self, argv: list[str], timeout_s: int, *, stdin: bytes | None = None,
-                  as_root: bool = False) -> ExecResult:
-        """Run argv in the sandbox, keeping the head and tail of its output."""
-        began = time.monotonic()
+    def _run(self, argv: list[str], timeout_s: int, *, stdin: bytes | None = None,
+             head: int = OUTPUT_HEAD_BYTES, tail: int = OUTPUT_TAIL_BYTES) -> tuple[int, _Capture, _Capture, bool]:
+        """Run argv in the sandbox; (exit code, stdout, stderr, host gave up).
+
+        The host waits at most timeout_s + HOST_GRACE_S. Measured 2026-10-29: a command whose
+        child keeps stdout open (a daemon it started) never returned from proc.wait(), even
+        after the in-box `timeout` killed it, so the wait runs in a thread with a deadline.
+        """
         try:
             proc = self.sandbox.exec(*argv, timeout=timeout_s + HOST_GRACE_S, text=False)
             if stdin is not None:
                 proc.stdin.write(stdin)
                 proc.stdin.write_eof()
                 proc.stdin.drain()
-            out, err = _Capture(OUTPUT_HEAD_BYTES, OUTPUT_TAIL_BYTES), _Capture(OUTPUT_HEAD_BYTES, OUTPUT_TAIL_BYTES)
-
-            def pump(stream: Any, capture: _Capture) -> None:
-                for chunk in stream:
-                    capture.feed(chunk if isinstance(chunk, bytes) else str(chunk).encode())
-
-            threads = [threading.Thread(target=pump, args=(proc.stdout, out), daemon=True),
-                       threading.Thread(target=pump, args=(proc.stderr, err), daemon=True)]
-            for t in threads:
-                t.start()
-            code = proc.wait()
-            for t in threads:
-                t.join(timeout=10)
         except Exception as error:
             raise BoxError(self._exec_error(error)) from error
+        out, err = _Capture(head, tail), _Capture(head, tail)
+        codes: list[int] = []
+        errors: list[Exception] = []
+
+        def pump(stream: Any, capture: _Capture) -> None:
+            try:
+                for chunk in stream:
+                    capture.feed(chunk if isinstance(chunk, bytes) else str(chunk).encode())
+            except Exception:  # the stream died with the process or the box
+                pass
+
+        def wait() -> None:
+            try:
+                codes.append(proc.wait())
+            except Exception as error:
+                errors.append(error)
+
+        threads = [threading.Thread(target=pump, args=(proc.stdout, out), daemon=True),
+                   threading.Thread(target=pump, args=(proc.stderr, err), daemon=True)]
+        waiter = threading.Thread(target=wait, daemon=True)
+        for t in (*threads, waiter):
+            t.start()
+        waiter.join(timeout_s + HOST_GRACE_S)
+        if errors:
+            raise BoxError(self._exec_error(errors[0])) from errors[0]
+        for t in threads:
+            t.join(timeout=5 if codes else 0.5)
+        if not codes:
+            return 124, out, err, True
+        return codes[0], out, err, False
+
+    def _exec_raw(self, argv: list[str], timeout_s: int, *, stdin: bytes | None = None,
+                  as_root: bool = False) -> ExecResult:
+        """Run argv in the sandbox, keeping the head and tail of its output."""
+        began = time.monotonic()
+        code, out, err, gave_up = self._run(argv, timeout_s, stdin=stdin)
         seconds = round(time.monotonic() - began, 2)
+        stderr = err.text()
+        if gave_up:
+            stderr += (f"\n[pickfit stopped waiting after {seconds:.0f}s: the command did not exit, or something "
+                       "it started still holds its output open; start servers and daemons with run_background]")
         return ExecResult(command=" ".join(argv) if as_root else argv[-1], exit_code=code,
-                          stdout=out.text(), stderr=err.text(), seconds=seconds,
+                          stdout=out.text(), stderr=stderr, seconds=seconds, timed_out=gave_up,
                           truncated=bool(out.dropped or err.dropped))
 
     def exec(self, command: str, timeout_s: int, *, cwd: str | None = None) -> ExecResult:
@@ -232,7 +264,7 @@ class ModalBox(Box):
         timeout_s = max(1, min(int(timeout_s), self.limits.max_command_s))
         result = self._exec_raw(self.user_argv(command, timeout_s, cwd or self.workdir), timeout_s)
         # `timeout -s KILL` exits 137; Modal's own backstop reports -1 or 124-ish codes.
-        timed_out = result.exit_code in (124, 137, -1) and result.seconds >= timeout_s - 0.5
+        timed_out = result.timed_out or (result.exit_code in (124, 137, -1) and result.seconds >= timeout_s - 0.5)
         return ExecResult(command=command, exit_code=result.exit_code, stdout=result.stdout,
                           stderr=result.stderr, seconds=result.seconds, timed_out=timed_out,
                           truncated=result.truncated)
@@ -249,19 +281,11 @@ class ModalBox(Box):
 
     def read_file(self, path: str, max_bytes: int = 64_000) -> bytes:
         self._require_started()
-        argv = self.user_argv(f"head -c {int(max_bytes)} -- {shlex.quote(path)}", 60, self.workdir)
-        proc_result = self._read_bytes(argv, 60)
-        if proc_result[0] != 0:
-            raise BoxError(f"cannot read {path}: {proc_result[2].decode(errors='replace').strip()[-300:]}")
-        return proc_result[1][:max_bytes]
-
-    def _read_bytes(self, argv: list[str], timeout_s: int) -> tuple[int, bytes, bytes]:
-        try:
-            proc = self.sandbox.exec(*argv, timeout=timeout_s + HOST_GRACE_S, text=False)
-            out, err = proc.stdout.read(), proc.stderr.read()
-            return proc.wait(), out, err
-        except Exception as error:
-            raise BoxError(self._exec_error(error)) from error
+        argv = self.user_argv(f"head -c {int(max_bytes)} -- {shlex.quote(path)}", READ_TIMEOUT_S, self.workdir)
+        code, out, err, gave_up = self._run(argv, READ_TIMEOUT_S, head=max_bytes, tail=0)
+        if code != 0 or gave_up:
+            raise BoxError(f"cannot read {path}: {err.text().strip()[-300:] or 'timed out'}")
+        return bytes(out.head)
 
     def _exec_error(self, error: Exception) -> str:
         text = f"{type(error).__name__}: {error}"

@@ -33,6 +33,17 @@ COMMAND_TIMEOUT_S = 600
 BACKGROUND_WAIT_S = 90
 
 
+def replay_timeout(recorded_s: float | None) -> int:
+    """A rerun gets 4x the recorded time plus 30 s (at least 60 s, at most 10 minutes).
+
+    A check that hangs with the network off (it took 0.5 s online) must not hold the
+    replay for the full 10 minutes, twice.
+    """
+    if recorded_s is None:
+        return COMMAND_TIMEOUT_S
+    return int(min(COMMAND_TIMEOUT_S, max(60, recorded_s * 4 + 30)))
+
+
 @dataclass(frozen=True)
 class ReplayCommand:
     command_id: int
@@ -40,6 +51,7 @@ class ReplayCommand:
     command: str
     port: int | None = None
     wait_s: int | None = None
+    seconds: float | None = None  # how long it took for the agent
 
 
 @dataclass(frozen=True)
@@ -67,7 +79,7 @@ def plan_from(verdict: LogVerdict, commands: list[CommandRecord]) -> ReplayPlan:
 
     def command(cid: int) -> ReplayCommand:
         c = by_id[cid]
-        return ReplayCommand(cid, c.tool, c.command, c.port, c.wait_s)
+        return ReplayCommand(cid, c.tool, c.command, c.port, c.wait_s, c.seconds)
 
     checks = [c for c in verdict.checks if c.passed]
     check_ids = {c.command_id for c in checks}
@@ -140,7 +152,7 @@ class Replayer:
             result = self.box.exec(background_script(cmd.command, cmd.port, wait, f"replay-{cmd.command_id}"),
                                    wait + 15)
         else:
-            result = self.box.exec(cmd.command, self.timeout)
+            result = self.box.exec(cmd.command, min(self.timeout, replay_timeout(cmd.seconds)))
         return self._ran(cmd, result)
 
     def _ran(self, cmd: ReplayCommand, result: ExecResult) -> RanCommand:

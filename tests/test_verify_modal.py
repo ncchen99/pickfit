@@ -232,3 +232,23 @@ def test_a_missing_image_is_published_once_then_used(monkeypatch: pytest.MonkeyP
     monkeypatch.setattr(mb, "publish_image", lambda client, app, log: published.append("x") or "pickfit-sbx:abc")
     ModalBox(client="client", log=lambda s: None).start()
     assert attempts == ["image:pickfit-sbx:abc"] * 2 and published == ["x"]
+
+
+def test_a_command_that_never_returns_is_given_up_on(monkeypatch: pytest.MonkeyPatch):
+    import threading
+
+    class HangingProc(FakeProc):
+        def wait(self) -> int:
+            threading.Event().wait()  # like a daemon child holding stdout open
+            return 0
+
+    sandbox = FakeSandbox()
+    sandbox.exec = lambda *argv, **kw: HangingProc(0, [b"partial"], [])  # type: ignore[method-assign]
+    monkeypatch.setattr(mb, "HOST_GRACE_S", 0)
+    monkeypatch.setattr(mb, "READ_TIMEOUT_S", 1)
+    box = started(sandbox)
+    result = box.exec("corvus serve", 1)
+    assert result.timed_out and result.exit_code == 124 and result.stdout == "partial"
+    assert "start servers and daemons with run_background" in result.stderr
+    with pytest.raises(BoxError, match="cannot read fifo"):
+        box.read_file("fifo")

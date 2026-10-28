@@ -127,3 +127,14 @@ def test_background_setup_is_restarted_with_the_same_script():
     assert result.passed and result.level == "service" and result.offline
     script, timeout = box.ran[1]
     assert "/dev/tcp/127.0.0.1/8080" in script and "replay-2.log" in script and timeout == 45
+
+
+def test_rerun_timeouts_follow_the_recorded_time():
+    from pickfit.verify.replay import replay_timeout
+
+    assert replay_timeout(0.5) == 60 and replay_timeout(40) == 190 and replay_timeout(300) == 600
+    assert replay_timeout(None) == 600
+    plan = plan_from(verdict([{"command_id": 2, "expected_signal": "0.4.1"}]), LOG)
+    box = box_for_log()
+    Replayer(box, log=lambda s: None).run(plan, TASK)
+    assert [t for _, t in box.ran] == [60, 60]  # LOG records 0.1 s for each
