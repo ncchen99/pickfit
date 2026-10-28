@@ -403,7 +403,7 @@ Cloudflare 免費額度（[Workers limits](https://developers.cloudflare.com/wor
 
 ## G. 整體架構
 
-依據：三個 agent 各從一個角度提出完整架構（[最小可行](notes/arch-proposal-mvp.md)、[demo 優先](notes/arch-proposal-demo.md)、[單一平台](notes/arch-proposal-single.md)），三位評審（務實派、黑客松評審、事實查核）交叉打分，再由綜合者移植好點子、修正評審找到的 18 個事實錯誤（[notes/architecture-synthesis.md](notes/architecture-synthesis.md)）。整合進本文時，主控者又修正了 4 處和 A–F 節不一致的地方（見 G.5）。
+依據：三個 agent 各從一個角度提出完整架構（[最小可行](notes/arch-proposal-mvp.md)、[demo 優先](notes/arch-proposal-demo.md)、[單一平台](notes/arch-proposal-single.md)），3 個評審 agent（AI 子代理，分別從務實、黑客松評分、事實查核的角度）交叉打分，再由綜合 agent 移植好點子、修正評審找到的 18 個事實錯誤（[notes/architecture-synthesis.md](notes/architecture-synthesis.md)）。整合進本文時，主控 agent 又修正了 4 處和 A–F 節不一致的地方（G.5）；最後 4 個審查 agent 檢查全文，修正項目見 G.6。分數是 AI 評審 agent 給的，不是比賽官方評審。
 
 ### G.1 三個架構的比較
 
@@ -413,13 +413,13 @@ Cloudflare 免費額度（[Workers limits](https://developers.cloudflare.com/wor
 |---|---|---|---|
 | 一句話 | 本機 Python 管線 → git JSON 正本 → 索引打包進 Cloudflare Worker（TS MCP） | 管線跑在 Modal；D1 overlay 讓提交不必重新部署；run viewer、看板；trace 放 R2 | 管線、沙盒、MCP（Python SDK）全在一個 Modal App；git 改成每天匯出的快照 |
 | 雲端服務 | Meta、Modal、Cloudflare（Workers＋D1）、GitHub | ＋Baseten、R2、Static Assets | Meta、Baseten、Modal、GitHub |
-| 開發時間（評審重算） | 最低版本約 70 h，緩衝約 4.5 h | 82 h，等於全部可用時數；有隱藏工時 | 79.5 h；Python MCP 不行時退回 TS 要再多 5–7 h |
+| 開發時間（評審重算） | 自估 70.5 h；每日排程加總 74.5 h，緩衝約 4.5 h | 82 h，等於全部可用時數；有隱藏工時 | 79.5 h；Python MCP 不行時退回 TS 要再多 5–7 h |
 | 成本（估算） | Meta $22–76；Modal $4–8 | Meta $49–91；Modal $11–23 | Meta $49–93；Modal 約 $18 |
 | 主要風險 | Meta 模型露出不足；驗證擠在一天 | 跨平台接點最多；MCP 到 11/1 才上線 | Python MCP 在 Modal 上沒實測；陌生程式和 MCP 共用一個帳號，被停權就全停 |
 | demo 效果 | 終端機逐步輸出 | 最好：每一步有模型徽章、證據框 | 好 |
 | 規則與條款 | 最保守 | 第 5 幕的規則最清楚 | 同 mvp |
 
-評審平均分數（3 位評審，0–10，未加權）：
+評審 agent 平均分數（3 個評審 agent，0–10，未加權）：
 
 | 項目 | mvp | demo | single |
 |---|---:|---:|---:|
@@ -430,14 +430,14 @@ Cloudflare 免費額度（[Workers limits](https://developers.cloudflare.com/wor
 | 和評分標準的契合度 | 6.17 | **9.00** | 7.67 |
 | 規則與條款安全度 | **8.33** | 8.00 | 8.00 |
 | **6 項平均** | **7.28** | 7.08 | 6.69 |
-| 評審選誰當基礎 | **3／3** | 0 | 0 |
+| 評審 agent 選誰當基礎 | **3／3** | 0 | 0 |
 
 ### G.2 推薦架構
 
 **一句話**：念誠電腦上的 Python 批次管線先用 **Muse Spark Open** 初篩，再由 **`muse-spark-1.3`** 讀懂軟體、在 **Modal gVisor 沙盒**裡自己安裝、修錯、判讀截圖；程式在乾淨沙盒重播後，寫成 **git 裡每款一份 JSON**，建置時打包進 **Cloudflare Worker**。Worker 用官方 **TS MCP SDK v2** 提供 5 個工具：推薦由 `muse-spark-1.3` 取捨、每筆附驗證證據；回報失敗會觸發重驗，留下一個 git diff。
 
 **為什麼選它**：
-1. **最可能如期交出能動的作品**：三位評審都選它；可行性、成本、風險三項最高。
+1. **最可能如期交出能動的作品**：3 個評審 agent 都選它；可行性、成本、風險三項最高。
 2. **關鍵路徑只用跑過的 spike**：MCP（`spikes/mcp_stateless/`）在 Node 與 workerd 都通過新舊兩代協定檢查；沙盒沿用已實測 4 款真實工具的 Docker spike 介面。
 3. **跑陌生程式的平台和對外服務分開**：Modal 帳號出事時只有驗證停，MCP 照常。
 4. **退路多半只改設定**：Meta 與 Baseten 都是 OpenAI 相容；沙盒換實作即可（Modal → E2B → 本機 Docker）。
@@ -457,7 +457,7 @@ Cloudflare 免費額度（[Workers limits](https://developers.cloudflare.com/wor
 | run page：從 trace 產生靜態 HTML，顯示每一步的模型、推理摘要、工具呼叫、exit code、花費、judge 證據框 | B | 11/2 |
 | 評測加第三組「關掉模型、只用規則排序」 | B | 11/2 |
 | 影片的即時／回放標示規則與 3 分鐘分鏡（H.4） | A | 11/3 |
-| 評審期防護：Worker 每日 Meta 上限＋評審期總額＋限流 | A | 11/1 |
+| 評審期防護：Worker 每日 Meta 上限＋評審期總額 $40（`meta_budget` 累計）；IP 限流要開 Workers Paid 後才用 Rate Limiting binding | A（限流 B） | 11/1 |
 | 提交改在 Modal 用 `spawn()` 處理，評審期不必開著筆電 | C | 11/3 前 |
 
 **不採用**：D1 overlay＋R2＋webhook（3 個沒驗證過的接點）；Python MCP 掛在 Modal（沒實測，SSE 撞 150 秒上限的行為未知）；git 降成快照（偏離 brief 第 11 節）；向量搜尋（F.3）。
@@ -531,7 +531,7 @@ flowchart TB
 
 | 步 | 模型 | 模型做的決定 | 程式做的事 |
 |---|---|---|---|
-| ① 發現 | 不用 | — | GitHub search（序列化、間隔 2 秒）、Show HN、Homebrew analytics、正規化、repo ID、規則前置 |
+| ① 發現 | 不用 | — | GitHub search（序列化、間隔 ≥2.1 秒、每輪 ≤20 次 search）、Show HN（Algolia 不能用時輪詢 Firebase `/v0/newstories`）、正規化、repo ID、規則前置 |
 | ② 初篩 | Muse Spark Open @ Baseten（`meta-models/muse-spark-open-1026`，**未驗證**；備案公開 ID），`reasoning_effort: low` | 是不是可用的軟體、哪一類（不給星數） | pydantic 驗證；低信心送 1.3 複查；抽 5% 比一致率 |
 | ③ 抽取 | `muse-spark-1.3`，Responses，`text.format` strict，`effort: low` | 讀 README、manifest、release notes，填欄位並附逐字引用 | 檢查引用確實出現在來源；事實欄位用 API 值 |
 | ④a 驗證 agent | `muse-spark-1.3`，Responses＋`previous_response_id`，`effort: medium` | 每一步跑什麼、錯了怎麼修、何時結束 | 程式先排安裝方式＋規則表；25 回合、15 指令、20 分鐘、$0.50 上限 |
@@ -539,14 +539,14 @@ flowchart TB
 | ④c 重播 | 不用 | — | 在全新沙盒照 `install_steps` 重跑 |
 | ⑤ 計分 | `muse-spark-1.3`（文件 rubric 8 項，0／1／2 分，附引用） | 文件完整度；寫 `why_worth_it` | 驗證、維護、知名度、寶藏分數由規則算 |
 | ⑦ 配對 | `muse-spark-1.3`，`store: false`，一次呼叫 | 解析需求、比較取捨、找最好的免費選項、最多問 1 題 | 硬條件篩選；slug 必須在候選裡、理由要對得上欄位；超預算或失敗退回規則排序，標 `degraded` |
-| ⑧ 安裝、⑨ 回報 | 不用 | — | 只回重播過的步驟；回報必須帶 `rec_id`、去重 |
+| ⑧ 安裝、⑨ 回報 | 不用 | — | 只回重播過的步驟；macOS 步驟是人工驗證，回傳時帶 `method: human`；回報帶 `rec_id` 才算分、去重 |
 | ⑩ 重驗 | `muse-spark-1.3`（同 ④a，多帶錯誤摘要） | 依使用者的錯誤修正步驟 | 新步驟 commit 回 git |
 
 三條路徑（時間都是估算、未實測）：
 
 | 路徑 | 觸發 | 時間 |
 |---|---|---|
-| 批次 | 手動 `uv run pickfit run --daily`（本機） | 驗證 30 筆約 15–25 分鐘（10 個沙盒並行） |
+| 批次 | 手動 `uv run pickfit run --daily`（本機） | 驗證 30 筆約 25–50 分鐘（並行 5，H.6 上限）；並行 10 時約 15–25 分鐘 |
 | 提交 | `submit_software` 寫 D1 → `pickfit watch` 每 60 秒讀 → 單筆跑完 → `wrangler deploy` | 約 10 分鐘 |
 | 回饋 | `report_outcome` 失敗 → `reverify_queue` → 重驗 → commit | 單筆 5–10 分鐘 |
 
@@ -561,10 +561,10 @@ flowchart TB
 | hello MCP 上線 | `spikes/mcp_stateless/` → `wrangler deploy`；`claude mcp add --transport http` | Claude Code 看得到 hello 工具 | Codex 實連 | 0.5 A |
 | `call_meta` | `openai` Python SDK，`base_url` = `https://api.meta.ai/v1` 或 `https://inference.baseten.co/v1` | 記帳（`usage` × 單價）、trace JSONL、429 退避、504 改 streaming；每日 $25、總額 $100 硬停 | `prompt_cache_key` | 2.5 A |
 | 發現：GitHub | `httpx`；REST search、repos、readme、releases；fine-grained PAT | 每類別 3 條 query | 16 條 query＋切日期 | 4 A |
-| 發現：Show HN | Algolia `search_by_date`；沿用 `spikes/ch_comm_hn_showhn.py` | 每天按日切片 | — | 1.5 B |
-| 發現：Homebrew tap | formulae.brew.sh analytics；沿用 `spikes/ch_packages_brew_taps.py` | 安裝數只當弱訊號 | ＋homebrew-core 當知名度基準 | 2（超前才做） |
-| 正規化、去重、候選庫 | `sqlite3`（`runs/pipeline.db`）；沿用 `ch_integration_normalize.py` | 主鍵 `gh:<repo id>`、舊名進 `aliases`、合併 `sources[]` | provenance 對應套件；大量建 repo 的作者降權 | 2.5 A |
-| 規則前置 | 沿用 `spikes/quality_signals.py` | fork、archived、template、沒 README | — | 1 A |
+| 發現：Show HN | Algolia `search_by_date`（第三方服務）；沿用 `spikes/ch_comm_hn_showhn.py` | 每天按日切片；Algolia 不能用時輪詢 Firebase `/v0/newstories` | — | 1.5 B |
+| 發現：Homebrew tap | formulae.brew.sh analytics；移植 `spikes/ch_packages_brew_taps.py` 時**拿掉 ecosyste.ms 查詢**，星數改用 GitHub API，`.rb` 改用 GitHub contents API | 安裝數只當弱訊號 | ＋homebrew-core 當知名度基準 | 2（超前才做） |
+| 正規化、去重、候選庫 | `sqlite3`（`runs/pipeline.db`）；移植 `ch_integration_normalize.py` 的正規化（**拿掉 ecosyste.ms 查詢**，舊名改用 GitHub API 的 301） | 主鍵 `gh:<repo id>`、舊名進 `aliases`、合併 `sources[]` | provenance 對應套件；大量建 repo 的作者降權 | 2.5 A |
+| 規則前置 | 移植 `spikes/quality_signals.py` 的分類規則，**拿掉所有 ecosyste.ms 呼叫**，改用 GitHub REST（repo、trees、releases、issues）＋README | fork、archived、template、沒 README | — | 1 A |
 | 初篩（開放權重） | Muse Spark Open @ Baseten；pydantic | 規則通過的全跑；低信心送 1.3 | 人工標 30 筆算準確率 | 2 B |
 | 抽取 | `muse-spark-1.3`，Responses，`text.format` strict | README（≤8K tokens）＋manifest＋最近 3 則 release notes | 讀 README 截圖；公開 README 改用 `-contributor`（便宜 12–20 倍） | 4 A |
 | 沙盒 | `modal` SDK：`Sandbox.create(runtime="gvisor", timeout=1200)`；事先建好 image（`python:3.12-slim`＋常用系統函式庫＋uv、pipx、node）；本機 `DockerBox` 沿用 spike | 建立時同時設 `outbound_domain_allowlist=["*"]` 與 `outbound_cidr_allowlist=["0.0.0.0/0"]`（只設網域會擋掉 http），跑範例前收成空清單 | E2B 備案；GPU 沙盒 | 3.5 A |
@@ -572,11 +572,11 @@ flowchart TB
 | 畫面判讀 | Pillow 重繪 PNG；`muse-spark-1.3`＋圖片＋schema | 1 張終端截圖 | 證據框畫在截圖上 | 1.5 A |
 | 重播 | 同一個 Box 介面 | 每筆一次 | — | 1 A |
 | 批次驗證 | `pickfit verify --batch N --concurrency 5` | 每天上限 30–50 筆，demo 類別優先 | 並行 10 | 1 A |
-| Mac 驗證（demo 那 3 筆） | 念誠的 Mac 開一個新使用者帳號，人工照 `get_install_guide` 跑 | log 存證，標 `method: human` | — | 1 A |
+| Mac 驗證（demo 那 3 筆） | 念誠的 Mac，人工照 `get_install_guide` 跑（新使用者帳號若沒有 Homebrew 寫入權，就在原帳號驗證） | log 存證，標 `method: human`；驗證完 `brew uninstall`（或 `pipx uninstall`）移除，錄影時才不會「其實早就裝好」 | — | 1 A |
 | 計分 | 規則＋`muse-spark-1.3` 文件 rubric | B.3 的權重 | 搜尋可見度；類別內百分位校準 | 2.5 A |
 | 正本、索引、發布 | `data/software/<slug>.json`；`jsonschema`；`scripts/build_index.mjs`（`ajv`）；`wrangler deploy` | `pickfit publish` 手動部署 | Workers Builds 自動部署；BM25 | 2.5 A |
-| 事件 | D1：`events`、`submissions`、`reverify_queue`、`meta_budget`（DDL 見 [notes/storage-matching.md](notes/storage-matching.md)） | 不記 IP、不存需求原文 | `sync_outcomes` 寫回 JSON | 1 A |
-| MCP server | TypeScript；`@modelcontextprotocol/server` 2.4.0 `createMcpHandler`；`zod` 4；Workers | 5 個工具；硬條件篩選後該類別 ≤60 張卡全送、一次模型呼叫、程式守門；`rec_id` 存 D1；Worker 每日 $3 | BM25＋`search_terms`；Rate Limiting binding（Paid）；MCP Registry | 7 A |
+| 事件 | D1：`events`、`submissions`、`reverify_queue`、`meta_budget`（DDL 見 [notes/storage-matching.md](notes/storage-matching.md)；`submissions` 要補，`stage`、`rec_id`、`error_excerpt` 照 E.3 對齊） | 不記 IP、不存需求原文 | `sync_outcomes` 寫回 JSON | 1 A |
+| MCP server | TypeScript；`@modelcontextprotocol/server` 2.4.0 `createMcpHandler`；`zod` 4；Workers | 5 個工具；硬條件篩選後該類別 ≤60 張卡全送、一次模型呼叫、程式守門；`rec_id` 存 D1；Worker 每日 $3、評審期總額 $40 | BM25＋`search_terms`；Rate Limiting binding（Paid）；MCP Registry | 7 A |
 | 提交處理 | `pickfit watch`（每 60 秒讀 D1） | 只收 `github.com/<owner>/<repo>`；同一 URL 冪等 | 改在 Modal `spawn()`（C） | 2 A |
 | 回報 → 重驗 | `reverify_queue`＋`pickfit watch`＋驗證 agent | 每天最多 5 筆 | — | 1.5 B |
 | run page | `scripts/render_runs.py`：trace → 靜態 HTML（Workers Static Assets） | demo 用的 3–5 筆 | 漏斗看板；公開寶藏列表 | 2 B |
@@ -586,9 +586,11 @@ flowchart TB
 
 合計：A 64.5 h、B 7.5 h，A＋B 72 h；容量 78 h，緩衝 6 h（見 H.1）。
 
-**超前才做（C，依序）**：Homebrew 第三方 tap（2 h）→ 提交搬到 Modal `spawn()`（3–4 h）→ Codex、Cursor、Claude.ai connector 實連與 MCP Registry（1 h）→ Workers Builds 自動部署（0.5 h）→ BM25＋分歧屬性（2.5 h）→ 公開寶藏列表＋Threads oEmbed 嵌入與分享按鈕（2.5 h）→ 搜尋可見度（2 h）→ PyPI RSS（3 h）。
+**超前才做（C，依序）**：Homebrew 第三方 tap（2 h）→ 提交搬到 Modal `spawn()`（3–4 h）→ Codex、Cursor、Claude.ai connector 實連與 MCP Registry（1 h）→ Workers Builds 自動部署（0.5 h）→ BM25＋分歧屬性（2.5 h）→ 公開寶藏列表＋Threads oEmbed 嵌入與分享按鈕（2.5 h）→ 搜尋可見度（2 h）→ PyPI RSS（3 h）→ Muse Code 當 demo agent 加拍一段（1 h；能否接遠端 MCP **未驗證**）。
 
-### G.5 整合時主控者的修正
+**移植 spike 的共同規則**：產品程式碼裡不能出現 `ecosyste.ms`（取得書面同意前）；11/4 交件檢查時 grep 一次。
+
+### G.5 整合時主控 agent 的修正
 
 | 項目 | 綜合筆記寫的 | 本文改成 | 理由 |
 |---|---|---|---|
@@ -596,6 +598,24 @@ flowchart TB
 | ecosyste.ms | 「只查不存」當回補 | 取得書面同意前**不用** | Terms §9 禁止未經同意的腳本擷取，查而不存也算（A.1） |
 | 寶藏排序 | gap 與 T 兩種寫法 | 標記：Q ≥ 70 且 N ≤ 45；排序：`T = Q × (1 − N/100)`，記 `formula_version` | B.3 已同步 |
 | `rec_id`、配對候選數 | — | `rec_id` 存 D1（不用 HMAC）；最低版本送 ≤60 張卡、一次呼叫；超過才加 BM25 | E.3、F.2 已加註 |
+
+### G.6 最終審查後的修正
+
+4 個審查 agent（涵蓋度、一致性、事實、條款）檢查全文，找到 65 項問題（2 項高嚴重度），已全部處理。主要的：
+
+| 問題 | 修正 |
+|---|---|
+| G.4 要沿用的 spike 會在未取得同意下呼叫 ecosyste.ms | 移植時拿掉所有 ecosyste.ms 呼叫；spikes/README 加警告；B.3 寫明各分項的替代資料來源 |
+| demo 的 dry run 可能讓「即時」那幕其實是預跑結果 | H.4 規則改寫：dry run 用另一個 repo；錄影用從未送進 pickfit 的 repo |
+| 提交、排程、部署在 A.4、F.1、channels.md 與 G 的寫法互相矛盾 | 全部統一成 G 的做法：MCP → D1 → 本機 `pickfit watch`；`pickfit publish` 手動部署；不用 Actions |
+| 管道層級前後不一致 | 統一成核心 2、計畫內 1（Show HN）、超前才做 2 |
+| `stage`、`rec_id`、`error_excerpt` 和 D1 DDL 不合 | E.3 加對照規則 |
+| 沒標明哪些筆記沒有獨立查核、哪些數字來自 ecosyste.ms | §0、A.1、D 加揭露 |
+| 關鍵事實缺來源連結 | A、C、D、E 加主要來源 |
+| 影片中對話的是 Claude Code，Meta 露出可能被蓋過 | I 加風險與退路；C 加 Muse Code |
+| `report_outcome` 會混入自己的評測與 demo 回報 | B.3：只有 external 回報算分 |
+
+完整清單在審查 workflow 的輸出（未存進 repo）。
 
 ## H. 每天的實作計畫
 
@@ -624,14 +644,14 @@ flowchart TB
 
 | 日期 | 工作（人時） | 晚上背景執行 | 完成標準 | 檢查點：沒達到就… |
 |---|---|---|---|---|
-| **10/28（三）** 8 h | **帳號**：Meta 優先（註冊 → 綁卡 → 建 key → 抄 Team ID → 填 credits 表單 → 設 Spend Limit 通知），再申請 Baseten、Modal、Cloudflare、GitHub PAT、E2B；跑 5 支 spike 1.5 · 骨架＋pydantic schema 2 · hello MCP 部署＋Claude Code 實連 0.5 · **評測 20 題寫好並 commit** 2 · `call_meta` v0（單價、記帳、trace、硬上限）2 | — | 一次真的 `muse-spark-1.3` 呼叫留下 trace 與花費；`eval/questions.yaml` 已 commit；Claude Code 看得到遠端 hello 工具；帳號狀態（含 Baseten model ID、RPM）貼回筆記 | Meta API 今晚不能用 → 10/29 起走 Baseten 全路徑（I #1） |
+| **10/28（三）** 8 h | **帳號**：Meta 優先（註冊 → 綁卡 → 建 key → 抄 Team ID → 填 credits 表單 → 設 Spend Limit 通知），再申請 Baseten、Modal、Cloudflare、GitHub PAT、E2B；跑 5 支 spike 1.5 · 骨架＋pydantic schema 2 · hello MCP 部署＋Claude Code 實連 0.5 · **評測 20 題寫好並 commit** 2 · `call_meta` v0（單價、記帳、trace、硬上限）2 | — | 一次真的 `muse-spark-1.3` 呼叫留下 trace 與花費；`eval/questions.yaml` 已 commit；Claude Code 看得到遠端 hello 工具；只把 model ID、RPM、各功能能不能用寫回筆記（Team ID、credits 核准與餘額、帳單資訊記在 `.env` 或 `CLAUDE.local.md`，不進 repo） | Meta API 今晚不能用 → 10/29 起走 Baseten 全路徑（I #1） |
 | **10/29（四）** 10.5 h | `call_meta` 收尾 0.5 · GitHub search＋補資料 4 · 正規化、repo ID、候選庫 2.5 · 規則前置 1 · **開放權重初篩（B）** 2 · 抽取 prompt 對 5 筆跑通 0.5 | 全量發現 → 規則 → 初篩 | `pickfit discover` 產生 ≥150 筆候選；漏斗每一格標模型與花費；Spark Open 與 1.3 的一致率有第一個數字；5 份抽取檔過 schema | 用第一批 `usage` 換掉成本假設；推理 token 超過估算 2 倍就降 effort。Baseten 沒核准 → 公開 ID 自付；再不行先只用規則 |
 | **10/30（五）** 11.5 h | 抽取完成（引用比對、事實欄位、重試、批次）3.5 · **驗證 agent**（安裝方式排序、規則表、Responses 迴圈、停止條件、`finish`），先在本機 Docker 跑已知工具 6 · **Show HN（B，最後做）** 1.5 | 批次抽取 | `evnx` 這類「照 README 會失敗」的工具，由 Muse Spark 自己讀錯誤、補步驟、呼叫 `finish`，trace 看得到推理摘要；≥30 份 profile 已 commit；挑好 10 筆 demo 候選（能在 Mac 裝、免費、能離線） | actor 修不好 → 10/31 上午繼續修，細路徑 MCP 延到 11/1；用規則表兜底，只做到「安裝驗證」。落後 → 不做 Show HN |
 | **10/31（六）** 10.5 h | ModalBox（gVisor、上限、網路政策、image、`--limits-test`）3.5 · judge＋截圖 1.5 · 重播並寫回 `install`、`verification` 1 · `build_index`＋`pickfit publish` 2.5 · D1 建表 1 · 細路徑 MCP：`find_software`、`get_install_guide` 讀真索引 1 | Modal 批次驗證：先 10 筆 demo 候選，再 30 筆 | 同一筆工具在 Modal 跑完 actor → judge（證據框）→ 重播；Claude Code 問「Mac 上、免費、能離線的 X」，回 2–3 筆真資料 | **硬關卡**：10 筆 demo 候選 ≥5 筆在 Modal 通過並重播成功。沒過 → 停掉所有 B、C，11/1 上午只修驗證；Modal 不能用 → 換 E2B（約 2 h） |
 | **11/1（日）** 10.5 h | MCP 補完：`find_alternatives`、`report_outcome`、`submit_software`、Host／Origin 檢查、Worker 每日上限與 `degraded`、`how_we_know`／`evidence_url`／`matched_by` 6 · 計分：規則分項＋文件 rubric＋寶藏 2.5 · `pickfit watch` 2 | 批次驗證第二輪＋計分 | ≥30 筆 verified（目標 50），每筆有分開的品質、知名度、寶藏分數；在 Claude Code 用 `submit_software` 貼一個第三方 repo，約 10 分鐘內出現在 `find_software` 結果；demo 主案＋2 個備案定案 | 不到 30 筆 → 停止加管道，只補 demo 類別的候選 |
 | **11/2（一）** 10.5 h | 回報 → 重驗 → git diff（B）1.5 · run page（B）2 · 評測 20 題 × 2 組（背景跑）＋評分 3.5 · 第三組 rules-only（B）0.5 · demo 3 筆的 Mac 驗證 1 · Meta 用量報表 1 · 抽查批次結果 1 · 到 Discord 問開放權重獎怎麼標、Community Vote 看哪個頁面 | 修 bug 後重驗失敗的筆 | 評測結果表（含輸的題）與系統數字；一次「回報失敗 → 重驗 → 新 commit」的 git diff；3 份 run page；Mac 驗證有存證。**當晚功能凍結** | ≥2 題「好答案在資料裡卻沒被推薦」→ 只調候選卡或加 BM25，不加新功能 |
 | **11/3（二）** 10.5 h | README（Meta 模型分工與用量、Built with Muse Spark Open、Why this is not RAG、評測、賽前／賽中、授權）3 · 彩排 2 次 1.5 · **錄影**（錄影前最後一次 publish，資料凍結）2.5 · 剪輯 v1 2.5 · 緩衝 1 | — | 3 分鐘影片 v1 上傳（先不公開）；README 完成；用乾淨的 Claude Code 照 README 接得上 | 影片沒完成 → 11/4 上午補；這天是主辦方回答問題的最後一天 |
-| **11/4（三）** 6 h | 規則第 11 節檢查表、金鑰掃描、授權 NOTICE · repo 轉 public 並登出確認 · 提交（Indie Developer）· X 貼文並附在提交頁：共 1.5 · 緩衝 4.5 | — | **台北 11/4 22:00 前送出** | 有問題就用 11/5 00:00–10:00 補救，不再加功能 |
+| **11/4（三）** 6 h | 規則第 11 節檢查表、金鑰掃描、`grep ecosyste.ms`、授權 NOTICE · repo 轉 public 並登出確認 · 提交（Indie Developer）· X 貼文並附在提交頁：共 1.5 · 緩衝 4.5 | — | **台北 11/4 22:00 前送出** | 有問題就用 11/5 00:00–10:00 補救，不再加功能 |
 
 和 brief 第 12 節的差別：驗證 agent 提前到 10/30（本機）與 10/31（Modal），因為它是最大的風險也是 demo 核心；MCP 拆成 10/28 hello、10/31 細路徑、11/1 補完；開放權重初篩從 11/1 提前到 10/29（它是漏斗第一層，晚做要重跑）；demo 故事 11/1 定案。
 
@@ -651,17 +671,21 @@ flowchart TB
 規則：
 - 預跑的畫面標「trace 回放」，即時的畫面標「即時，加速 ×N」。不改任何 trace、時間或 commit（規則第 9 節）。
 - 即時提交那一幕：挑一個**還沒處理過**、第三方、能在 Linux 沙盒驗證的 repo。不能是念誠自己的作品，影片裡是「使用者」提交別人的作品，不扮演作者（brief 第 9 節）。
-- 可以先 dry run 同一筆確認會過；正式錄影前用一個新 commit 把它從 `data/` 移除（不改寫歷史）。dry run 和錄壞的 trace 都保留。錄 2–3 次挑一次。
+- dry run 用**另一個**條件相近的第三方 repo；正式錄影用**從未送進 pickfit** 的 repo（D1 `submissions`／`events`、本機 SQLite 候選庫、`data/` 都沒有它）。真的要用同一筆時，錄影前要清掉以上所有紀錄與抽取快取，並在字幕與 README 註明「此 repo 錄影前試跑過一次，已清除紀錄」。dry run 和錄壞的 trace 都保留。錄 2–3 次挑一次。
+- Mac 那一幕：錄影開頭先秀 `command -v <tool>` 找不到、`brew list` 裡沒有，證明是當場安裝。
+- 畫面上對話的是 Claude Code（使用者端的 client）。0:45–1:25 用分割畫面同時秀 pickfit 伺服器端的 Meta trace（model ID、推理摘要），字幕寫明「選哪個、怎麼裝，由 Muse Spark 決定」。
+- judge 那一段字幕標「終端輸出重繪的截圖」；視覺判讀要和 exit code、重播一起都過才算數。
+- 自我修正那一幕要用**真的**失敗（例如評測或 Mac 實裝時照指南失敗的那一筆），字幕註明在哪個環境、誰回報；不送捏造的失敗回報。
 
 | 時間 | 畫面 | 即時／預跑 | Meta 模型露出 |
 |---|---|---|---|
 | 0:00–0:10 | 一句話說明賽前有什麼、這週做了什麼（官方要求） | — | — |
 | 0:10–0:25 | 問題：好軟體找不到，agent 也不認識今年的專案 | — | — |
-| 0:25–0:45 | 對照組：同一個 agent 不接 pickfit | 即時錄影（取自評測那次） | — |
-| 0:45–1:25 | 接上 pickfit：`find_software` → 今年的寶藏＋理由＋最好的免費選項＋`how_we_know` → `get_install_guide` → 在 Mac 上裝好，第一次執行就成功 → `report_outcome` | **即時**（安裝可加速） | `matched_by: muse-spark-1.3` |
+| 0:25–0:45 | 對照組：同一個 agent 不接 pickfit | 標「評測錄影回放」（11/2 評測第 N 題）；不剪掉它推薦了什麼，題號與完整輸出放 README | — |
+| 0:45–1:25 | 接上 pickfit：`find_software` → 今年的寶藏＋理由＋最好的免費選項＋`how_we_know` → `get_install_guide` → 在 Mac 上裝好，第一次執行就成功 → `report_outcome` | **即時**（安裝可加速） | 分割畫面：伺服器端 trace、`matched_by: muse-spark-1.3` |
 | 1:25–1:55 | 「怎麼知道裝得起來」：點 `evidence_url` → run page：照 README 失敗 → 讀錯誤 → 自己修 → judge 證據框 → 重播通過 | trace 回放 | actor、judge 的模型徽章與推理摘要 |
 | 1:55–2:30 | 供給端：使用者用 `submit_software` 提交第三方 repo → Spark Open 初篩 → 抽取 → 驗證 → 收錄 → 再問一次，找得到了 | **即時**（加速＋計時器）；失敗就播上一輪真實 trace，標回放 | 每一步的模型 |
-| 2:30–2:45 | 自我修正：回報失敗 → 驗證 agent 重跑 → git diff 多一個步驟 | 預跑或即時 | `muse-spark-1.3` |
+| 2:30–2:45 | 自我修正：真的失敗回報 → 驗證 agent 重跑 → git diff 多一個步驟 | 預跑（標回放）或即時 | `muse-spark-1.3` |
 | 2:45–3:00 | 數字：漏斗、驗證通過率、評測結果、各模型的呼叫數與花費（由 trace 產生） | — | 全部 |
 
 ### H.5 時間不夠時依序砍什麼
@@ -691,7 +715,7 @@ flowchart TB
 | 項目 | 估計 | 付款方 | 上限 |
 |---|---:|---|---|
 | Meta（抽取、驗證、重驗、rubric、配對、開發重跑） | $25–88 | $150 credits | 管線每日 $25、總額 $100 硬停；Worker 每日 $3、評審期總額 $40 |
-| Baseten（初篩） | $2–5 | Baseten credits | 月預算 $20，開 enforce |
+| Baseten（初篩） | 約 $1.3–2.5（200–400 筆 × $0.0042 × 1.5 重跑） | Baseten credits | 月預算 $20，開 enforce |
 | Modal（沙盒） | $4–9（最壞 $38） | Modal credits | `timeout=1200`、並行 ≤5；workspace 上限約 $80 |
 | Cloudflare（Workers Paid＋D1） | $0–5 | 自付 | — |
 | **credits 都到位時自付** | **$0–5** | | |
@@ -704,7 +728,7 @@ Meta 的 Spend Limit 只寄信、不停止扣款，所以上限全部由程式�
 |---|---|---|---|---|---|
 | 1 | 台灣帳號開不了 Meta Model API 或綁卡失敗（**未驗證**） | 中 | 極高：第一輪 pass/fail | 10/28 註冊或綁卡被拒 | 全部改走 Spark Open @ Baseten：抽取用 Chat＋pydantic 重試；actor 改 Chat Completions、每輪重送完整歷史（Baseten 的 `/responses` 是無狀態的）；並行降到 2–6；多 3–4 h |
 | 2 | Meta $150 credits 晚到，或效期矛盾（條款寫不過期、活動頁寫 10 天） | 中 | 中 | claim 後 2 個工作天沒入帳 | 先刷卡（10/28–10/30 估 <$10）；總額硬停 |
-| 3 | Baseten credits 沒核准、`-1026` 不存在、只有 15 RPM | 中 | 低–中：只影響開放權重獎 | 10/29 `/v1/models` 查不到 | 公開 ID 自付（<$5）；15 RPM 時 300 筆約 20 分鐘；最後退回 H.5 #6 |
+| 3 | Baseten credits 沒核准、`-1026` 不存在、只有 15 RPM | 中 | 低–中：只影響開放權重獎 | 10/29 `/v1/models` 查不到 | 公開 ID 自付（<$5）；15 RPM 時 300 筆約 20 分鐘；或改用 Modal Shared Endpoint（先確認比賽 credits 能付，D.2）；最後退回 H.5 #6 |
 | 4 | Modal credits 沒發，或網路政策（網域 allowlist Beta、執行中改政策 Alpha）不穩 | 中 | 中 | 10/31 `--limits-test` 失敗 | Starter 每月含 $30；安裝與執行拆成兩個沙盒（未實測）；換 E2B（約 2 h） |
 | 5 | 驗證 agent 成功率太低 | 中高 | 高：demo 沒料 | 10/30 本機修不好 `evnx` 這類問題；10/31 的 10 筆 <5 筆通過 | 程式先排安裝方式＋規則表；優先挑有 release 二進位或能用 pipx／uv 裝的；接受「安裝驗證」等級；10/31 硬關卡 |
 | 6 | 沙盒都是 Linux，demo 在 Mac | 高 | 中 | 沒有 Apple silicon Mac；照指南在 Mac 失敗 | 在自己的 Mac 開新使用者帳號人工跑（`method: human`）；沒有 Mac → demo 改在 Linux 終端機；Actions macOS 只跑 3 筆並在 README 說明（條款灰色） |
@@ -719,7 +743,9 @@ Meta 的 Spend Limit 只寄信、不停止扣款，所以上限全部由程式�
 | 15 | 推理 token 比估算多 2–3 倍 | 中 | 中 | 10/29 第一批的 `usage` | 降 effort；總額硬停；公開 README 的抽取改用 `-contributor` |
 | 16 | 評測輸了，或題目被說偏 | 中 | 中 | 11/2 結果 | 10/28 先凍結題目；輸的題照實寫進 README |
 | 17 | 錄影時即時提交失敗 | 中 | 高 | 彩排失敗 | 錄 2–3 次；最後播真實 trace，標回放 |
-| 18 | 第三方套件與資料授權沒查（`openai`、`httpx`、`pydantic`、`modal`；ecosyste.ms、Homebrew analytics） | 低 | 中 | — | 加入前查，記在 README 或 `NOTICE`；ecosyste.ms 取得同意前不用 |
+| 18 | 第三方套件與資料授權沒查（`openai`、`httpx`、`pydantic`、`modal`；資料來源） | 低 | 中 | — | 套件加入前查，記在 README 或 `NOTICE`。資料：ecosyste.ms 取得同意前不用，取得後也是 CC BY-SA 4.0（ShareAlike、要標來源、商用另需授權），預設不寫進 `data/`；deps.dev 自產關聯資料 CC-BY 4.0，在 `sources` 與 NOTICE 標示；Homebrew analytics 授權未明示，註明出處、不轉發原始數字；Muse Spark Open 要標「Built with Muse Spark Open」；`data/` 自己的授權在 README 寫明 |
+| 19 | 影片裡對話的是 Claude Code，評審以為「大腦」是 Claude、Meta 只是外掛 | 中 | 高：Use of Meta AI Tooling 25% | 彩排時觀眾記得的是 Claude | 分割畫面秀伺服器端 Meta trace 與字幕（H.4）；README 第一段寫明每個決定由哪個 Meta 模型做；有空加拍 Muse Code（C） |
+| 20 | 星數暴增的 repo 是惡意程式（StarScout：多數假星推的是釣魚惡意程式） | 低中 | 高 | 星數異常旗標 | 先人工抽查再送沙盒；沙盒零金鑰、網路收緊 |
 
 ## J. 建議修改 brief
 
@@ -727,9 +753,11 @@ Meta 的 Spend Limit 只寄信、不停止扣款，所以上限全部由程式�
 
 | brief 章節 | 現在寫的 | 建議 | 理由 |
 |---|---|---|---|
-| 4.1 提交入口 | 任何人貼一個 GitHub 或 Threads 連結 | 收 GitHub repo 連結；可附 Threads／X 貼文連結，但只用 oEmbed 嵌入、不讀內容；只有 Threads 連結時請補 repo | oEmbed 回傳沒有貼文文字，條款禁止抽取；`threads_basic` 的允許用途不符（A.2） |
-| 4.1 來源 | GitHub、Show HN、Homebrew 與 winget、Threads／Facebook 上的分享 | 黑客松：GitHub search、Show HN、提交；Homebrew tap 超前才做；PyPI、awesome 清單、區域社群之後；winget 不接；Threads／Facebook 不能主動發現 | A.1、[channels.md](channels.md) §0 |
+| 4.1 提交入口 | 任何人貼一個 GitHub 或 Threads 連結 | 黑客松只有 MCP `submit_software`，收 GitHub repo 連結；可附 Threads／X 貼文連結，只存 permalink、不讀內容，有展示頁時才用 oEmbed 嵌入（C）；只有 Threads 連結時請補 repo | oEmbed 回傳沒有貼文文字，條款禁止抽取；`threads_basic` 的允許用途不符（A.2） |
+| 4.1 來源 | GitHub、Show HN、Homebrew 與 winget、Threads／Facebook 上的分享 | 黑客松：GitHub search、提交（核心）；Show HN（計畫內）；Homebrew tap、PyPI 超前才做；awesome 清單、區域社群之後；winget 不接；Threads／Facebook 不能主動發現 | A.1、[channels.md](channels.md) §0 |
 | 4.4 工具 | 4 個工具 | 5 個：加 `submit_software`（同一個 URL 冪等，重送就是查進度）；推薦一律帶 `how_we_know`、`evidence_url`、`matched_by`、`rec_id` | 第 5 幕可以全程在 agent 裡做；評審點得到證據（E.3） |
+| 4.2、6、7 視覺驗證 | 執行畫面的截圖交給 Meta 的視覺模型判斷 | CLI 是把終端輸出重繪成 PNG，由 `muse-spark-1.3` 另開一次呼叫判讀並框出證據，README 標明「由輸出重繪」；本地 AI 工具有網頁 UI 時才用 Playwright 拍真的畫面（C） | C.3；避免被看成誇大或「簡單的圖片分析器」 |
+| 4.3 知名度 | 星數、下載量、被搜尋到的難易度 | 黑客松先不算「被搜尋到的難易度」，列為 C（`muse-spark-1.3`＋`web_search`，每 100 筆約 $1.9） | 工時（G.4） |
 | 4.5 展示頁 | 可選；用於 demo、社群投票 | 拆成 run page（驗證過程，計畫內）與公開寶藏列表（可選）；Community Vote 的「公開展示頁」先到 Discord 確認是不是主辦方的提交頁 | 規則第 5 節沒寫清楚是哪個頁面 |
 | 5 第 4 幕 | agent 照驗證過的步驟幫使用者裝好 | 註明沙盒驗證在 Linux；demo 那 3 筆另外在 Mac 上人工驗證，標 `method: human` | 雲端沙盒都是 Linux（C.1） |
 | 5 第 5 幕 | 作者在 Threads 分享，貼上連結後幾分鐘被推薦 | 使用者在自己的 agent 用 `submit_software` 提交一個第三方 GitHub repo（不扮作者、不用自己的作品）；畫面標「即時，加速 ×N」 | brief 第 9 節；Threads 內容讀不到 |
@@ -737,7 +765,7 @@ Meta 的 Spend Limit 只寄信、不停止扣款，所以上限全部由程式�
 | 6 大量初篩 | Muse Spark Open 或 Muse Glimmer（透過 Baseten 或 Modal） | 只寫 Muse Spark Open @ Baseten；Glimmer 不用；README 標「Built with Muse Spark Open」 | 合作夥伴都沒有按 token 計費的 Glimmer；授權要求標示（D.2） |
 | 8 資料來源 | Homebrew、winget-pkgs、Flathub：可以，有安裝數 | winget 沒有公開安裝數；Homebrew analytics 資料授權沒寫明、含 CI 安裝，只當弱訊號、不轉發原始資料；Flathub 未查 | [notes/channels-packages.md](notes/channels-packages.md) |
 | 8 GitHub API | 可以；注意 rate limit | 補一句：GitHub AUP §7 對 API 取得的資料也限制用途；只存自己抽出的事實＋連結，不轉貼 README 全文、不存個資 | [notes/channels-hosting.md](notes/channels-hosting.md) |
-| 8 Hacker News | 用官方 API | 用 Algolia `search_by_date` 或 Firebase `newstories`，不要只用 `showstories`（只是排序過的子集） | [notes/channels-communities.md](notes/channels-communities.md) |
+| 8 Hacker News | 用官方 API | 官方是 Firebase API；Algolia HN Search 是第三方服務（條款未驗證）。用 Algolia `search_by_date` 或 Firebase `newstories`，不要只用 `showstories`（只是排序過的子集） | [notes/channels-communities.md](notes/channels-communities.md) |
 | 8 Reddit | 條款禁止爬取、建立競爭資料庫或商用 | 理由改成：任何 API 存取都要先申請核准、商用要另簽約、禁止拿去訓練 | 「競爭資料庫」不是條款原文 |
 | 8 awesome 清單 | CC0 的 awesome 清單可以 | 補：沒有授權的清單只取連結當內部訊號、不轉載描述、不公開重建清單 | [notes/channels-curation.md](notes/channels-curation.md) |
 | 8（新增） | — | ecosyste.ms：條款 §9 禁止未經書面同意的腳本擷取，取得同意前不用；PyPI 不用 XML-RPC 做新整合 | [notes/channels-packages.md](notes/channels-packages.md)、[notes/channels-integration.md](notes/channels-integration.md) |
@@ -752,21 +780,21 @@ Meta 的 Spend Limit 只寄信、不停止扣款，所以上限全部由程式�
 
 | 項目 | 為什麼需要 | 建議 | 期限 |
 |---|---|---|---|
-| **Meta Model API 帳號、key、$150 credits** | 產品核心；第一輪 pass/fail；台灣能否註冊**未驗證** | [dev.meta.ai](https://dev.meta.ai/) → Start building（Individual）→ Billing 綁卡 → 建 key（發現、驗證、配對各一把）→ 抄 Team ID → 用錄取 email 裡的表單領 credits → Spend Limit 通知設 $50、$100 | **10/28 中午前**確認能註冊；credits 今天就領（截止 11/4 9 PM ET） |
-| Baseten 帳號、比賽 credits | 開放權重初篩 | app.baseten.co 註冊 → 照 Participant Guide 申請（限 2,000 人、要審核）→ 建 key → 月預算 $20 開 enforce → `/v1/models` 查 `muse-spark-open-1026` | 10/28 申請 |
-| Modal 帳號、token、credits | 沙盒 | `modal token new`；領 $100（前 1,000 人）；workspace 上限約 $80 | 10/28 |
-| GitHub fine-grained PAT | 本機發現管線（雲端 session 打不到） | 不勾任何權限（公開 repo 唯讀）；放 `.env` | 10/28 |
+| **Meta Model API 帳號、key、$150 credits** | 產品核心；第一輪 pass/fail；台灣能否註冊**未驗證** | [dev.meta.ai](https://dev.meta.ai/) → Start building（Individual）→ Billing 綁卡 → 建 key（發現、驗證、配對各一把）→ 抄 Team ID → 用錄取 email 裡的表單領 credits → Spend Limit 通知設 $50、$100。環境變數 `MODEL_API_KEY` | **10/28 中午前**確認能註冊；credits 今天就領（截止 11/4 9 PM ET） |
+| Baseten 帳號、比賽 credits | 開放權重初篩 | app.baseten.co 註冊 → 照 Participant Guide 申請（限 2,000 人、要審核）→ 建 key → 月預算 $20 開 enforce → `/v1/models` 查 `muse-spark-open-1026`。環境變數 `BASETEN_API_KEY` | 10/28 申請 |
+| Modal 帳號、token、credits | 沙盒 | `pip install modal && modal token new`（或設 `MODAL_TOKEN_ID`、`MODAL_TOKEN_SECRET`）；比賽 $100（前 1,000 人）的領取方式**未驗證**，到 Participant Guide 或 Discord 確認；workspace 上限約 $80 | 10/28 |
+| GitHub fine-grained PAT | 本機發現管線（雲端 session 打不到） | 不勾任何權限（公開 repo 唯讀）；環境變數 `GITHUB_TOKEN`。所有金鑰放 `.env`，跑 spike 前 `set -a; source .env; set +a` | 10/28 |
 | Cloudflare 帳號、`wrangler login` | MCP Worker、D1 | 用 `workers.dev` 子網域 | 10/28 |
 | E2B 帳號（備案） | Modal 不能用時 | 只註冊（免信用卡） | 10/28 |
 | 有沒有 Apple silicon Mac | 第 4 幕、Mac 驗證 | 有：開一個新的 macOS 使用者帳號人工跑；沒有：demo 改在 Linux | 10/28 |
 | 要不要用 GitHub Actions 跑 demo 那 3 筆的 Mac 驗證 | 條款是灰色地帶，交件又要用 GitHub repo | 有 Mac 就不用；沒有才考慮，只跑 3 筆、README 寫明用途 | 11/1 |
 | 要不要開 Workers Paid（每月 $5） | 冷啟動 10 ms CPU 與 Rate Limiting 都**未驗證**；評審期要穩定 | 開，10/31 部署真資料時 | 10/31 |
-| 要不要寄信給 ecosyste.ms 取得書面同意 | 它的資料最完整，但條款 §9 禁止未經同意的腳本擷取 | 今天寄（support@ecosyste.ms），說明用途；收到前不用，改用 GitHub API＋deps.dev | 10/28 |
+| 要不要寄信給 ecosyste.ms 取得書面同意 | 它的資料最完整，但條款 §9 禁止未經同意的腳本擷取 | 今天寄（support@ecosyste.ms），說明用途，並說明調研時已在讀到條款前查詢過、詢問能否保留那些數字；收到前不用，改用 GitHub API 與各套件庫官方 API（deps.dev 只補套件 ↔ repo 對應，沒有下載數）；取得同意也只在計分時即時查，不存進正本 | 10/28 |
 | 要不要買 `pickfit.dev` | 不影響功能 | 黑客松不需要；要買就今天買（名稱隨時可能被搶） | 10/28 |
 | 每天可投入的時數 | H.1 假設 10.5 h | 少於 9 h → 先砍 Show HN 與 run page | 10/28 |
 | Meta 花費上限 | Spend Limit 只寄信 | 管線每日 $25、總額 $100；Worker 每日 $3、評審期總額 $40 | 10/28 |
 | 評測題組 20 題 | 要在比賽期間新寫，寫資料前凍結 | 念誠自己寫，不搬賽前草稿 | **10/28 晚上** |
-| demo 用哪個 agent | 對照組與實驗組要同一個 | Claude Code（Codex 實連沒測過；Muse Code 能不能接遠端 MCP **未驗證**） | 10/31 |
+| demo 用哪個 agent | 對照組與實驗組要同一個 | Claude Code（Codex 實連沒測過；Muse Code 能不能接遠端 MCP **未驗證**）；搭配分割畫面秀 Meta trace（H.4、I #19） | 10/31 |
 | 第 5 幕提交哪個 repo | 不能是自己的作品 | 11/1 從發現結果挑一個還沒處理過的第三方 repo | 11/1 |
 | 評審期（11/5–11/8）的提交怎麼處理 | `pickfit watch` 要開著筆電 | 開著筆電跑 watch，README 寫明每日批次處理；有空再搬到 Modal | 11/2 |
 | Discord 要問的兩件事 | 開放權重獎提交時怎麼標；Community Vote 看哪個頁面 | 到 #questions 或 office hours 問 | 11/2（官方最後回答日是美東 11/3） |
