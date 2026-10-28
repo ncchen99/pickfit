@@ -47,6 +47,10 @@ from pickfit.verify.box import (
 )
 
 APP_NAME = "pickfit-verify"
+# Sandbox prices (3x the function rates), docs/research/notes/sandbox-compare.md, read 2026-10-28.
+# Billed on max(request, use); request = limit here, so this is the cost per second alive.
+CORE_USD_PER_S = 0.00003942
+GIB_USD_PER_S = 0.00000667
 BOX_UID = 1000
 # Never reachable from a box: cloud metadata and link-local, private and shared address space.
 BLOCKED_NETS = ("0.0.0.0/8", "10.0.0.0/8", "100.64.0.0/10", "169.254.0.0/16", "172.16.0.0/12",
@@ -174,6 +178,9 @@ class ModalBox(Box):
         except Exception as err:  # already gone; the lifetime timeout reaps it anyway
             self.log(f"modal terminate: {type(err).__name__}: {err}")
         self.started = False
+
+    def usd_per_second(self) -> float:
+        return self.limits.cpus / 2 * CORE_USD_PER_S + self.limits.memory_mb / 1024 * GIB_USD_PER_S
 
     # -- commands and files
 

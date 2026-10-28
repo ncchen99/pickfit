@@ -103,6 +103,8 @@ def test_create_kwargs_use_gvisor_hard_limits_and_an_allowlist():
     assert kw["outbound_cidr_allowlist"] == ONLINE_CIDRS and kw["outbound_domain_allowlist"] == []
     assert kw["tags"] == {"pickfit": "verify", "run": "x"}
     assert "secrets" not in kw and "env" not in kw
+    # 1 core and 2 GiB at sandbox prices: about $0.19 an hour alive.
+    assert ModalBox().usd_per_second() == pytest.approx(0.00003942 + 2 * 0.00000667)
 
 
 def test_commands_run_as_the_box_user_with_limits_and_no_host_env(monkeypatch: pytest.MonkeyPatch):

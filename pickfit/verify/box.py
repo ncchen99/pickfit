@@ -132,6 +132,10 @@ class Box(ABC):
     def close(self) -> None:
         """Destroy the sandbox and everything in it. Safe to call twice."""
 
+    def usd_per_second(self) -> float:
+        """What the box costs per second it exists (0 for a local container)."""
+        return 0.0
+
     def __enter__(self) -> Box:
         self.start()
         return self

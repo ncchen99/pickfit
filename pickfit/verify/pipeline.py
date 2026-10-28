@@ -42,6 +42,7 @@ class Outcome:
     seconds: float
     cost_usd: float
     phases: dict[str, float] = field(default_factory=dict)  # seconds per phase
+    box_usd: float = 0.0  # estimated sandbox cost (Modal); model cost is cost_usd
     written: bool = False
     write_note: str | None = None
 
@@ -54,6 +55,7 @@ class Outcome:
         return {"slug": self.slug, "run_id": self.run_id, "level": r.level, "replayed": r.replayed,
                 "judge": r.judge.verdict if r.judge else None, "unverified_reason": r.unverified_reason,
                 "blocking_error": r.blocking_error, "seconds": self.seconds, "cost_usd": self.cost_usd,
+                "box_usd": round(self.box_usd, 5),
                 "phases": self.phases, "runner": r.runner, "written": self.written,
                 "evidence": str(self.evidence_dir)}
 
@@ -86,6 +88,7 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
     agent = VerifyAgent(task, box, model=model, mode=mode, limits=limits, run_id=run_id, log=log,
                         runs_dir=runs_dir, **call_kwargs)
     report: VerifyReport
+    box_began = time.monotonic()
     try:
         phases["agent_box_start"] = _start(box)
         report = agent.run()
@@ -99,6 +102,8 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
         else:
             box.close()
     phases["agent"] = report.seconds
+    phases["agent_box_s"] = round(time.monotonic() - box_began, 1)  # what the sandbox is billed for
+    box_usd = box.usd_per_second() * phases["agent_box_s"]
     evidence_dir = agent.runs_dir / "verify" / run_id
     evidence_dir.mkdir(parents=True, exist_ok=True)
     if report.report_path is None:  # the agent never saved (its box failed to start)
@@ -110,6 +115,7 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
     if agent.verdict is not None and is_passed(agent.verdict.level):
         plan = plan_from(agent.verdict, report.commands)
         replay_box = make_box(run_id, "replay")
+        box_began = time.monotonic()
         try:
             phases["replay_box_start"] = _start(replay_box)
             replay = Replayer(replay_box, log=log).run(plan, task)
@@ -119,6 +125,8 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
         finally:
             replay_box.close()
         phases["replay"] = replay.seconds
+        phases["replay_box_s"] = round(time.monotonic() - box_began, 1)
+        box_usd += replay_box.usd_per_second() * phases["replay_box_s"]
         _dump(evidence_dir / "replay.json", {"plan": plan.to_dict(), "result": replay.to_dict()})
         if replay.passed:
             try:
@@ -138,14 +146,15 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
     notes += build_notes
     save_run(run, evidence_dir)
     outcome = Outcome(slug=task.slug, run_id=run_id, run=run, notes=notes, evidence_dir=evidence_dir,
-                      seconds=round(time.monotonic() - began, 1), cost_usd=run.cost_usd or 0.0, phases=phases)
+                      seconds=round(time.monotonic() - began, 1), cost_usd=run.cost_usd or 0.0, phases=phases,
+                      box_usd=box_usd)
     if write:
         outcome.written, outcome.write_note = write_back(run, task.slug, data_dir)
         log(f"write-back: {outcome.write_note}")
     flags = f"replayed {run.replayed} · judge {run.judge.verdict if run.judge else '-'}"
     offline = f" · offline {replay.offline}" if replay and replay.passed else ""
     log(f"result · {task.slug} · level {run.level} · {flags}{offline} · {outcome.seconds:.0f}s · "
-        f"${outcome.cost_usd:.4f} · {evidence_dir / 'verification_run.json'}")
+        f"model ${outcome.cost_usd:.4f} · box ${box_usd:.4f} · {evidence_dir / 'verification_run.json'}")
     for note in notes:
         log(f"  note: {note}")
     _dump(evidence_dir / "outcome.json", {**outcome.summary(), "notes": notes,

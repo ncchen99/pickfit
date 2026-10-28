@@ -201,7 +201,8 @@ def run_batch(items: list[BatchItem], verify: Callable[[VerifyTask, Callable[[st
             with lock:
                 last = rows[-1]
                 log(f"== {len(rows)}/{len(items)} · {last['slug']} · level {last.get('level')} · "
-                    f"{last.get('seconds', '-')}s · ${last.get('cost_usd', 0):.4f}")
+                    f"{last.get('seconds', '-')}s · model ${last.get('cost_usd') or 0:.4f} · "
+                    f"box ${last.get('box_usd') or 0:.4f}")
     order = {item.task.slug: i for i, item in enumerate(items)}
     rows.sort(key=lambda r: order[r["slug"]])
     summary = summarize(rows, wall_s=round(time.monotonic() - began, 1), concurrency=concurrency)
@@ -223,5 +224,6 @@ def summarize(rows: list[dict[str, Any]], *, wall_s: float, concurrency: int) ->
     return {"tools": len(rows), "passed": len(passed), "replayed": sum(bool(r.get("replayed")) for r in rows),
             "levels": levels, "errors": sum(1 for r in rows if r.get("error")),
             "cost_usd": round(sum(r.get("cost_usd") or 0 for r in rows), 4),
+            "box_usd": round(sum(r.get("box_usd") or 0 for r in rows), 4),
             "seconds_median": round(statistics.median(seconds), 1) if seconds else None,
             "seconds_max": max(seconds) if seconds else None, "wall_s": wall_s, "concurrency": concurrency}
