@@ -61,10 +61,22 @@ test('legacy clients: initialize, list and call without a session', async () => 
     await call(rpc({ jsonrpc: '2.0', id: 2, method: 'tools/list' }, { 'mcp-protocol-version': '2025-11-25' })),
   );
   const tools = Object.fromEntries(list.result.tools.map((t: any) => [t.name, t]));
-  assert.deepEqual(Object.keys(tools).sort(), ['find_software', 'get_install_guide']);
+  assert.deepEqual(Object.keys(tools).sort(), ['find_alternatives', 'find_software', 'get_install_guide', 'report_outcome', 'submit_software']);
+  for (const tool of Object.values(tools) as any[]) {
+    assert.equal(tool.outputSchema.type, 'object', tool.name);
+    assert.ok(tool.description.length <= 1000, tool.name);
+  }
   assert.equal(tools.find_software.annotations.readOnlyHint, true);
-  assert.equal(tools.find_software.outputSchema.type, 'object');
-  assert.ok(tools.find_software.description.length <= 1000);
+  assert.equal(tools.find_alternatives.annotations.readOnlyHint, true);
+  assert.equal(tools.get_install_guide.annotations.readOnlyHint, true);
+  // Writes: never destructive, safe to retry; only submit_software reaches outside (the pipeline reads the repo).
+  for (const name of ['report_outcome', 'submit_software']) {
+    assert.equal(tools[name].annotations.readOnlyHint, false);
+    assert.equal(tools[name].annotations.destructiveHint, false);
+    assert.equal(tools[name].annotations.idempotentHint, true);
+  }
+  assert.equal(tools.report_outcome.annotations.openWorldHint, false);
+  assert.equal(tools.submit_software.annotations.openWorldHint, true);
 
   const res = await message(
     await call(
@@ -118,10 +130,32 @@ test('modern clients: the model path end to end, then the install guide', async 
     ),
   );
   assert.equal(guide.result.structuredContent.applies_to_user_system.match, 'exact');
+  assert.equal(guide.result.structuredContent.rec_id, out.rec_id);
   await settle();
-  const types = sqlite.prepare('SELECT type, rec_id FROM events ORDER BY type').all() as any[];
-  assert.deepEqual(types.map((r) => r.type), ['find', 'install_guide']);
-  assert.ok(types.every((r) => r.rec_id === out.rec_id));
+
+  const reported = await message(
+    await call(
+      rpc(
+        {
+          jsonrpc: '2.0',
+          id: 12,
+          method: 'tools/call',
+          params: {
+            name: 'report_outcome',
+            arguments: { slug: 'fixture-llm-runner', stage: 'installed', rec_id: out.rec_id, satisfaction: 'satisfied' },
+            _meta: MODERN_META,
+          },
+        },
+        { ...headers, 'mcp-name': 'report_outcome', 'x-pickfit-reporter': 'dev' },
+      ),
+    ),
+  );
+  assert.equal(reported.result.structuredContent.counted_in_score, true);
+  await settle();
+  const rows = sqlite.prepare('SELECT type, rec_id, reporter FROM events ORDER BY type').all() as any[];
+  assert.deepEqual(rows.map((r) => r.type), ['find', 'install_guide', 'outcome']);
+  assert.ok(rows.every((r) => r.rec_id === out.rec_id));
+  assert.equal(rows[2].reporter, 'dev');
 });
 
 test('bad input and unknown slugs come back as tool errors', async () => {
@@ -163,6 +197,6 @@ test('Host and Origin allowlists block DNS rebinding', async () => {
 test('other paths: health at /, 404 elsewhere', async () => {
   const { call } = setup();
   const health = await call(new Request('http://127.0.0.1:8787/'));
-  assert.deepEqual(Object.keys(await health.json()).sort(), ['entries', 'index_built_at', 'mcp', 'name']);
+  assert.deepEqual(Object.keys(await health.json()).sort(), ['data_sha256', 'entries', 'index_built_at', 'match_mode', 'mcp', 'name', 'tools']);
   assert.equal((await call(new Request('http://127.0.0.1:8787/other'))).status, 404);
 });

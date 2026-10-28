@@ -1,8 +1,10 @@
 /**
  * The fallback when the model is off, over budget or fails: rank by rules
  * and explain with template reasons built only from card fields.
- * Order: keyword hits of the request on the profile, then verification on
- * the user's OS, then treasure value (quality high, popularity low).
+ * Order: (find_alternatives only) the profile names the current tool in
+ * alternatives_to, then keyword hits of the request on the profile, then
+ * verification on the user's OS, then treasure value (quality high,
+ * popularity low).
  */
 import type { Entry, OS } from './catalog.ts';
 import type { Card } from './cards.ts';
@@ -27,16 +29,22 @@ export function keywordHits(entry: Entry, need: string): number {
   return new Set(words(need).filter((w) => profile.has(w))).size;
 }
 
-export function rankByRules(entries: Entry[], need: string, os?: OS): Entry[] {
+/** Tool names compared without case, spaces or punctuation ("LM Studio" = "lm-studio"). */
+export const nameKey = (text: string) => text.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+export function rankByRules(entries: Entry[], need: string, os?: OS, current?: string): Entry[] {
+  const currentKey = current ? nameKey(current) : '';
   return entries
     .map((entry) => ({
       entry,
+      replaces: currentKey !== '' && entry.alternatives_to.some((alt) => nameKey(alt) === currentKey),
       hits: keywordHits(entry, need),
       onOs: os !== undefined && entry.install[os] !== undefined,
       treasure: entry.scores?.treasure_value ?? -1,
     }))
     .sort(
       (a, b) =>
+        Number(b.replaces) - Number(a.replaces) ||
         b.hits - a.hits ||
         Number(b.onOs) - Number(a.onOs) ||
         b.treasure - a.treasure ||

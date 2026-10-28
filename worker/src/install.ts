@@ -4,6 +4,8 @@
  * that were never run are not in the index, so they cannot leak out here.
  */
 import { bestGuide, type Arch, type Catalog, type OS } from './catalog.ts';
+import { ranSentence } from './evidence.ts';
+import { newId, REC_ID } from './events.ts';
 
 export interface InstallInput {
   slug: string;
@@ -13,8 +15,12 @@ export interface InstallInput {
 }
 
 export interface InstallOutput {
+  rec_id: string;
+  matched_by: 'rules';
   slug: string;
   name: string;
+  how_we_know: string;
+  evidence_url: string | null;
   verification: {
     status: 'verified' | 'unverified';
     level: string | null;
@@ -77,6 +83,9 @@ export function installGuide(catalog: Catalog, input: InstallInput): InstallOutp
     run_by: 'agent' as const,
     needs_sudo: /(^|[\s;&|])sudo\s/.test(step.command),
   }));
+  const howWeKnow = guide
+    ? `${ranSentence(guide)} These are the recorded steps of that run; no model wrote or changed them.`
+    : `pickfit has not run ${entry.name}'s install steps on any system yet.`;
   const warnings: string[] = [];
   if (steps.some((s) => PIPE_TO_SHELL.test(s.command))) {
     warnings.push('A step pipes a downloaded script into a shell. Show it to the user and get consent before running it.');
@@ -85,8 +94,13 @@ export function installGuide(catalog: Catalog, input: InstallInput): InstallOutp
     warnings.push('A step uses sudo. Ask the user before running it.');
   }
   return {
+    // A rec_id from find_* is kept; otherwise this guide issues one, so report_outcome can cite it.
+    rec_id: input.rec_id && REC_ID.test(input.rec_id) ? input.rec_id : newId('rec'),
+    matched_by: 'rules',
     slug: entry.slug,
     name: entry.name,
+    how_we_know: howWeKnow,
+    evidence_url: run?.evidence_url ?? null,
     verification: {
       status: run ? 'verified' : 'unverified',
       level: run?.level ?? null,

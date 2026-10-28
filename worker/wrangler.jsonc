@@ -18,7 +18,56 @@
     "META_DAILY_CAP_USD": "3",
     "META_TOTAL_CAP_USD": "40",
     "META_TIMEOUT_MS": "25000",
+    "SUBMIT_HOURLY_CAP": "20",
+    "TOOLS": "all",
     "ALLOWED_HOSTS": ""
   },
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  // Evaluation deployments: same code, same bundled data, settings only.
+  // `uv run pickfit publish --env <name>`; do not publish an env again while
+  // its evaluation runs (that is what keeps it frozen). Each has its own D1,
+  // so its events and Meta budget stay apart from the public server's.
+  // vars and d1_databases are not inherited from the top level.
+  "env": {
+    // The pickfit arm: read-only tools, muse-spark-1.3 matching.
+    "eval": {
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "pickfit-eval",
+          "database_id": "00000000-0000-0000-0000-000000000000",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "vars": {
+        "TOOLS": "readonly",
+        "MATCH_MODE": "model",
+        "META_DAILY_CAP_USD": "10",
+        "META_TOTAL_CAP_USD": "10",
+        "META_TIMEOUT_MS": "25000",
+        "SUBMIT_HOURLY_CAP": "0",
+        "ALLOWED_HOSTS": ""
+      }
+    },
+    // The rules-only arm: same tools and data, no model call (caps at 0 as a second guard).
+    "eval-rules": {
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "pickfit-eval-rules",
+          "database_id": "00000000-0000-0000-0000-000000000000",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "vars": {
+        "TOOLS": "readonly",
+        "MATCH_MODE": "off",
+        "META_DAILY_CAP_USD": "0",
+        "META_TOTAL_CAP_USD": "0",
+        "META_TIMEOUT_MS": "25000",
+        "SUBMIT_HOURLY_CAP": "0",
+        "ALLOWED_HOSTS": ""
+      }
+    }
+  }
 }

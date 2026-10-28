@@ -78,6 +78,8 @@ export interface Catalog {
   index_version: 'pickfit-index.v1';
   built_at: string;
   data_dir: string;
+  /** sha256 over every data file (scripts/build_index.py); equal hashes mean the same data. */
+  data_sha256?: string;
   count: number;
   entries: Entry[];
   bySlug: Map<string, Entry>;

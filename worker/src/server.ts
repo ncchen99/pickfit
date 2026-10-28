@@ -2,19 +2,33 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { CARD_FIELDS } from './cards.ts';
-import { findSoftware, type Deps } from './find.ts';
+import { findAlternatives, findSoftware, type Deps } from './find.ts';
 import { installGuide, UnknownSlugError } from './install.ts';
-import { logEvent } from './events.ts';
+import { logEvent, logFailure } from './events.ts';
+import { ERROR_EXCERPT_MAX, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } from './outcome.ts';
+import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './submit.ts';
+
+const ABOUT =
+  'pickfit recommends lesser-known software that it has installed and tested in a sandbox. Scope today: developer CLI tools and local AI/LLM tools. ';
+const RULES = 'Ask at most 1-2 questions first (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars.';
 
 export const INSTRUCTIONS =
-  'pickfit recommends lesser-known software that it has installed and tested in a sandbox. Scope today: developer CLI tools and local AI/LLM tools. ' +
-  'Flow: find_software -> user picks -> get_install_guide -> run steps with the user\'s consent -> report_outcome. ' +
-  'Ask at most 1-2 questions first (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars.';
+  ABOUT +
+  'Flow: find_software (or find_alternatives when replacing a tool) -> user picks -> get_install_guide -> run steps with the user\'s consent -> report_outcome. ' +
+  RULES +
+  ' submit_software adds a GitHub project.';
+
+/** TOOLS=readonly: no mention of the tools that are not registered. */
+export const READONLY_INSTRUCTIONS =
+  ABOUT +
+  'Flow: find_software (or find_alternatives when replacing a tool) -> user picks -> get_install_guide -> run steps with the user\'s consent. ' +
+  RULES;
 
 const os = z.enum(['macos', 'linux', 'windows']);
 const arch = z.enum(['arm64', 'x86_64']);
 const slug = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(64);
 const recId = z.string().max(200);
+const REC_ID_OUT = "Identifies this response in pickfit's log; pass it to the next pickfit call. Valid 7 days";
 
 const reason = z.object({
   claim: z.string(),
@@ -55,12 +69,8 @@ const pick = z.object({
   homepage: z.string().nullable(),
 });
 
-const findInput = z.object({
-  need: z
-    .string()
-    .min(3)
-    .max(500)
-    .describe("The job to get done, in the user's words. Describe the task, not a product name."),
+/** The user's conditions, shared by find_software and find_alternatives. */
+const conditions = {
   category: z.enum(['dev_cli', 'local_ai', 'any']).optional().describe('Default any'),
   os: os.optional(),
   arch: arch.optional(),
@@ -69,10 +79,26 @@ const findInput = z.object({
   ui_language: z.string().max(35).optional().describe('BCP 47 tag, only if the user needs the UI or docs in that language'),
   exclude: z.array(slug).max(20).optional().describe('Slugs already shown or rejected'),
   limit: z.number().int().min(1).max(3).optional().describe('Default 3'),
+};
+
+const findInput = z.object({
+  need: z
+    .string()
+    .min(3)
+    .max(500)
+    .describe("The job to get done, in the user's words. Describe the task, not a product name."),
+  ...conditions,
+});
+
+const alternativesInput = z.object({
+  current_software: z.string().min(1).max(100).describe('The tool the user uses now'),
+  pain_points: z.string().min(3).max(500).describe('What the user dislikes about it, in their words'),
+  must_keep: z.array(z.string().max(100)).max(5).optional().describe('What the replacement must still do'),
+  ...conditions,
 });
 
 const findOutput = z.object({
-  rec_id: z.string().describe('Pass to get_install_guide and report_outcome; valid 7 days'),
+  rec_id: z.string().describe(REC_ID_OUT),
   matched_by: z.string().describe('The Meta model that chose the picks, or "rules"'),
   degraded: z.boolean().describe('true = ranked by rules without the model (off, budget or failure)'),
   degraded_reason: z.string().nullable(),
@@ -84,6 +110,17 @@ const findOutput = z.object({
   coverage_note: z.string().nullable(),
 });
 
+const alternativesOutput = findOutput.extend({
+  current: z.object({
+    matched_slug: z.string().nullable().describe('The current tool in pickfit, if listed; never among the picks'),
+    known: z.boolean().describe('pickfit lists it, or names it as an alternative on some profile'),
+  }),
+  keep_current: z
+    .object({ recommended: z.boolean(), reason: z.string() })
+    .nullable()
+    .describe('recommended true = no pick is clearly better than the current tool; null when ranked by rules'),
+});
+
 const installInput = z.object({
   slug,
   os,
@@ -92,8 +129,12 @@ const installInput = z.object({
 });
 
 const installOutput = z.object({
+  rec_id: z.string().describe(REC_ID_OUT),
+  matched_by: z.literal('rules').describe('No model is used here: these are the steps of a recorded run'),
   slug: z.string(),
   name: z.string(),
+  how_we_know: z.string(),
+  evidence_url: z.string().nullable().describe('Run record of the verification'),
   verification: z.object({
     status: z.enum(['verified', 'unverified']),
     level: z.string().nullable(),
@@ -127,6 +168,56 @@ const installOutput = z.object({
   sources: z.array(z.string()),
 });
 
+const outcomeInput = z.object({
+  slug,
+  stage: z
+    .enum(STAGES)
+    .describe('How far the user got: installed, install_failed, first_run_ok, first_run_failed, still_using, replaced, abandoned'),
+  rec_id: recId.optional().describe('From find_software, find_alternatives or get_install_guide; without it the report is not counted'),
+  satisfaction: z.enum(['satisfied', 'neutral', 'dissatisfied', 'unknown']).optional(),
+  os: os.optional(),
+  arch: arch.optional(),
+  error_excerpt: z
+    .string()
+    .max(2000)
+    .optional()
+    .describe(`Last lines of the error, with user names, paths and tokens removed; pickfit keeps the last ${ERROR_EXCERPT_MAX} characters`),
+  replaced_by: z.string().max(100).optional().describe('Only with stage "replaced": the slug or name of what replaced it'),
+  note: z.string().max(NOTE_MAX).optional().describe('Optional short feedback, without personal data; read by people only'),
+});
+
+const outcomeOutput = z.object({
+  accepted: z.boolean(),
+  report_id: z.string(),
+  rec_id: z.string().nullable().describe('The recommendation this report is tied to, when counted'),
+  deduplicated: z.boolean().describe('true = this rec_id, slug, stage and result were already reported; nothing changed'),
+  counted_in_score: z.boolean(),
+  not_counted_reason: z.enum(['no_rec_id', 'unknown_or_expired_rec_id']).nullable(),
+  reverify: z.enum(['queued', 'already_queued', 'none']).describe('Whether pickfit will re-run the install steps in a fresh sandbox'),
+  next: z.string().nullable(),
+});
+
+const submitInput = z.object({
+  url: z.string().min(10).max(300).describe('https URL of a GitHub repository, e.g. https://github.com/owner/repo'),
+  submitter_role: z.enum(['author', 'user', 'unknown']).optional().describe('Is the user its author? Default unknown'),
+  note: z.string().max(SUBMIT_NOTE_MAX).optional().describe('Optional: what the tool is for, without personal data; read by people only'),
+});
+
+const submitOutput = z.object({
+  submission_id: z.string().nullable().describe('null when the repository is already listed'),
+  url: z.string().describe('The normalized repository URL'),
+  status: z.enum(['queued', 'reading', 'verifying', 'listed', 'listed_unverified', 'rejected']),
+  slug: z.string().nullable(),
+  reason: z.string().nullable().describe('Why it was rejected, when it was'),
+  already_submitted: z.boolean().describe('true = this call only read the status'),
+  check_again_after_s: z.number().int().nullable(),
+  next: z.string(),
+});
+
+function toolError(message: string) {
+  return { content: [{ type: 'text' as const, text: message }], isError: true };
+}
+
 function result(out: object) {
   return {
     content: [{ type: 'text' as const, text: JSON.stringify(out) }],
@@ -135,7 +226,11 @@ function result(out: object) {
 }
 
 export function buildServer(deps: Deps): McpServer {
-  const server = new McpServer({ name: 'pickfit', version: '0.1.0' }, { instructions: INSTRUCTIONS });
+  const readonly = deps.settings.tools === 'readonly';
+  const server = new McpServer(
+    { name: 'pickfit', version: '0.1.0' },
+    { instructions: readonly ? READONLY_INSTRUCTIONS : INSTRUCTIONS },
+  );
 
   server.registerTool(
     'find_software',
@@ -154,14 +249,31 @@ export function buildServer(deps: Deps): McpServer {
   );
 
   server.registerTool(
+    'find_alternatives',
+    {
+      title: 'Find alternatives to a tool',
+      description:
+        'Use when the user already uses a specific tool and wants something different ("replace X", "X is too slow / too expensive / needs an account"). ' +
+        'Requires the current tool\'s name and what the user dislikes about it: ask for the dislike if they have not said it; do not guess. Ask for the OS only if unknown. ' +
+        'Returns up to 3 lesser-known tools whose install pickfit actually ran, each with reasons tied to its verified profile, trade-offs against the current tool and verification evidence, ' +
+        'or keep_current advice when nothing fits better, plus the best free option. Next: get_install_guide(slug, os, rec_id).',
+      inputSchema: alternativesInput,
+      outputSchema: alternativesOutput,
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    async (args) => result(await findAlternatives(args, deps)),
+  );
+
+  server.registerTool(
     'get_install_guide',
     {
       title: 'Get a verified install guide',
       description:
-        'Use after the user picks a tool from find_software. Returns install steps pickfit actually ran (replayed in a fresh sandbox, or done by hand), with the OS, date and evidence, ' +
+        'Use after the user picks a tool from find_software or find_alternatives. Returns install steps pickfit actually ran (replayed in a fresh sandbox, or done by hand), with the OS, date and evidence, ' +
         'the steps only the user can do (permissions, accounts), a command to verify the install and a first task to try. ' +
         'Show each command to the user before running it, and ask before any step that needs sudo or pipes a script into a shell. ' +
-        'If applies_to_user_system.match is not "exact", tell the user the steps were checked on a different system. After the user tries it, call report_outcome.',
+        'If applies_to_user_system.match is not "exact", tell the user the steps were checked on a different system.' +
+        (readonly ? '' : ' After the user tries it, call report_outcome with the rec_id.'),
       inputSchema: installInput,
       outputSchema: installOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },
@@ -176,15 +288,78 @@ export function buildServer(deps: Deps): McpServer {
             slug: out.slug,
             os: args.os,
             arch: args.arch ?? null,
-            rec_id: args.rec_id ?? null,
+            rec_id: out.rec_id,
             results: [out.applies_to_user_system.match],
-          }).catch(() => undefined),
+            client: deps.client ?? null,
+          }).catch(logFailure('install_guide', out.rec_id)),
         );
         return result(out);
       } catch (err) {
-        if (err instanceof UnknownSlugError) {
-          return { content: [{ type: 'text' as const, text: err.message }], isError: true };
-        }
+        if (err instanceof UnknownSlugError) return toolError(err.message);
+        throw err;
+      }
+    },
+  );
+
+  // An evaluation deployment (TOOLS=readonly) exposes no tool that writes user data.
+  if (readonly) return server;
+
+  server.registerTool(
+    'report_outcome',
+    {
+      title: 'Report how a recommended tool worked out',
+      description:
+        'Call after the user tried a tool pickfit recommended, once for each stage reached: installed or install_failed, first_run_ok or first_run_failed, and later still_using, replaced or abandoned. ' +
+        'Pass the rec_id from find_software, find_alternatives or get_install_guide; without it the report is stored but not counted. ' +
+        'Remove user names, file paths, tokens and other personal data from error_excerpt and note; pickfit stores no account or IP. ' +
+        'A failed install with an error excerpt makes pickfit re-run the install steps in a fresh sandbox. Repeating the same report changes nothing.',
+      inputSchema: outcomeInput,
+      outputSchema: outcomeOutput,
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async (args) => {
+      try {
+        return result(
+          await reportOutcome(args, {
+            catalog: deps.catalog,
+            db: deps.db,
+            now: deps.now,
+            reporter: deps.reporter ?? 'external',
+            client: deps.client,
+          }),
+        );
+      } catch (err) {
+        if (err instanceof UnknownToolError) return toolError(err.message);
+        throw err;
+      }
+    },
+  );
+
+  server.registerTool(
+    'submit_software',
+    {
+      title: 'Submit a GitHub project to pickfit',
+      description:
+        'Use only when the user asks to add a software project to pickfit, often their own. Takes the GitHub repository URL. ' +
+        "pickfit's pipeline reads it with Meta's Muse Spark, tries the install in a sandbox and lists it if it works; this takes minutes, so call again with the same url to check the status. " +
+        'Developer CLI tools and local AI/LLM tools are verified today; other software may be rejected or listed unverified. Nothing is published under the user\'s name.',
+      inputSchema: submitInput,
+      outputSchema: submitOutput,
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+    },
+    async (args) => {
+      try {
+        return result(
+          await submitSoftware(args, {
+            catalog: deps.catalog,
+            db: deps.db,
+            now: deps.now,
+            hourlyCap: deps.settings.submitHourlyCap,
+            client: deps.client,
+          }),
+        );
+      } catch (err) {
+        if (err instanceof SubmitError) return toolError(err.message);
         throw err;
       }
     },
