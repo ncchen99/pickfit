@@ -272,6 +272,8 @@ def test_run_extract_stores_results_and_spends_through_call_meta(tmp_path: Path,
     funnel = db.funnel()
     assert funnel["extract"]["by_status"] == {"ok": 1}
     assert funnel["extract"]["models"] == {"muse-spark-1.3-contributor": 1}
+    assert funnel["extract"]["by_model"] == {"muse-spark-1.3-contributor": {
+        "candidates": 1, "by_status": {"ok": 1}, "cost_usd": pytest.approx(summary["cost_usd"])}}
     # Already extracted from the same sources: a second run makes no call.
     again = run_extract(limit=5, db_path=db_path, client=FakeMeta().client(), ledger=ledger,
                         runs_dir=tmp_path / "runs", log=lines.append)

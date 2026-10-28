@@ -272,9 +272,14 @@ class PipelineDB:
         for e in all_extractions:
             latest[e["repo_id"]] = e
         tokens: Counter[str] = Counter()  # billed only: a cache hit replays an old usage block
+        cost_by_model: Counter[str] = Counter()
         for e in all_extractions:
+            cost_by_model[e["model"]] += e["cost_usd"]
             if not e["cache_hit"]:
                 tokens.update({k: v for k, v in (e["usage"] or {}).items() if isinstance(v, int)})
+        latest_by_model: dict[str, dict[str, dict[str, Any]]] = {}
+        for e in all_extractions:
+            latest_by_model.setdefault(e["model"], {})[e["repo_id"]] = e
         return {
             "discover": {
                 "candidates": len(cands),
@@ -311,6 +316,10 @@ class PipelineDB:
                 "cache_hits": sum(1 for e in all_extractions if e["cache_hit"]),
                 "tokens": dict(tokens),
                 "cost_usd": round(sum(e["cost_usd"] for e in all_extractions), 6),
+                "by_model": {model: {"candidates": len(rows),
+                                     "by_status": dict(Counter(e["status"] for e in rows.values())),
+                                     "cost_usd": round(cost_by_model[model], 6)}
+                             for model, rows in sorted(latest_by_model.items())},
             },
         }
 
