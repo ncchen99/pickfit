@@ -283,14 +283,63 @@ def test_run_extract_records_schema_errors_and_quote_failures(tmp_path: Path, le
     db = PipelineDB(db_path)
     add_candidate(db, 1, "someone/tinyq", pushed_at="2026-10-21T00:00:00Z")
     add_candidate(db, 2, "someone/other", pushed_at="2026-10-20T00:00:00Z")
-    server = FakeMeta(ok("{not json"), ok(extraction(pricing=cited("paid", "Costs $5"))))
+    server = FakeMeta(ok("{not json"), ok("{still not json"), ok(extraction(pricing=cited("paid", "Costs $5"))))
     summary = run_extract(limit=2, db_path=db_path, client=server.client(), ledger=ledger,
                           runs_dir=tmp_path / "runs", cache=False, log=lambda line: None)
     assert summary["by_status"] == {"schema_error": 1, "quotes_dropped": 1}
     assert summary["errors"] == 1 and summary["quote_failures"] == 1
-    rows = {r["repo_id"]: r for r in db.extractions()}
-    assert rows["gh:1"]["result"] is None and rows["gh:1"]["error"]
-    assert rows["gh:2"]["quote_failures"] == [{"path": "/pricing", "text": "Costs $5"}]
+    assert summary["attempted"] == 2 and summary["calls"] == 3  # the schema error was tried twice
+    rows = db.extractions()
+    assert [r["repo_id"] for r in rows] == ["gh:1", "gh:1", "gh:2"]
+    assert rows[1]["result"] is None and rows[1]["error"]
+    assert rows[2]["quote_failures"] == [{"path": "/pricing", "text": "Costs $5"}]
+
+
+def test_running_out_of_output_tokens_retries_with_more_room(tmp_path: Path, ledger: Ledger) -> None:
+    db_path = tmp_path / "pipeline.db"
+    db = PipelineDB(db_path)
+    add_candidate(db, 1, "someone/tinyq")
+
+    def cut_off(body: dict[str, Any]) -> httpx2.Response:
+        reply = responses_reply('{"name": ', status="incomplete")
+        reply["incomplete_details"] = {"reason": "max_output_tokens"}
+        return httpx2.Response(200, json=reply)
+
+    server = FakeMeta(cut_off, ok(extraction()))
+    summary = run_extract(limit=1, db_path=db_path, client=server.client(), ledger=ledger,
+                          runs_dir=tmp_path / "runs", cache=False, log=lambda line: None)
+    assert summary["by_status"] == {"ok": 1} and summary["calls"] == 2
+    assert [r["max_output_tokens"] for r in server.requests] == [8000, 16000]
+    assert [r["status"] for r in db.extractions()] == ["incomplete", "ok"]
+    assert "max_output_tokens" in db.extractions()[0]["error"]
+
+
+def test_server_errors_get_one_more_try_after_call_meta_gives_up(tmp_path: Path, ledger: Ledger,
+                                                                  monkeypatch: pytest.MonkeyPatch) -> None:
+    import pickfit.extract as extract_module
+    monkeypatch.setattr(extract_module.time, "sleep", lambda s: None)
+    db_path = tmp_path / "pipeline.db"
+    db = PipelineDB(db_path)
+    add_candidate(db, 1, "someone/tinyq")
+    down = lambda body: httpx2.Response(503, json={"error": {"message": "overloaded"}})  # noqa: E731
+    server = FakeMeta(*[down] * meta.SERVER_ERROR_TRIES, ok(extraction()))
+    summary = run_extract(limit=1, db_path=db_path, client=server.client(), ledger=ledger,
+                          runs_dir=tmp_path / "runs", cache=False, log=lambda line: None)
+    assert summary["by_status"] == {"ok": 1} and summary["calls"] == 2
+
+
+def test_concurrent_batch_extracts_every_candidate_once(tmp_path: Path, ledger: Ledger) -> None:
+    db_path = tmp_path / "pipeline.db"
+    db = PipelineDB(db_path)
+    for i in range(1, 7):
+        add_candidate(db, i, f"someone/t{i}")
+    server = FakeMeta(*[ok(extraction())] * 6)
+    summary = run_extract(limit=6, concurrency=3, db_path=db_path, client=server.client(),
+                          ledger=ledger, runs_dir=tmp_path / "runs", cache=False, log=lambda line: None)
+    assert summary["by_status"] == {"ok": 6} and summary["calls"] == 6
+    assert sorted(r["repo_id"] for r in db.extractions()) == [f"gh:{i}" for i in range(1, 7)]
+    assert all(r["prompt_cache_key"] == "pickfit-extract-v1" for r in server.requests)
+    assert ledger.spend_summary()["calls"] == 6
 
 
 def test_run_extract_stops_after_repeated_errors(tmp_path: Path, ledger: Ledger) -> None:
