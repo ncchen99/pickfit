@@ -145,7 +145,7 @@ def test_cli_dry_run(repo: Path, capsys: pytest.CaptureFixture[str]) -> None:
 def test_an_env_is_checked_and_deployed_with_its_own_settings(repo: Path) -> None:
     code, lines = dry_run(repo, env="eval")
     assert code == 0, lines
-    assert "publish: env eval settings: TOOLS=readonly, MATCH_MODE=model, META_DAILY_CAP_USD=3, META_TOTAL_CAP_USD=10" in lines
+    assert "publish: env eval settings: TOOLS=readonly, MATCH_MODE=model, META_DAILY_CAP_USD=10, META_TOTAL_CAP_USD=10" in lines
     assert lines[-1].endswith(f"would run `npx wrangler deploy --env eval` in {repo / 'worker'}")
 
     code, lines = dry_run(repo, env="eval-rules")

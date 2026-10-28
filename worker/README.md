@@ -91,7 +91,7 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 
 `wrangler.jsonc` 已有兩個範本（`env` 區塊；wrangler 不會把頂層的 `vars`、`d1_databases` 繼承進 env，所以每個都完整列出）：
 
-- `eval`：`TOOLS=readonly`、`MATCH_MODE=model`、每日 $3、總額 $10、自己的 D1 `pickfit-eval`。
+- `eval`：`TOOLS=readonly`、`MATCH_MODE=model`、每日 $10、總額 $10（評測協定登記的上限；每日上限設低會讓評測中途變成 `degraded`）、自己的 D1 `pickfit-eval`。
 - `eval-rules`：`TOOLS=readonly`、`MATCH_MODE=off`、上限都是 0、自己的 D1 `pickfit-eval-rules`。
 
 **凍結**：Worker 的資料是部署時打包進去的索引，所以評測期間不要再對該 env 跑 `pickfit publish --env …`；公開的 server 照常更新不影響它。兩個 arm 要從同一個 commit 部署；`GET /` 會回 `data_sha256`、`index_built_at`、`tools`、`match_mode`，兩邊的 `data_sha256` 相同就是同一份資料。
