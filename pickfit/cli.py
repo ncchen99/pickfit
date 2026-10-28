@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from pathlib import Path
 
 from pickfit import __version__
 
@@ -52,9 +53,24 @@ def _extract(args: argparse.Namespace) -> int:
     from pickfit.extract import run_extract
 
     summary = run_extract(limit=args.limit, model=args.model, reasoning_effort=args.effort,
-                          repo_ids=args.repo, force=args.force)
+                          repo_ids=args.repo, force=args.force, concurrency=args.concurrency,
+                          max_attempts=args.attempts)
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     return 0 if summary["errors"] == 0 else 1
+
+
+def _profiles(args: argparse.Namespace) -> int:
+    from pickfit.discover.run import pipeline_db_path
+    from pickfit.discover.store import PipelineDB
+    from pickfit.meta import resolve_model
+    from pickfit.profiles import DEFAULT_CATEGORIES, DEFAULT_OUT, write_profiles
+
+    summary = write_profiles(PipelineDB(pipeline_db_path()), model=resolve_model(args.model),
+                             out_dir=args.out or DEFAULT_OUT,
+                             categories=tuple(args.category or DEFAULT_CATEGORIES),
+                             dry_run=args.dry_run, log=lambda line: print(line, file=sys.stderr))
+    print(json.dumps(summary.to_dict(), ensure_ascii=False, indent=2))
+    return 0
 
 
 def _funnel(args: argparse.Namespace) -> int:
@@ -87,7 +103,18 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     e.add_argument("--effort", default="minimal", help="reasoning effort (default minimal)")
     e.add_argument("--repo", action="append", help="extract this repo id (gh:<id>) or owner/name")
     e.add_argument("--force", action="store_true", help="extract again even if already extracted")
+    e.add_argument("--concurrency", type=int, default=1, help="calls in flight at once (default 1)")
+    e.add_argument("--attempts", type=int, default=2,
+                   help="tries per candidate for transient failures (default 2)")
     e.set_defaults(func=_extract)
+
+    p = sub.add_parser("profiles", help="write data/software/<slug>.json from stored extractions ($0)")
+    p.add_argument("--model", default="prod", help='extractions by this model: "prod" (default), "dev" or an id')
+    p.add_argument("--category", action="append", choices=["dev_cli", "local_ai", "other"],
+                   help="categories to write (repeatable; default dev_cli and local_ai)")
+    p.add_argument("--out", type=Path, default=None, help="output directory (default data/software)")
+    p.add_argument("--dry-run", action="store_true", help="build and validate, write nothing")
+    p.set_defaults(func=_profiles)
 
     f = sub.add_parser("funnel", help="counts, models and cost per funnel stage from runs/pipeline.db")
     f.set_defaults(func=_funnel)

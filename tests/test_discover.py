@@ -331,8 +331,76 @@ def test_library_without_entry_point() -> None:
 
 
 def test_unclear_repo_goes_to_the_model() -> None:
-    result = classify(candidate("# tinyq\n\nSome words.", topics=[]))
+    result = classify(candidate("# tinyq\n\n## Usage\n\nSome words."))
     assert (result.label, result.passed) == ("uncertain", True)
+
+
+def test_repo_with_nothing_to_install_or_run_is_rejected() -> None:
+    result = classify(candidate("# tinyq\n\nSome words.", topics=[]))
+    assert (result.label, result.passed) == ("rejected", False)
+    assert "reject:no_install_or_usage_signal" in result.reasons
+
+
+@pytest.mark.parametrize("heading", ["## 安装", "## インストール", "## 설치", "## Get Started", "## Build"])
+def test_install_headings_in_other_languages_count(heading: str) -> None:
+    result = classify(candidate(f"# tinyq\n\n{heading}\n\nSome words.", topics=[]))
+    assert "+readme_install_section" in result.reasons and result.passed
+
+
+LURE_FILES = [".github/ARrQaLTCrwrPCy", ".github/workflows/XUfnhmktZMGd.yml", "README.md",
+              "index.html", "preview.svg"]
+INSTALL_README = "# Owl\n\n## Download\n\n```\nbrew install owl\n```\n\n## Usage\n\nowl run\n"
+
+
+def test_lure_kit_marker_file_is_a_hard_reject() -> None:
+    result = classify(candidate(INSTALL_README, files=LURE_FILES, license=None,
+                                description="Owl AI Terminal 2026 - Best Free Download"))
+    assert (result.label, result.passed) == ("rejected", False)
+    assert "reject:suspected_lure" in result.reasons
+
+
+def test_random_workflow_name_without_a_license_is_a_lure() -> None:
+    files = [".github/workflows/xpuAjwHCGgmy.yml", "README.md", "tools/cli.js"]
+    assert "reject:suspected_lure" in classify(candidate(INSTALL_README, files=files, license=None)).reasons
+
+
+@pytest.mark.parametrize("files", [
+    [".github/CODEOWNERS", ".github/workflows/onPushToMain.yml", "src/main.go", "main.go"],
+    [".github/MAINTAINERS", ".github/workflows/BuildAndTestCI.yml", "src/main.rs", "Cargo.toml"],
+])
+def test_real_github_file_names_are_not_lures(files: list[str]) -> None:
+    result = classify(candidate(INSTALL_README, files=files))
+    assert result.passed and "reject:suspected_lure" not in result.reasons
+
+
+def test_readme_only_repo_is_rejected_even_with_install_docs() -> None:
+    files = ["LICENSE", "README.md", "docs/commands.md"]
+    result = classify(candidate(INSTALL_README, files=files))
+    assert (result.label, result.passed) == ("rejected", False)
+    assert "reject:readme_only" in result.reasons
+
+
+def test_release_binaries_without_source_or_license_are_rejected() -> None:
+    releases = [{"assets": [{"name": "app-linux-x64.tar.gz"}, {"name": "app-windows-x64.zip"}]}]
+    files = ["README.md", ".github/banner.gif", "docs/app.js"]
+    result = classify(candidate(INSTALL_README, files=files, releases=releases, license=None))
+    assert "reject:binary_only" in result.reasons and not result.passed
+    licensed = classify(candidate(INSTALL_README, files=files, releases=releases))
+    assert licensed.passed
+
+
+def test_single_file_go_tool_with_binaries_passes() -> None:
+    releases = [{"assets": [{"name": "tinyq_linux_amd64.tar.gz"}]}]
+    result = classify(candidate(INSTALL_README, files=["main.go", "go.mod", "README.md"],
+                                releases=releases, license=None))
+    assert (result.label, result.passed) == ("tool", True)
+
+
+def test_seo_title_counts_against_a_repo() -> None:
+    result = classify(candidate(INSTALL_README, description="Best Manga Downloader Script 2026"))
+    assert "-seo_title" in result.reasons
+    plain = classify(candidate(INSTALL_README, description="Coding agent for Visual Studio 2026/2022"))
+    assert "-seo_title" not in plain.reasons
 
 
 def test_owner_burst_is_flagged_not_rejected() -> None:

@@ -1,9 +1,13 @@
 """Rule prefilter (architecture B.1): drop what is clearly not usable software, for $0.
 
 Order: hard rejects (fork, archived, disabled, GitHub template, no README,
-abuse keywords) -> not software (lists, homework, tutorials, templates,
-dotfiles, demos) -> library (several signals and no strong tool signal) ->
-tool -> everything else is "uncertain" and goes on to a model.
+abuse keywords, the lure-kit file pattern) -> not software (lists, homework,
+tutorials, templates, dotfiles, demos) -> library (several signals and no
+strong tool signal) -> tool -> everything else is "uncertain". A tool or
+uncertain repo is still rejected when there is nothing to verify: no source
+files at all (README-only), release binaries without their source or a
+license (binary-only), or no install, usage, entry point or binary signal.
+What passes goes on to a model.
 
 Ported from the research spike's classifier, keeping only signals from the
 GitHub REST API (repo, README, releases, tree, root manifests); the spike's
@@ -19,13 +23,15 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-RULES_VERSION = "rules.v1"
+RULES_VERSION = "rules.v2"
 
 INSTALL_HEADING = re.compile(
-    r"^#{1,4}\s*.*\b(install|installation|getting started|quick ?start|setup|download)\b"
-    r"|^#{1,4}.*(安裝|下載)", re.I | re.M)
+    r"^#{1,4}\s*.*\b(install|installation|get(ting)? started|quick ?start|setup|download|build(ing)?)\b"
+    r"|^#{1,4}.*(安裝|安装|下載|下载|快速開始|快速开始|インストール|導入|セットアップ|ビルド|설치)",
+    re.I | re.M)
 USAGE_HEADING = re.compile(
-    r"^#{1,4}\s*.*\b(usage|how to use|examples?|commands?|features)\b|^#{1,4}.*(使用|用法)",
+    r"^#{1,4}\s*.*\b(usage|how to use|examples?|commands?|features)\b"
+    r"|^#{1,4}.*(使用|用法|使い方|操作|사용법)",
     re.I | re.M)
 INSTALL_COMMAND = re.compile(
     r"\b(brew install|cargo (b)?install|pipx install|uv tool install|pip3? install|npm (i|install) -g|"
@@ -39,13 +45,26 @@ LIBRARY_DESCRIPTION = re.compile(
 BINARY_ASSET = re.compile(
     r"(darwin|macos|apple|linux|windows|win64|x86_64|amd64|aarch64|arm64|\.dmg$|\.exe$|\.msi$|"
     r"\.deb$|\.rpm$|\.appimage$|\.pkg$|\.apk$)", re.I)
-SOURCE_FILE = re.compile(r"\.(go|rs|py|ts|js|mjs|swift|c|cc|cpp|zig|java|kt|rb|sh|lua|cs|dart)$")
+SOURCE_FILE = re.compile(
+    r"\.(go|rs|py|ts|tsx|js|jsx|mjs|cjs|vue|svelte|swift|m|mm|c|h|cc|cpp|hpp|zig|java|kt|scala|rb|php|"
+    r"pl|ex|exs|erl|hs|ml|fs|clj|el|jl|nim|cr|v|pas|sh|bash|zsh|fish|ps1|lua|cs|dart|nix)$")
 LINK_LIST_ITEM = re.compile(r"^\s*[-*] \[.+?\]\(http", re.M)
 # Account farms and credential tools seen in discovery research (channels-hosting).
 ABUSE = re.compile(
     r"bulk[- ]?(create|creat|register|sign[- ]?up)|account (generator|creator|farm)|"
     r"harvest(ing)? cookies|cookie (stealer|grabber)|token (grabber|stealer)|captcha (bypass|solver)|"
     r"\bstealer\b", re.I)
+
+# The lure kit seen in discovery (channels-hosting; P2 hand-over): README + index.html, a
+# .github/<random letters> file with no extension and .github/workflows/<random letters>.yml,
+# star-farmed, an SEO title. Real files directly under .github/ are named in capitals
+# (CODEOWNERS) or have an extension, so a mixed-case extensionless name is the kit's marker.
+_GITHUB_MARKER = re.compile(r"^\.github/(?=(?:[a-z]*[A-Z]){2})(?=(?:[A-Z]*[a-z]){2})[A-Za-z]{10,20}$")
+_WORKFLOW_STEM = re.compile(r"^\.github/workflows/([A-Za-z]{10,20})\.ya?ml$")
+SEO_TITLE = re.compile(
+    r"\b20[2-3]\d\b.*\b(best|top|ultimate|free|download|next[- ]gen)\b"
+    r"|\b(best|top|ultimate|free|download|next[- ]gen)\b.*\b20[2-3]\d\b", re.I)
+NAME_WITH_YEAR = re.compile(r"[-_]20[2-3]\d$")
 
 # (reason, pattern): matched against the repo name and topics (strong) or the description (weak).
 NOT_SOFTWARE = (
@@ -119,7 +138,30 @@ def _entry_points(files: list[str], manifests: dict[str, str]) -> tuple[list[str
     return entry, negative
 
 
-def _hard_rejects(repo: dict[str, Any], readme: str | None) -> list[str]:
+def _random_token(word: str) -> bool:
+    """Letters that are not words: several capitals, and capitals in a row or vowelless chunks.
+
+    Words in camelCase (onPushToMain) have a vowel in every chunk; an acronym (BuildAndTestCI)
+    can look random, so this alone is only used together with a missing license.
+    """
+    capitals = sum(ch.isupper() for ch in word)
+    if not 4 <= capitals < len(word):
+        return False
+    if re.search(r"[A-Z]{2}", word):
+        return True
+    chunks = re.findall(r"[A-Z]?[a-z]+", word)
+    return sum(1 for c in chunks if len(c) >= 2 and not re.search(r"[aeiouy]", c, re.I)) >= 2
+
+
+def _lure_kit(files: list[str], repo: dict[str, Any]) -> bool:
+    """The kit's .github marker file, or a random workflow name in a repo with no license."""
+    if any(_GITHUB_MARKER.match(f) for f in files):
+        return True
+    workflow = any((m := _WORKFLOW_STEM.match(f)) and _random_token(m.group(1)) for f in files)
+    return workflow and not repo.get("license")
+
+
+def _hard_rejects(repo: dict[str, Any], readme: str | None, files: list[str]) -> list[str]:
     reasons = [name for name, hit in (
         ("fork", repo.get("fork")),
         ("archived", repo.get("archived")),
@@ -131,6 +173,8 @@ def _hard_rejects(repo: dict[str, Any], readme: str | None) -> list[str]:
     text = " ".join(filter(None, [repo.get("name"), repo.get("description")]))
     if ABUSE.search(text):
         reasons.append("abuse_keywords")
+    if _lure_kit(files, repo):
+        reasons.append("suspected_lure")
     return reasons
 
 
@@ -145,7 +189,7 @@ def classify(candidate: dict[str, Any], owner_counts: dict[str, int] | None = No
     if owner_counts and owner_counts.get(repo.get("owner") or "", 0) >= OWNER_BURST:
         notes.append(f"flag:owner_burst({owner_counts[repo['owner']]})")
 
-    hard = _hard_rejects(repo, readme)
+    hard = _hard_rejects(repo, readme, files)
     if hard:
         return RuleResult("rejected", False, [f"reject:{r}" for r in hard] + notes)
 
@@ -180,7 +224,11 @@ def classify(candidate: dict[str, Any], owner_counts: dict[str, int] | None = No
             negative.append((reason, 2))
     if LIBRARY_DESCRIPTION.search(description):
         negative.append(("description_says_library", 2))
-    if files and not candidate.get("files_truncated") and not any(SOURCE_FILE.search(f) for f in files):
+    if SEO_TITLE.search(description) or NAME_WITH_YEAR.search(repo.get("name") or ""):
+        negative.append(("seo_title", 3))
+    source_files = sum(1 for f in files if SOURCE_FILE.search(f))
+    tree_known = bool(files) and not candidate.get("files_truncated")
+    if tree_known and source_files == 0:
         negative.append(("no_source_files", 4))
     links = len(LINK_LIST_ITEM.findall(readme))
     if links > LINK_LIST_MIN:
@@ -201,7 +249,19 @@ def classify(candidate: dict[str, Any], owner_counts: dict[str, int] | None = No
         label = "tool"
     else:
         label = "uncertain"
+    # Nothing a sandbox could verify: these never reach the model or the sandbox.
+    nothing_to_verify = None
+    if label in ("tool", "uncertain"):
+        has_binaries = any(name == "release_binaries" for name, _ in positive)
+        if tree_known and source_files == 0:
+            nothing_to_verify = "readme_only"
+        elif has_binaries and tree_known and source_files <= 2 and not entry and not repo.get("license"):
+            nothing_to_verify = "binary_only"
+        elif label == "uncertain" and p <= 1:
+            nothing_to_verify = "no_install_or_usage_signal"
+    if nothing_to_verify:
+        label = "rejected"
     passed = label in ("tool", "uncertain")
     reasons = ([f"+{name}" for name, _ in positive] + [f"-{name}" for name, _ in negative]
-               + ([] if passed else [f"reject:{label}"]) + notes)
+               + ([] if passed else [f"reject:{nothing_to_verify or label}"]) + notes)
     return RuleResult(label, passed, reasons, positive=p, not_software=n, library=lib)
