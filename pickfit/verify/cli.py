@@ -21,6 +21,8 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--keep-box", action="store_true", help="Docker: leave the agent's container running")
     v.add_argument("--write-back", action="store_true",
                    help="record a passed, replayed run in data/software/<slug>.json")
+    v.add_argument("--limits-test", action="store_true",
+                   help="no model: check the box's limits (user, metadata, network cut, memory, disk, pids)")
     v.set_defaults(func=run)
 
 
@@ -44,6 +46,12 @@ def run(args: argparse.Namespace) -> int:
     from pickfit.verify.pipeline import verify_task
     from pickfit.verify.task import load_fixture
 
+    if args.limits_test:
+        from pickfit.verify.agent import _runs_dir
+        from pickfit.verify.limits import limits_test
+
+        results, _ = limits_test(box_factory(args.runner, 900, platform=args.platform), _runs_dir(None))
+        return 0 if all(r.ok for r in results) else 1
     if not args.fixture:
         print("pickfit verify: give --fixture")
         return 2
