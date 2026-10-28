@@ -1,0 +1,145 @@
+"""Batch selection from a read-only pipeline database, and the parallel runner."""
+
+from __future__ import annotations
+
+import json
+import sqlite3
+import threading
+import time
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
+
+import pytest
+
+from pickfit.discover.store import PipelineDB
+from pickfit.verify.batch import load_candidates, run_batch, slug_for, verified_slugs
+
+FIXTURES = Path(__file__).parent / "fixtures" / "verify"
+
+
+def extraction(**changes: Any) -> dict[str, Any]:
+    data = json.loads((FIXTURES / "graphtty.json").read_text())["extraction"]
+    for path, value in changes.items():
+        node = data
+        *parents, leaf = path.split("__")
+        for key in parents:
+            node = node[key]
+        node[leaf] = value
+    return data
+
+
+def add(db: PipelineDB, repo_id: int, full_name: str, result: dict[str, Any] | None, *, model: str = "muse-spark-1.3",
+        status: str = "ok", rule_passed: bool = True, readme: str | None = "# readme\n") -> None:
+    db.upsert_repo({"id": repo_id, "full_name": full_name, "html_url": f"https://github.com/{full_name}"},
+                   category="dev_cli", query_id="q1", seen_at="2026-10-29T00:00:00+08:00")
+    key = f"gh:{repo_id}"
+    with db._write() as conn:
+        conn.execute("UPDATE candidates SET readme = ?, rule_passed = ? WHERE repo_id = ?",
+                     (readme, int(rule_passed), key))
+    db.save_extraction(repo_id=key, run_id="x", model=model, reasoning_effort="minimal", status=status,
+                       sources_sha="s", result=result, quote_failures=[], quotes_checked=0, error=None,
+                       usage=None, cost_usd=0.0, cache_hit=False, response_id=None, latency_s=None)
+
+
+@pytest.fixture
+def db_path(tmp_path: Path) -> Path:
+    path = tmp_path / "pipeline.db"
+    db = PipelineDB(path)
+    add(db, 1, "acme/graphtty", extraction())
+    add(db, 2, "acme/keyed", extraction(prerequisites__api_keys=[{"value": "OPENAI_API_KEY",
+                                                                   "quote": "OPENAI_API_KEY"}]))
+    add(db, 3, "acme/gui", extraction(kind={"value": "desktop_app", "quote": "app"}))
+    add(db, 4, "acme/macos", extraction(platforms={"value": ["macos"], "quote": "macOS"}))
+    add(db, 5, "acme/nopath", extraction(install_methods=[{"method": "brew", "command": "brew install x",
+                                                            "platforms": []}]))
+    add(db, 6, "acme/rejected", extraction(), rule_passed=False)
+    add(db, 7, "acme/failed", None, status="error")
+    add(db, 8, "acme/noreadme", extraction(), readme=None)
+    # Two extractions: the 1.3 one wins over a later contributor one.
+    add(db, 9, "other/graphtty", extraction(name={"value": "contributor", "quote": "# graphtty"}),
+        model="muse-spark-1.3-contributor")
+    add(db, 9, "other/graphtty", extraction(name={"value": "standard", "quote": "# graphtty"}))
+    add(db, 9, "other/graphtty", extraction(name={"value": "later contributor", "quote": "# graphtty"}),
+        model="muse-spark-1.3-contributor")
+    return path
+
+
+def test_selection_ranks_demo_first_and_sets_aside_with_reasons(db_path: Path):
+    items, skipped = load_candidates(db_path, limit=10)
+    assert [i.full_name for i in items] == ["acme/graphtty", "other/graphtty", "acme/keyed"]
+    assert [i.task.slug for i in items] == ["graphtty", "other-graphtty", "keyed"]
+    assert items[0].priority > items[2].priority  # an API key costs priority
+    other = items[1]
+    assert other.extraction_model == "muse-spark-1.3" and other.task.extraction.name.value == "standard"
+    assert other.task.repo_url == "https://github.com/other/graphtty" and other.task.readme == "# readme\n"
+    reasons = {s["full_name"]: s["reason"] for s in skipped}
+    assert reasons == {"acme/gui": "GUI app", "acme/macos": "platforms macos only",
+                       "acme/nopath": "no install path the Linux box can run", "acme/noreadme": "no README stored"}
+
+
+def test_selection_filters_and_limits(db_path: Path):
+    items, _ = load_candidates(db_path, limit=1)
+    assert [i.full_name for i in items] == ["acme/graphtty"]
+    items, _ = load_candidates(db_path, limit=10, repos=["gh:2"])
+    assert [i.full_name for i in items] == ["acme/keyed"]
+    items, skipped = load_candidates(db_path, limit=10, skip_slugs={"graphtty"})
+    assert "graphtty" not in [i.task.slug for i in items]
+    assert {"slug": "graphtty", "reason": "already has a run (use --force)"}.items() <= skipped[0].items()
+
+
+def test_database_is_opened_read_only(db_path: Path):
+    db_path.chmod(0o444)
+    try:
+        load_candidates(db_path, limit=5)
+    finally:
+        db_path.chmod(0o644)
+    with sqlite3.connect(db_path) as conn:
+        assert conn.execute("SELECT count(*) FROM extractions").fetchone()[0] == 11  # nothing written
+
+
+def test_slug_for_keeps_slugs_unique():
+    taken: set[str] = set()
+    assert slug_for("Acme/My.Tool", taken) == "my-tool"
+    assert slug_for("other/my_tool", taken) == "other-my-tool"
+
+
+def test_run_batch_runs_in_parallel_and_survives_errors(db_path: Path, tmp_path: Path):
+    items, _ = load_candidates(db_path, limit=3)
+    running, peak = 0, 0
+    lock = threading.Lock()
+
+    def verify(task, log):
+        nonlocal running, peak
+        with lock:
+            running += 1
+            peak = max(peak, running)
+        log("working")
+        time.sleep(0.05)
+        with lock:
+            running -= 1
+        if task.slug == "keyed":
+            raise RuntimeError("box exploded")
+        level = "function" if task.slug == "graphtty" else "unverified"
+        return SimpleNamespace(notes=[], summary=lambda: {"slug": task.slug, "level": level, "replayed": True,
+                                                          "seconds": 40.0, "cost_usd": 0.01})
+
+    lines: list[str] = []
+    summary = run_batch(items, verify, concurrency=3, runs_dir=tmp_path, log=lines.append, meta={"db": "x"})
+    assert peak == 3
+    assert (summary["tools"], summary["passed"], summary["errors"]) == (3, 1, 1)
+    assert summary["levels"] == {"function": 1, "unverified": 1, "None": 1}
+    assert summary["cost_usd"] == 0.02 and summary["seconds_median"] == 40.0
+    saved = json.loads(Path(summary["path"]).read_text())
+    assert [r["slug"] for r in saved["items"]] == ["graphtty", "other-graphtty", "keyed"]
+    assert saved["items"][2]["error"] == "RuntimeError: box exploded"
+    assert "[graphtty] working" in lines
+
+
+def test_verified_slugs_reads_outcomes(tmp_path: Path):
+    run = tmp_path / "verify" / "verify-x-1"
+    run.mkdir(parents=True)
+    (run / "outcome.json").write_text(json.dumps({"slug": "x"}))
+    (tmp_path / "verify" / "broken").mkdir()
+    (tmp_path / "verify" / "broken" / "outcome.json").write_text("{")
+    assert verified_slugs(tmp_path) == {"x"}

@@ -89,6 +89,15 @@ def sandbox_image(client: Any, app: Any, *, log: Callable[[str], None] = print) 
     return image, name
 
 
+def ensure_published_image(log: Callable[[str], None] = print) -> str:
+    """Build and publish the sandbox image now (before parallel boxes start); returns its name."""
+    import modal
+
+    client = modal_client()
+    app = modal.App.lookup(APP_NAME, create_if_missing=True, client=client)
+    return sandbox_image(client, app, log=log)[1]
+
+
 class ModalBox(Box):
     """A Modal Sandbox (gVisor) driven like a DockerBox."""
 
