@@ -60,6 +60,14 @@ def test_render_maps_boxes_back_to_text(tmp_path: Path):
     assert screen.text_in_box(0, 990, 1000, 1000) == ""
 
 
+def test_a_box_slightly_off_a_short_image_snaps_to_its_row(tmp_path: Path):
+    screen = render_terminal("evnx --version", "evnx 0.10.18", "", tmp_path / "v.png", title="t")
+    row_top = screen.top + screen.cell_h
+    y0 = round((row_top - 0.2 * screen.cell_h) * 1000 / screen.height)  # 20% of the prompt row, 35% of this one
+    y1 = round((row_top + 0.35 * screen.cell_h) * 1000 / screen.height)
+    assert screen.text_in_box(0, y0, 300, y1) == "evnx 0.10.18"
+
+
 def test_long_output_keeps_head_and_tail(tmp_path: Path):
     out = "\n".join(f"row {i}" for i in range(200))
     screen = render_terminal("tool", out, "", tmp_path / "s.png", title="t", max_rows=20)

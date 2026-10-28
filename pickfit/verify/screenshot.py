@@ -166,12 +166,15 @@ class Screen:
         y0, y1 = sorted((y_min * self.height / 1000, y_max * self.height / 1000))
         c0 = max(0, int((x0 - PAD) // self.cell_w))
         c1 = max(c0, int((x1 - PAD) // self.cell_w))
+        covered = [min(y1, self.top + (r + 1) * self.cell_h) - max(y0, self.top + r * self.cell_h)
+                   for r in range(len(self.rows))]
+        # A box edge that only grazes a row does not select it; a box that covers no row
+        # well (common on a short, two-row image) snaps to the row it overlaps most.
+        rows = [r for r, c in enumerate(covered) if c >= 0.4 * self.cell_h]
+        if not rows and covered and max(covered) > 0:
+            rows = [covered.index(max(covered))]
         picked: list[str] = []
-        for r in range(len(self.rows)):
-            top = self.top + r * self.cell_h
-            covered = min(y1, top + self.cell_h) - max(y0, top)
-            if covered < 0.4 * self.cell_h:  # a box edge that only grazes a row does not select it
-                continue
+        for r in rows:
             row, col, out = self.rows[r], 0, []
             for ch in row:
                 w = 2 if _wide(ch) else 1
