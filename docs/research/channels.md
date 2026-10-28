@@ -8,13 +8,13 @@
 
 ## 0. 結論
 
-**值得接的 5 條**（理由見第 2 節）。依 [architecture.md](architecture.md) H 節的工時，**一定接前 3 條，第 4、5 條進度超前才接**：
+**值得接的 5 條**（理由見第 2 節）。依 [architecture.md](architecture.md) H 節的工時：**核心 2 條（#1、#2）一定接；Show HN（#3）計畫內，落後就第一個砍；#4、#5 進度超前才接**：
 
 | # | 管道 | 層級 | 為什麼 | 工時（最低版本／完整版） |
 |---|---|---|---|---|
 | 1 | **GitHub search API**（＋ repo、release、README 補資料） | 核心 | 兩個類別的新作品主要都在這；能直接篩「今年建立、最近有 push、星數 5–300」；16 條 query 已寫好 | 4 h／6–9 h |
-| 2 | **提交入口**（MCP `submit_software`；GitHub Issue Form 選做，共用一個佇列） | 核心 | 供給端，也是 demo 第 5 幕；收 GitHub repo 連結；Threads 貼文連結只用官方 oEmbed **嵌入**，不讀內容 | 2 h／2–3 h |
-| 3 | **Hacker News Show HN**（官方 Firebase API＋Algolia） | 計畫內 | 規則要求「你親自做的、別人能試用的」；每週約 990 篇，兩類別且連 GitHub 約 75 篇；86% 只有 ≤3 分；spike 已寫好 | 1.5 h／2–4 h |
+| 2 | **提交入口**（MCP `submit_software`，寫進 D1 佇列） | 核心 | 供給端，也是 demo 第 5 幕；最低版本只收 GitHub repo 連結；Threads 貼文連結只存 permalink，用 oEmbed **嵌入**是超前才做，不讀內容 | 2 h／2–3 h |
+| 3 | **Hacker News Show HN**（HN 官方 Firebase API＋Algolia HN Search；Algolia 是第三方服務，不是 YC 營運） | 計畫內（落後就砍） | 規則要求「你親自做的、別人能試用的」；每週約 990 篇，兩類別且連 GitHub 約 75 篇；86% 只有 ≤3 分；spike 已寫好 | 1.5 h／2–4 h |
 | 4 | **Homebrew 第三方 tap**（官方 analytics）＋ homebrew-core 當知名度基準 | 超前才做 | 唯一同時有「安裝數」和「默默無聞」的訊號：30 天內新出現 4,066 個 tap formula，437 個安裝 10–1000 次；抽 40 個，36 個今年才建、星數中位數 1。**以 CLI 為主**（本地 AI 約 3／40）；對上 Mac demo | 2 h／3–4 h |
 | 5 | **PyPI 新專案**（RSS 每 20–30 分鐘輪詢；看 wheel 的 `console_scripts`） | 超前才做 | 本地 AI 工具很多在這；約每小時 40 個新專案；27／39 個有 Trusted Publishing provenance，可確認套件 ↔ repo | 3 h／3–4 h |
 
@@ -25,11 +25,13 @@
 2. V2EX「分享创造」＋ Qiita `個人開発` ＋ 阮一峰周刊「工具」（讓「全球」不只是英文圈）。約 3.5–5 h。
 3. Bluesky @mention 提交、dev.to `#showdev`（先取得 DEV 書面同意）、crates.io、npm、winget、Hugging Face Spaces（只看連回作者 GitHub 的）、Console.dev（先寫信）。
 
-**補資料（不是發現來源）**：GitHub REST API（metadata、release、README）、deps.dev（套件 ↔ repo 的對應有沒有發布簽章；只有它自產的關聯資料是 CC-BY 4.0）、Scorecard CLI `--local`（沙盒裡順便跑）。**ecosyste.ms 要先寄信取得書面同意**才放進管線（條款 §9 禁止未經同意的腳本擷取）。
+**補資料（不是發現來源）**：GitHub REST API（metadata、release、README、issues）、各套件庫官方 API（下載量）、deps.dev（套件 ↔ repo 的對應有沒有發布簽章；它**沒有下載數**；只有它自產的關聯資料是 CC-BY 4.0）、Scorecard CLI `--local`（沙盒裡順便跑）。後兩者在架構 G.4 還沒排工時，屬於之後。**ecosyste.ms 要先寄信取得書面同意**才放進管線（條款 §9 禁止未經同意的腳本擷取）。
 
 **要避開**（第 4 節）：爬任何 Meta 網站、Threads keyword search、Threads 登入讀貼文交給模型、Reddit、Product Hunt、X（要付費）、Lobsters 自動抓取、LinkedIn、Discord 抓取、GitHub trending 頁、GH Archive／BigQuery／ClickHouse／OSS Insight（資料已失準）、RSSHub（多數路由抓 HTML）、GitLab 大量輪詢、SourceHut、掘金、PTT、Dcard、Hatena（未取得書面同意前）、libraries.io、pypistats 大量抓取、PyPI XML-RPC 新整合。
 
-**條款上的共同做法**：只走官方 API 或 feed；只存我們自己抽出的事實＋連結；不轉貼 README 或貼文全文；不存個資；不用任何 Meta 爬蟲 User-Agent。GitHub AUP §7 對 API 取得的資料也限制用途（明列研究、封存），推薦服務算不算在內有解讀空間（未驗證）；黑客松照上述做法，正式商用前先向 GitHub 確認。
+**條款上的共同做法**：只走官方 API 或 feed；只存我們自己抽出的事實＋連結；不轉貼 README 或貼文全文；社群貼文只當發現線索、不當抽取來源；不存個資；不用任何 Meta 爬蟲 User-Agent。
+
+**誠實揭露**：調研時，部分 spike 在讀到 ecosyste.ms 條款 §9 之前已經用腳本查詢過它；本頁與 architecture.md 的幾個數字（例如 Homebrew tap 的星數中位數、awesome 清單的星數中位數、B 節的涵蓋率）來自這些查詢。之後不再執行，寄給 ecosyste.ms 的信會一併說明，並詢問能否保留這些數字。GitHub AUP §7 對 API 取得的資料也限制用途（明列研究、封存），推薦服務算不算在內有解讀空間（未驗證）；黑客松照上述做法，正式商用前先向 GitHub 確認。
 
 ---
 
@@ -55,25 +57,26 @@
 
 | 管道 | 訊號品質 | 取得方式 | 主要限制 | 工時 | 建議 |
 |---|---|---|---|---|---|
-| Homebrew 第三方 tap（analytics） | **高**（CLI） | formulae.brew.sh analytics JSON＋讀 tap repo 的 `.rb` | 沒有 rate limit 或條款說明；資料授權未明示；安裝數沒排除 CI，只當弱訊號 | 3–4 h | **接** |
-| homebrew-core | 中（新作品進不去：75 星、repo 滿 30 天） | `formula.json`（有 `executables`）、analytics | 同上 | 1–2 h | **接**（知名度基準、官方安裝方式） |
-| PyPI | 中（本地 AI 主力） | RSS（約 1 小時，每 20–30 分鐘輪詢）、JSON API；wheel 的 `console_scripts` 用 HTTP Range 讀 | 官方：「No new integrations should use the XML-RPC APIs」；過度請求可停權 | 3–4 h | **接** |
+| Homebrew 第三方 tap（analytics） | **高**（CLI） | formulae.brew.sh analytics JSON＋讀 tap repo 的 `.rb` | 沒有 rate limit 或條款說明；資料授權未明示；安裝數沒排除 CI，只當弱訊號 | 3–4 h | 超前才做（G.4 C） |
+| homebrew-core | 中（新作品進不去：75 星、repo 滿 30 天） | `formula.json`（有 `executables`）、analytics | 同上 | 1–2 h | 超前才做（和 tap 一起；知名度基準、官方安裝方式） |
+| PyPI | 中（本地 AI 主力） | RSS（約 1 小時，每 20–30 分鐘輪詢）、JSON API；wheel 的 `console_scripts` 用 HTTP Range 讀 | 官方：「No new integrations should use the XML-RPC APIs」；過度請求可停權 | 3–4 h | 超前才做（G.4 C） |
 | npm | 低–中（72% scoped、placeholder 多） | replicate `_changes`、downloads API | 不准自動化存取網站 | 3 h | 之後 |
 | crates.io | 中（91% 連 GitHub，`bin_names` 判斷 CLI） | API、RSS、每日 db dump | 1 req/s、必須帶 User-Agent | 2 h | 之後 |
 | Go（index＋pkg.go.dev） | 低（量極大） | index feed、pkg.go.dev v1 API | 45 QPS／IP block | 3–4 h | 之後 |
 | winget-pkgs | 中（**沒有安裝數**、GUI 多） | Git repo（MIT） | — | 2–3 h | 之後 |
 | AUR | 中（80% 連 GitHub，只限 Arch） | metadata dump、RPC | RPC 限制正式站未驗證 | 1–2 h | 之後 |
 | Scoop、Nixpkgs、conda-forge、Docker Hub | 低 | Git repo／API | 星數門檻或無上架日期 | — | 不當發現來源 |
-| deps.dev | 中（補資料） | API v3 | Google API ToS；只有 deps.dev 自產的關聯是 CC-BY 4.0，星數不能當 CC-BY 存；不含 Homebrew | 1 h | **接（補資料）** |
+| deps.dev | 中（補資料） | API v3 | Google API ToS；只有 deps.dev 自產的關聯是 CC-BY 4.0，星數不能當 CC-BY 存；不含 Homebrew | 1 h | 之後（補資料；G.4 未排工時） |
 | ecosyste.ms | 中高（補資料） | API | 資料 CC BY-SA 4.0（ShareAlike）；**Terms §9 禁止未經書面同意的腳本擷取，§11(c) 只授權個人使用** | 2 h | **寄信取得同意後才接** |
 | libraries.io | 低 | API（要 key） | 公開 dump 停在 2020 | — | 避開 |
+| Flathub | 未調研 | — | brief 第 8 節列為可用；本次沒查條款、API 與安裝數（未驗證） | — | 之後（以 Linux GUI 為主，不在兩個 demo 類別） |
 
 ### 1.3 策展、榜單與公開資料集（[notes/channels-curation.md](notes/channels-curation.md)）
 
 | 管道 | 訊號品質 | 取得方式 | 主要限制 | 工時 | 建議 |
 |---|---|---|---|---|---|
-| `rothgar/awesome-tuis` | 高（近 90 天 +51、星數中位數 42） | git diff | 沒有授權檔 → 只取連結 | 2（共用腳本） | 時間夠再接（CLI） |
-| `EndoTheDev/awesome-ollama` | 中高（新增 43、中位數 12） | git diff（比對名稱＋URL） | 沒有授權檔 → 只取連結 | 0.5 | 時間夠再接（本地 AI） |
+| `rothgar/awesome-tuis` | 高（近 90 天 +51、星數中位數 42） | git diff | 沒有授權檔 → 只取連結 | 2（共用腳本） | 之後擴充（CLI） |
+| `EndoTheDev/awesome-ollama` | 中高（新增 43、中位數 12） | git diff（比對名稱＋URL） | 沒有授權檔 → 只取連結 | 0.5 | 之後擴充（本地 AI） |
 | `agarrharr/awesome-cli-apps` | 中（已封存） | git | CC0 | 0.5 | 一次性匯入約 550 筆當「已知工具」對照組 |
 | `rafska/awesome-local-llm`、`vince-lam/awesome-local-llms` | 低（新增項目星數中位數上萬） | git | MIT | 0.5 | 當「已知名」名單 |
 | awesome-shell、terminals-are-sexy、janhq/awesome-local-ai | 低（停更） | git | — | — | 避開 |
@@ -85,13 +88,13 @@
 | Changelog News／Nightly、Golang Weekly、Python Weekly | — | — | 停刊、資料失準、追蹤轉址被 robots 擋、沒有 RSS | — | 避開 |
 | GH Archive、BigQuery `githubarchive`、ClickHouse playground、OSS Insight | 低 | dump／SQL／API | 新 repo 事件歸零；ClickHouse 停在 2026-07-02；OSS Insight trends 2026-03-01 起停用 | — | 避開 |
 | Hugging Face trending | 低（多是大公司 demo） | API | — | 1 | 之後（旁證） |
-| **自算 trending**：GitHub search＋stargazers `starred_at` | 高 | API | 同 GitHub search | 已含在 #1 | **接**（取代公開資料集） |
+| **自算 trending**：GitHub search＋stargazers `starred_at` | 高 | API | 同 GitHub search | 2–3（GitHub 完整版才含） | 之後（取代公開資料集） |
 
 ### 1.4 社群與社交（[notes/channels-communities.md](notes/channels-communities.md)）
 
 | 管道 | 訊號品質 | 取得方式 | 主要限制 | 工時 | 建議 |
 |---|---|---|---|---|---|
-| **Hacker News Show HN** | **高** | 官方 Firebase API、Algolia（都免金鑰） | YC 條款禁止爬網站 → 只走 API、只存連結與 metadata；`/v0/showstories` 只是排序過的子集，要用 Algolia 按天切或輪詢 `/v0/newstories` | 2–4 h | **接** |
+| **Hacker News Show HN** | **高** | HN 官方 Firebase API；Algolia HN Search（HN 搜尋框連到的第三方服務，有無獨立條款未驗證）；都免金鑰 | YC 條款的「data mining, robots, scraping」那句沒有例外字樣，走 API 是以「網站主動提供的管道」解讀（未驗證）→ 只走 API、只存連結與 metadata、不做商業展示；`/v0/showstories` 只是排序過的子集，要用 Algolia 按天切或輪詢 `/v0/newstories` | 2–4 h | **計畫內**（落後就砍） |
 | Bluesky | 中 | Jetstream（免認證、不計量） | 未登入搜尋只拿得到第一頁；要處理刪除；不要自動回覆每個 mention | 3–4 h | 可選（@mention 提交） |
 | dev.to `#showdev` | 中（約 887 篇／週，73% 零反應） | Forem API（免金鑰） | 網站條款只允許「personal, non-commercial transitory viewing」 | 2–3 h | 之後（先取得 DEV 書面同意） |
 | Mastodon／fediverse | 低–中 | hashtag timeline API | 約一半帳號 `indexable=false` | 3 h | 之後（只做 @mention 提交） |
@@ -106,8 +109,8 @@
 
 | 管道 | 能做什麼 | 主要限制 | 建議 |
 |---|---|---|---|
-| Threads oEmbed（免 token） | 嵌入原貼文 | 回傳的 html **沒有貼文文字**；條款禁止抽取、保存內容 | **接**（只嵌入） |
-| Threads Web Intents（分享按鈕） | 被收錄的作者一鍵分享 | 無審核；不計入 Most Viral（只算 X） | **接** |
+| Threads oEmbed（免 token） | 嵌入原貼文 | 回傳的 html **沒有貼文文字**；條款禁止抽取、保存內容 | 超前才做（G.4 C6，有展示頁才做；只嵌入） |
+| Threads Web Intents（分享按鈕） | 被收錄的作者一鍵分享 | 無審核；不計入 Most Viral（只算 X） | 超前才做（G.4 C6） |
 | Threads 自家帳號發文 | 發「今日寶藏」 | 讀別人的回覆再收錄：允許用途未驗證、風險高 | 可選（只發文） |
 | Threads 登入讀作者貼文交給模型 | — | `threads_basic` 允許用途只限「把貼文顯示給作者本人」；Development mode 不豁免 | **避開** |
 | Threads keyword／topic search | — | 未審核只搜得到自己的貼文；允許用途是「管理社群形象」，消費者 app 嚴格禁止 | **避開** |
@@ -123,9 +126,9 @@
 
 | 管道 | 訊號品質 | 量 | 取得方式 | 主要限制 | 工時 | 建議 |
 |---|---|---|---|---|---|---|
-| V2EX「分享创造」 | 高（節點就是發表作品） | 約 270 篇／週，40% 連 repo | Atom（免金鑰，含全文） | 沒有一般條款，只有 API 公平使用規則（反對拿輸出填充網站內容）→ 只存連結、標題、日期 | 1–1.5 h | 時間夠再接 |
-| Qiita `tag:個人開発` | 中高（likes 中位數 1） | 約 200 篇／週，29% 連 repo | API v2（免金鑰 60 次／時） | 利用規約：不可轉貼 | 1–1.5 h | 時間夠再接 |
-| 阮一峰周刊「工具」 | 中高（人工精選，混有爆紅大專案） | 12–18 個／週 | GitHub raw 檔 | CC BY-NC-ND 3.0 → 只取連結；只取標「投稿」的 | 0.5–1 h | 時間夠再接 |
+| V2EX「分享创造」 | 高（節點就是發表作品） | 約 270 篇／週，40% 連 repo | Atom（免金鑰，含全文） | 沒有一般條款，只有 API 公平使用規則（反對拿輸出填充網站內容）→ 只存連結、標題、日期 | 1–1.5 h | 之後擴充 |
+| Qiita `tag:個人開発` | 中高（likes 中位數 1） | 約 200 篇／週，29% 連 repo | API v2（免金鑰 60 次／時） | 利用規約：不可轉貼 | 1–1.5 h | 之後擴充 |
+| 阮一峰周刊「工具」 | 中高（人工精選，混有爆紅大專案） | 12–18 個／週 | GitHub raw 檔 | CC BY-NC-ND 3.0 → 只取連結；只取標「投稿」的 | 0.5–1 h | 之後擴充 |
 | GeekNews Show GN（韓） | 高 | 約 70 篇／週 | RSS（不含原始連結） | robots 擋 Meta 的爬蟲 UA，絕不用 | 2 h | 可選 |
 | Zenn、HelloGitHub、Gitee | 中／低 | — | RSS／raw／API | Zenn 禁止轉載；HelloGitHub CC BY-NC-ND | — | 之後 |
 | Hatena Bookmark | 中 | 約 45 repo／週 | RSS | 規約禁止把資訊提供給第三方 | — | 之後（先取得書面同意） |
@@ -141,10 +144,10 @@
 | 默默無聞 | 可用星數篩 | 自選 | 86% ≤3 分 | 星數中位數 1 | 用下載量篩 |
 | 有使用訊號 | 星數、星數曲線 | 無 | 分數、留言 | 安裝數（含 CI） | 下載量 |
 | 兩個 demo 類別 | 兩類都多 | 兩類 | 兩類約 75 篇／週 | CLI 為主 | 本地 AI 多 |
-| 條款風險 | 低（只走 API，用途有解讀空間） | 低 | 低（只走 API） | 低（官方 JSON） | 低（RSS） |
+| 條款風險 | 低（只走 API，用途有解讀空間） | 低 | 低（只走 API；YC 條款以「網站主動提供的管道」解讀，未驗證） | 低（官方 JSON；資料授權未明示） | 低（RSS） |
 | 一個人接上（最低版本） | 4 h | 2 h | 1.5 h | 2 h | 3 h |
 
-前 3 條約 7.5 h：10/29 接 GitHub，10/30 接 Show HN，11/1 接提交入口（見 architecture.md H.2）。
+前 3 條約 7.5 h：10/29 接 GitHub，10/30 接 Show HN（落後就砍），11/1 接提交入口（見 architecture.md H.2）。
 
 ---
 
@@ -203,7 +206,8 @@
 | Homebrew analytics | 和昨天的名單做差集；ETag | 每天 1 次 |
 
 - 每個來源一個 cursor（`source`、`cursor`、`etag`、`last_success_at`），**整批成功寫入後才前進**。
-- 排程：**黑客松期間用念誠本機 cron 跑發現**（GitHub API 在本機沒有本 session 的限制）；提交走事件觸發 Modal（`.spawn()`），不等排程，才做得到「幾分鐘內可被推薦」。之後要無人值守再搬到 Modal cron（Starter 有 5 個 cron）。GitHub Actions 只做「收錄檔有變 → 重建 MCP 索引」。Cloudflare Workers Free 每次只能發 50 個子請求，跑不動抓取。
+- 排程（與 architecture.md G.3、G.4 一致）：**黑客松期間在念誠本機手動或用 cron 跑 `pickfit run`**（GitHub API 在本機沒有本 session 的限制）。提交由 MCP `submit_software` 寫進 D1，本機 `pickfit watch` 每 60 秒讀一次並處理，約 10 分鐘可被推薦。發布用 `pickfit publish`（本機建索引、`wrangler deploy`）。
+- 之後（G.4 的 C 項）：提交改由 Modal `spawn()` 處理、發現搬到 Modal cron（Starter 有 5 個 cron）、Workers Builds 自動部署。黑客松期間**不用 GitHub Actions**（hosted runner 條款）。Cloudflare Workers Free 每次只能發 50 個子請求，跑不動抓取。
 
 ### 5.3 統一候選格式與狀態機
 
@@ -223,7 +227,7 @@ extracted（Muse Spark 抽出檔案草稿）
 
 ### 5.4 先便宜、後昂貴的漏斗
 
-以每天 3,000 筆候選估（GitHub、Show HN、PyPI、Homebrew）：
+以每天 3,000 筆候選估（GitHub、Show HN、PyPI、Homebrew 全接時的穩態容量）。**黑客松實際規模與花費以 architecture.md H.6 為準**：整場 300–600 筆候選、抽取 ≤150 筆、驗證 ≤150 次、Meta $25–88。
 
 | 層 | 數量 | 做什麼 | 成本／天（估） |
 |---|---|---|---|
@@ -244,14 +248,14 @@ extracted（Muse Spark 抽出檔案草稿）
 | `gh` CLI、GitHub REST API | 用 | 官方 |
 | `feedparser` 等 feed 函式庫 | 用 | PyPI、crates RSS |
 | Scorecard CLI `--local` | 用（沙盒裡） | 不需 token |
-| deps.dev API | 用（補資料） | 套件 ↔ repo provenance |
+| deps.dev API | 之後（補資料） | 套件 ↔ repo provenance；沒有下載數 |
 | ecosyste.ms | 寄信同意後 | 條款 |
 | RSSHub、Huginn、changedetection.io | 不用 | RSSHub 多數相關路由抓 HTML；另兩個是網頁變更偵測，不適合 |
 | GH Archive | 不用 | 資料已失準 |
 
 ### 5.6 提交入口
 
-- **一條路、一個佇列**：MCP `submit_software` 與 GitHub Issue Form 共用。Issue Form 由 webhook 轉給 Modal 處理，不在 Actions 裡跑。
-- 收什麼：GitHub repo、套件頁、HN 貼文、官網。Threads／X 貼文連結**選填、只用來嵌入**；只有 Threads 連結時回 `needs_info`，請補 repo 或官網。
+- **黑客松只有一條路**：MCP `submit_software` 寫進 D1 佇列，本機 `pickfit watch` 處理。GitHub Issue Form 之後再做（同樣寫進 D1，不用 webhook、不在 Actions 裡跑）。
+- 收什麼：最低版本只收 GitHub repo URL；套件頁、HN 貼文、官網之後擴充。Threads／X 貼文連結**選填、只存 permalink**，有展示頁時才用 oEmbed 嵌入；只有 Threads 連結時回 `needs_info`，請補 repo。
 - 怎麼確認是可用的軟體：連結能解析且存在 → 不是 fork／archived／template → 有安裝路徑 → 開放權重模型判斷 → 沙盒驗證成功。**驗證失敗不收錄**，原因回給提交者。
 - 防灌水：同 repo 重複提交只多一筆 source、不加分；驗證佇列每日上限；MCP 限流；內容規則（排除違反第三方 ToS 的工具、醫療／政治／戰爭類）；每天人工看 failed 原因與 10% 的 verified；「作者提交」標記之後再做（例如請作者加一個 topic 證明身分）。
