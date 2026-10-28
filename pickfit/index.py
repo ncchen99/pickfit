@@ -1,0 +1,176 @@
+"""Build the matching index the MCP Worker bundles (index "pickfit-index.v1").
+
+The Worker never reads data/software/*.json directly: this module validates
+every record against software.v1 (the pydantic model that generates
+schema/software.v1.json, plus its cross-field checks) and writes one JSON file
+with what find_software and get_install_guide need. Any bad record fails the
+whole build, so bad data never reaches a deploy.
+
+Only listed records are indexed, and only install guides that were actually
+run (basis "replayed" or "human") are kept: README claims never reach users as
+install steps.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+from pydantic import ValidationError
+
+from pickfit.schema import SCHEMA_VERSION, SoftwareRecord, VerificationRun, is_passed
+
+INDEX_VERSION = "pickfit-index.v1"
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_DATA_DIR = REPO_ROOT / "data" / "software"
+DEFAULT_OUT = REPO_ROOT / "worker" / "src" / "generated" / "index.json"
+VERIFIED_BASES = ("replayed", "human")
+
+
+class IndexBuildError(Exception):
+    """One or more records are invalid; nothing was written."""
+
+    def __init__(self, problems: list[str]) -> None:
+        super().__init__("\n".join(problems))
+        self.problems = problems
+
+
+@dataclass
+class BuildResult:
+    index: dict[str, Any]
+    skipped: list[str] = field(default_factory=list)  # valid but not listed
+
+
+def load_records(data_dir: Path) -> tuple[list[SoftwareRecord], str]:
+    """Validate every <slug>.json under data_dir; return records and a digest of the files."""
+    paths = sorted(data_dir.glob("*.json"))
+    if not paths:
+        raise IndexBuildError([f"no *.json records under {data_dir}"])
+    problems: list[str] = []
+    records: list[SoftwareRecord] = []
+    digest = hashlib.sha256()
+    for path in paths:
+        raw = path.read_bytes()
+        digest.update(path.name.encode() + b"\0" + raw + b"\0")
+        try:
+            record = SoftwareRecord.model_validate_json(raw)
+        except ValidationError as err:
+            problems.append(f"{path.name}: {err}")
+            continue
+        if record.slug != path.stem:
+            problems.append(f"{path.name}: slug {record.slug!r} does not match the file name")
+            continue
+        records.append(record)
+    for key in ("slug", "repo_id"):
+        seen: dict[str, str] = {}
+        for record in records:
+            value = getattr(record, key)
+            if value in seen:
+                problems.append(f"{record.slug}: duplicate {key} {value!r} (also {seen[value]})")
+            seen[value] = record.slug
+    if problems:
+        raise IndexBuildError(problems)
+    return records, digest.hexdigest()
+
+
+def _iso(value: datetime | None) -> str | None:
+    return value.isoformat().replace("+00:00", "Z") if value else None
+
+
+def _run_summary(run: VerificationRun) -> dict[str, Any]:
+    return {
+        "id": run.id,
+        "level": run.level,
+        "os": run.os,
+        "arch": run.arch,
+        "method": run.method,
+        "runner": run.runner,
+        "replayed": run.replayed,
+        "checked_at": _iso(run.checked_at),
+        "tool_version": run.tool_version,
+        "evidence_url": run.evidence.evidence_url,
+    }
+
+
+def _entry(record: SoftwareRecord) -> dict[str, Any]:
+    runs = {run.id: run for run in record.verification.runs}
+    install: dict[str, Any] = {}
+    for os_name, guide in record.install.guides():
+        if guide.basis not in VERIFIED_BASES:
+            continue
+        run = runs[guide.run_id or ""]  # SoftwareRecord checked the run exists and passed
+        install[os_name] = {
+            "basis": guide.basis,
+            "method": guide.method,
+            "steps": [step.model_dump() for step in guide.steps],
+            "manual_steps": guide.manual_steps,
+            "check": guide.check.model_dump() if guide.check else None,
+            "first_task": guide.first_task,
+            "pitfalls": [p.model_dump() for p in run.pitfalls],
+            "run": _run_summary(run),
+        }
+    scores = record.scores
+    return {
+        "slug": record.slug,
+        "name": record.name,
+        "summary": record.summary,
+        "why_worth_it": record.why_worth_it,
+        "category": record.category,
+        "kind": record.kind,
+        "maturity": record.maturity,
+        "tags": record.tags,
+        "use_cases": record.use_cases,
+        "alternatives_to": record.alternatives_to,
+        "homepage": record.homepage,
+        "repo_url": record.repo.url,
+        "platforms": record.platforms,
+        "prerequisites": record.prerequisites.model_dump(),
+        "pricing": record.pricing.model,
+        "pricing_note": record.pricing.note,
+        "open_source": record.open_source,
+        "license": record.license,
+        "processing": record.processing,
+        "last_release": _iso(record.last_release.published_at)[:10] if record.last_release else None,
+        "verification": {
+            "level": record.verification.level,
+            "checked_at": _iso(record.verification.checked_at),
+            "passed_runs": [_run_summary(r) for r in record.verification.runs if is_passed(r.level)],
+        },
+        "install": install,
+        "scores": {
+            "quality": scores.quality.total,
+            "popularity": scores.popularity.score,
+            "treasure": scores.treasure.is_treasure,
+            "treasure_value": scores.treasure.value,
+            "formula_version": scores.formula_version,
+        } if scores else None,
+        "sources": [s.url for s in record.sources if s.url][:5],
+    }
+
+
+def build_index(data_dir: Path = DEFAULT_DATA_DIR, now: datetime | None = None) -> BuildResult:
+    records, digest = load_records(data_dir)
+    listed = [r for r in records if r.status == "listed"]
+    try:
+        data_dir_label = str(data_dir.resolve().relative_to(REPO_ROOT))
+    except ValueError:
+        data_dir_label = str(data_dir)
+    index = {
+        "index_version": INDEX_VERSION,
+        "schema_version": SCHEMA_VERSION,
+        "built_at": _iso(now or datetime.now(UTC)),
+        "data_dir": data_dir_label,
+        "data_sha256": digest,
+        "count": len(listed),
+        "entries": [_entry(r) for r in sorted(listed, key=lambda r: r.slug)],
+    }
+    return BuildResult(index=index, skipped=[r.slug for r in records if r.status != "listed"])
+
+
+def write_index(index: dict[str, Any], out: Path = DEFAULT_OUT) -> None:
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(index, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")

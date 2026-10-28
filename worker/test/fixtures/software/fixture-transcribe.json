@@ -1,0 +1,297 @@
+{
+  "schema_version": "software.v1",
+  "slug": "fixture-transcribe",
+  "repo_id": "gh:900000102",
+  "name": "Fixture Transcribe",
+  "summary": "(Fake test fixture) Transcribes audio files to text offline with a small speech model.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "beta",
+  "tags": [
+    "speech-to-text",
+    "transcription",
+    "offline",
+    "audio"
+  ],
+  "use_cases": [
+    "transcribe a wav or mp3 file offline",
+    "make subtitles from a recording"
+  ],
+  "alternatives_to": [
+    "Otter",
+    "Whisper"
+  ],
+  "why_worth_it": "(Fake) Offline transcription in one command; the model downloads once at install.",
+  "homepage": null,
+  "repo": {
+    "url": "https://example.invalid/fixture/fixture-transcribe",
+    "full_name": "fixture/fixture-transcribe",
+    "created_at": "2026-05-01T00:00:00Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.10"
+    ],
+    "system_packages": [
+      "ffmpeg"
+    ],
+    "gpu": "none",
+    "apple_silicon_only": false,
+    "min_ram_gb": 4,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install fixture/tap/fixture-transcribe",
+          "purpose": "README's macOS method; not run"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "run-20261028-linux-2",
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "sudo apt-get install -y ffmpeg",
+          "purpose": "Install ffmpeg, which the README does not mention"
+        },
+        {
+          "command": "pipx install fixture-transcribe",
+          "purpose": "Install into an isolated environment"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "fixture-transcribe --version",
+        "expected_signal": "1.2.0"
+      },
+      "first_task": "fixture-transcribe recording.wav --format srt"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.2.0",
+    "published_at": "2026-10-02T00:00:00Z",
+    "url": "https://example.invalid/fixture/fixture-transcribe/releases/tag/v1.2.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-28T08:30:00Z",
+    "runs": [
+      {
+        "id": "run-20261028-linux-2",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "python:3.12-slim",
+        "checked_at": "2026-10-28T08:30:00Z",
+        "tool_version": "1.2.0",
+        "install_method": "pipx",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "sudo apt-get install -y ffmpeg",
+            "purpose": "Install ffmpeg, which the README does not mention"
+          },
+          {
+            "command": "pipx install fixture-transcribe",
+            "purpose": "Install into an isolated environment"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "fixture-transcribe sample.wav",
+            "expected_signal": "hello world",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hello world"
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pipx install fixture-transcribe",
+            "actually_needed": "ffmpeg first: sudo apt-get install -y ffmpeg"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "(Fixture) Terminal shows the expected output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": "https://example.invalid/runs/run-20261028-linux-2"
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.1
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "fixture-1",
+    "computed_at": "2026-10-28T12:00:00Z",
+    "quality": {
+      "total": 78,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.8,
+          "weight": 35
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 20
+        },
+        "maintenance": {
+          "score": 0.8,
+          "weight": 15
+        },
+        "engineering_hygiene": {
+          "score": 0.75,
+          "weight": 10
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 9,
+      "signals": {
+        "stars": 60,
+        "monthly_downloads": null,
+        "forks": null,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": null,
+        "registries_count": null
+      },
+      "age_days": 150
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 70.98
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "meta",
+      "kind": "github_api",
+      "url": "https://example.invalid/api/repos/fixture/fixture-transcribe",
+      "fetched_at": "2026-10-28T10:00:00Z"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://example.invalid/fixture/fixture-transcribe#readme",
+      "fetched_at": "2026-10-28T10:00:00Z"
+    },
+    {
+      "id": "run:run-20261028-linux-2",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-10-28T08:30:00Z"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "(Fake quote) Transcribes audio files to text offline with a small speech model.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-28T10:01:00Z"
+    },
+    {
+      "field": "/license",
+      "source_id": "meta",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-28T10:00:00Z"
+    }
+  ],
+  "first_seen_at": "2026-10-28T10:00:00Z",
+  "updated_at": "2026-10-28T12:00:00Z"
+}
