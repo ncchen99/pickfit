@@ -49,7 +49,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-agent-mini-20261029-024541-c365",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install agent-mini 2>&1",
+          "purpose": "Install agent-mini via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "agent-mini --version 2>&1",
+        "expected_signal": "agent-mini, version 0.5.0"
+      },
+      "first_task": "printf '\\n\\n\\n\\n\\n' | agent-mini init 2>&1"
+    },
     "windows": null
   },
   "pricing": {
@@ -65,10 +81,107 @@
     "url": "https://github.com/mohsinkaleem/agent-mini/releases/tag/v0.5.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:46:27.757056+08:00",
+    "runs": [
+      {
+        "id": "verify-agent-mini-20261029-024541-c365",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:46:27.757056+08:00",
+        "tool_version": "0.5.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install agent-mini 2>&1",
+            "purpose": "Install agent-mini via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "agent-mini --version 2>&1",
+            "expected_signal": "agent-mini, version 0.5.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "agent-mini, version 0.5.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "agent-mini --help 2>&1",
+            "expected_signal": "Commands:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Commands:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "printf '\\n\\n\\n\\n\\n' | agent-mini init 2>&1",
+            "expected_signal": "Config saved to",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ Config saved to /home/sbx/.agent-mini/config.json",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "agent-mini doctor 2>&1",
+            "expected_signal": "is unreachable",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "✗ Provider ollama at http://localhost:11434 is unreachable (ConnectError)",
+            "setup": [
+              {
+                "command": "printf '\\n\\n\\n\\n\\n' | agent-mini init 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install agent-mini",
+            "actually_needed": "uv tool install agent-mini (isolated install; avoids PEP 668 / read-only system)"
+          },
+          {
+            "readme_said": "agent-mini init (interactive wizard with no non-interactive flag)",
+            "actually_needed": "printf '\\n\\n\\n\\n\\n' | agent-mini init to accept defaults non-interactively"
+          },
+          {
+            "readme_said": "agent-mini doctor checks provider, model, tool support and permissions",
+            "actually_needed": "doctor exits 1 reporting ollama unreachable when no local model server runs; config/workspace/sandbox/budget checks still pass"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.5.0, help with Commands list, and init saving config successfully.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-agent-mini-20261029-024541-c365/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-agent-mini-20261029-024541-c365/check-1-cmd2.judged.png",
+            "runs/verify/verify-agent-mini-20261029-024541-c365/check-2-cmd3.judged.png",
+            "runs/verify/verify-agent-mini-20261029-024541-c365/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.04831
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -263,5 +376,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-29T02:41:28+08:00"
+  "updated_at": "2026-10-29T02:46:27.757787+08:00"
 }

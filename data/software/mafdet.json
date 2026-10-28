@@ -69,18 +69,21 @@
       "first_task": "mafdet --help"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-mafdet-20261029-024510-24d3",
       "method": "pipx",
       "steps": [
         {
-          "command": "pipx install mafdet",
-          "purpose": null
+          "command": "pipx install mafdet 2>&1",
+          "purpose": "Install mafdet via pipx (first-ranked candidate)"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "mafdet --help"
+      "check": {
+        "command": "mafdet --version 2>&1",
+        "expected_signal": "mafdet 0.4.1"
+      },
+      "first_task": "mafdet doctor 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -110,10 +113,88 @@
     "url": "https://github.com/TheLastOxygen/mafdet/releases/tag/v0.4.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:46:03.756649+08:00",
+    "runs": [
+      {
+        "id": "verify-mafdet-20261029-024510-24d3",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:46:03.756649+08:00",
+        "tool_version": "0.4.1",
+        "install_method": "pipx",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pipx install mafdet 2>&1",
+            "purpose": "Install mafdet via pipx (first-ranked candidate)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mafdet --version 2>&1",
+            "expected_signal": "mafdet 0.4.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mafdet 0.4.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mafdet --help 2>&1",
+            "expected_signal": "mafdet models",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mafdet models",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mafdet doctor 2>&1",
+            "expected_signal": "MAFDET doctor",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "MAFDET doctor /home/sbx/.mafdet",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mafdet models 2>&1",
+            "expected_signal": "qwen3-0.6b",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "qwen3-0.6b:Q8_0 too large 57 tok/s ≈ 7.7 s (19 s) ≈ 5.2 s 0.6 …",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.4.1, help listing mafdet models, and doctor diagnostics with expected exit 1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mafdet-20261029-024510-24d3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mafdet-20261029-024510-24d3/check-1-cmd5.judged.png",
+            "runs/verify/verify-mafdet-20261029-024510-24d3/check-2-cmd2.judged.png",
+            "runs/verify/verify-mafdet-20261029-024510-24d3/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.040521
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -364,5 +445,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:30+08:00",
-  "updated_at": "2026-10-29T02:41:28+08:00"
+  "updated_at": "2026-10-29T02:46:03.757371+08:00"
 }

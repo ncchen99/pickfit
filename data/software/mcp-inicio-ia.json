@@ -57,7 +57,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mcp-inicio-ia-20261029-024627-e8b2",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone https://github.com/em4nu3i69dll/mcp-inicio-ia.git repo && ls -la repo && cat repo/requirements.txt && cat repo/pyproject.toml 2>/dev/null; cat repo/setup.py 2>/dev/null; python3 --version; python3 -c \"import sqlite3; print(sqlite3.sqlite_version); print(sqlite3.connect(':memory:').execute(\\\"SELECT sqlite_compileoption_used('ENABLE_FTS5')\\\").fetchone())\"",
+          "purpose": "Clone repository source"
+        },
+        {
+          "command": "cd repo && python3 -m pip install -r requirements.txt && python3 -m pip install --no-deps .",
+          "purpose": "Install requirements and package with pip per README"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "cd repo && python3 -m mcp_inicio --help",
+        "expected_signal": "usage: mcp-inicio"
+      },
+      "first_task": "cd repo && python3 -m mcp_inicio preparar"
+    },
     "windows": null
   },
   "pricing": {
@@ -69,10 +89,104 @@
   "processing": "hybrid",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:47:50.757035+08:00",
+    "runs": [
+      {
+        "id": "verify-mcp-inicio-ia-20261029-024627-e8b2",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:47:50.757035+08:00",
+        "tool_version": "1.0.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/em4nu3i69dll/mcp-inicio-ia.git repo && ls -la repo && cat repo/requirements.txt && cat repo/pyproject.toml 2>/dev/null; cat repo/setup.py 2>/dev/null; python3 --version; python3 -c \"import sqlite3; print(sqlite3.sqlite_version); print(sqlite3.connect(':memory:').execute(\\\"SELECT sqlite_compileoption_used('ENABLE_FTS5')\\\").fetchone())\"",
+            "purpose": "Clone repository source"
+          },
+          {
+            "command": "cd repo && python3 -m pip install -r requirements.txt && python3 -m pip install --no-deps .",
+            "purpose": "Install requirements and package with pip per README"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd repo && python3 -m mcp_inicio --help",
+            "expected_signal": "usage: mcp-inicio",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: mcp-inicio [-h] [--base BASE]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd repo && python3 -m mcp_inicio preparar",
+            "expected_signal": "\"indexados\": 3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"indexados\": 3,",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd repo && python3 -m mcp_inicio comprobar",
+            "expected_signal": "\"conectado\": true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"conectado\": true,",
+            "setup": [
+              {
+                "command": "cd repo && python3 -m mcp_inicio preparar",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd repo && python3 -m unittest discover -s pruebas -v",
+            "expected_signal": "Ran 20 tests",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Ran 20 tests in 3.928s",
+            "setup": [
+              {
+                "command": "cd repo && python3 -m mcp_inicio preparar",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show successful outputs: preparar indexed 3, comprobar connected true, and help usage displayed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mcp-inicio-ia-20261029-024627-e8b2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mcp-inicio-ia-20261029-024627-e8b2/check-1-cmd4.judged.png",
+            "runs/verify/verify-mcp-inicio-ia-20261029-024627-e8b2/check-2-cmd5.judged.png",
+            "runs/verify/verify-mcp-inicio-ia-20261029-024627-e8b2/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.040149
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -277,5 +391,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:54+08:00",
-  "updated_at": "2026-10-29T02:41:28+08:00"
+  "updated_at": "2026-10-29T02:47:50.757810+08:00"
 }

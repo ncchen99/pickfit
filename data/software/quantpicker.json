@@ -66,17 +66,20 @@
       "first_task": "quantpicker search qwen3 8b"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "pip",
+      "basis": "replayed",
+      "run_id": "verify-quantpicker-20261029-024548-1d72",
+      "method": "uv",
       "steps": [
         {
-          "command": "pip install quantpicker",
-          "purpose": null
+          "command": "uv tool install quantpicker",
+          "purpose": "isolated install of README pip package via uv tool"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "quantpicker --version",
+        "expected_signal": "quantpicker 0.1.0"
+      },
       "first_task": "quantpicker search qwen3 8b"
     },
     "windows": {
@@ -107,10 +110,93 @@
     "url": "https://github.com/alleyxd/quantpicker/releases/tag/v0.1.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:49:04.881701+08:00",
+    "runs": [
+      {
+        "id": "verify-quantpicker-20261029-024548-1d72",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:49:04.881701+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install quantpicker",
+            "purpose": "isolated install of README pip package via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "quantpicker --version",
+            "expected_signal": "quantpicker 0.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "quantpicker 0.1.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "quantpicker --help",
+            "expected_signal": "Usage: quantpicker [OPTIONS] [REPO]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: quantpicker [OPTIONS] [REPO]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "quantpicker search qwen3 8b",
+            "expected_signal": "unsloth/Qwen3-8B-GGUF",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ unsloth/Qwen3-8B-GGUF ┆ 135K ┆ 158 │",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "quantpicker list unsloth/Qwen3-8B-GGUF --vram 24",
+            "expected_signal": "unsloth/Qwen3-8B-GGUF on 24.0 GiB",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "unsloth/Qwen3-8B-GGUF on 24.0 GiB (keeping 1.5 GiB for context):",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "quantpicker list unsloth/Qwen3-8B-GGUF",
+            "actually_needed": "quantpicker list unsloth/Qwen3-8B-GGUF --vram 24"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show search results containing unsloth/Qwen3-8B-GGUF, its quant size table on 24.0 GiB, and version quantpicker 0.1.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-quantpicker-20261029-024548-1d72/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-quantpicker-20261029-024548-1d72/check-1-cmd5.judged.png",
+            "runs/verify/verify-quantpicker-20261029-024548-1d72/check-2-cmd7.judged.png",
+            "runs/verify/verify-quantpicker-20261029-024548-1d72/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.042253
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -353,5 +439,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T02:49:04.882391+08:00"
 }

@@ -72,18 +72,21 @@
       "first_task": "mithril serve"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "pip",
+      "basis": "replayed",
+      "run_id": "verify-mithril-20261029-024859-a8c9",
+      "method": "uv",
       "steps": [
         {
-          "command": "pip install mithril-cli",
-          "purpose": null
+          "command": "uv tool install mithril-cli 2>&1",
+          "purpose": "Install mithril-cli with uv tool"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "mithril serve"
+      "check": {
+        "command": "mithril --version 2>&1",
+        "expected_signal": "mithril 1.0.0"
+      },
+      "first_task": "curl -s http://localhost:16180/health 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -113,10 +116,111 @@
     "url": "https://github.com/GiacomoSaccaggi/Mithril/releases/tag/v1.0.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:49:55.748109+08:00",
+    "runs": [
+      {
+        "id": "verify-mithril-20261029-024859-a8c9",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:49:55.748109+08:00",
+        "tool_version": "1.0.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install mithril-cli 2>&1",
+            "purpose": "Install mithril-cli with uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mithril --version 2>&1",
+            "expected_signal": "mithril 1.0.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mithril 1.0.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://localhost:16180/health 2>&1",
+            "expected_signal": "\"status\":\"ok\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"model_loaded\":false,\"status\":\"ok\",\"version\":\"1.0.0\"}",
+            "setup": [
+              {
+                "command": "mithril serve 2>&1",
+                "background": true,
+                "port": 16180
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl http://localhost:16180/api/tags",
+            "expected_signal": "\"models\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"models\":[{\"details\":{\"family\":\"qwen2\",\"format\":\"gguf\",\"parameter_size\":\"1.5B\",\"quantization_level\":\"Q4_K_M\"},\"model\":\"qwen-1.5b\",\"name\":\"qwen2:1.5b\",\"size\":0},{\"details\":{\"family\":\"qwen2\",\"format\":\"gguf\",\"parameter_size\":\"7B\",\"quantization_level\":\"Q4_K_M\"},\"model\":\"qwen-7b\",\"name\":\"qwen2:7b\",\"siz…",
+            "setup": [
+              {
+                "command": "mithril serve 2>&1",
+                "background": true,
+                "port": 16180
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://localhost:16180/v1/models 2>&1",
+            "expected_signal": "\"object\":\"list\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"data\":[{\"created\":1700000000,\"id\":\"qwen2:1.5b\",\"object\":\"model\",\"owned_by\":\"mithril\"},{\"created\":1700000000,\"id\":\"qwen2:7b\",\"object\":\"model\",\"owned_by\":\"mithril\"},{\"created\":1700000000,\"id\":\"qwen2:14b\",\"object\":\"model\",\"owned_by\":\"mithril\"},{\"created\":1700000000,\"id\":\"llama:8b\",\"object\":\"model\",\"…",
+            "setup": [
+              {
+                "command": "mithril serve 2>&1",
+                "background": true,
+                "port": 16180
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install mithril-cli",
+            "actually_needed": "uv tool install mithril-cli (README pip install fails on PEP 668 externally-managed system)"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show mithril 1.0.0 version, health status ok, and api/tags returning a models list.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mithril-20261029-024859-a8c9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mithril-20261029-024859-a8c9/check-1-cmd2.judged.png",
+            "runs/verify/verify-mithril-20261029-024859-a8c9/check-2-cmd6.judged.png",
+            "runs/verify/verify-mithril-20261029-024859-a8c9/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.039789
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -367,5 +471,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:11+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T02:49:55.749372+08:00"
 }

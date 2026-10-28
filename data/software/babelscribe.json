@@ -73,18 +73,21 @@
       "first_task": "babelscribe interview.mp4"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "pip",
+      "basis": "replayed",
+      "run_id": "verify-babelscribe-20261029-024248-40a6",
+      "method": "uv",
       "steps": [
         {
-          "command": "pip install babelscribe",
-          "purpose": null
+          "command": "uv tool install babelscribe && ~/.local/bin/babelscribe --help",
+          "purpose": "install babelscribe with uv tool"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "babelscribe interview.mp4"
+      "check": {
+        "command": "babelscribe --version",
+        "expected_signal": "0.3.2"
+      },
+      "first_task": "babelscribe models"
     },
     "windows": {
       "basis": "readme_claim",
@@ -114,10 +117,78 @@
     "url": "https://github.com/phonology024/babelscribe/releases/tag/v0.3.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:44:16.955558+08:00",
+    "runs": [
+      {
+        "id": "verify-babelscribe-20261029-024248-40a6",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:44:16.955558+08:00",
+        "tool_version": "0.3.2",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install babelscribe && ~/.local/bin/babelscribe --help",
+            "purpose": "install babelscribe with uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "babelscribe --version",
+            "expected_signal": "0.3.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.3.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "babelscribe models",
+            "expected_signal": "large-v3-turbo",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "large-v3-turbo 1.6 GB",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install babelscribe",
+            "actually_needed": "uv tool install babelscribe (isolated install avoids PEP 668 read-only system error)"
+          },
+          {
+            "readme_said": "babelscribe devices",
+            "actually_needed": "babelscribe devices -m tiny --flavor cpu: default `babelscribe devices` downloads 1.6 GB large-v3-turbo which exceeds this box's 1.5 GiB file-size limit (OSError: File too large) and the default vulkan binary fails without libvulkan.so.1; the cpu flavour plus a small model works"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show model list containing large-v3-turbo and version output 0.3.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-babelscribe-20261029-024248-40a6/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-babelscribe-20261029-024248-40a6/check-1-cmd3.judged.png",
+            "runs/verify/verify-babelscribe-20261029-024248-40a6/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.078713
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -392,5 +463,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:11+08:00",
-  "updated_at": "2026-10-29T02:41:28+08:00"
+  "updated_at": "2026-10-29T02:44:16.956481+08:00"
 }

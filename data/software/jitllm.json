@@ -72,18 +72,25 @@
       "first_task": "jitllm convert qwen3-30b-a3b"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-jitllm-20261029-024402-c583",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://jitllm.org/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://jitllm.org/install.sh -o /tmp/jitllm-install.sh && wc -c /tmp/jitllm-install.sh && head -c 4000 /tmp/jitllm-install.sh",
+          "purpose": "Download install script for inspection"
+        },
+        {
+          "command": "sh /tmp/jitllm-install.sh && ls -l ~/.local/bin/jitllm ~/.local/bin/jitllmd",
+          "purpose": "Install jitllm and jitllmd from release script"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "jitllm convert qwen3-30b-a3b"
+      "check": {
+        "command": "jitllm version",
+        "expected_signal": "0.2.6"
+      },
+      "first_task": "jitllm version"
     },
     "windows": {
       "basis": "readme_claim",
@@ -113,10 +120,110 @@
     "url": "https://github.com/jitllm/jitllm/releases/tag/v0.2.6"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:45:14.731539+08:00",
+    "runs": [
+      {
+        "id": "verify-jitllm-20261029-024402-c583",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:45:14.731539+08:00",
+        "tool_version": "0.2.6",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://jitllm.org/install.sh -o /tmp/jitllm-install.sh && wc -c /tmp/jitllm-install.sh && head -c 4000 /tmp/jitllm-install.sh",
+            "purpose": "Download install script for inspection"
+          },
+          {
+            "command": "sh /tmp/jitllm-install.sh && ls -l ~/.local/bin/jitllm ~/.local/bin/jitllmd",
+            "purpose": "Install jitllm and jitllmd from release script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "jitllm version",
+            "expected_signal": "0.2.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.2.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "jitllmd --help",
+            "expected_signal": "jitllmd serves the jitllm engine over the network",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "jitllmd serves the jitllm engine over the network, and talks to one.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "jitllmd service status",
+            "expected_signal": "nothing answers",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "loaded none",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "curl -fsSL http://localhost:4242/healthz && echo && curl -fsSL http://localhost:4242/v1/models",
+            "expected_signal": "{\"object\":\"list\",\"data\":[]}",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"object\":\"list\",\"data\":[]}",
+            "setup": [
+              {
+                "command": "jitllmd serve",
+                "background": true,
+                "port": 4242
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://jitllm.org/install.sh | sh",
+            "actually_needed": "Download to /tmp/jitllm-install.sh, read it, then run sh /tmp/jitllm-install.sh; installer verifies checksums.txt and installs to ~/.local/bin"
+          },
+          {
+            "readme_said": "jitllm --version or --help works",
+            "actually_needed": "jitllm version subcommand prints 0.2.6; jitllm --version and jitllm --help exit 2 with usage on stderr"
+          },
+          {
+            "readme_said": "On Linux the install script starts jitllmd as a systemd user service",
+            "actually_needed": "Installer prints 'no systemd user session here: start the server with jitllmd serve' and skips service install where no systemd user session exists"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show healthz returning ok with empty models list and version printing 0.2.6.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-jitllm-20261029-024402-c583/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-jitllm-20261029-024402-c583/check-1-cmd13.judged.png",
+            "runs/verify/verify-jitllm-20261029-024402-c583/check-2-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.088062
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -375,5 +482,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:36+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T02:45:14.733412+08:00"
 }

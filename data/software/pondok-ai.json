@@ -56,7 +56,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-pondok-ai-20261029-024251-7f7b",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g pondok-ai && pondok-ai --version",
+          "purpose": "global install pondok-ai via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "npx -y pondok-ai --version",
+        "expected_signal": "0.5.2"
+      },
+      "first_task": "npx pondok-ai model recommend"
+    },
     "windows": null
   },
   "pricing": {
@@ -72,10 +88,87 @@
     "url": "https://github.com/rasidi3112/pondok-ai/releases/tag/v0.5.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:44:00.187974+08:00",
+    "runs": [
+      {
+        "id": "verify-pondok-ai-20261029-024251-7f7b",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:44:00.187974+08:00",
+        "tool_version": "0.5.2",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g pondok-ai && pondok-ai --version",
+            "purpose": "global install pondok-ai via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "npx -y pondok-ai --version",
+            "expected_signal": "0.5.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.5.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "npx -y pondok-ai --help",
+            "expected_signal": "Usage: pondok-ai [options] [command]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: pondok-ai [options] [command]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "npx pondok-ai model recommend",
+            "expected_signal": "Hardware Profile:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Hardware Profile:",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx pondok-ai init --preset standard --yes",
+            "actually_needed": "run non-interactive init with --force in an empty dir: mkdir -p /tmp/pondok-test && npx -y pondok-ai init --preset standard --yes --force (fails requirements check without --force when Docker is missing or RAM <4GB)"
+          },
+          {
+            "readme_said": "npx pondok-ai ...",
+            "actually_needed": "use npx -y pondok-ai ... or npm install -g pondok-ai first so npx does not prompt to install the package"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show model recommend output with Hardware Profile and version 0.5.2 printed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-pondok-ai-20261029-024251-7f7b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-pondok-ai-20261029-024251-7f7b/check-1-cmd6.judged.png",
+            "runs/verify/verify-pondok-ai-20261029-024251-7f7b/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.049247
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -310,5 +403,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-29T02:41:28+08:00"
+  "updated_at": "2026-10-29T02:44:00.188842+08:00"
 }

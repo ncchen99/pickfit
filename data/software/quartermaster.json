@@ -71,18 +71,21 @@
       "first_task": "curl http://host/logs                          # up to the last 10KB"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "docker",
+      "basis": "replayed",
+      "run_id": "verify-quartermaster-20261029-024440-0dd7",
+      "method": "binary",
       "steps": [
         {
-          "command": "docker run -d --name quartermaster \\\n  -p 127.0.0.1:1250:8080 \\\n  -v quartermaster-data:/data \\\n  -v /path/to/models:/data/models \\\n  ghcr.io/quartermaster-labs/quartermaster:latest",
-          "purpose": null
+          "command": "curl -sL -o /tmp/qm-SHA256SUMS https://github.com/Quartermaster-Labs/Quartermaster/releases/download/v1.7.2/SHA256SUMS && cat /tmp/qm-SHA256SUMS && mkdir -p ~/.local/bin && curl -sL -o ~/.local/bin/quartermaster https://github.com/Quartermaster-Labs/Quartermaster/releases/download/v1.7.2/quartermaster-linux-amd64 && chmod +x ~/.local/bin/quartermaster && ls -lh ~/.local/bin/quartermaster && sha256sum ~/.local/bin/quartermaster",
+          "purpose": "download verified linux-amd64 binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "curl http://host/logs                          # up to the last 10KB"
+      "check": {
+        "command": "quartermaster --version",
+        "expected_signal": "version: v1.7.2"
+      },
+      "first_task": "curl -s http://127.0.0.1:12501/logs"
     },
     "windows": {
       "basis": "readme_claim",
@@ -112,10 +115,94 @@
     "url": "https://github.com/Quartermaster-Labs/Quartermaster/releases/tag/v1.7.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:45:41.398964+08:00",
+    "runs": [
+      {
+        "id": "verify-quartermaster-20261029-024440-0dd7",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:45:41.398964+08:00",
+        "tool_version": "v1.7.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sL -o /tmp/qm-SHA256SUMS https://github.com/Quartermaster-Labs/Quartermaster/releases/download/v1.7.2/SHA256SUMS && cat /tmp/qm-SHA256SUMS && mkdir -p ~/.local/bin && curl -sL -o ~/.local/bin/quartermaster https://github.com/Quartermaster-Labs/Quartermaster/releases/download/v1.7.2/quartermaster-linux-amd64 && chmod +x ~/.local/bin/quartermaster && ls -lh ~/.local/bin/quartermaster && sha256sum ~/.local/bin/quartermaster",
+            "purpose": "download verified linux-amd64 binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "quartermaster --version",
+            "expected_signal": "version: v1.7.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "version: v1.7.2 (d3668e9), built at 2026-10-15T09:18:43Z",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "quartermaster --help",
+            "expected_signal": "-config string",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "-config string",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:12501/logs",
+            "expected_signal": "Quartermaster listening on http://127.0.0.1:12501",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "18:45:33 [INFO] Quartermaster listening on http://127.0.0.1:12501",
+            "setup": [
+              {
+                "command": "cat > /tmp/qm-test.yaml <<'EOF'\nmodels:\n  model1:\n    cmd: llama-server --port ${PORT} --model /tmp/dummy.gguf\nEOF\ncat /tmp/qm-test.yaml",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "quartermaster -config /tmp/qm-test.yaml -listen 127.0.0.1:12501",
+                "background": true,
+                "port": 12501
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "-help says -log-file: pass an empty string to disable",
+            "actually_needed": "omit -log-file entirely (use default log file); passing -log-file \"\" panics with nil-pointer dereference in fileLog.Write"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show Quartermaster starting and listening on 127.0.0.1:12501 and reporting version v1.7.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-quartermaster-20261029-024440-0dd7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-quartermaster-20261029-024440-0dd7/check-1-cmd12.judged.png",
+            "runs/verify/verify-quartermaster-20261029-024440-0dd7/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.073053
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -366,5 +453,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:17+08:00",
-  "updated_at": "2026-10-29T02:41:28+08:00"
+  "updated_at": "2026-10-29T02:45:41.400260+08:00"
 }
