@@ -199,17 +199,19 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 
 ## 7. 狀態紀錄
 
+時間是記錄該列的 commit 時間（台北；`git log` 可對照）。10/28 19:25 更正：先前幾列寫的是估計時間，已改成實際 commit 時間。
+
 | 時間（台北） | task | 結果 | 花費 |
 |---|---|---|---|
 | 10/28 16:18 | P0.1 | Meta key 有效、9 個模型、一次 `muse-spark-1.3` 呼叫成功；Anthropic key 有效；Mac、Cloudflare、GitHub 就緒 | Meta 約 $0.0002 |
 | 10/28 17:06 | P1.1 | 評測 20 題與評分方式凍結（`5ac62ca`）。念誠決定：Mac 題（q08、q11、q12）親手跑；q15 用 CC0 公開錄音 | — |
-| 10/28 17:15 | P0.2 | contributor 4／4（text、json_schema、tools、image）；1.3 的 json_schema、tools 通過 | Meta 約 $0.004 |
-| 10/28 17:20 | P0.3 | 截圖放 tool 輸出或 user 訊息都看得到；schema＋tools 同一請求可以；串接迴圈可用但每回 15–18 秒，遇一次暫時性 503 | Meta <$0.001 |
-| 10/28 17:25 | P0.4 | 寶藏候選 cli 2,352、local-llm 351（數字見 channels-hosting 筆記） | — |
-| 10/28 17:35 | P0.5 | hello MCP 部署到 workers.dev，9 項協定檢查通過；Claude Code 無頭模式（`--strict-mcp-config`）實連成功；測完已移除。桌面 app 裡直接跑 `claude` 會失敗，要用 `env -i` | Anthropic $0.002 |
-| 10/28 17:40 | P0.6 | Modal gVisor：16.4 秒可用、安裝 5 秒、斷網 smoke test 通過 | Modal 約 $0.01 |
-| 10/28 17:45 | P1.2 | 專案骨架（`46d5ea7`） | — |
-| 10/28 19:10 | P1.3 | `software.v1` schema 與 Meta strict 版（`6025851`）。實測：Meta 接受 11.7K 字元的抽取 schema，輸出過 pydantic，每欄附原文引用、不知道的填 null | Meta $0.0004 |
-| 10/28 19:10 | P1.4 | `call_meta`＋共用帳本＋trace＋快取（`b0abe6c`）、`pickfit ping`／`spend`（`f18c7f0`）。122 個測試通過；實測第二次相同請求從快取回、$0；trace 裡沒有金鑰 | Meta <$0.001 |
-| 10/28 19:10 | — | **下一步**：P2 交給**沒讀過 `eval/` 的新 session**（本 session 看過題目）；P3.1–P3.2、P4.2–P4.4 可以同時各開一個 session（第 5 節） | 今日合計：Meta 約 $0.01、Anthropic $0.002、Modal 約 $0.01 |
-| 10/28 20:10 | P0.6–P0.8 | 念誠：Baseten 已申請（等審核）、Meta credits 表單與 Spend Limit 通知、Modal 上限約 $80 都完成。P2、P3、P4 三個 session 已開工（各自的 worktree）。花費守則加第 11 條（各家額度的用途分配） | — |
+| 10/28 17:21 | P0.2 | contributor 4／4（text、json_schema、tools、image）；1.3 的 json_schema、tools 通過 | Meta 約 $0.004 |
+| 10/28 17:21 | P0.3 | 截圖放 tool 輸出或 user 訊息都看得到；schema＋tools 同一請求可以；串接迴圈可用但每回 15–18 秒，遇一次暫時性 503 | Meta <$0.001 |
+| 10/28 17:21 | P0.4 | 寶藏候選 cli 2,352、local-llm 351（數字見 channels-hosting 筆記） | — |
+| 10/28 17:21 | P0.5 | hello MCP 部署到 workers.dev，9 項協定檢查通過；Claude Code 無頭模式（`--strict-mcp-config`）實連成功；測完已移除。桌面 app 裡直接跑 `claude` 會失敗，要用 `env -i` | Anthropic $0.002 |
+| 10/28 17:21 | P0.6 | Modal gVisor：16.4 秒可用、安裝 5 秒、斷網 smoke test 通過 | Modal 約 $0.01 |
+| 10/28 17:19 | P1.2 | 專案骨架（`46d5ea7`） | — |
+| 10/28 17:46 | P1.3 | `software.v1` schema 與 Meta strict 版（`6025851`）。實測：Meta 接受 11.7K 字元的抽取 schema，輸出過 pydantic，每欄附原文引用、不知道的填 null | Meta $0.0004 |
+| 10/28 17:46 | P1.4 | `call_meta`＋共用帳本＋trace＋快取（`b0abe6c`）、`pickfit ping`／`spend`（`f18c7f0`）。122 個測試通過；實測第二次相同請求從快取回、$0；trace 裡沒有金鑰 | Meta <$0.001 |
+| 10/28 17:46 | — | **下一步**：P2 交給**沒讀過 `eval/` 的新 session**（本 session 看過題目）；P3.1–P3.2、P4.2–P4.4 可以同時各開一個 session（第 5 節） | 今日合計：Meta 約 $0.01、Anthropic $0.002、Modal 約 $0.01 |
+| 10/28 18:55 | P0.6–P0.8 | 念誠：Baseten 已申請（等審核）、Meta credits 表單與 Spend Limit 通知、Modal 上限約 $80 都完成。P2、P3、P4 三個 session 已開工（各自的 worktree）。花費守則加第 11 條（各家額度的用途分配） | — |
