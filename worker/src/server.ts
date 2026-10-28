@@ -93,8 +93,12 @@ const installInput = z.object({
 });
 
 const installOutput = z.object({
+  rec_id: z.string().describe('Pass to report_outcome; valid 7 days'),
+  matched_by: z.literal('rules').describe('No model is used here: these are the steps of a recorded run'),
   slug: z.string(),
   name: z.string(),
+  how_we_know: z.string(),
+  evidence_url: z.string().nullable().describe('Run record of the verification'),
   verification: z.object({
     status: z.enum(['verified', 'unverified']),
     level: z.string().nullable(),
@@ -195,7 +199,7 @@ export function buildServer(deps: Deps): McpServer {
         'Use after the user picks a tool from find_software. Returns install steps pickfit actually ran (replayed in a fresh sandbox, or done by hand), with the OS, date and evidence, ' +
         'the steps only the user can do (permissions, accounts), a command to verify the install and a first task to try. ' +
         'Show each command to the user before running it, and ask before any step that needs sudo or pipes a script into a shell. ' +
-        'If applies_to_user_system.match is not "exact", tell the user the steps were checked on a different system. After the user tries it, call report_outcome.',
+        'If applies_to_user_system.match is not "exact", tell the user the steps were checked on a different system. After the user tries it, call report_outcome with the rec_id.',
       inputSchema: installInput,
       outputSchema: installOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },
@@ -210,8 +214,9 @@ export function buildServer(deps: Deps): McpServer {
             slug: out.slug,
             os: args.os,
             arch: args.arch ?? null,
-            rec_id: args.rec_id ?? null,
+            rec_id: out.rec_id,
             results: [out.applies_to_user_system.match],
+            client: deps.client ?? null,
           }).catch(() => undefined),
         );
         return result(out);

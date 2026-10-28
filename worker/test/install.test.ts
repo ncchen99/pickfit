@@ -44,3 +44,17 @@ test('same OS on another architecture is flagged', () => {
 test('unknown slug is an error that points back to find_software', () => {
   assert.throws(() => installGuide(catalog, { slug: 'nope', os: 'linux' }), UnknownSlugError);
 });
+
+test('every guide carries a rec_id, how_we_know, evidence_url and matched_by rules', () => {
+  const issued = installGuide(catalog, { slug: 'fixture-llm-runner', os: 'linux' });
+  assert.match(issued.rec_id, /^rec_[0-9a-f]{32}$/);
+  assert.equal(issued.matched_by, 'rules');
+  assert.equal(issued.evidence_url, 'https://example.invalid/runs/run-20261028-linux-1');
+  assert.match(issued.how_we_know, /fresh linux\/x86_64 sandbox \(modal-gvisor\) and replayed the steps from scratch/);
+  assert.match(issued.how_we_know, /no model wrote or changed them/);
+
+  const rec = 'rec_' + 'a'.repeat(32);
+  assert.equal(installGuide(catalog, { slug: 'fixture-llm-runner', os: 'linux', rec_id: rec }).rec_id, rec);
+  // Not one of ours: a fresh handle replaces it.
+  assert.notEqual(installGuide(catalog, { slug: 'fixture-llm-runner', os: 'linux', rec_id: 'made-up' }).rec_id, 'made-up');
+});

@@ -118,10 +118,32 @@ test('modern clients: the model path end to end, then the install guide', async 
     ),
   );
   assert.equal(guide.result.structuredContent.applies_to_user_system.match, 'exact');
+  assert.equal(guide.result.structuredContent.rec_id, out.rec_id);
   await settle();
-  const types = sqlite.prepare('SELECT type, rec_id FROM events ORDER BY type').all() as any[];
-  assert.deepEqual(types.map((r) => r.type), ['find', 'install_guide']);
-  assert.ok(types.every((r) => r.rec_id === out.rec_id));
+
+  const reported = await message(
+    await call(
+      rpc(
+        {
+          jsonrpc: '2.0',
+          id: 12,
+          method: 'tools/call',
+          params: {
+            name: 'report_outcome',
+            arguments: { slug: 'fixture-llm-runner', stage: 'installed', rec_id: out.rec_id, satisfaction: 'satisfied' },
+            _meta: MODERN_META,
+          },
+        },
+        { ...headers, 'mcp-name': 'report_outcome', 'x-pickfit-reporter': 'dev' },
+      ),
+    ),
+  );
+  assert.equal(reported.result.structuredContent.counted_in_score, true);
+  await settle();
+  const rows = sqlite.prepare('SELECT type, rec_id, reporter FROM events ORDER BY type').all() as any[];
+  assert.deepEqual(rows.map((r) => r.type), ['find', 'install_guide', 'outcome']);
+  assert.ok(rows.every((r) => r.rec_id === out.rec_id));
+  assert.equal(rows[2].reporter, 'dev');
 });
 
 test('bad input and unknown slugs come back as tool errors', async () => {

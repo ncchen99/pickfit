@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { reporterFrom } from '../src/events.ts';
+import { logEvent, reporterFrom } from '../src/events.ts';
 import { findSoftware } from '../src/find.ts';
 import { reportOutcome, UnknownToolError, type OutcomeInput } from '../src/outcome.ts';
 import { scrub } from '../src/scrub.ts';
@@ -87,6 +87,17 @@ test('without a valid rec_id the report is stored but not counted', async () => 
   const other = await report(h, { slug: 'fixture-cloud-summarize', stage: 'installed', rec_id: rec });
   assert.equal(other.counted_in_score, false);
   assert.ok(outcomes(h).every((r) => r.rec_id === null));
+});
+
+test('a rec_id handed out by get_install_guide counts for that slug only', async () => {
+  const h = harness(null, { modelEnabled: false });
+  const rec = 'rec_' + 'b'.repeat(32);
+  await logEvent(h.deps.db, h.deps.now(), { type: 'install_guide', rec_id: rec, slug: 'fixture-transcribe', os: 'linux' });
+  const out = await report(h, { slug: 'fixture-transcribe', stage: 'installed', rec_id: rec });
+  assert.equal(out.counted_in_score, true);
+  assert.equal(outcomes(h)[0].os, 'linux');
+  const other = await report(h, { slug: 'fixture-json-query', stage: 'installed', rec_id: rec });
+  assert.equal(other.counted_in_score, false);
 });
 
 test('a rec_id older than 7 days no longer counts', async () => {

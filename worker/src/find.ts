@@ -8,6 +8,7 @@
 import { bestGuide, type Arch, type Catalog, type Entry, type InstallGuide, type OS } from './catalog.ts';
 import { toCard, type Card } from './cards.ts';
 import { checkBudget, recordSpend } from './budget.ts';
+import { ranSentence } from './evidence.ts';
 import type { Settings } from './env.ts';
 import { logEvent, newId, type Reporter } from './events.ts';
 import { hardFilter, MAX_CARDS, type Conditions } from './filter.ts';
@@ -76,24 +77,9 @@ export interface FindOutput {
   coverage_note: string | null;
 }
 
-const LEVEL_TEXT: Record<string, string> = {
-  install: 'the install finished and the tool started',
-  function: 'a smoke test of its main function passed',
-  service: 'its service answered a test request',
-  inference: 'it produced model output in a test run',
-};
-
 function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, considered: number): string {
   const parts: string[] = [];
-  if (guide) {
-    const r = guide.run;
-    const runner = r.runner ? ` (${r.runner})` : '';
-    const where =
-      r.method === 'sandbox'
-        ? `installed it in a fresh ${r.os}/${r.arch} sandbox${runner} and replayed the steps from scratch`
-        : `installed it by hand on ${r.os}/${r.arch}${runner}`;
-    parts.push(`pickfit ${where} on ${r.checked_at.slice(0, 10)}; ${LEVEL_TEXT[r.level] ?? r.level}.`);
-  }
+  if (guide) parts.push(ranSentence(guide));
   if (entry.scores) {
     const q = entry.scores.quality === null ? 'n/a' : Math.round(entry.scores.quality);
     const p = entry.scores.popularity === null ? 'n/a' : Math.round(entry.scores.popularity);
