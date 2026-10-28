@@ -43,6 +43,8 @@ _ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 _CRASH = re.compile(r"Traceback \(most recent call last\)|panicked at|Segmentation fault|"
                     r": command not found|No module named |Error: Cannot find module")
 _VERSION_HELP = re.compile(r"(?:^|\s)(?:--version|-V|-v|--help|-h|version|help)\s*$")
+# A file a command writes: curl/wget -o/-O/--output, or a shell redirect.
+_WRITES = re.compile(r"(?:\s-o|\s-O|\s--output(?:-document)?|>>?)\s*=?\s*([~$/\w][^\s;&|'\"<>]*)")
 _GENERATION = re.compile(r"/v1/(?:chat/)?completions|/api/(?:generate|chat)|/completion\b|/v1/responses")
 
 
@@ -134,6 +136,11 @@ def _first_word(text: str) -> str:
     while words and (_ASSIGNMENT.match(words[0]) or words[0] in ("time", "env", "exec", "nohup")):
         words = words[1:]
     return words[0].rsplit("/", 1)[-1] if words else ""
+
+
+def written_paths(command: str) -> set[str]:
+    """Files a command writes with -o/-O/--output or a redirect (not /dev/* or &N)."""
+    return {p for p in _WRITES.findall(command) if not p.startswith("/dev/") and not p[:1].isdigit()}
 
 
 def masked_exit(command: str) -> str | None:
@@ -322,6 +329,22 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict
             steps_ok = False
             problems.append(f"step {step.command_id} is {len(record.command)} characters; an install step "
                             f"must fit in {COMMAND_MAX} (split it into shorter commands)")
+
+    # A step that runs a file only an uncited command wrote cannot be replayed (a fresh box lacks it).
+    cited = set(step_ids)
+    for sid in step_ids:
+        step = by_id[sid]
+        own = written_paths(step.command)
+        for earlier in commands:
+            if earlier.command_id is None or earlier.command_id >= sid or earlier.command_id in cited:
+                continue
+            missing = sorted(p for p in written_paths(earlier.command) - own if p in step.command
+                             and not any(p in written_paths(by_id[c].command) for c in cited if c < sid))
+            if missing and earlier.exit_code == 0:
+                steps_ok = False
+                problems.append(f"step {sid} uses {missing[0]}, which only command {earlier.command_id} wrote; "
+                                f"cite {earlier.command_id} as a step too, or the replay will not have it")
+                break
 
     checks: list[ResolvedCheck] = []
     has_service = False
