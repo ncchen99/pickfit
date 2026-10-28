@@ -21,16 +21,17 @@
 | `ch_meta_threads_hn.py` | 作者多常用 Threads 貼文當主連結 | `python3 spikes/ch_meta_threads_hn.py` | 無 | HN 一年內連到 Threads 33 則、X 至少 1,110 則 | 同上 |
 | `ch_regional_authors.py` | V2EX、Qiita、GeekNews 等作品專區的量 | `python3 spikes/ch_regional_authors.py` | 無 | V2EX 約 270 篇／週、Qiita 約 200 篇／週 | [channels-regional](../docs/research/notes/channels-regional.md) |
 | `ch_regional_curated.py` | 阮一峰周刊、HelloGitHub 等策展的 repo 量 | `python3 spikes/ch_regional_curated.py` | 無 | 阮一峰近 3 期 45 個工具、40 個 GitHub | 同上 |
-| `ch_curation_gharchive.py` | GH Archive 還能不能找新 repo | `python3 spikes/ch_curation_gharchive.py` | 無（會下載一小時的 dump） | 見筆記（查核中） | [channels-curation](../docs/research/notes/channels-curation.md) |
-| `ch_curation_lists.py` | awesome 清單的新增項目、週報 RSS 的 GitHub 連結 | `python3 spikes/ch_curation_lists.py` | 無 | 見筆記（查核中） | 同上 |
-| `ch_integration_normalize.py` | URL 正規化、GitHub 改名偵測、套件 → repo 映射 | `python3 spikes/ch_integration_normalize.py` | 可選 `GITHUB_TOKEN` | 見筆記（查核中） | [channels-integration](../docs/research/notes/channels-integration.md) |
-| `ch_integration_merge.py` | 多管道 → 統一候選格式 → 去重 → 規則初篩 | `python3 spikes/ch_integration_merge.py` | 無 | 見筆記（查核中） | 同上 |
+| `ch_curation_gharchive.py` | GH Archive 還能不能找新 repo | `python3 spikes/ch_curation_gharchive.py` | 無（會下載一小時的 dump） | 新 repo 事件 2025-10-09 起歸零；加星事件約剩 2024 年的 2% → 避開 | [channels-curation](../docs/research/notes/channels-curation.md) |
+| `ch_curation_lists.py` | awesome 清單的新增項目、週報 RSS 的 GitHub 連結 | `python3 spikes/ch_curation_lists.py` | 無 | awesome-tuis 近 90 天 +51（星數中位數 42）；awesome-cli-apps 已封存 | 同上 |
+| `ch_integration_normalize.py` | URL 正規化、GitHub 改名偵測、套件 → repo 映射 | `python3 spikes/ch_integration_normalize.py`（`selftest` 子命令） | 可選 `GITHUB_TOKEN` | 正規化 25／25；Show HN 7 天 271 個 repo 有 39 個（14%）改過名；PyPI 新專案 27／39 有 provenance、0 衝突 | [channels-integration](../docs/research/notes/channels-integration.md) |
+| `ch_curation_verify.py` | 重現查核後的 awesome 清單數字（比對名稱＋URL 的 diff） | `python3 spikes/ch_curation_verify.py` | 無 | awesome-ollama 新增 43 筆（不是 54）、星數中位數 12 | [channels-curation](../docs/research/notes/channels-curation.md) |
+| `ch_integration_merge.py` | 多管道 → 統一候選格式 → 去重 → 規則初篩 | `python3 spikes/ch_integration_merge.py --enrich 0` | 無 | 冪等：重跑時 Show HN 新增 0、PyPI 只多 1 筆。ecosyste.ms 取得同意前請用 `--enrich 0` | 同上 |
 
 ## 品質（B 節）
 
 | 腳本 | 驗證什麼 | 怎麼跑 | 需要 | 結果 | 筆記 |
 |---|---|---|---|---|---|
-| `quality_signals.py` | 對 repo 拉 GitHub、Scorecard、ecosyste.ms 訊號，算品質與知名度草案分數 | `python3 spikes/quality_signals.py owner/repo …` | `GITHUB_TOKEN`（本機） | 見筆記（查核中） | [quality-scoring](../docs/research/notes/quality-scoring.md) |
+| `quality_signals.py` | 對 repo 拉 GitHub、Scorecard、ecosyste.ms 訊號，算品質與知名度草案分數 | `python3 spikes/quality_signals.py`（預設 8 個 repo）；`--from-file repos.txt --classify-only` | `GITHUB_TOKEN`（本機；被擋時改用 ecosyste.ms，正式管線取得同意前不要用） | 227 個 Show HN repo：工具 142、交給模型 34、函式庫 1、沒資料 50；Scorecard 只有 7 個（3.1%）有資料；規則品質會飽和（小工具 80–100、bat 90） | [quality-scoring](../docs/research/notes/quality-scoring.md) |
 
 ## 沙盒（C 節）
 
@@ -55,7 +56,7 @@
 
 | 腳本 | 驗證什麼 | 怎麼跑 | 需要 | 結果 | 筆記 |
 |---|---|---|---|---|---|
-| `mcp_stateless/` | 最小無狀態 Streamable HTTP MCP server（Node SDK）、Workers 設定、client 測試 | 見 [mcp_stateless/README.md](mcp_stateless/README.md) | Node 22 | 見筆記（查核中） | [mcp-server](../docs/research/notes/mcp-server.md) |
+| `mcp_stateless/` | 最小無狀態 Streamable HTTP MCP server（TS SDK v2）、Workers 設定、client 測試 | 見 [mcp_stateless/README.md](mcp_stateless/README.md) | Node 22 | Node 與 `wrangler dev` 都通過新舊兩代共 9 項檢查；TS client 3 種模式、Python client 2 種模式可呼叫；**未部署、未用 Claude Code／Codex 實連** | [mcp-server](../docs/research/notes/mcp-server.md) |
 | `sm_index_bench.mjs` | 幾千筆時「條件篩選＋BM25」夠不夠；索引大小與查詢時間 | `node spikes/sm_index_bench.mjs` | Node | 8,198 筆 Homebrew 描述：原話 5／10 進前 25，改寫關鍵字後 10／10；查詢 <1 ms | [storage-matching](../docs/research/notes/storage-matching.md) |
 | `sm_worker_startup.sh` | 索引打包進 Worker 的 bundle 大小與啟動 CPU | `bash spikes/sm_worker_startup.sh 3000` | Node、wrangler（本機，不部署） | 3,000 筆約 1 MB，啟動遠低於 1 秒上限 | 同上 |
 | `sm_schema_events.py` | 檔案 JSON Schema 與 D1 事件表 DDL（在本機 SQLite 跑） | `python3 spikes/sm_schema_events.py` | 無 | DDL 在 SQLite 3.45 跑過；D1 未實測 | 同上 |
