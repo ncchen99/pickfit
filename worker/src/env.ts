@@ -10,6 +10,8 @@ export interface Env {
   META_TIMEOUT_MS?: string;
   /** Comma-separated extra Host names to accept, e.g. the workers.dev host. */
   ALLOWED_HOSTS?: string;
+  /** New submit_software submissions accepted per hour, across everyone. */
+  SUBMIT_HOURLY_CAP?: string;
 }
 
 export interface Settings {
@@ -18,6 +20,7 @@ export interface Settings {
   dailyCapUsd: number;
   totalCapUsd: number;
   timeoutMs: number;
+  submitHourlyCap: number;
 }
 
 function number(value: string | undefined, fallback: number): number {
@@ -32,5 +35,6 @@ export function settings(env: Env): Settings {
     dailyCapUsd: number(env.META_DAILY_CAP_USD, 3),
     totalCapUsd: number(env.META_TOTAL_CAP_USD, 40),
     timeoutMs: number(env.META_TIMEOUT_MS, 25_000),
+    submitHourlyCap: number(env.SUBMIT_HOURLY_CAP, 20),
   };
 }

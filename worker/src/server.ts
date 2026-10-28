@@ -6,6 +6,7 @@ import { findSoftware, type Deps } from './find.ts';
 import { installGuide, UnknownSlugError } from './install.ts';
 import { logEvent } from './events.ts';
 import { ERROR_EXCERPT_MAX, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } from './outcome.ts';
+import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './submit.ts';
 
 export const INSTRUCTIONS =
   'pickfit recommends lesser-known software that it has installed and tested in a sandbox. Scope today: developer CLI tools and local AI/LLM tools. ' +
@@ -161,6 +162,23 @@ const outcomeOutput = z.object({
   next: z.string().nullable(),
 });
 
+const submitInput = z.object({
+  url: z.string().min(10).max(300).describe('https URL of a GitHub repository, e.g. https://github.com/owner/repo'),
+  submitter_role: z.enum(['author', 'user', 'unknown']).optional().describe('Is the user its author? Default unknown'),
+  note: z.string().max(SUBMIT_NOTE_MAX).optional().describe('Optional: what the tool is for, without personal data; read by people only'),
+});
+
+const submitOutput = z.object({
+  submission_id: z.string().nullable().describe('null when the repository is already listed'),
+  url: z.string().describe('The normalized repository URL'),
+  status: z.enum(['queued', 'reading', 'verifying', 'listed', 'listed_unverified', 'rejected']),
+  slug: z.string().nullable(),
+  reason: z.string().nullable().describe('Why it was rejected, when it was'),
+  already_submitted: z.boolean().describe('true = this call only read the status'),
+  check_again_after_s: z.number().int().nullable(),
+  next: z.string(),
+});
+
 function toolError(message: string) {
   return { content: [{ type: 'text' as const, text: message }], isError: true };
 }
@@ -253,6 +271,36 @@ export function buildServer(deps: Deps): McpServer {
         );
       } catch (err) {
         if (err instanceof UnknownToolError) return toolError(err.message);
+        throw err;
+      }
+    },
+  );
+
+  server.registerTool(
+    'submit_software',
+    {
+      title: 'Submit a GitHub project to pickfit',
+      description:
+        'Use only when the user asks to add a software project to pickfit, often their own. Takes the GitHub repository URL. ' +
+        "pickfit's pipeline reads it with Meta's Muse Spark, tries the install in a sandbox and lists it if it works; this takes minutes, so call again with the same url to check the status. " +
+        'Developer CLI tools and local AI/LLM tools are verified today; other software may be rejected or listed unverified. Nothing is published under the user\'s name.',
+      inputSchema: submitInput,
+      outputSchema: submitOutput,
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+    },
+    async (args) => {
+      try {
+        return result(
+          await submitSoftware(args, {
+            catalog: deps.catalog,
+            db: deps.db,
+            now: deps.now,
+            hourlyCap: deps.settings.submitHourlyCap,
+            client: deps.client,
+          }),
+        );
+      } catch (err) {
+        if (err instanceof SubmitError) return toolError(err.message);
         throw err;
       }
     },

@@ -61,10 +61,21 @@ test('legacy clients: initialize, list and call without a session', async () => 
     await call(rpc({ jsonrpc: '2.0', id: 2, method: 'tools/list' }, { 'mcp-protocol-version': '2025-11-25' })),
   );
   const tools = Object.fromEntries(list.result.tools.map((t: any) => [t.name, t]));
-  assert.deepEqual(Object.keys(tools).sort(), ['find_software', 'get_install_guide', 'report_outcome']);
+  assert.deepEqual(Object.keys(tools).sort(), ['find_software', 'get_install_guide', 'report_outcome', 'submit_software']);
+  for (const tool of Object.values(tools) as any[]) {
+    assert.equal(tool.outputSchema.type, 'object', tool.name);
+    assert.ok(tool.description.length <= 1000, tool.name);
+  }
   assert.equal(tools.find_software.annotations.readOnlyHint, true);
-  assert.equal(tools.find_software.outputSchema.type, 'object');
-  assert.ok(tools.find_software.description.length <= 1000);
+  assert.equal(tools.get_install_guide.annotations.readOnlyHint, true);
+  // Writes: never destructive, safe to retry; only submit_software reaches outside (the pipeline reads the repo).
+  for (const name of ['report_outcome', 'submit_software']) {
+    assert.equal(tools[name].annotations.readOnlyHint, false);
+    assert.equal(tools[name].annotations.destructiveHint, false);
+    assert.equal(tools[name].annotations.idempotentHint, true);
+  }
+  assert.equal(tools.report_outcome.annotations.openWorldHint, false);
+  assert.equal(tools.submit_software.annotations.openWorldHint, true);
 
   const res = await message(
     await call(
