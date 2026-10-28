@@ -175,6 +175,16 @@ def test_readme_decodes_base64_and_missing_readme_is_none(tmp_path: Path) -> Non
     assert gh.readme("someone/empty") == (None, None)
 
 
+def test_renamed_repo_redirect_is_followed_with_the_token(tmp_path: Path) -> None:
+    def route(request: httpx2.Request) -> httpx2.Response:
+        if request.url.path == "/repos/old/name/releases":
+            return httpx2.Response(301, headers={"location": f"{gh_module.API}/repositories/9/releases"})
+        assert request.headers["authorization"] == f"Bearer {TOKEN}"
+        return json_response([{"tag_name": "v1", "draft": False}])
+
+    assert [r["tag_name"] for r in FakeGitHub(route).client(tmp_path).releases("old/name")] == ["v1"]
+
+
 def test_details_fetch_only_manifests_present_in_tree(tmp_path: Path) -> None:
     def route(request: httpx2.Request) -> httpx2.Response:
         path = request.url.path

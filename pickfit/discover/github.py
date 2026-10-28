@@ -141,7 +141,9 @@ class GitHub:
             with self._count_lock:
                 self.requests[kind] += 1
             try:
-                resp = self._http.get(path, params=params, headers={**self._headers, "Accept": accept})
+                # A renamed or transferred repo answers 301 to its old owner/name.
+                resp = self._http.get(path, params=params, headers={**self._headers, "Accept": accept},
+                                      follow_redirects=True)
             except httpx2.TransportError as err:
                 server_errors += 1
                 if server_errors >= SERVER_ERROR_TRIES:
