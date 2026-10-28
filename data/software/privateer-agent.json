@@ -65,18 +65,21 @@
       "first_task": "privateer --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-privateer-agent-20261029-025906-4dcf",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g privateer-agent",
-          "purpose": null
+          "command": "npm install -g privateer-agent --ignore-scripts",
+          "purpose": "Install privateer-agent globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "privateer --version"
+      "check": {
+        "command": "privateer --version",
+        "expected_signal": "privateer 0.15.3 (pi 1.3.0)"
+      },
+      "first_task": "privateer verify"
     },
     "windows": {
       "basis": "readme_claim",
@@ -106,10 +109,79 @@
     "url": "https://github.com/privateer-agent/privateer-agent/releases/tag/v0.15.3"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T03:01:01.967410+08:00",
+    "runs": [
+      {
+        "id": "verify-privateer-agent-20261029-025906-4dcf",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T03:01:01.967410+08:00",
+        "tool_version": "0.15.3",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g privateer-agent --ignore-scripts",
+            "purpose": "Install privateer-agent globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "privateer --version",
+            "expected_signal": "privateer 0.15.3 (pi 1.3.0)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "privateer 0.15.3 (pi 1.3.0)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "privateer verify",
+            "expected_signal": "⚓ Privateer install check",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "⚓ Privateer install check v0.15.3",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "privateer harbor status",
+            "expected_signal": "harbor: not reachable",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "harbor: not reachable",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show the expected Privateer outputs: install check header, harbor not reachable status, and version string.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-privateer-agent-20261029-025906-4dcf/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-privateer-agent-20261029-025906-4dcf/check-1-cmd4.judged.png",
+            "runs/verify/verify-privateer-agent-20261029-025906-4dcf/check-2-cmd5.judged.png",
+            "runs/verify/verify-privateer-agent-20261029-025906-4dcf/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.035105
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -312,5 +384,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T03:01:01.968244+08:00"
 }

@@ -76,20 +76,33 @@
       "first_task": "kesha --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-kesha-voice-kit-20261029-025701-6961",
       "method": "npm",
       "steps": [
         {
-          "command": "bun add -g @drakulavich/kesha-voice-kit",
-          "purpose": null
+          "command": "curl -fsSL https://bun.sh/install -o /tmp/bun-install.sh",
+          "purpose": "Download Bun installer script cleanly"
+        },
+        {
+          "command": "bash /tmp/bun-install.sh",
+          "purpose": "Install Bun runtime from script"
+        },
+        {
+          "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && bun add -g @drakulavich/kesha-voice-kit",
+          "purpose": "Reinstall Kesha cleanly for record"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && ln -sf ~/.bun/bin/kesha ~/.local/bin/kesha && ln -sf ~/.bun/bin/bun ~/.local/bin/bun",
+          "purpose": "Link bun and kesha onto default PATH"
         }
       ],
-      "manual_steps": [
-        "Grant microphone access on macOS on first use"
-      ],
-      "check": null,
-      "first_task": "kesha --version"
+      "manual_steps": [],
+      "check": {
+        "command": "kesha --version",
+        "expected_signal": "2.4.0"
+      },
+      "first_task": "kesha status"
     },
     "windows": {
       "basis": "readme_claim",
@@ -121,10 +134,95 @@
     "url": "https://github.com/drakulavich/kesha-voice-kit/releases/tag/v2.4.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:58:17.152207+08:00",
+    "runs": [
+      {
+        "id": "verify-kesha-voice-kit-20261029-025701-6961",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:58:17.152207+08:00",
+        "tool_version": "2.4.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://bun.sh/install -o /tmp/bun-install.sh",
+            "purpose": "Download Bun installer script cleanly"
+          },
+          {
+            "command": "bash /tmp/bun-install.sh",
+            "purpose": "Install Bun runtime from script"
+          },
+          {
+            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && bun add -g @drakulavich/kesha-voice-kit",
+            "purpose": "Reinstall Kesha cleanly for record"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && ln -sf ~/.bun/bin/kesha ~/.local/bin/kesha && ln -sf ~/.bun/bin/bun ~/.local/bin/bun",
+            "purpose": "Link bun and kesha onto default PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "kesha --version",
+            "expected_signal": "2.4.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2.4.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ln -sf ~/.bun/bin/bun ~/.local/bin/bun && kesha --help",
+            "expected_signal": "Kesha Voice Kit listens and talks back",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Kesha Voice Kit listens and talks back: local speech for agents and scripts.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "kesha status",
+            "expected_signal": "Platform: linux x64",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[32m✓\u001b[39m Platform: linux x64",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "bun add -g @drakulavich/kesha-voice-kit then kesha --version confirms kesha resolved on PATH",
+            "actually_needed": "Symlink ~/.bun/bin/kesha and ~/.bun/bin/bun into ~/.local/bin (or add ~/.bun/bin to PATH): global bin is ~/.bun/bin and kesha's shebang needs bun on PATH, otherwise kesha fails with env: 'bun': No such file or directory."
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show the expected signals with status reporting Platform linux x64 and version reporting 2.4.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-kesha-voice-kit-20261029-025701-6961/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-kesha-voice-kit-20261029-025701-6961/check-1-cmd7.judged.png",
+            "runs/verify/verify-kesha-voice-kit-20261029-025701-6961/check-2-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.081233
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -383,5 +481,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:18+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T02:58:17.153544+08:00"
 }

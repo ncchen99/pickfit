@@ -62,18 +62,25 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-servebench-20261029-025838-c37c",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install servebench",
-          "purpose": null
+          "command": "uv tool install servebench 2>&1",
+          "purpose": "Install servebench via uv tool"
+        },
+        {
+          "command": "uv tool install \"servebench[mock]\" 2>&1",
+          "purpose": "Add mock extra for mock-server"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "servebench quick"
+      "check": {
+        "command": "servebench --help 2>&1",
+        "expected_signal": "Benchmark an endpoint over a sweep of load levels."
+      },
+      "first_task": "servebench quick 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -99,10 +106,118 @@
   "processing": null,
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:59:37.154509+08:00",
+    "runs": [
+      {
+        "id": "verify-servebench-20261029-025838-c37c",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:59:37.154509+08:00",
+        "tool_version": "1.1.3",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install servebench 2>&1",
+            "purpose": "Install servebench via uv tool"
+          },
+          {
+            "command": "uv tool install \"servebench[mock]\" 2>&1",
+            "purpose": "Add mock extra for mock-server"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "servebench --help 2>&1",
+            "expected_signal": "Benchmark an endpoint over a sweep of load levels.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ run Benchmark an endpoint over a sweep of load levels. │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "servebench quick 2>&1",
+            "expected_signal": "No local LLM server found",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "No local LLM server found (looked for Ollama :11434, llama.cpp :8080, LM Studio :1234, vLLM :8000, SGLang :30000).",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "servebench run --url http://127.0.0.1:8001/v1 --model mock-model --concurrency 1,2 --num-requests 4 --input-len 16 --output-len 16 --out /tmp/sb-run.json 2>&1",
+            "expected_signal": "TTFT p50 101 ms",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "c=1 4 ok, 0 failed, 39.8 tok/s, TTFT p50 101 ms, 100% in SLO",
+            "setup": [
+              {
+                "command": "servebench mock-server --port 8001 2>&1",
+                "background": true,
+                "port": 8001
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "servebench roofline /tmp/sb-run.json --gpu-name \"RTX 3050 Laptop\" 2>&1",
+            "expected_signal": "Memory-Bandwidth Bound",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[Verdict] Operating in Memory-Bandwidth Bound regime.",
+            "setup": [
+              {
+                "command": "servebench mock-server --port 8001 2>&1",
+                "background": true,
+                "port": 8001
+              },
+              {
+                "command": "servebench run --url http://127.0.0.1:8001/v1 --model mock-model --concurrency 1,2 --num-requests 4 --input-len 16 --output-len 16 --out /tmp/sb-run.json 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "generic --version check",
+            "actually_needed": "use `servebench --help` (no --version flag exists; it exits 2 with 'No such option: --version')"
+          },
+          {
+            "readme_said": "`pip install servebench` / `uv tool install servebench` is enough to try every command",
+            "actually_needed": "`uv tool install \"servebench[mock]\"` to add FastAPI/uvicorn so `servebench mock-server` can actually start"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show help listing the run sweep description, quick reporting no local server, and run sweep completing with TTFT p50 101 ms.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-servebench-20261029-025838-c37c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-servebench-20261029-025838-c37c/check-1-cmd3.judged.png",
+            "runs/verify/verify-servebench-20261029-025838-c37c/check-2-cmd4.judged.png",
+            "runs/verify/verify-servebench-20261029-025838-c37c/check-3-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.051297
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -371,5 +486,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T02:59:37.155216+08:00"
 }

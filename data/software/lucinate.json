@@ -53,7 +53,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-lucinate-20261029-025810-c0fa",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "TAG=$(curl -fsSL https://api.github.com/repos/lucinate-ai/lucinate/releases/latest | grep tag_name | cut -d\\\" -f4) && echo $TAG | tee /tmp/ltag && curl -fsSL -o /tmp/luc.tgz https://github.com/lucinate-ai/lucinate/releases/download/$TAG/lucinate_${TAG#v}_linux_amd64.tar.gz",
+          "purpose": "Download lucinate release tarball"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/luc.tgz -C /tmp && install -m 755 /tmp/lucinate ~/.local/bin/lucinate",
+          "purpose": "Extract and install lucinate binary"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "lucinate --version",
+        "expected_signal": "lucinate 1.25.0"
+      },
+      "first_task": null
+    },
     "windows": {
       "basis": "readme_claim",
       "run_id": null,
@@ -84,10 +104,77 @@
     "url": "https://github.com/lucinate-ai/lucinate/releases/tag/v1.25.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:59:12.872634+08:00",
+    "runs": [
+      {
+        "id": "verify-lucinate-20261029-025810-c0fa",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:59:12.872634+08:00",
+        "tool_version": "1.25.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "TAG=$(curl -fsSL https://api.github.com/repos/lucinate-ai/lucinate/releases/latest | grep tag_name | cut -d\\\" -f4) && echo $TAG | tee /tmp/ltag && curl -fsSL -o /tmp/luc.tgz https://github.com/lucinate-ai/lucinate/releases/download/$TAG/lucinate_${TAG#v}_linux_amd64.tar.gz",
+            "purpose": "Download lucinate release tarball"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/luc.tgz -C /tmp && install -m 755 /tmp/lucinate ~/.local/bin/lucinate",
+            "purpose": "Extract and install lucinate binary"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lucinate --version",
+            "expected_signal": "lucinate 1.25.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lucinate 1.25.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lucinate --help",
+            "expected_signal": "Usage: lucinate",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: lucinate [--version|-v] [<command> [args...]]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/lucinate-ai/lucinate/main/install/lucinate.sh | sh",
+            "actually_needed": "Install to ~/.local/bin manually (fetch latest tag, download linux_amd64 tarball, extract, install to ~/.local/bin) because /usr/local/bin is not writable and sudo is unavailable"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The terminal shows lucinate 1.25.0 printed after --version.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lucinate-20261029-025810-c0fa/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lucinate-20261029-025810-c0fa/check-1-cmd10.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.071641
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -314,5 +401,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T02:59:12.873552+08:00"
 }

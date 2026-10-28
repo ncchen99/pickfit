@@ -54,7 +54,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-tokentracker-20261029-025701-e772",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install toktally",
+          "purpose": "Install toktally via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "tokentracker --version",
+        "expected_signal": "tokentracker, version 0.2.1"
+      },
+      "first_task": "tokentracker dashboard"
+    },
     "windows": null
   },
   "pricing": {
@@ -66,10 +82,115 @@
   "processing": "local",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:58:09.119085+08:00",
+    "runs": [
+      {
+        "id": "verify-tokentracker-20261029-025701-e772",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:58:09.119085+08:00",
+        "tool_version": "0.2.1",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install toktally",
+            "purpose": "Install toktally via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "tokentracker --version",
+            "expected_signal": "tokentracker, version 0.2.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tokentracker, version 0.2.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tokentracker --help",
+            "expected_signal": "Usage: tokentracker [OPTIONS] COMMAND",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: tokentracker [OPTIONS] COMMAND [ARGS]...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tokentracker dashboard",
+            "expected_signal": "TokenTracker — Last 30 days",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "╭────────────────────────────────── TokenTracker — Last 30 days ───────────────────────────────────╮",
+            "setup": [
+              {
+                "command": "~/.local/share/uv/tools/toktally/bin/python -c \"from tokentracker.db import log_call; from tokentracker.pricing import estimate_cost; print(estimate_cost('gpt-4o', 1000, 500)); log_call(model='gpt-4o', input_tokens=1000, output_tokens=500, total_tokens=1500, cost_usd=estimate_cost('gpt-4o',1000,500), latency_ms=1200, endpoint='chat.completions'); log_call(model='gpt-4o-mini', input_tokens=2000, output_tokens=500, total_tokens=2500, cost_usd=estimate_cost('gpt-4o-mini',2000,500), latency_ms=400, endpoint='chat.completions'); log_call(model='text-embedding-3-small', input_tokens=1000, output_tokens=0, total_tokens=1000, cost_usd=estimate_cost('text-embedding-3-small',1000,0), latency_ms=200, endpoint='embeddings'); print('seeded')\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "tokentracker recent",
+            "expected_signal": "Last 20 API Calls",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Last 20 API Calls",
+            "setup": [
+              {
+                "command": "~/.local/share/uv/tools/toktally/bin/python -c \"from tokentracker.db import log_call; from tokentracker.pricing import estimate_cost; print(estimate_cost('gpt-4o', 1000, 500)); log_call(model='gpt-4o', input_tokens=1000, output_tokens=500, total_tokens=1500, cost_usd=estimate_cost('gpt-4o',1000,500), latency_ms=1200, endpoint='chat.completions'); log_call(model='gpt-4o-mini', input_tokens=2000, output_tokens=500, total_tokens=2500, cost_usd=estimate_cost('gpt-4o-mini',2000,500), latency_ms=400, endpoint='chat.completions'); log_call(model='text-embedding-3-small', input_tokens=1000, output_tokens=0, total_tokens=1000, cost_usd=estimate_cost('text-embedding-3-small',1000,0), latency_ms=200, endpoint='embeddings'); print('seeded')\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "tokentracker insights",
+            "expected_signal": "TokenTracker insights — last 30 days",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "╭────────────────────────────── TokenTracker insights — last 30 days ──────────────────────────────╮",
+            "setup": [
+              {
+                "command": "~/.local/share/uv/tools/toktally/bin/python -c \"from tokentracker.db import log_call; from tokentracker.pricing import estimate_cost; print(estimate_cost('gpt-4o', 1000, 500)); log_call(model='gpt-4o', input_tokens=1000, output_tokens=500, total_tokens=1500, cost_usd=estimate_cost('gpt-4o',1000,500), latency_ms=1200, endpoint='chat.completions'); log_call(model='gpt-4o-mini', input_tokens=2000, output_tokens=500, total_tokens=2500, cost_usd=estimate_cost('gpt-4o-mini',2000,500), latency_ms=400, endpoint='chat.completions'); log_call(model='text-embedding-3-small', input_tokens=1000, output_tokens=0, total_tokens=1000, cost_usd=estimate_cost('text-embedding-3-small',1000,0), latency_ms=200, endpoint='embeddings'); print('seeded')\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show TokenTracker dashboard, recent calls table, and version 0.2.1 output as expected.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tokentracker-20261029-025701-e772/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tokentracker-20261029-025701-e772/check-1-cmd10.judged.png",
+            "runs/verify/verify-tokentracker-20261029-025701-e772/check-2-cmd11.judged.png",
+            "runs/verify/verify-tokentracker-20261029-025701-e772/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.055485
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -274,5 +395,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-29T02:41:28+08:00"
+  "updated_at": "2026-10-29T02:58:09.119847+08:00"
 }

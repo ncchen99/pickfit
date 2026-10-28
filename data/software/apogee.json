@@ -67,18 +67,21 @@
       "first_task": "apogee --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "go",
+      "basis": "replayed",
+      "run_id": "verify-apogee-20261029-025755-0c85",
+      "method": "binary",
       "steps": [
         {
-          "command": "go install github.com/airiclenz/apogee/cmd/apogee@latest",
-          "purpose": null
+          "command": "VERSION=$(curl -fsSL https://api.github.com/repos/airiclenz/apogee/releases/latest | sed -n 's/.*\"tag_name\": *\"v\\([^\"]*\\)\".*/\\1/p') && echo \"VERSION=$VERSION\" && curl -fsSLO \"https://github.com/airiclenz/apogee/releases/download/v$VERSION/apogee_${VERSION}_linux_amd64.tar.gz\" && tar -xzf \"apogee_${VERSION}_linux_amd64.tar.gz\" && ls -R && mkdir -p ~/.local/bin && install -m 0755 \"apogee_${VERSION}_linux_amd64/apogee\" ~/.local/bin/apogee && ~/.local/bin/apogee --version",
+          "purpose": "Download linux_amd64 prebuilt archive for latest release and install binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "apogee --version"
+      "check": {
+        "command": "apogee --version",
+        "expected_signal": "apogee version v0.28.0+4710.g8336a32f77c3"
+      },
+      "first_task": "apogee probe"
     },
     "windows": {
       "basis": "readme_claim",
@@ -108,10 +111,93 @@
     "url": "https://github.com/airiclenz/apogee/releases/tag/v0.28.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:58:38.407823+08:00",
+    "runs": [
+      {
+        "id": "verify-apogee-20261029-025755-0c85",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:58:38.407823+08:00",
+        "tool_version": "v0.28.0+4710.g8336a32f77c3",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "VERSION=$(curl -fsSL https://api.github.com/repos/airiclenz/apogee/releases/latest | sed -n 's/.*\"tag_name\": *\"v\\([^\"]*\\)\".*/\\1/p') && echo \"VERSION=$VERSION\" && curl -fsSLO \"https://github.com/airiclenz/apogee/releases/download/v$VERSION/apogee_${VERSION}_linux_amd64.tar.gz\" && tar -xzf \"apogee_${VERSION}_linux_amd64.tar.gz\" && ls -R && mkdir -p ~/.local/bin && install -m 0755 \"apogee_${VERSION}_linux_amd64/apogee\" ~/.local/bin/apogee && ~/.local/bin/apogee --version",
+            "purpose": "Download linux_amd64 prebuilt archive for latest release and install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "apogee --version",
+            "expected_signal": "apogee version v0.28.0+4710.g8336a32f77c3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "apogee version v0.28.0+4710.g8336a32f77c3",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "apogee --help",
+            "expected_signal": "Available Commands:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Available Commands:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "apogee probe",
+            "expected_signal": "apogee probe — host report",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "apogee probe — host report",
+            "setup": [
+              {
+                "command": "mkdir -p ~/.apogee && printf 'servers:\\n  - name: my-box\\n    endpoint: http://127.0.0.1:1111\\nserver: my-box\\nupdate-check: false\\n' > ~/.apogee/config.yaml && cat ~/.apogee/config.yaml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go install github.com/airiclenz/apogee/cmd/apogee@latest",
+            "actually_needed": "Skipped: box has no Go toolchain and installing language toolchains is forbidden; used the README's prebuilt-archive method instead"
+          },
+          {
+            "readme_said": "sudo install -m 0755 apogee /usr/local/bin/apogee",
+            "actually_needed": "install -m 0755 apogee ~/.local/bin/apogee (PATH already starts with ~/.local/bin); no sudo and no write to /usr/local/bin"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show apogee probe host report with confinement details and apogee version v0.28.0+4710.g8336a32f77c3.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-apogee-20261029-025755-0c85/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-apogee-20261029-025755-0c85/check-1-cmd6.judged.png",
+            "runs/verify/verify-apogee-20261029-025755-0c85/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.043225
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -346,5 +432,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T02:58:38.408586+08:00"
 }

@@ -49,7 +49,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-throttle-20261029-025809-461e",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install git+https://github.com/KushagraKanaujia/throttle@own/mvp",
+          "purpose": "pip install throttle from own/mvp branch"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "throttle --version",
+        "expected_signal": "throttle 0.7.0"
+      },
+      "first_task": "throttle demo"
+    },
     "windows": null
   },
   "pricing": {
@@ -65,10 +81,78 @@
     "url": "https://github.com/KushagraKanaujia/throttle/releases/tag/v0.6.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:59:06.492822+08:00",
+    "runs": [
+      {
+        "id": "verify-throttle-20261029-025809-461e",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:59:06.492822+08:00",
+        "tool_version": "0.7.0",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pip install git+https://github.com/KushagraKanaujia/throttle@own/mvp",
+            "purpose": "pip install throttle from own/mvp branch"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "throttle --version",
+            "expected_signal": "throttle 0.7.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "throttle 0.7.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "throttle --help",
+            "expected_signal": "throttle demo",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "throttle demo",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "throttle demo",
+            "expected_signal": "Saved throttle-demo/report.html",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ Saved throttle-demo/report.html │",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Demo completed offline with savings report saved, and version printed as 0.7.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-throttle-20261029-025809-461e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-throttle-20261029-025809-461e/check-1-cmd5.judged.png",
+            "runs/verify/verify-throttle-20261029-025809-461e/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.031141
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -255,5 +339,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:30+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T02:59:06.493544+08:00"
 }
