@@ -1,0 +1,946 @@
+# pickfit 評測題組 v1
+#
+# 比賽期間（2026-10-28）新寫，沒有使用賽前的評測草稿：由 AI agent 起草（3 個起草、1 個挑選、3 個審查、1 個定稿），念誠逐題審定後凍結。
+# 本檔 commit 的那一刻就是凍結：之後不改題目，只能在 eval/README.md 的勘誤區追加說明。
+# 題目只描述需求與可檢查的條件，刻意不寫預期答案（避免照著題目準備資料）。
+# 評分方式見 eval/README.md。
+
+version: 1
+questions:
+- id: q01
+  category: dev_cli
+  kind: find_software
+  language: en
+  prompt: I use Claude Code, Codex CLI and Gemini CLI on the same laptop, and every time I add an MCP
+    server I have to hand-edit three config files in three different formats. Is there a free command-line
+    tool that keeps one list of my MCP servers and syncs it into all three agents' configs? It should
+    run locally with no account and leave my other settings alone.
+  constraints:
+    os: any
+    arch: any
+    budget: free
+    must_run_locally: true
+    other:
+    - Operated from the command line; no GUI or web dashboard needed
+    - Writes MCP server entries for all three of Claude Code, Codex CLI and Gemini CLI
+    - Free to use; no account or sign-up
+    - Makes no network connections while adding or syncing servers
+    - Preserves unrelated settings already present in the target config files
+  current_software: null
+  pain_points:
+  - The same MCP server must be added three times
+  - Three config formats (JSON and TOML) drift out of sync
+  - Hand edits break existing settings
+  success_checklist:
+  - '[L1] The tool exists in a public repository or package registry; its README or docs state MCP config
+    support for Claude Code, Codex CLI and Gemini CLI; it is free and needs no account'
+  - '[L2] The answer''s install steps succeed verbatim in the dev image'
+  - '[L2] Fixture: every MCP config location each pinned agent documents (user scope and project scope)
+    is seeded with one unrelated setting. After adding the frozen stdio fixture MCP server through the
+    tool and syncing, every seeded file still parses as JSON or TOML and every seeded unrelated setting
+    is unchanged'
+  - '[L2] With pinned versions of the three agent CLIs installed (versions recorded at freeze), each agent''s
+    own MCP list command, run with no login and with egress blocked, shows the new server. If pre-freeze
+    calibration shows a pinned agent''s list command cannot run offline without login, that agent is checked
+    by validating its config against its documented schema instead, and the substitution is recorded before
+    the freeze'
+  - '[L2] Egress check passes for the add and sync steps'
+  why_famous_may_not_fit: Each agent ships its own 'add MCP server' command, but each writes only its
+    own config, so the built-ins still mean three edits. General dotfile managers copy files verbatim
+    and cannot translate between the JSON and TOML schemas. No long-established tool owns this niche,
+    so the question tests finding a small, recent project and getting its sync to write configs that each
+    agent accepts.
+  sandbox: linux_sandbox
+  rationale: 'Priority user: developer who uses several AI agents; the friction grows with every new MCP
+    server. Layers 1 and 2. Expected control difficulty: hard. Cluster: mcp-tooling. Changes: ''no account''
+    moved into the prompt; user- and project-scope fixtures; agent list commands made mandatory with a
+    pre-freeze fallback; egress logging instead of an offline-only run.'
+- id: q02
+  category: dev_cli
+  kind: find_software
+  language: en
+  prompt: Before I paste server logs into an AI chat, I want to automatically scrub API keys, tokens,
+    email addresses and IP addresses out of them. Is there a free, open-source command-line filter (stdin
+    to stdout) that does this entirely on my Linux machine, without me having to write the regexes myself?
+  constraints:
+    os: linux
+    arch: any
+    budget: free
+    must_run_locally: true
+    other:
+    - Reads from stdin and writes redacted text to stdout
+    - Makes no network calls
+    - OSI-approved open-source license
+    - Built-in detection (no hand-written regex) for at least cloud access keys, Git hosting tokens, email
+      addresses and IPv4 addresses
+  current_software: null
+  pain_points:
+  - Fear of leaking secrets and personal data to cloud AI tools
+  - Manual find-and-replace is error-prone
+  - Secret scanners report findings instead of producing a cleaned copy
+  success_checklist:
+  - '[L1] The tool exists, has an OSI-approved license, and its docs show stdin-to-stdout filter usage
+    with built-in rules'
+  - '[L2] The install steps succeed verbatim in the dev image'
+  - '[L2] Fixture log produced at test time by the frozen seeded generator (fake values are never committed):
+    one AWS-format access key ID (AKIA plus 16 random [A-Z0-9]), one GitHub-format personal access token
+    (ghp_ prefix, valid length and checksum format), two email addresses at example.com and example.org,
+    two public unicast IPv4 addresses outside private, loopback, link-local, shared 100.64/10, documentation
+    and multicast ranges, plus ordinary lines. Run as one pipeline (`cat app.log | <tool with the answer''s
+    flags> > clean.log`). A value counts as masked when its exact string is absent and: for the key and
+    token, no run of 5 or more characters of the random part survives; for emails, the local part is gone;
+    for IPs, at least the last two octets are gone. All six values must be masked'
+  - '[L2] Ordinary lines (timestamps, log levels, file paths, HTTP status codes and durations only; no
+    UUIDs, hashes or dotted version strings) are byte-identical in the output'
+  - '[L2] Egress check passes during the run'
+  why_famous_may_not_fit: The best-known secret scanners are built to scan repositories and report findings,
+    and some verify keys against provider APIs (network calls), rather than rewriting a text stream. General
+    PII toolkits are usually libraries, not ready-made CLI filters. No single well-known tool obviously
+    covers secrets plus PII as a stdin filter, so this tests matching on the stream-rewriting requirement.
+  sandbox: linux_sandbox
+  rationale: 'Priority user: privacy-minded developer who uses cloud AI but controls what leaves the machine.
+    Layers 1 and 2. Expected control difficulty: medium. Changes: ''open-source'' and ''built-in rules''
+    moved into the prompt; masking defined precisely; fake secrets generated at test time (no token-shaped
+    strings committed, so no push-protection hits); IP ranges chosen so default allowlists cannot cause
+    false failures; egress logging.'
+- id: q03
+  category: dev_cli
+  kind: find_software
+  language: en
+  prompt: I regularly get 2-5 GB CSV exports and need to filter rows, pick columns, and do group-by counts
+    from the terminal on Linux. pandas is too slow and memory-hungry, and awk breaks on quoted fields
+    that contain commas and line breaks. What free, open-source tool should I use? It must be a single
+    binary or a distro package, with no Python, Java or Node runtime.
+  constraints:
+    os: linux
+    arch: x86_64
+    budget: free
+    must_run_locally: true
+    other:
+    - OSI-approved open-source license
+    - Installable as a single prebuilt binary or a distro package; no Python, Java or Node runtime
+    - 'Parses RFC 4180 correctly: quoted fields with embedded commas, escaped quotes and newlines'
+    - Peak memory at most half the file size (streaming or indexed processing)
+  current_software: null
+  pain_points:
+  - pandas is too slow and memory-hungry on multi-GB files
+  - awk and cut break on quoted fields with commas and newlines
+  success_checklist:
+  - '[L1] The tool exists, has an OSI-approved license, and ships a prebuilt Linux x86_64 binary or a
+    distro package'
+  - '[L2] The install steps succeed verbatim in the base image (no python3, node or java); afterwards
+    `command -v python3 java node` prints nothing'
+  - '[L2] Frozen fixture CSV whose quoted fields contain commas, escaped double quotes and embedded newlines:
+    the answer''s commands for a row filter, a column selection and a group-by count return exactly the
+    frozen expected outputs'
+  - '[L2] On a 2 GB CSV from the frozen seeded generator (about 20 columns, a group key with 1,000 distinct
+    values, quoted fields in 5% of rows), all commands the answer gives for the group-by count, including
+    any index build, finish within 5 minutes on 4 vCPU, and container memory.peak stays at or below 1
+    GB'
+  why_famous_may_not_fit: Several well-known single-binary CSV tools and embedded SQL engines likely meet
+    every constraint, while the best-known Python CSV toolkit and pandas do not. A tie is expected; this
+    is a no-regression item that checks the agent avoids runtime-based tools and gives correct, quote-aware
+    commands.
+  sandbox: linux_sandbox
+  rationale: 'Covers data wrangling within dev_cli for budget-limited users. Layers 1 and 2. Expected
+    control difficulty: easy (no-regression subset). Changes: ''single binary'' and ''open-source'' are
+    now hard requirements in the prompt; memory limit set to 50% of file size; frozen generator; index
+    build counted in the time limit; runtime absence checked with command -v.'
+- id: q04
+  category: dev_cli
+  kind: find_software
+  language: en
+  prompt: Our 4-person team shares .env files over chat, which is obviously bad. We want to commit the
+    secrets to our git repo encrypted, let each developer decrypt with their own key, and be able to cut
+    someone off cleanly when they leave the team. No hosted secrets service and no server to run, and
+    it has to be free and open source. We use macOS and Linux.
+  constraints:
+    os: any
+    arch: any
+    budget: free
+    must_run_locally: true
+    other:
+    - No hosted service, no account, no self-run server
+    - Per-developer keys; people can be added or removed without sharing one master password
+    - Encrypted file is committed to git; plaintext is never committed
+    - CLI available on macOS and Linux
+    - Free and open source
+  current_software: null
+  pain_points:
+  - Secrets are shared in plaintext over chat
+  - Hosted secrets managers cost money per seat or need an account
+  - Offboarding a developer must be clean
+  success_checklist:
+  - '[L1] The recommended tool or tools exist, are open source, and install on macOS and Linux without
+    any account, per docs or release assets'
+  - '[L2] In the dev image, with fresh keypairs generated by the grader for developers A, B and C (of
+    the type the answer specifies), A encrypts and commits a sample .env as the answer describes; for
+    every secret value, `git rev-list --all | xargs git grep -F <value>` finds nothing, and the plaintext
+    .env is untracked and git-ignored'
+  - '[L2] Developer B, added as a recipient, decrypts the committed file in a separate container; developer
+    C, never added, cannot'
+  - '[L2] After the answer''s removal and rotation steps for B, B cannot decrypt the newly committed version.
+    If the answer gives no removal steps, this item fails'
+  - '[L2] Egress check passes for encryption and decryption'
+  why_famous_may_not_fit: Hosted secrets managers need an account and often per-seat payment, and server-based
+    vaults need infrastructure. Well-known git-native encryption tools likely meet every constraint, so
+    this is mainly a no-regression item; it also tests that the answer gives correct removal and rotation
+    steps (layer 2).
+  sandbox: linux_sandbox
+  rationale: 'Priority user: small, budget-limited team. Checks rest on cryptographic facts only. Expected
+    control difficulty: easy (no-regression subset). Changes: offboarding and ''open source'' moved into
+    the prompt; history-wide grep; .env must be ignored; missing removal steps fail; grader generates
+    keys.'
+- id: q05
+  category: dev_cli
+  kind: find_alternatives
+  language: zh-TW
+  prompt: 我平常用 pandoc 把 Word 檔轉成 Markdown 給 AI 讀，但它不能讀 PDF，而我們很多規格書都是 PDF。想找一個在 Linux 終端機就能用的工具，PDF 和
+    Word 都能轉成 Markdown，PDF 裡的表格要保留成表格，標題層級也要正確。公司文件不能上傳到雲端，只能在本機跑，電腦也沒有 GPU。免費最好，買斷也可以，但不要訂閱制。
+  constraints:
+    os: linux
+    arch: x86_64
+    budget: free_or_one_time
+    must_run_locally: true
+    other:
+    - One CLI tool converts both text-based PDF and DOCX to Markdown
+    - Runs locally and offline after setup; no cloud API
+    - CPU only (no GPU)
+    - Tables become Markdown tables; heading levels are preserved
+    - Free or one-time purchase; not a subscription
+  current_software: pandoc
+  pain_points:
+  - The current tool cannot take PDF input
+  - Company documents must not be uploaded to cloud converters
+  - No GPU available
+  - Does not want subscription software
+  success_checklist:
+  - '[L1] The tool exists; it is free or a one-time purchase, not a subscription; its docs list PDF and
+    DOCX input, Markdown output, and a local mode with no cloud API'
+  - '[L1] One tool handles both PDF and DOCX'
+  - '[L2] The install steps succeed verbatim in the dev image (x86_64, CPU only, 4 vCPU and 16 GB); any
+    model downloads happen during setup'
+  - '[L2] Frozen fixtures: a text-based PDF (CJK font embedded) and a DOCX with the same content: Traditional
+    Chinese and English text, one H1, two H2s, a 4-column table with a header row and 2 data rows (12
+    cells), and a bullet list. With egress blocked, each converts to a .md file in which the headings
+    are ATX headings at the right levels, the table is a Markdown pipe table whose 12 cell texts match
+    the fixture, and the list items are Markdown list items'
+  - '[L2] A frozen diff script finds at least 98% of the fixture''s CJK characters, in order, in each
+    output, with no replacement characters'
+  - '[L2] Each conversion finishes within 10 minutes'
+  - '[L2] Egress check passes during the conversions'
+  why_famous_may_not_fit: pandoc (the current tool) cannot read PDF. Widely shared document-to-Markdown
+    converters handle Word files well but may flatten PDF tables into plain text, while heavier layout-model
+    converters may keep tables but need GPU-class resources or long CPU runs. Hosted parsing services
+    break the no-upload rule and are often subscriptions. This tests matching on 'PDF tables preserved,
+    CPU only, offline'.
+  sandbox: linux_sandbox
+  rationale: 'New question; replaces the terminal disk-usage browser, where one well-known tool very likely
+    fit. Priority users: privacy-minded small teams, Traditional Chinese speakers, people who avoid subscriptions;
+    keeps the set''s only free_or_one_time budget. Layer 2: table and heading fidelity on CPU. Expected
+    control difficulty: medium.'
+- id: q06
+  category: dev_cli
+  kind: find_software
+  language: en
+  prompt: We have an internal REST API described by an OpenAPI 3 spec, and I want my AI coding agents
+    to call it as MCP tools. Is there a free, open-source tool that turns the spec into a working MCP
+    server I can run locally, without writing the server code by hand and without a hosted service or
+    account? It should forward the agents' tool calls to our API's base URL.
+  constraints:
+    os: any
+    arch: any
+    budget: free
+    must_run_locally: true
+    other:
+    - OSI-approved open-source license
+    - Produces or serves an MCP server (stdio or streamable HTTP) from an OpenAPI 3.x spec without hand-written
+      handler code
+    - Runs locally; no hosted service or account
+    - Forwards tool calls to a configurable API base URL
+    - Makes no network connections other than to the configured API
+  current_software: null
+  pain_points:
+  - Writing an MCP wrapper by hand for every endpoint
+  - Hosted conversion services would put a vendor in the path of internal API traffic
+  - Wants every agent that speaks MCP to use the same tools
+  success_checklist:
+  - '[L1] The tool exists, has an OSI-approved license, its docs show OpenAPI 3 input producing a runnable
+    MCP server, and no account or hosted service is needed'
+  - '[L1] The answer does not require hand-writing server or handler code; an answer that does fails this
+    item'
+  - '[L2] The install steps succeed verbatim in the dev image'
+  - '[L2] Frozen fixtures: an OpenAPI 3.0 spec with GET /items/{id} and POST /items, and a mock API script
+    on localhost. Following the answer, with only config values changed (spec path, base URL, auth placeholder)
+    and any generated code used unmodified, a pinned reference MCP client lists exactly two tools that
+    correspond to the two operations'
+  - '[L2] Calling the GET tool with id 42 returns content that includes the mock''s unique token, and
+    the mock''s log shows GET /items/42; calling the POST tool with the frozen body makes the mock receive
+    that JSON body'
+  - '[L2] Egress check passes for generation, startup and both tool calls (only the localhost mock is
+    reached)'
+  why_famous_may_not_fit: MCP is recent, so there is no long-established default. Some well-known MCP
+    frameworks offer OpenAPI import only as a library call inside a program you write, and several platforms
+    do the conversion as a hosted or account-based service. This tests finding a runnable local tool and
+    configuring its base URL correctly.
+  sandbox: linux_sandbox
+  rationale: 'New question; replaces the self-hosted tunnel, where one well-known tool very likely fit.
+    Priority users: developers who use several AI agents and avoid vendor lock-in. Layers 1 and 2, fully
+    checkable offline with a mock API. Expected control difficulty: medium. Cluster: mcp-tooling.'
+- id: q07
+  category: dev_cli
+  kind: find_software
+  language: en
+  prompt: I want our team's API requests to live in our git repo as plain-text files that diff cleanly
+    in code review, instead of in a cloud workspace that needs sign-in. Is there a free, open-source tool
+    that works fully offline on my Mac and has a CLI that runs the same request files as tests in our
+    Linux CI, failing the build when an assertion fails?
+  constraints:
+    os: any
+    arch: any
+    budget: free
+    must_run_locally: true
+    other:
+    - OSI-approved open-source license
+    - No account or sign-in for any feature the answer uses
+    - Works offline; network traffic only to the target host
+    - Requests are plain-text files in the project directory; one edit gives a small diff
+    - CLI runner on Linux x86_64 that exits non-zero when an assertion fails
+    - Install path documented for macOS arm64 and Linux x86_64
+  current_software: null
+  pain_points:
+  - Popular API clients push account sign-in and cloud sync of collections
+  - Collections are not stored as small diffable files in the repo
+  - Wants the same requests to run as tests in CI
+  success_checklist:
+  - '[L1] The tool exists, its license file shows an OSI-approved license, and every feature the answer
+    uses works without an account'
+  - '[L2] The install steps succeed verbatim in the dev image (Linux x86_64); docs or releases list macOS
+    arm64 support'
+  - '[L2] Frozen fixture: a local server that returns 200 with body {ok: true}. Three requests are written
+    in the tool''s file format as the answer describes; one asserts status 200 and body field ok equal
+    to true. The CLI run exits 0'
+  - '[L2] The same run exits non-zero when the server returns 500, and again when it returns 200 with
+    ok false'
+  - '[L2] Changing one request''s URL produces a git diff of at most 3 changed lines in one UTF-8 text
+    file; the other requests'' files are untouched'
+  - '[L2] Egress check passes during the CLI runs (localhost only)'
+  why_famous_may_not_fit: The best-known API client ties collections to an account and cloud workspace
+    and exports them as one large JSON file. Several well-known open-source API clients and plain-text
+    HTTP test runners likely fit, so this is a no-regression item that checks the agent avoids the account-bound
+    default and gives working CI assertions.
+  sandbox: linux_sandbox
+  rationale: 'Priority user: team that does not want its workflow locked into one vendor. Layers 1 and
+    2. Expected control difficulty: easy (no-regression subset). Changes: ''diff cleanly'' moved into
+    the prompt and given a 3-line threshold; fixture and both failure modes frozen; egress logging.'
+- id: q08
+  category: dev_cli
+  kind: find_alternatives
+  language: en
+  prompt: My company just grew past 250 employees, so Docker Desktop now needs a paid license for us.
+    I need a free, open-source way to run containers from the terminal on my Apple silicon MacBook that
+    still works with my existing docker and docker compose commands and runs arm64 images.
+  constraints:
+    os: macos
+    arch: arm64
+    budget: free
+    must_run_locally: true
+    other:
+    - License permits free commercial use at a company of more than 250 employees, with no size or revenue
+      threshold
+    - Core component under an OSI-approved license
+    - Runs natively on Apple silicon and runs arm64 Linux images
+    - Existing docker CLI commands and docker compose files work without rewriting
+    - Operable entirely from the terminal
+  current_software: Docker Desktop
+  pain_points:
+  - Paid subscription required above 250 employees or a revenue threshold
+  - Wants to avoid vendor lock-in
+  - Does not want to rewrite compose files
+  - Only needs the CLI, not a GUI desktop app
+  success_checklist:
+  - '[L1] The recommended option''s license or pricing allows free commercial use regardless of company
+    size, and its core component has an OSI-approved license'
+  - '[L1] The primary recommendation is not a tool whose license requires payment for commercial use at
+    this company size'
+  - '[L2] In a separate macOS user account on Apple silicon, with Docker Desktop not running and not the
+    active docker context or DOCKER_HOST, the install steps run as written'
+  - '[L2] `docker run --rm hello-world` succeeds and `docker image inspect hello-world --format ''{{.Architecture}}''`
+    prints arm64'
+  - '[L2] Frozen compose fixture (an nginx-alpine web service published on port 8080 and a redis-alpine
+    service): `docker compose up -d` starts both, and `curl -s -o /dev/null -w ''%{http_code}'' http://localhost:8080`
+    run on the macOS host returns 200'
+  - '[L2] No GUI: a terminal sudo prompt is allowed; any macOS dialog or app window that must be clicked
+    fails this item'
+  why_famous_may_not_fit: Docker Desktop (the current tool) needs a paid plan above the size threshold,
+    and the best-known polished Mac container app is free only for personal use. Well-known open-source
+    VM-based runtimes likely fit, so this mainly tests that the agent checks commercial licensing and
+    that docker and compose work unchanged (layer 2).
+  sandbox: mac_only
+  rationale: 'Priority user: Apple silicon developer avoiding subscription lock-in, on the same kind of
+    machine as the demo. Expected control difficulty: easy (no-regression subset). Changes: arm64 verified
+    by image inspect; host-side curl; ''no GUI'' defined; runs in a separate macOS user without uninstalling
+    anything.'
+- id: q09
+  category: dev_cli
+  kind: find_software
+  language: zh-TW
+  prompt: 我同時用 Claude Code 和 Codex 寫程式，想把待辦事項改成存在 repo 裡的純文字檔，跟著 git 一起版本控制，不想再用線上的 issue 系統。有沒有命令列工具，讓我和
+    agent 都能新增、列出、關閉任務，列表也能輸出成 JSON 給 agent 讀？要免費、開源、不用帳號、離線可用，Mac 和 Linux 都能跑。
+  constraints:
+    os: any
+    arch: any
+    budget: free
+    must_run_locally: true
+    other:
+    - OSI-approved open-source license
+    - Task data is stored as plain-text files inside the repository directory (not a home-directory database)
+    - CLI can create, list and close tasks
+    - Task list can be output as JSON
+    - No account; works offline
+    - Runs on macOS and Linux
+  current_software: null
+  pain_points:
+  - Online issue trackers need accounts and are not versioned with the code
+  - Coding agents cannot easily read or update tasks
+  - Wants tasks to travel with the repo in git
+  success_checklist:
+  - '[L1] The tool exists, has an OSI-approved license, its docs show task storage inside the project
+    directory and a JSON output option, and docs or releases show macOS and Linux support'
+  - '[L2] The install steps succeed verbatim in the dev image as a non-root user'
+  - '[L2] In a fresh git repo, using only commands from the answer or the tool''s docs: create 3 tasks
+    (one titled in Traditional Chinese) and close 1. The JSON listing parses with jq and identifies exactly
+    the 2 open tasks (either only open tasks are listed, or a status field marks the closed one), and
+    the Chinese title round-trips intact'
+  - '[L2] After committing, a fresh clone with no other state (no home-directory data, no untracked files)
+    lists the same tasks with the same statuses, so the committed text files are the source of truth'
+  - '[L2] The committed task data is UTF-8 text, and closing one more task changes at most 5 lines in
+    git diff'
+  - '[L2] Egress check passes for all commands'
+  why_famous_may_not_fit: The best-known terminal task managers keep data in a home-directory database
+    rather than in the repo, well-known plain-text todo formats have no JSON output, and hosted issue
+    trackers need accounts. The need is recent and tied to coding agents, so this tests matching on storage
+    location and machine-readable output.
+  sandbox: linux_sandbox
+  rationale: 'New question; replaces the tmux alternative, where one well-known tool very likely fit and
+    the ''on-screen hints'' check described that tool''s signature feature. Priority user: Traditional
+    Chinese developer who uses several AI agents. Layers 1 and 2. Expected control difficulty: medium.'
+- id: q10
+  category: dev_cli
+  kind: builtin_enough
+  language: zh-TW
+  prompt: 我用 Markdown 寫中文技術文件，一個段落就是一整行。每次 git diff 都是整行紅綠，根本看不出改了哪幾個字。是不是要另外裝什麼 diff 工具？我在 Ubuntu 上，git
+    已經裝好了。
+  constraints:
+    os: linux
+    arch: any
+    budget: free
+    must_run_locally: true
+    other:
+    - Must work for Chinese text, which has no spaces between words
+    - Prefer a solution that needs only the already-installed git, if that is enough
+    - Terminal only
+  current_software: git
+  pain_points:
+  - git diff marks whole lines, so the changed characters in long Chinese paragraphs cannot be seen
+  success_checklist:
+  - '[L3] The primary answer says no additional diff tool is required; any third-party pager or diff tool
+    appears only as an optional extra'
+  - '[L2] The proposed command or config uses only git and runs in the base image (git only) with LANG=C.UTF-8,
+    under a pseudo-terminal (`script -qc ''<cmd>'' /dev/null`) with GIT_PAGER=cat'
+  - '[L2] Frozen fixture: a repo with a single-line paragraph of about 200 Traditional Chinese characters
+    in which exactly one character is substituted. A frozen span-extraction script (parsing ANSI color
+    runs or [-..-] and {+..+} markers) finds that the removed and added spans are each at most 3 characters
+    and contain the changed character. Whole-line marking fails; default whitespace word-diff fails'
+  - '[L2] The changed character and its neighbours decode as valid UTF-8, with no split or garbled byte
+    sequences'
+  - '[L2] If the answer suggests a persistent setting (git config, alias or .gitattributes), after applying
+    it the everyday command gives the same character-level result'
+  - '[L2] The output is readable in a terminal (color or inline markers), not JSON or a patch that needs
+    another tool'
+  why_famous_may_not_fit: The usual advice is to install a popular third-party diff pager or structural
+    diff tool, which is an unneeded install. git's own word-level modes split on whitespace by default
+    and mark the whole Chinese paragraph unless configured for character-level matching in a UTF-8 locale,
+    so a shallow 'built-in' answer still fails.
+  sandbox: linux_sandbox
+  rationale: 'The dev_cli builtin_enough question. Layer 3 (git alone is enough) plus layer 2 (correct
+    CJK configuration), for a Traditional Chinese user. Expected control difficulty: medium. Changes:
+    pty capture with GIT_PAGER=cat, frozen span-extraction script, single-character substitution fixture,
+    primary-answer rule.'
+- id: q11
+  category: local_ai
+  kind: find_software
+  language: zh-TW
+  prompt: 我是學生，用 MacBook Air M2 16GB。想在本機離線跑一個中文模型，回答要是繁體中文、用台灣習慣的用語，不要一直跑出簡體字。最好在終端機就能問，不用付費也不用註冊任何帳號。
+  constraints:
+    os: macos
+    arch: arm64
+    budget: free
+    must_run_locally: true
+    other:
+    - Runs on an Apple silicon Mac with 16 GB unified memory
+    - Works offline after download
+    - Model weights downloadable without login or gated-license approval
+    - Usable from the terminal
+    - Model license permits free personal use
+  current_software: null
+  pain_points:
+  - Popular open models drift into Simplified Chinese and mainland vocabulary
+  - Some well-known model downloads require an account
+  - Limited memory on a student laptop
+  success_checklist:
+  - '[L1] The runner and the model exist and are free; the model license permits free personal use'
+  - '[L1] The model files download with no login, token or gated-access approval (HF_TOKEN unset, empty
+    cache)'
+  - '[L2] On a 16 GB Apple silicon Mac, in a fresh macOS user with empty model caches, the steps run from
+    the terminal; the summed peak memory footprint of every process the steps start, including any background
+    server (`/usr/bin/time -l` or `footprint`), stays under 12 GB'
+  - '[L2] With all network interfaces off, each of 5 frozen prompts gets a reply in the terminal. P1:
+    請用至少150字說明在家手沖咖啡的基本步驟。 P2: 請用至少150字介紹三種常見的台灣夜市小吃。 P3: 請用至少150字解釋什麼是雲端備份，以及它的優缺點。 P4: 請把下列英文詞翻成中文，每個一行：software,
+    video, network, program, information, default, file, memory。 P5: 請用至少150字，寫一段給電腦新手的入門說明：怎麼安裝新的應用、怎麼把線上看到的短片存下來、怎麼連上家裡的
+    Wi-Fi，以及電腦變慢時可以怎麼處理。'
+  - '[L2] Coherence: the replies to P1, P2, P3 and P5 each contain at least 50 CJK characters, repeat
+    no 10-character substring more than 3 times, and are judged by a blind grader as answering the prompt'
+  - '[L2] Script: the shared OpenCC scorer gives a Traditional ratio of at least 0.95 over the five replies
+    (at least 30 script-differing characters)'
+  - '[L2] Vocabulary: the P4 reply gives at least 6 of 軟體, 影片, 網路, 程式, 資訊, 預設, 檔案, 記憶體 on the matching
+    lines and none of 软件, 軟件, 视频, 視頻, 网络, 網絡, 程序, 信息, 默认, 默認, 内存, 內存, or 文件 for ''file''. The P5 reply
+    contains at least 2 of those Taiwan terms and none of 软件, 軟件, 视频, 視頻, 网络, 網絡, 默认, 默認, 内存, 內存'
+  why_famous_may_not_fit: 'The best-known open model families either drift into Simplified script and
+    mainland vocabulary on Chinese prompts, or their official weights are gated behind an account and
+    license acceptance. An ungated, Taiwan-tuned model that fits 16 GB is long-tail knowledge, so this
+    tests layer 2: choosing the model, not just the runner.'
+  sandbox: mac_only
+  rationale: 'Priority users: budget-limited student and Traditional Chinese speaker, on Apple silicon.
+    Expected control difficulty: hard. Cluster: traditional-chinese-output. Changes: five prompts frozen
+    (P5 avoids giving away the target terms), coherence defined, vocabulary forced by P4, shared OpenCC
+    scorer, memory measured as summed footprint, fresh user and empty caches.'
+- id: q12
+  category: local_ai
+  kind: find_software
+  language: en
+  prompt: On my Apple silicon MacBook Pro I want to run local LLMs with Apple's MLX framework instead
+    of GGUF/llama.cpp, from the terminal only, behind a local OpenAI-compatible server that my coding
+    tools can call, with streaming, since my editor streams responses. I'd like to load MLX-format models
+    straight from Hugging Face or a local folder. It has to be free and open source, no GUI app, no account.
+  constraints:
+    os: macos
+    arch: arm64
+    budget: free
+    must_run_locally: true
+    other:
+    - Uses Apple's MLX framework as the inference backend
+    - Loads MLX-format models from a Hugging Face repo id or local path with no conversion step
+    - Exposes an OpenAI-compatible /v1/chat/completions endpoint on localhost, including streaming
+    - Operable from the terminal with no GUI app installed
+    - OSI-approved open-source license
+    - No account or sign-in; works offline after the model is downloaded
+  current_software: null
+  pain_points:
+  - Wants Apple-native inference speed
+  - Already has MLX-format downloads that should be reused as-is
+  - Avoids closed-source desktop apps
+  success_checklist:
+  - '[L1] The tool exists, has an OSI-approved license, and documents MLX as its backend'
+  - '[L2] In a fresh macOS user with empty HF_HOME and no hub token, the install steps run from the terminal
+    without installing any GUI application'
+  - '[L2] The server starts with the frozen fixture model (an MLX-format 4-bit instruct model of at most
+    3B parameters, repo id and revision pinned at freeze), referenced by repo id or local path, with no
+    conversion step'
+  - '[L2] With the pinned official openai Python client and base_url set to the server, a non-streaming
+    chat completion returns non-empty choices[0].message.content'
+  - '[L2] A streaming request yields at least 2 chunks and terminates normally through the SDK''s stream
+    iterator'
+  - '[L2] Offline: with all network interfaces down and using only the answer''s commands (an offline
+    environment variable counts only if the answer says to set it), both requests succeed again after
+    a server restart'
+  - '[L2] No login or account prompt at any step'
+  why_famous_may_not_fit: The most popular one-command local runner has historically used a GGUF backend
+    and its own model store, and the most popular MLX-capable app is a closed-source desktop GUI. A well-known
+    MLX-based server likely meets every constraint, so this is mainly a no-regression item that also checks
+    streaming and offline restart.
+  sandbox: mac_only
+  rationale: 'Priority users: privacy and run-locally users on Apple silicon. Layer 2. Expected control
+    difficulty: easy (no-regression subset). Cluster: local-openai-endpoint. Changes: streaming moved
+    into the prompt; fixture model pinned; responses validated with the official SDK; offline defined
+    strictly.'
+- id: q13
+  category: local_ai
+  kind: find_alternatives
+  language: en
+  prompt: We run Ollama on a CPU-only Linux server (no GPU, 64 GB RAM) for about 10 teammates, and it
+    slows to a crawl when several people send requests at once. I already have a folder of GGUF files
+    from Hugging Face and don't want them copied into Ollama's own model store. What free, open-source
+    server can load GGUF files directly from a path, handle concurrent requests efficiently on CPU, and
+    expose an OpenAI-compatible API?
+  constraints:
+    os: linux
+    arch: x86_64
+    budget: free
+    must_run_locally: true
+    other:
+    - Runs on CPU-only x86_64 Linux; no CUDA or GPU
+    - Loads a GGUF model directly from a filesystem path with no import or copy step
+    - Exposes an OpenAI-compatible /v1/chat/completions endpoint
+    - Documented support for concurrent requests (parallel slots or continuous batching)
+    - Open-source license
+  current_software: Ollama
+  pain_points:
+  - Throughput collapses with several concurrent users
+  - Models live in its own blob store, so existing GGUF files are imported and duplicated
+  - Needs a Modelfile or import step per model
+  - Parallelism settings are easy to misconfigure
+  success_checklist:
+  - '[L1] The server exists, is open source, and its docs show CPU-only operation, an OpenAI-compatible
+    chat completions endpoint, and a setting for parallel requests or batching'
+  - '[L2] The install steps succeed verbatim in the dev image on x86_64 with no GPU, at 8 vCPU and 16
+    GB'
+  - '[L2] The frozen fixture GGUF (0.5B-1.5B instruct, hash recorded) is mounted read-only at a path.
+    Disk usage of all writable filesystems (`du -sx`, excluding the model mount) is measured after install
+    and before the first server start; after the server loads the model from that path and answers requests,
+    growth is under 5% of the model''s size'
+  - '[L2] 4 concurrent requests with the frozen long-output prompt (max_tokens 128, temperature 0) all
+    return 200 with non-empty content'
+  - '[L2] With the parallel settings the answer gives, aggregate throughput for the 4 concurrent requests
+    (total completion_tokens divided by wall time) is at least 1.5 times that of a single warmed-up request'
+  why_famous_may_not_fit: 'Ollama (the current tool) has exactly these limits. The best-known high-throughput
+    serving engines are built around NVIDIA GPUs, with CPU support secondary. A well-known GGUF-native
+    server likely fits, so this mostly tests layer 2: the parallel-slot and context settings that actually
+    raise throughput on CPU.'
+  sandbox: linux_sandbox
+  rationale: 'Priority user: small team self-hosting on modest hardware. Expected control difficulty:
+    easy (no-regression subset). Cluster: local-openai-endpoint. Changes: throughput ratio replaces raw
+    wall time and the log-based escape; disk baseline timing defined; 8 vCPU fixed.'
+- id: q14
+  category: local_ai
+  kind: find_software
+  language: en
+  prompt: I'm building a small RAG tool for internal use at my company on a CPU-only Linux box (8 GB RAM,
+    no GPU) and want to stop sending documents to cloud APIs. I need one local, open-source server that
+    gives me both an OpenAI-compatible /v1/embeddings endpoint and a rerank endpoint, with models that
+    handle mixed English and Chinese documents and whose licenses allow commercial use. What should I
+    run?
+  constraints:
+    os: linux
+    arch: x86_64
+    budget: free
+    must_run_locally: true
+    other:
+    - Runs on CPU only within 8 GB RAM
+    - One service (one install, one start command) serves an OpenAI-compatible /v1/embeddings endpoint
+      and a rerank endpoint
+    - The embedding and rerank models handle Chinese and English
+    - Works offline after model download
+    - Server under an OSI-approved license; the models' licenses permit self-hosted commercial use
+    - Installable via pip, a single binary, or a container image
+  current_software: null
+  pain_points:
+  - Does not want documents sent to a cloud embeddings API
+  - Popular local runners serve embeddings but not reranking
+  - Does not want to run two services
+  - No GPU available
+  success_checklist:
+  - '[L1] The server and models exist; the server has an OSI-approved license and its docs show embedding
+    and rerank endpoints; the answer names the models, and their licenses permit self-hosted commercial
+    use'
+  - '[L2] In the dev image, CPU only, with a 4 vCPU and 8 GB limit, one start command brings up one service
+    serving both models'
+  - '[L2] Through the pinned openai Python client with only base_url changed, an English input and a Chinese
+    input return vectors of the same non-zero dimension'
+  - '[L2] For each of 3 frozen English-Chinese translation pairs, cosine similarity between the English
+    sentence and its translation is higher than between the English sentence and a frozen unrelated Chinese
+    distractor'
+  - '[L2] A rerank request in the format given by the answer or by the server''s docs for the installed
+    version, with a frozen query and 5 frozen mixed-language passages (one relevant), ranks the relevant
+    passage first'
+  - '[L2] After model download, with egress blocked, both requests succeed, the egress check passes, and
+    container memory.peak stays under 8 GB'
+  why_famous_may_not_fit: 'Cloud embedding APIs break the local requirement. The most popular local runner
+    serves chat and embedding models; whether it offers a rerank endpoint must be checked on run day,
+    not assumed. Well-known embedding servers often serve one model per process, so two services are needed;
+    some popular multilingual rerankers carry non-commercial licenses; many inference servers assume an
+    NVIDIA GPU. This tests layer 2: one service, both endpoints, license-clean multilingual models.'
+  sandbox: linux_sandbox
+  rationale: 'Priority users: privacy and run-locally users building internal tools. Expected control
+    difficulty: medium. Cluster: local-openai-endpoint. Changes: commercial-use licensing moved into the
+    prompt; rerank format taken from the answer or docs; three cross-lingual pairs instead of one; ''as
+    far as widely known'' removed.'
+- id: q15
+  category: local_ai
+  kind: find_alternatives
+  language: zh-TW
+  prompt: 我用 openai-whisper 在沒有 GPU 的 Linux 筆電上，把中文會議錄音轉成逐字稿（要 SRT 格式、有時間軸）。可是它跑得很慢、要裝好幾 GB 的 PyTorch，而且常常輸出簡體字。有沒有免費、開源、可以離線跑、在
+    CPU 上快很多，而且直接輸出繁體中文的工具或設定？會議內容不能上傳。
+  constraints:
+    os: linux
+    arch: x86_64
+    budget: free
+    must_run_locally: true
+    other:
+    - Runs on CPU only
+    - No PyTorch dependency
+    - Works offline after the one-time model download
+    - Outputs SRT files
+    - Transcript is in Traditional Chinese characters
+    - Free and open source; command-line usage
+  current_software: openai-whisper
+  pain_points:
+  - Slow on CPU
+  - Pulls in a multi-gigabyte PyTorch dependency
+  - Mandarin output often comes out in Simplified characters
+  - Meeting audio is private and must not be uploaded
+  success_checklist:
+  - '[L1] The tool and model exist and are free to use; the tool has an OSI-approved license'
+  - '[L2] Following the steps in the dev image (x86_64, CPU only, 4 vCPU and 16 GB) produces a working
+    CLI, and no torch package is installed'
+  - '[L2] Frozen 60-second Mandarin clip (scripted text read by a consenting speaker, or CC0/CC-BY) with
+    a frozen reference transcript: with egress blocked after setup, the output is valid SRT (parses with
+    the pinned SRT parser, sequential indices, start before end in every cue, non-decreasing start times)
+    and its cues cover at least 50 seconds'
+  - '[L2] Accuracy: character error rate is at most 25% against the reference, after converting both to
+    Traditional with the pinned OpenCC and removing punctuation'
+  - '[L2] Script: the shared OpenCC scorer gives a Traditional ratio of at least 0.95 (the reference script
+    contains at least 60 script-differing characters)'
+  - '[L2] Speed: the answer''s full end-to-end command, including any post-processing for Traditional
+    output, finishes faster than openai-whisper ''small'' with default settings, run once in an identical
+    but separate container on the same host'
+  - '[L2] Egress check passes during transcription'
+  why_famous_may_not_fit: 'openai-whisper (the current tool) is slow on CPU, pulls in PyTorch, and often
+    emits Simplified Chinese unless prompted or post-processed. Well-known CPU-optimized Whisper ports
+    likely satisfy speed and no-PyTorch, so this tests layer 2: the model size, prompt or conversion step
+    that yields Traditional output at acceptable accuracy.'
+  sandbox: linux_sandbox
+  rationale: 'Priority users: Traditional Chinese speakers who also care about privacy. Expected control
+    difficulty: medium. Cluster: traditional-chinese-output. Changes: wording now 逐字稿 with SRT; ''open
+    source'' moved into the prompt; accuracy floor; speed baseline fixed and run in a separate container;
+    SRT validity defined; fixture consent or license recorded.'
+- id: q16
+  category: local_ai
+  kind: find_software
+  language: en
+  prompt: We need to translate a folder of internal English Markdown docs into European Portuguese for
+    our Lisbon office. The docs can't be sent to cloud translation services, so it has to run on our own
+    Linux box (CPU only, 16 GB RAM). Local models we tried keep producing Brazilian Portuguese, and machine
+    translation tends to mangle code blocks and link URLs. What free setup can batch-translate the whole
+    folder from the terminal and leave fenced code blocks and URLs untouched?
+  constraints:
+    os: linux
+    arch: x86_64
+    budget: free
+    must_run_locally: true
+    other:
+    - Runs fully offline after model download; no cloud API key
+    - CPU only with 16 GB RAM
+    - Batch-translates a whole directory of .md files from the command line (glue code given verbatim
+      in the answer, up to 50 lines, counts as part of the setup)
+    - Fenced code blocks and link URLs stay byte-identical
+    - Output uses European Portuguese (pt-PT) vocabulary
+    - All components free of charge; the model's license permits internal company use
+  current_software: null
+  pain_points:
+  - Docs must not be sent to a cloud translator
+  - No GPU
+  - Machine translation breaks Markdown and code blocks
+  - Local models default to Brazilian Portuguese
+  success_checklist:
+  - '[L1] Every component exists and is free of charge, and the model''s license permits internal company
+    use'
+  - '[L2] The install steps succeed verbatim in the dev image (CPU only, 4 vCPU and 16 GB)'
+  - '[L2] After model download, with egress blocked, translation runs and the egress check passes'
+  - '[L2] Frozen fixture folder of 3 .md files (about 1,000 words total; headings, lists, links, fenced
+    code blocks, numbers and frozen product names): 3 output files are produced within 30 minutes'
+  - '[L2] Every fenced code block and link URL is byte-identical to the input, heading counts match per
+    file, and the numbers and frozen product names appear unchanged'
+  - '[L2] Each output prose paragraph is identified as Portuguese by a pinned language identifier with
+    confidence of at least 0.9, and no English source sentence appears verbatim'
+  - '[L2] Variant: the fixture''s list items for ''file'', ''screen'', ''user'', ''mobile phone'' and
+    ''to download'' come out with at least 4 of ficheiro, ecrã, utilizador, telemóvel, transferir, and
+    none of arquivo, tela, usuário, celular, baixar'
+  - '[L2] Meaning: 5 sentences sampled with a fixed seed are each judged fully translated and meaning-preserving
+    by a blind grader who reads Portuguese or, if none is available, by a pinned LLM judge with a frozen
+    rubric (choice recorded before freeze); at least 4 of 5 pass'
+  why_famous_may_not_fit: 'The best-known translators are cloud services. Well-known self-hosted translation
+    servers usually treat Portuguese as one language and may translate Markdown syntax and code as prose,
+    and general local LLM setups drift toward Brazilian Portuguese unless instructed. This tests layer
+    2: a model and prompt that hold the European variant, plus a pipeline that protects code and URLs.'
+  sandbox: linux_sandbox
+  rationale: 'Same need as before (offline Markdown translation into a regional variant that models drift
+    away from), with the target changed from Taiwan Traditional Chinese to European Portuguese. Only two
+    questions now carry Traditional-script checks, and every check here is automated. Priority users:
+    privacy-minded teams and people with regional language needs. Expected control difficulty: hard.'
+- id: q17
+  category: local_ai
+  kind: find_software
+  language: en
+  prompt: I keep about 2,000 markdown notes and some PDFs, and I want to ask questions about them in plain
+    English from the terminal, completely offline so nothing leaves my laptop, and have it tell me which
+    note or PDF each answer came from. It's a Linux laptop with 16 GB RAM and no GPU; free and open source
+    please.
+  constraints:
+    os: linux
+    arch: x86_64
+    budget: free
+    must_run_locally: true
+    other:
+    - Fully offline after setup; no cloud API key; no telemetry required
+    - Indexes both Markdown and PDF files
+    - Runs on CPU with 16 GB RAM
+    - Command-line interface
+    - Answers name their source file
+    - OSI-approved open-source license
+  current_software: null
+  pain_points:
+  - Private notes must not be uploaded
+  - Many chat-with-documents tools default to a cloud API key
+  - Desktop GUI apps do not fit a terminal workflow
+  success_checklist:
+  - '[L1] The tool exists, has an OSI-approved license, and documents an offline local-model mode that
+    indexes Markdown and PDF'
+  - '[L2] In the dev image (CPU only, 4 vCPU and 16 GB), the steps index a frozen corpus of 50 Markdown
+    files and 5 text-based PDFs within 30 minutes. The corpus holds 5 synthetic facts with unique made-up
+    tokens; the facts for 2 of them exist only in the PDFs'
+  - '[L2] With egress blocked after setup (egress check passes), each of 5 frozen questions is answered
+    within 3 minutes; at least 4 of 5 answers contain the exact token, and both PDF-only questions pass'
+  - '[L2] For at least 4 of 5 answers, the cited source names the file that contains the fact'
+  - '[L2] No cloud API key is set at any step'
+  why_famous_may_not_fit: 'The best-known chat-with-your-documents apps are desktop GUIs or default to
+    cloud model APIs, and general RAG frameworks need you to write code. Several open-source terminal
+    tools exist but differ in PDF support, citations and CPU-only setup, so this tests layer 2: a local
+    model and embedding configuration that works on CPU.'
+  sandbox: linux_sandbox
+  rationale: 'Priority users: privacy and offline. Very common need, made objective by unique-token facts
+    and a network-off run. Expected control difficulty: medium. Changes: citation requirement moved into
+    the prompt; facts are synthetic tokens; two PDF-only facts must pass; time limits added.'
+- id: q18
+  category: local_ai
+  kind: find_software
+  language: en
+  prompt: I run local models with Ollama on my Linux laptop and want to chat with them from the terminal
+    while letting the model use my MCP servers as tools, for example a filesystem server and a small stdio
+    server we wrote ourselves. Is there a free, open-source terminal client that connects a local model
+    to stdio MCP servers, with no cloud account and nothing sent off my machine?
+  constraints:
+    os: linux
+    arch: any
+    budget: free
+    must_run_locally: true
+    other:
+    - OSI-approved open-source license
+    - Terminal-based (CLI or TUI)
+    - Connects to a local Ollama instance (native API or OpenAI-compatible endpoint)
+    - Supports user-configured stdio MCP servers as tools
+    - No account or login
+    - No network traffic beyond localhost (telemetry absent or disableable)
+  current_software: null
+  pain_points:
+  - MCP-capable clients are mostly tied to a vendor account or cloud model
+  - Local chat front-ends are mostly web or desktop GUIs
+  - Wants the same MCP servers usable with a local model
+  success_checklist:
+  - '[L1] The client exists, has an OSI-approved license, and its docs show how to configure stdio MCP
+    servers and a local Ollama or OpenAI-compatible endpoint'
+  - '[L2] The install steps succeed verbatim in the dev image'
+  - '[L2] A pinned Ollama on localhost serves the frozen tool-calling fixture model (calibrated before
+    freeze: 3 of 3 correct tool calls through Ollama''s own API). The frozen stdio fixture MCP server
+    exposes get_project_code(name), which returns a unique token. Using the client''s documented non-interactive
+    mode, or a pty script that approves every tool prompt, the frozen request ''Use the get_project_code
+    tool to look up project alpha and tell me its code.'' produces a reply containing the token, and the
+    fixture server''s log shows the tools/call, in at least 2 of 3 runs, each within 10 minutes'
+  - '[L2] Egress check passes, after applying any telemetry-off setting the answer gives'
+  - '[L2] No login or account step at any point'
+  why_famous_may_not_fit: MCP client support arrived first in vendor-tied desktop apps and coding agents
+    that expect an account or a cloud model, and well-known local chat front-ends are mostly web or desktop
+    GUIs. This tests finding a terminal client and wiring the local model plus MCP config correctly (layer
+    2).
+  sandbox: linux_sandbox
+  rationale: 'New question; replaces the Messages-API translator, whose runners may already serve that
+    API natively (a duplicate of q20''s built-in pattern). Priority users: people who use several agents
+    and want local, account-free tooling. Expected control difficulty: medium. Cluster: local-model-client.'
+- id: q19
+  category: local_ai
+  kind: find_software
+  language: en
+  prompt: Our company bans sending source code to outside AI services, so the popular cloud coding assistants
+    are out. I want a free, open-source coding agent that runs in the terminal, can read and edit files
+    in my repo, and talks only to a model server we host ourselves through an OpenAI-compatible endpoint.
+    No vendor account or login, and no telemetry.
+  constraints:
+    os: any
+    arch: any
+    budget: free
+    must_run_locally: true
+    other:
+    - OSI-approved open-source license
+    - Terminal-based (CLI or TUI)
+    - Configurable custom OpenAI-compatible base URL
+    - Fully functional with no vendor account or login
+    - No telemetry, or telemetry can be turned off per the docs
+    - Can read and edit files in the working directory
+  current_software: null
+  pain_points:
+  - Company policy forbids sending code to external AI services
+  - Popular assistants require a vendor account and subscription
+  - Popular assistants cannot be pointed at a self-hosted model
+  success_checklist:
+  - '[L1] The agent exists, has an OSI-approved license, and its docs show how to set a custom OpenAI-compatible
+    base URL and how to turn off telemetry (or state there is none)'
+  - '[L2] The install steps succeed verbatim in the dev image'
+  - '[L2] A pinned local OpenAI-compatible server serves the frozen tool-calling fixture model (calibrated
+    before freeze: a reference harness calling its tool API directly completes the same task 3 of 3 times).
+    Configured as the answer describes and run in its documented non-interactive or auto-approve mode,
+    or through a pty script that approves every prompt, the agent is asked to create hello.py printing
+    a frozen string; the file exists and `python3 hello.py` prints it, in at least 2 of 3 runs, each within
+    15 minutes'
+  - '[L2] The local server''s log shows the agent''s requests, and the egress check passes after applying
+    the answer''s telemetry settings'
+  - '[L2] No login prompt at any point'
+  why_famous_may_not_fit: The best-known coding assistants and terminal agents are tied to a vendor account
+    and that vendor's cloud models. Several well-known open-source terminal agents accept a custom base
+    URL, so this is mainly a no-regression item; it also measures telemetry instead of trusting docs,
+    and it tests vendor neutrality, because the agent under test is itself a vendor's agent (disclosed
+    in the README).
+  sandbox: linux_sandbox
+  rationale: 'Priority users: people bound by privacy or company policy who use several agents. Expected
+    control difficulty: easy (no-regression subset). Cluster: local-model-client. Changes: ''no telemetry''
+    moved into the prompt; model calibrated before freeze; non-interactive mode allowed; 2-of-3 rule;
+    telemetry checked by egress logging.'
+- id: q20
+  category: local_ai
+  kind: builtin_enough
+  language: en
+  prompt: I run Ollama on my Ubuntu desktop. I have a Python script that only speaks the OpenAI API (it
+    uses the official openai package). What proxy or gateway should I install so the script can use my
+    local models instead of OpenAI's cloud?
+  constraints:
+    os: linux
+    arch: x86_64
+    budget: free
+    must_run_locally: true
+    other:
+    - Prefer no extra software beyond what is already installed
+    - The script must not send data to any cloud endpoint
+    - Only base_url, api_key and model may change in the script; equivalent environment variables are
+      acceptable
+  current_software: Ollama
+  pain_points:
+  - Script is hard-wired to the OpenAI client library
+  - Wants to keep all inference local
+  success_checklist:
+  - '[L3] The primary answer says no additional proxy or gateway is needed; a gateway may appear only
+    as an optional extra (for example, multi-provider routing)'
+  - '[L2] The base_url the answer gives resolves to the runner''s documented default host, port and OpenAI-compatible
+    path (localhost, 127.0.0.1 and trailing-slash variants accepted); configuring the same values through
+    OPENAI_BASE_URL and OPENAI_API_KEY is accepted'
+  - '[L2] In the dev image with a pinned Ollama and the frozen small model pulled, the frozen openai-package
+    script (run with OPENAI_API_KEY unset unless the answer sets it) returns a non-empty chat completion
+    after only the changes the answer gives'
+  - '[L2] With egress blocked (localhost allowed), the same call succeeds and the egress check passes'
+  why_famous_may_not_fit: Agents often reach for a general-purpose LLM gateway that unifies many providers.
+    That is an extra service to install and run, and this case does not need it because the runner already
+    serves an OpenAI-compatible API. This tests layer 3.
+  sandbox: linux_sandbox
+  rationale: 'The local_ai builtin_enough question: what is already installed is enough. Very common among
+    users of several AI tools, and fully checkable with a tiny model in a container. Expected control
+    difficulty: easy (no-regression subset). Cluster: local-openai-endpoint. Changes: environment variables
+    and base_url variants accepted; API key handling checked by running with the key unset; primary-answer
+    rule.'
