@@ -108,6 +108,9 @@ def main(argv: list[str] | None = None) -> int:
 
     _add_pipeline_commands(sub)
 
+    from pickfit.verify.cli import add_parser as add_verify_parser
+    add_verify_parser(sub)
+
     args = parser.parse_args(argv)
     if args.command is None:
         parser.print_help()
