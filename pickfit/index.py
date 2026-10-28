@@ -96,6 +96,20 @@ def _run_summary(run: VerificationRun) -> dict[str, Any]:
     }
 
 
+def works_offline(run: VerificationRun) -> bool | None:
+    """True when every passing smoke test also passed with the network off; None when none ran offline."""
+    checked = [t.offline for t in run.smoke_tests if t.passed and t.offline is not None]
+    return all(checked) if checked else None
+
+
+def _first_task_setup(run: VerificationRun, first_task: str | None) -> list[dict[str, Any]]:
+    """What the first task needs to run first (its input file, a server), from the run's smoke test."""
+    for test in run.smoke_tests:
+        if first_task and test.passed and test.command == first_task:
+            return [{"command": s.command, "background": s.background} for s in test.setup]
+    return []
+
+
 def _entry(record: SoftwareRecord) -> dict[str, Any]:
     runs = {run.id: run for run in record.verification.runs}
     install: dict[str, Any] = {}
@@ -110,6 +124,8 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
             "manual_steps": guide.manual_steps,
             "check": guide.check.model_dump() if guide.check else None,
             "first_task": guide.first_task,
+            "first_task_setup": _first_task_setup(run, guide.first_task),
+            "works_offline": works_offline(run),
             "pitfalls": [p.model_dump() for p in run.pitfalls],
             "run": _run_summary(run),
         }

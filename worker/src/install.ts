@@ -32,6 +32,8 @@ export interface InstallOutput {
     checked_at: string | null;
     tool_version: string | null;
     evidence_url: string | null;
+    /** true: its checks passed again with the network off after install; false: they needed it. */
+    works_offline: boolean | null;
   };
   applies_to_user_system: {
     match: 'exact' | 'same_os_other_arch' | 'other_os' | 'none';
@@ -47,6 +49,7 @@ export interface InstallOutput {
   manual_steps: { title: string; run_by: 'user' }[];
   verify: { command: string; expected_contains: string } | null;
   first_task: string | null;
+  first_task_setup: { command: string; run_in_background: boolean }[];
   known_issues: { readme_said: string; actually_needed: string }[];
   warnings: string[];
   sources: string[];
@@ -112,12 +115,14 @@ export function installGuide(catalog: Catalog, input: InstallInput): InstallOutp
       checked_at: run?.checked_at ?? null,
       tool_version: run?.tool_version ?? null,
       evidence_url: run?.evidence_url ?? null,
+      works_offline: guide?.works_offline ?? null,
     },
     applies_to_user_system: { match, note },
     steps,
     manual_steps: (guide?.manual_steps ?? []).map((title) => ({ title, run_by: 'user' as const })),
     verify: guide?.check ? { command: guide.check.command, expected_contains: guide.check.expected_signal } : null,
     first_task: guide?.first_task ?? null,
+    first_task_setup: (guide?.first_task_setup ?? []).map((s) => ({ command: s.command, run_in_background: s.background })),
     known_issues: guide?.pitfalls ?? [],
     warnings,
     sources: entry.sources,

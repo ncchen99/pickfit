@@ -40,6 +40,9 @@ def test_only_run_install_guides_are_indexed(data_dir: Path) -> None:
     assert {os: g["basis"] for os, g in runner.items()} == {"macos": "human", "linux": "replayed"}
     assert runner["linux"]["run"]["replayed"] is True
     assert runner["linux"]["run"]["evidence_url"].startswith("https://example.invalid/runs/")
+    assert runner["linux"]["works_offline"] is True and runner["macos"]["works_offline"] is None
+    assert runner["linux"]["first_task_setup"] == [{"command": "fixture-llm-runner pull tiny-test",
+                                                   "background": False}]
 
 
 def test_unlisted_records_are_skipped(data_dir: Path) -> None:
