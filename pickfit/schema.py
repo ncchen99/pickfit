@@ -128,6 +128,8 @@ USAGE_MIN_REPORTS = 3
 # Length limits shared by extracted claims and record fields.
 QUOTE_MAX = 300
 COMMAND_MAX = 500
+# A smoke test's setup may write a whole input file with a heredoc.
+SETUP_MAX = 4000
 
 # --- Constrained strings ----------------------------------------------------
 
@@ -458,12 +460,34 @@ class InstallByOS(_Model):
         return [(os, g) for os in type(self).model_fields if (g := getattr(self, os))]
 
 
+class SetupStep(_Model):
+    """A command a smoke test needs first: an input file, a server to query."""
+
+    command: str = Field(min_length=1, max_length=SETUP_MAX)
+    background: bool = Field(
+        default=False, description="Started detached and left running (a server)."
+    )
+    port: int | None = Field(
+        default=None, ge=1, le=65535, description="Port waited for when background."
+    )
+
+
 class SmokeTest(_Model):
     command: str = Field(min_length=1, max_length=COMMAND_MAX)
     expected_signal: str = Field(max_length=300)
     exit_code: int | None
     passed: bool
     observed_excerpt: str | None = Field(default=None, max_length=300)
+    setup: list[SetupStep] = Field(
+        default=[], description="Run first, in order, with the network on."
+    )
+    offline: bool | None = Field(
+        default=None,
+        description=(
+            "true: passed with the network off; false: passed only with it on "
+            "(needs the network); null: not run offline."
+        ),
+    )
 
 
 class Pitfall(_Model):
