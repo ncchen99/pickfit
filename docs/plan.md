@@ -77,14 +77,14 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 - [ ] P0.7 👤 Baseten：註冊並申請比賽 credits、建 key 放 `.env` 的 `BASETEN_API_KEY`、月預算 $20 開 enforce。核准後 agent 跑 `spikes/meta_baseten_hello.py`，確認 `meta-models/muse-spark-open-1026` 存在。
 - [ ] P0.8 👤 Meta Billing：送出 credits 表單、Spend Limit 通知設 $50 與 $100。
 
-**G0（今晚）**：json_schema 與 tool calling 能用就照計畫走。json_schema 不行 → 用 `finish` 工具＋pydantic 驗證；tool calling 不行 → 驗證 agent 改成「模型回 JSON 動作、程式執行」。兩者都不擋進度。
+**G0（今晚）：已通過**（P0.2、P0.3）。json_schema 與 tool calling 能用就照計畫走。json_schema 不行 → 用 `finish` 工具＋pydantic 驗證；tool calling 不行 → 驗證 agent 改成「模型回 JSON 動作、程式執行」。兩者都不擋進度。
 
 ### P1 骨架與評測凍結（10/28）
 
 - [x] P1.1 👤 **評測 20 題凍結**（10/28 17:06，commit `5ac62ca`）：草稿由 agent 在 10/28 新寫（不讀、不搬 `CLAUDE.local.md` 指向的賽前資料夾裡的評測草稿），念誠逐題審閱、修改並拍板，之後 commit `eval/questions.yaml` 與 `eval/README.md`（評分方式）。**這一步要在任何資料（`data/`、候選庫）寫入前完成。** 題目只寫需求與可檢查的條件，不寫預期答案。README 要照實寫明「草稿由 AI 起草、念誠審定」。
 - [x] P1.2 專案骨架：`pyproject.toml`（`uv`、Python 3.12）、`pickfit/` 套件與 `pickfit` CLI、`tests/`、`NOTICE`（第三方授權）、`.gitignore` 補 `runs/`。目錄約定見第 5 節。
-- [ ] P1.3 pydantic schema `software.v1` 當唯一來源，產生 Meta strict JSON schema 與 `schema/software.v1.json`。欄位照 arch J（brief 第 11 節）＋ `repo_id`、`aliases`、`first_seen_at`；`verification` 等級照 arch C.3；`scores.quality.components` 照 arch B.3 的 6 個分項。
-- [ ] P1.4 `call_meta` v0（`openai` SDK、`base_url` 可切 Meta／Baseten）：記帳（`usage` × 單價，寫進第 2 節的共用帳本）、trace JSONL 寫到 `runs/traces/`、開發模式快取、第 2 節的硬上限、429 退避、504 改用 streaming 重試。完成標準：`uv run pytest` 通過（用 fixture）；一次真的呼叫經過 `call_meta`，留下 trace 與花費。
+- [x] P1.3 pydantic schema `software.v1` 當唯一來源，產生 Meta strict JSON schema 與 `schema/software.v1.json`。欄位照 arch J（brief 第 11 節）＋ `repo_id`、`aliases`、`first_seen_at`；`verification` 等級照 arch C.3；`scores.quality.components` 照 arch B.3 的 6 個分項。
+- [x] P1.4 `call_meta` v0（`openai` SDK、`base_url` 可切 Meta／Baseten）：記帳（`usage` × 單價，寫進第 2 節的共用帳本）、trace JSONL 寫到 `runs/traces/`、開發模式快取、第 2 節的硬上限、429 退避、504 改用 streaming 重試。完成標準：`uv run pytest` 通過（用 fixture）；一次真的呼叫經過 `call_meta`，留下 trace 與花費。
 
 ### P2 發現與抽取（10/29）
 
@@ -205,3 +205,6 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | 10/28 17:35 | P0.5 | hello MCP 部署到 workers.dev，9 項協定檢查通過；Claude Code 無頭模式（`--strict-mcp-config`）實連成功；測完已移除。桌面 app 裡直接跑 `claude` 會失敗，要用 `env -i` | Anthropic $0.002 |
 | 10/28 17:40 | P0.6 | Modal gVisor：16.4 秒可用、安裝 5 秒、斷網 smoke test 通過 | Modal 約 $0.01 |
 | 10/28 17:45 | P1.2 | 專案骨架（`46d5ea7`） | — |
+| 10/28 19:10 | P1.3 | `software.v1` schema 與 Meta strict 版（`6025851`）。實測：Meta 接受 11.7K 字元的抽取 schema，輸出過 pydantic，每欄附原文引用、不知道的填 null | Meta $0.0004 |
+| 10/28 19:10 | P1.4 | `call_meta`＋共用帳本＋trace＋快取（`b0abe6c`）、`pickfit ping`／`spend`（`f18c7f0`）。122 個測試通過；實測第二次相同請求從快取回、$0；trace 裡沒有金鑰 | Meta <$0.001 |
+| 10/28 19:10 | — | **下一步**：P2 交給**沒讀過 `eval/` 的新 session**（本 session 看過題目）；P3.1–P3.2、P4.2–P4.4 可以同時各開一個 session（第 5 節） | 今日合計：Meta 約 $0.01、Anthropic $0.002、Modal 約 $0.01 |
