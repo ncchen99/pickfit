@@ -66,18 +66,29 @@
       "first_task": "mi-lsp init . --name myapp"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-mi-lsp-20261029-013109-7303",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install-agent.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && cat /tmp/install.sh",
+          "purpose": "Download install.sh"
+        },
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/validate-worker-manifest.js && ls -l /tmp/install.sh /tmp/validate-worker-manifest.js",
+          "purpose": "Download worker-manifest validator beside installer"
+        },
+        {
+          "command": "sh /tmp/install.sh --skip-worker-install 2>&1",
+          "purpose": "Install CLI with --skip-worker-install"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "mi-lsp init . --name myapp"
+      "check": {
+        "command": "mi-lsp version --format toon",
+        "expected_signal": "version: 0.16.2"
+      },
+      "first_task": "mi-lsp version --format toon"
     },
     "windows": {
       "basis": "readme_claim",
@@ -107,10 +118,142 @@
     "url": "https://github.com/fgpaz/mi-lsp/releases/tag/v0.16.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T01:36:01.717392+08:00",
+    "runs": [
+      {
+        "id": "verify-mi-lsp-20261029-013109-7303",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:36:01.717392+08:00",
+        "tool_version": "0.16.2",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && cat /tmp/install.sh",
+            "purpose": "Download install.sh"
+          },
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/validate-worker-manifest.js && ls -l /tmp/install.sh /tmp/validate-worker-manifest.js",
+            "purpose": "Download worker-manifest validator beside installer"
+          },
+          {
+            "command": "sh /tmp/install.sh --skip-worker-install 2>&1",
+            "purpose": "Install CLI with --skip-worker-install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mi-lsp version --format toon",
+            "expected_signal": "version: 0.16.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "version: 0.16.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mi-lsp --help",
+            "expected_signal": "Manage workspace aliases and warm state",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "workspace Manage workspace aliases and warm state",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mi-lsp init ./myapp --name myapp --format toon",
+            "expected_signal": "backend: init",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "backend: init",
+            "setup": [
+              {
+                "command": "mkdir -p myapp/src && printf '# myapp\\n\\nDemo workspace for mi-lsp smoke test.\\n' > myapp/README.md && printf 'def start_daemon():\\n    \"\"\"Start the background daemon.\"\"\"\\n    print(\"daemon starting\")\\n' > myapp/src/daemon.py && printf 'def billing_retry():\\n    pass\\n' > myapp/src/billing.py && ls -R myapp",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mi-lsp workspace which --format toon",
+            "expected_signal": "workspace: myapp",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "workspace: myapp",
+            "setup": [
+              {
+                "command": "mkdir -p myapp/src && printf '# myapp\\n\\nDemo workspace for mi-lsp smoke test.\\n' > myapp/README.md && printf 'def start_daemon():\\n    \"\"\"Start the background daemon.\"\"\"\\n    print(\"daemon starting\")\\n' > myapp/src/daemon.py && printf 'def billing_retry():\\n    pass\\n' > myapp/src/billing.py && ls -R myapp",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mi-lsp init ./myapp --name myapp --format toon",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mi-lsp nav intent \"how does the daemon start\" --workspace myapp --format toon",
+            "expected_signal": "backend: intent",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "backend: intent",
+            "setup": [
+              {
+                "command": "mkdir -p myapp/src && printf '# myapp\\n\\nDemo workspace for mi-lsp smoke test.\\n' > myapp/README.md && printf 'def start_daemon():\\n    \"\"\"Start the background daemon.\"\"\"\\n    print(\"daemon starting\")\\n' > myapp/src/daemon.py && printf 'def billing_retry():\\n    pass\\n' > myapp/src/billing.py && ls -R myapp",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mi-lsp init ./myapp --name myapp --format toon",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL .../install-agent.sh | sh",
+            "actually_needed": "Also download validate-worker-manifest.js next to install.sh; install-agent.sh fetched alone fails with 'Cannot find module /tmp/validate-worker-manifest.js'"
+          },
+          {
+            "readme_said": "curl -fsSL .../install.sh | sh",
+            "actually_needed": "Run as 'sh /tmp/install.sh --skip-worker-install'; default run fails at 'mi-lsp worker install' with 'staged worker did not pass protocol verification' and rolls back, and 'worker status' reports bundled worker 'permission denied' and 'dotnet is not available'"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.16.2 with ok:true, init creating workspace myapp with ok:true, and help listing workspace management.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mi-lsp-20261029-013109-7303/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mi-lsp-20261029-013109-7303/check-1-cmd8.judged.png",
+            "runs/verify/verify-mi-lsp-20261029-013109-7303/check-2-cmd12.judged.png",
+            "runs/verify/verify-mi-lsp-20261029-013109-7303/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.101623
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -337,5 +480,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-28T23:56:48+08:00"
+  "updated_at": "2026-10-29T01:36:01.718631+08:00"
 }
