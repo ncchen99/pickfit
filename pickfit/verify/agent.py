@@ -542,9 +542,10 @@ class VerifyAgent:
                     pending.append(_user(f"Stop working: {wrap_up}. Call finish now with what the outputs "
                                          "so far show. No more commands."))
             turn += 1
+            # prompt_cache_key keeps one run's growing history on the same prefix cache (a hint).
             body: dict[str, Any] = {"instructions": self.instructions,
                                     "tools": [FINISH_TOOL] if wrap_up else TOOLS,
-                                    "reasoning": {"summary": "auto"}}
+                                    "reasoning": {"summary": "auto"}, "prompt_cache_key": self.run_id}
             if self.mode == "chain":
                 body["input"] = pending
                 if previous_id:
