@@ -1,0 +1,1658 @@
+{
+  "$defs": {
+    "Arch": {
+      "enum": [
+        "x86_64",
+        "arm64"
+      ],
+      "type": "string"
+    },
+    "Audience": {
+      "enum": [
+        "end_user",
+        "import_only"
+      ],
+      "type": "string"
+    },
+    "CapReason": {
+      "enum": [
+        "archived",
+        "verification_failed",
+        "not_a_tool",
+        "unverified"
+      ],
+      "type": "string"
+    },
+    "Category": {
+      "enum": [
+        "dev_cli",
+        "local_ai",
+        "other"
+      ],
+      "type": "string"
+    },
+    "Check": {
+      "additionalProperties": false,
+      "description": "A command that shows the install works, and the text it should print.",
+      "properties": {
+        "command": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "expected_signal": {
+          "maxLength": 300,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "command",
+        "expected_signal"
+      ],
+      "title": "Check",
+      "type": "object"
+    },
+    "EvidenceMethod": {
+      "enum": [
+        "api",
+        "model",
+        "sandbox",
+        "rule",
+        "human"
+      ],
+      "type": "string"
+    },
+    "FieldEvidence": {
+      "additionalProperties": false,
+      "description": "Where one field's value came from.",
+      "properties": {
+        "checked_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "field": {
+          "description": "JSON Pointer, e.g. /license.",
+          "pattern": "^(?:/[^/]+)+$",
+          "type": "string"
+        },
+        "method": {
+          "$ref": "#/$defs/EvidenceMethod"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Model id when method is 'model'."
+        },
+        "quote": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Verbatim quote; null for API values and sandbox results."
+        },
+        "source_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "source_id",
+        "quote",
+        "method",
+        "checked_at"
+      ],
+      "title": "FieldEvidence",
+      "type": "object"
+    },
+    "HttpsUrl": {
+      "maxLength": 2048,
+      "pattern": "^https://[^\\s/?#]+[^\\s]*$",
+      "type": "string"
+    },
+    "InstallByOS": {
+      "additionalProperties": false,
+      "properties": {
+        "linux": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InstallGuide"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "macos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InstallGuide"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "windows": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InstallGuide"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "InstallByOS",
+      "type": "object"
+    },
+    "InstallGuide": {
+      "additionalProperties": false,
+      "description": "Install steps for one OS, as get_install_guide returns them.\n\nbasis says where the steps come from: replayed (passed a fresh-sandbox\nreplay), human (done by hand on a real machine), or readme_claim (written\nin the README, never run; must not be presented as verified).",
+      "properties": {
+        "basis": {
+          "enum": [
+            "replayed",
+            "human",
+            "readme_claim"
+          ],
+          "type": "string"
+        },
+        "check": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Check"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "first_task": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "First useful command after install."
+        },
+        "manual_steps": {
+          "default": [],
+          "description": "Steps only the user can do, e.g. grant a permission.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "method": {
+          "$ref": "#/$defs/InstallMethod"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RunId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "verification.runs[].id behind these steps."
+        },
+        "steps": {
+          "description": "Steps an agent can run.",
+          "items": {
+            "$ref": "#/$defs/InstallStep"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "basis",
+        "run_id",
+        "method",
+        "steps"
+      ],
+      "title": "InstallGuide",
+      "type": "object"
+    },
+    "InstallMethod": {
+      "enum": [
+        "brew",
+        "cargo",
+        "pip",
+        "pipx",
+        "uv",
+        "npm",
+        "go",
+        "binary",
+        "docker",
+        "script",
+        "source",
+        "other"
+      ],
+      "type": "string"
+    },
+    "InstallStep": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "purpose": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "title": "InstallStep",
+      "type": "object"
+    },
+    "Judge": {
+      "additionalProperties": false,
+      "description": "Separate model call that reads the screenshot and log.",
+      "properties": {
+        "model": {
+          "type": "string"
+        },
+        "observed": {
+          "maxLength": 300,
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "working",
+            "error_visible",
+            "inconclusive"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "verdict",
+        "observed",
+        "model"
+      ],
+      "title": "Judge",
+      "type": "object"
+    },
+    "Kind": {
+      "enum": [
+        "cli_tool",
+        "tui",
+        "desktop_app",
+        "self_hosted_web_app",
+        "server_daemon",
+        "mcp_server_or_agent_plugin",
+        "browser_extension",
+        "library_sdk",
+        "framework",
+        "model_or_dataset",
+        "benchmark_or_research",
+        "demo_prototype",
+        "tutorial_course",
+        "homework",
+        "template_starter",
+        "curated_list",
+        "dotfiles_config",
+        "other"
+      ],
+      "type": "string"
+    },
+    "Maturity": {
+      "enum": [
+        "stable",
+        "beta",
+        "alpha",
+        "prototype"
+      ],
+      "type": "string"
+    },
+    "Need": {
+      "enum": [
+        "required",
+        "optional",
+        "none"
+      ],
+      "type": "string"
+    },
+    "OS": {
+      "enum": [
+        "macos",
+        "linux",
+        "windows"
+      ],
+      "type": "string"
+    },
+    "Outcomes": {
+      "additionalProperties": false,
+      "description": "Usage outcomes synced from D1, by reporter. Only external reports count in scores.",
+      "properties": {
+        "demo": {
+          "$ref": "#/$defs/StageCounts"
+        },
+        "dev": {
+          "$ref": "#/$defs/StageCounts"
+        },
+        "eval": {
+          "$ref": "#/$defs/StageCounts"
+        },
+        "external": {
+          "$ref": "#/$defs/StageCounts"
+        },
+        "last_report_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "replaced_by": {
+          "additionalProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "description": "External reports: replacement slug or name -> count.",
+          "type": "object"
+        },
+        "synced_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "Outcomes",
+      "type": "object"
+    },
+    "Pitfall": {
+      "additionalProperties": false,
+      "description": "A difference between the README and what actually worked.",
+      "properties": {
+        "actually_needed": {
+          "maxLength": 300,
+          "minLength": 1,
+          "type": "string"
+        },
+        "readme_said": {
+          "maxLength": 300,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "readme_said",
+        "actually_needed"
+      ],
+      "title": "Pitfall",
+      "type": "object"
+    },
+    "Popularity": {
+      "additionalProperties": false,
+      "properties": {
+        "age_days": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Repo age; velocity applies from 90 days."
+        },
+        "score": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "signals": {
+          "$ref": "#/$defs/PopularitySignals"
+        }
+      },
+      "required": [
+        "score",
+        "signals",
+        "age_days"
+      ],
+      "title": "Popularity",
+      "type": "object"
+    },
+    "PopularitySignals": {
+      "additionalProperties": false,
+      "description": "The seven popularity signals of B.3; null when not collected.",
+      "properties": {
+        "dependents": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "forks": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hn_top_score": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "monthly_downloads": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "registries_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "release_downloads": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stars": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "stars",
+        "monthly_downloads",
+        "forks",
+        "dependents",
+        "release_downloads",
+        "hn_top_score",
+        "registries_count"
+      ],
+      "title": "PopularitySignals",
+      "type": "object"
+    },
+    "Prerequisites": {
+      "additionalProperties": false,
+      "properties": {
+        "api_keys": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "apple_silicon_only": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "gpu": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Need"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "min_ram_gb": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "network": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Need"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "runtimes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "system_packages": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "title": "Prerequisites",
+      "type": "object"
+    },
+    "Pricing": {
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PricingModel"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "model"
+      ],
+      "title": "Pricing",
+      "type": "object"
+    },
+    "PricingModel": {
+      "enum": [
+        "free",
+        "freemium",
+        "paid"
+      ],
+      "type": "string"
+    },
+    "Processing": {
+      "enum": [
+        "local",
+        "cloud",
+        "hybrid"
+      ],
+      "type": "string"
+    },
+    "Quality": {
+      "additionalProperties": false,
+      "properties": {
+        "cap": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "QUALITY_CAPS[cap_reason]; the lowest cap that applies."
+        },
+        "cap_reason": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CapReason"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "binding_cap() of the record."
+        },
+        "components": {
+          "$ref": "#/$defs/QualityComponents"
+        },
+        "confidence": {
+          "description": "Share of weight that had data.",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "total": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "total",
+        "confidence",
+        "cap",
+        "cap_reason",
+        "components"
+      ],
+      "title": "Quality",
+      "type": "object"
+    },
+    "QualityComponent": {
+      "additionalProperties": false,
+      "properties": {
+        "score": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "0-1; null when data is missing (dropped from the denominator)."
+        },
+        "weight": {
+          "description": "Weight applied under formula_version.",
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "score",
+        "weight"
+      ],
+      "title": "QualityComponent",
+      "type": "object"
+    },
+    "QualityComponents": {
+      "additionalProperties": false,
+      "description": "The six quality components of B.3 (nominal weights 35/20/15/10/10/10+).",
+      "properties": {
+        "engineering_hygiene": {
+          "$ref": "#/$defs/QualityComponent"
+        },
+        "install_docs": {
+          "$ref": "#/$defs/QualityComponent"
+        },
+        "maintenance": {
+          "$ref": "#/$defs/QualityComponent"
+        },
+        "responsiveness": {
+          "$ref": "#/$defs/QualityComponent"
+        },
+        "sandbox_verification": {
+          "$ref": "#/$defs/QualityComponent"
+        },
+        "usage_outcomes": {
+          "$ref": "#/$defs/QualityComponent",
+          "description": "Only external reports count. <3 reports: weight 10, score null (dropped from the denominator); 3-9: 10; 10-29: 20; >=30: 30 (usage_outcomes_weight)."
+        }
+      },
+      "required": [
+        "sandbox_verification",
+        "install_docs",
+        "maintenance",
+        "engineering_hygiene",
+        "responsiveness",
+        "usage_outcomes"
+      ],
+      "title": "QualityComponents",
+      "type": "object"
+    },
+    "RelPath": {
+      "maxLength": 300,
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.-]*(?:/[A-Za-z0-9_][A-Za-z0-9_.-]*)*$",
+      "type": "string"
+    },
+    "Release": {
+      "additionalProperties": false,
+      "description": "Latest release from the host API.",
+      "properties": {
+        "published_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "tag": {
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HttpsUrl"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "tag",
+        "published_at",
+        "url"
+      ],
+      "title": "Release",
+      "type": "object"
+    },
+    "Repo": {
+      "additionalProperties": false,
+      "description": "Repository facts from the host API.",
+      "properties": {
+        "archived": {
+          "type": "boolean"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "full_name": {
+          "description": "owner/name as the host reports it now.",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+          "type": "string"
+        },
+        "url": {
+          "$ref": "#/$defs/HttpsUrl"
+        }
+      },
+      "required": [
+        "url",
+        "full_name",
+        "created_at",
+        "archived"
+      ],
+      "title": "Repo",
+      "type": "object"
+    },
+    "RepoId": {
+      "pattern": "^gh:[1-9][0-9]*$",
+      "type": "string"
+    },
+    "RunEvidence": {
+      "additionalProperties": false,
+      "description": "Where to see the proof. Screenshots are redrawn from terminal output.",
+      "properties": {
+        "evidence_url": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HttpsUrl"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Public run page or trace JSON (MCP evidence_url)."
+        },
+        "log_path": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RelPath"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "screenshot_paths": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/RelPath"
+          },
+          "type": "array"
+        },
+        "trace_path": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RelPath"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "trace_path"
+      ],
+      "title": "RunEvidence",
+      "type": "object"
+    },
+    "RunId": {
+      "maxLength": 80,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "type": "string"
+    },
+    "Scores": {
+      "additionalProperties": false,
+      "properties": {
+        "computed_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "formula_version": {
+          "maxLength": 40,
+          "minLength": 1,
+          "type": "string"
+        },
+        "popularity": {
+          "$ref": "#/$defs/Popularity"
+        },
+        "quality": {
+          "$ref": "#/$defs/Quality"
+        },
+        "treasure": {
+          "$ref": "#/$defs/Treasure"
+        }
+      },
+      "required": [
+        "formula_version",
+        "computed_at",
+        "quality",
+        "popularity",
+        "treasure"
+      ],
+      "title": "Scores",
+      "type": "object"
+    },
+    "Slug": {
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "type": "string"
+    },
+    "SmokeTest": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "exit_code": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expected_signal": {
+          "maxLength": 300,
+          "type": "string"
+        },
+        "observed_excerpt": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "passed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "command",
+        "expected_signal",
+        "exit_code",
+        "passed"
+      ],
+      "title": "SmokeTest",
+      "type": "object"
+    },
+    "Source": {
+      "additionalProperties": false,
+      "properties": {
+        "fetched_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "id": {
+          "description": "e.g. readme, release:<tag>.",
+          "maxLength": 200,
+          "pattern": "^\\S+$",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/SourceKind"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HttpsUrl"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "url",
+        "fetched_at"
+      ],
+      "title": "Source",
+      "type": "object"
+    },
+    "SourceKind": {
+      "enum": [
+        "github_api",
+        "readme",
+        "release",
+        "manifest",
+        "package_registry",
+        "hn",
+        "submission",
+        "sandbox",
+        "human"
+      ],
+      "type": "string"
+    },
+    "StageCounts": {
+      "additionalProperties": false,
+      "description": "report_outcome counts per stage.",
+      "properties": {
+        "abandoned": {
+          "default": 0,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "first_run_failed": {
+          "default": 0,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "first_run_ok": {
+          "default": 0,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "install_failed": {
+          "default": 0,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "installed": {
+          "default": 0,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "replaced": {
+          "default": 0,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "still_using": {
+          "default": 0,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "title": "StageCounts",
+      "type": "object"
+    },
+    "Tag": {
+      "pattern": "^[a-z0-9][a-z0-9+.-]{0,30}$",
+      "type": "string"
+    },
+    "Treasure": {
+      "additionalProperties": false,
+      "properties": {
+        "is_treasure": {
+          "description": "Tool, verified, not archived, quality >= 70 and popularity <= 45.",
+          "type": "boolean"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "T = quality * (1 - popularity/100); null when either is null."
+        }
+      },
+      "required": [
+        "is_treasure",
+        "value"
+      ],
+      "title": "Treasure",
+      "type": "object"
+    },
+    "UnverifiedReason": {
+      "enum": [
+        "not_run",
+        "needs_gpu",
+        "apple_silicon_only",
+        "macos_only",
+        "windows_only",
+        "gui_only",
+        "needs_account",
+        "model_too_large",
+        "budget_exceeded",
+        "other"
+      ],
+      "type": "string"
+    },
+    "Verification": {
+      "additionalProperties": false,
+      "description": "Summary over runs; keeps only the latest run per OS, arch and method.\n\nOlder runs live in git history, so a newer failure replaces an older pass.",
+      "properties": {
+        "checked_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Latest run time; null when no runs."
+        },
+        "level": {
+          "$ref": "#/$defs/VerificationLevel",
+          "description": "best_level(runs); unverified when no runs."
+        },
+        "runs": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/VerificationRun"
+          },
+          "type": "array"
+        },
+        "unverified_reason": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UnverifiedReason"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "level",
+        "checked_at"
+      ],
+      "title": "Verification",
+      "type": "object"
+    },
+    "VerificationLevel": {
+      "enum": [
+        "inference",
+        "service",
+        "function",
+        "install",
+        "unverified",
+        "failed"
+      ],
+      "type": "string"
+    },
+    "VerificationRun": {
+      "additionalProperties": false,
+      "description": "One verification attempt on one OS (C.3).",
+      "properties": {
+        "actor_model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "arch": {
+          "$ref": "#/$defs/Arch"
+        },
+        "blocking_error": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "checked_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "cost_usd": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "evidence": {
+          "$ref": "#/$defs/RunEvidence"
+        },
+        "id": {
+          "$ref": "#/$defs/RunId"
+        },
+        "image": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "install_method": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InstallMethod"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "judge": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Judge"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "level": {
+          "$ref": "#/$defs/VerificationLevel"
+        },
+        "method": {
+          "enum": [
+            "sandbox",
+            "human"
+          ],
+          "type": "string"
+        },
+        "os": {
+          "$ref": "#/$defs/OS"
+        },
+        "pitfalls": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Pitfall"
+          },
+          "type": "array"
+        },
+        "replayed": {
+          "description": "A fresh sandbox replayed the steps and passed.",
+          "type": "boolean"
+        },
+        "runner": {
+          "anyOf": [
+            {
+              "maxLength": 60,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "e.g. modal-gvisor, docker-runc, mac-m5."
+        },
+        "smoke_tests": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/SmokeTest"
+          },
+          "type": "array"
+        },
+        "steps": {
+          "description": "The successful path, in order.",
+          "items": {
+            "$ref": "#/$defs/InstallStep"
+          },
+          "type": "array"
+        },
+        "tool_version": {
+          "anyOf": [
+            {
+              "maxLength": 60,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "unverified_reason": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UnverifiedReason"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "id",
+        "level",
+        "os",
+        "arch",
+        "method",
+        "checked_at",
+        "replayed",
+        "steps",
+        "evidence"
+      ],
+      "title": "VerificationRun",
+      "type": "object"
+    },
+    "WebUrl": {
+      "maxLength": 2048,
+      "pattern": "^https?://[^\\s/?#]+[^\\s]*$",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "One software entry: the canonical file data/software/<slug>.json (software.v1).",
+  "properties": {
+    "aliases": {
+      "default": [],
+      "description": "Earlier names or owner/name pairs.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "alternatives_to": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "audience": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Audience"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "category": {
+      "$ref": "#/$defs/Category"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/FieldEvidence"
+      },
+      "type": "array"
+    },
+    "first_seen_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "homepage": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/WebUrl"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "install": {
+      "$ref": "#/$defs/InstallByOS"
+    },
+    "kind": {
+      "$ref": "#/$defs/Kind"
+    },
+    "last_release": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Release"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "license": {
+      "anyOf": [
+        {
+          "maxLength": 100,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "SPDX id from the host API; null when unknown or NOASSERTION."
+    },
+    "maturity": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Maturity"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "name": {
+      "maxLength": 100,
+      "minLength": 1,
+      "type": "string"
+    },
+    "open_source": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "outcomes": {
+      "$ref": "#/$defs/Outcomes"
+    },
+    "platforms": {
+      "description": "Platforms the sources claim; tested results live in install and verification.",
+      "items": {
+        "$ref": "#/$defs/OS"
+      },
+      "type": "array"
+    },
+    "prerequisites": {
+      "$ref": "#/$defs/Prerequisites"
+    },
+    "pricing": {
+      "$ref": "#/$defs/Pricing"
+    },
+    "processing": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Processing"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "repo": {
+      "$ref": "#/$defs/Repo"
+    },
+    "repo_id": {
+      "$ref": "#/$defs/RepoId",
+      "description": "Primary key: 'gh:' + GitHub numeric repository id."
+    },
+    "schema_version": {
+      "const": "software.v1",
+      "default": "software.v1",
+      "type": "string"
+    },
+    "scores": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Scores"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "slug": {
+      "$ref": "#/$defs/Slug",
+      "description": "Never changes; also the file name. Renames go to aliases."
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/Source"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "status": {
+      "description": "Only listed entries are recommended.",
+      "enum": [
+        "listed",
+        "hidden",
+        "removed"
+      ],
+      "type": "string"
+    },
+    "status_reason": {
+      "anyOf": [
+        {
+          "maxLength": 200,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "summary": {
+      "maxLength": 200,
+      "minLength": 1,
+      "type": "string"
+    },
+    "tags": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Tag"
+      },
+      "type": "array"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "use_cases": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "verification": {
+      "$ref": "#/$defs/Verification"
+    },
+    "why_worth_it": {
+      "anyOf": [
+        {
+          "maxLength": 200,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "slug",
+    "repo_id",
+    "name",
+    "summary",
+    "status",
+    "category",
+    "kind",
+    "audience",
+    "maturity",
+    "homepage",
+    "repo",
+    "platforms",
+    "prerequisites",
+    "pricing",
+    "open_source",
+    "license",
+    "processing",
+    "last_release",
+    "verification",
+    "sources",
+    "evidence",
+    "first_seen_at",
+    "updated_at"
+  ],
+  "title": "SoftwareRecord",
+  "type": "object"
+}
