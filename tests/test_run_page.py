@@ -86,6 +86,7 @@ def test_page_walks_through_agent_replay_judge_and_calls(tmp_path: Path) -> None
     assert "Fails: Check version" in page and "exit 2" in page and "rule · flag_unsupported" in page
     assert "&lt;script&gt;alert(1)" in page and "<script>alert(1)" not in page
     assert "Trying the README&#x27;s install." in page and "claimed level" in page
+    assert "{table}" not in page and "<td>tinyq -v</td><td>tinyq --version</td>" in page
     assert "Replay in a fresh box, network off" in page and "works offline" in page
     assert 'class="ebox" style="left:3.0%;top:10.0%;width:50.0%;height:20.0%"' in page
     assert "data:image/png;base64," in page  # the screenshot is inlined from the run directory

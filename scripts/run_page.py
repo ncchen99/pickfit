@@ -284,7 +284,7 @@ def _finish(args: dict[str, Any]) -> str:
     return (f'<div class="finish"><div>claimed level {level_badge(args.get("level"))} · install method '
             f'<code>{e(args.get("install_method"))}</code></div>'
             f'<div class="muted small">cites install steps [{e(steps)}] and checks [{e(smoke)}] by command_id; '
-            'the program checks each against the command log</div>{table}</div>')
+            f'the program checks each against the command log</div>{table}</div>')
 
 
 def verdict_section(report: dict[str, Any]) -> str:
