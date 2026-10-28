@@ -9,8 +9,9 @@ the replay ran them; the model's own words only survive as pitfalls and the
 tool version, and the version only if some output printed it.
 
 write_back() updates data/software/<slug>.json only for a passed, replayed run:
-the run replaces the earlier run on the same OS, arch and method, and the
-Linux install guide becomes the replayed steps.
+the run replaces the earlier run on the same OS, arch and method, the
+Linux install guide becomes the replayed steps, and existing scores are
+refreshed for the new runs (refresh_scores, no model call).
 """
 
 from __future__ import annotations
@@ -20,8 +21,6 @@ import os
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
-
-from pydantic import ValidationError
 
 from pickfit.env import REPO_ROOT
 from pickfit.ledger import taipei_now
@@ -42,6 +41,7 @@ from pickfit.schema import (
     best_level,
     is_passed,
 )
+from pickfit.score import refresh_scores
 from pickfit.verify.verdict import split_last, weaker
 
 if TYPE_CHECKING:
@@ -271,16 +271,12 @@ def write_back(run: VerificationRun, slug: str, data_dir: Path = DATA_DIR) -> tu
     data: dict[str, Any] = record.model_dump(mode="json")
     data["verification"] = verification.model_dump(mode="json")
     data["install"] = {**data["install"], run.os: install_guide(run).model_dump(mode="json")}
-    data["updated_at"] = taipei_now().isoformat()
-    note = "written"
-    try:
-        updated = SoftwareRecord.model_validate(data)
-    except ValidationError as err:
-        if data.get("scores") is None or "scores" not in str(err):
-            raise
-        data["scores"] = None  # quality caps follow the verification level: rescore later
-        updated = SoftwareRecord.model_validate(data)
-        note = "written; scores cleared because the verification level changed"
+    now = taipei_now()
+    data["updated_at"] = now.isoformat()
+    # The sandbox component and the quality cap follow the runs: recompute them, no model call.
+    scores_note = refresh_scores(data, now)
+    updated = SoftwareRecord.model_validate(data)
+    note = f"written; {scores_note}" if scores_note else "written"
     tmp = path.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(updated.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n",
                    encoding="utf-8")

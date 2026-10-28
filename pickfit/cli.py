@@ -120,6 +120,27 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     f.set_defaults(func=_funnel)
 
 
+# --- scoring (P5.1) ---------------------------------------------------------------
+
+
+def _add_score_command(sub: argparse._SubParsersAction) -> None:
+    from pickfit.score import DEFAULT_CONCURRENCY, main_score
+
+    s = sub.add_parser("score", help="quality, popularity and treasure scores for data/software (rubric call is paid)")
+    s.add_argument("--slug", action="append", help="score only this record (repeatable; default all)")
+    s.add_argument("--limit", type=int, default=None, help="score at most N records (in slug order)")
+    s.add_argument("--data-dir", default=None, help="records to score (default data/software)")
+    s.add_argument("--db", default=None, help="pipeline database with the GitHub snapshots (default runs/pipeline.db)")
+    s.add_argument("--model", default="prod", help='rubric model: "prod" (default), "dev" or a model id')
+    s.add_argument("--force", action="store_true", help="grade the README again even if it has not changed")
+    s.add_argument("--no-github", action="store_true",
+                   help="no GitHub calls: skip responsiveness and live snapshots for repos not in --db")
+    s.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY, help="records at once")
+    s.add_argument("--dry-run", action="store_true", help="compute and print; write nothing")
+    s.add_argument("--verbose", action="store_true", help="print every record's scores")
+    s.set_defaults(func=main_score)
+
+
 # --- publish (P4.2) ---------------------------------------------------------------
 
 
@@ -157,6 +178,7 @@ def main(argv: list[str] | None = None) -> int:
     s.set_defaults(func=_spend)
 
     _add_pipeline_commands(sub)
+    _add_score_command(sub)
     _add_publish_command(sub)
 
     from pickfit.verify.cli import add_parser as add_verify_parser

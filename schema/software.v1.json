@@ -53,6 +53,93 @@
       "title": "Check",
       "type": "object"
     },
+    "DocsRubric": {
+      "additionalProperties": false,
+      "description": "The model's rubric answer behind install_docs, kept so scores can be refreshed without a call.",
+      "properties": {
+        "checked_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "items": {
+          "$ref": "#/$defs/DocsRubricItems"
+        },
+        "model": {
+          "type": "string"
+        },
+        "sources_sha": {
+          "description": "sha256 of the rendered sources the model read.",
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "unquoted": {
+          "default": [],
+          "description": "Items set to 0 because their quote is not in the sources.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "model",
+        "checked_at",
+        "sources_sha",
+        "items"
+      ],
+      "title": "DocsRubric",
+      "type": "object"
+    },
+    "DocsRubricItems": {
+      "additionalProperties": false,
+      "description": "The eight documentation items of B.3's install_docs component, graded from the sources only.",
+      "properties": {
+        "config_and_keys": {
+          "$ref": "#/$defs/RubricItem",
+          "description": "Configuration, environment variables and API keys, or that none are needed."
+        },
+        "first_run_example": {
+          "$ref": "#/$defs/RubricItem",
+          "description": "A first command or example to run after install, with the output to expect."
+        },
+        "install_per_os": {
+          "$ref": "#/$defs/RubricItem",
+          "description": "Copy-paste install commands for each platform it supports."
+        },
+        "license_and_platforms": {
+          "$ref": "#/$defs/RubricItem",
+          "description": "The license and the platforms it runs on, as the sources name them."
+        },
+        "prerequisites": {
+          "$ref": "#/$defs/RubricItem",
+          "description": "What must exist first (runtimes, OS packages, hardware, accounts), or that nothing does."
+        },
+        "troubleshooting_uninstall": {
+          "$ref": "#/$defs/RubricItem",
+          "description": "Common problems or an FAQ, and how to update or uninstall."
+        },
+        "what_it_does": {
+          "$ref": "#/$defs/RubricItem",
+          "description": "What the software does and its main features."
+        },
+        "who_it_is_for": {
+          "$ref": "#/$defs/RubricItem",
+          "description": "Who it is for, or the jobs it suits."
+        }
+      },
+      "required": [
+        "what_it_does",
+        "who_it_is_for",
+        "prerequisites",
+        "install_per_os",
+        "first_run_example",
+        "config_and_keys",
+        "troubleshooting_uninstall",
+        "license_and_platforms"
+      ],
+      "title": "DocsRubricItems",
+      "type": "object"
+    },
     "EvidenceMethod": {
       "enum": [
         "api",
@@ -887,6 +974,38 @@
       "pattern": "^gh:[1-9][0-9]*$",
       "type": "string"
     },
+    "RubricItem": {
+      "additionalProperties": false,
+      "properties": {
+        "quote": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "For 1 or 2: a snippet (<=200 chars) copied verbatim from one source that shows the item; null for 0."
+        },
+        "score": {
+          "description": "0: missing; 1: partial or vague; 2: clear and complete.",
+          "enum": [
+            0,
+            1,
+            2
+          ],
+          "type": "integer"
+        }
+      },
+      "required": [
+        "score",
+        "quote"
+      ],
+      "title": "RubricItem",
+      "type": "object"
+    },
     "RunEvidence": {
       "additionalProperties": false,
       "description": "Where to see the proof. Screenshots are redrawn from terminal output.",
@@ -949,6 +1068,18 @@
         "computed_at": {
           "format": "date-time",
           "type": "string"
+        },
+        "docs_rubric": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DocsRubric"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Rubric behind quality.components.install_docs; null when not graded."
         },
         "formula_version": {
           "maxLength": 40,
