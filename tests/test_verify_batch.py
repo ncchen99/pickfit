@@ -88,6 +88,16 @@ def test_selection_filters_and_limits(db_path: Path):
     assert {"slug": "graphtty", "reason": "already has a run (use --force)"}.items() <= skipped[0].items()
 
 
+def test_gpu_tools_are_set_aside_unless_the_boxes_have_a_gpu(db_path: Path):
+    db = PipelineDB(db_path)
+    add(db, 10, "acme/cuda", extraction(prerequisites__gpu={"value": "required", "quote": "NVIDIA GPU"}))
+    items, skipped = load_candidates(db_path, limit=10)
+    assert {"full_name": "acme/cuda", "reason": "needs a GPU"}.items() <= next(
+        s for s in skipped if s["full_name"] == "acme/cuda").items()
+    items, _ = load_candidates(db_path, limit=10, repos=["gh:10"], gpu=True)
+    assert [i.full_name for i in items] == ["acme/cuda"]
+
+
 def test_database_is_opened_read_only(db_path: Path):
     db_path.chmod(0o444)
     try:

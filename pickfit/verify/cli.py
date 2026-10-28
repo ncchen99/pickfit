@@ -31,6 +31,8 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--mode", choices=["chain", "replay"], default=None,
                    help="carry history by previous_response_id (chain) or resend it (replay)")
     v.add_argument("--max-turns", type=int, default=None, help="turn limit (default 25)")
+    v.add_argument("--gpu", choices=["T4", "L4", "A10"], default=None,
+                   help="Modal: give each box this NVIDIA GPU (for tools whose core job needs one)")
     v.add_argument("--platform", default="linux/amd64", help="Docker platform (Modal runs x86_64)")
     v.add_argument("--keep-box", action="store_true", help="Docker: leave the agent's container running")
     v.add_argument("--write-back", action="store_true",
@@ -40,7 +42,7 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.set_defaults(func=run)
 
 
-def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64"):
+def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", gpu: str | None = None):
     """(run_id, role) -> an unstarted box of the chosen runner."""
     from pickfit.verify.box import BoxLimits, DockerBox
 
@@ -48,7 +50,9 @@ def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64"):
         from pickfit.verify.modal_box import ModalBox
 
         return lambda run_id, role: ModalBox(tags={"pickfit.run": run_id, "pickfit.role": role},
-                                             limits=BoxLimits(lifetime_s=lifetime_s))
+                                             limits=BoxLimits(lifetime_s=lifetime_s), gpu=gpu)
+    if gpu:
+        raise ValueError("--gpu needs --runner modal")
     return lambda run_id, role: DockerBox(platform=platform, labels={"pickfit.run": run_id, "pickfit.role": role},
                                           limits=BoxLimits(lifetime_s=lifetime_s))
 
@@ -72,7 +76,11 @@ def run(args: argparse.Namespace) -> int:
     limits = AgentLimits()
     if args.max_turns:
         limits = replace(limits, max_turns=args.max_turns)
-    make_box = box_factory(args.runner, int(limits.max_seconds) + LIFETIME_MARGIN_S, platform=args.platform)
+    if args.gpu and args.runner != "modal":
+        print("pickfit verify: --gpu needs --runner modal")
+        return 2
+    make_box = box_factory(args.runner, int(limits.max_seconds) + LIFETIME_MARGIN_S, platform=args.platform,
+                           gpu=args.gpu)
     if args.batch:
         return _batch(args, make_box, limits)
     outcome = verify_task(load_fixture(args.fixture), make_box, model=args.model, mode=args.mode or DEFAULT_MODE,
@@ -105,8 +113,9 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
         print(f"pickfit verify: no records in {data_dir}")
         return 2
     items, skipped = load_candidates(db, limit=args.batch, repos=repos, categories=args.category,
-                                     skip_slugs=skip, known_slugs=known)
-    print(f"batch · {len(items)} to verify · {len(skipped)} set aside · {args.runner} · "
+                                     skip_slugs=skip, known_slugs=known, gpu=bool(args.gpu))
+    print(f"batch · {len(items)} to verify · {len(skipped)} set aside · {args.runner}"
+          f"{' + ' + args.gpu if args.gpu else ''} · "
           f"concurrency {args.concurrency} · {resolve_model(args.model)}")
     for item in items:
         print(f"  {item.priority:+d} {item.task.slug:<28} {item.category:<9} {item.kind or '-':<12} "
@@ -125,7 +134,7 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
                            runs_dir=runs_dir, log=log, write=args.write_back, data_dir=data_dir)
 
     summary = run_batch(items, verify, concurrency=args.concurrency, runs_dir=runs_dir,
-                        meta={"db": str(db), "runner": args.runner, "model": resolve_model(args.model),
+                        meta={"db": str(db), "runner": args.runner, "gpu": args.gpu, "model": resolve_model(args.model),
                               "skipped": skipped})
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     return 0

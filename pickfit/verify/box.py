@@ -107,6 +107,7 @@ class Box(ABC):
     home: str = BOX_HOME
     workdir: str = BOX_WORKDIR
     network_enabled: bool = True
+    gpu: str | None = None  # e.g. "T4" when the box has an NVIDIA GPU
 
     @abstractmethod
     def start(self) -> None:

@@ -312,6 +312,9 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
         "no accounts, no GUI.",
         f"The README is saved in the work dir as README.md ({len(task.readme)} characters).",
     ]
+    if box.gpu:
+        lines.insert(3, f"GPU: one NVIDIA {box.gpu} (driver and nvidia-smi present, no CUDA toolkit), so GPU "
+                        "examples can run here; use the smallest model the tool supports.")
     if task.files:
         names = ", ".join(sorted(task.files))
         lines.append(f"The work dir is also a sample project to try the tool on, with these files: {names}. "

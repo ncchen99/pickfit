@@ -80,15 +80,15 @@ def demo_priority(ex: ExtractionResult) -> int:
     return score
 
 
-def not_in_box(ex: ExtractionResult) -> str | None:
-    """Why a Linux box cannot verify this at all, or None."""
+def not_in_box(ex: ExtractionResult, *, gpu: bool = False) -> str | None:
+    """Why a Linux box (with an NVIDIA GPU when `gpu`) cannot verify this at all, or None."""
     kind = ex.kind.value
     if kind in NOT_IN_BOX_KINDS:
         return NOT_IN_BOX_KINDS[kind]
     if kind is not None and kind not in TOOL_KINDS:
         return f"not a tool ({kind})"
     pre = ex.prerequisites
-    if pre.gpu.value == "required":
+    if pre.gpu.value == "required" and not gpu:
         return "needs a GPU"
     if pre.apple_silicon_only.value:
         return "Apple Silicon only"
@@ -124,10 +124,12 @@ def record_slugs(data_dir: Path) -> dict[str, str]:
 
 def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
                     categories: list[str] | None = None, skip_slugs: set[str] | None = None,
-                    known_slugs: dict[str, str] | None = None) -> tuple[list[BatchItem], list[dict[str, Any]]]:
+                    known_slugs: dict[str, str] | None = None,
+                    gpu: bool = False) -> tuple[list[BatchItem], list[dict[str, Any]]]:
     """Ranked batch items (at most `limit`) and the candidates set aside, with reasons.
 
     known_slugs (repo_id -> slug, from record_slugs) wins over a slug made from the name.
+    gpu: the boxes have an NVIDIA GPU, so tools that require one are not set aside.
     """
     skip_slugs = skip_slugs or set()
     known_slugs = known_slugs or {}
@@ -158,7 +160,7 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
         except ValidationError as err:
             skipped.append({**note, "reason": f"extraction does not validate: {str(err)[:120]}"})
             continue
-        why = not_in_box(ex)
+        why = not_in_box(ex, gpu=gpu)
         if why:
             skipped.append({**note, "reason": why})
             continue
