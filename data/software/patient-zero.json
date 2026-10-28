@@ -70,18 +70,21 @@
       "first_task": "npx patient-zero@latest"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-patient-zero-20261029-011302-75a6",
       "method": "npm",
       "steps": [
         {
-          "command": "npx patient-zero@latest",
-          "purpose": null
+          "command": "npm install -g patient-zero@latest && patient-zero --version && npm ls -g --depth=0",
+          "purpose": "Install patient-zero globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "npx patient-zero@latest"
+      "check": {
+        "command": "patient-zero --version",
+        "expected_signal": "0.2.1"
+      },
+      "first_task": "patient-zero scan --offline --no-github"
     },
     "windows": null
   },
@@ -98,10 +101,88 @@
     "url": "https://github.com/0xSteph/patient-zero/releases/tag/v0.2.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T01:15:07.025898+08:00",
+    "runs": [
+      {
+        "id": "verify-patient-zero-20261029-011302-75a6",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:15:07.025898+08:00",
+        "tool_version": "0.2.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g patient-zero@latest && patient-zero --version && npm ls -g --depth=0",
+            "purpose": "Install patient-zero globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "patient-zero --version",
+            "expected_signal": "0.2.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.2.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "patient-zero --help",
+            "expected_signal": "Usage: patient-zero",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: patient-zero [options] [command]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "npx patient-zero@latest",
+            "expected_signal": "No known IoCs matched.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[32m✅\u001b[39m No known IoCs matched.",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "patient-zero scan --offline --no-github",
+            "expected_signal": "IoC: bundled (offline)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[2m0.01s · coverage 2025-09-08 → present · 7 families · 6 indicators · IoC: \u001b[33mbundled (offline)\u001b[39m\u001b[22m",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show patient-zero v0.2.1 reporting No known IoCs matched, offline bundled IoCs, and version 0.2.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-patient-zero-20261029-011302-75a6/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-patient-zero-20261029-011302-75a6/check-1-cmd5.judged.png",
+            "runs/verify/verify-patient-zero-20261029-011302-75a6/check-2-cmd7.judged.png",
+            "runs/verify/verify-patient-zero-20261029-011302-75a6/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.039294
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -352,5 +433,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:07:48+08:00",
-  "updated_at": "2026-10-28T23:56:48+08:00"
+  "updated_at": "2026-10-29T01:16:09.794575+08:00"
 }
