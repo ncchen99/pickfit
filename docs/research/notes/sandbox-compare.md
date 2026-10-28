@@ -481,3 +481,17 @@
 - 第 5 節：結論、表格加 CircleCI／Codemagic、依據加 Apple 第 3 節、條款段落的 macOS 標註、帳號停權風險、Tart 的解讀。
 - 第 7 節 macOS 角色的理由；第 8 節實測數字與重跑說明；第 11 節加第 8a 項；第 12 節加來源。
 - 沒有改 brief、rules、architecture、spikes/README.md；沒有執行 git 指令。
+
+## 帶 token 實測：Modal（2026-10-28 台北）
+
+`uv run --python 3.12 --with modal python spikes/sb_modal_verify.py --install "pip install httpie" --smoke "http --version"`：
+
+| 階段 | 結果 |
+|---|---|
+| 建立 gVisor 沙盒到可執行（含第一次建 image） | 16.36 秒 |
+| 安裝（開網路） | 4.96 秒，exit 0 |
+| `_experimental_set_outbound_network_policy` 收成空清單 | 成功（`network_locked: true`） |
+| smoke test（斷網） | 0.6 秒，exit 0，輸出 `3.2.4` |
+| 合計 | 23.1 秒，費用約 $0.01 |
+
+還沒驗證：斷網後真的連不出去（要在 P3.6 的 `--limits-test` 裡用 curl 確認）、image 建好之後的冷啟動時間。

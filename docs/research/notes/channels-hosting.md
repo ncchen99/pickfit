@@ -386,3 +386,26 @@ python3 spikes/ch_hosting_hf_forges.py hf           # 可選：export HF_TOKEN=.
 - 帳號農場過濾規則更有必要：單一帳號一天建 40 個 repo。
 
 查核過程中執行過唯讀的 `git ls-remote`（驗證主張 7）與一次 `git status`；沒有 commit、push、checkout。
+
+## 帶 token 實測（2026-10-28 台北）
+
+`GH_TOKEN=$(gh auth token) python3 spikes/ch_hosting_github.py counts`（今天 UTC 2026-10-28）：
+
+| 類別 | query | 7 天 | 7 天且 stars≥5 | 14 天 | 14 天且 stars≥5 |
+|---|---|---:|---:|---:|---:|
+| cli | `topic:cli` | 5,556 | 68 | 8,710 | 161 |
+| cli | `topic:command-line` | 84 | 2 | 187 | 5 |
+| cli | `topic:terminal` | 682 | 28 | 1,407 | 66 |
+| cli | `topic:tui` | 480 | 19 | 974 | 42 |
+| cli | `cli in:name,description` | 20,917 | 121 | 38,552 | 285 |
+| cli | `"command-line tool" in:description` | 297 | 1 | 543 | 1 |
+| local_ai | `topic:local-llm` | 454 | 16 | 875 | 40 |
+| local_ai | `topic:ollama` | 991 | 21 | 1,952 | 48 |
+| local_ai | `topic:llama-cpp` | 264 | 12 | 565 | 32 |
+| local_ai | `topic:gguf` | 106 | 4 | 232 | 16 |
+| local_ai | `topic:local-ai` | 301 | 9 | 608 | 54 |
+| local_ai | `topic:mlx` | 114 | 5 | 243 | 12 |
+| local_ai | `"local llm" in:name,description` | 790 | 9 | 1,497 | 20 |
+| local_ai | `ollama in:name,description` | 2,246 | 15 | 4,421 | 28 |
+
+寶藏候選（今年建立、近 7 天有 push、stars 5–300、非 fork、未封存）：`topic:cli` 2,352 筆；`topic:local-llm` 351 筆。plan P2 的「≥150 筆候選」用每類別 3 條 query 就夠。

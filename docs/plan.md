@@ -69,11 +69,11 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 ### P0 驗證（10/28，花費上限 $1）
 
 - [x] P0.1 Meta key：`/v1/models`＋一次最小呼叫（見第 1 節）。
-- [ ] P0.2 Meta 基本能力：在 subshell 只帶 `MODEL_API_KEY`（第 2 節第 7 條），跑 `META_REASONING=minimal python3 spikes/meta_api_hello.py`（text、json_schema、tools、image）。先用 `META_MODEL=muse-spark-1.3-contributor` 跑一次；json_schema 與 tools 再用 `muse-spark-1.3` 各跑一次。完成標準：四項的通過與否、`usage` 寫進 [research/notes/meta-model-api.md](research/notes/meta-model-api.md) 的實測小節與 [spikes/README.md](../spikes/README.md)。
-- [ ] P0.3 Responses API：`spikes/meta_responses_agent_probe.py loop image_tool schema_tools`；`search_probe` 會產生搜尋費用，最後單獨跑。完成標準：arch D.4 #3–#5 有答案（截圖放哪模型看得到、`text.format` 能否和 tools 同一請求、推理 token 實際用量）。
-- [ ] P0.4 GitHub search 實際量：`GITHUB_TOKEN=$(gh auth token) python3 spikes/ch_hosting_github.py counts`。完成標準：兩個類別近 7／14 天的筆數寫回 [research/notes/channels-hosting.md](research/notes/channels-hosting.md)。
-- [ ] P0.5 hello MCP 上線：`spikes/mcp_stateless/` 用 `wrangler deploy` 部署到 `workers.dev`，`claude mcp add --transport http pickfit-hello <url>/mcp` 實連。完成標準：Claude Code 看得到並呼叫得到遠端 hello 工具。
-- [ ] P0.6 Modal：帳號與 token 已就緒（第 1 節）。👤 在 Modal 後台把 workspace 花費上限設約 $80。agent 在 subshell 只帶 `MODAL_TOKEN_ID`、`MODAL_TOKEN_SECRET`，跑 `uv run --python 3.12 --with modal python spikes/sb_modal_verify.py --install "pip install httpie" --smoke "http --version"`，量沙盒啟動時間與網路政策；只跑這一筆。
+- [x] P0.2 Meta 基本能力：在 subshell 只帶 `MODEL_API_KEY`（第 2 節第 7 條），跑 `META_REASONING=minimal python3 spikes/meta_api_hello.py`（text、json_schema、tools、image）。先用 `META_MODEL=muse-spark-1.3-contributor` 跑一次；json_schema 與 tools 再用 `muse-spark-1.3` 各跑一次。完成標準：四項的通過與否、`usage` 寫進 [research/notes/meta-model-api.md](research/notes/meta-model-api.md) 的實測小節與 [spikes/README.md](../spikes/README.md)。
+- [x] P0.3 Responses API（`search_probe` 延後到需要「搜尋可見度」時再跑）：`spikes/meta_responses_agent_probe.py loop image_tool schema_tools`；`search_probe` 會產生搜尋費用，最後單獨跑。完成標準：arch D.4 #3–#5 有答案（截圖放哪模型看得到、`text.format` 能否和 tools 同一請求、推理 token 實際用量）。
+- [x] P0.4 GitHub search 實際量：`GITHUB_TOKEN=$(gh auth token) python3 spikes/ch_hosting_github.py counts`。完成標準：兩個類別近 7／14 天的筆數寫回 [research/notes/channels-hosting.md](research/notes/channels-hosting.md)。
+- [x] P0.5 hello MCP 上線：`spikes/mcp_stateless/` 用 `wrangler deploy` 部署到 `workers.dev`，`claude mcp add --transport http pickfit-hello <url>/mcp` 實連。完成標準：Claude Code 看得到並呼叫得到遠端 hello 工具。
+- [x] P0.6 Modal：帳號與 token 已就緒（第 1 節）。👤 **還沒做**：在 Modal 後台把 workspace 花費上限設約 $80。agent 在 subshell 只帶 `MODAL_TOKEN_ID`、`MODAL_TOKEN_SECRET`，跑 `uv run --python 3.12 --with modal python spikes/sb_modal_verify.py --install "pip install httpie" --smoke "http --version"`，量沙盒啟動時間與網路政策；只跑這一筆。
 - [ ] P0.7 👤 Baseten：註冊並申請比賽 credits、建 key 放 `.env` 的 `BASETEN_API_KEY`、月預算 $20 開 enforce。核准後 agent 跑 `spikes/meta_baseten_hello.py`，確認 `meta-models/muse-spark-open-1026` 存在。
 - [ ] P0.8 👤 Meta Billing：送出 credits 表單、Spend Limit 通知設 $50 與 $100。
 
@@ -82,7 +82,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 ### P1 骨架與評測凍結（10/28）
 
 - [x] P1.1 👤 **評測 20 題凍結**（10/28 17:06，commit `5ac62ca`）：草稿由 agent 在 10/28 新寫（不讀、不搬 `CLAUDE.local.md` 指向的賽前資料夾裡的評測草稿），念誠逐題審閱、修改並拍板，之後 commit `eval/questions.yaml` 與 `eval/README.md`（評分方式）。**這一步要在任何資料（`data/`、候選庫）寫入前完成。** 題目只寫需求與可檢查的條件，不寫預期答案。README 要照實寫明「草稿由 AI 起草、念誠審定」。
-- [ ] P1.2 專案骨架：`pyproject.toml`（`uv`、Python 3.12）、`pickfit/` 套件與 `pickfit` CLI、`tests/`、`NOTICE`（第三方授權）、`.gitignore` 補 `runs/`。目錄約定見第 5 節。
+- [x] P1.2 專案骨架：`pyproject.toml`（`uv`、Python 3.12）、`pickfit/` 套件與 `pickfit` CLI、`tests/`、`NOTICE`（第三方授權）、`.gitignore` 補 `runs/`。目錄約定見第 5 節。
 - [ ] P1.3 pydantic schema `software.v1` 當唯一來源，產生 Meta strict JSON schema 與 `schema/software.v1.json`。欄位照 arch J（brief 第 11 節）＋ `repo_id`、`aliases`、`first_seen_at`；`verification` 等級照 arch C.3；`scores.quality.components` 照 arch B.3 的 6 個分項。
 - [ ] P1.4 `call_meta` v0（`openai` SDK、`base_url` 可切 Meta／Baseten）：記帳（`usage` × 單價，寫進第 2 節的共用帳本）、trace JSONL 寫到 `runs/traces/`、開發模式快取、第 2 節的硬上限、429 退避、504 改用 streaming 重試。完成標準：`uv run pytest` 通過（用 fixture）；一次真的呼叫經過 `call_meta`，留下 trace 與花費。
 
@@ -101,7 +101,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 
 - [ ] P3.1 `Box` 介面與 `DockerBox`（沿用 `spikes/sandbox_docker_install.py` 的限制）。
 - [ ] P3.2 安裝方式排序（套件管理器 → release 二進位 → 從原始碼建置）＋ 6–8 條常見錯誤規則。
-- [ ] P3.3 驗證 agent：Responses＋`previous_response_id`、`reasoning: {effort: medium, summary: auto}`；工具 `list_dir`、`read_file`、`run_command`、`run_background`、`finish`；停止條件：25 回合、15 個指令、20 分鐘、每款 $0.50、同一錯誤 3 次。終端機逐步印出模型、指令、exit code、花費。
+- [ ] P3.3 驗證 agent：Responses＋`previous_response_id`、`reasoning: {effort: medium, summary: auto}`；工具 `list_dir`、`read_file`、`run_command`、`run_background`、`finish`；停止條件：25 回合、15 個指令、20 分鐘、每款 $0.50、同一錯誤 3 次。終端機逐步印出模型、指令、exit code、花費。P0.3 量到串接回合每回 15–18 秒：先用 3–5 回合比較「`previous_response_id` 串接」與「每回合重送完整歷史（`store: false`）」的延遲與花費，選快的。
 - [ ] P3.4 截圖（Pillow 重繪終端輸出）＋判讀（另一次呼叫，圖片＋schema，回證據框）。
 - [ ] P3.5 重播：全新 Box 照記錄的步驟重跑，成功才寫回 `install` 與 `verification`。
 - [ ] P3.6 `ModalBox`（需 P0.6）：`runtime="gvisor"`、資源上限、先開網路安裝再收緊、預建 image、`--limits-test`。
@@ -133,7 +133,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 
 ### P6 評測（11/2）
 
-- [ ] P6.1 評測執行器：Claude Code 無頭模式（固定版本、固定提示），對照組（只有網路搜尋）與實驗組（＋pickfit MCP）；第三組 rules-only（計畫內）。**隔離**：這台 Mac 的使用者設定裡有 toolradar 等 MCP，會污染對照組；每題在空的暫存目錄執行，用 `--strict-mcp-config --mcp-config <檔案>`（對照組空的、實驗組只有 pickfit），先確認旗標有效；記下 Claude Code 版本。先跑 2 題估花費。
+- [ ] P6.1 評測執行器：Claude Code 無頭模式（固定版本、固定提示），對照組（只有網路搜尋）與實驗組（＋pickfit MCP）；第三組 rules-only（計畫內）。**隔離**：這台 Mac 的使用者設定裡有 toolradar 等 MCP，會污染對照組；每題在空的暫存目錄執行，用 `--strict-mcp-config --mcp-config <檔案>`（對照組空的、實驗組只有 pickfit），旗標已在 P0.5 實測有效；記下 Claude Code 版本。**`claude` 一定要用 `env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p …` 啟動**，否則會繼承桌面 app 的 `ANTHROPIC_BASE_URL` 而失敗（P0.5）。先跑 2 題估花費。
 - [ ] P6.2 收集答案；安裝步驟在乾淨容器（或 Mac）實跑。
 - [ ] P6.3 照 `eval/README.md` 評分；👤 念誠做盲測兩兩比較。
 - [ ] P6.4 👤 demo 那 3 筆在 Mac 上由念誠親手照 `get_install_guide` 驗證（`method: human`），驗完移除；agent 只準備檢查清單、收 log。
@@ -199,3 +199,9 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 |---|---|---|---|
 | 10/28 16:18 | P0.1 | Meta key 有效、9 個模型、一次 `muse-spark-1.3` 呼叫成功；Anthropic key 有效；Mac、Cloudflare、GitHub 就緒 | Meta 約 $0.0002 |
 | 10/28 17:06 | P1.1 | 評測 20 題與評分方式凍結（`5ac62ca`）。念誠決定：Mac 題（q08、q11、q12）親手跑；q15 用 CC0 公開錄音 | — |
+| 10/28 17:15 | P0.2 | contributor 4／4（text、json_schema、tools、image）；1.3 的 json_schema、tools 通過 | Meta 約 $0.004 |
+| 10/28 17:20 | P0.3 | 截圖放 tool 輸出或 user 訊息都看得到；schema＋tools 同一請求可以；串接迴圈可用但每回 15–18 秒，遇一次暫時性 503 | Meta <$0.001 |
+| 10/28 17:25 | P0.4 | 寶藏候選 cli 2,352、local-llm 351（數字見 channels-hosting 筆記） | — |
+| 10/28 17:35 | P0.5 | hello MCP 部署到 workers.dev，9 項協定檢查通過；Claude Code 無頭模式（`--strict-mcp-config`）實連成功；測完已移除。桌面 app 裡直接跑 `claude` 會失敗，要用 `env -i` | Anthropic $0.002 |
+| 10/28 17:40 | P0.6 | Modal gVisor：16.4 秒可用、安裝 5 秒、斷網 smoke test 通過 | Modal 約 $0.01 |
+| 10/28 17:45 | P1.2 | 專案骨架（`46d5ea7`） | — |

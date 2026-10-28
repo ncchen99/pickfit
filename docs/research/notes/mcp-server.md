@@ -798,3 +798,11 @@ annotations：`{ "readOnlyHint": false, "destructiveHint": false, "idempotentHin
 | `bench.mjs` | 暖機 1.25–1.41 ms；首次 `tools/list` 55–58 ms | — |
 
 金鑰檢查：spike 目錄（不含 `node_modules`、`.wrangler`）沒有 key、token、secret；`.gitignore` 排除 `node_modules/`、`.wrangler/`。重跑沒有在 spike 目錄留下新檔。
+
+## 上線實測（2026-10-28 台北）
+
+- `spikes/mcp_stateless/` 用 `wrangler@4.153.0 deploy` 部署到 `workers.dev`：bundle 670 KiB（gzip 134 KiB），Worker Startup Time 52 ms。
+- `curl.sh` 對線上 URL：legacy 與 modern 共 9 項檢查結果和本機相同。
+- Claude Code 2.1.304 無頭模式：`--strict-mcp-config --mcp-config <檔案>` 只載入指定的遠端 HTTP server（使用者層級的其他 MCP 沒有出現），成功呼叫 `find_software`；用 Haiku 3 回合 $0.002。
+- **注意**：在 Claude 桌面 app 的 session 裡直接執行 `claude`，會繼承 app 的 `ANTHROPIC_BASE_URL` 與 `CLAUDE_CODE_*` 變數而失敗（"Credit balance is too low"）。評測執行器要用 `env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p …`。
+- 測完已用 `wrangler delete` 移除（只回假資料，不該留在公開網址）。

@@ -13,7 +13,7 @@
 
 | 腳本 | 驗證什麼 | 怎麼跑 | 需要 | 結果（摘要） | 筆記 |
 |---|---|---|---|---|---|
-| `ch_hosting_github.py` | GitHub search 兩個類別最近 7／14 天的量、抽樣；`created:` 分片 | `python3 spikes/ch_hosting_github.py counts`／`sample`／`slice` | `GITHUB_TOKEN`（本機） | 本 session 被擋，**未實測** | [channels-hosting](../docs/research/notes/channels-hosting.md) |
+| `ch_hosting_github.py` | GitHub search 兩個類別最近 7／14 天的量、抽樣；`created:` 分片 | `python3 spikes/ch_hosting_github.py counts`／`sample`／`slice` | `GITHUB_TOKEN`（本機） | 10/28 本機實測：7 天 `topic:cli` 5,556 筆（stars≥5 有 68 筆）；寶藏候選 cli 2,352、local-llm 351 | [channels-hosting](../docs/research/notes/channels-hosting.md) |
 | `ch_hosting_hf_forges.py` | HF Spaces、Codeberg、GitLab 的新作品量 | `python3 spikes/ch_hosting_hf_forges.py` | 無 | HF 本地 AI 關鍵字 7 天 20 筆；README 連回作者自己 repo 的 3 筆中至少 1 筆可安裝（ollama-hud，未實裝）；Codeberg `topic:cli` 15–16 筆；GitLab 11 筆（2026-10-19 起未登入每 IP 60 次／時，可設 `GITLAB_TOKEN`） | 同上 |
 | `ch_packages_brew_taps.py` | Homebrew analytics 裡最近 30 天才出現的第三方 tap formula | `python3 spikes/ch_packages_brew_taps.py` | 無；**會呼叫 ecosyste.ms**（見上方警告） | 4,066 個新出現、437 個安裝 10–1000 次；抽 40 個，36 個今年建、星數中位數 1 | [channels-packages](../docs/research/notes/channels-packages.md) |
 | `ch_packages_registries.py` | PyPI、npm、crates、Go 等的新作品量與「是不是 CLI」訊號 | `python3 spikes/ch_packages_registries.py` | 無；**會呼叫 ecosyste.ms** | PyPI 約 40 個／小時，抽 30 個有 12 個有 `console_scripts` | 同上 |
@@ -41,15 +41,15 @@
 |---|---|---|---|---|---|
 | `sandbox_docker_install.py` | 在全新、受限的 Docker 容器裡照 README 安裝真實工具並跑 smoke test；`--limits-test` 測防護 | 先起 `dockerd`，再 `python3 spikes/sandbox_docker_install.py --with-llm`（不加 `--with-llm` 只跑 3 款 CLI）；防護檢查用 `--limits-test` | Docker | 4 款都通過（每款 2–29 秒），2 款要先修正；llama.cpp＋1.2 MB 模型做到推論驗證；OOM／磁碟／fork bomb 防護有效 | [sandbox-verify-design](../docs/research/notes/sandbox-verify-design.md) |
 | `sb_local_timing.sh` | 本機 runc 與 gVisor 的啟動時間 | `bash spikes/sb_local_timing.sh` | Docker（可選 runsc） | docker run 0.3–0.5 秒；runsc 0.08–0.16 秒 | [sandbox-compare](../docs/research/notes/sandbox-compare.md) |
-| `sb_modal_verify.py` | Modal Sandbox（`runtime="gvisor"`）：開網路安裝，斷網跑 smoke test，量各階段秒數 | `pip install modal && modal token new`，再 `python3 spikes/sb_modal_verify.py --install "pip install httpie" --smoke "http --version"` | `modal` 套件；`MODAL_TOKEN_ID`、`MODAL_TOKEN_SECRET` | **未實測**（沒有 token） | 同上 |
+| `sb_modal_verify.py` | Modal Sandbox（`runtime="gvisor"`）：開網路安裝，斷網跑 smoke test，量各階段秒數 | `pip install modal && modal token new`，再 `python3 spikes/sb_modal_verify.py --install "pip install httpie" --smoke "http --version"` | `modal` 套件；`MODAL_TOKEN_ID`、`MODAL_TOKEN_SECRET` | 10/28 實測：gVisor 沙盒 16.4 秒可用、安裝 5 秒、斷網後 smoke test 通過，約 $0.01；跑法改用 `uv run --python 3.12 --with modal python …` | 同上 |
 | `sb_gha_macos_brew.yml` | GitHub Actions macOS runner 上 brew 安裝與 smoke test | 只能放在 pickfit 自己 repo 的 `.github/workflows/`，手動觸發；**不要另開 repo**；只跑 demo 那 2–5 筆；`permissions: {}`、不放 secrets。repo 轉 public 前，macOS 每分鐘 $0.062。條款是灰色地帶，有 Apple silicon Mac 就不用（architecture.md K） | GitHub | **未實測**；條款限制見筆記 | 同上 |
 
 ## Meta 模型（D 節）
 
 | 腳本 | 驗證什麼 | 怎麼跑 | 需要 | 結果 | 筆記 |
 |---|---|---|---|---|---|
-| `meta_api_hello.py` | Meta Model API：文字、JSON schema、tool calling、圖片輸入 | `MODEL_API_KEY=… python3 spikes/meta_api_hello.py` | `MODEL_API_KEY` | **未實測**；無效 key 回 401（端點與認證方式正確） | [meta-model-api](../docs/research/notes/meta-model-api.md) |
-| `meta_responses_agent_probe.py` | Responses API 多輪工具迴圈、截圖放哪、schema＋tools、`web_search` | `MODEL_API_KEY=… python3 spikes/meta_responses_agent_probe.py` | `MODEL_API_KEY` | **未實測** | [meta-usage-design](../docs/research/notes/meta-usage-design.md) |
+| `meta_api_hello.py` | Meta Model API：文字、JSON schema、tool calling、圖片輸入 | `MODEL_API_KEY=… python3 spikes/meta_api_hello.py` | `MODEL_API_KEY` | 10/28 實測：contributor 4／4 通過、1.3 的 json_schema 與 tools 通過 | [meta-model-api](../docs/research/notes/meta-model-api.md) |
+| `meta_responses_agent_probe.py` | Responses API 多輪工具迴圈、截圖放哪、schema＋tools、`web_search` | `MODEL_API_KEY=… python3 spikes/meta_responses_agent_probe.py` | `MODEL_API_KEY` | 10/28 實測（contributor）：loop、image_tool、schema_tools 通過（loop 遇一次暫時性 503）；串接回合 15–18 秒；`search_probe` 未跑 | [meta-usage-design](../docs/research/notes/meta-usage-design.md) |
 | `meta_baseten_hello.py` | Baseten 上的 Muse Spark Open（含比賽 model ID） | `BASETEN_API_KEY=… python3 spikes/meta_baseten_hello.py` | `BASETEN_API_KEY` | **未實測**；無效 key 回 403 | [meta-open-weights](../docs/research/notes/meta-open-weights.md) |
 
 拿到 key 後的順序：`meta_api_hello.py` → `meta_responses_agent_probe.py` → `meta_baseten_hello.py`。
@@ -58,7 +58,7 @@
 
 | 腳本 | 驗證什麼 | 怎麼跑 | 需要 | 結果 | 筆記 |
 |---|---|---|---|---|---|
-| `mcp_stateless/` | 最小無狀態 Streamable HTTP MCP server（TS SDK v2）、Workers 設定、client 測試 | 見 [mcp_stateless/README.md](mcp_stateless/README.md) | Node 22 | Node 與 `wrangler dev` 都通過新舊兩代共 9 項檢查；TS client 3 種模式、Python client 2 種模式可呼叫；**未部署、未用 Claude Code／Codex 實連** | [mcp-server](../docs/research/notes/mcp-server.md) |
+| `mcp_stateless/` | 最小無狀態 Streamable HTTP MCP server（TS SDK v2）、Workers 設定、client 測試 | 見 [mcp_stateless/README.md](mcp_stateless/README.md) | Node 22 | Node 與 `wrangler dev` 都通過新舊兩代共 9 項檢查；TS client 3 種模式、Python client 2 種模式可呼叫；10/28 部署到 workers.dev，Claude Code 無頭模式實連成功（測完已移除）；Codex 未實連 | [mcp-server](../docs/research/notes/mcp-server.md) |
 | `sm_index_bench.mjs` | 幾千筆時「條件篩選＋BM25」夠不夠；索引大小與查詢時間 | `node spikes/sm_index_bench.mjs` | Node | 8,198 筆 Homebrew 描述：原話 5／10 進前 25，改寫關鍵字後 10／10；查詢 <1 ms | [storage-matching](../docs/research/notes/storage-matching.md) |
 | `sm_worker_startup.sh` | 索引打包進 Worker 的 bundle 大小與啟動 CPU | `bash spikes/sm_worker_startup.sh 3000` | Node、wrangler（本機，不部署） | 3,000 筆約 1 MB，啟動遠低於 1 秒上限 | 同上 |
 | `sm_schema_events.py` | 檔案 JSON Schema 與 D1 事件表 DDL（在本機 SQLite 跑） | `uv run --with jsonschema python spikes/sm_schema_events.py` | `jsonschema` | DDL 在 SQLite 3.45 跑過；D1 未實測 | 同上 |

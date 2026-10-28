@@ -2,6 +2,8 @@
 
 2026-10-28（台北）· 查證日一律為 2026-10-28。資料來自 Meta 官方文件與 Help Center，第三方來源會標出。
 **沒有 API key，所有模型呼叫都是「未實測」**；只用 curl 打了不需認證的端點（`/v1/status`、401 錯誤訊息）。
+
+**2026-10-28 下午已帶 key 實測**，結果見文末「帶 key 實測」；與上文不同時以實測為準。
 已由第二位 agent 逐條對官方文件查核並修正，見文末「查核紀錄（2026-10-28）」。
 
 ---
@@ -570,3 +572,21 @@ Use of Meta AI Tooling（25%）可展示、且有文件支持的能力：constra
 - 沒有把舊 Llama API 的資訊套到 Muse 模型（Help Center 也確認 Llama 不在 Model API 上）。
 - 沒有發現憑記憶補上的 model ID 或價格；所有數字都能在官方頁面找到。
 - 第 6 節成本估算重算過，數字正確（仍是估算）。
+
+## 帶 key 實測（2026-10-28 16:18–17:20 台北）
+
+台灣帳號可用。全部呼叫合計約 US$0.004。
+
+| 項目 | 結果 |
+|---|---|
+| `GET /v1/models` | 200。`muse-spark-1.3`、`muse-spark-1.3-contributor`、`muse-spark-1.2`、`muse-spark-1.2-contributor`、`muse-spark-1.1`、`muse-wonder-1.0`、`muse-image-1.0`、`muse-voice-transcribe-1.0`、`sam-3.1`。**沒有 embedding 模型** |
+| rate limit header | `muse-spark-1.3`：3,000 RPM、4M TPM；`muse-spark-1.3-contributor`：150 RPM、3M TPM |
+| 最小呼叫（1.3，`reasoning_effort: minimal`） | 52 token（推理 29）、1.7 秒 |
+| `spikes/meta_api_hello.py`（contributor，minimal） | text、json_schema、tools（兩輪）、image（base64 與公開 URL）**4／4 通過**；第二輪 tools 有 497 個 cached token |
+| 同上（1.3，minimal） | json_schema、tools **2／2 通過**；json_schema 輸出 240 token（推理 141） |
+| `meta_responses_agent_probe.py image_tool`（contributor） | 截圖放在 `function_call_output` 或緊接的 user 訊息，模型**都看得到**（D.4 #3） |
+| `… schema_tools` | 同一請求帶 tools 和 `text.format` json_schema **可以**，最後輸出合 schema（D.4 #4） |
+| `… loop` | 第一次在第 2 回合回 **503 `persistence service error`**；重跑成功：5 回合後呼叫 `finish`，參數齊全；`cached_tokens` 跨 `previous_response_id` 有效（753 → 1,137）。**每個串接回合 15–18 秒**（第一回合約 2 秒） |
+| `… search_probe` | 沒跑（會產生搜尋費用；只有「搜尋可見度」這個超前項目需要） |
+
+對設計的影響：`call_meta` 要重試 503；驗證 agent 的回合延遲要實測比較「`previous_response_id` 串接」與「每回合重送完整歷史」（plan P3.3）；開發與測試用 contributor 可省 12–20 倍。
