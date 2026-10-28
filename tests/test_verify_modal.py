@@ -169,11 +169,12 @@ def test_start_creates_the_sandbox_from_the_published_image(monkeypatch: pytest.
 
     monkeypatch.setattr(modal.App, "lookup", lambda name, **kw: f"app:{name}")
     monkeypatch.setattr(modal.Sandbox, "create", create)
-    monkeypatch.setattr(mb, "sandbox_image", lambda client, app, log: ("image-object", "pickfit-sbx:abc"))
+    monkeypatch.setattr(modal.Image, "from_name", lambda name: f"image:{name}")
+    monkeypatch.setattr(mb, "sandbox_image_tag", lambda: "pickfit-sbx:abc")
     box = ModalBox(limits=BoxLimits(lifetime_s=300), client="client", log=lambda s: None)
     box.start()
     assert created["args"] == ("sleep", "300") and created["app"] == "app:pickfit-verify"
-    assert created["image"] == "image-object" and created["runtime"] == "gvisor"
+    assert created["image"] == "image:pickfit-sbx:abc" and created["runtime"] == "gvisor"
     assert box.image == "pickfit-sbx:abc" and box.sandbox_id == "sb-test"
     mkdir, chown = (call[0] for call in sandbox.calls[:2])
     assert mkdir[:2] == ("mkdir", "-p") and chown[:3] == ("chown", "-R", "1000:1000")
@@ -205,3 +206,27 @@ def test_limits_test_reports_each_probe():
     assert [r.name for r in results if not r.ok] == []
     assert [r.name for r in results][-1] == "memory_cap"
     assert len(results) == 12
+
+
+def test_a_missing_image_is_published_once_then_used(monkeypatch: pytest.MonkeyPatch):
+    import modal
+
+    class NotFoundError(Exception):
+        pass
+
+    attempts: list[str] = []
+    published: list[str] = []
+
+    def create(*args: str, **kw: Any) -> FakeSandbox:
+        attempts.append(kw["image"])
+        if len(attempts) == 1:
+            raise NotFoundError("Image 'pickfit-sbx:abc' not found")
+        return FakeSandbox()
+
+    monkeypatch.setattr(modal.App, "lookup", lambda name, **kw: "app")
+    monkeypatch.setattr(modal.Sandbox, "create", create)
+    monkeypatch.setattr(modal.Image, "from_name", lambda name: f"image:{name}")
+    monkeypatch.setattr(mb, "sandbox_image_tag", lambda: "pickfit-sbx:abc")
+    monkeypatch.setattr(mb, "publish_image", lambda client, app, log: published.append("x") or "pickfit-sbx:abc")
+    ModalBox(client="client", log=lambda s: None).start()
+    assert attempts == ["image:pickfit-sbx:abc"] * 2 and published == ["x"]

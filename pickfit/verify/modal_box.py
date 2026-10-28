@@ -11,7 +11,9 @@
   never on it. set_network(False) replaces it with an empty allowlist
   (`_experimental_set_outbound_network_policy`, Alpha).
 - Image: built once from sandbox.Dockerfile and published as
-  `pickfit-sbx:<Dockerfile hash>`; later boxes start from that name.
+  `pickfit-sbx:<Dockerfile hash>`; boxes start from that name, and only a
+  missing name triggers the build. (`Image.from_name(...).hydrate()` is not
+  supported by the client, so the name is resolved by Sandbox.create.)
 
 Credentials come from MODAL_TOKEN_ID / MODAL_TOKEN_SECRET in .env and go to
 an explicit modal.Client; nothing is put into the process environment, and the
@@ -70,32 +72,35 @@ def modal_client() -> Any:
     return modal.Client.from_credentials(require_env("MODAL_TOKEN_ID"), require_env("MODAL_TOKEN_SECRET"))
 
 
-def sandbox_image(client: Any, app: Any, *, log: Callable[[str], None] = print) -> tuple[Any, str]:
-    """The published sandbox image for the current Dockerfile; built and published on first use."""
+def publish_image(client: Any, app: Any, *, log: Callable[[str], None] = print) -> str:
+    """Build the sandbox image from sandbox.Dockerfile and publish it under its hash name.
+
+    Modal caches the build, so an unchanged Dockerfile takes a few seconds.
+    """
     import modal
 
     name = sandbox_image_tag()
-    try:
-        return modal.Image.from_name(name).hydrate(client=client), name
-    except Exception:  # not published yet (NotFoundError), or a stale name
-        pass
-    log(f"building Modal image {name} from {SANDBOX_DOCKERFILE.name} (first run only)")
     began = time.monotonic()
     image = modal.Image.from_dockerfile(SANDBOX_DOCKERFILE, context_dir=SANDBOX_DOCKERFILE.parent,
                                         ignore=lambda path: True)
     image.build(app)
     image.publish(name, client=client)
-    log(f"built and published {name} in {time.monotonic() - began:.0f}s")
-    return image, name
+    log(f"Modal image {name} built and published in {time.monotonic() - began:.0f}s")
+    return name
 
 
 def ensure_published_image(log: Callable[[str], None] = print) -> str:
-    """Build and publish the sandbox image now (before parallel boxes start); returns its name."""
+    """Publish the image for the current Dockerfile before parallel boxes start; returns its name."""
     import modal
 
     client = modal_client()
     app = modal.App.lookup(APP_NAME, create_if_missing=True, client=client)
-    return sandbox_image(client, app, log=log)[1]
+    return publish_image(client, app, log=log)
+
+
+def _missing_image(err: Exception) -> bool:
+    text = f"{type(err).__name__} {err}".lower()
+    return "notfound" in text.replace(" ", "") or "not found" in text
 
 
 class ModalBox(Box):
@@ -136,10 +141,20 @@ class ModalBox(Box):
         began = time.monotonic()
         self.client = self.client or modal_client()
         app = modal.App.lookup(self.app_name, create_if_missing=True, client=self.client)
-        image, self.image = sandbox_image(self.client, app, log=self.log)
+        self.image = sandbox_image_tag()
+
+        def create() -> Any:
+            return modal.Sandbox.create("sleep", str(self.limits.lifetime_s), app=app, client=self.client,
+                                        image=modal.Image.from_name(self.image), **self.create_kwargs())
+
         try:
-            self.sandbox = modal.Sandbox.create("sleep", str(self.limits.lifetime_s), app=app, image=image,
-                                                client=self.client, **self.create_kwargs())
+            try:
+                self.sandbox = create()
+            except Exception as err:
+                if not _missing_image(err):
+                    raise
+                publish_image(self.client, app, log=self.log)  # first box after a Dockerfile change
+                self.sandbox = create()
         except Exception as err:
             raise BoxError(f"Modal sandbox create failed: {type(err).__name__}: {err}") from err
         self.sandbox_id = getattr(self.sandbox, "object_id", None)
