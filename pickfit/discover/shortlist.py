@@ -5,8 +5,10 @@ local_ai batch 11 of 16 profiles turned out to be GUI apps or other tools a
 Linux sandbox cannot verify. This ranks the candidates not yet extracted by
 signals in the GitHub snapshot alone (no model): an executable entry point, a
 package-manager install command, Linux release binaries, a local server or
-model runner in the README count for; a desktop, mobile or browser-extension
-project, a GPU or Apple Silicon requirement count against. It only orders the
+model runner in the README, and a name or description about local models
+count for; a desktop, mobile or browser-extension project, a GPU or Apple
+Silicon requirement, and a coding-agent description (those are usually
+dev_cli) count against. It only orders the
 queue: nothing is rejected, and the model still decides kind and category.
 
     uv run python -m pickfit.discover.shortlist --category local_ai --limit 40
@@ -38,6 +40,13 @@ GUI_ASSET = re.compile(r"\.(dmg|exe|msi|apk|ipa|appimage|pkg)$", re.I)
 LOCAL_SERVER = re.compile(r"/v1/(models|chat|completions)|openai[- ]compatible|localhost:\d{2,5}", re.I)
 LOCAL_RUNNER = re.compile(r"\bollama\b|llama\.cpp|llama-server|\bgguf\b|whisper|\bonnx|local models?\b"
                           r"|offline", re.I)
+# What the repo says it is (name and description): a local runner or offline AI tool is local_ai;
+# a coding agent that can also use a local model usually ends up dev_cli.
+LOCAL_FOCUS = re.compile(r"\b(local|offline|on-device|private)\b.{0,40}\b(llms?|models?|inference|ai|speech|voice|"
+                         r"transcri\w*|tts|stt)\b|\bgguf\b|llama\.?cpp|\bollama\b|\bwhisper|inference "
+                         r"(engine|server|runtime)|speech[- ]to[- ]text|text[- ]to[- ]speech|\bquantiz", re.I)
+CODING_AGENT = re.compile(r"coding[- ]agent|claude code|\bcodex\b|\bcursor\b|copilot|pair[- ]program|"
+                          r"agent (harness|runtime|platform|swarm)|multi-agent|agentic", re.I)
 GUI_FILE = re.compile(r"(^|/)(src-tauri/|tauri\.conf\.json$|[^/]+\.xcodeproj/|Package\.swift$|"
                       r"AndroidManifest\.xml$|pubspec\.yaml$|electron-builder\.(json|ya?ml)$)")
 # A GUI project at the top of the tree is the product; one in a subdirectory is often a companion app.
@@ -89,6 +98,11 @@ def box_fit(candidate: dict[str, Any]) -> tuple[int, list[str]]:
         signals.append(("local_server", 1))
     if LOCAL_RUNNER.search(readme):
         signals.append(("local_runner", 1))
+    about = " ".join(filter(None, [candidate["repo"].get("name"), candidate["repo"].get("description")]))
+    if LOCAL_FOCUS.search(about):
+        signals.append(("local_focus", 2))
+    if CODING_AGENT.search(about):
+        signals.append(("coding_agent", -2))
     if candidate.get("rule_label") == "uncertain":
         signals.append(("rules_uncertain", -1))
     package_json = manifests.get("package.json") or ""

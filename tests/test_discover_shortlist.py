@@ -76,3 +76,13 @@ def test_shortlist_skips_extracted_and_known_repos(tmp_path: Path) -> None:
     ranked = shortlist(db, category="local_ai", skip_repo_ids={"gh:4"})
     assert [r.full_name for r in ranked] == ["a/cli", "a/app"]
     assert shortlist(db, category="dev_cli") == []
+
+
+def test_description_about_local_models_counts_for_and_coding_agents_against() -> None:
+    runner = candidate()
+    runner["repo"]["description"] = "Pure-Go local LLM inference from GGUF files"
+    agent = candidate()
+    agent["repo"]["description"] = "Open source coding agent for your terminal"
+    assert "local_focus" in names(box_fit(runner)[1])
+    assert "coding_agent" in names(box_fit(agent)[1])
+    assert box_fit(runner)[0] > box_fit(agent)[0]
