@@ -5,6 +5,7 @@ import { CARD_FIELDS } from './cards.ts';
 import { findSoftware, type Deps } from './find.ts';
 import { installGuide, UnknownSlugError } from './install.ts';
 import { logEvent } from './events.ts';
+import { ERROR_EXCERPT_MAX, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } from './outcome.ts';
 
 export const INSTRUCTIONS =
   'pickfit recommends lesser-known software that it has installed and tested in a sandbox. Scope today: developer CLI tools and local AI/LLM tools. ' +
@@ -127,6 +128,39 @@ const installOutput = z.object({
   sources: z.array(z.string()),
 });
 
+const outcomeInput = z.object({
+  slug,
+  stage: z
+    .enum(STAGES)
+    .describe('How far the user got: installed, install_failed, first_run_ok, first_run_failed, still_using, replaced, abandoned'),
+  rec_id: recId.optional().describe('From find_software, find_alternatives or get_install_guide; without it the report is not counted'),
+  satisfaction: z.enum(['satisfied', 'neutral', 'dissatisfied', 'unknown']).optional(),
+  os: os.optional(),
+  arch: arch.optional(),
+  error_excerpt: z
+    .string()
+    .max(2000)
+    .optional()
+    .describe(`Last lines of the error, with user names, paths and tokens removed; pickfit keeps the last ${ERROR_EXCERPT_MAX} characters`),
+  replaced_by: z.string().max(100).optional().describe('Only with stage "replaced": the slug or name of what replaced it'),
+  note: z.string().max(NOTE_MAX).optional().describe('Optional short feedback, without personal data; read by people only'),
+});
+
+const outcomeOutput = z.object({
+  accepted: z.boolean(),
+  report_id: z.string(),
+  rec_id: z.string().nullable().describe('The recommendation this report is tied to, when counted'),
+  deduplicated: z.boolean().describe('true = this rec_id, slug, stage and result were already reported; nothing changed'),
+  counted_in_score: z.boolean(),
+  not_counted_reason: z.enum(['no_rec_id', 'unknown_or_expired_rec_id']).nullable(),
+  reverify: z.enum(['queued', 'already_queued', 'none']).describe('Whether pickfit will re-run the install steps in a fresh sandbox'),
+  next: z.string().nullable(),
+});
+
+function toolError(message: string) {
+  return { content: [{ type: 'text' as const, text: message }], isError: true };
+}
+
 function result(out: object) {
   return {
     content: [{ type: 'text' as const, text: JSON.stringify(out) }],
@@ -182,9 +216,38 @@ export function buildServer(deps: Deps): McpServer {
         );
         return result(out);
       } catch (err) {
-        if (err instanceof UnknownSlugError) {
-          return { content: [{ type: 'text' as const, text: err.message }], isError: true };
-        }
+        if (err instanceof UnknownSlugError) return toolError(err.message);
+        throw err;
+      }
+    },
+  );
+
+  server.registerTool(
+    'report_outcome',
+    {
+      title: 'Report how a recommended tool worked out',
+      description:
+        'Call after the user tried a tool pickfit recommended, once for each stage reached: installed or install_failed, first_run_ok or first_run_failed, and later still_using, replaced or abandoned. ' +
+        'Pass the rec_id from find_software, find_alternatives or get_install_guide; without it the report is stored but not counted. ' +
+        'Remove user names, file paths, tokens and other personal data from error_excerpt and note; pickfit stores no account or IP. ' +
+        'A failed install with an error excerpt makes pickfit re-run the install steps in a fresh sandbox. Repeating the same report changes nothing.',
+      inputSchema: outcomeInput,
+      outputSchema: outcomeOutput,
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async (args) => {
+      try {
+        return result(
+          await reportOutcome(args, {
+            catalog: deps.catalog,
+            db: deps.db,
+            now: deps.now,
+            reporter: deps.reporter ?? 'external',
+            client: deps.client,
+          }),
+        );
+      } catch (err) {
+        if (err instanceof UnknownToolError) return toolError(err.message);
         throw err;
       }
     },

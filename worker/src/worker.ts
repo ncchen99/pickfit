@@ -2,6 +2,7 @@
 import { createMcpHandler, localhostAllowedHostnames, validateHostHeader, validateOriginHeader } from '@modelcontextprotocol/server';
 import { loadCatalog } from './catalog.ts';
 import { settings, type Env } from './env.ts';
+import { reporterFrom } from './events.ts';
 import { buildServer } from './server.ts';
 
 function allowedHosts(env: Env): string[] {
@@ -47,6 +48,7 @@ export function makeWorker(indexData: unknown, options: WorkerOptions = {}) {
           now: options.now ?? (() => new Date()),
           waitUntil: (promise) => ctx.waitUntil(promise),
           fetch: options.fetch,
+          reporter: reporterFrom(request.headers.get('x-pickfit-reporter')),
         }),
       );
       return handler.fetch(request);

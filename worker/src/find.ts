@@ -9,7 +9,7 @@ import { bestGuide, type Arch, type Catalog, type Entry, type InstallGuide, type
 import { toCard, type Card } from './cards.ts';
 import { checkBudget, recordSpend } from './budget.ts';
 import type { Settings } from './env.ts';
-import { logEvent, newId } from './events.ts';
+import { logEvent, newId, type Reporter } from './events.ts';
 import { hardFilter, MAX_CARDS, type Conditions } from './filter.ts';
 import { clip, guardPicks, parseAnswer, type GuardedPick } from './guard.ts';
 import { callMeta, estimateCostUsd, MATCH_MODEL, MetaCallError, requestBody } from './meta.ts';
@@ -30,6 +30,8 @@ export interface Deps {
   waitUntil: (promise: Promise<unknown>) => void;
   fetch?: typeof fetch;
   client?: string | null;
+  /** From the X-Pickfit-Reporter header; labels report_outcome rows. */
+  reporter?: Reporter;
 }
 
 export interface PickOut {

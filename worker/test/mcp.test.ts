@@ -61,7 +61,7 @@ test('legacy clients: initialize, list and call without a session', async () => 
     await call(rpc({ jsonrpc: '2.0', id: 2, method: 'tools/list' }, { 'mcp-protocol-version': '2025-11-25' })),
   );
   const tools = Object.fromEntries(list.result.tools.map((t: any) => [t.name, t]));
-  assert.deepEqual(Object.keys(tools).sort(), ['find_software', 'get_install_guide']);
+  assert.deepEqual(Object.keys(tools).sort(), ['find_software', 'get_install_guide', 'report_outcome']);
   assert.equal(tools.find_software.annotations.readOnlyHint, true);
   assert.equal(tools.find_software.outputSchema.type, 'object');
   assert.ok(tools.find_software.description.length <= 1000);
