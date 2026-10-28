@@ -6,7 +6,7 @@
 
 ## 0. 目前的結論
 
-**狀態（2026-10-28 台北）**：A–K 都已完成。每個事實都由一個 agent 查官方文件或實測，另一個 agent 反向查核；整體架構由 3 個提案、3 位評審選出。**沒有任何 API key，所有模型、沙盒、部署的線上行為都還沒實測**（spike 已寫好，設好環境變數就能跑）。
+**狀態（2026-10-28 台北）**：A–K 都已完成。本調研由念誠指揮多個 AI agent 完成，沒有其他人參與。多數筆記由一個 agent 查官方文件或實測、另一個 agent 反向查核（`meta-usage-design`、`storage-matching` 與三份架構提案是設計與估算，沒有獨立查核）；整體架構由 3 個提案 agent、3 個評審 agent 選出，最後再由 4 個審查 agent 檢查全文（涵蓋度、一致性、事實、條款）。**沒有任何 API key，所有模型、沙盒、部署的線上行為都還沒實測**（spike 已寫好，設好環境變數就能跑）。
 
 ### 推薦的架構（一句話）
 
@@ -16,7 +16,7 @@
 
 | 決定 | 理由 |
 |---|---|
-| 本機管線＋Modal 沙盒＋Cloudflare MCP（不全放一個平台） | 三位評審都選它；關鍵路徑只用跑過的 spike；跑陌生程式的平台和對外服務分開，一邊出事另一邊照常 |
+| 本機管線＋Modal 沙盒＋Cloudflare MCP（不全放一個平台） | 3 個評審 agent 都選它；關鍵路徑只用跑過的 spike；跑陌生程式的平台和對外服務分開，一邊出事另一邊照常 |
 | Meta 模型在 6 個環節做決定 | 初篩、抽取、驗證 agent、畫面判讀、文件評分、配對；程式只做守門與記帳。產品執行期不用任何非 Meta 的 LLM（D.3） |
 | 不用向量搜尋 | Meta 沒有 embedding 模型（未驗證）；「向量庫＋LLM」正是基本 RAG 的樣子；條件篩選＋模型取捨在 spike 裡夠用（F.3） |
 | 驗證是核心賣點，也是最大風險 | 本機 Docker spike：4 款真實工具都裝起來，2 款要先修正 README；所以 10/30 就先做驗證 agent，10/31 設硬關卡（H.2） |
@@ -25,14 +25,14 @@
 
 | 問題 | 結論 |
 |---|---|
-| A. 管道 | 一定接 **GitHub search API**、**提交入口**、**Show HN**（官方 API）；超前才接 **Homebrew 第三方 tap**（有安裝數、星數中位數 1）、**PyPI**。Threads／Facebook **不能主動發現**（keyword search 要審核且用途不符；oEmbed 沒有貼文文字），只能用 oEmbed 嵌入。GH Archive 等公開資料集已失準。ecosyste.ms 要先取得書面同意 |
+| A. 管道 | 核心接 **GitHub search API**、**提交入口**（MCP `submit_software`）；計畫內接 **Show HN**（落後就第一個砍）；超前才接 **Homebrew 第三方 tap**（有安裝數、星數中位數 1）、**PyPI**。Threads／Facebook **不能主動發現**（keyword search 要審核且用途不符；oEmbed 沒有貼文文字），只能用 oEmbed 嵌入。GH Archive 等公開資料集已失準。ecosyste.ms 要先取得書面同意 |
 | B. 品質 | 規則先分出「可用的軟體」；用規則算的品質會飽和（小工具和 bat 都是 80–100 分），所以品質主要靠**沙盒驗證（35%）**與**模型 rubric 評文件（20%）**；知名度用 7 個訊號對數正規化另外算；寶藏 = 驗證通過＋品質 ≥70＋知名度 ≤45。Scorecard API 只涵蓋約 3% 的長尾 repo |
 | C. 沙盒 | **Modal Sandbox** 主力（gVisor、網路 allowlist、可先開網路安裝再斷網執行），E2B 備案。雲端沙盒都是 Linux；demo 那 3 筆在念誠的 Mac 上人工驗證並照實標示 |
 | D. Meta 模型 | API 在 `https://api.meta.ai/v1`，OpenAI 相容；`muse-spark-1.3` 支援圖片、tool calling、強制 JSON schema，$1.25／$4.25 每百萬 token。**Muse Spark Open @ Baseten** 只做初篩（同價，為了 credits 與 Best Open Weight 獎）；Glimmer 不用（合作夥伴沒有按 token 的服務） |
 | E. MCP | 規格 `2026-07-28` 已經無狀態，但多數客戶端仍走舊 handshake → 用官方 TS SDK v2 的 `createMcpHandler` 同時服務兩代，部署在 Cloudflare Workers（`McpAgent` 已 deprecated）。brief 的 4 個工具＋`submit_software` |
 | F. 儲存與配對 | git 裡每款一份 JSON 當正本，建置成索引打包進 Worker；事件寫 D1；配對是「硬條件篩選 → `muse-spark-1.3` 一次呼叫取捨 → 程式守門」，**不用向量搜尋** |
 | G–H. 架構與時程 | 核心 64.5 h＋計畫內 7.5 h，容量 78 h，緩衝 6 h。兩個關卡：**10/28 晚上** Meta API 能不能用；**10/31 晚上** ≥5 筆在 Modal 通過驗證並重播。11/2 功能凍結、11/3 錄影、**台北 11/4 22:00 交件**（離截止 12 小時） |
-| 花費（估算） | Meta $25–88（$150 credits 內，程式硬停 $100）；Baseten $2–5；Modal $4–9；credits 都到位時自付 $0–5 |
+| 花費（估算） | Meta $25–88（$150 credits 內，程式硬停 $100）；Baseten 約 $1.3–2.5；Modal $4–9；credits 都到位時自付 $0–5 |
 
 ### 念誠今天要做的事（細節見 K）
 
@@ -40,7 +40,7 @@
 2. 申請 Baseten（審核制）、Modal、Cloudflare、GitHub fine-grained PAT、E2B（備案）。
 3. **寫好並 commit 20 題評測題組**（比賽期間新寫，不搬賽前草稿），今晚凍結。
 4. 確認有沒有 Apple silicon Mac、每天能投入幾小時。
-5. 寄信給 ecosyste.ms 詢問能否用腳本存取（選做）。
+5. 寄信給 ecosyste.ms 詢問能否用腳本存取（選做；信中說明調研時已在讀到條款前查詢過）。
 6. 在本機跑 `spikes/ch_hosting_github.py counts`（這個雲端 session 的 GitHub API 只開放本 repo，GitHub search 的實際量還沒量到）。
 
 ### 本報告沒能確認的事
@@ -53,22 +53,38 @@
 
 完整盤點（7 組、約 70 個管道）、要避開的清單、整合方式：[channels.md](channels.md)。原始筆記在 [notes/](notes/)。**7 組都已調研並查核。**
 
+主要來源（查證日 2026-10-28）：[GitHub AUP](https://docs.github.com/en/site-policy/acceptable-use-policies/github-acceptable-use-policies)、[GitHub search API](https://docs.github.com/en/rest/search/search)、[HN API](https://github.com/HackerNews/API)、[Homebrew analytics](https://formulae.brew.sh/analytics/)、[PyPI API](https://docs.pypi.org/api/)、[ecosyste.ms Terms](https://ecosyste.ms/terms)、[Threads keyword search](https://developers.facebook.com/documentation/threads/keyword-search)、[Meta 權限與允許用途](https://developers.facebook.com/documentation/development/permissions)、[Threads embed](https://developers.facebook.com/documentation/threads/tools-and-resources/embed-a-threads-post)、[Automated Data Collection Terms](https://www.facebook.com/legal/automated_data_collection_terms)。
+
 ### A.1 黑客松期間接的管道
 
-依 H 節的工時，**一定接 3 條、時間夠再接 2 條**（工時是 G.4 的最低版本；完整版見 [channels.md](channels.md)）：
+依 H 節的工時：**核心 2 條、計畫內 1 條（落後就砍）、超前才做 2 條**（工時是 G.4 的最低版本；完整版見 [channels.md](channels.md)）：
 
 | # | 管道 | 層級 | 理由 | 工時 |
 |---|---|---|---|---|
 | 1 | GitHub search API（＋ repo、release、README） | 核心 | 兩個類別的新作品主要在這；可直接篩「今年建立、最近有 push、星數 5–300」；之後可用 stargazers 的 `starred_at` 自算星數曲線，取代已失準的公開資料集 | 4 h（完整版 6–9 h） |
-| 2 | 提交入口（MCP `submit_software`；GitHub Issue Form 選做） | 核心 | 供給端，也是 demo 第 5 幕；收 GitHub repo 連結，Threads 連結只嵌入 | 2 h |
-| 3 | Hacker News Show HN（官方 Algolia／Firebase API） | 計畫內 | 作者本人發表、別人能試用；兩類別且連 GitHub 約 75 篇／週；86% ≤3 分，正是沒人注意到的；spike 已寫好 | 1.5 h |
+| 2 | 提交入口（MCP `submit_software` 寫進 D1，本機 `pickfit watch` 處理） | 核心 | 供給端，也是 demo 第 5 幕；最低版本只收 GitHub repo 連結；Threads 連結只存 permalink，oEmbed 嵌入是 C6；Issue Form 之後 | 2 h |
+| 3 | Hacker News Show HN（HN 官方 Firebase API＋Algolia HN Search；Algolia 是第三方服務，不是 YC 營運，有無獨立條款未驗證） | 計畫內（落後就砍） | 作者本人發表、別人能試用；兩類別且連 GitHub 約 75 篇／週；86% ≤3 分，正是沒人注意到的；spike 已寫好 | 1.5 h |
 | 4 | Homebrew 第三方 tap（官方 analytics） | 超前才做 | 唯一同時有「安裝數」和「默默無聞」的訊號：30 天安裝 10–1000 次的新 tap formula 有 437 個，抽樣星數中位數 1；以 CLI 為主（本地 AI 約 3／40）；對上 Mac demo | 2 h |
 | 5 | PyPI 新專案（RSS 每 20–30 分鐘；`console_scripts` 篩 CLI） | 超前才做 | 本地 AI 工具很多在這；provenance 能確認套件 ↔ repo | 3 h |
 
 - 本地 AI 類別在最低版本靠 GitHub search 的 topic（`ollama`、`llama-cpp`、`local-llm` 等）與 Show HN 涵蓋。
 - 之後擴充：`awesome-tuis`、`awesome-ollama` 的 diff（2–3 h，只取連結）；V2EX、Qiita、阮一峰周刊（3.5–5 h）；Bluesky @mention 提交。
-- 補資料：GitHub REST API、deps.dev、Scorecard CLI `--local`。**ecosyste.ms 的條款 §9 禁止未經書面同意的腳本擷取**，寄信取得同意前不放進管線。
+- 補資料：GitHub REST API、各套件庫官方 API（下載量）；deps.dev（只補套件 ↔ repo 對應，沒有下載數）與 Scorecard CLI `--local` 屬於之後（G.4 未排工時）。**ecosyste.ms 的條款 §9 禁止未經書面同意的腳本擷取**，寄信取得同意前不放進管線。
+- **誠實揭露**：調研時，部分 spike 在讀到 ecosyste.ms §9 之前已經用腳本查詢過它；A.1 的 Homebrew tap 星數中位數、B.1 部分分類資料、B.2 的涵蓋率、channels.md 的 awesome 清單星數中位數來自這些查詢。之後不再執行，寄信時一併說明並詢問能否保留這些數字。
 - 條款共同做法：只走官方 API／feed，只存自己抽出的事實＋連結，不轉貼全文、不存個資。GitHub AUP §7 對 API 取得的資料也限制用途，推薦服務算不算在內有解讀空間（未驗證）。
+
+### A.2 Meta 平台（Threads、Facebook）實際開放到什麼程度
+
+- **不能拿來主動發現**：Threads keyword search、IG hashtag、FB 粉專都要 App Review，允許用途也不是建軟體目錄；未審核時 keyword search 只搜得到自己的貼文（[文件](https://developers.facebook.com/documentation/threads/keyword-search)）。
+- **oEmbed 免 token，但只能嵌入**：回傳 html 沒有貼文文字，條款禁止抽取與保存。
+- **「作者用 Threads 登入、讀貼文交給模型」也不行**：`threads_basic` 的允許用途只限把貼文顯示給作者本人。
+- Facebook Groups API 已在 2024-04-22 移除；Meta Content Library 只給研究機構。
+- **能做的**：提交入口收 GitHub 連結，Threads 連結用 oEmbed 嵌入原貼文；Threads 分享按鈕；用自家帳號發「今日寶藏」。這些都排在 C（超前才做）。這也讓 brief 第 5 節 demo 第 5 幕要改寫（見 J 節）。
+
+### A.3 重要限制
+
+- 這個雲端 session 的 GitHub API 只開放本 repo，GitHub search 的實際筆數沒量到；發現管線要在念誠本機或 Modal 用自己的 PAT 跑。
+- GitHub 公開事件流已經抓不到新 repo：GH Archive 的新 repo 事件 2025-10-09 起歸零，2026-10-26 起每小時事件驟降到約 2,800 筆；BigQuery、ClickHouse、OSS Insight 跟著失準。「星數剛開始長」要自己用 GitHub API 算。
 
 ### A.4 怎麼大量整合（摘要）
 
@@ -78,22 +94,9 @@
 | 跨來源合併 | union-find 合併 repo、套件（purl）、HN、Threads、官網等 key；每個來源留出處與首次看見時間 |
 | 套件 → repo | 先看發布簽章 provenance，再看自填欄位 |
 | 增量 | 每個來源一個 cursor／ETag，整批成功才前進；PyPI RSS 每 20–30 分鐘 |
-| 排程 | 本機 cron 跑發現；提交事件直接觸發 Modal；GitHub Actions 只重建索引 |
-| 漏斗 | 規則（$0）→ Spark Open 初篩（約 $2／天）→ Muse Spark 抽取（約 $3.5／天）→ 沙盒驗證（**每天上限 30–50 筆**）；每天約 $9–15 |
-| 提交 | 一個佇列；驗證失敗不收錄；重複提交不加分；每日上限；人工抽查 |
-
-### A.2 Meta 平台（Threads、Facebook）實際開放到什麼程度
-
-- **不能拿來主動發現**：Threads keyword search、IG hashtag、FB 粉專都要 App Review，允許用途也不是建軟體目錄；未審核時 keyword search 只搜得到自己的貼文（[文件](https://developers.facebook.com/documentation/threads/keyword-search)）。
-- **oEmbed 免 token，但只能嵌入**：回傳 html 沒有貼文文字，條款禁止抽取與保存。
-- **「作者用 Threads 登入、讀貼文交給模型」也不行**：`threads_basic` 的允許用途只限把貼文顯示給作者本人。
-- Facebook Groups API 已在 2024-04-22 移除；Meta Content Library 只給研究機構。
-- **能做的**：提交表單收 GitHub 連結，Threads 連結用 oEmbed 嵌入原貼文；Threads 分享按鈕；用自家帳號發「今日寶藏」。這讓 brief 第 5 節 demo 第 5 幕要改寫（見 J 節）。
-
-### A.3 重要限制
-
-- 這個雲端 session 的 GitHub API 只開放本 repo，GitHub search 的實際筆數沒量到；發現管線要在念誠本機或 Modal 用自己的 PAT 跑。
-- GitHub 公開事件流已經抓不到新 repo：GH Archive 的新 repo 事件 2025-10-09 起歸零，2026-10-26 起每小時事件驟降到約 2,800 筆；BigQuery、ClickHouse、OSS Insight 跟著失準。「星數剛開始長」要自己用 GitHub API 算。
+| 排程 | 黑客松：本機手動或 cron 跑 `pickfit run`；提交由 `submit_software` 寫 D1，本機 `pickfit watch` 每 60 秒處理；發布用 `pickfit publish` 手動 `wrangler deploy`；不用 GitHub Actions。Modal `spawn()`、Modal cron、Workers Builds 都是 C（G.4） |
+| 漏斗 | 規則（$0）→ Spark Open 初篩 → Muse Spark 抽取 → 沙盒驗證（**每天上限 30–50 筆**）。channels.md §5.4 的「每天 3,000 筆、約 $9–15」是 4 條管道全接時的穩態容量；**黑客松實際規模與花費以 H.6 為準**（整場 300–600 筆候選） |
+| 提交 | 黑客松只有 MCP `submit_software` 一個入口、一個 D1 佇列；驗證失敗不收錄；重複提交不加分；每日上限；人工抽查 |
 
 ## B. 怎麼判斷「可用的軟體」與「品質好」
 
@@ -105,7 +108,7 @@
 
 | 類型 | 規則訊號（例） |
 |---|---|
-| 工具（正向） | README 有安裝／用法小節與安裝指令（`brew install`、`pipx`、`cargo install`…）；**強訊號**：release 附二進位檔、套件中繼資料有執行入口（npm `bin`、`[project.scripts]`、Cargo `src/main.rs`、Go `cmd/*/main.go`）、被套件庫收錄 |
+| 工具（正向） | README 有安裝／用法小節與安裝指令（`brew install`、`pipx`、`cargo install`…）；**強訊號**：release 附二進位檔、套件中繼資料有執行入口（npm `bin`、`[project.scripts]`、Cargo `src/main.rs`、Go `cmd/*/main.go`）、被套件庫收錄（直接查 Homebrew `formula.json`、PyPI／npm／crates 官方 API，不用 ecosyste.ms） |
 | 不是軟體 | 名稱或 topics 有 awesome、homework、assignment、tutorial、template、starter、dotfiles；`is_template`；README 大多是連結清單；沒有程式碼檔 |
 | 函式庫 | `main`／`exports` 但沒有 `bin`；只有 `src/lib.rs`；README 只示範 `import`／`go get`；描述寫 library、SDK |
 
@@ -122,8 +125,8 @@ Muse Spark 判斷：類型（18 類 enum）、給終端使用者還是給開發�
 | OpenSSF Scorecard API | **低** | 只涵蓋每週掃描清單（約 131 萬個 repo）或自己發布的 repo；227 個 Show HN repo 只有 7 個（3.1%）有資料，ollama 也是 404。Maintained 對建立未滿 90 天的 repo 給 0；Code-Review、Contributors 對單人專案不公平 |
 | Scorecard CLI `--local` | 中 | 不需要 token，小 repo 1–2 秒；可在沙盒 clone 後順便跑 |
 | CHAOSS 指標 | 中（挑著用） | Issue Response Time、Change Request Closure、Release Frequency 可用；Bus Factor 小專案一定是 1，不計分 |
-| ecosyste.ms | **高（補資料）** | 一個來源就有 release 下載數、issue 關閉時間、套件下載量、檔案列表；涵蓋率 repos 78%、issues 44%；資料 CC BY-SA 4.0 |
-| deps.dev | 中 | 涵蓋 28%；能確認套件 ↔ repo 對應有沒有發布簽章 |
+| ecosyste.ms | 高，但**取得書面同意前不用**（Terms §9，見 A.1） | 一個來源就有 release 下載數、issue 關閉時間、套件下載量、檔案列表；涵蓋率 repos 78%、issues 44%；資料 CC BY-SA 4.0（ShareAlike），取得同意也不寫進正本 |
+| deps.dev | 中 | 涵蓋 28%；能確認套件 ↔ repo 對應有沒有發布簽章；沒有下載數 |
 | **pickfit 自己的** | **最高** | 沙盒驗證結果、安裝步驟數、README 和實際操作的差距、模型依 rubric 評的文件完整度、`report_outcome` 成功率 |
 
 **關鍵發現**：用規則算的品質會飽和。5 個 2026 年的小工具「若驗證通過」是 80–100 分，bat 是 90，分不開。CI、測試、changelog 用 AI 很容易做出來。所以品質要靠**沙盒驗證**和**模型 rubric**拉開。
@@ -139,34 +142,36 @@ Muse Spark 判斷：類型（18 類 enum）、給終端使用者還是給開發�
 | 維護 | 15 | 最近 push、最近 release、一年 ≥2 次 release；**不計 commit 數** |
 | 工程衛生 | 10 | CI、測試、OSI 授權、changelog、lockfile |
 | 回應 | 10 | 外部使用者 issue 的關閉比例與時間（≥2 筆才算） |
-| 使用結果 | 10 | `report_outcome` 成功率（≥3 筆才算） |
+| 使用結果 | 10 | `report_outcome` 成功率（≥3 筆才算）；回報帶 `reporter: eval／demo／dev／external`，**只有 external 算分**，評測與 demo 的回報在 README 分開列 |
 
 - 缺資料的分項從分母拿掉後重新正規化，另外輸出 `confidence`。
 - 上限：archived 30；驗證失敗 40；不是工具 50；**還沒驗證 69**（剛好低於寶藏門檻）。
 
 **popularity（0–100）**：7 個訊號各自對數正規化 `100 × log10(1+x) ÷ log10(1+ref)` 後加權：stars 0.35、每月下載 0.15、forks 0.10、dependents 0.10、release 下載 0.10、HN 最高分 0.10、收錄套件庫數 0.10。ref 依類別不同（本地 AI 的星數普遍較高）；建立滿 3 個月加 25% 的成長速度。ref 是**未校準的初始猜測**，收完候選後改用類別內 P95。
 
-**寶藏**：工具＋驗證通過＋未 archived，且 quality ≥ 70、popularity ≤ 45。寶藏之間的排序值用 `T = quality × (1 − popularity/100)`（schema 已測過；筆記裡的 `gap = quality − popularity` 是同一個概念的另一種寫法，統一用 T），並記 `formula_version`。推薦時先配對條件，寶藏只在合格候選中加分（「推薦是配對，不是排名」）。
+**黑客松期間的資料來源**（ecosyste.ms 取得同意前不用）：stars、forks、release 資產下載數、外部 issue 與 PR 統計用 GitHub REST API；每月下載用 npm downloads API、Homebrew analytics（PyPI 只少量查，不大量抓 pypistats）；收錄套件庫數直接查 Homebrew `formula.json`、PyPI、npm、crates 是否存在；dependents 先不計。缺的分項照規則從分母拿掉並降低 `confidence`。brief 4.3 的「被搜尋到的難易度」最低版本不算，做法（`muse-spark-1.3`＋`web_search`，每筆 2 次、每 100 筆約 $1.9）列在 C。寫 pydantic schema 時，`quality.components` 照本節 6 個分項，不照 storage-matching 筆記的舊範例。
+
+**寶藏**：工具＋驗證通過＋未 archived，且 quality ≥ 70、popularity ≤ 45。寶藏之間的排序值用 `T = quality × (1 − popularity/100)`，並記 `formula_version`。quality-scoring 筆記 §3.5 用的是 `gap = quality − popularity`，兩者排序不完全相同（例：Q100／N40 與 Q70／N11 的先後會對調）；本文採 T（G.5）。推薦時先配對條件，寶藏只在合格候選中加分（「推薦是配對，不是排名」）。
 
 **試算**（spike，假設驗證通過）：datui、convkit、photoc、mere-run、pasteface 的知名度 9–38，都是寶藏候選；bat 品質 90 但知名度 96，不是；gollama（函式庫）、awesome-cli-apps（清單、archived）被正確封頂。
 
-**防灌水**：星數只算進知名度；不計 commit 數；release 只看有沒有；只計外部使用者開的 issue；星數暴增（單週 >50% 且 >200）或 forks／stars 異常就人工抽查。StarScout 研究（[arXiv 2412.13459](https://arxiv.org/abs/2412.13459)）指出假星常用來推 AI/LLM 與工具類 repo，正是我們的兩個類別。
+**防灌水**：星數只算進知名度；不計 commit 數；release 只看有沒有；只計外部使用者開的 issue；星數暴增（單週 >50% 且 >200）或 forks／stars 異常就人工抽查。StarScout 研究（[arXiv 2412.13459](https://arxiv.org/abs/2412.13459)）指出，大多數假星用來推短命的釣魚惡意程式 repo，其餘多半推 AI/LLM、區塊鏈、工具與教學 demo，正好包含我們的兩個類別。所以星數暴增除了人工抽查，也要先排除惡意程式疑慮再送沙盒（沙盒零金鑰、網路收緊）。
 
 ## C. 沙盒驗證
 
-細節與來源：[notes/sandbox-compare.md](notes/sandbox-compare.md)、[notes/sandbox-verify-design.md](notes/sandbox-verify-design.md)（都經查核，查證日 2026-10-28）。
+細節與來源：[notes/sandbox-compare.md](notes/sandbox-compare.md)、[notes/sandbox-verify-design.md](notes/sandbox-verify-design.md)（都經查核，查證日 2026-10-28）。主要來源：[Modal pricing](https://modal.com/pricing)、[Modal sandbox](https://modal.com/docs/guide/sandbox)、[Modal sandbox networking](https://modal.com/docs/guide/sandbox-networking)、[E2B billing](https://e2b.dev/docs/billing)、[Daytona network limits](https://www.daytona.io/docs/en/network-limits/)、[Cloudflare Containers limits](https://developers.cloudflare.com/containers/platform/limits/)、[Vercel Sandbox pricing](https://vercel.com/docs/sandbox/pricing)、[GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions)。
 
 ### C.1 方案比較
 
-| 方案 | 隔離 | 費用 | 啟動 | GPU | 網路控制 | 單次上限 | 結論 |
-|---|---|---|---|---|---|---|---|
-| **Modal Sandbox** | gVisor 或 VM（建立時明確設 `runtime="gvisor"`） | CPU／記憶體按一般價 3 倍；5 分鐘、1 core＋2 GiB 約 $0.016；比賽 $100＋Starter 每月 $30 | 官方只說「sub-second」，未實測 | 有（T4 $0.59/h、L4 $0.80/h） | 預設可出網；`block_network`、CIDR、網域 allowlist（Beta）；執行中改政策（Alpha）→ 可做「先開網路安裝、再斷網執行」 | 24 小時 | **主力** |
-| E2B | Firecracker microVM | Hobby 免卡、$100 一次性 | 約 80 ms | 無 | 有 allow/deny，deny 不支援網域 | 1 小時（Hobby） | Linux 備案 |
-| Daytona | 容器 | 有 free credits | — | 有 | Tier 1、2 只能連「必要服務」清單，連不到一般專案網域；Tier 3 要儲值 $500 | — | 不選：照 README 下載安裝腳本會被擋 |
-| Cloudflare Sandbox／Containers | Firecracker | 要 Workers Paid（$5/月） | 1–3 秒 | 文件沒列 | — | — | 不選：只能從 Worker 用 TS 操作，工時最高 |
-| Vercel Sandbox | Firecracker | Hobby 每月 5 CPU-h | — | 無 | — | 45 分鐘 | 不選 |
-| GitHub Actions（macOS runner） | 每次全新 VM | public repo 免費 | 數十秒（未量） | 無 | 全開 | 6 小時 | **只跑 demo 那幾筆的 Mac 驗證**（條款限制，見下） |
-| 本機 Docker（加限制） | 容器（runc） | 免費 | 0.2–0.5 秒（本環境實測） | 看機器 | 自己控 | 無 | 開發期間的 spike 與除錯 |
+| 方案 | 隔離 | 費用 | 啟動 | GPU | 網路控制 | 套件與映像檔 | 單次上限 | 結論 |
+|---|---|---|---|---|---|---|---|---|
+| **Modal Sandbox** | gVisor 或 VM（建立時明確設 `runtime="gvisor"`） | CPU／記憶體按一般價 3 倍；5 分鐘、1 core＋2 GiB 約 $0.016；比賽 $100＋Starter 每月 $30 | 官方只說「sub-second」，未實測 | 有（T4 $0.59/h、L4 $0.80/h）；GPU 沙盒只限 gVisor、會被搶占 | 預設可出網；`block_network`、CIDR、網域 allowlist（Beta）；執行中改政策（Alpha）→ 可做「先開網路安裝、再斷網執行」 | apt／pip／Dockerfile／registry；檔案系統與記憶體快照 | 24 小時 | **主力** |
+| E2B | Firecracker microVM | Hobby 免卡、$100 一次性 | 約 80 ms | 無 | 有 allow/deny，deny 不支援網域 | Dockerfile 式 template | 1 小時（Hobby） | Linux 備案 |
+| Daytona | 容器 | 送 $200（不能用在 GPU） | <90 ms | 有 | Tier 1、2 只能連「必要服務」清單，連不到一般專案網域；Tier 3 要儲值 $500 | Docker image 建 snapshot | 無固定上限；閒置 15 分鐘自動停止 | 不選：照 README 下載安裝腳本會被擋 |
+| Cloudflare Sandbox／Containers | Firecracker | 要 Workers Paid（$5/月） | 1–3 秒 | 文件沒列 | 範例預設 `enableInternet: false`；可由 Worker 攔截並放行特定主機 | 自己的 Docker image（帳號總共 50 GB） | 不保證；閒置逾時最長 6 小時 | 不選：只能從 Worker 用 TS 操作，工時最高 |
+| Vercel Sandbox | Firecracker | Hobby 每月 5 CPU-h | 「milliseconds」（沒有數字） | 無 | 預設全開；可 deny-all 或網域／CIDR；執行中可改 | Ubuntu image 或自訂 OCI；root | 45 分鐘（Hobby） | 不選 |
+| GitHub Actions（macOS runner） | 每次全新 VM | public repo 免費；pickfit 交件前是 private：macOS $0.062／分（3 筆 × 約 5 分鐘約 $1） | 未公布（未量） | 無 | 全開 | macos-15 已裝 Homebrew | 6 小時 | **只跑 demo 那幾筆的 Mac 驗證**（條款限制，見下） |
+| 本機 Docker（加限制） | 容器（runc） | 免費 | 0.2–0.5 秒（本環境實測） | 看機器 | 自己控 | 任何 image | 無 | 開發期間的 spike 與除錯 |
 
 **macOS 的問題**：demo 使用者在 Mac，但雲端沙盒都是 Linux。
 - GitHub Actions 條款限 hosted runner 只能做「與該 repo 軟體專案相關」的事（[原文](https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features)），違規可能停用 repo 或帳號，而交件要用 GitHub repo。所以**大量驗證第三方軟體不走 Actions**，只拿來跑 demo 那 3–5 筆的 Mac 驗證（有風險，見 K 節的決定）。
@@ -193,25 +198,29 @@ Muse Spark 判斷：類型（18 類 enum）、給終端使用者還是給開發�
 
 ### C.3 「驗證通過」的定義（分級，不假裝）
 
+等級和 [notes/sandbox-verify-design.md](notes/sandbox-verify-design.md) §2.1 一致，schema 的 enum 照這張表寫：
+
 | 等級 | 開發者 CLI 工具 | 本地 AI／LLM 工具 |
 |---|---|---|
-| 安裝驗證 | 安裝指令 exit 0、指令在 PATH | 同左 |
-| 功能驗證 | `--version`／`--help` 成功，README 第一個範例能跑、輸出合理 | 服務起得來、port 有回應（`/health`、`/v1/models`） |
 | 推論驗證 | — | 用極小模型（<1 GB，例如 `stories260K.gguf`、`smollm2:135m`）跑一次推論 |
+| 服務驗證 | — | 服務起得來、port 有回應（`/health`、`/v1/models`） |
+| 功能驗證 | `--version`／`--help` 成功，README 第一個範例能跑、輸出合理 | — |
+| 安裝驗證 | 安裝指令 exit 0、指令在 PATH | 同左 |
 | 未驗證（附原因） | 需要帳號、GUI、特定 OS | 需要 GPU／CUDA、Apple Silicon（MLX）、大模型 |
+| 失敗 | 照 README 與修正後都裝不起來或跑不起來 | 同左 |
 
 - 大型模型：不下載。用官方支援的最小模型做 smoke test，第一次下載後放 Modal Volume 共用；只有工具必須用 CUDA 才開 GPU 沙盒。
-- 截圖：用 Pillow 把終端輸出畫成 PNG（0.06 秒，支援中文）當預設；`termshot`（MIT）可用但中文會變方塊；`vhs` 依賴太多；`asciinema`／`agg` 是 GPL-3.0。截圖是從輸出重繪的，判讀以文字 log 為主。
+- 截圖：用 Pillow 把終端輸出畫成 PNG（0.06 秒，支援中文）當預設；`termshot`（MIT）可用但中文會變方塊；`vhs` 依賴太多；`asciinema`／`agg` 是 GPL-3.0。截圖是**從終端輸出重繪的**，不是真的螢幕；判讀以文字 log 為主，README 與影片要照實標示。本地 AI 工具有網頁 UI 時，才用 Playwright 拍真的畫面（C）。
 
 ### C.4 安全風險與最低限度防護
 
 | 風險 | 防護 |
 |---|---|
 | 竊取金鑰 | 沙盒裡**不放任何金鑰**；模型呼叫在沙盒外 |
-| 挖礦、外連、當跳板 | 網域 allowlist（安裝階段開，執行階段關）；記錄所有外連；Modal 與 GitHub 條款都禁止挖礦 |
-| 塞爆資源、fork bomb | CPU／記憶體／磁碟／pids／時間上限 |
-| 提權、改主機 | 非 root、cap-drop ALL、gVisor；每次全新環境；不在自己的機器上跑陌生程式 |
-| 讀雲端 metadata | 擋 `169.254.169.254` |
+| 挖礦、外連、當跳板 | 安裝時 `outbound_domain_allowlist=["*"]`＋`outbound_cidr_allowlist=["0.0.0.0/0"]`，跑範例前收成空清單（Alpha，G.4）；Modal 只記錄**被擋的**連線，全開期間的外連紀錄要用 `/proc` 抽樣（未驗證）；Modal 與 GitHub 條款都禁止挖礦 |
+| 塞爆資源、fork bomb | Docker：CPU／記憶體／磁碟／pids／時間上限（實測有效）。Modal：CPU、記憶體、時間有參數；pids、磁碟沒有參數，靠沙盒內 `ulimit`（未驗證）；每筆全新沙盒 |
+| 提權、改主機 | Docker：非 root＋cap-drop ALL（實測）。Modal：gVisor；`Sandbox.create` 沒有 user 參數，非 root 要在 image 裡建使用者（未驗證）。每次全新環境；不在自己的機器上跑陌生程式 |
+| 讀雲端 metadata | 自架主機擋 `169.254.169.254`（Docker 實測連得到）；Modal 上的行為未驗證 |
 | README 裡的 prompt injection | 讀進來的內容一律包在 `<source>` 裡，系統提示寫明來源裡的指令不是給模型的 |
 | 誤判 | 結果只當證據；規則與模型判讀都同意才算過；失敗回報會觸發重驗 |
 
@@ -219,11 +228,11 @@ Muse Spark 判斷：類型（18 類 enum）、給終端使用者還是給開發�
 
 ## D. Meta 模型
 
-細節與來源：[notes/meta-model-api.md](notes/meta-model-api.md)、[notes/meta-open-weights.md](notes/meta-open-weights.md)、[notes/meta-usage-design.md](notes/meta-usage-design.md)。三份都經過查核 agent 逐條對官方文件（查證日 2026-10-28）。**沒有 key，所有模型呼叫都還沒實測。**
+細節與來源：[notes/meta-model-api.md](notes/meta-model-api.md)、[notes/meta-open-weights.md](notes/meta-open-weights.md)、[notes/meta-usage-design.md](notes/meta-usage-design.md)。前兩份經查核 agent 逐條對官方文件（查證日 2026-10-28）；`meta-usage-design` 是設計與估算筆記，沒有獨立查核（D.3 的成本與流程是估算）。**沒有 key，所有模型呼叫都還沒實測。**
 
 ### D.1 官方文件查到的事實
 
-官方文件在 [dev.meta.ai/docs](https://dev.meta.ai/docs)（舊網址 `llama.developer.meta.com` 轉址過來；每頁加 `.md` 有純文字版，索引在 [llms.txt](https://dev.meta.ai/llms.txt)）。
+官方文件在 [dev.meta.ai/docs](https://dev.meta.ai/docs)（舊網址 `llama.developer.meta.com` 轉址過來；每頁加 `.md` 有純文字版，索引在 [llms.txt](https://dev.meta.ai/llms.txt)）。主要來源：[models](https://dev.meta.ai/docs/models.md)、[pricing & rate limits](https://dev.meta.ai/docs/pricing-rate-limits.md)、[structured output](https://dev.meta.ai/docs/structured-output.md)、[tool calling](https://dev.meta.ai/docs/tool-calling.md)、[reasoning](https://dev.meta.ai/docs/reasoning.md)、[spend limit](https://dev.meta.ai/help/billing/spend-limit-alert)、[Muse Spark Open](https://dev.meta.ai/docs/muse-spark-open.md)、[Muse Glimmer](https://dev.meta.ai/docs/muse-glimmer.md)、[Baseten Model APIs](https://docs.baseten.co/inference/model-apis/overview)、[Modal endpoint integrations](https://modal.com/docs/guide/endpoint-integrations.md)。
 
 | 模型 | model ID | 在哪 | 圖片 | tool calling | JSON schema | context | 價格（每百萬 token，in／out） |
 |---|---|---|---|---|---|---|---|
@@ -248,7 +257,9 @@ Muse Spark 判斷：類型（18 類 enum）、給終端使用者還是給開發�
 ### D.2 開放權重：用在哪、為什麼
 
 - 開放權重**不會比較便宜**：Spark Open 在 Baseten／Modal 和 Meta 標準版同價；Meta 的 Contributor 版還便宜約 12–20 倍。
-- 用它的理由是：比賽給的 Baseten credits、獨立的 rate limit、以及 Best Build on Meta Open Weight Models 加碼獎。
+- 用它的理由是：比賽給的 Baseten credits，以及 Best Build on Meta Open Weight Models 加碼獎。額度和 Meta API 分開算，但 Baseten 預設只有 15–120 RPM，遠低於 Meta 的 3,000 RPM，不是優點。
+- **Baseten 呼叫方式**：OpenAI 相容，base URL `https://inference.baseten.co/v1`，Bearer 認證（`BASETEN_API_KEY`）；`/responses` 是無狀態的（不能用 `previous_response_id`）；json_schema 接受但不強制。
+- **Modal 呼叫方式**（Baseten 沒核准時的另一個合作夥伴）：`modal endpoint create --shared --model meta-models/Muse-Spark-Open-816B-A42B` 建 Shared Endpoint；`modal workspace proxy-tokens create` 後用 `Authorization: Bearer wk-<id>.ws-<secret>`；base URL `https://inference.us-west.modal.direct/v1`，`model` 填端點的 hostname；按 token $1.25／$0.15／$4.25。Modal 文件寫方案內含的 credits 不能付 Shared Endpoint，**比賽的 $100 能不能付未驗證**；tool calling 與 JSON schema 支援也未驗證。
 - 所以只放在**初篩**這一個環節：Spark Open @ Baseten，`reasoning_effort: low`，輸出用 pydantic 在程式端驗證（Baseten 不強制 schema）；低信心才升級到 `muse-spark-1.3` 複查。
 - Glimmer 不用：合作夥伴都只提供專屬 GPU（Modal H100 約 $3.95／小時），自架的時間不划算。
 - 授權要求產品顯示「Built with Muse Spark Open」，README 要放。
@@ -260,12 +271,12 @@ Muse Spark 判斷：類型（18 類 enum）、給終端使用者還是給開發�
 | 環節 | 模型 | 模型做的決定 | 程式做的事 | 每 100 筆（估算） |
 |---|---|---|---|---:|
 | 1 初篩 | Spark Open @ Baseten | 是不是可用的軟體、哪一類、為什麼不是（不給星數，避免知名度偏誤） | 前置規則、JSON 驗證、5% 抽樣和 1.3 比對 | $1.4 |
-| 2 抽取 | `muse-spark-1.3` | 讀 README、release notes、貼文、截圖，填欄位，**每欄附原文引用** | 檢查引用真的出現在來源；授權、release 等事實欄位用 API 值 | $2.4–2.8 |
+| 2 抽取 | `muse-spark-1.3` | 讀 README、manifest、release notes、截圖，填欄位，**每欄附原文引用**（社群貼文只當發現線索，不當抽取來源、不存引用） | 檢查引用真的出現在來源；授權、release 等事實欄位用 API 值 | $2.4–2.8 |
 | 3a 驗證 agent | `muse-spark-1.3`（Responses＋function tools＋`web_search`） | 每一步跑什麼、錯了怎麼修、何時結束 | 沙盒、步數／時間／花費上限 | $10–27 |
 | 3b 畫面判讀 | `muse-spark-1.3`（圖片＋schema） | 截圖裡的軟體是否真的在運作，框出證據（0–1000 座標） | 和 exit code、重播結果合併 | $1.3 |
 | 3c 重播 | 不用模型 | — | 在乾淨沙盒照記錄的步驟重跑一次，確認可重現 | — |
-| 4 計分 | `muse-spark-1.3` | 文件完整度、安裝說明準確度（0–3 分，有錨點與引用） | 驗證、維護、知名度、寶藏分數都用規則算 | $3.8 |
-| 5 配對 | `muse-spark-1.3` | 需求 → 條件、比較 2–3 個候選、找最好的免費選項、最多問 1–2 個問題 | 結構化篩選；檢查理由對得上欄位 | $2.4／100 次查詢 |
+| 4 計分 | `muse-spark-1.3` | 文件 rubric：8 項，每項 0／1／2 分，附引用（B.3） | 驗證、維護、知名度、寶藏分數都用規則算 | $1.7（搜尋可見度是 C，另約 $1.9） |
+| 5 配對 | `muse-spark-1.3`（一次呼叫，≤60 張候選卡） | 需求 → 條件、比較 1–3 個候選、找最好的免費選項、最多回 1 個澄清問題 | 結構化篩選；檢查理由對得上欄位 | $1.3–3.5／100 次查詢 |
 
 - 驗證 agent 是最能證明「核心」的地方：Muse Spark 自己決定安裝方式、讀錯誤、改指令、跑 smoke test。官方 cookbook 有 Muse Spark 1.3 在拋棄式 Docker 沙盒自主跑 48 個 shell 指令的例子，同一個模式。
 - 停止條件：呼叫 `finish`，或 25 回合、15 個指令、20 分鐘、每款 $0.50、同一個錯誤 3 次。
@@ -277,7 +288,7 @@ Muse Spark 判斷：類型（18 類 enum）、給終端使用者還是給開發�
 | # | 項目 | 備案 |
 |---|---|---|
 | 1 | 台灣帳號能否開 Meta Model API | 全部改走 Spark Open @ Baseten |
-| 2 | Baseten 的 `meta-models/muse-spark-open-1026` 是否存在 | 用 `/v1/models` 查；不行就用公開 ID |
+| 2 | Baseten 的 `meta-models/muse-spark-open-1026` 是否存在 | 用 `/v1/models` 查；不行就用公開 ID；Baseten 沒核准就試 Modal Shared Endpoint（先確認比賽 credits 能付） |
 | 3 | 截圖放在 tool 輸出裡模型看不看得到（文件互相矛盾） | 截圖放 user 訊息，或只交給 3b 判讀 |
 | 4 | `text.format` 能否和 tools 同一請求 | 用 `finish` 工具＋程式驗證 |
 | 5 | 推理 token 實際用量 | 調 `reasoning.effort`；先用 spike 的 `usage` 換掉估算 |
@@ -286,7 +297,7 @@ spike：`spikes/meta_api_hello.py`（文字、JSON schema、tool calling、圖�
 
 ## E. MCP server
 
-細節、完整 JSON Schema 與 spike：[notes/mcp-server.md](notes/mcp-server.md)（經查核，查證日 2026-10-28）、`spikes/mcp_stateless/`。
+細節、完整 JSON Schema 與 spike：[notes/mcp-server.md](notes/mcp-server.md)（經查核，查證日 2026-10-28）、`spikes/mcp_stateless/`。主要來源：[MCP 2026-07-28 changelog](https://modelcontextprotocol.io/specification/2026-07-28/changelog.md)、[TS SDK v2 HTTP](https://ts.sdk.modelcontextprotocol.io/v2/serving/http.md)、[Cloudflare createMcpHandler](https://developers.cloudflare.com/agents/model-context-protocol/apis/handler-api/)、[Workers limits](https://developers.cloudflare.com/workers/platform/limits/)、[Claude Code MCP](https://code.claude.com/docs/en/mcp.md)、[Codex MCP](https://developers.openai.com/codex/mcp.md)。
 
 ### E.1 規格與 SDK 現況
 
@@ -295,7 +306,7 @@ spike：`spikes/meta_api_hello.py`（文字、JSON schema、tool calling、圖�
 | MCP Current 版本是 **`2026-07-28`**：拿掉 `initialize` handshake 與 `Mcp-Session-Id`，協定本身就是無狀態；新增必備的 `server/discover`，請求要帶 `MCP-Protocol-Version`、`Mcp-Method` header（[規格](https://modelcontextprotocol.io/specification/2026-07-28/server/tools.md)） | brief「無狀態」已經是規格預設 |
 | 但很多客戶端還走舊的 `initialize`（legacy）：TS SDK v2 client、MCP Inspector 預設 legacy；Claude Code 的 v2 runtime 才會先問新版（v2.1.274 起預設） | server 要**同時服務兩代**。官方 SDK v2 的 `createMcpHandler` 預設就這樣做，legacy 那一路也不發 session id（spike 實測） |
 | 官方 SDK：TS 拆成 `@modelcontextprotocol/server`／`client` 2.4.0（Apache-2.0）；Python `mcp` 2.3.0（MIT），`FastMCP` 改名 `MCPServer` | 網路上大量 v1 範例已過時，照 v2 文件寫 |
-| Cloudflare：`McpAgent`（Durable Objects）**已 deprecated**；新做法是 `agents/mcp/server` 的 `createMcpHandler`，每請求建新 server、不需 DO（[文件](https://developers.cloudflare.com/agents/model-context-protocol/apis/handler-api/)） | 照 brief 部署在 Workers，不需要 Durable Objects |
+| Cloudflare：`McpAgent`（Durable Objects）**已 deprecated**；新做法是 `agents/mcp/server` 的 `createMcpHandler`，每請求建新 server、不需 DO（[文件](https://developers.cloudflare.com/agents/model-context-protocol/apis/handler-api/)） | 照 brief 部署在 Workers，不需要 Durable Objects。注意有兩個同名函式：pickfit 照 spike **直接用 `@modelcontextprotocol/server` 2.4.0 的 `createMcpHandler`**，自己加 Host／Origin 檢查；不同時安裝 `agents`（它把 server 固定在 2.3.1，會版本衝突） |
 | 舊版規定 `outputSchema` 根節點必須是 object | 輸出一律 object 根節點，並同時回 JSON 文字版 `content` |
 | 無狀態 legacy 連線上 server 不能主動對 client 發請求（elicitation、sampling） | 不用 elicitation；server 在結果裡回 `clarifying_question` |
 
@@ -321,10 +332,10 @@ brief 的 4 個工具合理。建議加 `submit_software`（供給端，demo 第
 
 | 工具 | 主要輸入 | 主要輸出 | annotations |
 |---|---|---|---|
-| `find_software` | `need`（必填，使用者原話描述要做的事）、`category`、`os`、`arch`、`budget`、`must_run_locally` | `rec_id`、`picks[]`（slug、why、tradeoffs、platforms、pricing、processing、`verification`、`scores.quality`／`popularity`）、`best_free`、`no_install_option`、`clarifying_question`、`degraded` | `readOnlyHint: true` |
+| `find_software` | `need`（必填，使用者原話描述要做的事）、`category`、`os`、`arch`、`budget`、`must_run_locally` | `rec_id`、`matched_by`（model ID 或 `rules`）、`picks[]`（slug、why、tradeoffs、platforms、pricing、processing、`verification`、`how_we_know`、`evidence_url`（run page 或 trace JSON）、`scores.quality`／`popularity`）、`best_free`、`no_install_option`、`clarifying_question`（最多 1 題）、`degraded` | `readOnlyHint: true` |
 | `find_alternatives` | `current_software`、`pain_points`（都必填）＋共用條件 | 同上＋`keep_current`（沒有更好的就直說） | `readOnlyHint: true` |
 | `get_install_guide` | `slug`、`os`（必填）、`rec_id` | `verification`（在哪個 OS、何時）、`applies_to_user_system`、`steps[]`（agent 可執行）、`manual_steps[]`（例如權限授權）、`verify`（驗證指令）、`first_task` | `readOnlyHint: true` |
-| `report_outcome` | `slug`、`stage`（installed／install_failed／first_run_ok／…／replaced）必填；`rec_id`、`satisfaction`、`os`、`error_excerpt`（去掉使用者名稱、路徑、token） | 收到與否、是否排入重驗 | `idempotentHint: true`（server 端真的去重） |
+| `report_outcome` | `slug`、`stage`（installed／install_failed／first_run_ok／first_run_failed／abandoned／still_using／replaced）必填；`rec_id`、`satisfaction`、`os`、`error_excerpt`（≤500 字元，去掉使用者名稱、路徑、token） | 收到與否、`counted_in_score`、是否排入重驗 | `idempotentHint: true`（server 端真的去重） |
 | `submit_software` | `url`（**GitHub repo**；Threads 貼文連結只當附加、用來嵌入，不讀內容）、`note` | `slug`、狀態（排隊、讀懂中、驗證中、已收錄、拒絕＋原因）；同一個 URL 重送就是查進度 | `idempotentHint: true`、`openWorldHint: true` |
 
 共通原則：
@@ -333,6 +344,7 @@ brief 的 4 個工具合理。建議加 `submit_software`（供給端，demo 第
 - 每個推薦都帶驗證證據與分開的品質／知名度分數，這是「不是基本 RAG」最直接的證明。
 - server instructions 約 430 字元（Codex 只保證讀前 512 字元），草稿在筆記 5.3 節。
 - 回應裡不放推薦碼、廣告、付費排序。
+- 和 D1 DDL 對齊（storage-matching 筆記的 DDL 要跟著改）：`stage` 七個值存成 `(stage, success)`，例如 `install_failed` → `('installed', 0)`、`first_run_ok` → `('first_run', 1)`；沒帶 `rec_id` 的回報只記一列、回 `counted_in_score: false`；`error_excerpt` 兩邊都是 500 字元。
 
 ## F. 儲存與配對
 
@@ -353,8 +365,8 @@ brief 的 4 個工具合理。建議加 `submit_software`（供給端，demo 第
 |---|---|---|
 | 1 | 正本：`data/software/<slug>.json`，用 JSON 不用 YAML | diff 就是審計紀錄；不必處理 YAML 的隱式型別 |
 | 2 | 建置時把全部檔案轉成一個 `index.json`（候選卡＋預先算好的 BM25 倒排），**打包進 Worker** | spike：3,000 筆 bundle 約 1 MB；8,198 筆 `JSON.parse` 16.5 ms，查詢中位數 <1 ms，離 Worker 啟動 1 秒上限很遠（本機量測） |
-| 3 | 事件（查詢、安裝指南、回報、提交）寫 **D1**：`events`、`reverify_queue`、`meta_budget` 三張表 | 要 SQL 彙總與去重；KV 免費版每天只能寫 1,000 個 key、最終一致，不適合 |
-| 4 | push → Workers Builds 自動 `validate → build_index → deploy` | 不用自己寫同步程式；資料壞了就不會部署 |
+| 3 | 事件（查詢、安裝指南、回報、提交）寫 **D1**：`events`、`submissions`、`reverify_queue`、`meta_budget` 四張表（`submissions` 至少要 `url` 唯一、`status`、`submitted_at`、`slug`、`reason`；筆記沒有它的 DDL，實作時補） | 要 SQL 彙總與去重；KV 免費版每天只能寫 1,000 個 key、最終一致，不適合 |
+| 4 | 最低版本由本機 `pickfit publish`（驗 schema → commit → build_index → `wrangler deploy`）手動部署；Workers Builds 自動部署是 C | 資料壞了就不會部署 |
 | 5 | 失敗回報進 `reverify_queue` → 驗證 agent 重跑 → 新步驟 commit 回 git | 「回報 → 重驗 → 安裝步驟被修正」留下一個 git diff，是「不是 RAG」最直接的證據 |
 | 6 | 不記 IP，不存需求原文，只存模型解析後的條件 | brief 第 11 節 |
 
@@ -367,7 +379,7 @@ Cloudflare 免費額度（[Workers limits](https://developers.cloudflare.com/wor
 | A 解析需求 | Muse Spark | 自然語言 → 條件（OS、預算、隱私、類別、必要功能、目前在用的工具）＋英文 `search_terms` |
 | B 硬條件篩選 | 程式 | 只留 `listed`、該 OS 驗證過、符合本機執行／免費等條件的 |
 | C 取候選 | 程式 | 黑客松最低版本：該類別合格的 ≤60 筆就全部送進模型（不截斷、不依寶藏分數排序）；超過 60 筆才用 BM25 查 `search_terms` 取前 25 張候選卡（每張約 350 tokens）。A＋E 合成一次模型呼叫，降低延遲 |
-| D 該不該問 | 程式＋Muse Spark | 程式先找「前 5 名在這個屬性上不同、但需求沒說」的屬性；沒有就不准問；有的話由模型判斷問了會不會改變第一名 |
+| D 該不該問 | 程式＋Muse Spark | 最多回 1 題（E.3 只有一個 `clarifying_question`）。最低版本由模型判斷；「分歧屬性」程式檢查（前 5 名在這個屬性上不同、但需求沒說，沒有就不准問）是 C |
 | E 比較取捨 | Muse Spark | 選 1–3 個，每個理由附對應欄位；寫和知名工具的取捨、最好的免費選項、「不需要新軟體」的情況 |
 | F 守門 | 程式 | slug 必須在候選裡、理由對得上欄位；模型失敗就退回寶藏分數排序＋模板理由，標 `generated_by: rules` |
 | G 安裝 | 程式 | `get_install_guide` 只回傳重播過的步驟，不呼叫模型 |
