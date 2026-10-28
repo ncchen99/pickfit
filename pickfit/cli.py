@@ -30,6 +30,69 @@ def _spend(args: argparse.Namespace) -> int:
     return 0
 
 
+# --- discovery and extraction (P2) ----------------------------------------------
+
+
+def _discover(args: argparse.Namespace) -> int:
+    from pickfit.discover.github import GitHubError, github_token
+    from pickfit.discover.run import run_discover
+
+    try:
+        token = github_token()
+    except GitHubError as err:
+        print(f"pickfit discover: {err}", file=sys.stderr)
+        return 2
+    funnel = run_discover(token=token, per_query=args.per_query, pushed_days=args.pushed_days,
+                          categories=args.category, skip_details=args.skip_details)
+    print(json.dumps(funnel, ensure_ascii=False, indent=2))
+    return 0
+
+
+def _extract(args: argparse.Namespace) -> int:
+    from pickfit.extract import run_extract
+
+    summary = run_extract(limit=args.limit, model=args.model, reasoning_effort=args.effort,
+                          repo_ids=args.repo, force=args.force)
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+    return 0 if summary["errors"] == 0 else 1
+
+
+def _funnel(args: argparse.Namespace) -> int:
+    from pickfit.discover.run import pipeline_db_path, prescreen_status
+    from pickfit.discover.store import PipelineDB
+
+    print(json.dumps(PipelineDB(pipeline_db_path()).funnel(prescreen_status()),
+                     ensure_ascii=False, indent=2))
+    return 0
+
+
+def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
+    from pickfit.discover.github import PUSHED_DAYS, TOPICS
+    from pickfit.discover.run import DEFAULT_PER_QUERY
+
+    d = sub.add_parser("discover", help="search GitHub for candidates, fetch details, apply rules ($0)")
+    d.add_argument("--per-query", type=int, default=DEFAULT_PER_QUERY,
+                   help=f"results to take from each search query (default {DEFAULT_PER_QUERY}, max 1000)")
+    d.add_argument("--pushed-days", type=int, default=PUSHED_DAYS,
+                   help=f"only repos pushed in the last N days (default {PUSHED_DAYS})")
+    d.add_argument("--category", action="append", choices=sorted(TOPICS),
+                   help="limit to one category (repeatable; default all)")
+    d.add_argument("--skip-details", action="store_true",
+                   help="only search; do not fetch README, releases or files")
+    d.set_defaults(func=_discover)
+
+    e = sub.add_parser("extract", help="read candidates with a Meta model into ExtractionResult (paid)")
+    e.add_argument("--limit", type=int, required=True, help="candidates to extract in this run")
+    e.add_argument("--model", default="dev", help='"dev" (contributor, default), "prod", or a model id')
+    e.add_argument("--effort", default="minimal", help="reasoning effort (default minimal)")
+    e.add_argument("--repo", action="append", help="extract this repo id (gh:<id>) or owner/name")
+    e.add_argument("--force", action="store_true", help="extract again even if already extracted")
+    e.set_defaults(func=_extract)
+
+    f = sub.add_parser("funnel", help="counts, models and cost per funnel stage from runs/pipeline.db")
+    f.set_defaults(func=_funnel)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="pickfit")
     parser.add_argument("--version", action="version", version=f"pickfit {__version__}")
@@ -42,6 +105,8 @@ def main(argv: list[str] | None = None) -> int:
 
     s = sub.add_parser("spend", help="show spending from the shared ledger")
     s.set_defaults(func=_spend)
+
+    _add_pipeline_commands(sub)
 
     args = parser.parse_args(argv)
     if args.command is None:
