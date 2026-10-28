@@ -12,7 +12,7 @@ import { toCard, type Card } from './cards.ts';
 import { checkBudget, recordSpend } from './budget.ts';
 import { ranSentence } from './evidence.ts';
 import type { Settings } from './env.ts';
-import { logEvent, newId, type Reporter } from './events.ts';
+import { logEvent, logFailure, newId, type Reporter } from './events.ts';
 import { hardFilter, MAX_CARDS, type Conditions } from './filter.ts';
 import { clip, guardPicks, parseAnswer, type GuardedPick } from './guard.ts';
 import { callMeta, estimateCostUsd, MATCH_MODEL, MetaCallError, requestBody } from './meta.ts';
@@ -275,7 +275,7 @@ async function askModel(
     }
     throw err;
   } finally {
-    deps.waitUntil(recordSpend(deps.db, now, cost).catch(() => undefined));
+    deps.waitUntil(recordSpend(deps.db, now, cost).catch(logFailure('meta_budget')));
   }
 }
 
@@ -372,7 +372,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
       degraded: output.degraded,
       meta_cost_usd: cost,
       latency_ms: Date.now() - started,
-    }).catch(() => undefined),
+    }).catch(logFailure(req.kind, output.rec_id)),
   );
   return { output, keepCurrent: choice.keepCurrent };
 }

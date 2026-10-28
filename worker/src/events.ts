@@ -35,6 +35,14 @@ export function reporterFrom(header: string | null): Reporter {
 export const REC_ID = /^rec_[0-9a-f]{32}$/;
 export const REC_TTL_DAYS = 7;
 
+/**
+ * For waitUntil: a failed D1 write never fails the response, but it is logged
+ * (Workers logs), so a response whose rec_id is missing from events can be found.
+ */
+export function logFailure(what: string, recId: string | null = null) {
+  return (err: unknown) => console.error(JSON.stringify({ event: 'd1_write_failed', what, rec_id: recId, error: String(err) }));
+}
+
 export function newId(prefix: string): string {
   return `${prefix}_${crypto.randomUUID().replace(/-/g, '')}`;
 }

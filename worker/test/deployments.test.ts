@@ -153,3 +153,21 @@ test('MATCH_MODE=off is a rules-only twin of the same build and data', async () 
   assert.ok(out.picks.length > 0);
   assert.equal((await model.call('find_software', MAC_LLM)).result.structuredContent.matched_by, 'muse-spark-1.3');
 });
+
+test('a failed events write does not fail the response, and is logged with the rec_id', async () => {
+  const d1 = makeD1();
+  d1.sqlite.exec('DROP TABLE events');
+  const d = deployment({ TOOLS: 'readonly', MATCH_MODE: 'off' }, { db: d1 });
+  const errors: string[] = [];
+  const original = console.error;
+  console.error = (line: string) => void errors.push(line);
+  try {
+    const out = (await d.call('find_software', MAC_LLM)).result.structuredContent;
+    await d.settle();
+    assert.ok(out.picks.length > 0);
+    const logged = errors.map((line) => JSON.parse(line));
+    assert.deepEqual(logged.map((e) => [e.event, e.what, e.rec_id]), [['d1_write_failed', 'find', out.rec_id]]);
+  } finally {
+    console.error = original;
+  }
+});

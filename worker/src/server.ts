@@ -4,7 +4,7 @@ import * as z from 'zod/v4';
 import { CARD_FIELDS } from './cards.ts';
 import { findAlternatives, findSoftware, type Deps } from './find.ts';
 import { installGuide, UnknownSlugError } from './install.ts';
-import { logEvent } from './events.ts';
+import { logEvent, logFailure } from './events.ts';
 import { ERROR_EXCERPT_MAX, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } from './outcome.ts';
 import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './submit.ts';
 
@@ -291,7 +291,7 @@ export function buildServer(deps: Deps): McpServer {
             rec_id: out.rec_id,
             results: [out.applies_to_user_system.match],
             client: deps.client ?? null,
-          }).catch(() => undefined),
+          }).catch(logFailure('install_guide', out.rec_id)),
         );
         return result(out);
       } catch (err) {

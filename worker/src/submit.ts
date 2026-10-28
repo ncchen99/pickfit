@@ -6,7 +6,7 @@
  * across everyone (there is no per-user key: pickfit stores no IP).
  */
 import type { Catalog } from './catalog.ts';
-import { logEvent, newId } from './events.ts';
+import { logEvent, logFailure, newId } from './events.ts';
 import { scrubHead } from './scrub.ts';
 
 export interface SubmitInput {
@@ -97,7 +97,7 @@ export async function submitSoftware(input: SubmitInput, deps: SubmitDeps): Prom
   }
   const now = deps.now();
   const log = (status: string, slug: string | null) =>
-    logEvent(deps.db, now, { type: 'submit', slug, results: [status], client: deps.client ?? null }).catch(() => undefined);
+    logEvent(deps.db, now, { type: 'submit', slug, results: [status], client: deps.client ?? null }).catch(logFailure('submit'));
 
   const listed = deps.catalog.entries.find((entry) => normalizeRepoUrl(entry.repo_url) === url);
   if (listed) {
