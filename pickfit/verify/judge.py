@@ -32,7 +32,6 @@ REASONING_EFFORT = "low"
 MAX_OUTPUT_TOKENS = 3_000
 MAX_IMAGES = 3
 OUTPUT_CHARS = 2_500
-SCOPE_CAP_USD = 0.10
 
 INSTRUCTIONS = """\
 You are pickfit's screen judge. pickfit installed a piece of software in a disposable Linux sandbox and \
@@ -157,8 +156,8 @@ def _clamp(v: int) -> int:
 
 
 def judge_checks(name: str, checks: list[CheckResult], out_dir: Path, *, model: str | None = None,
-                 run_id: str | None = None, scope: str | None = None, log: Callable[[str], None] = print,
-                 **call_kwargs: Any) -> JudgeResult | None:
+                 run_id: str | None = None, scope: str | None = None, scope_cap_usd: float | None = None,
+                 log: Callable[[str], None] = print, **call_kwargs: Any) -> JudgeResult | None:
     """Render the passing checks and ask the judge; None when there is nothing to judge."""
     shown = pick_checks(checks)
     if not shown:
@@ -171,7 +170,7 @@ def judge_checks(name: str, checks: list[CheckResult], out_dir: Path, *, model: 
     began = time.monotonic()
     result = call_meta("responses", body, stage=STAGE, public_data_only=True, model=model,
                        max_output_tokens=MAX_OUTPUT_TOKENS, reasoning_effort=REASONING_EFFORT,
-                       scope=scope, scope_cap_usd=SCOPE_CAP_USD if scope else None, run_id=run_id,
+                       scope=scope, scope_cap_usd=scope_cap_usd, run_id=run_id,
                        output_model=JudgeOutput, cache=False, **call_kwargs)
     latency = round(time.monotonic() - began, 2)
     usage = vars(result.usage) if result.usage else None

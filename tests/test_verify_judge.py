@@ -99,7 +99,7 @@ def run_judge(tmp_path: Path, server: FakeServer, checks: list[CheckResult] = CH
     lines: list[str] = []
     result = judge_checks("graphtty", checks, tmp_path / "shots", client=server.client(), ledger=ledger,
                           runs_dir=tmp_path / "runs", log=lines.append, run_id="verify-graphtty-t",
-                          scope="verify:graphtty", **kw)
+                          scope="verify:graphtty", scope_cap_usd=0.5, **kw)
     return result, lines
 
 

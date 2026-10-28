@@ -40,7 +40,7 @@ from pickfit.verify.box import Box, BoxError, ExecResult, background_script
 from pickfit.verify.plan import InstallPlan, plan_for
 from pickfit.verify.rules import RuleHit, error_signature, match_rules
 from pickfit.verify.task import VerifyTask
-from pickfit.verify.verdict import log_verdict
+from pickfit.verify.verdict import LogVerdict, log_verdict
 
 HistoryMode = Literal["chain", "replay"]
 DEFAULT_MODE: HistoryMode = "replay"
@@ -416,7 +416,8 @@ def _runs_dir(runs_dir: Path | str | None) -> Path:
 
 
 def new_run_id(slug: str) -> str:
-    stem = re.sub(r"[^a-z0-9]+", "-", slug.lower()).strip("-") or "tool"
+    stem = re.sub(r"[^a-z0-9]+", "-", slug.lower()).strip("-")[:40].strip("-") or "tool"
+    # RunId allows 80 characters: 7 + 40 + 1 + 15 + 1 + 4 at most.
     return f"verify-{stem}-{taipei_now().strftime('%Y%m%d-%H%M%S')}-{secrets.token_hex(2)}"
 
 
@@ -449,6 +450,7 @@ class VerifyAgent:
         self.instructions = INSTRUCTIONS.format(max_commands=limits.max_commands, max_turns=limits.max_turns,
                                                 minutes=round(limits.max_seconds / 60))
         self.commands_used = 0
+        self.verdict: LogVerdict | None = None
         self.error_counts: Counter[str] = Counter()
         self.repeated_error: str | None = None
         self.started = 0.0
@@ -623,6 +625,7 @@ class VerifyAgent:
         if args.level == "failed" and not args.blocking_error:
             args.blocking_error = args.summary or "not given"
         verdict = log_verdict(args, self.report.commands)
+        self.verdict = verdict
         self.report.finish = args.model_dump()
         self.report.verdict = verdict.to_dict()
         said = "agrees" if verdict.agrees else f"lowered to {verdict.level}" if \
