@@ -48,7 +48,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-ccclub-20261029-012321-7160",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g ccclub",
+          "purpose": "Install ccclub globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ccclub --version",
+        "expected_signal": "0.9.8"
+      },
+      "first_task": "ccclub show-data"
+    },
     "windows": null
   },
   "pricing": {
@@ -60,10 +76,87 @@
   "processing": "cloud",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T01:24:23.670228+08:00",
+    "runs": [
+      {
+        "id": "verify-ccclub-20261029-012321-7160",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:24:23.670228+08:00",
+        "tool_version": "0.9.8",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g ccclub",
+            "purpose": "Install ccclub globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ccclub --version",
+            "expected_signal": "0.9.8",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.9.8",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ccclub --help",
+            "expected_signal": "Usage: ccclub [options] [command]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: ccclub [options] [command]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ccclub show-data",
+            "expected_signal": "No usage data found for supported coding agents.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No usage data found for supported coding agents.",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx ccclub init",
+            "actually_needed": "npm install -g ccclub installs the same npm package non-interactively and puts ccclub on PATH; npx ccclub init is interactive first-time setup (asks name, creates group), not just an install"
+          },
+          {
+            "readme_said": "ccclub shows the leaderboard / ccclub --json gives raw JSON",
+            "actually_needed": "Leaderboard commands (ccclub, ccclub --json) exit 1 with 'Not initialized. Run \"ccclub init\" or \"ccclub join <code>\" first.' until init/join is done; ccclub show-data is the README example that works with no account and prints privacy notice plus 'No usage data found for supported coding agents.' w…"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show show-data reporting no usage data and --version printing 0.9.8.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ccclub-20261029-012321-7160/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ccclub-20261029-012321-7160/check-1-cmd4.judged.png",
+            "runs/verify/verify-ccclub-20261029-012321-7160/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.036169
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -252,5 +345,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:07:48+08:00",
-  "updated_at": "2026-10-28T23:54:33+08:00"
+  "updated_at": "2026-10-29T01:24:23.671288+08:00"
 }

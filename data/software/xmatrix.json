@@ -66,18 +66,25 @@
       "first_task": "xmatrix harness list"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-xmatrix-20261029-012319-cc58",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://xmatrix.sh/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://xmatrix.sh/install.sh -o /tmp/xmatrix-install.sh && wc -c /tmp/xmatrix-install.sh && head -c 6000 /tmp/xmatrix-install.sh",
+          "purpose": "download install script for inspection"
+        },
+        {
+          "command": "bash /tmp/xmatrix-install.sh --binary-only",
+          "purpose": "install xmatrix binary-only"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "xmatrix harness list"
+      "check": {
+        "command": "xmatrix --version",
+        "expected_signal": "xmatrix 1.12.0"
+      },
+      "first_task": "xmatrix harness list --local"
     },
     "windows": {
       "basis": "readme_claim",
@@ -107,10 +114,95 @@
     "url": "https://github.com/LambdaLabsHQ/xmatrix/releases/tag/xmatrix-v1.12.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T01:24:34.138640+08:00",
+    "runs": [
+      {
+        "id": "verify-xmatrix-20261029-012319-cc58",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:24:34.138640+08:00",
+        "tool_version": "1.12.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://xmatrix.sh/install.sh -o /tmp/xmatrix-install.sh && wc -c /tmp/xmatrix-install.sh && head -c 6000 /tmp/xmatrix-install.sh",
+            "purpose": "download install script for inspection"
+          },
+          {
+            "command": "bash /tmp/xmatrix-install.sh --binary-only",
+            "purpose": "install xmatrix binary-only"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "xmatrix --version",
+            "expected_signal": "xmatrix 1.12.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "xmatrix 1.12.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "xmatrix --help",
+            "expected_signal": "Usage: xmatrix [OPTIONS] [COMMAND]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: xmatrix [OPTIONS] [COMMAND]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "xmatrix harness list --local",
+            "expected_signal": "HARNESS",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "HARNESS INSTALLED VERSION LATEST AUTO PROBE",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://xmatrix.sh/install.sh | bash",
+            "actually_needed": "download the script first and run `bash /tmp/xmatrix-install.sh --binary-only` to skip interactive browser login and daemon autostart (requires systemctl) in a headless sandbox"
+          },
+          {
+            "readme_said": "`xmatrix harness list` shows installed harnesses (exits 1 with `Not logged in. Run: xmatrix login` when not logged in)",
+            "actually_needed": "`xmatrix harness list --local` for a login-free local probe"
+          },
+          {
+            "readme_said": "`xmatrix star` stars the repo from the terminal",
+            "actually_needed": "run at an interactive terminal; with stdin closed it exits 1 with `xmatrix star needs a person at an interactive terminal`"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show successful outputs: harness list prints a HARNESS table and --version prints xmatrix 1.12.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-xmatrix-20261029-012319-cc58/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-xmatrix-20261029-012319-cc58/check-1-cmd9.judged.png",
+            "runs/verify/verify-xmatrix-20261029-012319-cc58/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.069909
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -321,5 +413,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-28T23:56:48+08:00"
+  "updated_at": "2026-10-29T01:24:34.139561+08:00"
 }

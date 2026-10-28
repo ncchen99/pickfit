@@ -73,17 +73,24 @@
       "first_task": "shep welcome"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-shep-20261029-012344-4cd6",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo install shep",
-          "purpose": null
+          "command": "cd /tmp && curl -fsSLO https://github.com/shep-pm/shep/releases/download/shep-v0.18.2/shep-x86_64-unknown-linux-gnu.tar.gz && curl -fsSLO https://github.com/shep-pm/shep/releases/download/shep-v0.18.2/shep-x86_64-unknown-linux-gnu.sha256",
+          "purpose": "Download shep release archive"
+        },
+        {
+          "command": "cd /tmp && sha256sum -c shep-x86_64-unknown-linux-gnu.sha256 && mkdir -p /tmp/shep-ex2 && tar xzf shep-x86_64-unknown-linux-gnu.tar.gz -C /tmp/shep-ex2 && mkdir -p ~/.local/bin && cp /tmp/shep-ex2/shep ~/.local/bin/shep && cp /tmp/shep-ex2/shep-runtime ~/.local/bin/shep-runtime && cp /tmp/shep-ex2/shep-dev ~/.local/bin/shep-dev",
+          "purpose": "Verify and install shep binaries to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "shep --version",
+        "expected_signal": "shep 0.18.2"
+      },
       "first_task": "shep welcome"
     },
     "windows": {
@@ -114,10 +121,137 @@
     "url": "https://github.com/shep-pm/shep/releases/tag/shep-v0.18.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T01:24:55.794242+08:00",
+    "runs": [
+      {
+        "id": "verify-shep-20261029-012344-4cd6",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:24:55.794242+08:00",
+        "tool_version": "0.18.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /tmp && curl -fsSLO https://github.com/shep-pm/shep/releases/download/shep-v0.18.2/shep-x86_64-unknown-linux-gnu.tar.gz && curl -fsSLO https://github.com/shep-pm/shep/releases/download/shep-v0.18.2/shep-x86_64-unknown-linux-gnu.sha256",
+            "purpose": "Download shep release archive"
+          },
+          {
+            "command": "cd /tmp && sha256sum -c shep-x86_64-unknown-linux-gnu.sha256 && mkdir -p /tmp/shep-ex2 && tar xzf shep-x86_64-unknown-linux-gnu.tar.gz -C /tmp/shep-ex2 && mkdir -p ~/.local/bin && cp /tmp/shep-ex2/shep ~/.local/bin/shep && cp /tmp/shep-ex2/shep-runtime ~/.local/bin/shep-runtime && cp /tmp/shep-ex2/shep-dev ~/.local/bin/shep-dev",
+            "purpose": "Verify and install shep binaries to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "shep --version",
+            "expected_signal": "shep 0.18.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "shep 0.18.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "shep --help",
+            "expected_signal": "shep start server.js start it and keep it alive",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "shep start server.js start it and keep it alive",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "shep welcome",
+            "expected_signal": "the shepherd keeps them running",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "( o o )--, the shepherd keeps them running",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "shep start /tmp/shep-demo/Flockfile.toml",
+            "expected_signal": "api online",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2 api online 54 0 - - - 5.1M 0s - -",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/shep-demo/bin && printf '#!/bin/sh\\nwhile true; do echo hello-from-api; sleep 2; done\\n' > /tmp/shep-demo/bin/api && chmod +x /tmp/shep-demo/bin/api && printf '[[app]]\\nname = \"api\"\\nscript = \"/tmp/shep-demo/bin/api\"\\n' > /tmp/shep-demo/Flockfile.toml && cat /tmp/shep-demo/Flockfile.toml && ls -l /tmp/shep-demo/bin/api",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "shep flock",
+            "expected_signal": "api online",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2 api online 54 0 - - - 5.5M 0s - -",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/shep-demo/bin && printf '#!/bin/sh\\nwhile true; do echo hello-from-api; sleep 2; done\\n' > /tmp/shep-demo/bin/api && chmod +x /tmp/shep-demo/bin/api && printf '[[app]]\\nname = \"api\"\\nscript = \"/tmp/shep-demo/bin/api\"\\n' > /tmp/shep-demo/Flockfile.toml && cat /tmp/shep-demo/Flockfile.toml && ls -l /tmp/shep-demo/bin/api",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "sleep 3 && shep bleats --no-follow --lines 4 api",
+            "expected_signal": "hello-from-api",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "api | hello-from-api",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/shep-demo/bin && printf '#!/bin/sh\\nwhile true; do echo hello-from-api; sleep 2; done\\n' > /tmp/shep-demo/bin/api && chmod +x /tmp/shep-demo/bin/api && printf '[[app]]\\nname = \"api\"\\nscript = \"/tmp/shep-demo/bin/api\"\\n' > /tmp/shep-demo/Flockfile.toml && cat /tmp/shep-demo/Flockfile.toml && ls -l /tmp/shep-demo/bin/api",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install shep",
+            "actually_needed": "downloaded and verified shep-x86_64-unknown-linux-gnu.tar.gz from GitHub releases (shep-v0.18.2) and copied shep, shep-runtime, shep-dev into ~/.local/bin"
+          },
+          {
+            "readme_said": "Visual C++ redistributable prerequisite",
+            "actually_needed": "no redistributable needed on Linux"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show welcome banner with shepherd tagline, api online after start, and version 0.18.2 output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-shep-20261029-012344-4cd6/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-shep-20261029-012344-4cd6/check-1-cmd5.judged.png",
+            "runs/verify/verify-shep-20261029-012344-4cd6/check-2-cmd7.judged.png",
+            "runs/verify/verify-shep-20261029-012344-4cd6/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.076973
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -360,5 +494,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-28T23:56:48+08:00"
+  "updated_at": "2026-10-29T01:24:55.795390+08:00"
 }

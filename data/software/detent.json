@@ -73,20 +73,25 @@
       "first_task": "detent --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-detent-20261029-012317-664e",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/digitaldrywood/detent/main/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/digitaldrywood/detent/main/install.sh -o /tmp/detent-install.sh && wc -c /tmp/detent-install.sh && head -n 100 /tmp/detent-install.sh",
+          "purpose": "Download install script for inspection before running"
+        },
+        {
+          "command": "sh /tmp/detent-install.sh",
+          "purpose": "Install detent release binary via install script"
         }
       ],
-      "manual_steps": [
-        "Sign in to Codex or Claude Code on the runner machine"
-      ],
-      "check": null,
-      "first_task": "detent --version"
+      "manual_steps": [],
+      "check": {
+        "command": "detent --version",
+        "expected_signal": "0.171.6"
+      },
+      "first_task": "detent version"
     },
     "windows": null
   },
@@ -103,10 +108,81 @@
     "url": "https://github.com/digitaldrywood/detent/releases/tag/v0.171.6"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T01:23:59.257138+08:00",
+    "runs": [
+      {
+        "id": "verify-detent-20261029-012317-664e",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:23:59.257138+08:00",
+        "tool_version": "0.171.6",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/digitaldrywood/detent/main/install.sh -o /tmp/detent-install.sh && wc -c /tmp/detent-install.sh && head -n 100 /tmp/detent-install.sh",
+            "purpose": "Download install script for inspection before running"
+          },
+          {
+            "command": "sh /tmp/detent-install.sh",
+            "purpose": "Install detent release binary via install script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "detent --version",
+            "expected_signal": "0.171.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.171.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "detent --help",
+            "expected_signal": "Available Commands:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Available Commands:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "detent version",
+            "expected_signal": "\"version\": \"0.171.6\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"version\": \"0.171.6\",",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows detent --version printing 0.171.6.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-detent-20261029-012317-664e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-detent-20261029-012317-664e/check-1-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.038122
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -349,5 +425,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-28T23:56:48+08:00"
+  "updated_at": "2026-10-29T01:23:59.259078+08:00"
 }

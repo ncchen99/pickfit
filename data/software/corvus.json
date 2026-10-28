@@ -69,18 +69,25 @@
       "first_task": "corvus decompile_member --load app.dll member=Ns.Type::Method"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-corvus-20261029-012023-8715",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/Albasha0x0/Corvus/main/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/Albasha0x0/Corvus/main/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -c 8000 /tmp/install.sh",
+          "purpose": "Download installer script for inspection"
+        },
+        {
+          "command": "sh /tmp/install.sh --yes",
+          "purpose": "Install Corvus via installer script"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "corvus decompile_member --load app.dll member=Ns.Type::Method"
+      "check": {
+        "command": "corvus version",
+        "expected_signal": "2.7.2"
+      },
+      "first_task": "corvus version"
     },
     "windows": {
       "basis": "readme_claim",
@@ -110,10 +117,82 @@
     "url": "https://github.com/Albasha0x0/Corvus/releases/tag/v2.7.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T01:22:36.871813+08:00",
+    "runs": [
+      {
+        "id": "verify-corvus-20261029-012023-8715",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:22:36.871813+08:00",
+        "tool_version": "2.7.2",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/Albasha0x0/Corvus/main/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -c 8000 /tmp/install.sh",
+            "purpose": "Download installer script for inspection"
+          },
+          {
+            "command": "sh /tmp/install.sh --yes",
+            "purpose": "Install Corvus via installer script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "corvus version",
+            "expected_signal": "2.7.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2.7.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "corvus --help",
+            "expected_signal": "Call a tool, e.g. corvus decompile_member --load app.dll member=Ns.T::M",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "<tool> [name=value ...] Call a tool, e.g. corvus decompile_member --load app.dll member=Ns.T::M",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "corvus describe decompile_member",
+            "expected_signal": "decompile_member: Decompile to C#",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "decompile_member: Decompile to C#",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both commands succeeded, showing the decompile_member description and version 2.7.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-corvus-20261029-012023-8715/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-corvus-20261029-012023-8715/check-1-cmd5.judged.png",
+            "runs/verify/verify-corvus-20261029-012023-8715/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.113528
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -340,5 +419,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:07:48+08:00",
-  "updated_at": "2026-10-28T23:56:48+08:00"
+  "updated_at": "2026-10-29T01:22:36.875191+08:00"
 }

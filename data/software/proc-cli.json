@@ -71,17 +71,20 @@
       "first_task": "proc on :3000"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-proc-cli-20261029-012359-38f4",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g proc-cli",
-          "purpose": null
+          "purpose": "install proc via npm install -g proc-cli"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "proc --version",
+        "expected_signal": "proc 2.0.1"
+      },
       "first_task": "proc on :3000"
     },
     "windows": {
@@ -112,10 +115,108 @@
     "url": "https://github.com/yazeed/proc-cli/releases/tag/v2.0.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T01:29:46.642037+08:00",
+    "runs": [
+      {
+        "id": "verify-proc-cli-20261029-012359-38f4",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:29:46.642037+08:00",
+        "tool_version": "2.0.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g proc-cli",
+            "purpose": "install proc via npm install -g proc-cli"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "proc --version",
+            "expected_signal": "proc 2.0.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "proc 2.0.1",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "proc --help",
+            "expected_signal": "proc list --min-cpu 10",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "proc list --min-cpu 10 Processes using >10% CPU",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "proc on :3000",
+            "expected_signal": "Port 3000 is used by:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ Port 3000 is used by:",
+            "setup": [
+              {
+                "command": "python3 -m http.server 3000",
+                "background": true,
+                "port": 3000
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "proc list --min-cpu 10",
+            "expected_signal": "No processes found",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "⚠ No processes found",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "proc list --limit 5",
+            "expected_signal": "Found 5 processes",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ Found 5 processes",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm install -g proc-cli installs proc",
+            "actually_needed": "first proc invocation downloads the prebuilt Linux binary (Checksum verified, Installed to ~/.local/lib/node_modules/proc-cli/proc) before printing the version"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show expected outputs for port lookup, filtered list, and version.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-proc-cli-20261029-012359-38f4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-proc-cli-20261029-012359-38f4/check-1-cmd5.judged.png",
+            "runs/verify/verify-proc-cli-20261029-012359-38f4/check-2-cmd6.judged.png",
+            "runs/verify/verify-proc-cli-20261029-012359-38f4/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.039523
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -350,5 +451,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-28T23:56:48+08:00"
+  "updated_at": "2026-10-29T01:29:46.643433+08:00"
 }

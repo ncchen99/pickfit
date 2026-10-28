@@ -72,18 +72,25 @@
       "first_task": "./praana --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-praana-20261029-012613-e207",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/amitkumardubey/praana/main/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/amitkumardubey/praana/main/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -c 4000 /tmp/install.sh",
+          "purpose": "Download install.sh for inspection before running"
+        },
+        {
+          "command": "bash /tmp/install.sh",
+          "purpose": "Run install.sh to install praana binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "./praana --version"
+      "check": {
+        "command": "praana --version",
+        "expected_signal": "PRAANA v0.15.1"
+      },
+      "first_task": "praana doctor"
     },
     "windows": {
       "basis": "readme_claim",
@@ -113,10 +120,82 @@
     "url": "https://github.com/amitkumardubey/praana/releases/tag/v0.15.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T01:26:59.617224+08:00",
+    "runs": [
+      {
+        "id": "verify-praana-20261029-012613-e207",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:26:59.617224+08:00",
+        "tool_version": "v0.15.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/amitkumardubey/praana/main/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -c 4000 /tmp/install.sh",
+            "purpose": "Download install.sh for inspection before running"
+          },
+          {
+            "command": "bash /tmp/install.sh",
+            "purpose": "Run install.sh to install praana binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "praana --version",
+            "expected_signal": "PRAANA v0.15.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PRAANA v0.15.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "praana --help",
+            "expected_signal": "Slash Commands",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "╭ Slash Commands ───────────────────────────────────────────────────────────────────╮",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "praana doctor",
+            "expected_signal": "PRAANA Doctor",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "PRAANA Doctor",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show PRAANA Doctor diagnostics output and PRAANA v0.15.1 version string.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-praana-20261029-012613-e207/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-praana-20261029-012613-e207/check-1-cmd5.judged.png",
+            "runs/verify/verify-praana-20261029-012613-e207/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.037796
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -367,5 +446,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:15+08:00",
-  "updated_at": "2026-10-28T23:56:48+08:00"
+  "updated_at": "2026-10-29T01:26:59.618676+08:00"
 }

@@ -71,18 +71,21 @@
       "first_task": "phm --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-phantom-20261029-012215-5eca",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g @ashlr/phantom",
-          "purpose": null
+          "command": "node --version && npm install -g @ashlr/phantom",
+          "purpose": "Install @ashlr/phantom globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "phm --version"
+      "check": {
+        "command": "phm --version",
+        "expected_signal": "3.29.15"
+      },
+      "first_task": "curl -s -o /tmp/verse.html -w \"%{http_code} %{size_download}\\n\" http://127.0.0.1:7777/verse/"
     },
     "windows": {
       "basis": "readme_claim",
@@ -112,10 +115,89 @@
     "url": "https://github.com/ashlrai/phantom/releases/tag/v3.29.15"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T01:23:19.952963+08:00",
+    "runs": [
+      {
+        "id": "verify-phantom-20261029-012215-5eca",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:23:19.952963+08:00",
+        "tool_version": "3.29.15",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "node --version && npm install -g @ashlr/phantom",
+            "purpose": "Install @ashlr/phantom globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "phm --version",
+            "expected_signal": "3.29.15",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "3.29.15",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "phm --help",
+            "expected_signal": "Phantom — phm, the CLI for agentic engineers",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Phantom — phm, the CLI for agentic engineers (ashlr remains compatible)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s -o /tmp/verse.html -w \"%{http_code} %{size_download}\\n\" http://127.0.0.1:7777/verse/",
+            "expected_signal": "200 627",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "200 627",
+            "setup": [
+              {
+                "command": "phm verse --no-open --port 7777",
+                "background": true,
+                "port": 7777
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "phm verse",
+            "actually_needed": "phm verse --no-open --port 7777 (stays listening; plain `phm verse` tries to open a browser and then exits)"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show curl returning 200 627 and phm reporting version 3.29.15.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-phantom-20261029-012215-5eca/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-phantom-20261029-012215-5eca/check-1-cmd7.judged.png",
+            "runs/verify/verify-phantom-20261029-012215-5eca/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.034142
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -358,5 +440,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-28T23:56:48+08:00"
+  "updated_at": "2026-10-29T01:23:19.954086+08:00"
 }
