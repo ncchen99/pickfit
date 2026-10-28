@@ -201,6 +201,15 @@ def test_normalize_for_match_folds_whitespace_markdown_and_typography() -> None:
     assert normalize_for_match("it’s “fast” — &amp; `small`") == "it's \"fast\" - & small"
 
 
+def test_normalize_for_match_folds_inline_html_and_markdown_escapes() -> None:
+    source = r"Mail into <strong>real IMAP folders</strong>. | `curl -fsSL https://x.sh/i.sh \| bash` |"
+    checker = QuoteChecker([Source("readme", "readme", None, source)])
+    assert checker.found("Mail into **real IMAP folders**.")
+    assert checker.found("curl -fsSL https://x.sh/i.sh | bash")
+    assert not checker.found("curl -fsSL https://x.sh/i.sh | sh")
+    assert not checker.found("Mail into fake IMAP folders.")
+
+
 def test_quote_checker_requires_a_real_substring() -> None:
     checker = QuoteChecker([Source("readme", "readme", None, README)])
     assert checker.found("Works on macOS and Linux")

@@ -136,14 +136,19 @@ def sources_sha(sources: list[Source]) -> str:
 
 # --- Quote check ------------------------------------------------------------------
 
-# Typographic quotes and dashes, and markdown marks a model tends to drop; removed or
-# folded on both sides, so a match still means the quote's words are in the source in order.
+# Formatting a model tends to drop or rewrite when it copies: inline HTML emphasis
+# (<strong> becomes **), markdown backslash escapes (\| in tables), code and emphasis
+# marks, typographic quotes and dashes. Removed or folded on both sides, so a match
+# still means the quote's words are in the source in the same order.
+_INLINE_HTML = re.compile(r"</?(?:strong|b|em|i|u|code|kbd|mark|sup|sub)\b[^>]*>", re.I)
+_MARKDOWN_ESCAPE = re.compile(r"\\([\\`*_{}\[\]()#+\-.!|<>~])")
 _FOLD = str.maketrans({"‘": "'", "’": "'", "“": '"', "”": '"',
                        "–": "-", "—": "-", "`": None, "*": None})
 
 
 def normalize_for_match(text: str) -> str:
-    text = unicodedata.normalize("NFKC", html.unescape(text)).translate(_FOLD)
+    text = _MARKDOWN_ESCAPE.sub(r"\1", _INLINE_HTML.sub("", html.unescape(text)))
+    text = unicodedata.normalize("NFKC", text).translate(_FOLD)
     return " ".join(text.split())
 
 
