@@ -142,7 +142,20 @@ Muse Spark 判斷：類型（18 類 enum）、給終端使用者還是給開發�
 | 維護 | 15 | 最近 push、最近 release、一年 ≥2 次 release；**不計 commit 數** |
 | 工程衛生 | 10 | CI、測試、OSI 授權、changelog、lockfile |
 | 回應 | 10 | 外部使用者 issue 的關閉比例與時間（≥2 筆才算） |
-| 使用結果 | 10 | `report_outcome` 成功率（≥3 筆才算）；回報帶 `reporter: eval／demo／dev／external`，**只有 external 算分**，評測與 demo 的回報在 README 分開列 |
+| 使用結果 | 10 起（隨回報數提高，見下） | 0.4 × 安裝成功率＋0.3 × 第一次執行成功率＋0.3 × 留存率（`still_using` ÷（`still_using`＋`replaced`＋`abandoned`））；某一項沒有回報就從這三項的分母拿掉。外部回報 ≥3 筆才算；回報帶 `reporter: eval／demo／dev／external`，**只有 external 算分**，評測與 demo 的回報在 README 分開列 |
+
+**使用結果的權重隨外部回報增加**（brief 3.1）。資料少的時候以驗證與公開資料為主；同一款軟體的外部回報越多，使用結果越接近主要訊號：
+
+| 外部回報筆數 | 使用結果權重 | 多出來的權重從哪裡扣 |
+|---|---|---|
+| < 3 | 不算（從分母拿掉） | — |
+| 3–9 | 10 | — |
+| 10–29 | 20 | 依比例從「安裝與文件」「維護」「工程衛生」「回應」扣 |
+| ≥ 30 | 30 | 同上 |
+
+- 沙盒驗證的 35 分不扣：它是實測，不是推估。
+- 門檻與權重是**未校準的初始值**，隨 `formula_version` 一起記錄。黑客松期間幾乎不會超過 3–9 這一級，這張表的用途是把長期設計寫清楚。
+- 被換掉的比例要和同類別比，才看得出是軟體的問題還是這一類本來就常換。
 
 - 缺資料的分項從分母拿掉後重新正規化，另外輸出 `confidence`。
 - 上限：archived 30；驗證失敗 40；不是工具 50；**還沒驗證 69**（剛好低於寶藏門檻）。
@@ -335,7 +348,7 @@ brief 的 4 個工具合理。建議加 `submit_software`（供給端，demo 第
 | `find_software` | `need`（必填，使用者原話描述要做的事）、`category`、`os`、`arch`、`budget`、`must_run_locally` | `rec_id`、`matched_by`（model ID 或 `rules`）、`picks[]`（slug、why、tradeoffs、platforms、pricing、processing、`verification`、`how_we_know`、`evidence_url`（run page 或 trace JSON）、`scores.quality`／`popularity`）、`best_free`、`no_install_option`、`clarifying_question`（最多 1 題）、`degraded` | `readOnlyHint: true` |
 | `find_alternatives` | `current_software`、`pain_points`（都必填）＋共用條件 | 同上＋`keep_current`（沒有更好的就直說） | `readOnlyHint: true` |
 | `get_install_guide` | `slug`、`os`（必填）、`rec_id` | `verification`（在哪個 OS、何時）、`applies_to_user_system`、`steps[]`（agent 可執行）、`manual_steps[]`（例如權限授權）、`verify`（驗證指令）、`first_task` | `readOnlyHint: true` |
-| `report_outcome` | `slug`、`stage`（installed／install_failed／first_run_ok／first_run_failed／abandoned／still_using／replaced）必填；`rec_id`、`satisfaction`、`os`、`error_excerpt`（≤500 字元，去掉使用者名稱、路徑、token） | 收到與否、`counted_in_score`、是否排入重驗 | `idempotentHint: true`（server 端真的去重） |
+| `report_outcome` | `slug`、`stage`（installed／install_failed／first_run_ok／first_run_failed／abandoned／still_using／replaced）必填；`rec_id`、`satisfaction`、`os`、`error_excerpt`（≤500 字元，去掉使用者名稱、路徑、token）、`replaced_by`（`stage` 是 replaced 時填，slug 或軟體名稱）、`note`（選填心得，≤280 字元，同樣去掉個資） | 收到與否、`counted_in_score`、是否排入重驗 | `idempotentHint: true`（server 端真的去重） |
 | `submit_software` | `url`（**GitHub repo**；Threads 貼文連結只當附加、用來嵌入，不讀內容）、`note` | `slug`、狀態（排隊、讀懂中、驗證中、已收錄、拒絕＋原因）；同一個 URL 重送就是查進度 | `idempotentHint: true`、`openWorldHint: true` |
 
 共通原則：
@@ -344,7 +357,9 @@ brief 的 4 個工具合理。建議加 `submit_software`（供給端，demo 第
 - 每個推薦都帶驗證證據與分開的品質／知名度分數，這是「不是基本 RAG」最直接的證明。
 - server instructions 約 430 字元（Codex 只保證讀前 512 字元），草稿在筆記 5.3 節。
 - 回應裡不放推薦碼、廣告、付費排序。
-- 和 D1 DDL 對齊（storage-matching 筆記的 DDL 要跟著改）：`stage` 七個值存成 `(stage, success)`，例如 `install_failed` → `('installed', 0)`、`first_run_ok` → `('first_run', 1)`；沒帶 `rec_id` 的回報只記一列、回 `counted_in_score: false`；`error_excerpt` 兩邊都是 500 字元。
+- 和 D1 DDL 對齊（storage-matching 筆記的 DDL 要跟著改）：`stage` 七個值存成 `(stage, success)`，例如 `install_failed` → `('installed', 0)`、`first_run_ok` → `('first_run', 1)`、`still_using` → `('still_using', 1)`、`replaced` 與 `abandoned` → `('still_using', 0)`（`replaced` 另存 `replaced_by`）；沒帶 `rec_id` 的回報只記一列、回 `counted_in_score: false`；`error_excerpt` 兩邊都是 500 字元。`events` 要加 `replaced_by TEXT`、`note TEXT`（≤280）兩欄。
+- `note` 是不可信的輸入，可能夾帶 prompt injection：只存進 D1 給人工抽查與彙整，**不原文放進任何工具回應**，也不直接餵給配對模型；不計分。之後要用，先由模型抽成結構化事實（例如「中英混雜準確度不足」），再由程式決定怎麼用。
+- `sync_outcomes` 寫回 JSON 的 `outcomes` 要多記 `still_using`、`replaced`、`replaced_by` 的計數，給「被換掉的比例」與 B.3 的權重分級用。
 
 ## F. 儲存與配對
 
@@ -616,6 +631,19 @@ flowchart TB
 | `report_outcome` 會混入自己的評測與 demo 回報 | B.3：只有 external 回報算分 |
 
 完整清單在審查 workflow 的輸出（未存進 repo）。
+
+### G.7 和 brief 第 3.1 節對齊
+
+brief 補上「真實使用結果會累積成平台長期的價值」之後，本文跟著改：
+
+| 項目 | 改成 | 位置 |
+|---|---|---|
+| 使用結果的權重 | 固定 10 分 → 依外部回報筆數分級提高（10／20／30），多出的權重從規則與模型推估的分項扣，沙盒驗證不扣 | B.3 |
+| 使用結果怎麼算 | 只看成功率 → 安裝成功率、第一次執行成功率、留存率三項 | B.3 |
+| `report_outcome` 欄位 | 加 `replaced_by`、`note`（選填心得，不原文回傳、不計分） | E.3 |
+| D1 與 `sync_outcomes` | `events` 加兩欄；`outcomes` 多記留存與被換掉的計數 | E.3 |
+
+研究筆記沒有跟著改，實作時以本文為準：[notes/storage-matching.md](notes/storage-matching.md) 的 `events` DDL 與 `outcomes` 範例、[notes/mcp-server.md](notes/mcp-server.md) 的 `report_outcome` input schema、[notes/quality-scoring.md](notes/quality-scoring.md) 3.1 節的使用結果權重。
 
 ## H. 每天的實作計畫
 
