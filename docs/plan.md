@@ -19,14 +19,14 @@
 | 項目 | 狀態 | 備註 |
 |---|---|---|
 | Meta Model API | ✅ key 有效 | `/v1/models` 有 `muse-spark-1.3`、`muse-spark-1.3-contributor`、`muse-spark-1.2(-contributor)`、`muse-spark-1.1`、`muse-wonder-1.0`、`muse-image-1.0`、`muse-voice-transcribe-1.0`、`sam-3.1`；**沒有 embedding 模型**（確認 arch F.3）。一次 `muse-spark-1.3` 呼叫（`reasoning_effort: minimal`）：52 token（推理 29）、1.7 秒、約 $0.0002。限額 3,000 RPM、4M TPM。台灣帳號可用，第一輪的最大風險解除 |
-| Meta credits | 👤 | 表單、入帳、Spend Limit 通知的狀態記在 `CLAUDE.local.md`（credits 與帳單資訊不進 repo） |
+| Meta credits | ✅ 表單已送、Spend Limit 通知已設 | 入帳狀態記在 `CLAUDE.local.md`（credits 與帳單資訊不進 repo） |
 | Anthropic API key | ✅ 有效 | **只用在評測**（受測 agent），產品執行期不用 |
 | Mac | ✅ Apple M5、24 GB、macOS 27 | demo 第 4 幕與 Mac 人工驗證在這台做 |
 | Cloudflare | ✅ `wrangler` 已登入 | |
 | GitHub | ✅ `gh` 已登入 | 管線用 `GITHUB_TOKEN=$(gh auth token)`，不必另建 PAT |
 | Docker | 已安裝，daemon 沒開 | 本機沙盒開發前先開 Docker Desktop |
 | Modal | ✅ token 在 `.env` | `MODAL_TOKEN_ID`／`MODAL_TOKEN_SECRET`；本機沒裝 CLI，用 `uvx --from modal modal …`；Python 端用 `uv run --python 3.12 --with modal …` |
-| Baseten | ❌ 👤 | 審核制，越早申請越好 |
+| Baseten | ⏳ 10/28 已申請 | 審核制；沒回覆就當沒核准，照 P2.4 的退路走 |
 | E2B | ❌ | 備案，Modal 不能用時才註冊 |
 | Python | 系統 3.9 | 專案用 `uv` 管 Python 3.12 |
 
@@ -46,6 +46,10 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 8. Anthropic key 只給評測執行器：先跑 2 題估單題花費，再跑全部；評測總花費上限 $30。
 9. Claude Code 的子 agent、workflow 不在迴圈裡呼叫付費 API。需要呼叫時由主 agent 執行，並回報花費。
 10. 每天結束時，把當日花費寫進狀態紀錄（數字由帳本產生；只記花費，不記 credits 餘額）。
+11. **上限是安全網，不是要省到最後。** Meta 的 Spend Limit 只寄信、不會擋，所以由程式擋：管線 $100＋Worker 評審期 $40＝$140，留 $10 給 $150 credits 的誤差。各家額度照用途分配，**產品裡每個決定都用 Meta 模型**（評分 25%，第一輪必查；arch D.3、I #19）：
+    - **Meta**：用在品質與規模。正式資料用 `muse-spark-1.3`（contributor 只用在開發）；驗證 agent 用 medium；修錯時可用 `web_search`；困難案例用 `muse-wonder-1.0` 重試；驗證目標從 50 筆提高到 100 筆以上。**11/1 檢查**：若預估到交件的 Meta 花費 <$60，就再擴大發現與驗證規模。
+    - **Modal**：更多沙盒驗證；本地 AI 工具必須用 GPU 時開 GPU 沙盒（T4 約 $0.59／小時），讓更多工具達到「推論驗證」等級。
+    - **Anthropic**（11/27 到期）：只用在評測（受測 agent、補充重跑、獨立評分）與開發工具，不放進產品的發現、抽取、驗證、配對流程。
 
 ---
 
@@ -73,9 +77,9 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 - [x] P0.3 Responses API（`search_probe` 延後到需要「搜尋可見度」時再跑）：`spikes/meta_responses_agent_probe.py loop image_tool schema_tools`；`search_probe` 會產生搜尋費用，最後單獨跑。完成標準：arch D.4 #3–#5 有答案（截圖放哪模型看得到、`text.format` 能否和 tools 同一請求、推理 token 實際用量）。
 - [x] P0.4 GitHub search 實際量：`GITHUB_TOKEN=$(gh auth token) python3 spikes/ch_hosting_github.py counts`。完成標準：兩個類別近 7／14 天的筆數寫回 [research/notes/channels-hosting.md](research/notes/channels-hosting.md)。
 - [x] P0.5 hello MCP 上線：`spikes/mcp_stateless/` 用 `wrangler deploy` 部署到 `workers.dev`，`claude mcp add --transport http pickfit-hello <url>/mcp` 實連。完成標準：Claude Code 看得到並呼叫得到遠端 hello 工具。
-- [x] P0.6 Modal：帳號與 token 已就緒（第 1 節）。👤 **還沒做**：在 Modal 後台把 workspace 花費上限設約 $80。agent 在 subshell 只帶 `MODAL_TOKEN_ID`、`MODAL_TOKEN_SECRET`，跑 `uv run --python 3.12 --with modal python spikes/sb_modal_verify.py --install "pip install httpie" --smoke "http --version"`，量沙盒啟動時間與網路政策；只跑這一筆。
-- [ ] P0.7 👤 Baseten：註冊並申請比賽 credits、建 key 放 `.env` 的 `BASETEN_API_KEY`、月預算 $20 開 enforce。核准後 agent 跑 `spikes/meta_baseten_hello.py`，確認 `meta-models/muse-spark-open-1026` 存在。
-- [ ] P0.8 👤 Meta Billing：送出 credits 表單、Spend Limit 通知設 $50 與 $100。
+- [x] P0.6 Modal：帳號與 token 已就緒（第 1 節）；workspace 花費上限已設約 $80（念誠，10/28）。agent 在 subshell 只帶 `MODAL_TOKEN_ID`、`MODAL_TOKEN_SECRET`，跑 `uv run --python 3.12 --with modal python spikes/sb_modal_verify.py --install "pip install httpie" --smoke "http --version"`，量沙盒啟動時間與網路政策；只跑這一筆。
+- [ ] P0.7 👤 Baseten（10/28 已申請，等審核）：註冊並申請比賽 credits、建 key 放 `.env` 的 `BASETEN_API_KEY`、月預算 $20 開 enforce。核准後 agent 跑 `spikes/meta_baseten_hello.py`，確認 `meta-models/muse-spark-open-1026` 存在。
+- [x] P0.8 👤 Meta Billing（10/28 完成）：送出 credits 表單、Spend Limit 通知設 $50 與 $100。
 
 **G0（今晚）：已通過**（P0.2、P0.3）。json_schema 與 tool calling 能用就照計畫走。json_schema 不行 → 用 `finish` 工具＋pydantic 驗證；tool calling 不行 → 驗證 agent 改成「模型回 JSON 動作、程式執行」。兩者都不擋進度。
 
@@ -133,7 +137,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 
 ### P6 評測（11/2）
 
-- [ ] P6.1 評測執行器：Claude Code 無頭模式（固定版本、固定提示），對照組（只有網路搜尋）與實驗組（＋pickfit MCP）；第三組 rules-only（計畫內）。**隔離**：這台 Mac 的使用者設定裡有 toolradar 等 MCP，會污染對照組；每題在空的暫存目錄執行，用 `--strict-mcp-config --mcp-config <檔案>`（對照組空的、實驗組只有 pickfit），旗標已在 P0.5 實測有效；記下 Claude Code 版本。**`claude` 一定要用 `env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p …` 啟動**，否則會繼承桌面 app 的 `ANTHROPIC_BASE_URL` 而失敗（P0.5）。先跑 2 題估花費。
+- [ ] P6.1 評測執行器：Claude Code 無頭模式（固定版本、固定提示），對照組（只有網路搜尋）與實驗組（＋pickfit MCP）；第三組 rules-only（計畫內）。**隔離**：這台 Mac 的使用者設定裡有 toolradar 等 MCP，會污染對照組；每題在空的暫存目錄執行，用 `--strict-mcp-config --mcp-config <檔案>`（對照組空的、實驗組只有 pickfit），若 Anthropic 額度夠：每題每組另外加跑 2 次當「補充結果」，主要結果仍是第 1 次；要在任何一組開跑前寫進 `eval/README.md` 第 9 節勘誤區（不改題目與主要結果的定義）。旗標已在 P0.5 實測有效；記下 Claude Code 版本。**`claude` 一定要用 `env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p …` 啟動**，否則會繼承桌面 app 的 `ANTHROPIC_BASE_URL` 而失敗（P0.5）。先跑 2 題估花費。
 - [ ] P6.2 收集答案；安裝步驟在乾淨容器（或 Mac）實跑。
 - [ ] P6.3 照 `eval/README.md` 評分；👤 念誠做盲測兩兩比較。
 - [ ] P6.4 👤 demo 那 3 筆在 Mac 上由念誠親手照 `get_install_guide` 驗證（`method: human`），驗完移除；agent 只準備檢查清單、收 log。
@@ -185,7 +189,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 
 | 期限 | 項目 |
 |---|---|
-| **10/28 今天** | 審閱並同意評測 20 題（P1.1，今晚凍結）；Modal workspace 花費上限（P0.6）；Baseten 申請（P0.7）；Meta credits 表單與 Spend Limit 通知（P0.8）；每天能投入幾小時（少於 9 h → 先砍 Show HN 與 run page） |
+| **10/28 今天** | ✅ 評測凍結、Modal 上限、Baseten 申請、Meta credits 表單與通知都已完成。每天能投入幾小時還沒定，暫照 arch H.1 的 10.5 h（少於 9 h → 先砍 Show HN 與 run page） |
 | 10/31 | 要不要開 Workers Paid（每月 $5）；demo 用的 agent（建議 Claude Code，搭配分割畫面秀 Meta trace） |
 | 11/1 | demo 主案與備案；第 5 幕提交哪個第三方 repo |
 | 11/2 | 到 Discord 問：開放權重獎怎麼標、Community Vote 看哪個頁面；評審期的提交怎麼處理 |
@@ -208,3 +212,4 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | 10/28 19:10 | P1.3 | `software.v1` schema 與 Meta strict 版（`6025851`）。實測：Meta 接受 11.7K 字元的抽取 schema，輸出過 pydantic，每欄附原文引用、不知道的填 null | Meta $0.0004 |
 | 10/28 19:10 | P1.4 | `call_meta`＋共用帳本＋trace＋快取（`b0abe6c`）、`pickfit ping`／`spend`（`f18c7f0`）。122 個測試通過；實測第二次相同請求從快取回、$0；trace 裡沒有金鑰 | Meta <$0.001 |
 | 10/28 19:10 | — | **下一步**：P2 交給**沒讀過 `eval/` 的新 session**（本 session 看過題目）；P3.1–P3.2、P4.2–P4.4 可以同時各開一個 session（第 5 節） | 今日合計：Meta 約 $0.01、Anthropic $0.002、Modal 約 $0.01 |
+| 10/28 20:10 | P0.6–P0.8 | 念誠：Baseten 已申請（等審核）、Meta credits 表單與 Spend Limit 通知、Modal 上限約 $80 都完成。P2、P3、P4 三個 session 已開工（各自的 worktree）。花費守則加第 11 條（各家額度的用途分配） | — |
