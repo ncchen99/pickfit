@@ -40,7 +40,7 @@ from pickfit.schema import (
     best_level,
     is_passed,
 )
-from pickfit.verify.verdict import _last_command, weaker
+from pickfit.verify.verdict import last_command, weaker
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import VerifyReport
@@ -100,7 +100,7 @@ def _record_command(command: str) -> str | None:
     """The command as the record can hold it: whole, else its last top-level command."""
     if len(command) <= COMMAND_MAX:
         return command
-    last = _last_command(command).strip()
+    last = last_command(command).strip()
     return last if 0 < len(last) <= COMMAND_MAX else None
 
 

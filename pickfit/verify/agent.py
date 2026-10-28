@@ -6,7 +6,9 @@ enforces the limits: 25 turns, 15 commands, 20 minutes, $0.50 per run
 (`scope="verify:<slug>"` in the shared ledger), and a stop after the same
 error three times. Near a limit the model gets one last turn with only
 `finish`. README text and tool output reach the model inside <source> blocks;
-the Box holds no keys, and every model call goes through call_meta.
+the Box holds no keys, and every model call goes through call_meta. Every
+budgeted command gets a command_id; `finish` cites ids, and verdict.py
+decides the level from the recorded commands, not from the model's claims.
 
 Two ways to carry the conversation, picked by `mode`:
 - chain: `previous_response_id`; each turn sends only the new tool outputs.

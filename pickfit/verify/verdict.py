@@ -169,7 +169,7 @@ def masked_exit(command: str) -> str | None:
     return None
 
 
-def _last_command(command: str) -> str:
+def last_command(command: str) -> str:
     parts = [text for _, text in _top_level(command) if text.strip()]
     return parts[-1] if parts else command
 
@@ -196,7 +196,7 @@ def check_kind(command: str) -> str:
     """version (--version/--help only), generation (asks a model for text), or example."""
     if _GENERATION.search(command):
         return "generation"
-    if _VERSION_HELP.search(_last_command(command)):
+    if _VERSION_HELP.search(last_command(command)):
         return "version"
     return "example"
 
