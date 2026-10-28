@@ -8,8 +8,10 @@ DockerBox is for local development (Docker or OrbStack on this Mac). It keeps
 the limits measured in spikes/sandbox_docker_install.py: uid 1000, all
 capabilities dropped, no-new-privileges, CPU/memory/pids caps, a read-only
 root with size-limited tmpfs for HOME and /tmp (the disk cap), a per-command
-`timeout -s KILL` inside the container, and a container lifetime cap. ModalBox
-(P3.6) implements the same interface on Modal gVisor.
+`timeout -s KILL` inside the container, and a container lifetime cap. Cloud
+metadata (169.254.0.0/16) is routed to `unreachable` inside the container by a
+one-off root exec before the agent runs; the box user cannot change routes.
+ModalBox (P3.6) implements the same interface on Modal gVisor.
 """
 
 from __future__ import annotations
@@ -56,6 +58,10 @@ OUTPUT_HEAD_BYTES = 8_000
 OUTPUT_TAIL_BYTES = 24_000
 HOST_GRACE_S = 15  # the host waits this long past the in-box timeout before giving up
 DOCKER_WAIT_S = 120
+# Cloud instance metadata (169.254.169.254 and the rest of link-local) answers with
+# credentials on many hosts; boxes never need it.
+METADATA_CIDR = "169.254.0.0/16"
+METADATA_CIDR6 = "fd00:ec2::254/128"
 
 
 class BoxError(RuntimeError):
@@ -350,6 +356,23 @@ class DockerBox(Box):
         if not setup.ok:
             self.close()
             raise BoxError(f"box setup failed: {setup.stderr.strip()[-500:]}")
+        try:
+            self._block_metadata()
+        except BoxError:
+            self.close()
+            raise
+
+    def _root(self, script: str, timeout_s: int = 30) -> subprocess.CompletedProcess[str]:
+        """Harness-only root command (route setup); never used for model commands."""
+        return subprocess.run([self.docker, "exec", "-u", "0", "--privileged", self.name, "sh", "-c", script],
+                              capture_output=True, text=True, timeout=timeout_s)
+
+    def _block_metadata(self) -> None:
+        proc = self._root(f"ip route replace unreachable {METADATA_CIDR} && "
+                          f"{{ ip -6 route replace unreachable {METADATA_CIDR6} 2>/dev/null; "
+                          f"ip route show type unreachable; }}")
+        if f"unreachable {METADATA_CIDR}" not in proc.stdout:
+            raise BoxError(f"could not block cloud metadata: {(proc.stdout + proc.stderr).strip()[-300:]}")
 
     def close(self) -> None:
         if not self.started:
@@ -409,3 +432,5 @@ class DockerBox(Box):
         if proc.returncode != 0:
             raise BoxError(f"docker network {verb} failed: {proc.stderr.strip()[-300:]}")
         self.network_enabled = enabled
+        if enabled:
+            self._block_metadata()  # a reconnected interface comes back with fresh routes

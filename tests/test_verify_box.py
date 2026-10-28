@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import stat
+import subprocess
 import sys
 from pathlib import Path
 
@@ -74,7 +75,7 @@ def fake_docker(tmp_path: Path) -> Path:
         "import json, os, sys\n"
         f"open({str(log)!r}, 'a').write(json.dumps(sys.argv[1:]) + '\\n')\n"
         "sys.stdin.read() if sys.argv[1:2] == ['exec'] and '-i' in sys.argv else None\n"
-        "print('ok')\n"
+        "print('unreachable 169.254.0.0/16' if sys.argv[1:4] == ['exec', '-u', '0'] else 'ok')\n"
         "sys.exit(int(os.environ.get('FAKE_EXIT', '0')))\n")
     script.chmod(script.stat().st_mode | stat.S_IEXEC)
     return script
@@ -100,10 +101,34 @@ def test_exec_kills_inside_the_box_and_clamps_timeout(fake_docker: Path, monkeyp
     box.set_network(False)
     assert _calls(fake_docker)[-1] == ["network", "disconnect", "bridge", "pf-test"]
     assert box.network_enabled is False
+    box.set_network(True)
+    assert _calls(fake_docker)[-2] == ["network", "connect", "bridge", "pf-test"]
+    assert _calls(fake_docker)[-1][:5] == ["exec", "-u", "0", "--privileged", "pf-test"]  # routes again
     box.close()
     assert _calls(fake_docker)[-1] == ["rm", "-f", "pf-test"]
     with pytest.raises(BoxError):
         box.exec("echo again", 5)
+
+
+def test_start_blocks_cloud_metadata_as_root(fake_docker: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(box_mod, "ensure_docker", lambda **kw: None)
+    box = DockerBox(image="img", build=False, docker=str(fake_docker), name="pf-meta")
+    box.start()
+    root = [c for c in _calls(fake_docker) if c[:3] == ["exec", "-u", "0"]]
+    assert len(root) == 1 and "ip route replace unreachable 169.254.0.0/16" in root[0][-1]
+    # Model commands never run as root.
+    box.exec("id", 5)
+    assert _calls(fake_docker)[-1][:2] == ["exec", "-w"]
+
+
+def test_start_fails_closed_when_metadata_cannot_be_blocked(fake_docker: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(box_mod, "ensure_docker", lambda **kw: None)
+    box = DockerBox(image="img", build=False, docker=str(fake_docker), name="pf-meta")
+    monkeypatch.setattr(box, "_root", lambda script, timeout_s=30: subprocess.CompletedProcess(
+        [], 2, "", "ip: command not found"))
+    with pytest.raises(BoxError, match="could not block cloud metadata"):
+        box.start()
+    assert _calls(fake_docker)[-1] == ["rm", "-f", "pf-meta"] and not box.started
 
 
 def test_exec_marks_in_box_kill_as_timeout(fake_docker: Path, monkeypatch: pytest.MonkeyPatch):
