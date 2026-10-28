@@ -73,17 +73,20 @@
       "first_task": "neurondump list"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-neurondump-20261029-023935-c98e",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo install neurondump",
-          "purpose": null
+          "command": "rm -f ~/.local/bin/neurondump && curl -sL -o /tmp/ndlinux.tar.gz https://github.com/aymen94/NeuronDump/releases/download/v0.1.4/neurondump-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/ndlinux.tar.gz -C /tmp && mkdir -p ~/.local/bin && cp /tmp/neurondump-x86_64-unknown-linux-gnu/neurondump ~/.local/bin/neurondump && chmod +x ~/.local/bin/neurondump && ~/.local/bin/neurondump --version",
+          "purpose": "Download Linux x86_64 release tarball and install neurondump to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "neurondump --version",
+        "expected_signal": "neurondump 0.1.4"
+      },
       "first_task": "neurondump list"
     },
     "windows": {
@@ -114,10 +117,87 @@
     "url": "https://github.com/aymen94/NeuronDump/releases/tag/v0.1.4"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:40:21.678051+08:00",
+    "runs": [
+      {
+        "id": "verify-neurondump-20261029-023935-c98e",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:40:21.678051+08:00",
+        "tool_version": "0.1.4",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -f ~/.local/bin/neurondump && curl -sL -o /tmp/ndlinux.tar.gz https://github.com/aymen94/NeuronDump/releases/download/v0.1.4/neurondump-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/ndlinux.tar.gz -C /tmp && mkdir -p ~/.local/bin && cp /tmp/neurondump-x86_64-unknown-linux-gnu/neurondump ~/.local/bin/neurondump && chmod +x ~/.local/bin/neurondump && ~/.local/bin/neurondump --version",
+            "purpose": "Download Linux x86_64 release tarball and install neurondump to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "neurondump --version",
+            "expected_signal": "neurondump 0.1.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "neurondump 0.1.4",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "neurondump --help",
+            "expected_signal": "Reverse-engineer, analyze and slim down local GGUF LLMs",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Reverse-engineer, analyze and slim down local GGUF LLMs",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "neurondump list",
+            "expected_signal": "0 model(s)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0 model(s)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install neurondump / cargo install --path crates/neurondump with Rust 1.88+",
+            "actually_needed": "download ready-made Linux x86_64 tarball from releases (v0.1.4) and copy inner neurondump binary to ~/.local/bin; cargo candidates skipped because box has no Rust toolchain and installing one is not allowed"
+          },
+          {
+            "readme_said": "unzip and run neurondump list",
+            "actually_needed": "tarball extracts to subdirectory neurondump-x86_64-unknown-linux-gnu/neurondump, so copy from there"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show empty model table with '0 model(s)' and version output 'neurondump 0.1.4'.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-neurondump-20261029-023935-c98e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-neurondump-20261029-023935-c98e/check-1-cmd8.judged.png",
+            "runs/verify/verify-neurondump-20261029-023935-c98e/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.045922
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -376,5 +456,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T02:40:21.678805+08:00"
 }

@@ -64,18 +64,25 @@
       "first_task": "frink bench -m models/Llama-3.2-3B-Instruct-Q4_K_M.gguf -p 512 -n 128 -r 3 --compare"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-frink-20261029-023935-6e9e",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/antonellof/frink/main/scripts/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/antonellof/frink/main/scripts/install.sh -o /tmp/frink-install.sh && wc -c /tmp/frink-install.sh && cat /tmp/frink-install.sh",
+          "purpose": "Download install script for reading before running"
+        },
+        {
+          "command": "bash /tmp/frink-install.sh",
+          "purpose": "Run install script to install frink and frink-server"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "frink bench -m models/Llama-3.2-3B-Instruct-Q4_K_M.gguf -p 512 -n 128 -r 3 --compare"
+      "check": {
+        "command": "frink --version",
+        "expected_signal": "frink 0.49.0"
+      },
+      "first_task": "frink smoke"
     },
     "windows": null
   },
@@ -92,10 +99,96 @@
     "url": "https://github.com/antonellof/frink/releases/tag/v0.49.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:40:24.904927+08:00",
+    "runs": [
+      {
+        "id": "verify-frink-20261029-023935-6e9e",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:40:24.904927+08:00",
+        "tool_version": "0.49.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/antonellof/frink/main/scripts/install.sh -o /tmp/frink-install.sh && wc -c /tmp/frink-install.sh && cat /tmp/frink-install.sh",
+            "purpose": "Download install script for reading before running"
+          },
+          {
+            "command": "bash /tmp/frink-install.sh",
+            "purpose": "Run install script to install frink and frink-server"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "frink --version",
+            "expected_signal": "frink 0.49.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "frink 0.49.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "frink --help",
+            "expected_signal": "bench",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "bench-bw Measure this host's CPU/PCIe bandwidths and write the profile `qstar` reads to decide the MoE fetch split",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "frink bench --help",
+            "expected_signal": "Also run `llama-bench` on the same GGUF and print the gap",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "--compare Also run `llama-bench` on the same GGUF and print the gap",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "frink smoke",
+            "expected_signal": "Smoke test passed: 8 decode steps, all logits finite.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Smoke test passed: 8 decode steps, all logits finite.",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "frink bench -m models/Llama-3.2-3B-Instruct-Q4_K_M.gguf -p 512 -n 128 -r 3 --compare",
+            "actually_needed": "Download the ~2GB Llama-3.2-3B-Instruct-Q4_K_M.gguf first via `frink download ... --local-dir models`; also --compare requires llama-bench on PATH. Verified offline substitute instead: `frink smoke` (synthetic weights, no download) and `frink bench --help` to confirm the README flags exist."
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show success: smoke test completed 8 steps with finite logits, and version printed as frink 0.49.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-frink-20261029-023935-6e9e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-frink-20261029-023935-6e9e/check-1-cmd7.judged.png",
+            "runs/verify/verify-frink-20261029-023935-6e9e/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.04736
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -314,5 +407,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T02:40:24.906195+08:00"
 }

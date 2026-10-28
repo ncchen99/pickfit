@@ -67,18 +67,21 @@
       "first_task": "infai --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "script",
+      "basis": "replayed",
+      "run_id": "verify-infai-20261029-023935-eecc",
+      "method": "binary",
       "steps": [
         {
-          "command": "curl -sL https://raw.githubusercontent.com/dipankardas011/infai/main/install.sh | bash",
-          "purpose": null
+          "command": "mkdir -p ~/.local/bin && curl -sL https://github.com/dipankardas011/infai/releases/download/v0.24.1/infai_0.24.1_linux_amd64.tar.gz -o /tmp/infai-clean.tar.gz && tar -xzf /tmp/infai-clean.tar.gz -C /tmp && install -m 0755 /tmp/infai ~/.local/bin/infai",
+          "purpose": "Download v0.24.1 release tarball and install binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "infai --version"
+      "check": {
+        "command": "infai --version",
+        "expected_signal": "infai 0.24.1"
+      },
+      "first_task": "infai"
     },
     "windows": null
   },
@@ -95,10 +98,87 @@
     "url": "https://github.com/dipankardas011/infai/releases/tag/infaiw-v0.30.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:40:40.804625+08:00",
+    "runs": [
+      {
+        "id": "verify-infai-20261029-023935-eecc",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:40:40.804625+08:00",
+        "tool_version": "0.24.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin && curl -sL https://github.com/dipankardas011/infai/releases/download/v0.24.1/infai_0.24.1_linux_amd64.tar.gz -o /tmp/infai-clean.tar.gz && tar -xzf /tmp/infai-clean.tar.gz -C /tmp && install -m 0755 /tmp/infai ~/.local/bin/infai",
+            "purpose": "Download v0.24.1 release tarball and install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "infai --version",
+            "expected_signal": "infai 0.24.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "infai 0.24.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "infai --help",
+            "expected_signal": "Usage of infai:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage of infai:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "infai",
+            "expected_signal": "could not open a new TTY",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "18:40:35 ERROR tui error=could not open a new TTY: open /dev/tty: no such device or address",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -sL .../install.sh | bash installs to /usr/local/bin via sudo",
+            "actually_needed": "install to ~/.local/bin (e.g. install -m 0755 /tmp/infai ~/.local/bin/infai) as non-root user"
+          },
+          {
+            "readme_said": "install.sh resolves version from /releases/latest, which now returns infaiw-v0.30.0 so the constructed infai_* URL 404s",
+            "actually_needed": "pin an infai v* tag (e.g. v0.24.1) and download infai_0.24.1_linux_amd64.tar.gz from that release"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "infai logged migrations then showed the expected no-TTY error, and --version printed infai 0.24.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-infai-20261029-023935-eecc/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-infai-20261029-023935-eecc/check-1-cmd9.judged.png",
+            "runs/verify/verify-infai-20261029-023935-eecc/check-2-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.069102
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -309,5 +389,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T02:40:40.805661+08:00"
 }

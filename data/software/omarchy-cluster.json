@@ -76,20 +76,24 @@
       "first_task": "omarchy-cluster discover"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-omarchy-cluster-20261029-023935-b4a5",
       "method": "pip",
       "steps": [
         {
-          "command": "python3 -m venv ~/.local/share/omarchy-cluster/venv && ~/.local/share/omarchy-cluster/venv/bin/pip install git+https://github.com/joshuaswarren/omarchy-cluster.git && ~/.local/share/omarchy-cluster/venv/bin/omarchy-cluster install-agent",
-          "purpose": null
+          "command": "python3 -m venv ~/.local/share/omarchy-cluster/venv && ~/.local/share/omarchy-cluster/venv/bin/pip install git+https://github.com/joshuaswarren/omarchy-cluster.git",
+          "purpose": "Create venv and pip install omarchy-cluster from git"
+        },
+        {
+          "command": "ln -sf ~/.local/share/omarchy-cluster/venv/bin/omarchy-cluster ~/.local/bin/omarchy-cluster",
+          "purpose": "Link venv binary onto PATH"
         }
       ],
-      "manual_steps": [
-        "Copy the same cluster token file to all nodes",
-        "Download the model on every node before serving"
-      ],
-      "check": null,
+      "manual_steps": [],
+      "check": {
+        "command": "omarchy-cluster --version",
+        "expected_signal": "0.3.2"
+      },
       "first_task": "omarchy-cluster discover"
     },
     "windows": null
@@ -107,10 +111,92 @@
     "url": "https://github.com/joshuaswarren/omarchy-cluster/releases/tag/v0.3.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:40:37.003952+08:00",
+    "runs": [
+      {
+        "id": "verify-omarchy-cluster-20261029-023935-b4a5",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:40:37.003952+08:00",
+        "tool_version": "0.3.2",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "python3 -m venv ~/.local/share/omarchy-cluster/venv && ~/.local/share/omarchy-cluster/venv/bin/pip install git+https://github.com/joshuaswarren/omarchy-cluster.git",
+            "purpose": "Create venv and pip install omarchy-cluster from git"
+          },
+          {
+            "command": "ln -sf ~/.local/share/omarchy-cluster/venv/bin/omarchy-cluster ~/.local/bin/omarchy-cluster",
+            "purpose": "Link venv binary onto PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "omarchy-cluster --version",
+            "expected_signal": "0.3.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.3.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "omarchy-cluster discover",
+            "expected_signal": "Connection refused",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "modal 127.0.0.1 local URLError: <urlopen error [Errno 111] Connection refused>",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "omarchy-cluster status",
+            "expected_signal": "no links.json yet",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no links.json yet; run: omarchy-cluster probe",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "~/.local/share/omarchy-cluster/venv/bin/omarchy-cluster install-agent",
+            "actually_needed": "install-agent requires systemctl --user (systemd); without systemctl it fails with FileNotFoundError and the agent is not started"
+          },
+          {
+            "readme_said": "omarchy-cluster discover/status directly after venv pip install",
+            "actually_needed": "ln -sf ~/.local/share/omarchy-cluster/venv/bin/omarchy-cluster ~/.local/bin/omarchy-cluster so omarchy-cluster is on PATH"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show discover reporting Connection refused, status showing DOWN with no links.json prompt, and --version printing 0.3.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-omarchy-cluster-20261029-023935-b4a5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-omarchy-cluster-20261029-023935-b4a5/check-1-cmd5.judged.png",
+            "runs/verify/verify-omarchy-cluster-20261029-023935-b4a5/check-2-cmd7.judged.png",
+            "runs/verify/verify-omarchy-cluster-20261029-023935-b4a5/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.042137
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -361,5 +447,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T02:40:37.005342+08:00"
 }
