@@ -140,3 +140,38 @@ def test_cli_dry_run(repo: Path, capsys: pytest.CaptureFixture[str]) -> None:
     code = cli_main(["publish", "--dry-run", "--data", str(repo / "data" / "software"), "--worker", str(repo / "worker")])
     assert code == 0
     assert "would run `npx wrangler deploy`" in capsys.readouterr().out
+
+
+def test_an_env_is_checked_and_deployed_with_its_own_settings(repo: Path) -> None:
+    code, lines = dry_run(repo, env="eval")
+    assert code == 0, lines
+    assert "publish: env eval settings: TOOLS=readonly, MATCH_MODE=model, META_DAILY_CAP_USD=3, META_TOTAL_CAP_USD=10" in lines
+    assert lines[-1].endswith(f"would run `npx wrangler deploy --env eval` in {repo / 'worker'}")
+
+    code, lines = dry_run(repo, env="eval-rules")
+    assert code == 0, lines
+    assert any("TOOLS=readonly, MATCH_MODE=off" in line for line in lines)
+
+    code, lines = dry_run(repo)
+    assert any(line.startswith("publish: top-level settings: TOOLS=all, MATCH_MODE=model") for line in lines)
+
+
+def test_an_env_needs_its_own_d1_and_hosts(repo: Path) -> None:
+    path = repo / "worker" / "wrangler.jsonc"
+    config = json.loads(strip_jsonc(path.read_text(encoding="utf-8")))
+    config["env"]["eval"]["d1_databases"][0]["database_id"] = "00000000-0000-0000-0000-000000000000"
+    config["env"]["eval"]["vars"]["ALLOWED_HOSTS"] = ""
+    path.write_text(json.dumps(config), encoding="utf-8")
+    git(repo, "commit", "-qam", "eval env not set up")
+    code, lines = dry_run(repo, env="eval")
+    assert code == 1
+    assert any("wrangler.jsonc env.eval: database_id is still the placeholder" in line for line in lines)
+    assert any("wrangler.jsonc env.eval: ALLOWED_HOSTS is empty" in line for line in lines)
+    # The top level is still deployable.
+    assert dry_run(repo)[0] == 0
+
+
+def test_an_unknown_env_refuses(repo: Path) -> None:
+    code, lines = dry_run(repo, env="nope")
+    assert code == 1
+    assert "- wrangler.jsonc: no env.nope section" in lines

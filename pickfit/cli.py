@@ -99,7 +99,7 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
 def _publish(args: argparse.Namespace) -> int:
     from pickfit.publish import publish
 
-    return publish(args.data, args.worker, dry_run=args.dry_run, allow_dirty=args.allow_dirty)
+    return publish(args.data, args.worker, dry_run=args.dry_run, allow_dirty=args.allow_dirty, env=args.env)
 
 
 def _add_publish_command(sub: argparse._SubParsersAction) -> None:
@@ -112,6 +112,7 @@ def _add_publish_command(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--worker", type=Path, default=DEFAULT_WORKER_DIR, help="the Worker directory")
     p.add_argument("--dry-run", action="store_true", help="run every check and print the plan; deploy nothing")
     p.add_argument("--allow-dirty", action="store_true", help="publish even if data/software has uncommitted changes")
+    p.add_argument("--env", help="deploy the env.<NAME> section of wrangler.jsonc (e.g. a frozen evaluation deployment)")
     p.set_defaults(func=_publish)
 
 

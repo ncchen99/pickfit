@@ -8,11 +8,18 @@ before anything is written, and any problem refuses the whole publish:
 - the records are test fixtures (slug ``fixture-*`` or a repo on ``.invalid``);
 - data/software has uncommitted changes, so the deploy would not match a
   commit (``--allow-dirty`` skips this one check);
-- wrangler.jsonc still has the placeholder D1 id or no ALLOWED_HOSTS.
+- wrangler.jsonc still has the placeholder D1 id or no ALLOWED_HOSTS (for
+  ``--env NAME``, in its ``env.NAME`` section: wrangler does not inherit
+  vars or D1 bindings into an environment).
 
 Then the index is written to worker/src/generated/index.json and
-``npx wrangler deploy`` runs in worker/. ``--dry-run`` runs every check and
-prints the plan without writing a file or calling wrangler.
+``npx wrangler deploy [--env NAME]`` runs in worker/. ``--dry-run`` runs every
+check and prints the plan, including the deployment's settings, without
+writing a file or calling wrangler.
+
+Deployments differ only by wrangler.jsonc settings (TOOLS, MATCH_MODE, the
+Meta caps), never by code: a frozen evaluation deployment is an env that is
+not published again while the evaluation runs.
 
 Remote D1 migrations and the MODEL_API_KEY secret are separate steps
 (worker/README.md, deploy checklist).
@@ -26,6 +33,8 @@ import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+SHOWN_VARS = ("TOOLS", "MATCH_MODE", "META_DAILY_CAP_USD", "META_TOTAL_CAP_USD")
 from urllib.parse import urlparse
 
 from pickfit.index import DEFAULT_DATA_DIR, REPO_ROOT, IndexBuildError, build_index, write_index
@@ -41,6 +50,7 @@ class Plan:
     problems: list[str] = field(default_factory=list)
     index: dict[str, Any] | None = None
     commit: str | None = None
+    vars: dict[str, Any] = field(default_factory=dict)
 
     @property
     def ok(self) -> bool:
@@ -78,21 +88,29 @@ def strip_jsonc(text: str) -> str:
     return re.sub(r",(\s*[}\]])", r"\1", "".join(out))
 
 
-def check_wrangler(worker_dir: Path) -> list[str]:
+def check_wrangler(worker_dir: Path, env: str | None = None) -> tuple[list[str], dict[str, Any]]:
+    """(problems, vars) of the top-level config, or of its env.<env> section."""
     path = worker_dir / "wrangler.jsonc"
     try:
         config = json.loads(strip_jsonc(path.read_text(encoding="utf-8")))
     except (OSError, ValueError) as err:
-        return [f"{path}: cannot read ({err})"]
+        return [f"{path}: cannot read ({err})"], {}
+    where = "wrangler.jsonc"
+    if env:
+        where = f"wrangler.jsonc env.{env}"
+        config = config.get("env", {}).get(env)
+        if not isinstance(config, dict):
+            return [f"wrangler.jsonc: no env.{env} section"], {}
+    variables = config.get("vars", {})
     problems: list[str] = []
     db = next((d for d in config.get("d1_databases", []) if d.get("binding") == "DB"), None)
     if not db:
-        problems.append("wrangler.jsonc: no D1 binding DB")
+        problems.append(f"{where}: no D1 binding DB")
     elif not db.get("database_id") or PLACEHOLDER_DB_ID.match(db["database_id"]):
-        problems.append("wrangler.jsonc: database_id is still the placeholder; run `wrangler d1 create pickfit` and put its id there")
-    if not str(config.get("vars", {}).get("ALLOWED_HOSTS", "")).strip():
-        problems.append("wrangler.jsonc: ALLOWED_HOSTS is empty; set the workers.dev host name, or every remote request gets 403")
-    return problems
+        problems.append(f"{where}: database_id is still the placeholder; run `wrangler d1 create <name>` and put its id there")
+    if not str(variables.get("ALLOWED_HOSTS", "")).strip():
+        problems.append(f"{where}: ALLOWED_HOSTS is empty; set the workers.dev host name, or every remote request gets 403")
+    return problems, variables
 
 
 def fixture_entries(index: dict[str, Any]) -> list[str]:
@@ -116,7 +134,12 @@ def git_state(data_dir: Path) -> tuple[str | None, list[str]]:
     return head, dirty
 
 
-def plan(data_dir: Path = DEFAULT_DATA_DIR, worker_dir: Path = DEFAULT_WORKER_DIR, allow_dirty: bool = False) -> Plan:
+def plan(
+    data_dir: Path = DEFAULT_DATA_DIR,
+    worker_dir: Path = DEFAULT_WORKER_DIR,
+    allow_dirty: bool = False,
+    env: str | None = None,
+) -> Plan:
     result = Plan()
     try:
         built = build_index(data_dir)
@@ -140,7 +163,8 @@ def plan(data_dir: Path = DEFAULT_DATA_DIR, worker_dir: Path = DEFAULT_WORKER_DI
         result.problems.append(
             f"{len(dirty)} uncommitted file(s) under {data_dir} (e.g. {dirty[0]}); commit them first or pass --allow-dirty"
         )
-    result.problems += check_wrangler(worker_dir)
+    problems, result.vars = check_wrangler(worker_dir, env)
+    result.problems += problems
     return result
 
 
@@ -150,9 +174,10 @@ def publish(
     *,
     dry_run: bool = False,
     allow_dirty: bool = False,
+    env: str | None = None,
     out=print,
 ) -> int:
-    p = plan(data_dir, worker_dir, allow_dirty)
+    p = plan(data_dir, worker_dir, allow_dirty, env)
     if not p.ok:
         out(f"publish: refusing to deploy, {len(p.problems)} problem(s):")
         for problem in p.problems:
@@ -160,14 +185,17 @@ def publish(
         return 1
     assert p.index is not None
     index_path = worker_dir / INDEX_PATH
+    command = DEPLOY_COMMAND + (["--env", env] if env else [])
     out(
         f"publish: {p.index['count']} listed entries from {p.index['data_dir']} "
         f"(data sha256 {p.index['data_sha256'][:12]}, commit {p.commit or 'none'})"
     )
+    shown = ", ".join(f"{name}={p.vars.get(name, '(default)')}" for name in SHOWN_VARS)
+    out(f"publish: {'env ' + env if env else 'top-level'} settings: {shown}")
     if dry_run:
         out(f"publish: dry run; would write {index_path}")
-        out(f"publish: dry run; would run `{' '.join(DEPLOY_COMMAND)}` in {worker_dir}")
+        out(f"publish: dry run; would run `{' '.join(command)}` in {worker_dir}")
         return 0
     write_index(p.index, index_path)
-    out(f"publish: wrote {index_path}; running `{' '.join(DEPLOY_COMMAND)}` in {worker_dir}")
-    return subprocess.run(DEPLOY_COMMAND, cwd=worker_dir).returncode
+    out(f"publish: wrote {index_path}; running `{' '.join(command)}` in {worker_dir}")
+    return subprocess.run(command, cwd=worker_dir).returncode
