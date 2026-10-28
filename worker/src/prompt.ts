@@ -26,10 +26,22 @@ What usually matters per category:
 
 Write every text field in plain, specific English without marketing words.`;
 
+/** find_alternatives: appended to MATCH_INSTRUCTIONS, which stays as it is for find_software. */
+export const ALTERNATIVES_RULES = `
+
+This request is about replacing a tool the person already uses. <request> also has current_software, pain_points (what they dislike about it) and must_keep (what the replacement must still do). These rules come on top of the ones above:
+12. Pick only candidates that do the same job as current_software, fix at least one pain point and keep everything in must_keep. In fit, say which pain point the pick fixes. A tool for a different job is not an alternative, however good it is.
+13. vs_well_known: one sentence on when the pick is the better or the worse choice than current_software for this person.
+14. keep_current: recommended is true when no candidate is clearly better for this person than current_software, for example when each one would lose something in must_keep or fixes none of the pain points; false when at least one pick is clearly better. reason: one sentence saying why.
+15. need.current_tool: the common name of current_software. need.pain_points: up to 4 short English phrases, at most 6 words each, naming what they dislike, with no personal details.`;
+
+export type MatchKind = 'find' | 'alternatives';
+
 const LIMIT_PLACEHOLDER = '{limit}';
 
-export function instructions(limit: number): string {
-  return MATCH_INSTRUCTIONS.replace(LIMIT_PLACEHOLDER, String(limit));
+export function instructions(limit: number, kind: MatchKind = 'find'): string {
+  const base = MATCH_INSTRUCTIONS.replace(LIMIT_PLACEHOLDER, String(limit));
+  return kind === 'alternatives' ? base + ALTERNATIVES_RULES : base;
 }
 
 /** JSON whose text cannot close the surrounding <request>/<candidates> tags. */
@@ -51,13 +63,14 @@ export function matchInput(request: Record<string, unknown>, cards: Card[]): str
 const nullableString = { type: ['string', 'null'] };
 
 /** Strict JSON schema for the answer; slugs are limited to this request's candidates. */
-export function matchSchema(slugs: string[]): Record<string, unknown> {
+export function matchSchema(slugs: string[], kind: MatchKind = 'find'): Record<string, unknown> {
   const object = (properties: Record<string, unknown>) => ({
     type: 'object',
     properties,
     required: Object.keys(properties),
     additionalProperties: false,
   });
+  const alternatives = kind === 'alternatives';
   return object({
     need: object({
       task: { type: 'string', description: 'The job in at most 12 English words; no personal details.' },
@@ -67,6 +80,9 @@ export function matchSchema(slugs: string[]): Record<string, unknown> {
       must_run_locally: { type: ['boolean', 'null'] },
       must_have: { type: 'array', items: { type: 'string' } },
       search_terms: { type: 'array', items: { type: 'string' } },
+      ...(alternatives
+        ? { current_tool: nullableString, pain_points: { type: 'array', items: { type: 'string' } } }
+        : {}),
     }),
     picks: {
       type: 'array',
@@ -89,6 +105,7 @@ export function matchSchema(slugs: string[]): Record<string, unknown> {
     best_free_reason: nullableString,
     no_install_option: nullableString,
     clarifying_question: nullableString,
+    ...(alternatives ? { keep_current: object({ recommended: { type: 'boolean' }, reason: { type: 'string' } }) } : {}),
   });
 }
 
@@ -115,10 +132,15 @@ export interface ModelAnswer {
     must_run_locally: boolean | null;
     must_have: string[];
     search_terms: string[];
+    /** find_alternatives only */
+    current_tool?: string | null;
+    pain_points?: string[];
   };
   picks: ModelPick[];
   best_free_slug: string | null;
   best_free_reason: string | null;
   no_install_option: string | null;
   clarifying_question: string | null;
+  /** find_alternatives only */
+  keep_current?: { recommended: boolean; reason: string };
 }

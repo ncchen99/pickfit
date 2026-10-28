@@ -2,7 +2,7 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { CARD_FIELDS } from './cards.ts';
-import { findSoftware, type Deps } from './find.ts';
+import { findAlternatives, findSoftware, type Deps } from './find.ts';
 import { installGuide, UnknownSlugError } from './install.ts';
 import { logEvent } from './events.ts';
 import { ERROR_EXCERPT_MAX, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } from './outcome.ts';
@@ -10,8 +10,9 @@ import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './subm
 
 export const INSTRUCTIONS =
   'pickfit recommends lesser-known software that it has installed and tested in a sandbox. Scope today: developer CLI tools and local AI/LLM tools. ' +
-  'Flow: find_software -> user picks -> get_install_guide -> run steps with the user\'s consent -> report_outcome. ' +
-  'Ask at most 1-2 questions first (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars.';
+  'Flow: find_software (or find_alternatives when replacing a tool) -> user picks -> get_install_guide -> run steps with the user\'s consent -> report_outcome. ' +
+  'Ask at most 1-2 questions first (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars. ' +
+  'submit_software adds a GitHub project.';
 
 const os = z.enum(['macos', 'linux', 'windows']);
 const arch = z.enum(['arm64', 'x86_64']);
@@ -57,12 +58,8 @@ const pick = z.object({
   homepage: z.string().nullable(),
 });
 
-const findInput = z.object({
-  need: z
-    .string()
-    .min(3)
-    .max(500)
-    .describe("The job to get done, in the user's words. Describe the task, not a product name."),
+/** The user's conditions, shared by find_software and find_alternatives. */
+const conditions = {
   category: z.enum(['dev_cli', 'local_ai', 'any']).optional().describe('Default any'),
   os: os.optional(),
   arch: arch.optional(),
@@ -71,6 +68,22 @@ const findInput = z.object({
   ui_language: z.string().max(35).optional().describe('BCP 47 tag, only if the user needs the UI or docs in that language'),
   exclude: z.array(slug).max(20).optional().describe('Slugs already shown or rejected'),
   limit: z.number().int().min(1).max(3).optional().describe('Default 3'),
+};
+
+const findInput = z.object({
+  need: z
+    .string()
+    .min(3)
+    .max(500)
+    .describe("The job to get done, in the user's words. Describe the task, not a product name."),
+  ...conditions,
+});
+
+const alternativesInput = z.object({
+  current_software: z.string().min(1).max(100).describe('The tool the user uses now'),
+  pain_points: z.string().min(3).max(500).describe('What the user dislikes about it, in their words'),
+  must_keep: z.array(z.string().max(100)).max(5).optional().describe('What the replacement must still do'),
+  ...conditions,
 });
 
 const findOutput = z.object({
@@ -84,6 +97,17 @@ const findOutput = z.object({
   no_install_option: z.string().nullable(),
   clarifying_question: z.string().nullable(),
   coverage_note: z.string().nullable(),
+});
+
+const alternativesOutput = findOutput.extend({
+  current: z.object({
+    matched_slug: z.string().nullable().describe('The current tool in pickfit, if listed; never among the picks'),
+    known: z.boolean().describe('pickfit lists it, or names it as an alternative on some profile'),
+  }),
+  keep_current: z
+    .object({ recommended: z.boolean(), reason: z.string() })
+    .nullable()
+    .describe('recommended true = no pick is clearly better than the current tool; null when ranked by rules'),
 });
 
 const installInput = z.object({
@@ -210,11 +234,27 @@ export function buildServer(deps: Deps): McpServer {
   );
 
   server.registerTool(
+    'find_alternatives',
+    {
+      title: 'Find alternatives to a tool',
+      description:
+        'Use when the user already uses a specific tool and wants something different ("replace X", "X is too slow / too expensive / needs an account"). ' +
+        'Requires the current tool\'s name and what the user dislikes about it: ask for the dislike if they have not said it; do not guess. Ask for the OS only if unknown. ' +
+        'Returns up to 3 lesser-known tools whose install pickfit actually ran, each with reasons tied to its verified profile, trade-offs against the current tool and verification evidence, ' +
+        'or keep_current advice when nothing fits better, plus the best free option. Next: get_install_guide(slug, os, rec_id).',
+      inputSchema: alternativesInput,
+      outputSchema: alternativesOutput,
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    async (args) => result(await findAlternatives(args, deps)),
+  );
+
+  server.registerTool(
     'get_install_guide',
     {
       title: 'Get a verified install guide',
       description:
-        'Use after the user picks a tool from find_software. Returns install steps pickfit actually ran (replayed in a fresh sandbox, or done by hand), with the OS, date and evidence, ' +
+        'Use after the user picks a tool from find_software or find_alternatives. Returns install steps pickfit actually ran (replayed in a fresh sandbox, or done by hand), with the OS, date and evidence, ' +
         'the steps only the user can do (permissions, accounts), a command to verify the install and a first task to try. ' +
         'Show each command to the user before running it, and ask before any step that needs sudo or pipes a script into a shell. ' +
         'If applies_to_user_system.match is not "exact", tell the user the steps were checked on a different system. After the user tries it, call report_outcome with the rec_id.',

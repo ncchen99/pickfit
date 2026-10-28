@@ -1,9 +1,11 @@
 /**
- * find_software (architecture F.2): hard filters (code) -> every candidate
- * card in one muse-spark-1.3 call that parses the request and chooses ->
- * guard (code). Without the model (off, no key, over budget, failure, or
- * every pick rejected) it ranks by rules and says so: matched_by "rules",
- * degraded true.
+ * find_software and find_alternatives (architecture F.2): hard filters
+ * (code) -> every candidate card in one muse-spark-1.3 call that parses the
+ * request and chooses -> guard (code). Without the model (off, no key, over
+ * budget, failure, or every pick rejected) it ranks by rules and says so:
+ * matched_by "rules", degraded true. find_alternatives sends the current tool
+ * and its pain points too, drops the current tool from the candidates, and
+ * may advise keeping it.
  */
 import { bestGuide, type Arch, type Catalog, type Entry, type InstallGuide, type OS } from './catalog.ts';
 import { toCard, type Card } from './cards.ts';
@@ -14,11 +16,19 @@ import { logEvent, newId, type Reporter } from './events.ts';
 import { hardFilter, MAX_CARDS, type Conditions } from './filter.ts';
 import { clip, guardPicks, parseAnswer, type GuardedPick } from './guard.ts';
 import { callMeta, estimateCostUsd, MATCH_MODEL, MetaCallError, requestBody } from './meta.ts';
-import { instructions, matchInput, matchSchema, type ModelAnswer, type ModelReason } from './prompt.ts';
-import { rankByRules, templateReasons } from './rules.ts';
+import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer, type ModelReason } from './prompt.ts';
+import { nameKey, rankByRules, templateReasons } from './rules.ts';
 
 export interface FindInput extends Conditions {
   need: string;
+  ui_language?: string;
+  limit?: number;
+}
+
+export interface AlternativesInput extends Conditions {
+  current_software: string;
+  pain_points: string;
+  must_keep?: string[];
   ui_language?: string;
   limit?: number;
 }
@@ -75,6 +85,11 @@ export interface FindOutput {
   no_install_option: string | null;
   clarifying_question: string | null;
   coverage_note: string | null;
+}
+
+export interface AlternativesOutput extends FindOutput {
+  current: { matched_slug: string | null; known: boolean };
+  keep_current: { recommended: boolean; reason: string } | null;
 }
 
 function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, considered: number): string {
@@ -144,11 +159,26 @@ interface Choice {
   question: string | null;
   parsedNeed: Record<string, unknown> | null;
   emptyByModel: boolean;
+  keepCurrent: { recommended: boolean; reason: string } | null;
 }
 
-function fromModel(answer: ModelAnswer, picks: GuardedPick[], entries: Map<string, Entry>): Choice {
+const NO_CHOICE: Choice = {
+  picks: [],
+  bestFree: null,
+  noInstall: null,
+  question: null,
+  parsedNeed: null,
+  emptyByModel: false,
+  keepCurrent: null,
+};
+
+const shortList = (items: string[] | undefined, n: number, max: number) =>
+  (Array.isArray(items) ? items : []).slice(0, n).map((s) => String(s).slice(0, max));
+
+function fromModel(answer: ModelAnswer, picks: GuardedPick[], entries: Map<string, Entry>, kind: MatchKind): Choice {
   const free = answer.best_free_slug ? entries.get(answer.best_free_slug) : undefined;
   const need = answer.need;
+  const keep = answer.keep_current;
   return {
     picks,
     bestFree:
@@ -163,15 +193,23 @@ function fromModel(answer: ModelAnswer, picks: GuardedPick[], entries: Map<strin
       os: need.os,
       budget: need.budget,
       must_run_locally: need.must_run_locally,
-      must_have: (need.must_have ?? []).slice(0, 6).map((s) => s.slice(0, 60)),
-      search_terms: (need.search_terms ?? []).slice(0, 6).map((s) => s.slice(0, 40)),
+      must_have: shortList(need.must_have, 6, 60),
+      search_terms: shortList(need.search_terms, 6, 40),
+      ...(kind === 'alternatives'
+        ? { current_tool: clip(need.current_tool, 40), pain_points: shortList(need.pain_points, 4, 60) }
+        : {}),
     },
     emptyByModel: answer.picks.length === 0,
+    keepCurrent:
+      kind === 'alternatives' && typeof keep?.recommended === 'boolean'
+        ? { recommended: keep.recommended, reason: clip(keep.reason, 300) ?? '' }
+        : null,
   };
 }
 
-function fromRules(input: FindInput, candidates: Entry[], cards: Map<string, Card>, limit: number): Choice {
-  const ranked = rankByRules(candidates, input.need, input.os);
+function fromRules(req: MatchRequest, candidates: Entry[], cards: Map<string, Card>, limit: number): Choice {
+  const os = req.conditions.os;
+  const ranked = rankByRules(candidates, req.rulesText, os, req.currentTool);
   const top = ranked.slice(0, limit);
   const free = ranked.find((entry) => entry.pricing === 'free');
   const osSets = new Set(top.map((entry) => entry.platforms.slice().sort().join(',')));
@@ -179,22 +217,24 @@ function fromRules(input: FindInput, candidates: Entry[], cards: Map<string, Car
     picks: top.map((entry) => ({
       slug: entry.slug,
       fit: entry.summary,
-      reasons: templateReasons(entry, cards.get(entry.slug)!, input.os),
+      reasons: templateReasons(entry, cards.get(entry.slug)!, os),
       tradeoffs: [],
       vs_well_known: null,
     })),
     bestFree: free ? { slug: free.slug, reason: 'The highest-ranked free tool by rules.' } : null,
     noInstall: null,
-    question: !input.os && osSets.size > 1 ? 'Which OS will you use it on: macOS, Linux or Windows?' : null,
+    question: !os && osSets.size > 1 ? 'Which OS will you use it on: macOS, Linux or Windows?' : null,
     parsedNeed: null,
     emptyByModel: false,
+    keepCurrent: null, // rules cannot judge the current tool
   };
 }
 
 type Attempt = { answer: ModelAnswer; picks: GuardedPick[]; cost: number } | { failure: string; cost: number };
 
 async function askModel(
-  input: FindInput,
+  request: Record<string, unknown>,
+  kind: MatchKind,
   cards: Map<string, Card>,
   limit: number,
   deps: Deps,
@@ -203,21 +243,11 @@ async function askModel(
   const { settings } = deps;
   if (!settings.modelEnabled) return { failure: 'model_off', cost: 0 };
   if (!settings.apiKey) return { failure: 'no_api_key', cost: 0 };
-  const request = {
-    need: input.need,
-    category: input.category ?? 'any',
-    os: input.os ?? null,
-    arch: input.arch ?? null,
-    budget: input.budget ?? null,
-    must_run_locally: input.must_run_locally ?? null,
-    ui_language: input.ui_language ?? null,
-    limit,
-  };
   const body = requestBody({
-    instructions: instructions(limit),
+    instructions: instructions(limit, kind),
     input: matchInput(request, [...cards.values()]),
-    schemaName: 'pickfit_match',
-    schema: matchSchema([...cards.keys()]),
+    schemaName: kind === 'alternatives' ? 'pickfit_alternatives' : 'pickfit_match',
+    schema: matchSchema([...cards.keys()], kind),
   });
   try {
     const budget = await checkBudget(deps.db, now, estimateCostUsd(JSON.stringify(body).length), settings);
@@ -231,7 +261,7 @@ async function askModel(
     cost = result.costUsd;
     // Token use for tuning; no request text.
     console.log(
-      JSON.stringify({ event: 'meta_call', model: MATCH_MODEL, cards: cards.size, ...result.usage, cost_usd: cost, latency_ms: result.latencyMs }),
+      JSON.stringify({ event: 'meta_call', kind, model: MATCH_MODEL, cards: cards.size, ...result.usage, cost_usd: cost, latency_ms: result.latencyMs }),
     );
     const answer = parseAnswer(result.text);
     if (!answer) return { failure: 'model_bad_output', cost };
@@ -249,36 +279,51 @@ async function askModel(
   }
 }
 
-export async function findSoftware(input: FindInput, deps: Deps): Promise<FindOutput> {
+interface MatchRequest {
+  kind: MatchKind;
+  conditions: Conditions & { ui_language?: string; limit?: number };
+  /** What the model reads inside <request>. */
+  modelRequest: Record<string, unknown>;
+  /** Text the rules fallback ranks profiles against. */
+  rulesText: string;
+  /** find_alternatives: the rules rank profiles that name this tool first. */
+  currentTool?: string;
+  /** Extra parsed conditions to log (never the user's words). */
+  logged?: Record<string, unknown>;
+}
+
+async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindOutput; keepCurrent: Choice['keepCurrent'] }> {
   const started = Date.now();
   const now = deps.now();
-  const limit = Math.min(Math.max(input.limit ?? 3, 1), 3);
-  const { candidates, passed } = hardFilter(deps.catalog.entries, input);
+  const cond = req.conditions;
+  const limit = Math.min(Math.max(cond.limit ?? 3, 1), 3);
+  const { candidates, passed } = hardFilter(deps.catalog.entries, cond);
   const entries = new Map(candidates.map((entry) => [entry.slug, entry]));
-  const cards = new Map(candidates.map((entry) => [entry.slug, toCard(entry, input.os)]));
+  const cards = new Map(candidates.map((entry) => [entry.slug, toCard(entry, cond.os)]));
 
   let choice: Choice;
   let matchedBy = 'rules';
   let degradedReason: string | null = null;
   let cost = 0;
   if (candidates.length === 0) {
-    choice = { picks: [], bestFree: null, noInstall: null, question: null, parsedNeed: null, emptyByModel: false };
+    choice = NO_CHOICE;
   } else {
-    const attempt = await askModel(input, cards, limit, deps, now);
+    const attempt = await askModel({ ...req.modelRequest, limit }, req.kind, cards, limit, deps, now);
     cost = attempt.cost;
     if ('answer' in attempt) {
       matchedBy = MATCH_MODEL;
-      choice = fromModel(attempt.answer, attempt.picks, entries);
+      choice = fromModel(attempt.answer, attempt.picks, entries, req.kind);
     } else {
       degradedReason = attempt.failure;
-      choice = fromRules(input, candidates, cards, limit);
+      choice = fromRules(req, candidates, cards, limit);
     }
   }
 
+  const what = req.kind === 'alternatives' ? 'alternative' : 'tool';
   const notes: string[] = [];
   if (candidates.length === 0) {
     notes.push(
-      'No verified tool in pickfit meets these conditions. Coverage today: developer CLI tools and local AI/LLM tools.',
+      `No verified ${what} in pickfit meets these conditions. Coverage today: developer CLI tools and local AI/LLM tools.`,
     );
   } else if (choice.emptyByModel) {
     notes.push(`None of the ${candidates.length} verified tools that meet the conditions fits this request.`);
@@ -293,7 +338,7 @@ export async function findSoftware(input: FindInput, deps: Deps): Promise<FindOu
     degraded: degradedReason !== null,
     degraded_reason: degradedReason,
     considered: passed,
-    picks: choice.picks.map((chosen) => pickOut(entries.get(chosen.slug)!, chosen, input.os, matchedBy, passed)),
+    picks: choice.picks.map((chosen) => pickOut(entries.get(chosen.slug)!, chosen, cond.os, matchedBy, passed)),
     best_free: choice.bestFree,
     no_install_option: choice.noInstall,
     clarifying_question: choice.question,
@@ -302,23 +347,24 @@ export async function findSoftware(input: FindInput, deps: Deps): Promise<FindOu
 
   deps.waitUntil(
     logEvent(deps.db, now, {
-      type: 'find',
+      type: req.kind,
       rec_id: output.rec_id,
-      os: input.os ?? null,
-      arch: input.arch ?? null,
-      category: input.category ?? 'any',
+      os: cond.os ?? null,
+      arch: cond.arch ?? null,
+      category: cond.category ?? 'any',
       // Conditions only; the user's own words are never stored.
       need: {
         given: {
-          category: input.category ?? null,
-          os: input.os ?? null,
-          arch: input.arch ?? null,
-          budget: input.budget ?? null,
-          must_run_locally: input.must_run_locally ?? null,
-          ui_language: input.ui_language ?? null,
+          category: cond.category ?? null,
+          os: cond.os ?? null,
+          arch: cond.arch ?? null,
+          budget: cond.budget ?? null,
+          must_run_locally: cond.must_run_locally ?? null,
+          ui_language: cond.ui_language ?? null,
           limit,
         },
         parsed: choice.parsedNeed,
+        ...req.logged,
       },
       results: output.picks.map((pick) => pick.slug),
       client: deps.client ?? null,
@@ -328,5 +374,61 @@ export async function findSoftware(input: FindInput, deps: Deps): Promise<FindOu
       latency_ms: Date.now() - started,
     }).catch(() => undefined),
   );
+  return { output, keepCurrent: choice.keepCurrent };
+}
+
+function sharedRequest(input: Conditions & { ui_language?: string }) {
+  return {
+    category: input.category ?? 'any',
+    os: input.os ?? null,
+    arch: input.arch ?? null,
+    budget: input.budget ?? null,
+    must_run_locally: input.must_run_locally ?? null,
+    ui_language: input.ui_language ?? null,
+  };
+}
+
+export async function findSoftware(input: FindInput, deps: Deps): Promise<FindOutput> {
+  const { output } = await recommend(
+    {
+      kind: 'find',
+      conditions: input,
+      modelRequest: { need: input.need, ...sharedRequest(input) },
+      rulesText: input.need,
+    },
+    deps,
+  );
   return output;
+}
+
+/** The user's current tool in the catalog (by slug or name), and whether pickfit knows it at all. */
+export function matchCurrent(catalog: Catalog, name: string): AlternativesOutput['current'] {
+  const key = nameKey(name);
+  if (!key) return { matched_slug: null, known: false };
+  const entry = catalog.entries.find((e) => nameKey(e.slug) === key || nameKey(e.name) === key);
+  const named = catalog.entries.some((e) => e.alternatives_to.some((alt) => nameKey(alt) === key));
+  return { matched_slug: entry?.slug ?? null, known: entry !== undefined || named };
+}
+
+export async function findAlternatives(input: AlternativesInput, deps: Deps): Promise<AlternativesOutput> {
+  const current = matchCurrent(deps.catalog, input.current_software);
+  const exclude = [...(input.exclude ?? []), ...(current.matched_slug ? [current.matched_slug] : [])];
+  const mustKeep = input.must_keep ?? [];
+  const { output, keepCurrent } = await recommend(
+    {
+      kind: 'alternatives',
+      conditions: { ...input, exclude },
+      modelRequest: {
+        current_software: input.current_software,
+        pain_points: input.pain_points,
+        must_keep: mustKeep,
+        ...sharedRequest(input),
+      },
+      rulesText: [input.pain_points, ...mustKeep].join(' '),
+      currentTool: input.current_software,
+      logged: { current: { matched_slug: current.matched_slug, known: current.known } },
+    },
+    deps,
+  );
+  return { ...output, current, keep_current: keepCurrent };
 }
