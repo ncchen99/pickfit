@@ -14,7 +14,7 @@
 
 ---
 
-## 1. 目前狀態（2026-10-28 16:20 台北）
+## 1. 目前狀態（2026-10-28 23:24 台北）
 
 | 項目 | 狀態 | 備註 |
 |---|---|---|
@@ -24,7 +24,7 @@
 | Mac | ✅ Apple M5、24 GB、macOS 27 | demo 第 4 幕與 Mac 人工驗證在這台做 |
 | Cloudflare | ✅ `wrangler` 已登入 | |
 | GitHub | ✅ `gh` 已登入 | 管線用 `GITHUB_TOKEN=$(gh auth token)`，不必另建 PAT |
-| Docker | 已安裝，daemon 沒開 | 本機沙盒開發前先開 Docker Desktop |
+| Docker | ✅ OrbStack（docker context `orbstack`） | P3 的 `DockerBox` 在這上面跑過 |
 | Modal | ✅ token 在 `.env` | `MODAL_TOKEN_ID`／`MODAL_TOKEN_SECRET`；本機沒裝 CLI，用 `uvx --from modal modal …`；Python 端用 `uv run --python 3.12 --with modal …` |
 | Baseten | ⏳ 10/28 已申請 | 審核制；沒回覆就當沒核准，照 P2.4 的退路走 |
 | E2B | ❌ | 備案，Modal 不能用時才註冊 |
@@ -92,20 +92,20 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 
 ### P2 發現與抽取（10/29）
 
-- [ ] P2.1 GitHub search：每類別 3 條 query（topic＋`created:`＋`pushed:`＋星數 5–300），序列化、間隔 ≥2.1 秒；補 repo、README、release。**discovery 的 query 依類別寫，不從評測題目推導，由沒讀過 `eval/` 的 session 撰寫**（[eval/README.md](../eval/README.md) 第 3 節）；每條 query 連同時間記在 trace。
-- [ ] P2.2 正規化、去重、候選庫（`runs/pipeline.db`）：主鍵 `gh:<repo id>`、舊名進 `aliases`。移植 spike 時拿掉所有 ecosyste.ms 呼叫。
-- [ ] P2.3 規則前置（arch B.1）：fork、archived、template、沒 README、函式庫訊號。從 `spikes/quality_signals.py` 移植時拿掉所有 ecosyste.ms 呼叫，改用 GitHub REST。
+- [x] P2.1 GitHub search：每類別 3 條 query（topic＋`created:`＋`pushed:`＋星數 5–300），序列化、間隔 ≥2.1 秒；補 repo、README、release。**discovery 的 query 依類別寫，不從評測題目推導，由沒讀過 `eval/` 的 session 撰寫**（[eval/README.md](../eval/README.md) 第 3 節）；每條 query 連同時間記在 trace。（實作：`pickfit/discover/`；query 與時間記在 `runs/pipeline.db` 的 `queries` 表）
+- [x] P2.2 正規化、去重、候選庫（`runs/pipeline.db`）：主鍵 `gh:<repo id>`、舊名進 `aliases`。移植 spike 時拿掉所有 ecosyste.ms 呼叫。
+- [x] P2.3 規則前置（arch B.1）：fork、archived、template、沒 README、函式庫訊號。從 `spikes/quality_signals.py` 移植時拿掉所有 ecosyste.ms 呼叫，改用 GitHub REST。（目前 496 筆過 466 筆、94%，偏寬；README-only 的可疑 repo 有擋下。P2.6 前再收緊）
 - [ ] P2.4 開放權重初篩（計畫內，需 P0.7）：Spark Open @ Baseten，低信心送 1.3 複查，抽 5% 比一致率。Baseten 沒核准或 `-1026` 不存在 → 用公開 model ID 自付（<$5）→ 再不行試 Modal Shared Endpoint（先確認 credits 能付）→ 最後才只用規則（會失去 Best Open Weight 資格，arch I #3、H.5 #6）。
-- [ ] P2.5 抽取 v0：`muse-spark-1.3`，Responses、`text.format` strict，每欄附引用。照「1 → 5 → 30」放大。
+- [x] P2.5 抽取 v0：`muse-spark-1.3`，Responses、`text.format` strict，每欄附引用。照「1 → 5 → 30」放大。（開發時用 contributor 跑到 36 筆，全過 schema；程式檢查每段引用確實出現在來源，已在 v0 做好。1.3 正式批次在 P2.6，估每筆約 $0.017）
 - [ ] P2.6 抽取收尾（10/30 上午，arch H.2）：程式檢查引用真的出現在來源、授權與 release 等事實欄位改用 API 值、重試、批次；晚上背景跑批次抽取，產生 P3 要用的 ≥30 份 profile。
 
 **完成標準**：`pickfit discover` 產生 ≥150 筆候選；漏斗每一格標模型與花費；5 份抽取檔過 schema。推理 token 超過估算 2 倍就降 effort。
 
 ### P3 驗證 agent（10/30 本機 → 10/31 Modal）
 
-- [ ] P3.1 `Box` 介面與 `DockerBox`（沿用 `spikes/sandbox_docker_install.py` 的限制）。
-- [ ] P3.2 安裝方式排序（套件管理器 → release 二進位 → 從原始碼建置）＋ 6–8 條常見錯誤規則。
-- [ ] P3.3 驗證 agent：Responses＋`previous_response_id`、`reasoning: {effort: medium, summary: auto}`；工具 `list_dir`、`read_file`、`run_command`、`run_background`、`finish`；停止條件：25 回合、15 個指令、20 分鐘、每款 $0.50、同一錯誤 3 次。終端機逐步印出模型、指令、exit code、花費。P0.3 量到串接回合每回 15–18 秒：先用 3–5 回合比較「`previous_response_id` 串接」與「每回合重送完整歷史（`store: false`）」的延遲與花費，選快的。
+- [x] P3.1 `Box` 介面與 `DockerBox`（沿用 `spikes/sandbox_docker_install.py` 的限制）。（還沒擋 169.254.169.254；`run_background` 還沒對真的 server 測過）
+- [x] P3.2 安裝方式排序（套件管理器 → release 二進位 → 從原始碼建置）＋ 6–8 條常見錯誤規則。
+- [x] P3.3 驗證 agent：Responses＋`previous_response_id`、`reasoning: {effort: medium, summary: auto}`；工具 `list_dir`、`read_file`、`run_command`、`run_background`、`finish`；停止條件：25 回合、15 個指令、20 分鐘、每款 $0.50、同一錯誤 3 次。終端機逐步印出模型、指令、exit code、花費。P0.3 量到串接回合每回 15–18 秒：先用 3–5 回合比較「`previous_response_id` 串接」與「每回合重送完整歷史（`store: false`）」的延遲與花費，選快的。（結果：重送完整歷史每回合 1–7 秒、串接 11–25 秒且遇過一次 400 找不到 response，預設改為重送＋`prompt_cache_key`。evnx 照 README 失敗後由 1.3 自己修好、graphtty 一次通過。待補：模型會誇大自己做過的設定，程式要拿指令紀錄對質；輸出還不是 `VerificationRun`；斷網階段還沒做）
 - [ ] P3.4 截圖（Pillow 重繪終端輸出）＋判讀（另一次呼叫，圖片＋schema，回證據框）。
 - [ ] P3.5 重播：全新 Box 照記錄的步驟重跑，成功才寫回 `install` 與 `verification`。
 - [ ] P3.6 `ModalBox`（需 P0.6）：`runtime="gvisor"`、資源上限、先開網路安裝再收緊、預建 image、`--limits-test`。
@@ -119,9 +119,9 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 ### P4 MCP（10/28 hello → 10/31 細路徑 → 11/1 補完）
 
 - [ ] P4.1 hello 上線（＝P0.5）。
-- [ ] P4.2 `build_index`＋`pickfit publish`：驗 schema → commit → 建索引 → `wrangler deploy`；資料壞了就不部署。
-- [ ] P4.3 D1 建表：`events`、`submissions`、`reverify_queue`、`meta_budget`（欄位照 arch E.3 的對照規則；`submissions` 要補 DDL）。不記 IP、不存需求原文，只存模型解析後的條件（brief 第 11 節）。
-- [ ] P4.4 細路徑：`find_software` 照 arch F.2 走「硬條件篩選 → 該類別 ≤60 張候選卡 → 一次 `muse-spark-1.3` 呼叫（`store: false`、effort `low`）解析需求並取捨 → 程式守門（slug 必須在候選裡、理由對得上欄位）」；模型失敗或超預算就退回寶藏分數排序，標 `matched_by: rules`、`degraded: true`。`MODEL_API_KEY` 用 `wrangler secret put` 設定。`get_install_guide` 只回重播過的步驟，不呼叫模型。
+- [ ] P4.2 `build_index`＋`pickfit publish`：驗 schema → commit → 建索引 → `wrangler deploy`；資料壞了就不部署。（`build_index` 已完成；`pickfit publish` 還沒做）
+- [x] P4.3 D1 建表：`events`、`submissions`、`reverify_queue`、`meta_budget`（欄位照 arch E.3 的對照規則；`submissions` 要補 DDL）。不記 IP、不存需求原文，只存模型解析後的條件（brief 第 11 節）。（`worker/migrations/0001_init.sql`，目前只在本機 D1）
+- [x] P4.4 細路徑：`find_software` 照 arch F.2 走「硬條件篩選 → 該類別 ≤60 張候選卡 → 一次 `muse-spark-1.3` 呼叫（`store: false`、effort `low`）解析需求並取捨 → 程式守門（slug 必須在候選裡、理由對得上欄位）」；模型失敗或超預算就退回寶藏分數排序，標 `matched_by: rules`、`degraded: true`。`MODEL_API_KEY` 用 `wrangler secret put` 設定。`get_install_guide` 只回重播過的步驟，不呼叫模型。（本機 `wrangler dev`＋假資料完成，37 個測試；部署步驟見 `worker/README.md`。**與 arch F.2 不同**：工具宣稱支援使用者的 OS 或在該 OS 驗證過就列入，回應一律註明實際驗證過的 OS；要改回嚴格版改 `worker/src/filter.ts` 的 `fits()`）
 - [ ] P4.5 補完：`find_alternatives`、`report_outcome`、`submit_software`；Host／Origin 檢查；Worker 每日上限與 `degraded`；回應帶 `how_we_know`、`evidence_url`、`matched_by`、`rec_id`。
 
 ### P5 計分、提交、回報閉環（11/1–11/2）
@@ -215,3 +215,5 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | 10/28 17:46 | P1.4 | `call_meta`＋共用帳本＋trace＋快取（`b0abe6c`）、`pickfit ping`／`spend`（`f18c7f0`）。122 個測試通過；實測第二次相同請求從快取回、$0；trace 裡沒有金鑰 | Meta <$0.001 |
 | 10/28 17:46 | — | **下一步**：P2 交給**沒讀過 `eval/` 的新 session**（本 session 看過題目）；P3.1–P3.2、P4.2–P4.4 可以同時各開一個 session（第 5 節） | 今日合計：Meta 約 $0.01、Anthropic $0.002、Modal 約 $0.01 |
 | 10/28 18:55 | P0.6–P0.8 | 念誠：Baseten 已申請（等審核）、Meta credits 表單與 Spend Limit 通知、Modal 上限約 $80 都完成。P2、P3、P4 三個 session 已開工（各自的 worktree）。花費守則加第 11 條（各家額度的用途分配） | — |
+| 10/28 23:24 | P2.1–P2.3、P2.5、P3.1–P3.3、P4.3–P4.4 | 三個 session 的分支併入 main（merge `914b3a9`、`62006dd`、`bceb932`），衝突只在 `pickfit/cli.py` 與 `NOTICE`，兩邊都留；221 個 Python、37 個 Worker 測試通過。P2：496 筆候選、規則過 466 筆、抽取 36 筆全過 schema。P3：evnx 照 README 失敗後由 1.3 自己修好；預設改為每回合重送完整歷史（1–7 秒／回合）。P4：`find_software`、`get_install_guide` 在本機完成，OS 條件放寬並註明實際驗證過的 OS（見 P4.4） | Meta：管線 $0.198（verify $0.158、extract $0.040）＋Worker 本機 D1 $0.044；Anthropic 約 $0.12 |
+| 10/28 23:24 | — | **下一步**：P3.4–P3.7（判讀、重播、`ModalBox`、批次）、P2.6（收緊規則＋1.3 正式抽取）、P4.5（補完工具與部署）可各開一個 session；都不讀 `eval/` | — |
