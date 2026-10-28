@@ -93,6 +93,28 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     f.set_defaults(func=_funnel)
 
 
+# --- publish (P4.2) ---------------------------------------------------------------
+
+
+def _publish(args: argparse.Namespace) -> int:
+    from pickfit.publish import publish
+
+    return publish(args.data, args.worker, dry_run=args.dry_run, allow_dirty=args.allow_dirty)
+
+
+def _add_publish_command(sub: argparse._SubParsersAction) -> None:
+    from pathlib import Path
+
+    from pickfit.publish import DEFAULT_DATA_DIR, DEFAULT_WORKER_DIR
+
+    p = sub.add_parser("publish", help="validate data/software, build the Worker index, wrangler deploy")
+    p.add_argument("--data", type=Path, default=DEFAULT_DATA_DIR, help="directory of <slug>.json")
+    p.add_argument("--worker", type=Path, default=DEFAULT_WORKER_DIR, help="the Worker directory")
+    p.add_argument("--dry-run", action="store_true", help="run every check and print the plan; deploy nothing")
+    p.add_argument("--allow-dirty", action="store_true", help="publish even if data/software has uncommitted changes")
+    p.set_defaults(func=_publish)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="pickfit")
     parser.add_argument("--version", action="version", version=f"pickfit {__version__}")
@@ -107,6 +129,7 @@ def main(argv: list[str] | None = None) -> int:
     s.set_defaults(func=_spend)
 
     _add_pipeline_commands(sub)
+    _add_publish_command(sub)
 
     from pickfit.verify.cli import add_parser as add_verify_parser
     add_verify_parser(sub)
