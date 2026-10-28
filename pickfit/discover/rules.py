@@ -5,11 +5,11 @@ abuse keywords) -> not software (lists, homework, tutorials, templates,
 dotfiles, demos) -> library (several signals and no strong tool signal) ->
 tool -> everything else is "uncertain" and goes on to a model.
 
-Ported from the research spike's classifier, with every ecosyste.ms lookup
-removed (its terms forbid scripted access without written consent): signals
-come only from the GitHub REST API (repo, README, releases, tree, root
-manifests). The spike's "packaged in a distro" signal came from ecosyste.ms and
-is gone; checking Homebrew and package registries directly is later work.
+Ported from the research spike's classifier, keeping only signals from the
+GitHub REST API (repo, README, releases, tree, root manifests); the spike's
+third-party package index lookups are gone (its terms forbid scripted access
+without written consent, plan section 5). That removed the "packaged in a
+distro" signal; checking Homebrew and package registries directly is later work.
 """
 
 from __future__ import annotations
