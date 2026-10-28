@@ -8,14 +8,17 @@ DockerBox is for local development (Docker or OrbStack on this Mac). It keeps
 the limits measured in spikes/sandbox_docker_install.py: uid 1000, all
 capabilities dropped, no-new-privileges, CPU/memory/pids caps, a read-only
 root with size-limited tmpfs for HOME and /tmp (the disk cap), a per-command
-`timeout -s KILL` inside the container, and a container lifetime cap. ModalBox
-(P3.6) implements the same interface on Modal gVisor.
+`timeout -s KILL` inside the container, and a container lifetime cap. Cloud
+metadata (169.254.0.0/16) is routed to `unreachable` inside the container by a
+one-off root exec before the agent runs; the box user cannot change routes.
+ModalBox (P3.6) implements the same interface on Modal gVisor.
 """
 
 from __future__ import annotations
 
 import hashlib
 import secrets
+import shlex
 import shutil
 import subprocess
 import sys
@@ -55,6 +58,10 @@ OUTPUT_HEAD_BYTES = 8_000
 OUTPUT_TAIL_BYTES = 24_000
 HOST_GRACE_S = 15  # the host waits this long past the in-box timeout before giving up
 DOCKER_WAIT_S = 120
+# Cloud instance metadata (169.254.169.254 and the rest of link-local) answers with
+# credentials on many hosts; boxes never need it.
+METADATA_CIDR = "169.254.0.0/16"
+METADATA_CIDR6 = "fd00:ec2::254/128"
 
 
 class BoxError(RuntimeError):
@@ -125,12 +132,37 @@ class Box(ABC):
     def close(self) -> None:
         """Destroy the sandbox and everything in it. Safe to call twice."""
 
+    def usd_per_second(self) -> float:
+        """What the box costs per second it exists (0 for a local container)."""
+        return 0.0
+
     def __enter__(self) -> Box:
         self.start()
         return self
 
     def __exit__(self, *exc: Any) -> None:
         self.close()
+
+
+def background_script(command: str, port: int | None, wait_s: int, tag: int | str) -> str:
+    """Bash that starts `command` detached with its output in a log, then waits for it.
+
+    With a port, it waits up to wait_s for 127.0.0.1:port to accept connections;
+    without one, a few seconds to see that the process is still alive. Prints
+    the pid (also the process group: setsid) and the log tail; exits 0 only if
+    the process came up. The agent and the replay run the same script.
+    """
+    log = f"$HOME/.pickfit-bg/{tag}.log"
+    start = (f"mkdir -p $HOME/.pickfit-bg && setsid nohup bash -c {shlex.quote(command)} "
+             f"> {log} 2>&1 < /dev/null & P=$!; echo \"pid $P\"; ")
+    if port:
+        probe = (f"for i in $(seq 1 {max(wait_s, 1)}); do "
+                 f"(echo > /dev/tcp/127.0.0.1/{port}) 2>/dev/null && {{ echo \"port {port} open after ${{i}}s\"; ok=1; break; }}; "
+                 f"kill -0 $P 2>/dev/null || {{ echo 'process exited'; break; }}; sleep 1; done; ")
+    else:
+        probe = (f"sleep {min(wait_s, 5)}; kill -0 $P 2>/dev/null && {{ echo 'still running'; ok=1; }} "
+                 "|| echo 'process exited'; ")
+    return f"ok=0; {start}{probe}echo '--- log tail ---'; tail -n 40 {log}; test $ok = 1"
 
 
 # ---------------------------------------------------------------- output capture
@@ -328,6 +360,23 @@ class DockerBox(Box):
         if not setup.ok:
             self.close()
             raise BoxError(f"box setup failed: {setup.stderr.strip()[-500:]}")
+        try:
+            self._block_metadata()
+        except BoxError:
+            self.close()
+            raise
+
+    def _root(self, script: str, timeout_s: int = 30) -> subprocess.CompletedProcess[str]:
+        """Harness-only root command (route setup); never used for model commands."""
+        return subprocess.run([self.docker, "exec", "-u", "0", "--privileged", self.name, "sh", "-c", script],
+                              capture_output=True, text=True, timeout=timeout_s)
+
+    def _block_metadata(self) -> None:
+        proc = self._root(f"ip route replace unreachable {METADATA_CIDR} && "
+                          f"{{ ip -6 route replace unreachable {METADATA_CIDR6} 2>/dev/null; "
+                          f"ip route show type unreachable; }}")
+        if f"unreachable {METADATA_CIDR}" not in proc.stdout:
+            raise BoxError(f"could not block cloud metadata: {(proc.stdout + proc.stderr).strip()[-300:]}")
 
     def close(self) -> None:
         if not self.started:
@@ -387,3 +436,5 @@ class DockerBox(Box):
         if proc.returncode != 0:
             raise BoxError(f"docker network {verb} failed: {proc.stderr.strip()[-300:]}")
         self.network_enabled = enabled
+        if enabled:
+            self._block_metadata()  # a reconnected interface comes back with fresh routes
