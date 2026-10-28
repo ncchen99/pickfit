@@ -271,9 +271,10 @@ class PipelineDB:
         all_extractions = self.extractions()
         for e in all_extractions:
             latest[e["repo_id"]] = e
-        tokens: Counter[str] = Counter()
+        tokens: Counter[str] = Counter()  # billed only: a cache hit replays an old usage block
         for e in all_extractions:
-            tokens.update({k: v for k, v in (e["usage"] or {}).items() if isinstance(v, int)})
+            if not e["cache_hit"]:
+                tokens.update({k: v for k, v in (e["usage"] or {}).items() if isinstance(v, int)})
         return {
             "discover": {
                 "candidates": len(cands),
