@@ -241,6 +241,10 @@ async function askModel(
   try {
     const result = await callMeta(settings.apiKey, body, { timeoutMs: settings.timeoutMs, fetch: deps.fetch });
     cost = result.costUsd;
+    // Token use for tuning; no request text.
+    console.log(
+      JSON.stringify({ event: 'meta_call', model: MATCH_MODEL, cards: cards.size, ...result.usage, cost_usd: cost, latency_ms: result.latencyMs }),
+    );
     const answer = parseAnswer(result.text);
     if (!answer) return { failure: 'model_bad_output', cost };
     const guarded = guardPicks(answer, cards, limit);
