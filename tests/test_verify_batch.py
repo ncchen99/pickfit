@@ -13,7 +13,7 @@ from typing import Any
 import pytest
 
 from pickfit.discover.store import PipelineDB
-from pickfit.verify.batch import load_candidates, run_batch, slug_for, verified_slugs
+from pickfit.verify.batch import load_candidates, record_slugs, run_batch, slug_for, verified_slugs
 
 FIXTURES = Path(__file__).parent / "fixtures" / "verify"
 
@@ -96,6 +96,17 @@ def test_database_is_opened_read_only(db_path: Path):
         db_path.chmod(0o644)
     with sqlite3.connect(db_path) as conn:
         assert conn.execute("SELECT count(*) FROM extractions").fetchone()[0] == 11  # nothing written
+
+
+def test_existing_records_decide_the_slug(db_path: Path, tmp_path: Path):
+    data = tmp_path / "data"
+    data.mkdir()
+    (data / "gt.json").write_text(json.dumps({"repo_id": "gh:9", "slug": "graphtty-other"}))
+    (data / "bad.json").write_text("{")
+    known = record_slugs(data)
+    assert known == {"gh:9": "graphtty-other"}
+    items, _ = load_candidates(db_path, limit=10, known_slugs=known)
+    assert {i.full_name: i.task.slug for i in items}["other/graphtty"] == "graphtty-other"
 
 
 def test_slug_for_keeps_slugs_unique():

@@ -110,11 +110,27 @@ def _connect_ro(db: Path) -> sqlite3.Connection:
     return conn
 
 
+def record_slugs(data_dir: Path) -> dict[str, str]:
+    """repo_id -> slug of the records already in data/software, so write-back finds its file."""
+    slugs: dict[str, str] = {}
+    for path in sorted(data_dir.glob("*.json")):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            slugs[data["repo_id"]] = data["slug"]
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+    return slugs
+
+
 def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
-                    categories: list[str] | None = None, skip_slugs: set[str] | None = None
-                    ) -> tuple[list[BatchItem], list[dict[str, Any]]]:
-    """Ranked batch items (at most `limit`) and the candidates set aside, with reasons."""
+                    categories: list[str] | None = None, skip_slugs: set[str] | None = None,
+                    known_slugs: dict[str, str] | None = None) -> tuple[list[BatchItem], list[dict[str, Any]]]:
+    """Ranked batch items (at most `limit`) and the candidates set aside, with reasons.
+
+    known_slugs (repo_id -> slug, from record_slugs) wins over a slug made from the name.
+    """
     skip_slugs = skip_slugs or set()
+    known_slugs = known_slugs or {}
     with _connect_ro(db) as conn:
         rows = conn.execute(
             "SELECT c.repo_id, c.full_name, c.category, c.repo, c.readme, e.model, e.result, e.id "
@@ -129,13 +145,13 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
     wanted = {r.lower() for r in repos or []}
     items: list[BatchItem] = []
     skipped: list[dict[str, Any]] = []
-    taken: set[str] = set()
+    taken: set[str] = set(known_slugs.values())
     for row in sorted(best.values(), key=lambda r: r["full_name"].lower()):
         if wanted and row["repo_id"].lower() not in wanted and row["full_name"].lower() not in wanted:
             continue
         if categories and row["category"] not in categories:
             continue
-        slug = slug_for(row["full_name"], taken)
+        slug = known_slugs.get(row["repo_id"]) or slug_for(row["full_name"], taken)
         note = {"repo_id": row["repo_id"], "full_name": row["full_name"], "slug": slug}
         try:
             ex = ExtractionResult.model_validate_json(row["result"])

@@ -18,6 +18,8 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--category", action="append", choices=["dev_cli", "local_ai"],
                    help="batch: only this category (repeatable)")
     v.add_argument("--force", action="store_true", help="batch: also tools that already have a run")
+    v.add_argument("--data-dir", default=None,
+                   help="records to take slugs from and write back to (default data/software)")
     v.add_argument("--dry-run", action="store_true", help="batch: list what would run and why others are skipped")
     v.add_argument("--runner", choices=["docker", "modal"], default="docker",
                    help="local DockerBox (development) or ModalBox (gVisor on Modal)")
@@ -81,17 +83,19 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
     from pickfit.discover.run import pipeline_db_path
     from pickfit.meta import resolve_model
     from pickfit.verify.agent import DEFAULT_MODE, _runs_dir
-    from pickfit.verify.batch import load_candidates, run_batch, verified_slugs
+    from pickfit.verify.batch import load_candidates, record_slugs, run_batch, verified_slugs
     from pickfit.verify.pipeline import verify_task
+    from pickfit.verify.result import DATA_DIR
 
     runs_dir = _runs_dir(None)
     db = Path(args.db) if args.db else pipeline_db_path()
     if not db.exists():
         print(f"pickfit verify: no pipeline database at {db} (use --db)")
         return 2
+    data_dir = Path(args.data_dir) if args.data_dir else DATA_DIR
     skip = set() if args.force else verified_slugs(runs_dir)
     items, skipped = load_candidates(db, limit=args.batch, repos=args.repo, categories=args.category,
-                                     skip_slugs=skip)
+                                     skip_slugs=skip, known_slugs=record_slugs(data_dir))
     print(f"batch · {len(items)} to verify · {len(skipped)} set aside · {args.runner} · "
           f"concurrency {args.concurrency} · {resolve_model(args.model)}")
     for item in items:
@@ -108,7 +112,7 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
 
     def verify(task, log):
         return verify_task(task, make_box, model=args.model, mode=args.mode or DEFAULT_MODE, limits=limits,
-                           runs_dir=runs_dir, log=log, write=args.write_back)
+                           runs_dir=runs_dir, log=log, write=args.write_back, data_dir=data_dir)
 
     summary = run_batch(items, verify, concurrency=args.concurrency, runs_dir=runs_dir,
                         meta={"db": str(db), "runner": args.runner, "model": resolve_model(args.model),
