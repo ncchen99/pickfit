@@ -1,0 +1,23 @@
+{
+  "name": "pickfit-worker",
+  "private": true,
+  "type": "module",
+  "description": "pickfit MCP server on Cloudflare Workers (stateless Streamable HTTP, MCP TS SDK v2)",
+  "scripts": {
+    "build:index": "uv run --project .. python ../scripts/build_index.py",
+    "build:fixtures": "uv run --project .. python ../scripts/build_index.py --data test/fixtures/software --out test/generated/index.json",
+    "dev": "wrangler dev --ip 127.0.0.1 --port 8787",
+    "db:migrate:local": "wrangler d1 migrations apply pickfit --local",
+    "test": "npm run build:fixtures && node --test test/*.test.ts",
+    "typecheck": "wrangler types --include-env=false && tsc -p . && tsc -p test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.4.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.1",
+    "typescript": "6.0.3",
+    "wrangler": "4.153.0"
+  }
+}
