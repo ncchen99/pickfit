@@ -163,7 +163,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | `scripts/` | `build_index`、run page、用量報表 |
 | `runs/` | 候選庫、trace、快取（不進 git） |
 
-**評測題目的隔離**：建資料的 session（P2、P3、P5 的發現、抽取、驗證、計分）**不讀 `eval/`**，也不從讀過題目的對話 fork。只有 P6 的評測執行與評分讀。
+**評測題目的隔離**：建資料與配對的 session（P2、P3、P4、P5 的發現、抽取、驗證、配對、計分）**不讀 `eval/`**，也不從讀過題目的對話 fork。配對的 prompt 正是評測量的東西，所以 P4 也算。只有 P6 的評測執行與評分讀。
 
 **可以平行的工作**（P1 完成後，各自開 session，不碰同一批檔案）：
 - P2 發現與抽取（`pickfit/discover/`、`pickfit/extract.py`）
