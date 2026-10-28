@@ -102,7 +102,8 @@ FINISH_TOOL = _fn(
         "install_method": {"type": ["string", "null"], "enum": [*_METHODS, None]},
         "steps": {"type": "array", "description": (
             "The install path a fresh box needs, in order: the command_id of each run_command that "
-            "installed it and exited 0. No exploration (ls, cat, --help) and no failed attempts."),
+            "installed it and exited 0, including every download or file write those commands use. "
+            "No exploration (ls, cat, --help) and no failed attempts."),
             "items": {"type": "object", "properties": {"command_id": _INT, "purpose": _STR},
                       "required": ["command_id", "purpose"], "additionalProperties": False}},
         "smoke_tests": {"type": "array", "description": (

@@ -178,3 +178,15 @@ def test_infer_install_method():
                                  "&& tar xzf t.tgz"]) == "binary"
     assert infer_install_method(["npm install -g tldr"]) == "npm"
     assert infer_install_method(["make"], "source") == "source"
+
+
+def test_a_claim_the_log_refuses_says_why(tmp_path: Path):
+    server = FakeServer(response("r1", run_cmd("uv tool install graphtty || true")),
+                        response("r2", run_cmd("graphtty --version")),
+                        response("r3", finish(level="function", steps=[1], smoke=SMOKE[:1])),
+                        response("r4", finish(level="function", steps=[1], smoke=SMOKE[:1])))
+    outcome, _ = verify(tmp_path, server, Boxes({}))
+    run = outcome.run
+    assert run.level == "unverified" and not run.replayed
+    assert run.blocking_error.startswith("the command log does not support the claimed function: step 1 does "
+                                         "not show a success (`||`")

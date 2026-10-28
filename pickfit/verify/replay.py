@@ -84,11 +84,12 @@ def plan_from(verdict: LogVerdict, commands: list[CommandRecord]) -> ReplayPlan:
     checks = [c for c in verdict.checks if c.passed]
     check_ids = {c.command_id for c in checks}
     setup_ids = sorted({s for c in checks for s in c.setup_ids} - check_ids - set(verdict.step_ids))
+    steps = set(verdict.step_ids)
     return ReplayPlan(
         steps=tuple(command(i) for i in verdict.step_ids),
         setups=tuple(command(i) for i in setup_ids),
-        checks=tuple(ReplayCheck(command(c.command_id), tuple(c.setup_ids), c.expected_exit_code,
-                                 c.expected_signal, c.kind) for c in checks))
+        checks=tuple(ReplayCheck(command(c.command_id), tuple(s for s in c.setup_ids if s not in steps),
+                                 c.expected_exit_code, c.expected_signal, c.kind) for c in checks))
 
 
 @dataclass

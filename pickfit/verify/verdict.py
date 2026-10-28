@@ -21,7 +21,7 @@ import re
 from dataclasses import asdict, dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from pickfit.schema import PASSED_LEVELS, is_passed
+from pickfit.schema import COMMAND_MAX, PASSED_LEVELS, is_passed
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import CommandRecord, FinishArgs
@@ -298,6 +298,10 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict
             why = masked or ("timed out" if record.timed_out else f"exit {record.exit_code}")
             problems.append(f"step {step.command_id} does not show a success ({why}): "
                             f"{_one_line(record.command)}")
+        elif len(record.command) > COMMAND_MAX:
+            steps_ok = False
+            problems.append(f"step {step.command_id} is {len(record.command)} characters; an install step "
+                            f"must fit in {COMMAND_MAX} (split it into shorter commands)")
 
     checks: list[ResolvedCheck] = []
     has_service = False
@@ -313,6 +317,8 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict
             kind=check_kind(record.command))
         setup_ok = True
         for setup_id in test.setup_ids:
+            if setup_id in step_ids:  # an install step: the replay runs every step first anyway
+                continue
             setup = by_id.get(setup_id)
             if setup is None or setup_id >= test.command_id:
                 setup_ok = False

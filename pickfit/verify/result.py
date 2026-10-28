@@ -116,6 +116,10 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
     if not report.verdict:
         reason = "budget_exceeded" if report.stop_reason == "budget" else "other"
         notes.append(f"the agent did not finish ({report.stop_reason}{': ' + report.error if report.error else ''})")
+    elif is_passed(verdict.get("claimed_level", "")) and not is_passed(level):
+        problems = verdict.get("problems") or []
+        notes.append("the command log does not support the claimed "
+                     f"{verdict['claimed_level']}: {'; '.join(problems[:3]) or 'no passing check'}")
     blocking = finish.get("blocking_error")
 
     replayed = bool(replay and replay.passed)
@@ -129,8 +133,6 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
                 seen = f"{judge.verdict}: {judge.observed}" if judge else "no judge verdict"
                 notes.append(f"the screen judge did not confirm it ({seen})")
                 level, reason = "unverified", "other"
-    if level == "unverified" and notes and not blocking:
-        blocking = "; ".join(notes)
 
     by_id = {c.command_id: c for c in report.commands if c.command_id is not None}
     step_ids = verdict.get("step_ids") or []
@@ -169,6 +171,8 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
     if is_passed(level) and level != "install" and not any(t.passed for t in smoke):
         level = "install"
         notes.append("no passing smoke test fits the record")
+    if level == "unverified" and notes and not blocking:
+        blocking = "; ".join(notes)
 
     if level == "unverified" and reason is None:
         reason = "other"

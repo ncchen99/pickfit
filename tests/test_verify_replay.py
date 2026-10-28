@@ -138,3 +138,9 @@ def test_rerun_timeouts_follow_the_recorded_time():
     box = box_for_log()
     Replayer(box, log=lambda s: None).run(plan, TASK)
     assert [t for _, t in box.ran] == [60, 60]  # LOG records 0.1 s for each
+
+
+def test_steps_cited_as_setup_are_not_run_twice():
+    plan = plan_from(verdict([{"command_id": 4, "setup_ids": [1, 3], "expected_signal": "──▶"}]), LOG)
+    assert [s.command_id for s in plan.setups] == [3]
+    assert plan.checks[0].setup_ids == (3,)

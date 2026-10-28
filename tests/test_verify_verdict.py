@@ -162,3 +162,16 @@ def test_failed_and_unverified_claims_stand():
     assert verdict.level == "failed" and verdict.agrees
     verdict = log_verdict(claim("unverified", [], [], unverified_reason="needs_gpu"), LOG)
     assert (verdict.level, verdict.unverified_reason) == ("unverified", "needs_gpu")
+
+
+def test_long_steps_and_steps_cited_as_setup():
+    long_step = "curl -L -o t.tgz https://example.invalid/" + "x" * 480 + " && tar xzf t.tgz"
+    log = [rec(1, long_step, 0), rec(2, "tool --version", 0, "tool 1.0"),
+           rec(3, "rm -rf src && git clone https://example.invalid/src", 0, "Cloning")]
+    verdict = log_verdict(claim("install", [1], [{"command_id": 2, "expected_signal": "1.0"}]), log)
+    assert verdict.level == "unverified"
+    assert verdict.problems[0].startswith(f"step 1 is {len(long_step)} characters; an install step must fit in 500")
+    # A clean re-clone after the checks is an install step, not a setup that "ran after" them.
+    verdict = log_verdict(claim("install", [3], [{"command_id": 2, "setup_ids": [3], "expected_signal": "1.0"}]),
+                          log)
+    assert verdict.level == "install" and verdict.problems == []
