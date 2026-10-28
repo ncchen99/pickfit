@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 
 from pickfit.verify.agent import CommandRecord, FinishArgs
-from pickfit.verify.verdict import check_kind, log_verdict, masked_exit
+from pickfit.verify.verdict import check_kind, log_verdict, masked_exit, split_last
 
 
 @pytest.mark.parametrize("command", [
@@ -175,3 +175,12 @@ def test_long_steps_and_steps_cited_as_setup():
     verdict = log_verdict(claim("install", [3], [{"command_id": 2, "setup_ids": [3], "expected_signal": "1.0"}]),
                           log)
     assert verdict.level == "install" and verdict.problems == []
+
+
+def test_split_last_separates_what_runs_first():
+    heredoc = "cat > g.json <<'EOF'\n{\"a\": 1; \"b\": 2 && 3}\nEOF"
+    assert split_last(f"{heredoc}\ngraphtty g.json") == (heredoc, "graphtty g.json")
+    assert split_last("evnx sync && evnx validate") == ("evnx sync", "evnx validate")
+    assert split_last("cd sub; tool run") == ("cd sub", "tool run")
+    assert split_last("echo '{}' | tinyq .a") is None  # a pipe cannot be split
+    assert split_last("tool --version") is None

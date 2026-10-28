@@ -27,12 +27,14 @@ from pickfit.env import REPO_ROOT
 from pickfit.ledger import taipei_now
 from pickfit.schema import (
     COMMAND_MAX,
+    SETUP_MAX,
     Check,
     InstallGuide,
     InstallStep,
     Judge,
     Pitfall,
     RunEvidence,
+    SetupStep,
     SmokeTest,
     SoftwareRecord,
     Verification,
@@ -40,7 +42,7 @@ from pickfit.schema import (
     best_level,
     is_passed,
 )
-from pickfit.verify.verdict import last_command, weaker
+from pickfit.verify.verdict import split_last, weaker
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import VerifyReport
@@ -96,12 +98,21 @@ def _printed(version: str | None, outputs: list[str]) -> str | None:
     return version[:60] if any(version in out for out in outputs) else None
 
 
-def _record_command(command: str) -> str | None:
-    """The command as the record can hold it: whole, else its last top-level command."""
+def _record_check(command: str) -> tuple[str, list[SetupStep]] | None:
+    """A check as the record holds it: (command, setup that must run first), or None.
+
+    A command over COMMAND_MAX that is `first && last` (or `;`, a newline) keeps
+    `last` as the command and `first` as a setup step, which runs the same work.
+    """
     if len(command) <= COMMAND_MAX:
-        return command
-    last = last_command(command).strip()
-    return last if 0 < len(last) <= COMMAND_MAX else None
+        return command, []
+    split = split_last(command)
+    if split is None:
+        return None
+    first, last = split
+    if not last or len(last) > COMMAND_MAX or len(first) > SETUP_MAX:
+        return None
+    return last, [SetupStep(command=first)]
 
 
 def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeResult | None, *,
@@ -153,21 +164,34 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
     smoke: list[SmokeTest] = []
     if replay and replay.checks:
         for c in replay.checks:
-            command = _record_command(c.command)
-            if command is None or c.run is None:
+            if c.run is None:
                 continue
+            setup = [SetupStep(command=s.command, background=s.tool == "run_background",
+                               port=s.port if s.tool == "run_background" else None)
+                     for s in c.setup if len(s.command) <= SETUP_MAX]
+            fitted = _record_check(c.command)
+            if fitted is None or len(setup) < len(c.setup):
+                notes.append(f"smoke test {c.command_id} is too long for the record")
+                continue
+            command, before = fitted
             smoke.append(SmokeTest(
                 command=command, expected_signal=_clip(c.expected_signal, 300) or "",
                 exit_code=c.run.exit_code, passed=c.passed,
-                observed_excerpt=_clip(_excerpt(c.run.stdout, c.run.stderr, c.expected_signal), 300)))
+                observed_excerpt=_clip(_excerpt(c.run.stdout, c.run.stderr, c.expected_signal), 300),
+                setup=setup + before, offline=c.offline if c.passed else None))
     else:
         for c in verdict.get("checks") or []:
-            command = _record_command(c["command"])
-            if command is None:
+            fitted = _record_check(c["command"])
+            if fitted is None:
                 continue
+            command, before = fitted
+            setup = [SetupStep(command=by_id[i].command, background=by_id[i].tool == "run_background",
+                               port=by_id[i].port if by_id[i].tool == "run_background" else None)
+                     for i in c["setup_ids"] if i in by_id and len(by_id[i].command) <= SETUP_MAX]
             smoke.append(SmokeTest(command=command, expected_signal=_clip(c["expected_signal"], 300) or "",
                                    exit_code=c["exit_code"], passed=c["passed"],
-                                   observed_excerpt=_clip(c.get("observed_excerpt"), 300)))
+                                   observed_excerpt=_clip(c.get("observed_excerpt"), 300),
+                                   setup=setup + before))
     if is_passed(level) and level != "install" and not any(t.passed for t in smoke):
         level = "install"
         notes.append("no passing smoke test fits the record")

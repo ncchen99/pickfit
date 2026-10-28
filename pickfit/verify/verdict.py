@@ -174,6 +174,26 @@ def last_command(command: str) -> str:
     return parts[-1] if parts else command
 
 
+def split_last(command: str) -> tuple[str, str] | None:
+    """(what runs first, the last command) when they are joined by `&&`, `;` or a newline.
+
+    Running the first part and then the last as two commands does the same work;
+    a pipe cannot be split this way, so it returns None.
+    """
+    parts = [(op, text) for op, text in _top_level(command) if text.strip()]
+    if len(parts) < 2 or parts[-1][0] not in ("&&", ";", "\n"):
+        return None
+    last = parts[-1][1]
+    stripped = command.rstrip()
+    if not stripped.endswith(last.rstrip()):
+        return None
+    head = stripped[: len(stripped) - len(last.rstrip())].rstrip()
+    for op in ("&&", ";"):
+        if head.endswith(op):
+            head = head[: -len(op)].rstrip()
+    return (head, last.strip()) if head else None
+
+
 # ---------------------------------------------------------------- verdict
 
 

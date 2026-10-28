@@ -95,8 +95,10 @@ def test_full_pass_is_replayed_offline_and_judged(tmp_path: Path):
     assert outcome.passed and run.level == "function" and run.replayed
     assert run.judge.verdict == "working" and run.judge.model == "muse-spark-1.3-contributor"
     assert [s.command for s in run.steps] == ["uv tool install graphtty"]
-    assert [(t.command, t.passed, t.exit_code) for t in run.smoke_tests] == [
-        ("graphtty --version", True, 0), ("graphtty graph.json", True, 0)]
+    assert [(t.command, t.passed, t.exit_code, t.offline) for t in run.smoke_tests] == [
+        ("graphtty --version", True, 0, True), ("graphtty graph.json", True, 0, True)]
+    assert run.smoke_tests[0].setup == []
+    assert [s.command for s in run.smoke_tests[1].setup] == [GRAPH]  # the input file it reads
     assert run.install_method == "uv" and run.tool_version == "0.4.1"
     assert run.pitfalls[0].actually_needed == "uv tool install graphtty"
     assert run.runner == "fake" and (run.os, run.arch, run.method) == ("linux", "x86_64", "sandbox")
@@ -190,3 +192,20 @@ def test_a_claim_the_log_refuses_says_why(tmp_path: Path):
     assert run.level == "unverified" and not run.replayed
     assert run.blocking_error.startswith("the command log does not support the claimed function: step 1 does "
                                          "not show a success (`||`")
+
+
+def test_a_long_check_keeps_its_first_part_as_setup(tmp_path: Path):
+    big = "cat > graph.json <<'EOF'\n" + '{"nodes": ["a", "b"]}\n' * 40 + "EOF"
+    script = {**SCRIPT, "cat > graph.json": (0, "a ──▶ b", "")}
+    long_check = f"{big}\ngraphtty graph.json"
+    smoke = [SMOKE[0], {"command_id": 3, "setup_ids": [], "expected_signal": "a ──▶ b", "expected_exit_code": 0,
+                        "observed_excerpt": "a ──▶ b"}]
+    server = FakeServer(response("r1", run_cmd("uv tool install graphtty")),
+                        response("r2", run_cmd("graphtty --version")),
+                        response("r3", run_cmd(long_check)),
+                        response("r4", finish(level="function", steps=[1], smoke=smoke)),
+                        judge_answer("working"))
+    outcome, _ = verify(tmp_path, server, Boxes({"agent": script, "replay": script}))
+    test = outcome.run.smoke_tests[1]
+    assert len(long_check) > 500 and outcome.run.level == "function"
+    assert test.command == "graphtty graph.json" and [s.command for s in test.setup] == [big]
