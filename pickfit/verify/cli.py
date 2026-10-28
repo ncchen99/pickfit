@@ -44,5 +44,5 @@ def run(args: argparse.Namespace) -> int:
             print(f"box kept: docker exec -it {box.name} bash  (remove: docker rm -f {box.name})")
         else:
             box.close()
-    level = report.check["level"] if report.check else None
+    level = report.verdict["level"] if report.verdict else None
     return 0 if level and is_passed(level) else 1

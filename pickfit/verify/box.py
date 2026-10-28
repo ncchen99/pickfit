@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import secrets
+import shlex
 import shutil
 import subprocess
 import sys
@@ -131,6 +132,27 @@ class Box(ABC):
 
     def __exit__(self, *exc: Any) -> None:
         self.close()
+
+
+def background_script(command: str, port: int | None, wait_s: int, tag: int | str) -> str:
+    """Bash that starts `command` detached with its output in a log, then waits for it.
+
+    With a port, it waits up to wait_s for 127.0.0.1:port to accept connections;
+    without one, a few seconds to see that the process is still alive. Prints
+    the pid (also the process group: setsid) and the log tail; exits 0 only if
+    the process came up. The agent and the replay run the same script.
+    """
+    log = f"$HOME/.pickfit-bg/{tag}.log"
+    start = (f"mkdir -p $HOME/.pickfit-bg && setsid nohup bash -c {shlex.quote(command)} "
+             f"> {log} 2>&1 < /dev/null & P=$!; echo \"pid $P\"; ")
+    if port:
+        probe = (f"for i in $(seq 1 {max(wait_s, 1)}); do "
+                 f"(echo > /dev/tcp/127.0.0.1/{port}) 2>/dev/null && {{ echo \"port {port} open after ${{i}}s\"; ok=1; break; }}; "
+                 f"kill -0 $P 2>/dev/null || {{ echo 'process exited'; break; }}; sleep 1; done; ")
+    else:
+        probe = (f"sleep {min(wait_s, 5)}; kill -0 $P 2>/dev/null && {{ echo 'still running'; ok=1; }} "
+                 "|| echo 'process exited'; ")
+    return f"ok=0; {start}{probe}echo '--- log tail ---'; tail -n 40 {log}; test $ok = 1"
 
 
 # ---------------------------------------------------------------- output capture

@@ -22,10 +22,8 @@ from pickfit.schema import ExtractionResult
 from pickfit.verify.agent import (
     FINISH_TOOL,
     AgentLimits,
-    CommandRecord,
     FinishArgs,
     VerifyAgent,
-    check_finish,
     render_task,
 )
 from pickfit.verify.box import Box, BoxError, ExecResult
@@ -114,10 +112,10 @@ def run_cmd(command: str, timeout_s: int = 120, purpose: str = "") -> tuple[str,
     return "run_command", {"command": command, "timeout_s": timeout_s, "purpose": purpose}
 
 
-def finish(level: str = "function", steps: list[str] | None = None,
+def finish(level: str = "function", steps: list[int] | None = None,
            smoke: list[dict[str, Any]] | None = None, **extra: Any) -> tuple[str, dict[str, Any]]:
     args = {"level": level, "unverified_reason": None, "tool_version": "0.10.18", "install_method": "pipx",
-            "steps": [{"command": c, "purpose": "install"} for c in steps or []],
+            "steps": [{"command_id": c, "purpose": "install"} for c in steps or []],
             "smoke_tests": smoke or [], "pitfalls": [], "blocking_error": None, "summary": "Done.", **extra}
     return "finish", args
 
@@ -152,12 +150,13 @@ def agent(task: VerifyTask, box: Box, server: FakeServer, ledger: Ledger, tmp_pa
 
 EVNX_BOX = {
     "pipx install evnx": (0, "installed package evnx 0.10.18", ""),
+    "evnx --version": (0, "evnx 0.10.18", ""),
     "evnx sync && evnx validate": (1, "SECRET_KEY looks like a placeholder\nDEBUG is set to \"False\"", ""),
     "evnx validate": (2, "", "Error: .env.example does not exist. Create it with `evnx sync`."),
 }
 
-SMOKE = [{"command": "evnx validate", "setup": ["evnx sync"], "expected_signal": "SECRET_KEY",
-          "exit_code": 1, "passed": True, "observed_excerpt": "SECRET_KEY looks like a placeholder"}]
+SMOKE = [{"command_id": 3, "setup_ids": [], "expected_signal": "SECRET_KEY", "expected_exit_code": 1,
+          "observed_excerpt": "SECRET_KEY looks like a placeholder"}]
 
 
 # ---------------------------------------------------------------- the loop
@@ -168,15 +167,19 @@ def test_chain_mode_reads_the_error_fixes_it_and_finishes(task, ledger, tmp_path
         response("r1", run_cmd("pipx install evnx")),
         response("r2", run_cmd("evnx validate")),
         response("r3", run_cmd("evnx sync && evnx validate")),
-        response("r4", finish(steps=["pipx install evnx"], smoke=SMOKE), summary="validate exit 1 is right."),
+        response("r4", finish(steps=[1], smoke=SMOKE), summary="validate exit 1 is right."),
     )
     box = FakeBox(EVNX_BOX)
     runner = agent(task, box, server, ledger, tmp_path, mode="chain")
     report = runner.run()
 
     assert report.stop_reason == "finished"
-    assert report.check == {"claimed_level": "function", "level": "function", "unverified_reason": None,
-                            "problems": [], "agrees": True}
+    verdict = report.verdict
+    assert (verdict["claimed_level"], verdict["level"], verdict["problems"], verdict["agrees"]) == (
+        "function", "function", [], True)
+    assert verdict["step_ids"] == [1]
+    assert verdict["checks"][0]["command"] == "evnx sync && evnx validate"
+    assert verdict["checks"][0]["observed_excerpt"] == "SECRET_KEY looks like a placeholder"
     assert [c.command for c in report.commands] == ["pipx install evnx", "evnx validate",
                                                     "evnx sync && evnx validate"]
     assert box.files["README.md"].startswith(b"# evnx")
@@ -194,14 +197,14 @@ def test_chain_mode_reads_the_error_fixes_it_and_finishes(task, ledger, tmp_path
 
     # The failed validate reaches the model as data, with the rule hint.
     out = server.requests[2]["input"][0]["output"]
-    assert "exit_code: 2" in out and '<source kind="stderr">' in out
+    assert out.startswith("command_id: 2\nexit_code: 2") and '<source kind="stderr">' in out
     assert "[error_names_fix]" in out and "Suggested: evnx sync" in out
 
     # Budget accounting: every turn is in the shared ledger under the run's scope.
     assert report.cost_usd > 0
     assert [t.reasoning_summary for t in report.turns][-1] == "validate exit 1 is right."
     saved = json.loads(Path(report.report_path).read_text())
-    assert saved["check"]["level"] == "function" and len(saved["turns"]) == 4
+    assert saved["verdict"]["level"] == "function" and len(saved["turns"]) == 4
 
     # The terminal shows model, commands, exit codes and spend as they happen.
     printed = "\n".join(runner.lines)
@@ -209,18 +212,22 @@ def test_chain_mode_reads_the_error_fixes_it_and_finishes(task, ledger, tmp_path
     assert "  thinking: Thinking." in printed
     assert "  $ evnx validate   [cmd 2/15]" in printed and "    exit 2 · 0.1s · Error: .env.example" in printed
     assert "    rule error_names_fix:" in printed
-    assert "  finish: level function · 1 steps · 1 smoke tests · 0 pitfalls · check agrees" in printed
+    assert "  finish: level function · 1 steps · 1 smoke tests · 0 pitfalls · log agrees" in printed
     assert printed.splitlines()[-2].startswith("done · finished · level function · 4 turns · 3 commands")
 
 
 def test_replay_mode_resends_history_without_storage(task, ledger, tmp_path):
+    version = [{"command_id": 2, "setup_ids": [], "expected_signal": "0.10.18", "expected_exit_code": 0,
+                "observed_excerpt": "evnx 0.10.18"}]
     server = FakeServer(
         response("r1", run_cmd("pipx install evnx")),
-        response("r2", finish(level="install", steps=["pipx install evnx"])),
+        response("r2", run_cmd("evnx --version")),
+        response("r3", finish(level="function", steps=[1], smoke=version)),
     )
     report = agent(task, FakeBox(EVNX_BOX), server, ledger, tmp_path, mode="replay").run()
-    assert report.stop_reason == "finished" and report.check["level"] == "install"
-    first, second = server.requests
+    # A --version check alone supports install, not the claimed function.
+    assert report.stop_reason == "finished" and report.verdict["level"] == "install"
+    first, second, _ = server.requests
     for request in server.requests:
         assert request["store"] is False
         assert request["include"] == ["reasoning.encrypted_content"]
@@ -238,7 +245,7 @@ def test_command_budget_forces_a_finish_only_turn(task, ledger, tmp_path):
         response("r3", finish(level="failed", blocking_error="ran out of commands")),
     )
     report = agent(task, FakeBox(), server, ledger, tmp_path, limits=AgentLimits(max_commands=2)).run()
-    assert report.stop_reason == "finished" and report.check["level"] == "failed"
+    assert report.stop_reason == "finished" and report.verdict["level"] == "failed"
     last = server.requests[-1]
     assert last["tools"] == [FINISH_TOOL]
     assert "Stop working: the command budget (2) is used up" in last["input"][-1]["content"]
@@ -261,7 +268,7 @@ def test_same_error_three_times_stops_the_work(task, ledger, tmp_path):
 def test_last_turn_is_finish_only_and_silence_ends_the_run(task, ledger, tmp_path):
     server = FakeServer(response("r1", run_cmd("echo 1")), response("r2", text="I am done."))
     report = agent(task, FakeBox(), server, ledger, tmp_path, limits=AgentLimits(max_turns=2)).run()
-    assert report.stop_reason == "no_finish" and report.check is None
+    assert report.stop_reason == "no_finish" and report.verdict is None
     assert server.requests[1]["tools"] == [FINISH_TOOL]
 
 
@@ -271,13 +278,13 @@ def test_text_reply_gets_a_nudge(task, ledger, tmp_path):
     report = agent(task, FakeBox(), server, ledger, tmp_path).run()
     assert report.stop_reason == "finished"
     assert server.requests[1]["input"][-1]["content"].startswith("Continue with the tools")
-    assert report.check["level"] == "unverified" and report.check["unverified_reason"] == "needs_account"
+    assert report.verdict["level"] == "unverified" and report.verdict["unverified_reason"] == "needs_account"
 
 
 def test_finish_with_other_calls_is_not_recorded(task, ledger, tmp_path):
     server = FakeServer(
-        response("r1", run_cmd("pipx install evnx"), finish(level="install", steps=["pipx install evnx"])),
-        response("r2", finish(level="install", steps=["pipx install evnx"])),
+        response("r1", run_cmd("pipx install evnx"), finish(level="install", steps=[1])),
+        response("r2", finish(level="install", steps=[1])),
     )
     report = agent(task, FakeBox(EVNX_BOX), server, ledger, tmp_path, mode="chain").run()
     outputs = [item["output"] for item in server.requests[1]["input"]]
@@ -289,7 +296,7 @@ def test_invalid_finish_and_bad_tool_arguments_go_back_to_the_model(task, ledger
     server = FakeServer(
         response("r1", ("run_command", {"timeout_s": 5}), ("finish", {"level": "great"})),
         response("r2", ("read_file", {"path": "README.md", "offset": 0}), ("nope", {})),
-        response("r3", finish(level="install", steps=["pipx install evnx"])),
+        response("r3", finish(level="install", steps=[1])),
     )
     report = agent(task, FakeBox(EVNX_BOX), server, ledger, tmp_path, mode="chain").run()
     first_outputs = [item["output"] for item in server.requests[1]["input"]]
@@ -297,9 +304,9 @@ def test_invalid_finish_and_bad_tool_arguments_go_back_to_the_model(task, ledger
     second_outputs = [item["output"] for item in server.requests[2]["input"]]
     assert second_outputs[0].startswith('<source kind="file" path="README.md"')
     assert second_outputs[1] == "error: unknown tool 'nope'"
-    # The step was never run, so the install claim is not accepted.
-    assert report.check["level"] == "unverified"
-    assert report.check["problems"] == ["step never seen succeeding: pipx install evnx"]
+    # No command ever ran, so the install claim is not accepted.
+    assert report.verdict["level"] == "unverified"
+    assert report.verdict["problems"] == ["step cites no run_command with id 1"]
 
 
 def test_scope_cap_stops_before_sending(task, ledger, tmp_path):
@@ -357,34 +364,14 @@ def test_prompt_escapes_source_breakouts(task):
     assert text.count("</source>") == 1 and "<\\/source>" in text
 
 
-def test_check_finish_lowers_unsupported_claims():
-    log = [CommandRecord(1, "run_command", "pipx install evnx", 0, 1.0),
-           CommandRecord(2, "run_command", "evnx validate", 2, 0.1)]
-    claim = FinishArgs.model_validate(finish(steps=["pipx install evnx"], smoke=[
-        {**SMOKE[0], "setup": [], "exit_code": 1}])[1])
-    check = check_finish(claim, log)
-    assert check["level"] == "install"
-    assert check["problems"] == ["smoke test claims exit 1, log shows 2: evnx validate"]
-
-
 def test_finish_accepts_the_string_null_for_nullable_fields():
-    raw = finish(level="function", steps=["pipx install evnx"],
-                 smoke=[{**SMOKE[0], "observed_excerpt": "null"}])[1]
+    raw = finish(level="function", steps=[1],
+                 smoke=[{**SMOKE[0], "observed_excerpt": "null", "expected_exit_code": "null"}])[1]
     raw.update(unverified_reason="null", blocking_error="null", tool_version="None", install_method="")
     args = FinishArgs.model_validate(raw)
     assert (args.unverified_reason, args.blocking_error, args.tool_version, args.install_method) == (
         None, None, None, None)
-    assert args.smoke_tests[0].observed_excerpt is None
-
-
-def test_check_finish_flags_setup_that_replay_cannot_rerun():
-    log = [CommandRecord(1, "run_command", "pipx install evnx", 0, 1.0),
-           CommandRecord(2, "run_command", "printf 'A=1\\n' > .env && evnx sync && evnx validate", 1, 0.1)]
-    claim = FinishArgs.model_validate(finish(steps=["pipx install evnx"], smoke=[
-        {**SMOKE[0], "setup": ["evnx sync", "write a .env with two variables"]}])[1])
-    check = check_finish(claim, log)
-    assert check["level"] == "function" and not check["agrees"]
-    assert check["problems"] == ["setup not in the log as written: write a .env with two variables"]
+    assert args.smoke_tests[0].observed_excerpt is None and args.smoke_tests[0].expected_exit_code == 0
 
 
 def test_fixtures_load_and_parse():
