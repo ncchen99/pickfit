@@ -47,7 +47,7 @@ def main() -> int:
 
     import modal  # 延後 import，沒裝 modal 時也能看到上面的說明
 
-    result: dict = {"install": args.install, "smoke": args.smoke}
+    result: dict = {"install": args.install, "smoke": args.smoke, "runtime": "gvisor"}
     t0 = time.monotonic()
     app = modal.App.lookup("pickfit-verify-spike", create_if_missing=True)
     # 正式版應改用事先 publish 的 named image（Image.from_name），避免每次建立時才 build。
@@ -56,6 +56,7 @@ def main() -> int:
     sb = modal.Sandbox.create(
         app=app,
         image=image,
+        runtime="gvisor",  # 不指定時由 Modal 自己選 runtime；推薦設定是明確用 gVisor
         timeout=args.timeout,
         cpu=1.0,  # 1 physical core = 2 vCPU
         memory=2048,  # MiB
