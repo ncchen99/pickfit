@@ -12,6 +12,9 @@ Two ways to carry the conversation, picked by `mode`:
 - chain: `previous_response_id`; each turn sends only the new tool outputs.
 - replay: `store: false`; each turn resends the whole history, with reasoning
   carried as `reasoning.encrypted_content`.
+Replay is the default: measured 2026-10-28 on the contributor model, chained
+turns took 11-25 s (one 503 "persistence service error") against 2-4 s for
+replayed turns, at the same cost per turn.
 """
 
 from __future__ import annotations
@@ -39,7 +42,7 @@ from pickfit.verify.rules import RuleHit, error_signature, match_rules
 from pickfit.verify.task import VerifyTask
 
 HistoryMode = Literal["chain", "replay"]
-DEFAULT_MODE: HistoryMode = "chain"
+DEFAULT_MODE: HistoryMode = "replay"
 STAGE = "verify"
 REASONING_EFFORT = "medium"
 MAX_OUTPUT_TOKENS = 8_000
@@ -282,6 +285,12 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
         "node 22 with npm (global prefix ~/.local); git, curl, unzip, xz, zstd. Network: on. No API keys, "
         "no accounts, no GUI.",
         f"The README is saved in the work dir as README.md ({len(task.readme)} characters).",
+    ]
+    if task.files:
+        names = ", ".join(sorted(task.files))
+        lines.append(f"The work dir is also a sample project to try the tool on, with these files: {names}. "
+                     "Run the README example on them as a user would.")
+    lines += [
         "",
         "Install candidates ranked by pickfit (try in order; say why if you leave the order):",
     ]
@@ -494,6 +503,8 @@ class VerifyAgent:
                   f"{box.runner} {box.os}/{box.arch}")
         try:
             box.write_file("README.md", self.task.readme)
+            for name, content in self.task.files.items():
+                box.write_file(name, content)
             self._loop()
         except BoxError as err:
             self.report.stop_reason, self.report.error = "box_error", str(err)

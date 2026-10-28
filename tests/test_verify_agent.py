@@ -171,7 +171,7 @@ def test_chain_mode_reads_the_error_fixes_it_and_finishes(task, ledger, tmp_path
         response("r4", finish(steps=["pipx install evnx"], smoke=SMOKE), summary="validate exit 1 is right."),
     )
     box = FakeBox(EVNX_BOX)
-    runner = agent(task, box, server, ledger, tmp_path)
+    runner = agent(task, box, server, ledger, tmp_path, mode="chain")
     report = runner.run()
 
     assert report.stop_reason == "finished"
@@ -180,6 +180,8 @@ def test_chain_mode_reads_the_error_fixes_it_and_finishes(task, ledger, tmp_path
     assert [c.command for c in report.commands] == ["pipx install evnx", "evnx validate",
                                                     "evnx sync && evnx validate"]
     assert box.files["README.md"].startswith(b"# evnx")
+    assert box.files[".env"].startswith(b'DEBUG="False"')  # the fixture's sample project
+    assert "sample project to try the tool on, with these files: .env" in server.requests[0]["input"][0]["content"]
 
     first, second = server.requests[0], server.requests[1]
     assert first["reasoning"] == {"summary": "auto", "effort": "medium"}
@@ -277,7 +279,7 @@ def test_finish_with_other_calls_is_not_recorded(task, ledger, tmp_path):
         response("r1", run_cmd("pipx install evnx"), finish(level="install", steps=["pipx install evnx"])),
         response("r2", finish(level="install", steps=["pipx install evnx"])),
     )
-    report = agent(task, FakeBox(EVNX_BOX), server, ledger, tmp_path).run()
+    report = agent(task, FakeBox(EVNX_BOX), server, ledger, tmp_path, mode="chain").run()
     outputs = [item["output"] for item in server.requests[1]["input"]]
     assert outputs[1].startswith("Not recorded: call finish alone")
     assert report.stop_reason == "finished" and len(report.turns) == 2
@@ -289,7 +291,7 @@ def test_invalid_finish_and_bad_tool_arguments_go_back_to_the_model(task, ledger
         response("r2", ("read_file", {"path": "README.md", "offset": 0}), ("nope", {})),
         response("r3", finish(level="install", steps=["pipx install evnx"])),
     )
-    report = agent(task, FakeBox(EVNX_BOX), server, ledger, tmp_path).run()
+    report = agent(task, FakeBox(EVNX_BOX), server, ledger, tmp_path, mode="chain").run()
     first_outputs = [item["output"] for item in server.requests[1]["input"]]
     assert first_outputs[0].startswith("error: invalid arguments for run_command")
     second_outputs = [item["output"] for item in server.requests[2]["input"]]
@@ -332,6 +334,21 @@ def test_run_background_waits_for_the_port(task, ledger, tmp_path):
 
 
 # ---------------------------------------------------------------- pieces
+
+
+def test_default_mode_is_replay(task, ledger, tmp_path):
+    server = FakeServer(response("r1", finish(level="unverified", unverified_reason="other")))
+    report = agent(task, FakeBox(), server, ledger, tmp_path).run()
+    assert report.mode == "replay" and server.requests[0]["store"] is False
+
+
+def test_sample_files_must_stay_in_the_work_dir(tmp_path):
+    data = json.loads((FIXTURES / "evnx.json").read_text())
+    for bad in ("/etc/passwd", "../escape", "README.md"):
+        path = tmp_path / "f.json"
+        path.write_text(json.dumps({**data, "files": {bad: "x"}}))
+        with pytest.raises(ValueError, match="relative path inside the work dir"):
+            load_fixture(path, fetch=lambda url: "readme")
 
 
 def test_prompt_escapes_source_breakouts(task):
