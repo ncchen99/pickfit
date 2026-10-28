@@ -76,7 +76,7 @@ def extraction(**overrides: Any) -> dict[str, Any]:
 
 def add(db: PipelineDB, repo_id: int, full_name: str, result: dict[str, Any], *,
         category: str = "dev_cli", releases: list[dict[str, Any]] | None = None,
-        license: str | None = "MIT", model: str = MODEL) -> str:
+        license: str | None = "MIT", model: str = MODEL, readme: str = README) -> str:
     owner, name = full_name.split("/")
     item = {"id": repo_id, "full_name": full_name, "name": name, "owner": {"login": owner},
             "html_url": f"https://github.com/{full_name}", "description": "Query JSON Lines",
@@ -95,7 +95,7 @@ def add(db: PipelineDB, repo_id: int, full_name: str, result: dict[str, Any], *,
                      "published_at": "2026-10-01T00:00:00Z",
                      "url": f"https://github.com/{full_name}/releases/tag/v0.1.0", "body": "First.",
                      "assets": []}]
-    db.save_details(key, {"readme": README, "readme_path": "README.md", "files": ["src/main.rs"],
+    db.save_details(key, {"readme": readme, "readme_path": "README.md", "files": ["src/main.rs"],
                           "files_truncated": False, "manifests": {}, "releases": releases},
                     pushed_at="2026-10-20T00:00:00Z")
     db.save_rules(key, label="tool", passed=True, reasons=[], version="test")
@@ -158,6 +158,29 @@ def test_readme_install_claims_become_unverified_guides_per_os(db: PipelineDB, t
     assert install["linux"]["check"] == {"command": "echo '{\"a\":1}' | tinyq .a", "expected_signal": "1"}
 
 
+def test_guides_skip_checkout_steps_and_shells_of_another_os(db: PipelineDB, tmp_path: Path) -> None:
+    readme_cmds = {
+        "npm ci": "npm", "pip install -r requirements.txt": "pip", "uv pip install -e .": "uv",
+        "git clone https://github.com/someone/tinyq": "source", "npm run dev": "npm",
+        "pip install pytest": "pip", "brew install llama.cpp": "brew", "docker compose up -d": "docker",
+        "curl -fsSL https://x.dev/install.sh | bash": "script", "irm https://x.dev/install.ps1 | iex": "script",
+        "brew tap someone/tap": "brew", "brew install someone/tap/tinyq": "brew",
+    }
+    claims = [{"method": m, "command": c, "platforms": []} for c, m in readme_cmds.items()]
+    add(db, 7, "someone/tinyq", extraction(
+        install_methods=claims, platforms=cited(["macos", "linux", "windows"], "Works on macOS and Linux")),
+        readme=README + "\n".join(f"    {c}" for c in readme_cmds))
+    out = tmp_path / "software"
+    write_profiles(db, model=MODEL, out_dir=out, now=NOW)
+    install = read(out, "tinyq")["install"]
+    assert [s["command"] for s in install["macos"]["steps"]] == ["brew tap someone/tap",
+                                                                 "brew install someone/tap/tinyq"]
+    assert [s["command"] for s in install["linux"]["steps"]] == ["curl -fsSL https://x.dev/install.sh | bash"]
+    assert [s["command"] for s in install["windows"]["steps"]] == ["irm https://x.dev/install.ps1 | iex"]
+    pointers = {e["field"] for e in read(out, "tinyq")["evidence"]}
+    assert {"/install/macos/steps/0", "/install/macos/steps/1", "/install/windows/steps/0"} <= pointers
+
+
 def test_only_end_user_tools_in_the_chosen_categories_are_written(db: PipelineDB, tmp_path: Path) -> None:
     add(db, 1, "a/lib", extraction(kind=cited("library_sdk", "A tiny jq-like query tool")))
     add(db, 2, "a/app", extraction(category=cited("other", "A tiny jq-like query tool")))
@@ -215,6 +238,14 @@ def test_slug_clash_uses_the_owner_and_rewrites_keep_slug_and_verification(db: P
     assert kept["verification"]["level"] == "install" and kept["install"]["linux"]["basis"] == "replayed"
     assert kept["install"]["macos"]["basis"] == "readme_claim"
     assert len(build_index(out, now=NOW).index["entries"]) == 2
+
+
+def test_repeated_list_values_are_kept_once(db: PipelineDB, tmp_path: Path) -> None:
+    keys = [cited("JQ_KEY", "jq-like"), cited("JQ_KEY", "jq-like")]
+    add(db, 7, "someone/tinyq", extraction(prerequisites={**extraction()["prerequisites"], "api_keys": keys}))
+    out = tmp_path / "software"
+    write_profiles(db, model=MODEL, out_dir=out, now=NOW)
+    assert read(out, "tinyq")["prerequisites"]["api_keys"] == ["JQ_KEY"]
 
 
 def test_helpers() -> None:

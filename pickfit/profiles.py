@@ -72,6 +72,19 @@ OS_METHOD_ORDER: dict[str, tuple[str, ...]] = {
                 "other"),
 }
 _UV_TOOL = re.compile(r"^\s*(uv\s+tool\s+install|uvx)\b")
+# Steps that only work inside a clone of the repo (one step of a longer build, not an install).
+_NEEDS_CHECKOUT = re.compile(
+    r"^\s*(\./|sh\s+\./|bash\s+\./|make\b|cmake\b|cargo\s+(build|run)\b|go\s+(build|run)\b|npm\s+ci\b"
+    r"|npm\s+(i|install)\s*$|pnpm\s+(i|install)\s*$|yarn\s*$|bun\s+install\s*$|git\s+clone\b"
+    r"|(npm|pnpm|yarn|bun)\s+(run\s+)?(dev|start|build|test)\b|docker[- ]compose\s+up\b|docker\s+compose\s+up\b)"
+    r"|\s-r\s+\S*requirements|\s-e\s+\.(\s|$|\[)|\sinstall\s+\.(\s|$|\[)")
+_POSIX_SHELL = re.compile(r"\b(bash|sh|zsh)\b|\bchmod\b|^\s*\./|\|\s*(sudo\s+)?(ba|z)?sh\b")
+_POWERSHELL = re.compile(r"\b(irm|iwr|iex|powershell|pwsh|Invoke-WebRequest|Invoke-Expression)\b", re.I)
+_BREW_TAP = re.compile(r"^\s*brew\s+tap\s")
+# A package-manager command for this tool names it; one that does not installs something else
+# (a prerequisite such as llama.cpp, or a test dependency such as pytest).
+PACKAGE_METHODS = frozenset({"brew", "npm", "pip", "pipx", "uv", "cargo", "go"})
+_NAME_SUFFIX = re.compile(r"(cli|app|mcp|server|tui)$")
 
 # Extraction source ids -> record source ids (release ids carry the tag).
 _API_SOURCE = "github_api"
@@ -145,8 +158,38 @@ def _claim_rank(os_name: str, claim: InstallClaim) -> int:
     return order.index(method) if method in order else len(order)
 
 
-def _readme_guides(result: ExtractionResult, platforms: list[str], ev: _Evidence) -> dict[str, Any]:
-    """One readme_claim guide per OS the README gives an install command for."""
+def _squash(text: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", text.lower())
+
+
+def _names_tool(command: str, names: list[str]) -> bool:
+    squashed = _squash(command)
+    for name in names:
+        token = _squash(name)
+        for variant in (token, _NAME_SUFFIX.sub("", token)):
+            if len(variant) >= 3 and variant in squashed:
+                return True
+    return False
+
+
+def _fits_os(claim: InstallClaim, os_name: str, platforms: list[str]) -> bool:
+    """The README gives this command for os_name, or names no OS and the tool claims os_name."""
+    if os_name in claim.platforms:
+        return True
+    if claim.platforms or os_name not in platforms:
+        return False
+    if os_name == "windows":
+        return not _POSIX_SHELL.search(claim.command) and claim.method != "brew"
+    return not _POWERSHELL.search(claim.command)
+
+
+def _readme_guides(result: ExtractionResult, platforms: list[str], names: list[str],
+                   ev: _Evidence) -> dict[str, Any]:
+    """One readme_claim guide per OS the README gives a standalone install command for.
+
+    Commands that only work inside a clone (npm ci, pip install -e ., ./install.sh) are one
+    step of a source build, so they are left to verification rather than shown as an install.
+    """
     smoke = result.smoke_test_candidates
     check = next(({"command": s.command, "expected_signal": s.expected_output}
                   for s in smoke if s.expected_output and s.expected_output.strip()), None)
@@ -154,16 +197,26 @@ def _readme_guides(result: ExtractionResult, platforms: list[str], ev: _Evidence
     manual = [m.value for m in result.manual_steps if m.value]
     guides: dict[str, Any] = {}
     for os_name in OS_METHOD_ORDER:
-        claims = [c for c in result.install_methods
-                  if os_name in c.platforms or (not c.platforms and os_name in platforms)]
-        claims = [c for c in claims if _claim_rank(os_name, c) < len(OS_METHOD_ORDER[os_name])]
+        claims = [c for c in result.install_methods if _fits_os(c, os_name, platforms)
+                  and not _NEEDS_CHECKOUT.search(c.command)
+                  and (c.method not in PACKAGE_METHODS or _BREW_TAP.match(c.command)
+                       or _names_tool(c.command, names))
+                  and _claim_rank(os_name, c) < len(OS_METHOD_ORDER[os_name])]
         if not claims:
             continue
         best = min(claims, key=lambda c: _claim_rank(os_name, c))
-        if not ev.model_value(f"/install/{os_name}", best.command):
+        steps = [best]
+        if _BREW_TAP.match(best.command):  # a tap is followed by its brew install
+            after = claims[claims.index(best) + 1:]
+            follow = next((c for c in after if c.method == "brew" and not _BREW_TAP.match(c.command)), None)
+            if follow is None:
+                continue
+            steps.append(follow)
+        if not all(ev.model_value(f"/install/{os_name}/steps/{i}", c.command)
+                   for i, c in enumerate(steps)):
             continue
         guides[os_name] = {"basis": "readme_claim", "run_id": None, "method": best.method,
-                           "steps": [{"command": best.command, "purpose": None}],
+                           "steps": [{"command": c.command, "purpose": None} for c in steps],
                            "manual_steps": manual, "check": check, "first_task": first_task}
     return guides
 
@@ -210,9 +263,9 @@ def build_record(candidate: dict[str, Any], extraction: dict[str, Any], *, slug:
         return value if ev.model_value(name, quote) else None
 
     def cited_list(name: str, items: list[Any]) -> list[str]:
-        kept = []
+        kept: list[str] = []
         for item in items:
-            if item.value and ev.model_value(f"{name}/{len(kept)}", item.quote):
+            if item.value and item.value not in kept and ev.model_value(f"{name}/{len(kept)}", item.quote):
                 kept.append(item.value)
         return kept
 
@@ -296,7 +349,7 @@ def build_record(candidate: dict[str, Any], extraction: dict[str, Any], *, slug:
                  "archived": bool(repo.get("archived"))},
         "platforms": platforms,
         "prerequisites": prerequisites,
-        "install": _readme_guides(result, platforms, ev),
+        "install": _readme_guides(result, platforms, [repo.get("name") or "", name], ev),
         "pricing": {"model": cited("/pricing", result.pricing.value, result.pricing.quote),
                     "note": None},
         "open_source": open_source_from_license(license_id),
