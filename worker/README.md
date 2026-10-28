@@ -1,6 +1,6 @@
 # pickfit MCP server（Cloudflare Worker）
 
-無狀態的 Streamable HTTP MCP server（官方 TypeScript SDK v2 的 `createMcpHandler`，新舊兩代協定都收）。5 個工具：`find_software`、`find_alternatives`、`get_install_guide`、`report_outcome`、`submit_software`。**還沒部署**，只在本機跑；部署步驟見文末的檢查清單。
+無狀態的 Streamable HTTP MCP server（官方 TypeScript SDK v2 的 `createMcpHandler`，新舊兩代協定都收）。5 個工具：`find_software`、`find_alternatives`、`get_install_guide`、`report_outcome`、`submit_software`（`TOOLS=readonly` 時只有前 3 個，見「評測部署」）。**還沒部署**，只在本機跑；部署步驟見文末的檢查清單。
 
 ## 怎麼跑
 
@@ -70,6 +70,41 @@ env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p "…" \
 Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.sqlite` 分開）：每日 $3、總額 $40（`META_DAILY_CAP_USD`、`META_TOTAL_CAP_USD`）。`find_*` 呼叫前先用「這次最多花多少」檢查兩個上限，超過就不呼叫、回 `degraded: true`、`degraded_reason: "over_budget"`；呼叫後記實際花費；逾時的呼叫照上限計。查不到 D1 就不呼叫模型（`budget_unavailable`）。
 
 本機實測（假資料 4–5 張卡，10/28）：`find_software` 約 $0.009、7 秒；`find_alternatives` 約 $0.009–0.011、6–7 秒。
+
+## 不快取
+
+`find_software`、`find_alternatives` 每次呼叫都重新做一次完整配對（硬條件 → 候選卡 → 一次 `muse-spark-1.3` → 守門），Worker 裡沒有任何結果快取；同樣的請求送兩次就是兩次模型呼叫、兩個不同的 `rec_id`、兩列 `events`（`test/deployments.test.ts` 有測）。其他層也不快取：
+
+- MCP：2026-07-28 版只有 `tools/list`、`server/discover` 等清單類結果帶快取欄位（SDK 預設 `ttlMs: 0`、`private`）；`tools/call` 的結果沒有。
+- HTTP：`/mcp` 的每個回應都帶 `Cache-Control: no-store`。
+- Meta：請求帶 `store: false`。Meta 可能把重複的 prompt 前段算成 cached input token（計價較低），那只是重用輸入，答案每次都重新產生，所以同樣的請求可能得到不同的 picks。
+
+## 評測部署（凍結、唯讀）
+
+同一份程式與資料，只靠 `wrangler.jsonc` 的設定分出不同部署（不改程式碼）：
+
+| 設定 | 作用 |
+|---|---|
+| `TOOLS` | 不設或 `all`：5 個工具。`readonly`：只註冊 `find_software`、`find_alternatives`、`get_install_guide`；server instructions 與工具說明不再提到另外兩個，呼叫它們回 JSON-RPC `-32602 Tool … not found`。其他任何值也當 `readonly`（打錯字不會意外打開寫入工具） |
+| `MATCH_MODE` | `model` 或 `off`（規則排序，不呼叫 Meta） |
+| `META_DAILY_CAP_USD`、`META_TOTAL_CAP_USD` | 這個部署自己的 Meta 上限；算的是這個部署的 D1 `meta_budget` |
+
+`wrangler.jsonc` 已有兩個範本（`env` 區塊；wrangler 不會把頂層的 `vars`、`d1_databases` 繼承進 env，所以每個都完整列出）：
+
+- `eval`：`TOOLS=readonly`、`MATCH_MODE=model`、每日 $3、總額 $10、自己的 D1 `pickfit-eval`。
+- `eval-rules`：`TOOLS=readonly`、`MATCH_MODE=off`、上限都是 0、自己的 D1 `pickfit-eval-rules`。
+
+**凍結**：Worker 的資料是部署時打包進去的索引，所以評測期間不要再對該 env 跑 `pickfit publish --env …`；公開的 server 照常更新不影響它。兩個 arm 要從同一個 commit 部署；`GET /` 會回 `data_sha256`、`index_built_at`、`tools`、`match_mode`，兩邊的 `data_sha256` 相同就是同一份資料。
+
+**`rec_id` 對帳**：三個唯讀工具的每個回應都有 `rec_id`，也都寫進該部署的 `events`：`find`／`alternatives` 一個 `rec_id` 一列（唯一索引）；`get_install_guide` 若帶了推薦的 `rec_id` 就沿用（用 `rec_id`＋`slug`＋`type = 'install_guide'` 對），沒帶就新發一個。`events` 存的是條件與推薦的 slug（`results`），不是整個回應、也沒有使用者原話；要比對完整回應，客戶端那邊要自己留 transcript。寫 D1 在回應送出後（`waitUntil`），失敗不會讓回應失敗，但會在 Workers log 記 `d1_write_failed` 與 `rec_id`。
+
+部署評測 env（在第一次公開部署的檢查清單之外另做；下面以 `eval` 為例，`eval-rules` 一樣但不用設金鑰）：
+
+1. `npx wrangler d1 create pickfit-eval`，把 id 填進 `env.eval.d1_databases`；`npx wrangler d1 migrations apply pickfit-eval --env eval --remote`。
+2. `env.eval.vars.ALLOWED_HOSTS` 填 `pickfit-mcp-eval.<workers.dev 子網域>.workers.dev`（env 部署的 Worker 名稱是 `pickfit-mcp-<env>`），commit。
+3. `uv run pickfit publish --dry-run --env eval`（會印出這個 env 的 `TOOLS`、`MATCH_MODE`、上限），沒問題再 `uv run pickfit publish --env eval`。
+4. 金鑰：把文末第 6 步的指令改成 `npx wrangler secret put MODEL_API_KEY --env eval`。
+5. 確認 `GET /` 的 `tools` 是 `readonly`、`data_sha256` 和另一個 arm 相同；`tools/list` 只有 3 個工具。
 
 ## D1（`migrations/`）
 
