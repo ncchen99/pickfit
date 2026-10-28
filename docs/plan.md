@@ -43,7 +43,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 5. **上限分階段**：10/29 前每日 $3；10/29 起管線每日 $25；管線總額 $100 硬停。Worker 另計：每日 $3、評審期總額 $40（arch H.6）。
 6. **先小後大**：新 prompt 先跑 1 筆，再 5 筆、30 筆；每一步看過 `usage` 才放大。
 7. **不要整份 `source .env`**：裡面有 `ANTHROPIC_API_KEY`，從那個 shell 啟動的 `claude` 會改用 API key 計費。spike 在 subshell 裡只帶需要的變數，例如 `(set -a; . ./.env; set +a; unset ANTHROPIC_API_KEY; python3 spikes/…)`；`pickfit` 程式自己從 `.env` 只讀它要的變數。
-8. Anthropic key 只給評測執行器：先跑 2 題估單題花費，再跑全部；評測總花費上限 $30。
+8. Anthropic key 只給評測執行器與評分：先跑 2 題估單題花費，再跑全部。評測上限（10/29 事先登記）：第 1 次 $30、補充重跑 $60、Claude 評分 $20；看到結果後不追加。
 9. Claude Code 的子 agent、workflow 不在迴圈裡呼叫付費 API。需要呼叫時由主 agent 執行，並回報花費。
 10. 每天結束時，把當日花費寫進狀態紀錄（數字由帳本產生；只記花費，不記 credits 餘額）。
 11. **上限是安全網，不是要省到最後。** Meta 的 Spend Limit 只寄信、不會擋，所以由程式擋：管線 $100＋Worker 評審期 $40＝$140，留 $10 給 $150 credits 的誤差。各家額度照用途分配，**產品裡每個決定都用 Meta 模型**（評分 25%，第一輪必查；arch D.3、I #19）：
@@ -137,12 +137,12 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 
 ### P6 評測（11/2）
 
-- [ ] P6.1 評測執行器：Claude Code 無頭模式（固定版本、固定提示），對照組（只有網路搜尋）與實驗組（＋pickfit MCP）；第三組 rules-only（計畫內）。**隔離**：這台 Mac 的使用者設定裡有 toolradar 等 MCP，會污染對照組；每題在空的暫存目錄執行，用 `--strict-mcp-config --mcp-config <檔案>`（對照組空的、實驗組只有 pickfit），若 Anthropic 額度夠：每題每組另外加跑 2 次當「補充結果」，主要結果仍是第 1 次；要在任何一組開跑前寫進 `eval/README.md` 第 9 節勘誤區（不改題目與主要結果的定義）。旗標已在 P0.5 實測有效；記下 Claude Code 版本。**`claude` 一定要用 `env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p …` 啟動**，否則會繼承桌面 app 的 `ANTHROPIC_BASE_URL` 而失敗（P0.5）。先跑 2 題估花費。
+- [ ] P6.1 評測執行器：Claude Code 無頭模式（固定版本、固定提示），對照組（只有網路搜尋）與實驗組（＋pickfit MCP）；第三組 rules-only（要跑，只跑第 1 次）。**10/29 已事先登記**補充重跑、成立門檻、評分程序、輸題原因標記（`eval/README.md` 第 9.1 節，只有評測 session 讀）。對建資料的 session 有影響的只有這幾條：評測用兩個凍結的唯讀部署（`pickfit-eval`、`pickfit-eval-rules`；Worker 設 `TOOLS=readonly`、Meta 每日 $10）；從開跑到跑完不改 pickfit 的程式、資料、提示詞，不跑 `pickfit watch`、不 publish；開跑前記下 commit、部署版本與資料快照的雜湊。**隔離**：這台 Mac 的使用者設定裡有 toolradar 等 MCP，會污染對照組；每題在空的暫存目錄執行，用 `--strict-mcp-config --mcp-config <檔案>`（對照組空的、實驗組只有 pickfit），每題每組另外加跑 2 次當補充結果，主要結果仍是第 1 次（9.1）。旗標已在 P0.5 實測有效；記下 Claude Code 版本。**`claude` 一定要用 `env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p …` 啟動**，否則會繼承桌面 app 的 `ANTHROPIC_BASE_URL` 而失敗（P0.5）。先跑 2 題估花費。
 - [ ] P6.2 收集答案；安裝步驟在乾淨容器（或 Mac）實跑。
 - [ ] P6.3 照 `eval/README.md` 評分；👤 念誠做盲測兩兩比較。
 - [ ] P6.4 👤 demo 那 3 筆在 Mac 上由念誠親手照 `get_install_guide` 驗證（`method: human`），驗完移除；agent 只準備檢查清單、收 log。
 
-**完成標準**：結果表（含輸的題）＋系統數字（候選數、驗證通過率、提交到可被推薦的時間）。≥2 題「好答案在資料裡卻沒被推薦」→ 只調候選卡或加 BM25，不加新功能。**當晚功能凍結。**
+**完成標準**：結果表（含輸的題）＋系統數字（候選數、驗證通過率、提交到可被推薦的時間）。≥2 題「好答案在資料裡卻沒被推薦」→ 只調候選卡或加 BM25，不加新功能；調整後的版本不得再用這 20 題的成績當評測結果（9.1 F）。L2 實跑截止 11/3 12:00（台北）。**當晚功能凍結。**
 
 ### P7 README、影片、交件（11/3–11/4）
 
@@ -217,3 +217,4 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | 10/28 18:55 | P0.6–P0.8 | 念誠：Baseten 已申請（等審核）、Meta credits 表單與 Spend Limit 通知、Modal 上限約 $80 都完成。P2、P3、P4 三個 session 已開工（各自的 worktree）。花費守則加第 11 條（各家額度的用途分配） | — |
 | 10/28 23:24 | P2.1–P2.3、P2.5、P3.1–P3.3、P4.3–P4.4 | 三個 session 的分支併入 main（merge `914b3a9`、`62006dd`、`bceb932`），衝突只在 `pickfit/cli.py` 與 `NOTICE`，兩邊都留；221 個 Python、37 個 Worker 測試通過。P2：496 筆候選、規則過 466 筆、抽取 36 筆全過 schema。P3：evnx 照 README 失敗後由 1.3 自己修好；預設改為每回合重送完整歷史（1–7 秒／回合）。P4：`find_software`、`get_install_guide` 在本機完成，OS 條件放寬並註明實際驗證過的 OS（見 P4.4） | Meta：管線 $0.198（verify $0.158、extract $0.040）＋Worker 本機 D1 $0.044；Anthropic 約 $0.12 |
 | 10/28 23:24 | — | **下一步**：P3.4–P3.7（判讀、重播、`ModalBox`、批次）、P2.6（收緊規則＋1.3 正式抽取）、P4.5（補完工具與部署）可各開一個 session；都不讀 `eval/` | — |
+| 10/29 00:25 | P6.1 | 評測的事先登記 commit（`e2e025b`，`eval/README.md` 9.1）：補充重跑、成立門檻、盲評程序、輸題原因標記、砍除順序；先由 3 個獨立審查者找漏洞再修。念誠確認數字：補充重跑 $60、Claude 評分 $20、評測部署 Meta 每日 $10、L2 截止 11/3 12:00、rules-only 要跑。Baseten：申請已送出但沒核准（credits $0），credits 入帳前不呼叫 | — |
