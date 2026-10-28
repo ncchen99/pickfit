@@ -96,8 +96,15 @@ def _run_summary(run: VerificationRun) -> dict[str, Any]:
     }
 
 
-def works_offline(run: VerificationRun) -> bool | None:
-    """True when every passing smoke test also passed with the network off; None when none ran offline."""
+def works_offline(run: VerificationRun, first_task: str | None = None) -> bool | None:
+    """Whether it works with the network off after install; None when nothing ran offline.
+
+    The first task decides when it ran offline (that is what users are told to run);
+    otherwise every passing smoke test must have passed offline.
+    """
+    for test in run.smoke_tests:
+        if first_task and test.passed and test.command == first_task and test.offline is not None:
+            return test.offline
     checked = [t.offline for t in run.smoke_tests if t.passed and t.offline is not None]
     return all(checked) if checked else None
 
@@ -125,7 +132,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
             "check": guide.check.model_dump() if guide.check else None,
             "first_task": guide.first_task,
             "first_task_setup": _first_task_setup(run, guide.first_task),
-            "works_offline": works_offline(run),
+            "works_offline": works_offline(run, guide.first_task),
             "pitfalls": [p.model_dump() for p in run.pitfalls],
             "run": _run_summary(run),
         }

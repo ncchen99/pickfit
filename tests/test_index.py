@@ -111,3 +111,17 @@ def test_write_index_round_trips(data_dir: Path, tmp_path: Path) -> None:
     out = tmp_path / "index.json"
     write_index(index, out)
     assert json.loads(out.read_text(encoding="utf-8")) == index
+
+
+def test_works_offline_follows_the_first_task():
+    from pickfit.index import works_offline
+    from pickfit.schema import VerificationRun
+
+    record = json.loads((FIXTURES / "fixture-llm-runner.json").read_text())
+    run = VerificationRun.model_validate(record["verification"]["runs"][0])
+    online = run.smoke_tests[0].model_copy(update={"command": "npx tool@latest", "offline": False})
+    offline = run.smoke_tests[0].model_copy(update={"command": "tool scan --offline", "offline": True})
+    mixed = run.model_copy(update={"smoke_tests": [online, offline]})
+    assert works_offline(mixed, "tool scan --offline") is True
+    assert works_offline(mixed, "npx tool@latest") is False
+    assert works_offline(mixed) is False  # no first task: every passing check must pass offline

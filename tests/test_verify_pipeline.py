@@ -209,3 +209,16 @@ def test_a_long_check_keeps_its_first_part_as_setup(tmp_path: Path):
     test = outcome.run.smoke_tests[1]
     assert len(long_check) > 500 and outcome.run.level == "function"
     assert test.command == "graphtty graph.json" and [s.command for s in test.setup] == [big]
+
+
+def test_the_guide_prefers_a_first_task_that_worked_offline():
+    from pickfit.schema import SmokeTest
+    from pickfit.verify.result import install_guide
+
+    record = json.loads((FIXTURES / "software_example.json").read_text())
+    run = VerificationRun.model_validate(record["verification"]["runs"][0])
+    tests = [SmokeTest(command="tool --version", expected_signal="1.0", exit_code=0, passed=True, offline=True),
+             SmokeTest(command="npx tool@latest", expected_signal="ok", exit_code=0, passed=True, offline=False),
+             SmokeTest(command="tool scan --offline", expected_signal="ok", exit_code=0, passed=True, offline=True)]
+    guide = install_guide(run.model_copy(update={"smoke_tests": tests}))
+    assert guide.first_task == "tool scan --offline" and guide.check.command == "tool --version"

@@ -245,8 +245,10 @@ def install_guide(run: VerificationRun) -> InstallGuide:
     """The Linux install guide a passed, replayed run supports."""
     passing = [t for t in run.smoke_tests if t.passed and t.expected_signal]
     check = next((t for t in passing if t.exit_code == 0), passing[0] if passing else None)
-    example = next((t for t in run.smoke_tests if t.passed and not re.search(r"--?(?:version|help)\b|^\S+\s+-[Vh]$",
-                                                                         t.command)), None)
+    examples = [t for t in run.smoke_tests
+                if t.passed and not re.search(r"--?(?:version|help)\b|^\S+\s+-[Vh]$", t.command)]
+    # The first task shown to users: one that also worked with the network off, if any did.
+    example = next((t for t in examples if t.offline), examples[0] if examples else None)
     return InstallGuide(
         basis="replayed", run_id=run.id, method=run.install_method or "other", steps=run.steps,
         check=Check(command=check.command, expected_signal=check.expected_signal) if check else None,
