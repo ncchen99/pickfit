@@ -72,20 +72,21 @@
       "first_task": "orbit init"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-orbit-20261029-011619-a952",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g @orbit-tools/cli",
-          "purpose": null
+          "command": "npm install -g @orbit-tools/cli && orbit --version && which orbit",
+          "purpose": "Install Orbit CLI via npm"
         }
       ],
-      "manual_steps": [
-        "authenticate an agent CLI and gh for pull requests"
-      ],
-      "check": null,
-      "first_task": "orbit init"
+      "manual_steps": [],
+      "check": {
+        "command": "orbit --version",
+        "expected_signal": "orbit 0.36.0"
+      },
+      "first_task": "orbit init --non-interactive --machine-name pickfit --task-prefix PKF --skip-host-prerequisites"
     },
     "windows": null
   },
@@ -102,10 +103,123 @@
     "url": "https://github.com/constellation-works/orbit/releases/tag/v0.36.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T01:17:24.565683+08:00",
+    "runs": [
+      {
+        "id": "verify-orbit-20261029-011619-a952",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:17:24.565683+08:00",
+        "tool_version": "0.36.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @orbit-tools/cli && orbit --version && which orbit",
+            "purpose": "Install Orbit CLI via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "orbit --version",
+            "expected_signal": "orbit 0.36.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "orbit 0.36.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "orbit --help",
+            "expected_signal": "Usage: orbit [OPTIONS] <COMMAND>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: orbit [OPTIONS] <COMMAND>",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "orbit init --non-interactive --machine-name pickfit --task-prefix PKF --skip-host-prerequisites",
+            "expected_signal": "machine identity (created)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "machine identity (created): name=\"pickfit\", id=hm_bf3ab7b4524189d4, task_prefix=PKF",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "orbit doctor",
+            "expected_signal": "0 failure(s), 2 warning(s).",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0 failure(s), 2 warning(s).",
+            "setup": [
+              {
+                "command": "orbit init --non-interactive --machine-name pickfit --task-prefix PKF --skip-host-prerequisites",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s -o /dev/null -w \"%{http_code}\\n\" http://127.0.0.1:7878/",
+            "expected_signal": "200",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "200",
+            "setup": [
+              {
+                "command": "orbit init --non-interactive --machine-name pickfit --task-prefix PKF --skip-host-prerequisites",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "orbit web serve --port 7878 --no-open",
+                "background": true,
+                "port": 7878
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "orbit init",
+            "actually_needed": "orbit init --non-interactive --machine-name pickfit --task-prefix PKF --skip-host-prerequisites (fresh init requires --machine-name and --task-prefix with --non-interactive; host sandbox prep skipped without root)"
+          },
+          {
+            "readme_said": "orbit web serve",
+            "actually_needed": "orbit web serve --port 7878 --no-open to bind a fixed port and avoid attempting to open a browser"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show init created machine identity, doctor reported 0 failure(s) 2 warning(s), and version printed orbit 0.36.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-orbit-20261029-011619-a952/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-orbit-20261029-011619-a952/check-1-cmd5.judged.png",
+            "runs/verify/verify-orbit-20261029-011619-a952/check-2-cmd6.judged.png",
+            "runs/verify/verify-orbit-20261029-011619-a952/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.047145
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -348,5 +462,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-28T23:56:48+08:00"
+  "updated_at": "2026-10-29T01:17:24.568208+08:00"
 }
