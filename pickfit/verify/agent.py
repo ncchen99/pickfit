@@ -129,7 +129,8 @@ TOOLS: list[dict[str, Any]] = [
         {"path": _STR, "offset": {"type": "integer", "description": "Character offset; 0 to start."}},
         ["path", "offset"]),
     _fn("run_command", "Run one non-interactive bash command in the box as the non-root user, in the "
-        "work dir. Stdin is closed. Uses one unit of the command budget.",
+        "work dir. Stdin is closed. Its exit code is recorded and returned, so do not append "
+        "`; echo $?` or `|| true`. Uses one unit of the command budget.",
         {"command": _STR,
          "timeout_s": {"type": "integer", "description": "Kill after this many seconds (max 600)."},
          "purpose": {"type": "string", "description": "Why you run it, in a few words."}},
@@ -228,12 +229,18 @@ How to work:
 (a missing step, a wrong package name, PATH) and retry; move to the next candidate only when the method \
 itself cannot work here.
 2. Confirm the command is on PATH and that --version or --help works (some tools support only one).
-3. Smoke test: run the README's first example that needs no account, API key, GPU or GUI. Create any \
-input file it needs yourself (a heredoc in run_command). For a server or local AI tool, start it with \
-run_background, query its health or /v1/models endpoint, and run one tiny inference if a model under \
-about 300 MB is available.
+3. Smoke test: run the README's first example that needs no account, API key, GPU or GUI, exactly as \
+the README writes it, on the sample files if the work dir has them; otherwise create the input it needs \
+(a heredoc in run_command). If the example fails, treat it like an install error: read the message, add \
+the missing step, run the example again, and record the missing step as a pitfall. For a server or local \
+AI tool, start it with run_background, query its health or /v1/models endpoint, and run one tiny \
+inference if a model under about 300 MB is available.
 4. Judge exit codes by the README's meaning: a linter or validator that finds problems may correctly exit 1.
 5. Call finish once, at the end, alone.
+
+pickfit records the exit code of every command and shows it to you, and finish is checked against that \
+record. So run each check (--version, --help, each README example) as its own run_command, and never hide \
+an exit code with `; echo $?`, `|| true` or a trailing pipe. Chain only dependent steps, with &&.
 
 Levels: install = installed, on PATH, --version or --help works. function = also a README example ran \
 with sensible output. service = a local server started and answered a health or models request. \
