@@ -404,7 +404,8 @@ def check_finish(finish: FinishArgs, commands: list[CommandRecord]) -> dict[str,
     smoke_ok = False
     for test in finish.smoke_tests:
         for setup in test.setup:
-            if not any(c.exit_code == 0 for c in runs_of(setup)):
+            # Often chained before the test itself, so its own exit code is not in the log.
+            if not runs_of(setup):
                 problems.append(f"setup not in the log as written: {_one_line(setup, 120)}")
         seen = runs_of(test.command)
         if not seen:

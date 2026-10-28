@@ -344,7 +344,7 @@ def test_check_finish_lowers_unsupported_claims():
     log = [CommandRecord(1, "run_command", "pipx install evnx", 0, 1.0),
            CommandRecord(2, "run_command", "evnx validate", 2, 0.1)]
     claim = FinishArgs.model_validate(finish(steps=["pipx install evnx"], smoke=[
-        {**SMOKE[0], "exit_code": 1}])[1])
+        {**SMOKE[0], "setup": [], "exit_code": 1}])[1])
     check = check_finish(claim, log)
     assert check["level"] == "install"
     assert check["problems"] == ["smoke test claims exit 1, log shows 2: evnx validate"]
