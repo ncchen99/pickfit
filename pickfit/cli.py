@@ -43,6 +43,9 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("spend", help="show spending from the shared ledger")
     s.set_defaults(func=_spend)
 
+    from pickfit.verify.cli import add_parser as add_verify_parser
+    add_verify_parser(sub)
+
     args = parser.parse_args(argv)
     if args.command is None:
         parser.print_help()
