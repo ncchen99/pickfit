@@ -148,9 +148,11 @@ def test_run_batch_runs_in_parallel_and_survives_errors(db_path: Path, tmp_path:
 
 
 def test_verified_slugs_reads_outcomes(tmp_path: Path):
-    run = tmp_path / "verify" / "verify-x-1"
-    run.mkdir(parents=True)
-    (run / "outcome.json").write_text(json.dumps({"slug": "x"}))
+    for name, slug in (("verify-x-20261029-001103-ab12", "x"), ("verify-y-20261029-020000-cd34", "y")):
+        run = tmp_path / "verify" / name
+        run.mkdir(parents=True)
+        (run / "outcome.json").write_text(json.dumps({"slug": slug}))
     (tmp_path / "verify" / "broken").mkdir()
     (tmp_path / "verify" / "broken" / "outcome.json").write_text("{")
-    assert verified_slugs(tmp_path) == {"x"}
+    assert verified_slugs(tmp_path) == {"x", "y"}
+    assert verified_slugs(tmp_path, since="20261029-01") == {"y"}
