@@ -48,7 +48,23 @@
     "api_keys": []
   },
   "install": {
-    "macos": null,
+    "macos": {
+      "basis": "replayed",
+      "run_id": "verify-mcp-audit-20261029-163650-6800",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install mcp-audit-scanner",
+          "purpose": "Install mcp-audit via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mcp-audit --help",
+        "expected_signal": "Scan MCP configurations for security issues."
+      },
+      "first_task": "mcp-audit version"
+    },
     "linux": {
       "basis": "replayed",
       "run_id": "verify-mcp-audit-20261029-011619-86aa",
@@ -83,7 +99,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:17:10.624845+08:00",
+    "checked_at": "2026-10-29T16:41:16.782629+08:00",
     "runs": [
       {
         "id": "verify-mcp-audit-20261029-011619-86aa",
@@ -175,6 +191,97 @@
         },
         "actor_model": "muse-spark-1.3",
         "cost_usd": 0.040387
+      },
+      {
+        "id": "verify-mcp-audit-20261029-163650-6800",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26",
+        "checked_at": "2026-10-29T16:41:16.782629+08:00",
+        "tool_version": "0.22.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install mcp-audit-scanner",
+            "purpose": "Install mcp-audit via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mcp-audit --help",
+            "expected_signal": "Scan MCP configurations for security issues.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ scan Scan MCP configurations for security issues. │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mcp-audit version",
+            "expected_signal": "mcp-audit 0.22.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mcp-audit 0.22.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mcp-audit check",
+            "expected_signal": "No MCP config files found on this machine.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No MCP config files found on this machine. Run mcp-audit discover to see where",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mcp-audit scan",
+            "expected_signal": "No security issues found",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ ✅ No security issues found │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mcp-audit discover",
+            "expected_signal": "No MCP configurations found on this machine.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No MCP configurations found on this machine.",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "standard `--version` flag works",
+            "actually_needed": "use `mcp-audit version` or `mcp-audit --help`; there is no `--version` flag"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show mcp-audit running successfully with the expected check, scan, and help outputs.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mcp-audit-20261029-163650-6800/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mcp-audit-20261029-163650-6800/check-1-cmd5.judged.png",
+            "runs/verify/verify-mcp-audit-20261029-163650-6800/check-2-cmd6.judged.png",
+            "runs/verify/verify-mcp-audit-20261029-163650-6800/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.048949
       }
     ]
   },
@@ -463,5 +570,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-29T02:35:07+08:00"
+  "updated_at": "2026-10-29T16:41:16.788820+08:00"
 }
