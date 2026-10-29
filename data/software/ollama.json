@@ -1,0 +1,499 @@
+{
+  "schema_version": "software.v1",
+  "slug": "ollama",
+  "repo_id": "gh:658928958",
+  "name": "Ollama",
+  "summary": "Run open language models locally and interact via CLI, API, and app integrations.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "deepseek",
+    "gemma",
+    "glm",
+    "go",
+    "golang",
+    "gpt-oss",
+    "llama",
+    "llm",
+    "llms",
+    "minimax"
+  ],
+  "use_cases": [
+    "run and chat with a local model",
+    "run and manage models via REST API",
+    "run personal AI assistant across messaging apps"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://ollama.com",
+  "repo": {
+    "url": "https://github.com/ollama/ollama",
+    "full_name": "ollama/ollama",
+    "created_at": "2023-06-26T19:39:32Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://ollama.com/install.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "ollama"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-ollama-20261029-172450-f97f",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p $HOME/.local && curl -fL -o /tmp/ollama.tar.zst https://ollama.com/download/ollama-linux-amd64.tar.zst && tar -I 'zstd -d' -xf /tmp/ollama.tar.zst -C $HOME/.local && ls -l $HOME/.local/bin/ollama",
+          "purpose": "Manual Ollama install to user prefix"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ollama --version",
+        "expected_signal": "client version is 0.40.13"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://ollama.com/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "ollama"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.40.13",
+    "published_at": "2026-10-28T19:55:04Z",
+    "url": "https://github.com/ollama/ollama/releases/tag/v0.40.13"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T17:27:02.300426+08:00",
+    "runs": [
+      {
+        "id": "verify-ollama-20261029-172450-f97f",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T17:27:02.300426+08:00",
+        "tool_version": "0.40.13",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p $HOME/.local && curl -fL -o /tmp/ollama.tar.zst https://ollama.com/download/ollama-linux-amd64.tar.zst && tar -I 'zstd -d' -xf /tmp/ollama.tar.zst -C $HOME/.local && ls -l $HOME/.local/bin/ollama",
+            "purpose": "Manual Ollama install to user prefix"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ollama --version",
+            "expected_signal": "client version is 0.40.13",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Warning: client version is 0.40.13",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://ollama.com/install.sh | sh",
+            "actually_needed": "script aborts without root; manually extracted Linux tarball into HOME/.local already on PATH",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows ollama --version outputting client version is 0.40.13 with a warning about no running instance.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ollama-20261029-172450-f97f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ollama-20261029-172450-f97f/check-1-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.105331
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-29T17:31:53+08:00",
+    "quality": {
+      "total": 64.9,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 185183,
+        "monthly_downloads": 63844,
+        "forks": 18710,
+        "dependents": null,
+        "release_downloads": 7736760,
+        "hn_top_score": 648,
+        "registries_count": 1
+      },
+      "age_days": 1220,
+      "packages": [
+        "homebrew:ollama"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0,
+      "excluded": "well_known"
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:31:53.748963+08:00",
+      "sources_sha": "80328797db213124b83576a0dc8a5df7a91ed2bc720739da866fb219e9552a9d",
+      "items": {
+        "what_it_does": {
+          "score": 1,
+          "quote": "Start building with open models. Access the latest releases locally or in the cloud with complete privacy."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Start building with open models. Access the latest releases locally or in the cloud with complete privacy."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://ollama.com/install.sh | sh\n```\n\nor [download manually](https://ollama.com/download/Ollama.dmg)\n\n### Windows\n\n```shell\nirm https://ollama.com/install.ps1 | iex"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "ollama run gemma4"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "### macOS"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "well_known": {
+    "basis": "homebrew_installs_on_request_365d",
+    "package": "homebrew:ollama",
+    "rank": 23,
+    "count": 655153,
+    "max_rank": 1000,
+    "period_start": "2025-10-29",
+    "period_end": "2026-10-29",
+    "source_url": "https://formulae.brew.sh/api/analytics/install-on-request/365d.json",
+    "checked_at": "2026-10-29T09:14:25Z"
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ollama/ollama",
+      "fetched_at": "2026-10-29T17:14:36+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ollama/ollama/blob/main/README.md",
+      "fetched_at": "2026-10-29T17:13:41+08:00"
+    },
+    {
+      "id": "release:v0.40.13",
+      "kind": "release",
+      "url": "https://github.com/ollama/ollama/releases/tag/v0.40.13",
+      "fetched_at": "2026-10-29T17:13:41+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "ollama run gemma4",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "ollama run gemma4",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Access the latest releases locally or in the cloud with complete privacy.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Start building with open models. Access the latest releases locally or in the cloud with complete privacy.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Ollama",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "release:v0.40.13",
+      "quote": "now run on Linux and Windows as well as Apple silicon.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T17:14:36+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T17:14:36+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T17:14:36+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T17:14:36+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T17:14:36+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.40.13",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T17:13:41+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Run and chat with [Gemma 4](https://ollama.com/library/gemma4):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Ollama has a REST API for running and managing models.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "to turn Ollama into a personal AI assistant across WhatsApp, Telegram, Slack, Discord, and more:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://ollama.com/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://ollama.com/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://ollama.com/install.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Access the latest releases locally or in the cloud with complete privacy.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T17:13:39+08:00",
+  "updated_at": "2026-10-29T17:31:53+08:00"
+}

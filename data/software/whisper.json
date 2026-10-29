@@ -1,0 +1,466 @@
+{
+  "schema_version": "software.v1",
+  "slug": "whisper",
+  "repo_id": "gh:537603333",
+  "name": "Whisper",
+  "summary": "General-purpose speech recognition model for transcription, translation and language ID.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "transcribe speech in audio files",
+    "translate non-English speech into English",
+    "identify spoken language",
+    "transcribe English speech"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/openai/whisper",
+    "full_name": "openai/whisper",
+    "created_at": "2022-09-16T20:02:54Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.8-3.11"
+    ],
+    "system_packages": [
+      "ffmpeg",
+      "rust"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-whisper-20261029-172450-ae8f",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install openai-whisper",
+          "purpose": "Install openai-whisper with uv tool"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/ffdl && curl -fL -o /tmp/ffdl/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz && tar -xf /tmp/ffdl/ffmpeg.tar.xz -C /tmp/ffdl && cp /tmp/ffdl/ffmpeg-*-amd64-static/ffmpeg ~/.local/bin/ffmpeg && chmod +x ~/.local/bin/ffmpeg && ~/.local/bin/ffmpeg -version",
+          "purpose": "Provide ffmpeg via static binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "whisper --help",
+        "expected_signal": "--model"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v20250625",
+    "published_at": "2025-06-26T01:06:09Z",
+    "url": "https://github.com/openai/whisper/releases/tag/v20250625"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T17:27:10.759624+08:00",
+    "runs": [
+      {
+        "id": "verify-whisper-20261029-172450-ae8f",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T17:27:10.759624+08:00",
+        "tool_version": "20250625",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install openai-whisper",
+            "purpose": "Install openai-whisper with uv tool"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/ffdl && curl -fL -o /tmp/ffdl/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz && tar -xf /tmp/ffdl/ffmpeg.tar.xz -C /tmp/ffdl && cp /tmp/ffdl/ffmpeg-*-amd64-static/ffmpeg ~/.local/bin/ffmpeg && chmod +x ~/.local/bin/ffmpeg && ~/.local/bin/ffmpeg -version",
+            "purpose": "Provide ffmpeg via static binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "whisper --help",
+            "expected_signal": "--model",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: whisper [-h] [--model MODEL] [--model_dir MODEL_DIR] [--device DEVICE]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install -U openai-whisper",
+            "actually_needed": "uv tool install openai-whisper (isolated install avoids PEP 668 / read-only system Python)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "sudo apt update && sudo apt install ffmpeg",
+            "actually_needed": "downloaded static ffmpeg 7.0.2 from johnvansickle.com to ~/.local/bin/ffmpeg with ~/.local/bin on PATH (no root/sudo in box)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Python 3.8-3.11 required",
+            "actually_needed": "Python 3.12.16 works for install and --help",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows whisper --help printing full usage including the --model option.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-whisper-20261029-172450-ae8f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-whisper-20261029-172450-ae8f/check-1-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.084069
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-29T17:31:53+08:00",
+    "quality": {
+      "total": 52.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.357,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.455,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 111511,
+        "monthly_downloads": 4986176,
+        "forks": 13505,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 568,
+        "registries_count": 1
+      },
+      "age_days": 1503,
+      "packages": [
+        "pypi:openai-whisper"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0,
+      "excluded": "well_known"
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:31:53.748963+08:00",
+      "sources_sha": "7effa2ac6fcdf92279ec880f49bb293e9d805a425957d4d9c054f40bb289055c",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "It is trained on a large dataset of diverse audio and is also a multitasking model that can perform multilingual speech recognition, speech translation, and language identification."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "We used Python 3.9.9 and [PyTorch](https://pytorch.org/) 1.10.1 to train and test our models"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "# on Ubuntu or Debian\nsudo apt update && sudo apt install ffmpeg"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "whisper audio.flac audio.mp3 audio.wav --model turbo"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "export PATH=\"$HOME/.cargo/bin:$PATH\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "pip install --upgrade --no-deps --force-reinstall git+https://github.com/openai/whisper.git"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Whisper's code and model weights are released under the MIT License."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "well_known": {
+    "basis": "homebrew_installs_on_request_365d",
+    "package": "homebrew:openai-whisper",
+    "rank": 158,
+    "count": 115473,
+    "max_rank": 1000,
+    "period_start": "2025-10-29",
+    "period_end": "2026-10-29",
+    "source_url": "https://formulae.brew.sh/api/analytics/install-on-request/365d.json",
+    "checked_at": "2026-10-29T09:14:25Z"
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/openai/whisper",
+      "fetched_at": "2026-10-29T17:18:53+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/openai/whisper/blob/main/README.md",
+      "fetched_at": "2026-10-29T17:18:55+08:00"
+    },
+    {
+      "id": "release:v20250625",
+      "kind": "release",
+      "url": "https://github.com/openai/whisper/releases/tag/v20250625",
+      "fetched_at": "2026-10-29T17:18:55+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "The following command will transcribe speech in audio files, using the `turbo` model:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "The following command will transcribe speech in audio files",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Below are the names of the available models and their approximate memory requirements and inference speed",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Whisper is a general-purpose speech recognition model.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Whisper",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "the codebase is expected to be compatible with Python 3.8-3.11 and recent PyTorch versions.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "It also requires the command-line tool [`ffmpeg`](https://ffmpeg.org/) to be installed on your system",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "You may need [`rust`](http://rust-lang.org) installed as well",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T17:18:53+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T17:18:53+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T17:18:53+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v20250625",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T17:18:55+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "The following command will transcribe speech in audio files",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "To **translate** speech into English, use:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "including multilingual speech recognition, speech translation, spoken language identification",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "for transcribing English. However, **the `turbo` model is not trained for translation tasks**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "model = whisper.load_model(\"turbo\")",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T17:21:47+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T17:18:53+08:00",
+  "updated_at": "2026-10-29T17:31:53+08:00"
+}
