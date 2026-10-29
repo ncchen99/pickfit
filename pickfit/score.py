@@ -1,4 +1,4 @@
-"""Scores (P5.1, arch B.3): quality, popularity and treasure, kept apart, formula "b3.v3".
+"""Scores (P5.1, arch B.3): quality, popularity and treasure, kept apart, formula "b3.v4".
 
 quality (0-100) is a weighted mean of six components, each 0-1:
 
@@ -6,10 +6,12 @@ quality (0-100) is a weighted mean of six components, each 0-1:
   failed run 0; no run: no data. Depth is how far the run got (VERIFICATION_DEPTH, per category:
   a dev CLI is fully checked at function, a local AI tool at inference). Step tiers: <=3 install
   actions 1.0, 4-6 0.85, more 0.7. Actions are counted inside the recorded steps, which chain
-  commands with && (install_actions); looking around (ls, head, wc, --version) is not an action.
-  A pitfall counts as a README fix unless pickfit's box explains it (no root, no toolchains,
-  scripts read first, no GPU or Docker...) or it is only about pickfit's --version/--help
-  check (readme_fix).
+  commands with && (install_actions); looking around (ls, head, wc, --version, a VAR=$(...) that
+  only looks) is not an action, and heredoc lines are file content. A pitfall counts as a README
+  fix unless pickfit's box explains it (no root, no toolchains, scripts read first, no GPU,
+  Docker, keys or configuration...), it says the README was right or the tool did the step by
+  itself, it follows from a step the box blocked, or it is only about pickfit's --version/--help
+  check (readme_fixes).
 - install_docs 25: muse-spark-1.3 grades the README against B.3's 8-item rubric (0/1/2 each,
   points / 16). Every item above 0 needs a verbatim quote; an item whose quote is not in the
   sources counts 0. The answer is kept in scores.docs_rubric and reused while the sources stay
@@ -34,6 +36,10 @@ each category under b3.v3) and popularity <= 45; T = quality * (1 - popularity/1
 
 b3.v3 moved weight from maintenance and hygiene (near 1.0 for almost every record, since
 discovery takes young, active repos) to the sandbox run and the docs rubric, which do vary.
+b3.v4 fixes what a review found: README fixes that were not, look-around assignments counted as
+actions, missing download counts stored as 0, partial download sums, and HN stories matched on a
+bare personal or company domain. A rescore with --no-github or --no-registries keeps the stored
+responsiveness and registry signals.
 
 Inputs are the record, the GitHub snapshot it was built from (runs/pipeline.db; fetched live
 when the pipeline database does not hold the repo), one REST call for issues and the registry
@@ -78,7 +84,7 @@ from pickfit.schema import (
     usage_outcomes_weight,
 )
 
-FORMULA_VERSION = "b3.v3"
+FORMULA_VERSION = "b3.v4"
 STAGE = "score-rubric"
 REASONING_EFFORT = "low"
 MAX_OUTPUT_TOKENS = 8_000  # reasoning shares it; at effort low one call used 4,000 and ran out
@@ -160,26 +166,79 @@ _CHECK_ARGS = frozenset({"--version", "-V", "version", "--help", "-h", "help"})
 _QUERIES = frozenset({"view", "info", "show", "list", "ls", "search", "outdated"})
 
 
+_HEREDOC = re.compile(r"<<-?\s*(['\"]?)(\w+)\1")
+
+
+def _strip_heredocs(text: str) -> str:
+    """Drop heredoc bodies: their lines are file content, not commands."""
+    lines, out, i = text.split("\n"), [], 0
+    while i < len(lines):
+        out.append(lines[i])
+        m = _HEREDOC.search(lines[i])
+        i += 1
+        if m:
+            while i < len(lines) and lines[i].strip() != m.group(2):
+                i += 1
+            i += 1
+    return "\n".join(out)
+
+
+def _substitution(value: str) -> str | None:
+    """The command inside a value that is one $(...) or `...` (optionally in double quotes), else None."""
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] == '"':
+        value = value[1:-1].strip()
+    if value.startswith("`") and value.endswith("`") and value.count("`") == 2:
+        return value[1:-1]
+    if not value.startswith("$("):
+        return None
+    depth = 0
+    for i, c in enumerate(value):
+        depth += c == "("
+        depth -= c == ")"
+        if depth == 0 and i > 1:
+            return value[2:i] if i == len(value) - 1 else None
+    return None
+
+
+def _written(words: list[str], prog: str) -> list[str]:
+    """Files a segment writes: redirection targets (not /dev/*, not 2>&1), and tee's arguments."""
+    out = []
+    for i, w in enumerate(words):
+        m = re.fullmatch(r"\d?>>?(.*)", w)
+        if m and not m.group(1).startswith("&"):
+            target = m.group(1) or (words[i + 1] if i + 1 < len(words) else "")
+            if target and not target.startswith("/dev/"):
+                out.append(target)
+    if prog == "tee":
+        out += [w for w in words[1:] if not w.startswith("-") and not re.match(r"\d?>", w)]
+    return out
+
+
 def _acts(segment: str) -> bool:
-    """Does one pipeline segment change the box (download, install, link, set PATH)?"""
+    """Does one pipeline segment change the box (download, install, link, write config, set PATH)?"""
+    m = re.fullmatch(r"\s*([A-Za-z_]\w*)=(.*)", segment, re.S)
+    if m and (inner := _substitution(m.group(2))) is not None:
+        return install_actions([inner]) > 0  # VAR=$(...) acts only if its command does
     try:
         words = shlex.split(segment)
     except ValueError:
         words = segment.split()
-    words = [w for w in words if not re.match(r"\d*[<>]", w)]
     while words and re.match(r"[A-Za-z_]\w*=", words[0]):
         if len(words) == 1:
-            return True  # VERSION=$(curl ...): part of the recipe
+            return False  # VAR=value sets a shell variable only
         words = words[1:]
     if not words:
         return False
-    prog, args = words[0].rsplit("/", 1)[-1], words[1:]
+    prog = words[0].rsplit("/", 1)[-1]
+    written = _written(words, prog)
+    args = [w for w in words[1:] if not re.match(r"\d?[<>]", w) and w not in written]
     if prog in _LOOKS or (prog == "sed" and "-i" not in args):
-        return False
+        return any(not t.startswith("/tmp/") for t in written)  # cat > ~/.config/x.toml writes config
     if prog.startswith("python") and args[:1] == ["-c"]:
         return False
-    if prog == "curl" and not any(a in ("--output", "--remote-name") or re.fullmatch(r"-[A-Za-z]*[oO][A-Za-z]*", a)
-                                  for a in args):
+    if prog == "curl" and not written and not any(
+            a in ("--output", "--remote-name") or re.fullmatch(r"-[A-Za-z]*[oO][A-Za-z]*", a) for a in args):
         return False  # prints only; piped into a shell, the shell is the action
     if args and set(args) <= _CHECK_ARGS:
         return False  # tool --version, go version
@@ -194,26 +253,33 @@ def install_actions(commands: list[str]) -> int:
 
     `curl -o x && wc -c x && head x` is one action; `mkdir && curl -o && chmod +x` is three.
     """
-    return sum(1 for command in commands for statement in _split(command, ("&&", "||", ";", "\n"))
+    return sum(1 for command in commands for statement in _split(_strip_heredocs(command), ("&&", "||", ";", "\n"))
                if any(_acts(seg) for seg in _split(statement, ("|",))))
 
 
 # Pitfalls that pickfit's box explains, not the README (pickfit/verify/agent.py): the agent is not
 # root, may not install language toolchains and reads a downloaded script before running it; system
-# pip is externally managed; the box has no GPU, Docker, systemd, browser, terminal, account, key or
-# model server; and smoke tests use pickfit's tiny models.
+# pip is externally managed; the box is a fresh install with no GPU, Docker, systemd, browser,
+# terminal, account, keys, configuration or model server; and smoke tests use pickfit's tiny models.
 _BOX_PITFALL = re.compile(
     r"\bsudo\b|\bnon-root\b|\b(?:without|no) root\b|/usr/local/bin|\bapt(?:-get)?\b|\.deb\b|\bdpkg\b"
     r"|\b(?:go|cargo) (?:install|get|build)\b|\btoolchains?\b|\b(?:Rust|Go) \d"
     r"|\bPEP ?668\b|externally[- ]managed"
     r"|\b(?:GPU|CUDA|NVIDIA|VRAM|Docker|systemd|systemctl|Ollama|browser|TTY|stdin|interactive|prompts?)\b"
-    r"|\blog(?:ged)? ?in\b|\baccount\b|\bAPI keys?\b"
+    r"|\blog(?:ged)? ?in\b|\baccount\b|\bkeys?\b|\bcredentials\b|\bsecrets\b"
+    r"|\bunconfigured\b|\bnot configured\b|\bfresh install\b"
     r"|\bmodel server\b|\bin (?:the |this )?box\b|\b(?:the|this) box\b|\bbox has no\b|\b\d+(?:\.\d+)? ?GB\b"
     r"|\bstories260K\b|\bSmolLM",
     re.I)
-# The README asked for more than was needed, or the tool did it by itself: nothing to correct.
-_NOT_NEEDED = re.compile(r"\b(?:not|no \w+) (?:needed|required)\b|\bworks without\b|\bautomatically\b|\bauto-\w+",
-                         re.I)
+# The README was right, the tool did the step by itself, or the pitfall is only a note: nothing to
+# correct. (The verify agent records every difference from the README, not only wrong ones.)
+_NOT_A_FIX = re.compile(
+    r"\b(?:not|no \w+) (?:needed|required)\b|\bworks without\b|\bautomatically\b|\bauto-\w+"
+    r"|\bby itself\b|\bon its own\b"
+    r"|\bfirst (?:\w+ )?(?:run|invocation|use|call)\b[^.;]*\b(?:downloads?|fetch(?:es)?|creates?|installs?)\b"
+    r"|\bworked (?:despite|as)\b|\bas (?:documented|written)\b|\b(?:correct|expected) (?:\w+ )?behaviou?r\b"
+    r"|\bnot an install failure\b|\bnewer than\b|\bolder than\b|\bresolved [\w.-]+==",
+    re.I)
 _PIPED_INSTALLER = re.compile(r"\|\s*(?:ba|z)?sh\b")
 _FAILED = re.compile(r"\bfail|\berror\b|\bexits? [1-9]|\b404\b|\bnot found\b|\bmissing\b|\bbroken\b|\bwrong\b"
                      r"|\bpanics?\b|\bcrash", re.I)
@@ -226,11 +292,25 @@ _INSTALL_WORDS = re.compile(r"\b(?:npm|pnpm|bun|yarn|pip3?|pipx|uv|cargo|brew|go
 def readme_fix(pitfall: Pitfall) -> bool:
     """B.3's "had to correct the README to succeed": a pitfall the box and pickfit's checks do not explain."""
     said, needed = pitfall.readme_said, pitfall.actually_needed
-    if _BOX_PITFALL.search(f"{said} {needed}") or _NOT_NEEDED.search(needed):
+    if _BOX_PITFALL.search(f"{said} {needed}") or _NOT_A_FIX.search(needed):
         return False
     if _PIPED_INSTALLER.search(said) and not _FAILED.search(needed):
         return False  # the agent downloads and reads a piped installer first
     return not (_CHECK_PITFALL.search(said) and not _INSTALL_WORDS.search(said))
+
+
+def _command_key(text: str) -> str | None:
+    words = re.sub(r"[`'\"]", " ", text).lower().split()
+    return " ".join(words[:2]) if len(words) >= 2 else None
+
+
+def readme_fixes(pitfalls: list[Pitfall]) -> int:
+    """README fixes in one run. A pitfall that only follows from a step the box blocked (`serve` fails
+    because `generate` needs a model server) is the box's too."""
+    blocked = {key for p in pitfalls if _BOX_PITFALL.search(f"{p.readme_said} {p.actually_needed}")
+               and (key := _command_key(p.readme_said))}
+    return sum(1 for p in pitfalls if readme_fix(p)
+               and not any(key in p.actually_needed.lower() for key in blocked))
 
 
 # How much of the tool a passed run proved (C.3). A dev CLI is fully checked once a README example
@@ -251,7 +331,7 @@ def sandbox_score(verification: Verification, category: str) -> float | None:
             continue
         n = install_actions([s.command for s in run.steps])
         tier = 1.0 if n <= 3 else 0.85 if n <= 6 else 0.7
-        fixes = sum(1 for p in run.pitfalls if readme_fix(p))
+        fixes = readme_fixes(run.pitfalls)
         score = round(depth[run.level] * tier * README_FIX_FACTOR ** fixes, 4)
         best = score if best is None else max(best, score)
     if best is not None:
@@ -474,16 +554,33 @@ def snapshot_time(snapshot: dict[str, Any], fallback: datetime) -> datetime:
     return _time(snapshot.get("details_at") or snapshot.get("last_seen_at")) or fallback
 
 
+def kept_registry(scores: Any) -> Any:
+    """The registry and HN signals as stored, for a rescore that does not look them up again."""
+    from pickfit.registries import RegistrySignals
+
+    signals = scores.popularity.signals
+    return RegistrySignals(monthly_downloads=signals.monthly_downloads, registries_count=signals.registries_count,
+                           hn_top_score=signals.hn_top_score, packages=list(scores.popularity.packages))
+
+
 def build_scores(record: SoftwareRecord, snapshot: dict[str, Any] | None, issues: list[dict[str, Any]] | None,
-                 rubric: DocsRubric | None, *, now: datetime, registry: Any = None) -> dict[str, Any]:
-    """The scores object for a record; missing inputs leave their components or signals null."""
+                 rubric: DocsRubric | None, *, now: datetime, registry: Any = None,
+                 kept: Any = None) -> dict[str, Any]:
+    """The scores object for a record. Inputs that were not fetched (issues None, registry None) come
+    from `kept`, the stored scores, when given; otherwise their components or signals stay null."""
     as_of = snapshot_time(snapshot, now) if snapshot else now
+    if issues is None and kept is not None:
+        responsiveness = kept.quality.components.responsiveness.score
+    else:
+        responsiveness = responsiveness_score(issues, as_of)
+    if registry is None and kept is not None:
+        registry = kept_registry(kept)
     components: dict[str, float | None] = {
         "sandbox_verification": sandbox_score(record.verification, record.category),
         "install_docs": round(rubric.items.score(), 4) if rubric else None,
         "maintenance": maintenance_score(snapshot, as_of) if snapshot else None,
         "engineering_hygiene": hygiene_score(snapshot, record.open_source) if snapshot else None,
-        "responsiveness": responsiveness_score(issues, as_of),
+        "responsiveness": responsiveness,
         "usage_outcomes": usage_score(record.outcomes),
     }
     cap_reason = binding_cap(record.kind, record.repo.archived, record.verification.level)
@@ -721,7 +818,8 @@ def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: st
             row["rubric"] = "reused"
     elif rubric is not None:
         row["rubric"] = "kept"  # no README to grade now: keep the earlier answer
-    scores = build_scores(record, snapshot, issues, rubric, now=now, registry=registry)
+    # --no-github and --no-registries keep what was measured before instead of blanking it.
+    scores = build_scores(record, snapshot, issues, rubric, now=now, registry=registry, kept=old)
     row.update(quality=scores["quality"]["total"], confidence=scores["quality"]["confidence"],
                cap_reason=scores["quality"]["cap_reason"], popularity=scores["popularity"]["score"],
                treasure=scores["treasure"]["is_treasure"], treasure_value=scores["treasure"]["value"],
