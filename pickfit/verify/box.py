@@ -111,7 +111,7 @@ class Box(ABC):
     # How the agent's instructions name the box and the box user's limits.
     kind: str = "Linux sandbox"
     user_rule: str = "You are not root: no sudo, no apt-get, nothing written outside $HOME and /tmp."
-    setsid: str = "setsid"  # detaches run_background processes into their own session
+    detach: str = "setsid nohup"  # starts run_background processes in their own session, immune to SIGHUP
 
     def describe(self) -> str:
         """The box line of the agent's task: OS, user, paths and what is installed."""
@@ -157,17 +157,18 @@ class Box(ABC):
 
 
 def background_script(command: str, port: int | None, wait_s: int, tag: int | str, *,
-                      setsid: str = "setsid") -> str:
+                      detach: str = "setsid nohup") -> str:
     """Bash that starts `command` detached with its output in a log, then waits for it.
 
     With a port, it waits up to wait_s for 127.0.0.1:port to accept connections;
     without one, a few seconds to see that the process is still alive. Prints
     the pid (also the process group: setsid) and the log tail; exits 0 only if
-    the process came up. The agent and the replay run the same script; `setsid`
-    is the box's own detach command (macOS has none, so TartBox brings one).
+    the process came up. The agent and the replay run the same script; `detach`
+    is the box's own way to start it (macOS has no setsid, and its nohup fails
+    outside a console session, so TartBox brings a helper).
     """
     log = f"$HOME/.pickfit-bg/{tag}.log"
-    start = (f"mkdir -p $HOME/.pickfit-bg && {setsid} nohup bash -c {shlex.quote(command)} "
+    start = (f"mkdir -p $HOME/.pickfit-bg && {detach} bash -c {shlex.quote(command)} "
              f"> {log} 2>&1 < /dev/null & P=$!; echo \"pid $P\"; ")
     if port:
         probe = (f"for i in $(seq 1 {max(wait_s, 1)}); do "

@@ -9,13 +9,16 @@
 - Model commands run as `sbx`, a standard macOS user (not an admin, no sudo)
   that owns the Homebrew prefix, so `brew install` works without root. Each
   command runs under `ulimit` caps and an in-guest timeout that kills its
-  process group (macOS has no `timeout` or `setsid`; small helpers in a
-  root-owned directory stand in). The VM's own CPU, memory and disk are the
+  process group (macOS has no `timeout` or `setsid`, and its `nohup` fails
+  outside a console session; small helpers in a root-owned directory stand in). The VM's own CPU, memory and disk are the
   outer caps; macOS enforces no per-process memory limit.
 - Network: the guest's pf firewall, loaded as root by the harness, blocks
   private ranges, link-local (cloud metadata) and the host (only DNS to the
-  resolver is allowed), and IPv6. set_network(False) blocks everything but
-  loopback and drops existing connections. sbx cannot change pf.
+  resolver is allowed), and IPv6. DNS is pinned to the IPv4 resolver (the
+  VM's gateway): vmnet also hands out an IPv6 link-local resolver first, and
+  with IPv6 blocked every lookup waited 3 s for it (measured 2026-10-29).
+  set_network(False) blocks everything but loopback and drops existing
+  connections. sbx cannot change pf.
 - Apple allows at most two macOS VMs at once per Mac, and an open bug
   (FB22967193, reported on macOS 26.5) can leave the limit "used up" until the
   host reboots: run one box at a time, and stop when start() reports it.
@@ -72,7 +75,9 @@ MAC_ENV = {
     "HOMEBREW_NO_ANALYTICS": "1",
     "HOMEBREW_NO_ENV_HINTS": "1",
 }
-GUEST_PYTHON = "/usr/bin/python3"  # the Command Line Tools' Python; Homebrew needs the CLT, so it is there
+# The Command Line Tools' Python (Homebrew needs the CLT, so it is there), called directly: the /usr/bin/python3
+# shim goes through xcrun, which adds SDKROOT, CPATH, LIBRARY_PATH and MANPATH that every command would inherit.
+GUEST_PYTHON = "/Library/Developer/CommandLineTools/usr/bin/python3"
 HELPER_DIR = "/usr/local/libexec/pickfit"  # root-owned: the box user cannot replace the helpers
 # timeout <seconds> <argv...>: runs argv in its own session, kills that process group at the deadline
 # and exits 137 like `timeout -s KILL`; a signal death exits 128+N like bash.
@@ -91,21 +96,24 @@ except subprocess.TimeoutExpired:
     sys.exit(137)
 sys.exit(128 - code if code < 0 else code)
 """
-# setsid <argv...>: like util-linux setsid without the fork; run_background's process gets its own session.
-HELPER_SETSID = """\
-import os, sys
+# detach <argv...>: `setsid nohup` for macOS. util-linux setsid without the fork, then SIGHUP ignored;
+# macOS's own nohup exits with "can't detach from console" outside a GUI session (measured 2026-10-29).
+HELPER_DETACH = """\
+import os, signal, sys
 try:
     os.setsid()
 except OSError as err:
-    print(f"setsid: {err}; running in the current session", file=sys.stderr)
+    print(f"detach: {err}; running in the current session", file=sys.stderr)
+signal.signal(signal.SIGHUP, signal.SIG_IGN)
 os.execvp(sys.argv[1], sys.argv[1:])
 """
 TIMEOUT_CMD = f"{GUEST_PYTHON} -I {HELPER_DIR}/timeout"
-SETSID_CMD = f"{GUEST_PYTHON} -I {HELPER_DIR}/setsid"
+DETACH_CMD = f"{GUEST_PYTHON} -I {HELPER_DIR}/detach"
 # Never reachable from the box: the same ranges as ModalBox, plus all of IPv6 (vmnet gives the guest none
 # that it needs). The host sits on 192.168.64.0/24, so it is covered.
 BLOCKED_NETS = ("0.0.0.0/8", "10.0.0.0/8", "100.64.0.0/10", "169.254.0.0/16", "172.16.0.0/12",
                 "192.168.0.0/16", "224.0.0.0/4", "240.0.0.0/4")
+ROOT_PATH = "PATH=/usr/bin:/bin:/usr/sbin:/sbin; export PATH"
 AGENT_WAIT_S = 240
 NETWORK_WAIT_S = 60
 STALE_S = 3 * 3600  # a running pf-verify VM older than this was left by a dead process
@@ -120,7 +128,7 @@ def pf_rules(online: bool, resolvers: list[str]) -> str:
     lines = ["set skip on lo0",
              "block drop in all",
              "pass in quick inet proto udp from any port 67 to any port 68",  # DHCP replies
-             "block drop out quick inet6 all"]
+             "block return out quick inet6 all"]  # fail fast, so clients fall back to IPv4 at once
     if resolvers:
         lines.append(f"pass out quick inet proto {{ tcp, udp }} to {{ {', '.join(resolvers)} }} port 53")
     lines += ["pass out quick inet proto udp from any port 68 to any port 67",
@@ -188,7 +196,7 @@ class TartBox(Box):
     kind = "macOS virtual machine"
     user_rule = ("You are a standard macOS user, not an admin: no sudo, nothing written outside $HOME, /tmp and "
                  "the Homebrew prefix /opt/homebrew (yours, so brew install needs no sudo).")
-    setsid = SETSID_CMD
+    detach = DETACH_CMD
 
     def __init__(self, *, base: str = BASE_VM, limits: BoxLimits = BoxLimits(), cpus: int = 4,
                  memory_mb: int = 8192, name: str | None = None, tart: str = TART,
@@ -273,23 +281,34 @@ class TartBox(Box):
                 text = self.vm_log.read_text(errors="replace")[-800:]
                 hint = f" {VM_LIMIT_HINT}" if re.search(r"LimitExceeded|maximum number|limit", text, re.I) else ""
                 raise BoxError(f"tart run exited with {self.vm_proc.returncode}: {text.strip()}{hint}")
-            probe = self._tart("exec", self.name, "true", timeout_s=20)
+            try:
+                probe = self._tart("exec", self.name, "true", timeout_s=20)
+            except BoxError:  # measured: early in boot, exec can hang instead of failing
+                continue
             if probe.returncode == 0:
                 return
             time.sleep(2)
         raise BoxError(f"the guest agent did not answer within {AGENT_WAIT_S}s")
 
     def _root(self, script: str, timeout_s: int = 60) -> subprocess.CompletedProcess[str]:
-        """Harness-only root command (helpers, firewall); never used for model commands."""
-        return self._tart("exec", self.name, "sudo", "-n", "/bin/sh", "-c", script, timeout_s=timeout_s + 15)
+        """Harness-only root command (helpers, firewall); never used for model commands.
+
+        The guest agent runs as `admin` (passwordless sudo) with a PATH that lacks /sbin and /usr/sbin.
+        """
+        return self._tart("exec", self.name, "sudo", "-n", "/bin/sh", "-c", f"{ROOT_PATH}\n{script}",
+                          timeout_s=timeout_s + 15)
 
     def _setup(self) -> None:
         """Helpers, the firewall and the work dir, as root, before any model command."""
-        wait = (f"for i in $(seq 1 {NETWORK_WAIT_S}); do route -n get default >/dev/null 2>&1 && break; "
-                "sleep 1; done; scutil --dns | awk '/nameserver\\[[0-9]+\\]/ {print $3}' | sort -u")
-        net = self._root(wait, NETWORK_WAIT_S + 10)
+        pin = (f"for i in $(seq 1 {NETWORK_WAIT_S}); do route -n get default >/dev/null 2>&1 && break; "
+               "sleep 1; done; gw=$(route -n get default | awk '/gateway:/ {print $2}'); "
+               "svc=$(networksetup -listallnetworkservices | sed -n 2p); "
+               "networksetup -setdnsservers \"$svc\" \"$gw\" && echo \"$gw\"")
+        net = self._root(pin, NETWORK_WAIT_S + 20)
         self.resolvers = [ip for ip in net.stdout.split() if re.fullmatch(r"\d+\.\d+\.\d+\.\d+", ip)]
-        files = {"timeout": HELPER_TIMEOUT, "setsid": HELPER_SETSID,
+        if net.returncode != 0 or not self.resolvers:
+            raise BoxError(f"guest network did not come up: {(net.stdout + net.stderr).strip()[-300:]}")
+        files = {"timeout": HELPER_TIMEOUT, "detach": HELPER_DETACH,
                  "pf-online.conf": pf_rules(True, self.resolvers), "pf-offline.conf": pf_rules(False, [])}
         script = [f"set -e; mkdir -p {HELPER_DIR}"]
         for name, text in files.items():

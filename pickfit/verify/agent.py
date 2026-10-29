@@ -771,7 +771,7 @@ class VerifyAgent:
         n = self.commands_used
         wait = max(0, min(args.wait_s, BACKGROUND_WAIT_S))
         self._say(f"  & {_one_line(args.command, 200)}   [cmd {n}/{self.limits.max_commands}]")
-        script = background_script(args.command, args.port, wait, n, setsid=self.box.setsid)
+        script = background_script(args.command, args.port, wait, n, detach=self.box.detach)
         result = self.box.exec(script, self._timeout(wait + 15))
         hints = match_rules(args.command, result.exit_code, result.stdout, result.stderr)
         self._record(turn, "run_background", args.command, result, hints, port=args.port, wait_s=wait)

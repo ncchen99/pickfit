@@ -152,7 +152,7 @@ class Replayer:
         if cmd.tool == "run_background":
             wait = min(cmd.wait_s or 30, BACKGROUND_WAIT_S)
             result = self.box.exec(background_script(cmd.command, cmd.port, wait, f"replay-{cmd.command_id}",
-                                                     setsid=self.box.setsid),
+                                                     detach=self.box.detach),
                                    wait + 15)
         else:
             result = self.box.exec(cmd.command, min(self.timeout, replay_timeout(cmd.seconds)))

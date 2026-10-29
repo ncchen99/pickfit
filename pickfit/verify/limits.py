@@ -84,7 +84,7 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
     if macos:  # dropped, not refused: a refusal would mean the packet reached the host
         add(_probe(box, "host_blocked", "curl -sS -m 5 http://$(route -n get default | awk '/gateway/ {print $2}'):22/",
                    20, "the host (the VM's gateway) times out", lambda r: r.exit_code == 28))
-    box.exec(f"{box.setsid} nohup python3 -m http.server 8765 --bind 127.0.0.1 >/dev/null 2>&1 < /dev/null & "
+    box.exec(f"{box.detach} python3 -m http.server 8765 --bind 127.0.0.1 >/dev/null 2>&1 < /dev/null & "
              "sleep 2", 20)
     box.set_network(False)
     try:

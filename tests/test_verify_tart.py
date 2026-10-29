@@ -46,7 +46,7 @@ if cmd == "exec":
     if "-i" in args:
         open(os.path.join(here, "stdin.bin"), "wb").write(sys.stdin.buffer.read())
     script = args[-1]
-    if "scutil --dns" in script:
+    if "networksetup -setdnsservers" in script:
         print("192.168.64.1")
     elif "pfctl -s info" in script:
         print("Status: Enabled for 0 days 00:00:01")
@@ -94,7 +94,7 @@ def test_start_clones_boots_sets_up_as_root_and_close_deletes(fake_tart: Path, s
     setup = root[-1][-1]
     assert "pfctl -q -f /usr/local/libexec/pickfit/pf-online.conf" in setup
     assert "192.168.64.1" in setup and "block drop out quick inet to" in setup  # resolver allowed, LAN not
-    assert "os.killpg" in setup and "os.setsid()" in setup  # the timeout and setsid helpers
+    assert "os.killpg" in setup and "os.setsid()" in setup and "SIG_IGN" in setup  # timeout and detach helpers
     assert box.started and box.image.startswith("cirruslabs/macos-tahoe-base@sha256:0123456789ab macOS 26.6.2")
     box.close()
     assert _calls(fake_tart)[-2:] == [["stop", "pf-verify-1-abc", "--timeout", "10"], ["delete", "pf-verify-1-abc"]]
@@ -129,8 +129,8 @@ def test_network_cut_swaps_pf_rules_and_drops_open_connections(fake_tart: Path, 
     box = _box(fake_tart, state_dir)
     box.start()
     box.set_network(False)
-    assert _calls(fake_tart)[-1][-1] == ("pfctl -q -f /usr/local/libexec/pickfit/pf-offline.conf && "
-                                         "pfctl -q -F states")
+    assert _calls(fake_tart)[-1][-1] == (f"{tb.ROOT_PATH}\npfctl -q -f /usr/local/libexec/pickfit/pf-offline.conf"
+                                         " && pfctl -q -F states")
     assert box.network_enabled is False
     box.set_network(True)
     assert "pf-online.conf" in _calls(fake_tart)[-1][-1] and box.network_enabled
@@ -195,7 +195,7 @@ def test_pf_rules_block_local_networks_online_and_everything_offline():
     online = pf_rules(True, ["192.168.64.1"])
     assert online.startswith("set skip on lo0\n")
     assert "pass out quick inet proto { tcp, udp } to { 192.168.64.1 } port 53" in online
-    assert "169.254.0.0/16" in online and "192.168.0.0/16" in online and "block drop out quick inet6 all" in online
+    assert "169.254.0.0/16" in online and "192.168.0.0/16" in online and "block return out quick inet6 all" in online
     assert online.rstrip().endswith("pass out inet all")
     assert pf_rules(False, ["192.168.64.1"]) == "set skip on lo0\nblock drop all\n"
 
@@ -208,7 +208,7 @@ def test_image_label_names_source_digest_and_guest():
 
 class MacFakeBox(FakeBox):
     os, arch, runner = "macos", "arm64", "tart-vz"
-    kind, user_rule, setsid = TartBox.kind, TartBox.user_rule, TartBox.setsid
+    kind, user_rule, detach = TartBox.kind, TartBox.user_rule, TartBox.detach
     home, workdir = "/Users/sbx", "/Users/sbx/work"
 
     def describe(self) -> str:
@@ -242,4 +242,4 @@ def test_macos_limits_probes_check_admin_firewall_and_host():
     results = {r.name: r for r in run_limits_test(box, log=lambda s: None)}
     assert results["non_admin"].ok and results["firewall_locked"].ok and results["host_blocked"].ok
     assert "memory_cap" not in results and "non_root" not in results
-    assert any(cmd.startswith(f"{tb.SETSID_CMD} nohup python3 -m http.server") for cmd, _ in box.ran)
+    assert any(cmd.startswith(f"{tb.DETACH_CMD} python3 -m http.server") for cmd, _ in box.ran)
