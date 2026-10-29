@@ -132,6 +132,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 - [x] P5.4 run page：從 trace 產生靜態 HTML（計畫內）。（10/29：`scripts/run_page.py`，用方向鍵逐步看一次驗證；範例用 mcp-audit。trace 在不進 git 的 `runs/`；失敗的 run 目前沒留 trace）
 - [x] P5.5 Meta 用量報表：從 trace 產生 README 與影片要用的數字。（10/29：`scripts/meta_usage.py`；02:46 時各 session 合計 1,429 次請求、80% 命中快取；沙盒驗證 79 次有 63 次通過並重播，每次中位數 73 秒、$0.048）
 - [ ] P5.6 👤 11/1 晚上 demo 主案＋2 個備案定案；挑影片「供給端」那一幕（arch H.4 的 1:55–2:30）要提交的第三方 repo：不能是自己的作品，而且**從未送進 pickfit**。
+- [ ] P5.7 產品網頁（交件前必做，見 brief 第 4.5 節）：使用者用一句自然語言搜尋，背後走和 MCP 同一份資料、同一套配對，回傳最適合的軟體，附理由、驗證結果與安裝方式；呈現 pickfit 的品牌與設計。demo 從 agent 帶到網頁現場（brief 第 5 節第 7 幕）。11/2 晚上功能凍結前完成；來不及就縮成只有搜尋與結果頁，不砍。
 
 **11/1 完成標準**：≥30 筆 verified（目標 50），每筆有分開的品質、知名度、寶藏分數；在 Claude Code 用 `submit_software` 貼一個第三方 repo（**不能是 P5.6 留給錄影的那一個**），約 10 分鐘內出現在 `find_software`。
 
@@ -232,3 +233,4 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | 10/29 13:06 | P4.1、P4.2 | Worker 第一次正式部署（版本 `b53d4be6`，資料 commit `17924c7`、96 筆）：`https://pickfit-mcp.ncchen99.workers.dev/mcp`。遠端 D1 `pickfit` 建好並套用 0001、0002；`MODEL_API_KEY` 用 pipe 設成 secret。實測 5 個工具都在，問一題由 `muse-spark-1.3` 配對、沒有降級。新 57 筆的分數要等評分校正分支合併後再發布一次 | Worker 呼叫 1 次 |
 | 10/29 14:31 | P5.1 | 評分校正 `b3.v3` 併入 main（merge `408b8e6`）；408 個 Python、69 個 Worker 測試通過。96 筆只有分數欄位變了；寶藏 28 → 15 筆（CLI 8、本地 AI 7），demo 候選只剩 mcp-audit、phantom 有寶藏標記。另修：第一次部署讓 2 個發布測試失敗（`d94d8c3`）、registries.py 註解不再出現 ecosyste.ms（`63b20b4`）。Worker 重新發布（版本 `dd5fe5f4`）。審查 workflow 確認 6 個計分誤判（README 修正判斷、查不到下載量記成 0 等），交回 P5 session。部署後前兩次 `find_software` 因 `model_http` 退回規則排序，Worker 遇到這種錯誤不會重試 | Worker 呼叫 4 次 |
 | 10/29 14:47 | P5.1 | 評分 `b3.v4` 併入 main（merge `ca1767e`），修掉審查找到的 10 個問題：README 修正判斷從 21 筆降到 15 筆、檢查用指令不再算安裝步驟、查不到的下載量記成 null。5 筆品質和審查算出的正確值一致（second-brain 93.2、all-code 90.2 等）；寶藏仍 15 筆（second-brain 加入、babelscribe 移出），all-code 第一。420 個 Python、69 個 Worker 測試通過；Worker 重新發布（版本 `a186681b`）。Worker 模型呼叫的重試交給 P4.5 session（14:30 前後 Meta 間歇回 404「model not found」） | Meta $0（文件評分全部重用） |
+| 10/29 15:14 | P5.7 | 文件分支併入 main（merge `9a074a0`），只動 brief.md、hackathon-rules.md：補上重複造輪子的代價（維護、成本、token）、從使用者渴望描述（這場比賽實質是創新創業競賽，兩個面向都講）、收錄的兩條路（長期有很多開發者投稿，用同一套 agentic 審查）、影片要講的問題與長期規劃（brief 5.1）。念誠決定產品網頁改成交件前必做（自然語言搜尋、和 MCP 同一套平台、呈現品牌），新增 P5.7 | — |
