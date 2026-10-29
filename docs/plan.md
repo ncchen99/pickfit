@@ -126,7 +126,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 
 ### P5 計分、提交、回報閉環（11/1–11/2）
 
-- [x] P5.1 計分：規則分項＋`muse-spark-1.3` 文件 rubric＋寶藏分數（arch B.3，記 `formula_version`）。（10/29：`pickfit score`，公式 `b3.v1`；39 筆都有分開的品質、知名度、寶藏分數，已驗證的品質中位數 85，未驗證的壓在 69 以下；文件 rubric 每筆一次 1.3 呼叫，README 沒變就重用。待校正：寶藏分數分不開（25 筆已驗證有 22 筆算寶藏）、步驟數分級沒作用、知名度 7 項訊號有 4 項空白；校正由沒讀過 `eval/` 的 session 做）
+- [x] P5.1 計分：規則分項＋`muse-spark-1.3` 文件 rubric＋寶藏分數（arch B.3，記 `formula_version`）。（10/29：`pickfit score`，公式 `b3.v1`；39 筆都有分開的品質、知名度、寶藏分數，已驗證的品質中位數 85，未驗證的壓在 69 以下；文件 rubric 每筆一次 1.3 呼叫，README 沒變就重用。待校正：寶藏分數分不開（25 筆已驗證有 22 筆算寶藏）、步驟數分級沒作用、知名度 7 項訊號有 4 項空白；校正由沒讀過 `eval/` 的 session 做。同日校正為 `b3.v3`（念誠選方案 1、寶藏門檻 80）：沙盒分數看驗證深度與安裝難度、只有真的修 README 才扣分，知名度改用候選池第 95 百分位當基準並補上下載量、套件庫、HN；96 筆已驗證 67 筆，品質中位數 81.2，寶藏 15 筆。審查找到的誤判（README 修正判斷、查不到下載量記成 0）交回 P5 session 修）
 - [ ] P5.2 `pickfit watch`：每 60 秒讀 D1 `submissions` → 跑單筆管線 → publish。
 - [ ] P5.3 回報 → 重驗 → git diff（計畫內）。只用**真的**失敗（評測或 Mac 實裝時照指南失敗的那一筆）測試與展示，回報標 `reporter: dev`；不送捏造的失敗回報（arch H.4、B.3）。
 - [x] P5.4 run page：從 trace 產生靜態 HTML（計畫內）。（10/29：`scripts/run_page.py`，用方向鍵逐步看一次驗證；範例用 mcp-audit。trace 在不進 git 的 `runs/`；失敗的 run 目前沒留 trace）
@@ -230,3 +230,5 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | 10/29 12:12 | P2.6、P3.8 | 補本地 AI 與推論等級驗證兩個分支併入 main（merge `4944df7`）；388 個 Python、69 個 Worker 測試通過。新增 57 筆 profile（共 96 筆）；已驗證的本地 AI 工具 4 → 28 筆，其中 goinfer、xyntetik-runner 在沙盒實際載入小模型跑出推論；另多驗證 18 筆 CLI 工具。demo 第 10 筆改為 cluaiz。驗證加了 T4 GPU 選項（berth 只有裝假的 `nvidia-smi` 才過，維持未驗證）。新的 57 筆還沒評分 | Meta 累計 $12.09（10/29 $11.14）；這兩個 session 的 Modal 約 $0.31 |
 | 10/29 12:12 | — | **下一步**：新的 57 筆跑評分、寶藏分數校正（交給沒讀過 `eval/` 的 session）；寫回要擋掉「只在沙盒裡才需要的步驟」；部署 Worker 要念誠點頭；Mac 上親手驗 demo 前 3 筆（P6.4） | — |
 | 10/29 13:06 | P4.1、P4.2 | Worker 第一次正式部署（版本 `b53d4be6`，資料 commit `17924c7`、96 筆）：`https://pickfit-mcp.ncchen99.workers.dev/mcp`。遠端 D1 `pickfit` 建好並套用 0001、0002；`MODEL_API_KEY` 用 pipe 設成 secret。實測 5 個工具都在，問一題由 `muse-spark-1.3` 配對、沒有降級。新 57 筆的分數要等評分校正分支合併後再發布一次 | Worker 呼叫 1 次 |
+| 10/29 14:31 | P5.1 | 評分校正 `b3.v3` 併入 main（merge `408b8e6`）；408 個 Python、69 個 Worker 測試通過。96 筆只有分數欄位變了；寶藏 28 → 15 筆（CLI 8、本地 AI 7），demo 候選只剩 mcp-audit、phantom 有寶藏標記。另修：第一次部署讓 2 個發布測試失敗（`d94d8c3`）、registries.py 註解不再出現 ecosyste.ms（`63b20b4`）。Worker 重新發布（版本 `dd5fe5f4`）。審查 workflow 確認 6 個計分誤判（README 修正判斷、查不到下載量記成 0 等），交回 P5 session。部署後前兩次 `find_software` 因 `model_http` 退回規則排序，Worker 遇到這種錯誤不會重試 | Worker 呼叫 4 次 |
+| 10/29 14:47 | P5.1 | 評分 `b3.v4` 併入 main（merge `ca1767e`），修掉審查找到的 10 個問題：README 修正判斷從 21 筆降到 15 筆、檢查用指令不再算安裝步驟、查不到的下載量記成 null。5 筆品質和審查算出的正確值一致（second-brain 93.2、all-code 90.2 等）；寶藏仍 15 筆（second-brain 加入、babelscribe 移出），all-code 第一。420 個 Python、69 個 Worker 測試通過；Worker 重新發布（版本 `a186681b`）。Worker 模型呼叫的重試交給 P4.5 session（14:30 前後 Meta 間歇回 404「model not found」） | Meta $0（文件評分全部重用） |
