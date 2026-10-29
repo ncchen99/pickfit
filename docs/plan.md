@@ -126,11 +126,11 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 
 ### P5 計分、提交、回報閉環（11/1–11/2）
 
-- [ ] P5.1 計分：規則分項＋`muse-spark-1.3` 文件 rubric＋寶藏分數（arch B.3，記 `formula_version`）。
+- [x] P5.1 計分：規則分項＋`muse-spark-1.3` 文件 rubric＋寶藏分數（arch B.3，記 `formula_version`）。（10/29：`pickfit score`，公式 `b3.v1`；39 筆都有分開的品質、知名度、寶藏分數，已驗證的品質中位數 85，未驗證的壓在 69 以下；文件 rubric 每筆一次 1.3 呼叫，README 沒變就重用。待校正：寶藏分數分不開（25 筆已驗證有 22 筆算寶藏）、步驟數分級沒作用、知名度 7 項訊號有 4 項空白；校正由沒讀過 `eval/` 的 session 做）
 - [ ] P5.2 `pickfit watch`：每 60 秒讀 D1 `submissions` → 跑單筆管線 → publish。
 - [ ] P5.3 回報 → 重驗 → git diff（計畫內）。只用**真的**失敗（評測或 Mac 實裝時照指南失敗的那一筆）測試與展示，回報標 `reporter: dev`；不送捏造的失敗回報（arch H.4、B.3）。
-- [ ] P5.4 run page：從 trace 產生靜態 HTML（計畫內）。
-- [ ] P5.5 Meta 用量報表：從 trace 產生 README 與影片要用的數字。
+- [x] P5.4 run page：從 trace 產生靜態 HTML（計畫內）。（10/29：`scripts/run_page.py`，用方向鍵逐步看一次驗證；範例用 mcp-audit。trace 在不進 git 的 `runs/`；失敗的 run 目前沒留 trace）
+- [x] P5.5 Meta 用量報表：從 trace 產生 README 與影片要用的數字。（10/29：`scripts/meta_usage.py`；02:46 時各 session 合計 1,429 次請求、80% 命中快取；沙盒驗證 79 次有 63 次通過並重播，每次中位數 73 秒、$0.048）
 - [ ] P5.6 👤 11/1 晚上 demo 主案＋2 個備案定案；挑影片「供給端」那一幕（arch H.4 的 1:55–2:30）要提交的第三方 repo：不能是自己的作品，而且**從未送進 pickfit**。
 
 **11/1 完成標準**：≥30 筆 verified（目標 50），每筆有分開的品質、知名度、寶藏分數；在 Claude Code 用 `submit_software` 貼一個第三方 repo（**不能是 P5.6 留給錄影的那一個**），約 10 分鐘內出現在 `find_software`。
@@ -224,3 +224,5 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | 10/29 02:18 | — | **下一步**：P5（計分、提交、回報閉環）；部署 Worker 要念誠點頭；Mac 上親手驗 demo 前 3 筆（P6.4）；本地 AI 類的已驗證工具偏少，需要時再加發現 query | — |
 | 10/29 | P0.7 | Baseten 核准比賽 credits（只能用 `meta-models/muse-spark-open-1026`）。`.env` 已留 `BASETEN_API_KEY` 欄位，等念誠從一次性連結取 key 貼上；之後跑 `spikes/meta_baseten_hello.py` 確認，P2.4 開放權重初篩解除封鎖 | — |
 | 10/29 11:55 | P0.7 | key 進 `.env`，`spikes/meta_baseten_hello.py` 一般模式與 `--tools` 都通過：`-1026` 存在、JSON 與 tool call 都符合 schema；限額 100 RPM、2M TPM。P2.4 解除封鎖 | Baseten 約 $0.003 |
+| 10/29 12:07 | P5.1、P5.4、P5.5 | P5 分支併入 main（merge `fdea9ed`）；375 個 Python、69 個 Worker 測試通過。39 筆都有評分（公式 `b3.v1`），驗證紀錄與安裝步驟沒變；run page 與 Meta 用量報表可用。寶藏分數待校正 | Meta 累計 $11.91（10/29 $10.96，含其他 session） |
+| 10/29 12:07 | — | **下一步**：補本地 AI 的分支（local_ai 已驗證 4 → 28，新增 57 筆）測完再問念誠要不要合併，新增的要跑評分；推論等級驗證另有 session 在做；寶藏分數校正；部署 Worker 要念誠點頭；Mac 上親手驗 demo 前 3 筆（P6.4） | — |
