@@ -15,6 +15,7 @@ npm run dev                                             # http://127.0.0.1:8787/
 
 - 關掉模型：`npx wrangler dev --var MATCH_MODE:off`（或不放 `MODEL_API_KEY`）。
 - 測試：`npm test`（先用 `scripts/build_index.py` 從 fixture 建索引；D1 用 `node:sqlite` 跑同一份 migration；Meta 回應是假的，不打 API）。型別：`npm run typecheck`。
+- 輸出格式：`test/conformance.test.ts` 透過 MCP server 呼叫 5 個工具的每一種回應，用 SDK 自己的驗證器（`CfWorkerJsonSchemaValidator`）檢查 `structuredContent` 符合 `tools/list` 公布的 `outputSchema`。schema 是 `additionalProperties: false`，所以工具多回一個欄位、`server.ts` 的 zod 沒跟著加，這個測試就會失敗；嚴格驗證的客戶端遇到這種回應會整個拒收。
 - 真資料：`npm run build:index`（讀 `data/software/*.json`，任何一筆不合 `software.v1` 就失敗、不寫索引）。部署用 `uv run pickfit publish`（見文末）。
 
 Claude Code 連本機（桌面 app 的 shell 要用 `env -i`，否則會繼承 `ANTHROPIC_BASE_URL`）：
@@ -127,14 +128,19 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 
 ## D1（`migrations/`）
 
-`0001_init.sql`：`events`、`submissions`、`reverify_queue`、`meta_budget`。`0002_outcome_once_by_result.sql`：回報的去重索引加上 `success`。`0003_model_attempts.sql`：`events` 加 `degraded_reason`、`model_attempts`、`model_statuses`；**`0003` 沒套用前就部署這版，所有事件（find、guide、outcome、submit）都會寫入失敗**：回應不受影響，但 Workers log 會出現 `d1_write_failed`，`rec_id` 不會進 `events`，之後的 `report_outcome` 也就不能計分。不記 IP；`events.need` 只存條件（agent 給的參數＋模型解析出的 `task`、`search_terms`、痛點等），不存使用者原話。
+`0001_init.sql`：`events`、`submissions`、`reverify_queue`、`meta_budget`。`0002_outcome_once_by_result.sql`：回報的去重索引加上 `success`。`0003_model_attempts.sql`：`events` 加 `degraded_reason`、`model_attempts`、`model_statuses`。**一定要先套 `0003` 再部署這版**，否則每一筆事件都寫不進去：
+
+- `report_outcome` 會整個失敗：它等事件寫完才回應，寫入錯誤會讓每次呼叫都回錯誤。
+- `find_*`、`get_install_guide`、`submit_software` 照常回應，但事件寫入失敗，只在 Workers log 留下 `d1_write_failed`。`rec_id` 不會進 `events`，之後拿這些 `rec_id` 回報也不能計分。
+
+不記 IP；`events.need` 只存條件（agent 給的參數＋模型解析出的 `task`、`search_terms`、痛點等），不存使用者原話。
 
 ## 部署檢查清單
 
 **先決條件**：`data/software/` 有真的 profile 並已 commit（P2.6），而且念誠同意部署。下面的指令都在**主 checkout** 的 `worker/` 下跑（`.env` 在主 checkout 根目錄）。
 
 1. **建 D1**：`npx wrangler d1 create pickfit`，把輸出的 `database_id` 填進 `wrangler.jsonc`（取代全 0 的佔位），commit。
-2. **遠端建表**：`npx wrangler d1 migrations apply pickfit --remote`（`0001`–`0003` 都要套；之後 `migrations/` 有新檔就再跑一次，**`pickfit publish` 不會幫你跑**；`eval` 等 env 的 D1 也要各自套）。
+2. **遠端建表**：`npx wrangler d1 migrations apply pickfit --remote`（`0001`–`0003` 都要套，而且**要在部署這版之前套**；之後 `migrations/` 有新檔，也是先套再部署。**`pickfit publish` 不會幫你跑**；`eval` 等 env 的 D1 也要各自套）。
 3. **`ALLOWED_HOSTS`**：在 `wrangler.jsonc` 的 `vars` 填 `pickfit-mcp.<workers.dev 子網域>.workers.dev`（子網域就是 P0.5 hello 部署用的那個，dashboard 的 Workers & Pages 也看得到），commit。沒填的話遠端每個請求都是 403，`pickfit publish` 也會拒絕部署。
 4. **先 dry run**：在 repo 根目錄 `uv run pickfit publish --dry-run`。它會驗 `data/software/` 每一筆、確認不是 fixture、資料都已 commit、`wrangler.jsonc` 已填好；任何一項不過就列出問題、exit 1。
 5. **部署**：`uv run pickfit publish`。它用真資料重建 `worker/src/generated/index.json`，再跑 `npx wrangler deploy`。（之後本機要回到假資料：`npm run build:index -- --data test/fixtures/software`。）
