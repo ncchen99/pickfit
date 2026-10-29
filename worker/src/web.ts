@@ -140,6 +140,7 @@ function html(body: string, status: number, nonce: string | null, extra: Record<
 }
 
 const newNonce = () => crypto.randomUUID().replace(/-/g, '');
+const COUNT = new Intl.NumberFormat('en');
 
 /** A search's result, and why the model was not asked when the web's reservation was refused. */
 interface Searched {
@@ -216,7 +217,7 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
     const chars = [...form.need].length;
     const parsed = findInput.safeParse(toFindArgs(form));
     if (chars < NEED_MIN || chars > NEED_MAX || !parsed.success) {
-      const said = chars > NEED_MAX ? `That is ${chars} characters. ` : '';
+      const said = chars > NEED_MAX ? `That is ${COUNT.format(chars)} characters. ` : '';
       return respond(
         form,
         renderNotice('error', 'Describe what you need', `${said}Write ${NEED_MIN} to ${NEED_MAX} characters about the job you want done, then search again.`),

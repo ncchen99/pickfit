@@ -199,7 +199,7 @@ test('web searches stop calling Meta at WEB_DAILY_CAP_USD; agents keep the rest 
   s.sqlite.prepare('INSERT INTO meta_budget (day, calls, cost_usd) VALUES (?, 1, 2.0)').run('2026-10-30');
   const html = await (await s.search(MAC_LLM)).text();
   assert.equal(s.metaCalls.length, 0);
-  assert.match(html, /<h2>Model matching on this page is paused until 00:00 UTC<\/h2>/);
+  assert.match(html, /<h2>Model matching paused until 00:00 UTC<\/h2>/);
   assert.ok(html.includes('<article class="pick"'), 'still shows rules results');
   await s.settle();
   assert.equal(events(s, 'find')[0].degraded_reason, 'over_budget');
@@ -271,7 +271,7 @@ test('another site cannot post to /search, and a bad need is refused before Meta
   assert.match(await short.text(), /Describe what you need/);
   const long = await s.search({ need: 'x'.repeat(5000) });
   assert.equal(long.status, 400, 'over 500 characters is a 400 that says so, never a silent cut');
-  assert.match(await long.text(), /That is 5000 characters\./);
+  assert.match(await long.text(), /That is 5,000 characters\./);
   const huge = await s.search({ need: 'x'.repeat(BODY_MAX_BYTES + 10) });
   assert.equal(huge.status, 413);
   const declared = await s.send(
@@ -342,7 +342,7 @@ test('concurrent searches cannot spend past the web cap: each reserves its worst
   // Room for one reservation ($0.08) under $2: one Meta call, the rest ranked by rules and told why.
   assert.equal(s.metaCalls.length, 1);
   const texts = await Promise.all(pages.map((r) => r.text()));
-  assert.equal(texts.filter((h) => h.includes('Model matching on this page is paused until 00:00 UTC')).length, 3);
+  assert.equal(texts.filter((h) => h.includes('Model matching paused until 00:00 UTC')).length, 3);
   // Holds are released: what is left is the real cost of the one call.
   const today = s.sqlite.prepare('SELECT cost_usd, calls FROM meta_budget WHERE day = ?').get('2026-10-30') as any;
   assert.ok(Math.abs(today.cost_usd - (1.85 + 0.00605)) < 1e-9, String(today.cost_usd));

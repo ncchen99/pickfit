@@ -219,7 +219,7 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
   const issues = readerIssues(guide.known_issues);
   if (issues.length) {
     parts.push(
-      `<h5>Where the README and reality differ</h5><ul class="issues">${issues
+      `<h5>Where the README and reality differ</h5><ul class="issues" data-ui>${issues
         .map((i) => `<li><span class="quiet">README:</span> ${esc(i.readme_said)}<br><span class="quiet">What worked:</span> ${esc(i.actually_needed)}</li>`)
         .join('')}</ul>`,
     );
@@ -301,7 +301,7 @@ function pickHtml(pick: PickOut, first: boolean, result: SearchResult, form: For
 const BY_RULES = 'these results are ranked by rules (words in your request, verification on your OS, treasure score) without Muse Spark';
 const BUDGET: Record<BudgetStop | 'other', { title: string; text: string }> = {
   web_daily: {
-    title: 'Model matching on this page is paused until 00:00 UTC',
+    title: 'Model matching paused until 00:00 UTC',
     text: `Today’s Meta spend, by this page and by agents together, has reached the share this page may use, so ${BY_RULES}.`,
   },
   total: {
@@ -777,6 +777,9 @@ select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid 
 .facts li{font-size:var(--t-small);background:var(--surface);border-radius:var(--radius);padding:5px 10px}
 .evidence{align-self:start}
 .claim{align-self:start;position:sticky;top:24px}
+@media (max-height:820px){.claim{position:static}}
+.best-free{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 40px;align-items:start}
+.best-free>p:first-child{grid-row:span 2}
 .record{background:var(--surface);border-radius:var(--radius);padding:20px 22px}
 .record p{margin-bottom:8px}
 .level{font-weight:600;font-size:var(--t-lead)}
@@ -790,6 +793,7 @@ select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid 
 .install{margin:20px 0 8px}
 .install summary{padding:6px 0}
 .install-body{padding:4px 0 2px}
+details:not([open])>:not(summary){display:none}
 .steps{padding-left:22px}.steps li{margin-bottom:14px}.steps li p{margin-bottom:6px}
 .caution{color:var(--caution)}
 .cmd{display:flex;align-items:flex-start;background:var(--code);color:var(--code-ink);border-radius:var(--radius);margin:6px 0 10px;min-width:0}
@@ -886,7 +890,8 @@ select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid 
 .hero-row h1{flex-direction:column;align-items:stretch;gap:0;margin-bottom:24px}
 .lede{order:1}.search{order:2}.examples{order:3}
 .frame{order:4;max-width:520px;margin-top:40px}
-.pick,.nofit{grid-template-columns:minmax(0,1fr);gap:28px}
+.pick,.nofit,.best-free{grid-template-columns:minmax(0,1fr);gap:28px}
+.best-free{gap:4px}
 .claim{position:static}
 .recent-grid{grid-template-columns:minmax(0,1fr);margin-top:40px}
 .stage{grid-template-columns:minmax(0,1fr)}
