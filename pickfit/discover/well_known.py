@@ -106,13 +106,15 @@ def _fetch(url: str, cache: Path) -> Any:
 
 
 def add(db: PipelineDB, gh: GitHub, pool: list[dict[str, Any]], analytics: dict[str, Any], *, upto_rank: int,
-        max_rank: int, log=print) -> list[str]:
-    """Store pool rows up to `upto_rank` as candidates with details, rules and evidence; return their ids."""
+        max_rank: int, from_rank: int = 1, log=print) -> list[str]:
+    """Store pool rows from `from_rank` to `upto_rank` as candidates with details, rules and evidence; return their ids."""
     checked_at = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")  # as the records write it
     ids: list[str] = []
     for row in pool:
         if row["rank"] > upto_rank:
             break
+        if row["rank"] < from_rank:
+            continue
         try:
             item = gh.repo(row["repo"])
         except GitHubError as err:
@@ -147,7 +149,8 @@ def listing(db: PipelineDB, category: str | None = None) -> list[dict[str, Any]]
     rows = []
     for repo_id, ev in db.well_known().items():
         c = db.candidate(repo_id)
-        screen = (decisions.get(repo_id) or {}).get("result") or {}
+        decision = decisions.get(repo_id) or {}
+        screen = (decision.get("review") or decision.get("screen") or {}).get("result") or {}
         extraction = db.last_extraction(repo_id, "muse-spark-1.3")
         result = (extraction or {}).get("result") or {}
         extracted = (result.get("category") or {}).get("value") if isinstance(result.get("category"), dict) else None
@@ -165,7 +168,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m pickfit.discover.well_known")
     sub = parser.add_subparsers(dest="command", required=True)
     a = sub.add_parser("add", help="store the top Homebrew formulae's GitHub repos as candidates ($0)")
-    a.add_argument("--upto-rank", type=int, required=True, help=f"stop at this rank (at most --max-rank)")
+    a.add_argument("--upto-rank", type=int, required=True, help="stop at this rank (at most --max-rank)")
+    a.add_argument("--from-rank", type=int, default=1, help="start at this rank, to go on from an earlier run")
     a.add_argument("--max-rank", type=int, default=MAX_RANK, help=f"the well-known threshold (default {MAX_RANK})")
     a.add_argument("--db", default=None, help="pipeline database (default runs/pipeline.db)")
     li = sub.add_parser("list", help="stored well-known candidates in rank order")
@@ -186,7 +190,8 @@ def main(argv: list[str] | None = None) -> int:
     log(f"pool: {len(pool)} repos in the top {args.max_rank} ({analytics['start_date']}..{analytics['end_date']})")
     gh = GitHub(github_token())
     try:
-        ids = add(db, gh, pool, analytics, upto_rank=args.upto_rank, max_rank=args.max_rank, log=log)
+        ids = add(db, gh, pool, analytics, upto_rank=args.upto_rank, max_rank=args.max_rank,
+                  from_rank=args.from_rank, log=log)
     finally:
         log(f"github requests: {dict(gh.requests)}")
         gh.close()
