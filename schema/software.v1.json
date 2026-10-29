@@ -1346,6 +1346,9 @@
         "gui_only",
         "needs_account",
         "model_too_large",
+        "needs_toolchain",
+        "needs_root",
+        "needs_container",
         "budget_exceeded",
         "other"
       ],
@@ -1353,7 +1356,7 @@
     },
     "Verification": {
       "additionalProperties": false,
-      "description": "Summary over runs; keeps only the latest run per OS, arch and method.\n\nOlder runs live in git history, so a newer failure replaces an older pass.",
+      "description": "Summary over runs; keeps only the latest run per OS, arch and method.\n\nOlder runs live in git history. Write-back never replaces a passed run with one\nthat did not pass, and writes a failure only on an OS with no passed run.",
       "properties": {
         "checked_at": {
           "anyOf": [
@@ -1515,7 +1518,7 @@
           "type": "array"
         },
         "replayed": {
-          "description": "A fresh sandbox replayed the steps and passed.",
+          "description": "A fresh sandbox replayed the run with the same outcome: the steps and checks passed again, or, for a failed run, the failure repeated.",
           "type": "boolean"
         },
         "runner": {

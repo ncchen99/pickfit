@@ -113,7 +113,7 @@ def without_runs(doc):
 
 def with_failed_run(doc):
     run = doc["verification"]["runs"][0]
-    run.update(level="failed", replayed=False, blocking_error="frobtail: command not found")
+    run.update(level="failed", replayed=True, blocking_error="frobtail: command not found")
     doc["verification"]["level"] = "failed"
     doc["install"]["linux"] = None
 
@@ -124,7 +124,7 @@ def with_newer_failed_run(doc):
         "id": "run-20261102-linux-1",
         "level": "failed",
         "checked_at": "2026-11-02T08:00:00Z",
-        "replayed": False,
+        "replayed": True,
         "smoke_tests": [],
         "judge": None,
         "blocking_error": "frobtail: command not found",
@@ -170,6 +170,10 @@ MUTATIONS = {
     "level does not match runs": ("level must be", set_path("verification", "level", "inference")),
     "newer run on the same target kept": ("latest run per os", with_newer_failed_run),
     "passed sandbox run not replayed": ("replay", set_path(*RUN, "replayed", False)),
+    "failed sandbox run not repeated": (
+        "repeat its failure",
+        both(with_failed_run, set_path(*RUN, "replayed", False)),
+    ),
     "passed run judged error_visible": (
         "judge's verdict",
         set_path(*RUN, "judge", "verdict", "error_visible"),

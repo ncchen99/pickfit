@@ -8,10 +8,16 @@ is checked again instead of trusted. Steps and smoke tests are the commands as
 the replay ran them; the model's own words only survive as pitfalls and the
 tool version, and the version only if some output printed it.
 
-write_back() updates data/software/<slug>.json only for a passed, replayed run:
-the run replaces the earlier run on the same OS, arch and method, the
-Linux install guide becomes the replayed steps, and existing scores are
-refreshed for the new runs (refresh_scores, no model call).
+A failed claim is the box's when its error names a box limit (failure.py): the
+run becomes unverified with that reason. Otherwise it stays failed only if a
+fresh box repeated the failure (replayed then means "the failure repeated").
+
+write_back() updates data/software/<slug>.json for a passed, replayed run, a
+repeated failure, or an unverified run whose reason describes the software. The
+run replaces the earlier run on the same OS, arch and method, except that a run
+that did not pass is never written on an OS with a passed run. A passed run's
+steps become that OS's install guide; existing scores are refreshed for the new
+runs (refresh_scores, no model call).
 """
 
 from __future__ import annotations
@@ -42,10 +48,12 @@ from pickfit.schema import (
     is_passed,
 )
 from pickfit.score import refresh_scores
+from pickfit.verify.failure import WRITTEN_REASONS, box_reason
 from pickfit.verify.verdict import split_last, weaker
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import VerifyReport
+    from pickfit.verify.failure import FailureCheck
     from pickfit.verify.judge import JudgeResult
     from pickfit.verify.replay import ReplayResult
 
@@ -117,7 +125,8 @@ def _record_check(command: str) -> tuple[str, list[SetupStep]] | None:
 
 def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeResult | None, *,
               evidence_dir: Path, screenshots: list[Path] | None = None,
-              judge_cost_usd: float = 0.0) -> tuple[VerificationRun, list[str]]:
+              judge_cost_usd: float = 0.0, confirm: FailureCheck | None = None
+              ) -> tuple[VerificationRun, list[str]]:
     """The VerificationRun for one verification, plus notes on why the level was lowered."""
     notes: list[str] = []
     verdict = report.verdict or {}
@@ -144,6 +153,22 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
                 seen = f"{judge.verdict}: {judge.observed}" if judge else "no judge verdict"
                 notes.append(f"the screen judge did not confirm it ({seen})")
                 level, reason = "unverified", "other"
+
+    # A failure is the box's when its error names a box limit; the software's only if it repeated.
+    if verdict.get("claimed_level") == "failed":
+        limit = box_reason(blocking)
+        if limit:
+            level, reason = "unverified", limit
+            notes.append(f"the box, not the software, explains the failure ({limit})")
+        elif level != "failed":
+            notes.append(f"the failure cannot be confirmed: {'; '.join((verdict.get('problems') or [])[:3])}")
+        elif confirm is not None and confirm.reproduced:
+            replayed = True
+        else:
+            why = confirm.error if confirm else "not rerun"
+            notes.append(f"the failure did not repeat in a fresh box ({why})")
+            level, reason = "unverified", "other"
+            blocking = f"not confirmed in a fresh box ({why}): {blocking}"
 
     by_id = {c.command_id: c for c in report.commands if c.command_id is not None}
     step_ids = verdict.get("step_ids") or []
@@ -192,6 +217,12 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
                                    exit_code=c["exit_code"], passed=c["passed"],
                                    observed_excerpt=_clip(c.get("observed_excerpt"), 300),
                                    setup=setup + before))
+    failing = confirm.failing if confirm and level == "failed" else None
+    fitted = _record_check(failing.command) if failing else None
+    if failing and fitted and not any(t.command == fitted[0] for t in smoke):
+        smoke.append(SmokeTest(command=fitted[0], expected_signal="", exit_code=failing.exit_code, passed=False,
+                               observed_excerpt=_clip(_excerpt(failing.stdout, failing.stderr, ""), 300),
+                               setup=fitted[1]))
     if is_passed(level) and level != "install" and not any(t.passed for t in smoke):
         level = "install"
         notes.append("no passing smoke test fits the record")
@@ -255,22 +286,38 @@ def install_guide(run: VerificationRun) -> InstallGuide:
         first_task=example.command[:300] if example else None)
 
 
+def _unwritable(run: VerificationRun) -> str | None:
+    """Why a run says nothing a record should keep, or None."""
+    if is_passed(run.level) or run.level == "failed":
+        return None if run.replayed else f"level {run.level}, replayed False"
+    if run.unverified_reason in WRITTEN_REASONS:
+        return None
+    return f"unverified ({run.unverified_reason}) says nothing about the software"
+
+
 def write_back(run: VerificationRun, slug: str, data_dir: Path = DATA_DIR) -> tuple[bool, str]:
-    """Record a passed, replayed run in data/software/<slug>.json; (written, why)."""
-    if not (is_passed(run.level) and run.replayed):
-        return False, f"not written: level {run.level}, replayed {run.replayed}"
+    """Record a run in data/software/<slug>.json; (written, why)."""
+    why = _unwritable(run)
+    if why:
+        return False, f"not written: {why}"
     path = data_dir / f"{slug}.json"
     if not path.exists():
         return False, f"not written: {_rel(path) or path} does not exist yet"
     record = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8"))
+    if not is_passed(run.level):
+        held = next((r for r in record.verification.runs if r.os == run.os and is_passed(r.level)), None)
+        if held:
+            return False, f"not written: {run.level} would sit beside the passed {run.os} run {held.id}"
     runs = [r for r in record.verification.runs if (r.os, r.arch, r.method) != (run.os, run.arch, run.method)]
     runs.append(run)
     level = best_level(runs)
-    verification = Verification(level=level, unverified_reason=None if level != "unverified" else "other",
-                                checked_at=max(r.checked_at for r in runs), runs=runs)
+    newest = max((r for r in runs if r.level == "unverified"), key=lambda r: r.checked_at, default=None)
+    verification = Verification(level=level, unverified_reason=newest.unverified_reason if level == "unverified"
+                                and newest else None, checked_at=max(r.checked_at for r in runs), runs=runs)
     data: dict[str, Any] = record.model_dump(mode="json")
     data["verification"] = verification.model_dump(mode="json")
-    data["install"] = {**data["install"], run.os: install_guide(run).model_dump(mode="json")}
+    if is_passed(run.level):
+        data["install"] = {**data["install"], run.os: install_guide(run).model_dump(mode="json")}
     now = taipei_now()
     data["updated_at"] = now.isoformat()
     # The sandbox component and the quality cap follow the runs: recompute them, no model call.

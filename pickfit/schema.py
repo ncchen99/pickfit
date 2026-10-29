@@ -81,6 +81,9 @@ type UnverifiedReason = Literal[
     "gui_only",
     "needs_account",
     "model_too_large",
+    "needs_toolchain",
+    "needs_root",
+    "needs_container",
     "budget_exceeded",
     "other",
 ]
@@ -532,7 +535,12 @@ class VerificationRun(_Model):
     checked_at: AwareDatetime
     tool_version: str | None = Field(default=None, max_length=60)
     install_method: InstallMethod | None = None
-    replayed: bool = Field(description="A fresh sandbox replayed the steps and passed.")
+    replayed: bool = Field(
+        description=(
+            "A fresh sandbox replayed the run with the same outcome: the steps and checks "
+            "passed again, or, for a failed run, the failure repeated."
+        )
+    )
     steps: list[InstallStep] = Field(description="The successful path, in order.")
     smoke_tests: list[SmokeTest] = []
     pitfalls: list[Pitfall] = []
@@ -556,6 +564,8 @@ class VerificationRun(_Model):
                 raise ValueError(f"a {self.level!r} run needs at least one passing smoke test")
         if self.level == "failed" and not self.blocking_error:
             raise ValueError("a failed run must record blocking_error")
+        if self.level == "failed" and self.method == "sandbox" and not self.replayed:
+            raise ValueError("a failed sandbox run must repeat its failure in a fresh sandbox")
         return self
 
 
@@ -571,7 +581,8 @@ def best_level(runs: list[VerificationRun]) -> str:
 class Verification(_Model):
     """Summary over runs; keeps only the latest run per OS, arch and method.
 
-    Older runs live in git history, so a newer failure replaces an older pass.
+    Older runs live in git history. Write-back never replaces a passed run with one
+    that did not pass, and writes a failure only on an OS with no passed run.
     """
 
     level: VerificationLevel = Field(description="best_level(runs); unverified when no runs.")

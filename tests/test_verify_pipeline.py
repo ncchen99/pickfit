@@ -136,13 +136,78 @@ def test_failed_replay_skips_the_judge(tmp_path: Path):
     assert not (outcome.evidence_dir / "judge.json").exists()
 
 
-def test_failed_claim_is_recorded_without_replay(tmp_path: Path):
-    server = FakeServer(response("r1", run_cmd("uv tool install graphtty")),
-                        response("r2", finish(level="failed", blocking_error="no wheel for py3.12")))
-    boxes = Boxes({"agent": {"uv tool install": (1, "", "no wheel")}})
-    outcome, _ = verify(tmp_path, server, boxes)
-    assert outcome.run.level == "failed" and outcome.run.blocking_error == "no wheel for py3.12"
-    assert [role for role, _ in boxes.made] == ["agent"]
+BROKEN = {**SCRIPT, "graphtty --version": (1, "", "ModuleNotFoundError: No module named 'graphtty'")}
+
+
+def failed_turns(blocking: str = "the wheel ships no code", failing: int | None = 2) -> list[dict[str, Any]]:
+    return [response("r1", run_cmd("uv tool install graphtty")),
+            response("r2", run_cmd("graphtty --version")),
+            response("r3", finish(level="failed", steps=[1], smoke=SMOKE[:1], blocking_error=blocking,
+                                  failing_command_id=failing))]
+
+
+def test_a_failure_counts_only_when_a_fresh_box_repeats_it(tmp_path: Path):
+    boxes = Boxes({"agent": BROKEN, "confirm": BROKEN})
+    outcome, lines = verify(tmp_path, FakeServer(*failed_turns()), boxes)
+    run = outcome.run
+    assert run.level == "failed" and run.replayed and run.blocking_error == "the wheel ships no code"
+    assert [role for role, _ in boxes.made] == ["agent", "confirm"] and boxes.made[1][1].closed
+    assert [c for c, _ in boxes.made[1][1].ran] == ["uv tool install graphtty", "graphtty --version"]
+    assert [(t.command, t.passed, t.exit_code) for t in run.smoke_tests] == [("graphtty --version", False, 1)]
+    assert (outcome.evidence_dir / "confirm.json").exists() and "failure repeated" in "\n".join(lines)
+    # The fresh box installs it fine: not the software's failure after all.
+    outcome, _ = verify(tmp_path, FakeServer(*failed_turns()), Boxes({"agent": BROKEN}))
+    run = outcome.run
+    assert (run.level, run.unverified_reason, run.replayed) == ("unverified", "other", False)
+    assert run.blocking_error.startswith("not confirmed in a fresh box (command 2 passed in a fresh box)")
+
+
+def test_a_failure_the_box_explains_is_unverified_with_its_reason(tmp_path: Path):
+    turns = failed_turns("install.sh requires Rust 1.91+ (absent, forbidden to install)")
+    boxes = Boxes({"agent": BROKEN})
+    outcome, _ = verify(tmp_path, FakeServer(*turns), boxes)
+    run = outcome.run
+    assert (run.level, run.unverified_reason) == ("unverified", "needs_toolchain")
+    assert [role for role, _ in boxes.made] == ["agent"]  # no box spent confirming it
+    assert "the box, not the software, explains the failure (needs_toolchain)" in outcome.notes
+
+
+def bare_record(data_dir: Path) -> Path:
+    """The example record with no runs, as a profile has before verification."""
+    data_dir.mkdir(exist_ok=True)
+    record = json.loads((FIXTURES / "software_example.json").read_text())
+    record.update(slug="graphtty", scores=None)
+    record["verification"] = {"level": "unverified", "unverified_reason": "not_run", "checked_at": None, "runs": []}
+    record["install"]["linux"] = None
+    path = data_dir / "graphtty.json"
+    path.write_text(json.dumps(record))
+    return path
+
+
+def test_write_back_keeps_a_repeated_failure_but_never_over_a_pass(tmp_path: Path):
+    path = bare_record(tmp_path / "data")
+    boxes = Boxes({"agent": BROKEN, "confirm": BROKEN})
+    outcome, _ = verify(tmp_path, FakeServer(*failed_turns()), boxes, write=True, data_dir=path.parent)
+    assert outcome.written
+    record = SoftwareRecord.model_validate_json(path.read_text())
+    assert record.verification.level == "failed" and record.verification.runs[0].id == outcome.run_id
+    assert record.install.linux is None  # a failure is no install guide
+    # A record with a passed linux run keeps it.
+    passed = json.loads((FIXTURES / "software_example.json").read_text()) | {"slug": "graphtty"}
+    path.write_text(json.dumps(passed))
+    outcome, _ = verify(tmp_path, FakeServer(*failed_turns()), boxes, write=True, data_dir=path.parent)
+    assert not outcome.written
+    assert outcome.write_note == "not written: failed would sit beside the passed linux run run-20261031-linux-1"
+    assert json.loads(path.read_text()) == passed
+
+
+def test_write_back_records_the_box_reason(tmp_path: Path):
+    path = bare_record(tmp_path / "data")
+    turns = failed_turns("No container engine in the box (neither docker nor podman)", failing=None)
+    outcome, _ = verify(tmp_path, FakeServer(*turns), Boxes({"agent": BROKEN}), write=True, data_dir=path.parent)
+    assert outcome.written
+    verification = SoftwareRecord.model_validate_json(path.read_text()).verification
+    assert (verification.level, verification.unverified_reason) == ("unverified", "needs_container")
 
 
 def test_write_back_updates_the_record(tmp_path: Path):
@@ -167,7 +232,8 @@ def test_write_back_updates_the_record(tmp_path: Path):
 def test_write_back_skips_unpassed_runs_and_missing_records(tmp_path: Path):
     outcome, _ = verify(tmp_path, FakeServer(*agent_turns(), judge_answer("inconclusive")), Boxes({}),
                         write=True, data_dir=tmp_path / "nowhere")
-    assert not outcome.written and outcome.write_note == "not written: level unverified, replayed True"
+    assert not outcome.written
+    assert outcome.write_note == "not written: unverified (other) says nothing about the software"
     outcome, _ = verify(tmp_path, FakeServer(*agent_turns(), judge_answer("working")), Boxes({}),
                         write=True, data_dir=tmp_path / "nowhere")
     assert not outcome.written and "does not exist yet" in outcome.write_note

@@ -253,6 +253,7 @@ class LogVerdict:
     step_ids: list[int]
     checks: list[ResolvedCheck]
     problems: list[str]
+    failing_id: int | None = None  # a failed claim: the command whose failure a fresh box must repeat
 
     @property
     def agrees(self) -> bool:
@@ -389,8 +390,30 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict
                 problems.append("no passing check in the log")
         else:
             level = weaker(level, supported)
+    failing_id = _failing_id(finish, checks, by_id, problems) if level == "failed" else None
+    if level == "failed" and failing_id is None:  # nothing a fresh box could fail again
+        level, reason = "unverified", "other"
     return LogVerdict(claimed_level=finish.level, level=level, unverified_reason=reason,
-                      step_ids=step_ids, checks=checks, problems=problems)
+                      step_ids=step_ids, checks=checks, problems=problems, failing_id=failing_id)
+
+
+def _failing_id(finish: FinishArgs, checks: list[ResolvedCheck], by_id: dict[int, CommandRecord],
+                problems: list[str]) -> int | None:
+    """The failed claim's failing command: the one cited, else the last cited check that exited non-zero."""
+    cid = finish.failing_command_id
+    if cid is None:
+        failed = [c.command_id for c in checks if c.exit_code not in (0, None) and by_id[c.command_id].tool
+                  == "run_command"]
+        cid = failed[-1] if failed else None
+    record = by_id.get(cid) if cid is not None else None
+    if record is None or record.tool != "run_command":
+        problems.append("failing_command_id cites no run_command" if cid is not None else
+                        "a failed claim needs failing_command_id: the command that failed")
+        return None
+    if record.exit_code == 0 and not record.timed_out:
+        problems.append(f"failing command {cid} exited 0")
+        return None
+    return cid
 
 
 def _one_line(text: str, limit: int = 120) -> str:
