@@ -37,13 +37,13 @@
 | 1 | `quartermaster` | service | 依 VRAM 自動設定模型、用 API 提供聊天／圖片／語音的本機平台；起服務後本機 API 斷網回應 | release v1.7.2 的 `quartermaster-darwin-arm64` |
 | 2 | `jitllm` | service | 依硬體調整的推論引擎（模型比記憶體大也能跑）；`jitllmd serve` 後 `/healthz`、`/v1/models` 斷網回應 | 官方 install script；release 有 `jitllm-tui_0.2.6_darwin_arm64.tar.gz` |
 | 3 | `babelscribe` | function | 離線把音訊／影片轉成 SRT／VTT 字幕（Whisper，99 種語言）；`babelscribe models` 斷網通過 | `uv tool install babelscribe`（PyPI 純 Python wheel；release 另有 macOS arm64 Metal 版 whisper-cli） |
-| 4 | `goinfer` | function | 純 Go 的本機 LLM 推論（GGUF、safetensors）；`goinfer-chat models` 斷網通過 | release 的 `goinfer-chat-*-darwin-arm64` |
+| 4 | `goinfer` | inference | 純 Go 的本機 LLM 推論（GGUF、safetensors）；`goinfer-serve` 載入 SmolLM2-135M 後，chat completion 斷網回應 | release 的 `goinfer-chat-*-darwin-arm64` |
 | 5 | `llamastash` | function | 終端機裡的本機 LLM 引擎與模型調度器；`list` 斷網通過 | release v0.10.0 的 `llamastash-0.10.0-aarch64-apple-darwin.tar.gz` |
 | 6 | `neurondump` | function | 檢視本機 GGUF 模型內部、寫出更小但能跑的 GGUF；`list` 斷網通過 | release v0.1.4 的 `neurondump-aarch64-apple-darwin.tar.gz` |
 | 7 | `omm` | function | 本機 GGUF 模型的套件管理器（安裝、連結、排名、驗證）；`list`、`doctor` 斷網通過 | `pipx install omm-model`（PyPI 純 Python wheel） |
-| 8 | `xyntetik-runner` | function | 單一執行檔的 C 語言 GGUF 引擎（服務模型、訓練 LoRA）；`--caps` 斷網通過 | release 的 `runner-macos-arm64` |
+| 8 | `xyntetik-runner` | inference | 單一執行檔的 C 語言 GGUF 引擎（服務模型、訓練 LoRA）；`runner --serve` 載入 stories260K 後，chat completion 斷網回應 | release 的 `runner-macos-arm64` |
 
-都還沒做到「推論驗證」：驗證 agent 手上沒有極小模型，只驗到服務或功能等級（見 [第二批](#第二批本地-ai1029) 的待辦）。
+`goinfer`、`xyntetik-runner` 已做到「推論驗證」（10/29 重驗）；其餘只驗到服務或功能等級（見 [第二批](#第二批本地-ai1029) 的待辦）。
 
 ### 符合四項條件但沒選
 
@@ -92,4 +92,4 @@
 
 - `berth`（GPU 記憶體排程器）在 T4 GPU 沙盒（`pickfit verify --gpu T4`）裡通過並重播，但 `berth daemon` 要先放一個改寫 `nvidia-smi` 輸出的 shim 才起得來：gVisor 裡的 `nvidia-smi` 把 `pci.bus_id` 回報成 `[Unknown Error]`。這一步只有沙盒需要，不能寫進使用者的安裝步驟，所以**沒有寫回**，仍是未驗證。
 - 不符合 demo 條件的通過者：`frink`（GitHub 認不出授權、也沒寫價格）、`factor`、`mithril`（要 API key）、`quantpicker`（範例要連網）、`open-jet`、`neurobrix`（README 平台只寫 Linux）、`omarchy-cluster`、`mcp-inicio-ia`（只能從原始碼裝）、`infai`（darwin 檔只有 `infaiw`，和驗證的 `infai` 不是同一個執行檔）。
-- 待辦：本地 AI 都還沒做到「推論驗證」。驗證 agent 的指示只說「有 300 MB 以下的模型就跑一次推論」，沒告訴它去哪裡拿；之後可以在 `pickfit/verify/agent.py` 的提示裡指名授權寬鬆的極小模型（例如 `stories260K.gguf`、SmolLM2-135M），讓 `goinfer`、`cluaiz`、`jitllm`、`xyntetik-runner` 這類引擎跑到推論等級。
+- 推論驗證（10/29 重驗）：`pickfit/verify/agent.py` 的提示現在對本地 AI 指名極小模型（stories260K GGUF，MIT；SmolLM2-135M-Instruct，Apache-2.0）。`goinfer`、`xyntetik-runner` 升到推論等級；`flyweight` 只支援 Qwen、Gemma 等架構，仍是 function；`cluaiz`、`jitllm`、`quartermaster` 重跑兩次都因安裝步驟沒被正確引用而沒通過，維持原本的 service；`llamastash` 新的一次不比舊的好，保留舊紀錄。
