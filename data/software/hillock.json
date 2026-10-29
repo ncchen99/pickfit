@@ -214,7 +214,7 @@
             "kind": null
           }
         ],
-        "blocking_error": "the installed hillock 1.0.0 (from a local or VCS source) declares the console script main:run_cli, and no module main is installed; PyPI hillock-1.0.0 wheel ships no code (RECORD has only dist-info, top_level.txt empty) so `hillock --help` fails with ModuleNotFoundError: No module named 'main'; `pip install -e .` from source has the same setuptools mapping (only `assets`) so the console script stays broken; README CPU suite `verify_hillock.py` runs but ends 21/22 with gate-zero-leaks FAIL (expe…",
+        "blocking_error": "failed on a check of the published wheel hillock-1.0.0-py3-none-any.whl (artifact_check): it holds only dist-info files and declares the console script main:run_cli with no module main. The sandbox agrees: after git clone, venv and pip install -e, `hillock --help` raises ModuleNotFoundError: No module named 'main', again in a fresh box, and the probe found no module main installed.",
         "judge": null,
         "evidence": {
           "trace_path": "runs/verify/verify-hillock-20261029-024443-0330/report.json",
@@ -223,7 +223,14 @@
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.164943
+        "cost_usd": 0.164943,
+        "artifact_check": {
+          "artifact": "https://files.pythonhosted.org/packages/81/cd/f9f1171e76e1ac0e311969f002cbd6f76965f6d21c7b7722cd93bc524a5a/hillock-1.0.0-py3-none-any.whl",
+          "sha256": "5cf2e1fb6981a7698ed4bfa4de274f3600c0d88af07e3455b13505a715101fad",
+          "finding": "the wheel holds only its hillock-1.0.0.dist-info files (METADATA, WHEEL, RECORD, entry_points.txt, top_level.txt, licenses/LICENSE); entry_points.txt declares hillock = main:run_cli and top_level.txt is empty, so no module main ships",
+          "checked_at": "2026-10-29T16:41:08+08:00",
+          "checked_by": "Claude Code (P3 verification session), by listing the published wheel's files; not a box"
+        }
       }
     ]
   },
@@ -561,5 +568,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-29T16:06:22.734232+08:00"
+  "updated_at": "2026-10-29T16:41:19.808516+08:00"
 }
