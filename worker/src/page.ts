@@ -112,7 +112,7 @@ export function yourSystem(v: PickOut['verification'], form: FormValues): { stat
       text:
         v.os === form.os && form.arch
           ? `Not verified on your system: it ran on ${system(v.os, v.arch)}, not ${form.arch}.`
-          : `Not verified on your system: it ran on ${system(v.os, v.arch)}, and pickfit hasn't run it on ${osName(form.os || null)} yet.`,
+          : `Not verified on your system: it ran on ${system(v.os, v.arch)}, and pickfit hasn’t run it on ${osName(form.os || null)} yet.`,
     };
   }
   return { state: 'unknown', text: 'Choose your OS above to see whether it ran on your system.' };
@@ -145,7 +145,7 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
   const match = guide.applies_to_user_system.match;
   if (match === 'other_os' && form.os) {
     parts.push(
-      `<p class="caution">These steps ran on ${esc(system(v.os, v.arch))}. pickfit hasn't run them on ${esc(osName(form.os))}, so expect differences.</p>`,
+      `<p class="caution">These steps ran on ${esc(system(v.os, v.arch))}. pickfit hasn’t run them on ${esc(osName(form.os))}, so expect differences.</p>`,
     );
   } else if (match === 'same_os_other_arch' && form.arch) {
     parts.push(`<p class="caution">These steps ran on ${esc(system(v.os, v.arch))}, not ${esc(form.arch)}. A download may need the other build.</p>`);
@@ -205,6 +205,9 @@ function record(pick: PickOut, guide: InstallOutput | undefined, form: FormValue
   );
 }
 
+/** find.ts adds this tradeoff for agents when the run was on another system; the test record says it in full. */
+const RAN_ELSEWHERE = /^Verified on \S+(?: \S+)? only; pickfit has not run its /;
+
 function pickHtml(pick: PickOut, rank: number, result: SearchResult, form: FormValues): string {
   const { out } = result;
   const best = out.best_free?.slug === pick.slug ? out.best_free : null;
@@ -215,7 +218,10 @@ function pickHtml(pick: PickOut, rank: number, result: SearchResult, form: FormV
   const why = pick.why
     .map((r) => `<li>${esc(r.claim)}<span class="cite">From its profile: ${esc(r.field)} is “${esc(r.value)}”</span></li>`)
     .join('');
-  const tradeoffs = pick.tradeoffs.map((t) => `<li>${esc(t)}</li>`).join('');
+  const tradeoffs = pick.tradeoffs
+    .filter((t) => !RAN_ELSEWHERE.test(t))
+    .map((t) => `<li>${esc(t)}</li>`)
+    .join('');
   const links = [
     link(pick.repo, 'Source code'),
     pick.homepage && pick.homepage !== pick.repo ? link(pick.homepage, 'Homepage') : '',
@@ -244,11 +250,11 @@ function pickHtml(pick: PickOut, rank: number, result: SearchResult, form: FormV
 const DEGRADED: Record<string, { title: string; text: string }> = {
   over_budget: {
     title: 'Model matching is paused for today',
-    text: "Today's budget for Meta model calls from this page is used up, so these results are ranked by rules (words in your request, verification on your OS, treasure score) without Muse Spark. It resets at 00:00 UTC.",
+    text: "Today’s budget for Meta model calls from this page is used up, so these results are ranked by rules (words in your request, verification on your OS, treasure score) without Muse Spark. It resets at 00:00 UTC.",
   },
   budget_unavailable: {
     title: 'Ranked without the model this time',
-    text: "pickfit couldn't check its model budget, so it didn't call Muse Spark and ranked these by rules. Search again in a minute.",
+    text: "pickfit couldn’t check its model budget, so it didn’t call Muse Spark and ranked these by rules. Search again in a minute.",
   },
   model_off: {
     title: 'Model matching is off on this server',
@@ -258,7 +264,7 @@ const DEGRADED: Record<string, { title: string; text: string }> = {
 DEGRADED.no_api_key = DEGRADED.model_off;
 const MODEL_FAILED = {
   title: 'Ranked without the model this time',
-  text: "Muse Spark didn't return a usable answer, so these results are ranked by rules. Search again to retry.",
+  text: "Muse Spark didn’t return a usable answer, so these results are ranked by rules. Search again to retry.",
 };
 
 function matchLine(out: FindOutput): string {
@@ -268,7 +274,7 @@ function matchLine(out: FindOutput): string {
     return `Ranked by rules among the ${out.considered} verified tools that meet your conditions; no model was used.`;
   }
   return (
-    `Meta's ${esc(out.matched_by)} compared the ${out.considered} verified tools that meet your conditions and ${chose}. ` +
+    `Meta’s ${esc(out.matched_by)} compared the ${out.considered} verified tools that meet your conditions and ${chose}. ` +
     'Code checked every reason against the tool’s profile.'
   );
 }
@@ -305,7 +311,7 @@ export function renderResults(result: SearchResult, form: FormValues, catalog: C
   if (out.no_install_option) {
     parts.push(
       `<div class="aside"><h3>You may not need to install anything</h3><p>${esc(out.no_install_option)}</p>` +
-        `<p class="quiet">From Muse Spark's general knowledge; pickfit hasn't checked it.</p></div>`,
+        `<p class="quiet">From Muse Spark’s general knowledge; pickfit hasn’t checked it.</p></div>`,
     );
   }
   const wk = out.well_known_option;
