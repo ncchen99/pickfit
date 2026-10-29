@@ -1,6 +1,6 @@
 # pickfit MCP server（Cloudflare Worker）
 
-無狀態的 Streamable HTTP MCP server（官方 TypeScript SDK v2 的 `createMcpHandler`，新舊兩代協定都收）。5 個工具：`find_software`、`find_alternatives`、`get_install_guide`、`report_outcome`、`submit_software`（`TOOLS=readonly` 時只有前 3 個，見「評測部署」）。已部署在 `https://pickfit-mcp.ncchen99.workers.dev/mcp`（10/29 起）；部署步驟見文末的檢查清單。
+無狀態的 Streamable HTTP MCP server（官方 TypeScript SDK v2 的 `createMcpHandler`，新舊兩代協定都收）。5 個工具：`find_software`、`find_alternatives`、`get_install_guide`、`report_outcome`、`submit_software`（`TOOLS=readonly` 時只有前 3 個，見「評測部署」）。已部署在 `https://pickfit-mcp.ncchen99.workers.dev/mcp`（10/29 起）；部署步驟見文末的檢查清單。同一個 Worker 也提供產品網頁（瀏覽器開 `/`，見「產品網頁」）。
 
 ## 怎麼跑
 
@@ -127,6 +127,25 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 - HTTP：`/mcp` 的每個回應都帶 `Cache-Control: no-store`。
 - Meta：請求帶 `store: false`。Meta 可能把重複的 prompt 前段算成 cached input token（計價較低），那只是重用輸入，答案每次都重新產生，所以同樣的請求可能得到不同的 picks。
 
+例外只有產品網頁自己的快取（下一節）：只在 `POST /search` 裡讀寫，MCP 的路徑碰不到（`test/web.test.ts` 有測：網頁同樣的搜尋兩次只呼叫一次模型，MCP 兩次仍是兩次）。
+
+## 產品網頁（`GET /`、`POST /search`，P5.7）
+
+一個搜尋框加上選填的作業系統、CPU、「只要免費」「要能離線」，對應 `find_software` 的 `need`、`os`、`arch`、`budget: free_only`、`must_run_locally`。程式在 `src/web.ts`（路由、限制）與 `src/page.ts`（HTML，純函式）。
+
+- **同一個大腦**：`POST /search` 先用 `server.ts` 的 `findInput`（MCP 工具同一個 zod schema）驗表單，再呼叫 `find.ts` 的 `findSoftware`，每個 pick 再呼叫 `install.ts` 的 `installGuide`，最後才排成 HTML。沒有另一份配對或安裝步驟的程式碼，網頁和 agent 不會分岔。沒選 OS 時，安裝步驟用 pickfit 實際跑過的那個系統，並寫明在哪裡跑的。
+- **路由**：`GET /` 只有在 `Accept` 含 `text/html`（瀏覽器）時回網頁；`curl`、健康檢查、`pickfit publish` 之後的確認照舊拿到 JSON（`Vary: Accept`）。所以公開網址打開就是產品，而部署檢查與評測部署比對 `data_sha256` 的方式不變。`GET /search` 轉回 `/`。沒有 JavaScript 時表單照樣送出，伺服器回整頁；有 JavaScript 時只換結果區（`X-Pickfit-Fragment: 1`）。
+- **呈現**：每個 pick 有 fit 句、理由（每條附上它引用的卡片欄位與值）、取捨、和知名工具的比較、`best_free`、試驗紀錄（驗證等級、在哪個 OS／CPU、沙盒重播或人工、日期、離線是否通過、「在你的系統上驗證過／沒有／請選 OS」）、`get_install_guide` 的步驟（第一個展開）、原始碼與 run record 連結（有才顯示）。`well_known_option` 放在虛線框、標「Not verified by pickfit」，沒有排名、徽章、試驗紀錄、安裝步驟或連結。沒有合適的工具時顯示 `coverage_note`。`find.ts` 給 agent 的「Verified on linux only…」取捨不重複顯示，因為試驗紀錄已經用完整句子說了。
+- **不記個資**：不存 IP。`events` 和 MCP 一樣只存解析後的條件，另標 `client = 'web'`，網頁和 agent 的使用量分得開。網頁上顯示安裝步驟**不**寫 `install_guide` 事件，因為使用者還沒選，而 MCP 的那個事件代表「選了這一款」。不支援 `?need=` 預填：請求網址會進 Workers log，頁尾寫著 pickfit 不留使用者的原話。
+- **花費與濫用**（每次搜尋是一次付費的 `muse-spark-1.3`，用 Worker 自己的 `meta_budget`）：
+  - **網頁上限** `WEB_DAILY_CAP_USD`（預設 2）：網頁搜尋用同一套 `checkBudget`，只是每日上限換成 `min(WEB_DAILY_CAP_USD, META_DAILY_CAP_USD)`。當天總花費（網頁加 MCP）到 $2 後，網頁改用規則排序，顯示「Model matching is paused for today」；剩下的 $1 只留給 agent。總額 $40 照舊。
+  - **每人頻率**：`ratelimits` 綁定 `WEB_RATE_LIMITER`，每分鐘 6 次（以 Cloudflare 機房計）。鍵是「UTC 日期＋IP」的 SHA-256 前 32 字元，只存在限流計數器裡，不進 D1、不進 log。沒有綁定時（例如在別的環境）改用這個 isolate 記憶體裡的計數；綁定出錯時放行並記 `web_rate_limit_failed`，花費仍受網頁上限擋。超過回 429、`Retry-After: 60` 與「Busy」訊息，不呼叫模型、不寫事件。
+  - **快取**：同樣的需求（忽略大小寫與多餘空白）加同樣的條件，10 分鐘內在同一個 isolate 直接重用結果，不呼叫模型、不寫事件，頁面註明是剛才的結果。鍵是雜湊，不留原話；`degraded` 的結果不快取，下一次會再試模型。
+  - **跨站**：`POST /search` 和 `/mcp` 一樣檢查 Host 與 Origin，別的網站的表單不能花這裡的預算。表單超過 4 KB 回 413；需求要 3–500 字，否則 400，都不呼叫模型。
+- **安全**：每個回應一個 CSP nonce（`default-src 'none'`，只允許自己的 inline script／style、`connect-src 'self'`、`form-action 'self'`、`frame-ancestors 'none'`）。資料與模型輸出全部跳脫；連結只收 http(s)，帶 `rel="noopener noreferrer"`，`Referrer-Policy: no-referrer`。沒有第三方字型或腳本。
+- **評測部署**：`env.eval`、`env.eval-rules` 設 `WEB_SEARCH: "off"`，`/` 永遠是 JSON、`/search` 是 404；`ratelimits` 綁定也不會被 env 繼承。
+- **實測**（10/29，本機 `wrangler dev`、真資料 96 筆、5 個自擬需求，不是評測題）：8 次 `muse-spark-1.3` 共 $0.139，平均 6.9 秒。git commit 訊息（Linux x86-64）→ Eckra，在你的系統上驗證過；講課影片離線字幕（macOS arm64、免費、離線）→ babelscribe，標「沒在你的系統上驗證」；壓測 OpenAI 相容端點（Linux）→ servebench；本機記錄 LLM API 花費（免費、不限 OS）→ TokenTracker；RAW 修圖（macOS、免費，不在涵蓋範圍）→ 沒有合適的，`well_known_option` 是 darktable，標未驗證。
+
 ## 評測部署（凍結、唯讀）
 
 同一份程式與資料，只靠 `wrangler.jsonc` 的設定分出不同部署（不改程式碼）：
@@ -178,5 +197,5 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
    uv run --project .. python -c "import sys; from pickfit.env import read_env; sys.stdout.write(read_env(['MODEL_API_KEY'])['MODEL_API_KEY'])" | npx wrangler secret put MODEL_API_KEY
    ```
 
-7. **確認**：`curl https://<host>/` 的 `entries` 等於 dry run 的筆數；`claude mcp add --transport http pickfit https://<host>/mcp`（用 `env -i` 啟動，見上）看得到 5 個工具；問一題，回應的 `matched_by` 是 `muse-spark-1.3`。
+7. **確認**：`curl https://<host>/` 的 `entries` 等於 dry run 的筆數（瀏覽器開同一個網址是產品網頁，試搜一次）；`claude mcp add --transport http pickfit https://<host>/mcp`（用 `env -i` 啟動，見上）看得到 5 個工具；問一題，回應的 `matched_by` 是 `muse-spark-1.3`。
 8. **緊急關模型**：`npx wrangler deploy --var MATCH_MODE:off`，或把 `META_DAILY_CAP_USD` 調成 `0` 再部署；兩種都會讓 `find_*` 改用規則、標 `degraded`。
