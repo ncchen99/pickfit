@@ -79,6 +79,27 @@ env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p "…" \
 
 模型偏保守：GPU 伺服器那題沒提 vLLM、換掉 Ollama 那題沒提 llama.cpp。寧可少提，不要每題都推知名工具蓋過長尾的 picks。
 
+### 知名工具的參考紀錄（`well_known`，10/29 試做，未決定是否併入）
+
+發現只收 ≤300 星的長尾工具，所以知名的免費工具永遠不會是 pick。參考紀錄讓少數知名工具也有實跑過的安裝步驟、可以被選，但和長尾分開標示。
+
+- **怎麼選（規則，不手挑）**：`pickfit.discover.well_known`。Homebrew core（不含 tap）依過去 365 天 install-on-request 排名，前 1000 名（約每年 ≥9.5k 次）且原始碼在 GitHub 的，當成 candidate 存進 pipeline DB（query `well_known:homebrew`），安裝數證據另存在 `well_known` 表。類別照常由 prescreen 與抽取決定（類別定義），每類取排名最前的 N 個。
+- **紀錄**：`software.v1` 多一個選填的 `well_known`（basis、package、rank、count、門檻、期間、來源網址、查證時間）；有它的紀錄 `scores.treasure.excluded = "well_known"`，**永遠不是寶藏**，不論分數。兩個欄位是 null 時不寫進檔案，長尾紀錄不會變。索引帶 `well_known: {package, rank, count, period_end}` 或 `null`。
+- **Worker**：卡片多 `well_known` 欄位；prompt 第 3 條說只有比長尾候選更適合時才選它，而且最多一個；守門與規則模式都只留一個。pick 帶 `well_known` 物件，`how_we_know` 多一句 Homebrew 排名。超過 60 張卡時參考紀錄一定留著（寶藏排序一定會把它們排掉）。
+
+試做結果（排名前 700 名掃完；花費 Meta $0.47、Baseten $1.27）：
+
+| 工具 | Homebrew 排名 | 驗證 | 品質 | 抽取的缺口 |
+|---|---|---|---|---|
+| ollama | 23 | install（沙盒沒有 root，改解壓 tarball 到 `~/.local`） | 64.9 | 價格 null、`processing: hybrid` |
+| llama.cpp | 72 | inference | 89.6 | 價格 null、平台空、`hybrid` |
+| whisper（openai-whisper） | 158 | install（`uv tool install`） | 52.3 | 價格 null、平台空 |
+| whisper.cpp | 219 | 未驗證：抽取說只支援 macOS，Linux 沙盒不收 | 69.0（上限） | 價格 null |
+
+llmfit（273）與 goose（469）prescreen 判 local_ai，但抽取判 dev_cli，所以不算。700–1000 名沒有掃；從名稱看只有 onnxruntime（函式庫）與 aider（coding agent）。
+
+真實配對（10 題自擬需求，不是評測題，$0.22）：**參考紀錄 0 次被選**，即使它們在卡片裡（Linux 本機聊天有 ollama、llama.cpp；Linux 轉錄有 whisper），模型都選長尾工具。抽取沒寫價格，所以 `budget: free_only` 一律擋掉它們；ollama、llama.cpp 是 `hybrid`，`must_run_locally` 也擋掉。副作用：「Mac 上免費離線的本機聊天」這題，模型在 `well_known_option` 提了 Ollama，但 Ollama 現在是目錄裡的一筆，守門以 `listed_in_pickfit` 丟掉，使用者連一句未驗證的提及都沒有了。
+
 ### `report_outcome`
 
 - 7 個 stage 存成 `(stage, success)`，對照寫在 `migrations/0001_init.sql` 開頭；`satisfaction` 存成 1／0／-1。
