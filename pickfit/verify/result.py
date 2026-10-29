@@ -8,17 +8,18 @@ is checked again instead of trusted. Steps and smoke tests are the commands as
 the replay ran them; the model's own words only survive as pitfalls and the
 tool version, and the version only if some output printed it.
 
-A failed claim stays failed only on structural evidence about the installed
-package, found by a fresh box that reinstalled it (failure.py; replayed then
-means "a fresh box reinstalled it and found the same defect"). Otherwise it is
-unverified: with the box limit its error shows, "suspected_tool_fault" when the
-tool's own command fails with an error of its code, or "other".
+The pipeline never makes a run failed; only a person's run (method human), or a
+check of the published package by hand (artifact_check), can. A failed claim is
+unverified: with the box limit its error shows, else "suspected_tool_fault",
+with what the log, a fresh box and the structure probe found (failure.py) as
+evidence in blocking_error and a failed smoke test.
 A step that only works around the box (a shim) keeps a run from passing.
 
-write_back() updates data/software/<slug>.json for a passed, replayed run, a
-repeated failure, or an unverified run whose reason describes the software. The
+write_back() updates data/software/<slug>.json for a passed, replayed run, or an
+unverified run whose reason describes the software; never for a failed run. The
 run replaces the earlier run on the same OS, arch and method, except that a run
-that did not pass is never written on an OS with a passed run. A passed run's
+that did not pass is never written on an OS with a passed run, nor over a failed
+run, and a weaker pass never replaces a stronger one. A passed run's
 steps become that OS's install guide; existing scores are refreshed for the new
 runs (refresh_scores, no model call).
 """
@@ -179,36 +180,31 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         if is_passed(level) or level == "failed":
             level, reason = "unverified", "other"
             blocking = "; ".join([*workarounds, *([blocking] if blocking else [])])
-    # A failure is the box's when the box's limit explains it; the software's only if it repeated.
-    elif verdict.get("claimed_level") == "failed":
-        # Failed only on structural evidence about the installed package; a runtime error is a suspicion.
+    elif level == "failed" or verdict.get("claimed_level") == "failed":
+        # The pipeline never writes failed (a person's run does): a failed claim is the box's limit when
+        # the error shows one, else a suspicion, with what the log, a fresh box and the probe found.
         suspect, why_not = tool_command(verdict, report.commands)
-        defect = structural_defect(confirm.structure) if confirm is not None else None
-        if level == "failed" and suspect is not None and defect:
-            replayed = True
-            notes.append(f"the package itself is broken: {defect}")
-            blocking = f"{defect}; {blocking}" if blocking else defect
+        limit = failure_reason(verdict, report.commands, blocking)
+        found: list[str] = []
+        if suspect is not None:
+            error, why = own_error(suspect)
+            found.append(f"command {suspect.command_id} exits {suspect.exit_code}"
+                         + (f" with {error}" if error else f" ({why})"))
+            evidence = suspect  # kept as a failed smoke test: the command, its exit code, its error
         else:
-            limit = failure_reason(verdict, report.commands, blocking)
-            error, why_not = own_error(suspect) if suspect is not None else (None, why_not)
-            passed_fresh = confirm is not None and confirm.failing is not None and confirm.failing.ok
-            if limit:
-                note, reason = f"the box, not the software, explains the failure ({limit})", limit
-            elif error and not passed_fresh:
-                again = " again in a fresh box" if confirm is not None and confirm.reproduced else ""
-                note = (f"suspected tool fault, not proven: command {suspect.command_id} exits {suspect.exit_code}"
-                        f"{again} with {error}")
-                reason = "suspected_tool_fault"
-            elif passed_fresh:
-                note, reason = f"the failure did not repeat in a fresh box ({confirm.error})", "other"
-            else:
-                note, reason = f"no evidence that the tool itself is at fault: {why_not}", "other"
+            found.append(f"nothing checked further ({why_not})")
+        if confirm is not None:
+            found.append("it failed again in a fresh box" if confirm.reproduced else f"fresh box: {confirm.error}")
+            defect = structural_defect(confirm.structure)
+            if defect:
+                found.append(f"probe: {defect}")
+        level, reason = "unverified", limit or "suspected_tool_fault"
+        if limit:
+            notes.append(f"the box, not the software, explains the failure ({limit})")
+        else:
+            note = f"suspected tool fault, not proven: {'; '.join(found)}"
             notes.append(note)
-            if reason in ("suspected_tool_fault", "other"):
-                blocking = f"{note}; {blocking}" if blocking else note
-            level = "unverified"
-            if reason == "suspected_tool_fault":
-                evidence = suspect  # keep the failing command, its exit code and its error as a smoke test
+            blocking = f"{note}; {blocking}" if blocking else note
 
     by_id = {c.command_id: c for c in report.commands if c.command_id is not None}
     step_ids = verdict.get("step_ids") or []
@@ -256,7 +252,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
                                    exit_code=c["exit_code"], passed=c["passed"],
                                    observed_excerpt=_clip(c.get("observed_excerpt"), 300),
                                    setup=setup + before))
-    failing = confirm.failing if confirm and level == "failed" else evidence
+    failing = evidence
     fitted = _record_check(failing.command) if failing else None
     if failing and fitted and not any(t.command == fitted[0] for t in smoke):
         smoke.append(SmokeTest(command=fitted[0], expected_signal="", exit_code=failing.exit_code, passed=False,
@@ -272,8 +268,6 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         reason = "other"
     outputs = [f"{c.stdout}\n{c.stderr}" for c in report.commands]
     method = infer_install_method([s.command for s in steps], finish.get("install_method"))
-    if level == "failed" and not (blocking or "").strip():
-        blocking = (finish.get("summary") or "").strip() or "not given"
     run = VerificationRun(
         id=report.run_id, level=level, unverified_reason=reason, os=report.box.get("os", "linux"),
         arch=report.box.get("arch", "x86_64"), method="sandbox", runner=report.box.get("runner"),
@@ -327,7 +321,9 @@ def install_guide(run: VerificationRun) -> InstallGuide:
 
 def _unwritable(run: VerificationRun) -> str | None:
     """Why a run says nothing a record should keep, or None."""
-    if is_passed(run.level) or run.level == "failed":
+    if run.level == "failed":
+        return "the pipeline never writes failed (a person's run does)"
+    if is_passed(run.level):
         return None if run.replayed else f"level {run.level}, replayed False"
     if run.unverified_reason in WRITTEN_REASONS:
         return None
@@ -347,6 +343,10 @@ def write_back(run: VerificationRun, slug: str, data_dir: Path = DATA_DIR) -> tu
         held = next((r for r in record.verification.runs if r.os == run.os and is_passed(r.level)), None)
         if held:
             return False, f"not written: {run.level} would sit beside the passed {run.os} run {held.id}"
+        failed = next((r for r in record.verification.runs if (r.os, r.arch, r.method) == (run.os, run.arch, run.method)
+                       and r.level == "failed"), None)
+        if failed:
+            return False, f"not written: {run.level} would replace the failed run {failed.id}; only a pass does"
     same = next((r for r in record.verification.runs if (r.os, r.arch, r.method) == (run.os, run.arch, run.method)
                  and is_passed(r.level)), None)
     if same and is_passed(run.level) and PASSED_LEVELS.index(run.level) > PASSED_LEVELS.index(same.level):

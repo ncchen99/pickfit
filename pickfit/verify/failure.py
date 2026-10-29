@@ -1,23 +1,22 @@
-"""Runs that did not pass: whose fault it is. No model call.
+"""Runs that did not pass: whose fault it is. No model call, and never a failed verdict.
 
-A sandbox run is failed only on structural evidence about the installed package itself, which no
-limit of the box can produce (structural_defect): a fresh box reruns the cited install steps, then a
-probe reads the package's own metadata and finds that its console script's module is not installed
-(Python: entry_points and RECORD, plus the import system's finders), or that its npm bin file is not
-in a package with no install scripts. The probe runs only when the agent claims failed, every cited
-install step succeeded, and the failing command is the tool's own (tool_command), with no box limit
-in its error tail.
+The pipeline never makes a run failed: a box limit can look like any error, a fresh box of the same
+image repeats it, and a probe of an installed package cannot tell a broken package from an
+incomplete install. failed comes only from a person's run (method human) or a check of the
+published package by hand (VerificationRun.artifact_check). A failed claim from the agent is
+unverified: with a specific box reason when the failing command's error tail shows one
+(output_limit: no compiler, root, Docker, CUDA, memory, disk, an account) or, when the log names
+no failing command and no check passed, when the agent's description does (box_reason); else
+"suspected_tool_fault", kept for a human check or another environment.
 
-Runtime errors alone do not make a run failed: a box limit can look like any exception. When the
-failing command shows an error of the tool's code (own_error) but no structural defect, the run is
-unverified "suspected_tool_fault", with the command, its exit code and its error tail as evidence
-for a human check or another environment. A specific box reason comes from the error tail
-(output_limit: no compiler, root, Docker, CUDA, memory, disk, an account) or, when the log names no
-failing command and no check passed, from the agent's description (box_reason); "other" otherwise.
+What it rests on is kept as evidence: the failing command, its exit code and its error
+(tool_command, own_error); when that command is the tool's own, run after every cited install step
+succeeded, a fresh box reruns the steps and the command (failure_plan, confirm_failure) and probes
+the installed package's own metadata (structure_probe, structural_defect).
 
 - sandbox_only() and cited_workarounds(): a command that only works around the box (a shim for
   nvidia-smi, a fake docker) is not part of a user's install, so a run that cites one, as a step,
-  a setup, a check or the failing command, neither passes nor fails.
+  a setup, a check or the failing command, neither passes nor counts as a suspicion.
 - WRITTEN_REASONS: the unverified reasons worth writing back to a record; "other",
   "budget_exceeded" and "not_run" say nothing about the software.
 """
@@ -406,7 +405,11 @@ def parse_structure(stdout: str) -> dict[str, Any] | None:
 
 
 def structural_defect(structure: dict[str, Any] | None) -> str | None:
-    """Evidence that the installed package lacks what its own metadata names, or None."""
+    """What the probe found missing from the installed package, as evidence, or None.
+
+    Evidence only, never a verdict: an install from source that skipped its build, an optional
+    extension the box could not compile, or npm's own bin-path cleanup can look the same.
+    """
     if not structure:
         return None
     if structure.get("kind") == "python" and structure.get("dist") and not structure.get("in_files") \

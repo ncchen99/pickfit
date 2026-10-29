@@ -8,7 +8,7 @@
    A failed claim whose failing command is the tool's own, run after every
    install step succeeded, gets a fresh box that reruns the steps and that
    command, then probes the installed package's own structure (failure.py, no
-   model). Only a structural defect makes the run failed; the rest is unverified.
+   model). That is evidence only: the pipeline never writes failed.
 5. result.py turns the three into a VerificationRun, saved next to the
    agent's report; write_back() updates data/software/<slug>.json when asked.
 

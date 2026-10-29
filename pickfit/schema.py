@@ -565,8 +565,8 @@ class VerificationRun(_Model):
     install_method: InstallMethod | None = None
     replayed: bool = Field(
         description=(
-            "A fresh sandbox replayed the run with the same outcome: the steps and checks "
-            "passed again, or, for a failed run, it reinstalled the package and found the same defect."
+            "A fresh sandbox replayed the steps with the same outcome: for a passed run, the "
+            "steps and checks passed again."
         )
     )
     steps: list[InstallStep] = Field(description="The successful path, in order.")
@@ -597,8 +597,9 @@ class VerificationRun(_Model):
                 raise ValueError(f"a {self.level!r} run needs at least one passing smoke test")
         if self.level == "failed" and not self.blocking_error:
             raise ValueError("a failed run must record blocking_error")
-        if self.level == "failed" and self.method == "sandbox" and not self.replayed:
-            raise ValueError("a failed sandbox run must repeat its failure in a fresh sandbox")
+        if self.level == "failed" and self.method == "sandbox" and self.artifact_check is None:
+            raise ValueError("a sandbox run is never failed on its own: failed needs a person's run, "
+                             "or a check of the published package (artifact_check)")
         return self
 
 
