@@ -555,7 +555,8 @@ umask 077
 PICKFIT_ADMIN_PW="$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | cut -c1-32)"
 export PICKFIT_ADMIN_PW
 test "${{#PICKFIT_ADMIN_PW}}" -eq 32
-dscl . -passwd /Users/admin "$PICKFIT_ADMIN_PW"
+# admin has a Secure Token, so even root must give the old password (the image's published default).
+dscl . -passwd /Users/admin admin "$PICKFIT_ADMIN_PW"
 {GUEST_PYTHON} -I - <<'PICKFIT_PY'
 import os
 key = (125, 137, 82, 35, 210, 188, 221, 234, 163, 185, 31)  # macOS's kcpassword XOR key
