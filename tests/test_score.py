@@ -187,6 +187,35 @@ def test_hygiene_parts_ignore_vendored_files() -> None:
         "ci": False, "tests": True, "osi_license": False, "changelog": True, "lockfile": False}
 
 
+# Texts that the untagged rules read the other way, so each kind is seen deciding on its own.
+LOOKS_LIKE_A_FIX = ("tool link", "tool pair")
+LOOKS_LIKE_THE_BOX = ("sudo install tool", "install to ~/.local/bin (no sudo in the box)")
+
+
+@pytest.mark.parametrize(("kind", "fix"), [("readme_wrong", True), ("sandbox", False), ("tool_handled", False),
+                                           ("note", False)])
+def test_a_tagged_pitfall_counts_as_a_readme_fix_only_when_readme_wrong(kind: str, fix: bool) -> None:
+    for said, needed in (LOOKS_LIKE_A_FIX, LOOKS_LIKE_THE_BOX):
+        assert readme_fix(Pitfall(readme_said=said, actually_needed=needed, kind=kind)) is fix
+    assert readme_fix(Pitfall(readme_said=LOOKS_LIKE_A_FIX[0], actually_needed=LOOKS_LIKE_A_FIX[1]))  # untagged
+    assert not readme_fix(Pitfall(readme_said=LOOKS_LIKE_THE_BOX[0], actually_needed=LOOKS_LIKE_THE_BOX[1]))
+
+
+def test_kinds_and_untagged_pitfalls_mix_in_one_run() -> None:
+    blocked = Pitfall(readme_said="tool generate path/to/repo", actually_needed="needs a model server", kind="sandbox")
+    follows = Pitfall(readme_said="tool serve [path]", actually_needed='exits 1: Run "tool generate" first.')
+    tagged_follows = Pitfall(readme_said="tool serve [path]", actually_needed='exits 1: Run "tool generate" first.',
+                             kind="readme_wrong")
+    note = Pitfall(readme_said="curl https://x.dev/i.sh | sh", actually_needed="the script was run without being read",
+                   kind="note")
+    assert readme_fixes([blocked, follows, note]) == 0  # a sandbox-tagged step blocks an untagged follower too
+    assert readme_fixes([blocked, tagged_follows, note]) == 1  # a tagged follower keeps its kind
+    notes = verification({**run(), "pitfalls": [{"readme_said": "a", "actually_needed": "b", "kind": "note"}] * 3})
+    assert sandbox_score(notes, "dev_cli") == 1.0  # recording notes costs nothing
+    wrong = verification({**run(), "pitfalls": [{"readme_said": "a", "actually_needed": "b", "kind": "readme_wrong"}]})
+    assert sandbox_score(wrong, "dev_cli") == 0.85
+
+
 def test_a_pitfall_that_follows_from_a_box_blocked_step_is_not_a_readme_fix() -> None:
     blocked = Pitfall(readme_said="tool generate path/to/repo",
                       actually_needed="`tool generate /tmp/r` exits 1: Cannot reach Ollama at localhost:11434")

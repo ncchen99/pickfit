@@ -7,11 +7,11 @@ quality (0-100) is a weighted mean of six components, each 0-1:
   a dev CLI is fully checked at function, a local AI tool at inference). Step tiers: <=3 install
   actions 1.0, 4-6 0.85, more 0.7. Actions are counted inside the recorded steps, which chain
   commands with && (install_actions); looking around (ls, head, wc, --version, a VAR=$(...) that
-  only looks) is not an action, and heredoc lines are file content. A pitfall counts as a README
-  fix unless pickfit's box explains it (no root, no toolchains, scripts read first, no GPU,
-  Docker, keys or configuration...), it says the README was right or the tool did the step by
-  itself, it follows from a step the box blocked, or it is only about pickfit's --version/--help
-  check (readme_fixes).
+  only looks) is not an action, and heredoc lines are file content. A pitfall tagged with a kind
+  counts as a README fix only when it is readme_wrong. An untagged one counts unless pickfit's box
+  explains it (no root, no toolchains, scripts read first, no GPU, Docker, keys or
+  configuration...), it says the README was right or the tool did the step by itself, it follows
+  from a step the box blocked, or it is only about pickfit's --version/--help check (readme_fixes).
 - install_docs 25: muse-spark-1.3 grades the README against B.3's 8-item rubric (0/1/2 each,
   points / 16). Every item above 0 needs a verbatim quote; an item whose quote is not in the
   sources counts 0. The answer is kept in scores.docs_rubric and reused while the sources stay
@@ -290,7 +290,11 @@ _INSTALL_WORDS = re.compile(r"\b(?:npm|pnpm|bun|yarn|pip3?|pipx|uv|cargo|brew|go
 
 
 def readme_fix(pitfall: Pitfall) -> bool:
-    """B.3's "had to correct the README to succeed": a pitfall the box and pickfit's checks do not explain."""
+    """B.3's "had to correct the README to succeed". A pitfall tagged with a kind says so itself: only
+    readme_wrong is a fix; sandbox, tool_handled and note never are, so recording a note costs nothing.
+    An untagged (older) pitfall is a fix when the box and pickfit's checks do not explain its text."""
+    if pitfall.kind is not None:
+        return pitfall.kind == "readme_wrong"
     said, needed = pitfall.readme_said, pitfall.actually_needed
     if _BOX_PITFALL.search(f"{said} {needed}") or _NOT_A_FIX.search(needed):
         return False
@@ -304,13 +308,18 @@ def _command_key(text: str) -> str | None:
     return " ".join(words[:2]) if len(words) >= 2 else None
 
 
+def _box_caused(pitfall: Pitfall) -> bool:
+    if pitfall.kind is not None:
+        return pitfall.kind == "sandbox"
+    return bool(_BOX_PITFALL.search(f"{pitfall.readme_said} {pitfall.actually_needed}"))
+
+
 def readme_fixes(pitfalls: list[Pitfall]) -> int:
-    """README fixes in one run. A pitfall that only follows from a step the box blocked (`serve` fails
-    because `generate` needs a model server) is the box's too."""
-    blocked = {key for p in pitfalls if _BOX_PITFALL.search(f"{p.readme_said} {p.actually_needed}")
-               and (key := _command_key(p.readme_said))}
+    """README fixes in one run. An untagged pitfall that only follows from a step the box blocked (`serve`
+    fails because `generate` needs a model server) is the box's too; a tagged one keeps its kind."""
+    blocked = {key for p in pitfalls if _box_caused(p) and (key := _command_key(p.readme_said))}
     return sum(1 for p in pitfalls if readme_fix(p)
-               and not any(key in p.actually_needed.lower() for key in blocked))
+               and (p.kind is not None or not any(key in p.actually_needed.lower() for key in blocked)))
 
 
 # How much of the tool a passed run proved (C.3). A dev CLI is fully checked once a README example
