@@ -21,18 +21,20 @@
   su; and the guest agent runs from a root-owned copy, not from the
   sbx-owned /opt/homebrew. Every box checks all of that before it runs a
   model command and refuses an unhardened base.
-- Network: the guest's pf firewall, loaded as root by the harness, blocks
-  private ranges, link-local (cloud metadata) and the host (only DNS to the
-  resolver is allowed), and IPv6. DNS is pinned to the IPv4 resolver (the
-  VM's gateway): vmnet also hands out an IPv6 link-local resolver first, and
-  with IPv6 blocked every lookup waited 3 s for it (measured 2026-10-29).
-  set_network(False) blocks everything but loopback and drops existing
-  connections. sbx cannot change pf. After every change the harness checks
-  that pf is enabled with pickfit's labelled ruleset, and offline that a
-  connection to the internet really fails; before turning the network back
-  on it checks that the cut held, so `offline` is never claimed on a word.
-  The policy lives in the guest: moving it to the host (softnet) needs a
-  one-time setuid step on the Mac, which is the owner's to take.
+- Network: the policy lives on the HOST, in Tart's softnet packet filter, so
+  in-guest root cannot change it. softnet's own default allows the public
+  internet AND the vmnet gateway, and that gateway is this Mac (measured: host
+  ports answered the guest under the default), so online explicitly blocks
+  @host; private ranges, link-local/metadata and IPv6 are not globally
+  routable and the default already drops them. Because the gateway is blocked
+  it cannot be the DNS resolver, so the guest uses public resolvers (1.1.1.1).
+  Offline is block 0.0.0.0/0. softnet drops blocked traffic silently, so after
+  every policy change the harness confirms AS ROOT that the host, a private
+  address, metadata and IPv6 all time out (curl exit 28, not a refusal), that
+  the internet is reachable only online, and before re-enabling that the cut
+  held -- `offline` is never claimed on a word. The limits test adds a
+  positive control (an open host port answers with the block off, then drops
+  with it on) so the probe cannot silently pass.
 - Lifetime: besides the harness's timer, the guest schedules its own
   shutdown and a detached host process stops and deletes the clone, so a
   dead harness does not leave a VM running.
@@ -143,15 +145,26 @@ VM_LIMIT_HINT = ("macOS refused to start another VM (Apple allows two at once; b
 
 # The network policy lives on the HOST, in Tart's softnet packet filter, so nothing inside the guest --
 # not even root -- can change it (the box user can reach the auto-login admin, who has sudo; a guest-side
-# firewall was defeatable from there). Online uses softnet's own default: it allows the public internet
-# but blocks the private IPv4 ranges, link-local/metadata and the host, and isolates the bridge, so the
-# allow/block lists stay empty. Offline is a default-deny egress policy.
+# firewall was defeatable from there). softnet's OWN default allows the public internet AND the vmnet
+# gateway, which IS this Mac (README: "send traffic to gateway IP of the vmnet bridge"); measured
+# 2026-10-29, host ports 3000/5000/7000 answered from the guest under the default. So online explicitly
+# blocks @host; private IPv4 and link-local/metadata are not globally routable, so the default already
+# drops them. Offline is a default-deny egress policy. softnet drops blocked traffic silently, so a
+# blocked destination shows up as a curl connect timeout (exit 28), never a refusal (exit 7 = reached).
 SOFTNET_BIN = "softnet"
-SOFTNET_POLICY = {True: {"allow": [], "block": []}, False: {"allow": [], "block": ["0.0.0.0/0"]}}
-# Checked as root in the guest after every policy change: the internet is reachable only online, and the
-# host, cloud metadata and a private address are never reachable (softnet denies them to in-guest root too).
-PUBLIC_PROBE = "curl -sS -m 6 -o /dev/null -w '%{http_code}' https://pypi.org/simple/pip/"
-CONTAINED_PROBES = {"metadata": "169.254.169.254", "private": "10.0.0.1"}
+SOFTNET_POLICY = {True: {"allow": [], "block": ["@host"]}, False: {"allow": [], "block": ["0.0.0.0/0"]}}
+# DNS cannot go to the gateway any more (it is @host, now blocked), so the guest uses public resolvers.
+PUBLIC_DNS = ("1.1.1.1", "1.0.0.1")
+CURL_DROP = 28  # softnet silently drops -> curl's connect times out; 0 = reached, 7 = reached+refused
+PUBLIC_URL = "https://pypi.org/simple/pip/"
+# Host ports to probe for containment. Several are services this Mac tends to run (3000 dev servers,
+# 5000/7000 AirPlay/ControlCenter), so if @host were NOT blocked an open one would answer (exit 0); with
+# it blocked every one drops (exit 28). Closed ports alone (22/80) could not tell blocked from refused.
+HOST_PORTS = (3000, 5000, 7000, 49152, 22, 80, 443, 88)
+# Never reachable in either phase: cloud metadata and a private address (positive-controlled in the
+# limits test via the host ports, which softnet filters the same way).
+CONTAINED_PROBES = {"metadata": "http://169.254.169.254/", "private": "http://10.255.255.1/"}
+IPV6_PROBE = "http://[2606:4700:4700::1111]/"  # a public IPv6 (Cloudflare); the guest must have no v6 egress
 
 
 def softnet_real_path(name: str = SOFTNET_BIN) -> str | None:
@@ -203,8 +216,13 @@ class SoftnetControl:
             pass
 
     def set_policy(self, online: bool) -> dict[str, Any]:
+        return self.set_rules(**SOFTNET_POLICY[online])
+
+    def set_rules(self, *, allow: list[str], block: list[str]) -> dict[str, Any]:
+        """Replace softnet's live allow/block lists (the limits test uses this for its positive control)."""
         self._id += 1
-        req = {"jsonrpc": "2.0", "id": self._id, "method": "softnet.policy.set", "params": SOFTNET_POLICY[online]}
+        req = {"jsonrpc": "2.0", "id": self._id, "method": "softnet.policy.set",
+               "params": {"allow": allow, "block": block}}
         try:
             self.parent.sendall((json.dumps(req) + "\n").encode())
             reply = json.loads(self._readline())
@@ -244,10 +262,12 @@ def load_manifest(base: str = BASE_VM, state_dir: Path | None = None) -> dict[st
 
 
 def image_label(manifest: dict[str, Any]) -> str:
-    """What `VerificationRun.image` records: source image digest, guest macOS, pickfit's base."""
+    """What `VerificationRun.image` records: source image digest, guest macOS, and pickfit's base build id,
+    so a run names the exact base it ran on (a later rebuild gets a new id)."""
     digest = (manifest.get("source_digest") or "").removeprefix("sha256:")[:12] or "unknown"
     source = manifest.get("source", SOURCE_IMAGE).split(":")[0].removeprefix("ghcr.io/")
-    return f"{source}@sha256:{digest} macOS {manifest.get('macos', '?')} +{manifest.get('base', BASE_VM)}"[:120]
+    build = manifest.get("build_id") or "nobuild"
+    return f"{source}@sha256:{digest} macOS {manifest.get('macos', '?')} +{manifest.get('base', BASE_VM)}@{build}"[:120]
 
 
 def _tart_json(tart: str, *args: str) -> Any:
@@ -310,6 +330,7 @@ class TartBox(Box):
         self.start_s: float | None = None
         self.network_enabled = True
         self.resolvers: list[str] = []
+        self.gateway: str | None = None  # the vmnet gateway (== @host); set in _setup, the host-probe target
         self.vm_proc: subprocess.Popen[bytes] | None = None
         self.vm_log: Path | None = None
         self.control: SoftnetControl | None = None  # host end of softnet's policy channel
@@ -447,17 +468,20 @@ class TartBox(Box):
             if check.returncode != 0:
                 raise BoxError(f"the base VM is not hardened ({(check.stdout + check.stderr).strip()[-300:]}); "
                                "rebuild it with `pickfit verify --runner tart --prepare-base`")
-        # Wait for the default route, then pin DNS to the gateway. softnet's NAT already hands out a
-        # working resolver, so a pin failure is not fatal (the online check below resolves a hostname and
-        # would catch a real DNS fault); pinning only avoids a slow IPv6-resolver fallback if one appears.
+        # Wait for the default route, then pin DNS to PUBLIC resolvers. The gateway cannot be the resolver
+        # any more: it is @host, which the online policy blocks, so a gateway resolver would make DNS fail.
+        # Public resolvers (1.1.1.1) are globally routable, which softnet allows.
         pin = (f"for i in $(seq 1 {NETWORK_WAIT_S}); do route -n get default >/dev/null 2>&1 && break; "
-               "sleep 1; done; gw=$(route -n get default | awk '/gateway:/ {print $2}'); echo \"$gw\"; "
+               "sleep 1; done; gw=$(route -n get default | awk '/gateway:/ {print $2}'); echo \"gw=$gw\"; "
                "svc=$(networksetup -listallnetworkservices | sed -n 2p); "
-               "networksetup -setdnsservers \"$svc\" \"$gw\" 2>/dev/null || true")
+               f"networksetup -setdnsservers \"$svc\" {' '.join(PUBLIC_DNS)}")
         net = self._root(pin, NETWORK_WAIT_S + 20)
-        self.resolvers = [ip for ip in net.stdout.split() if re.fullmatch(r"\d+\.\d+\.\d+\.\d+", ip)]
-        if net.returncode != 0 or not self.resolvers:
-            raise BoxError(f"guest network did not come up: {(net.stdout + net.stderr).strip()[-300:]}")
+        gw = re.search(r"gw=(\d+\.\d+\.\d+\.\d+)", net.stdout)
+        if net.returncode != 0 or gw is None:
+            raise BoxError(f"guest network did not come up (no default gateway): "
+                           f"{(net.stdout + net.stderr).strip()[-300:]}")
+        self.gateway = gw.group(1)
+        self.resolvers = list(PUBLIC_DNS)
         files = {"timeout": HELPER_TIMEOUT, "detach": HELPER_DETACH}
         script = [f"set -e; mkdir -p {HELPER_DIR}"]
         for name, text in files.items():
@@ -571,31 +595,99 @@ class TartBox(Box):
             raise BoxError(f"cannot read {path}: {proc.stderr.decode(errors='replace').strip()[-300:]}")
         return proc.stdout[:max_bytes]
 
+    def _curl_codes(self, targets: dict[str, str], timeout: int = 4) -> tuple[dict[str, int], str]:
+        """Run `curl` to each target as root, concurrently; return {name: exit code} and the raw output.
+
+        Raises (fails closed) if the gateway is unknown or any probe produced no exit code.
+        """
+        if not self.gateway:
+            raise BoxError("firewall check: the guest has no default gateway")
+        lines = []
+        for name, url in targets.items():
+            url = url.replace("$gw", self.gateway)
+            lines.append(f"( curl -sS -m {timeout} -o /dev/null {shlex.quote(url)} 2>/dev/null; echo {name}=$? ) &")
+        lines.append("wait")
+        out = self._root("\n".join(lines), timeout + 25).stdout
+        codes = {m.group(1): int(m.group(2)) for m in re.finditer(r"(\w+)=(-?\d+)", out)}
+        missing = [n for n in targets if n not in codes]
+        if missing:
+            raise BoxError(f"firewall check could not run (no result for {', '.join(missing)}): {out.strip()[-200:]}")
+        return codes, out
+
+    def _firewall_targets(self, online: bool) -> dict[str, str]:
+        targets = {"public": PUBLIC_URL, "ipv6": IPV6_PROBE, **CONTAINED_PROBES}
+        for port in (5000, 7000, 3000, 22):
+            targets[f"host{port}"] = f"http://$gw:{port}/"
+        return targets
+
     def _check_firewall(self, *, online: bool) -> None:
         """Confirm softnet's host-side policy from inside the guest, as root (it must contain root too).
 
-        Online: the public internet is reachable and the host, cloud metadata and a private address are
-        not. Offline: the public internet is not reachable either. curl exits 0 when it connects and
-        non-zero (DNS/refused/timeout) when softnet drops the traffic.
+        The host, a private address, cloud metadata and IPv6 must all be dropped (curl exit 28) in both
+        phases. The public internet must be reachable (0) online and dropped (28) offline. A refusal
+        (exit 7) fails: it means the packet reached the host. Fails closed if a probe cannot run.
         """
-        checks = [f"{PUBLIC_PROBE} >/dev/null 2>&1; echo public=$?"]
-        if online:
-            for name, ip in CONTAINED_PROBES.items():
-                checks.append(f"curl -sS -m 6 -o /dev/null http://{ip}/ 2>/dev/null; echo {name}=$?")
-            checks.append("gw=$(route -n get default | awk '/gateway:/ {print $2}'); "
-                          "curl -sS -m 6 -o /dev/null http://$gw/ 2>/dev/null; echo host=$?")
-        out = self._root("; ".join(checks), 60).stdout
-        codes = dict(re.findall(r"(\w+)=(-?\d+)", out))
+        codes, out = self._curl_codes(self._firewall_targets(online))
         where = "online" if online else "offline"
-        if online and codes.get("public") != "0":
-            raise BoxError(f"firewall check (online): the internet was not reachable ({out.strip()[-160:]})")
-        if not online and codes.get("public") == "0":
-            raise BoxError(f"firewall check (offline): the internet was still reachable ({out.strip()[-160:]})")
-        if online:
-            reachable = [name for name in (*CONTAINED_PROBES, "host") if codes.get(name) == "0"]
-            if reachable:
-                raise BoxError(f"firewall check (online): softnet let the guest reach {', '.join(reachable)} "
-                               f"({out.strip()[-160:]})")
+        bad: list[str] = []
+        must_drop = ["ipv6", *CONTAINED_PROBES, *(k for k in codes if k.startswith("host"))]
+        if not online:
+            must_drop.append("public")
+        elif codes["public"] != 0:
+            bad.append(f"internet unreachable online (public={codes['public']})")
+        for name in must_drop:
+            if codes[name] != CURL_DROP:
+                how = "reached" if codes[name] in (0, 7) else f"exit {codes[name]}"
+                bad.append(f"{name} not dropped ({how})")
+        if bad:
+            raise BoxError(f"firewall check ({where}) failed: {'; '.join(bad)} | {out.strip()[-160:]}")
+
+    def validate_containment(self, timeout: int = 4) -> list[tuple[str, bool, str, str]]:
+        """Positive/negative control for the limits test (as root): prove the probe can see an open host
+        port with the block off, then prove the online and offline policies drop it. Returns named results;
+        restores the online policy before returning. Mutates the live policy, so only the limits test
+        (no untrusted code running) calls it."""
+        results: list[tuple[str, bool, str, str]] = []
+
+        def rec(name: str, ok: bool, expect: str, detail: str) -> None:
+            results.append((name, ok, expect, detail))
+
+        if not self.gateway or self.control is None:
+            rec("gateway_found", False, "a default gateway and control channel", str(self.gateway))
+            return results
+        rec("gateway_found", True, "a default gateway is set", self.gateway)
+        # Positive control: with the host allowed, find a host port that actually answers.
+        self.control.set_rules(allow=["@host"], block=[])
+        host_targets = {f"host{p}": f"http://$gw:{p}/" for p in HOST_PORTS}
+        codes, _ = self._curl_codes(host_targets, timeout)
+        open_ports = [int(n[4:]) for n, c in codes.items() if c == 0]
+        rec("probe_sees_open_host_port", bool(open_ports),
+            "an open host port answers when @host is allowed (proves the probe is not a no-op)",
+            f"reachable: {open_ports}" if open_ports else f"none of {list(HOST_PORTS)} answered")
+        # Negative control + the real online policy: every host port now drops.
+        self.control.set_policy(True)
+        self.network_enabled = True
+        codes, _ = self._curl_codes({**host_targets, "public": PUBLIC_URL, **CONTAINED_PROBES, "ipv6": IPV6_PROBE},
+                                    timeout)
+        for p in (open_ports or list(HOST_PORTS)):
+            key = f"host{p}"
+            rec(f"host_{p}_blocked_online", codes[key] == CURL_DROP, "host port drops (exit 28) once @host is blocked",
+                f"exit {codes[key]}")
+        rec("internet_online", codes["public"] == 0, "public internet reachable online", f"exit {codes['public']}")
+        for name in (*CONTAINED_PROBES, "ipv6"):
+            rec(f"{name}_blocked_online", codes[name] == CURL_DROP, f"{name} drops online", f"exit {codes[name]}")
+        # Offline: everything drops, including the host, a public resolver and IPv6.
+        self.control.set_policy(False)
+        self.network_enabled = False
+        off = self._curl_codes({"public": PUBLIC_URL, "resolver": "http://1.1.1.1/", "ipv6": IPV6_PROBE,
+                                "host5000": "http://$gw:5000/", **CONTAINED_PROBES}, timeout)[0]
+        for name in ("public", "resolver", "ipv6", "host5000", *CONTAINED_PROBES):
+            rec(f"{name}_blocked_offline", off[name] == CURL_DROP, f"{name} drops with the network cut",
+                f"exit {off[name]}")
+        self.control.set_policy(True)
+        self._check_firewall(online=True)
+        self.network_enabled = True
+        return results
 
     def set_network(self, enabled: bool) -> None:
         self._require_started()
@@ -757,7 +849,7 @@ def prepare_base(*, source: str = SOURCE_IMAGE, base: str = BASE_VM, tart: str =
         if not user.ok:
             raise BoxError(f"brew install failed: {(user.stdout + user.stderr).strip()[-800:]}")
         manifest: dict[str, Any] = {"base": base, "source": source, "source_digest": source_digest(tart, source),
-                                    "arch": "arm64", "user": MAC_USER,
+                                    "arch": "arm64", "user": MAC_USER, "build_id": secrets.token_hex(6),
                                     "prepared_at": taipei_now().isoformat(timespec="seconds")}
         for key, command in VERSIONS.items():
             result = box.exec(command, 60)

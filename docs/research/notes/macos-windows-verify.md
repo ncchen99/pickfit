@@ -207,7 +207,7 @@
 
 **修法：把網路政策搬到 host（Tart 的 softnet），guest 的 root 也改不了。**
 
-- 每台 VM 以 `tart run --net-softnet --net-softnet-control-fd=N` 開機；harness 經那個 fd 用 JSON-RPC 下 `softnet.policy.set`：online＝allow/block 皆空（softnet 預設就擋私有網段、link-local／metadata、host，並隔離 bridge，只放行公網），offline＝`block 0.0.0.0/0`。softnet 換政策時清空 flow table，已建立的連線會斷，所以斷網前開的連線撐不過切換。
+- 每台 VM 以 `tart run --net-softnet --net-softnet-control-fd=N` 開機；harness 經那個 fd 用 JSON-RPC 下 `softnet.policy.set`。**（第一版寫成 online＝allow/block 皆空，以為預設就擋 host；錯了，見 5.6：softnet 預設放行 vmnet gateway＝本機。已改成 online＝`block ["@host"]`。）** offline＝`block 0.0.0.0/0`。softnet 換政策時清空 flow table，已建立的連線會斷，所以斷網前開的連線撐不過切換。
 - 每次切換後，harness **以 guest 內的 root** 確認：online 時連得到公網、連不到 host／metadata／私有位址；offline 時連公網也失敗。這條驗證因此不再依賴任何 guest 內 root 改得動的東西。
 - softnet 要一次性 setuid-root（它建好網路介面後會把權限降回呼叫者）：念誠 10/29 設好（`-r-sr-xr-x root:wheel`）。沒設好時 box 會拒絕開機並印出設定指令。
 - 拿掉 guest pf；`--limits-test` 的 `firewall_locked`（sbx 關不掉 pf）移除，保留逃逸面探針（admin 密碼、su、遠端登入、agent 執行檔）當縱深防禦。**`--limits-test` 在 softnet base 上 17／17**（含 host／metadata／私有位址以 root 仍不可達、斷網以 root 仍不可達）。

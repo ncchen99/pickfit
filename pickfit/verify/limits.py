@@ -114,28 +114,34 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
     add(_probe(box, "no_secrets_in_env", "env | cut -d= -f1 | sort | tr '\\n' ' '", 20,
                "no API_KEY/TOKEN/SECRET/PASSWORD variables",
                lambda r: not re.search(r"API_KEY|TOKEN|SECRET|PASSWORD", r.stdout)))
-    add(_probe(box, "internet", PYPI, 30, "PyPI answers 200", lambda r: r.stdout.strip() == "200"))
-    add(_probe(box, "metadata_blocked", "curl -sS -m 5 http://169.254.169.254/latest/meta-data/", 20,
-               "169.254.169.254 unreachable", lambda r: r.exit_code != 0))
-    add(_probe(box, "private_blocked", "curl -sS -m 5 http://10.0.0.1/", 20,
-               "10.0.0.1 unreachable", lambda r: r.exit_code != 0))
-    if macos:  # softnet refuses the host fast (exit 7); a guest-side block would time out (28); 0 = reached
-        add(_probe(box, "host_blocked",
-                   "gw=$(route -n get default | awk '/gateway/ {print $2}'); test -n \"$gw\" && "
-                   "curl -sS -m 5 -o /dev/null http://$gw:22/", 20,
-                   "the host (the VM's gateway) is unreachable", lambda r: r.exit_code != 0))
+    if macos:
+        # Containment is host-side (softnet); prove it AS ROOT with a positive control (an open host port
+        # answers with the block off, then drops with it on) and strict drops online and offline.
+        try:
+            for name, ok, expect, detail in box.validate_containment():
+                add(ProbeResult(name, ok, expect, None, 0.0, detail))
+        except BoxError as err:  # fail closed, loudly, if the containment check could not run
+            add(ProbeResult("containment_check_ran", False, "the containment check completes", None, 0.0, str(err)))
+    else:
+        add(_probe(box, "internet", PYPI, 30, "PyPI answers 200", lambda r: r.stdout.strip() == "200"))
+        add(_probe(box, "metadata_blocked", "curl -sS -m 5 http://169.254.169.254/latest/meta-data/", 20,
+                   "169.254.169.254 unreachable", lambda r: r.exit_code != 0))
+        add(_probe(box, "private_blocked", "curl -sS -m 5 http://10.0.0.1/", 20,
+                   "10.0.0.1 unreachable", lambda r: r.exit_code != 0))
     box.exec(f"{box.detach} python3 -m http.server 8765 --bind 127.0.0.1 >/dev/null 2>&1 < /dev/null & "
              "sleep 2", 20)
     box.set_network(False)
     try:
-        add(_probe(box, "offline_internet", PYPI, 30, "PyPI unreachable with the network off",
-                   lambda r: r.stdout.strip() != "200"))
+        if not macos:
+            add(_probe(box, "offline_internet", PYPI, 30, "PyPI unreachable with the network off",
+                       lambda r: r.stdout.strip() != "200"))
         add(_probe(box, "offline_localhost", "curl -sS -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/",
                    20, "localhost still answers with the network off", lambda r: r.stdout.strip() == "200"))
     finally:
         box.set_network(True)
-    add(_probe(box, "online_again", PYPI, 30, "PyPI answers again after the network is back",
-               lambda r: r.stdout.strip() == "200"))
+    if not macos:
+        add(_probe(box, "online_again", PYPI, 30, "PyPI answers again after the network is back",
+                   lambda r: r.stdout.strip() == "200"))
     timed = box.exec("sleep 30", 3)
     add(ProbeResult("command_timeout", timed.timed_out and timed.seconds < 15, "sleep 30 killed at 3 s",
                     timed.exit_code, timed.seconds, _detail(timed)))
