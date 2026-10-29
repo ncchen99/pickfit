@@ -135,15 +135,22 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 
 - **同一個大腦**：`POST /search` 先用 `server.ts` 的 `findInput`（MCP 工具同一個 zod schema）驗表單，再呼叫 `find.ts` 的 `findSoftware`，每個 pick 再呼叫 `install.ts` 的 `installGuide`，最後才排成 HTML。沒有另一份配對或安裝步驟的程式碼，網頁和 agent 不會分岔。沒選 OS 時，安裝步驟用 pickfit 實際跑過的那個系統，並寫明在哪裡跑的。
 - **路由**：`GET /` 只有在 `Accept` 含 `text/html`（瀏覽器）時回網頁；`curl`、健康檢查、`pickfit publish` 之後的確認照舊拿到 JSON（`Vary: Accept`）。所以公開網址打開就是產品，而部署檢查與評測部署比對 `data_sha256` 的方式不變。`GET /search` 轉回 `/`。沒有 JavaScript 時表單照樣送出，伺服器回整頁；有 JavaScript 時只換結果區（`X-Pickfit-Fragment: 1`）。
-- **呈現**：每個 pick 有 fit 句、理由（每條附上它引用的卡片欄位與值）、取捨、和知名工具的比較、`best_free`、試驗紀錄（驗證等級、在哪個 OS／CPU、沙盒重播或人工、日期、離線是否通過、「在你的系統上驗證過／沒有／請選 OS」）、`get_install_guide` 的步驟（第一個展開）、原始碼與 run record 連結（有才顯示）。`well_known_option` 放在虛線框、標「Not verified by pickfit」，沒有排名、徽章、試驗紀錄、安裝步驟或連結。沒有合適的工具時顯示 `coverage_note`。`find.ts` 給 agent 的「Verified on linux only…」取捨不重複顯示，因為試驗紀錄已經用完整句子說了。
+- **呈現**：每個 pick 有 fit 句、理由（每條附上它引用的卡片欄位與值）、取捨、和知名工具的比較、`best_free`、試驗紀錄（驗證等級、在哪個 OS／CPU、沙盒重播或人工、日期、離線測試通過、沒通過，或使用者要離線但還沒測過，以及「在你的系統上驗證過／沒有／請選 OS」）、`get_install_guide` 的步驟（第一個展開）、原始碼與 run record 連結（有才顯示）。`best_free` 不在 picks 裡時，也寫出它在哪裡跑過、是不是使用者的系統。`well_known_option` 的標題寫著「not verified by pickfit」，用一般字體（不是 pick 名稱的襯線大字）；第一行是一條填色的「pickfit 沒裝過也沒測過，沒有試跑紀錄和安裝指南」；沒有排名、徽章、試驗紀錄、安裝步驟或連結。沒有合適的工具時顯示 `coverage_note`。`find.ts` 給 agent 的「Verified on linux only…」取捨不重複顯示，因為試驗紀錄已經用完整句子說了。
 - **不記個資**：不存 IP。`events` 和 MCP 一樣只存解析後的條件，另標 `client = 'web'`，網頁和 agent 的使用量分得開。網頁上顯示安裝步驟**不**寫 `install_guide` 事件，因為使用者還沒選，而 MCP 的那個事件代表「選了這一款」。不支援 `?need=` 預填：請求網址會進 Workers log，頁尾寫著 pickfit 不留使用者的原話。
 - **花費與濫用**（每次搜尋是一次付費的 `muse-spark-1.3`，用 Worker 自己的 `meta_budget`）：
-  - **網頁上限** `WEB_DAILY_CAP_USD`（預設 2）：網頁搜尋用同一套 `checkBudget`，只是每日上限換成 `min(WEB_DAILY_CAP_USD, META_DAILY_CAP_USD)`。當天總花費（網頁加 MCP）到 $2 後，網頁改用規則排序，顯示「Model matching is paused for today」；剩下的 $1 只留給 agent。總額 $40 照舊。
-  - **每人頻率**：`ratelimits` 綁定 `WEB_RATE_LIMITER`，每分鐘 6 次（以 Cloudflare 機房計）。鍵是「UTC 日期＋IP」的 SHA-256 前 32 字元，只存在限流計數器裡，不進 D1、不進 log。沒有綁定時（例如在別的環境）改用這個 isolate 記憶體裡的計數；綁定出錯時放行並記 `web_rate_limit_failed`，花費仍受網頁上限擋。超過回 429、`Retry-After: 60` 與「Busy」訊息，不呼叫模型、不寫事件。
-  - **快取**：同樣的需求（忽略大小寫與多餘空白）加同樣的條件，10 分鐘內在同一個 isolate 直接重用結果，不呼叫模型、不寫事件，頁面註明是剛才的結果。鍵是雜湊，不留原話；`degraded` 的結果不快取，下一次會再試模型。
-  - **跨站**：`POST /search` 和 `/mcp` 一樣檢查 Host 與 Origin，別的網站的表單不能花這裡的預算。表單超過 4 KB 回 413；需求要 3–500 字，否則 400，都不呼叫模型。
+  - **網頁上限** `WEB_DAILY_CAP_USD`（預設 2）：呼叫模型前，先用**一條** D1 指令（`budget.ts` 的 `reserveSpend`，`INSERT … SELECT … WHERE` 加 upsert）預留這次最壞情況的花費（`estimateCostUsd(150000)`，約 $0.08；今天 60 張卡約 8 萬字元）。條件是「今天已花＋預留 ≤ `min(WEB_DAILY_CAP_USD, META_DAILY_CAP_USD)`」而且「總額＋預留 ≤ $40」。同時湧入的搜尋不會在任何一筆記帳前全部通過檢查；兩個 isolate 共用一個 D1 也一樣，`test/web.test.ts` 有測。呼叫結束（不論成敗）後釋放預留，實際花費照 MCP 原本的方式記帳。`findSoftware` 裡原本的檢查照跑，只是上限加上自己的預留，不重複計算。MCP 路徑不預留，程式沒變，但它的檢查看得到網頁正在進行的預留，所以比較保守。預留不到時改用規則排序，並說明原因：
+    - 網頁今天的額度用完：「paused until 00:00 UTC」，並說明網頁和 agent 的花費合計已到上限；
+    - 總額用完：不承諾重置；
+    - 查不到 D1：照實說查不到。
+  - **每人頻率**：`ratelimits` 綁定 `WEB_RATE_LIMITER`，每分鐘 6 次（以 Cloudflare 機房計）。鍵是「UTC 日期＋IP」的 SHA-256 前 32 字元，IPv6 位址以 /64 計（一戶或一台主機常持有整個 /64；IPv4-mapped 位址照 IPv4 計），只存在限流計數器裡，不進 D1、不進 log。沒有綁定時（例如在別的環境）改用這個 isolate 記憶體裡的計數；綁定出錯時放行並記 `web_rate_limit_failed`，花費仍受網頁上限擋。超過回 429、`Retry-After: 60` 與「Busy」訊息，不呼叫模型、不寫事件。
+  - **快取與併發**：同樣的需求（忽略大小寫與多餘空白）加同樣的條件：
+    - 10 分鐘內在同一個 isolate 直接重用結果，不呼叫模型、不寫事件，頁面註明是剛才的結果。
+    - 還在跑的搜尋，後到的那筆等它的結果，不另外呼叫。
+    - 鍵是雜湊，不留原話；`degraded` 的結果不快取，下一次會再試模型。
+    - 一個 isolate 同時最多 `MAX_IN_FLIGHT`（6）筆模型搜尋，超過回 503、`Retry-After: 10` 與「Busy」。跨 isolate 的花費由上面的預留擋。
+  - **跨站**：`POST /search` 和 `/mcp` 一樣檢查 Host 與 Origin，別的網站的表單不能花這裡的預算。表單以位元組計，邊讀邊算，超過 8 KB（`Content-Length` 已超過就不讀）回 413。需求以字元（code point）計，要 3–500 字，否則回 400 並說出字數，不會默默截斷；500 個中日文字約 4.5 KB，在上限內。都不呼叫模型。
 - **設計**（10/30 改版）：用 frontend-design 與 taste-skill 做、web-design-guidelines 檢查。概念是「pickfit 在沙盒裝好一款工具時寫下的試跑紀錄，就是每個推薦印在上面的那張單子」。
-  - 首屏：「Tools that fit, [一張真的試跑紀錄] tested first.」，搜尋框就在下面。
+  - 首屏：「Tools that fit, [一張真的試跑紀錄] tested first.」，搜尋框就在下面。手機上順序是標題、說明、搜尋框，試跑紀錄放在後面，搜尋框在第一個畫面裡。沒有 JavaScript 時，表單送到 `/search#results`，回來的頁面直接停在結果。
   - 結果：左邊是主張、右邊是證據，主張在捲動時停住。沒有排名數字（配對不是排名）。「內建就夠了」放在 picks 前面。沒驗證過的工具沒有試跑紀錄。
   - 搜尋前：最新的試跑表、另一個寶藏工具被修正的 README，以及一個四段的滑桿，帶同一款工具走過讀懂、安裝、配對、交付。這些全部從索引讀，不呼叫模型、不捏造。
   - 字級五階、一個強調色；沒有細線、外框、陰影、眉標、emoji。
