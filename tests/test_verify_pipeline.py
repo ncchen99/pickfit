@@ -160,7 +160,27 @@ def test_a_failure_counts_only_when_a_fresh_box_repeats_it(tmp_path: Path):
     outcome, _ = verify(tmp_path, FakeServer(*failed_turns()), Boxes({"agent": BROKEN}))
     run = outcome.run
     assert (run.level, run.unverified_reason, run.replayed) == ("unverified", "other", False)
-    assert run.blocking_error.startswith("not confirmed in a fresh box (command 2 passed in a fresh box)")
+    assert run.blocking_error.startswith("the failure did not repeat in a fresh box (command 2 passed in a fresh box)")
+
+
+@pytest.mark.parametrize(("script", "turns", "why"), [
+    # An install step fails: whatever it printed, that is not positive evidence against the tool.
+    ({"uv tool install graphtty": (1, "", "error: subprocess-exited-with-error")},
+     [response("r1", run_cmd("uv tool install graphtty")),
+      response("r2", finish(level="failed", blocking_error="the wheel does not build", failing_command_id=1))],
+     "no evidence that the tool itself is at fault: no install step ran before it"),
+    # The tool's own command fails, but with no error of its code (a test suite reporting a failure).
+    ({**SCRIPT, "graphtty --version": (1, "1 of 22 checks failed", "")},
+     failed_turns("its self-test reports a failure"),
+     "no evidence that the tool itself is at fault: command 2 shows no error of the tool's own code"),
+])
+def test_a_failure_without_positive_evidence_is_unverified(tmp_path: Path, script, turns, why):
+    boxes = Boxes({"agent": script})
+    outcome, _ = verify(tmp_path, FakeServer(*turns), boxes)
+    run = outcome.run
+    assert (run.level, run.unverified_reason) == ("unverified", "other")
+    assert [role for role, _ in boxes.made] == ["agent"]  # no box spent confirming it
+    assert run.blocking_error.startswith(why)
 
 
 def test_a_failure_the_box_explains_is_unverified_with_its_reason(tmp_path: Path):

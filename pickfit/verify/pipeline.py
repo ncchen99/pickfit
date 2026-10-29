@@ -5,8 +5,10 @@
 3. If that level passed, a fresh box replays the steps online and the smoke
    tests offline (replay.py).
 4. If the replay passed, the screen judge reads its outputs (judge.py).
-   A failure the box does not explain instead gets a fresh box that reruns the
-   steps and the failing command (failure.py): exit codes decide, no model.
+   A failure with positive evidence of the tool's own fault (every install step
+   succeeded, then the tool's own command failed with an error of its code) gets
+   a fresh box that reruns the steps and that command (failure.py): exit codes
+   decide, no model. Any other failure is unverified, with no box spent.
 5. result.py turns the three into a VerificationRun, saved next to the
    agent's report; write_back() updates data/software/<slug>.json when asked.
 
@@ -30,8 +32,8 @@ from pickfit.verify.failure import (
     FailureCheck,
     cited_workarounds,
     confirm_failure,
-    failed_claim_limit,
     failure_plan,
+    tool_fault,
 )
 from pickfit.verify.judge import JudgeResult, judge_checks
 from pickfit.verify.replay import Replayer, ReplayResult, plan_from
@@ -127,8 +129,7 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
         finish = report.finish or {}
         cited = agent.verdict.to_dict()
         purposes = {s["command_id"]: s.get("purpose") for s in finish.get("steps") or []}
-        if not cited_workarounds(cited, report.commands, purposes) and \
-                not failed_claim_limit(cited, report.commands, finish.get("blocking_error")):
+        if not cited_workarounds(cited, report.commands, purposes) and tool_fault(cited, report.commands)[0]:
             plan_failure = failure_plan(agent.verdict, report.commands)
     if plan_failure is not None:
         confirm_box = make_box(run_id, "confirm")

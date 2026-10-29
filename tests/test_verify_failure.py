@@ -9,10 +9,11 @@ from pickfit.verify.failure import (
     WRITTEN_REASONS,
     box_reason,
     cited_workarounds,
-    failure_limit,
     failure_plan,
+    failure_reason,
     output_limit,
     sandbox_only,
+    tool_fault,
 )
 from pickfit.verify.verdict import log_verdict
 
@@ -22,25 +23,40 @@ from pickfit.verify.verdict import log_verdict
      "needs_container"),
     ("bash: line 1: docker: command not found", "needs_container"),
     ("error: neither docker nor podman found", "needs_container"),
+    ("FileNotFoundError: [Errno 2] No such file or directory: 'docker'", "needs_container"),
+    ("Error: spawn docker ENOENT", "needs_container"),
     ("Building wheel for tokenizers (pyproject.toml) ... error\n  error: can't find Rust compiler", "needs_toolchain"),
+    ("Cargo, the Rust package manager, is not installed or is not on PATH.", "needs_toolchain"),
+    ("gyp ERR! stack Error: not found: make", "needs_toolchain"),
     ("bash: line 1: cargo: command not found", "needs_toolchain"),
     ("bash: go: command not found", "needs_toolchain"),
+    ('exec: "go": executable file not found in $PATH', "needs_toolchain"),
+    ("FileNotFoundError: [Errno 2] No such file or directory: 'gcc'", "needs_toolchain"),
     ("error: command 'gcc' failed: No such file or directory", "needs_toolchain"),
     ("evdev/input.c:10:10: fatal error: linux/input.h: No such file or directory", "needs_root"),
+    ("The 'linux/input.h' and 'linux/input-event-codes.h' include files are missing. You will have to install "
+     "the kernel header files in order to continue:", "needs_root"),
     ("npm ERR! Error: EACCES: permission denied, mkdir '/usr/lib/node_modules/foo'", "needs_root"),
+    ("install: cannot create regular file '/usr/local/bin/foo': Permission denied", "needs_root"),
+    ("PermissionError: [Errno 13] Permission denied: '/usr/local/lib/python3.12/site-packages/foo'", "needs_root"),
+    ("OSError: [Errno 30] Read-only file system: '/opt/foo'", "needs_root"),
+    ("ImportError: libGL.so.1: cannot open shared object file: No such file or directory", "needs_root"),
     ("System has not been booted with systemd as init system (PID 1). Can't operate.", "needs_root"),
     ("ImportError: libcuda.so.1: cannot open shared object file: No such file or directory", "needs_gpu"),
     ("RuntimeError: CUDA driver version is insufficient for CUDA runtime version", "needs_gpu"),
+    ("AssertionError: Torch not compiled with CUDA enabled", "needs_gpu"),
+    ("FileNotFoundError: [Errno 2] No such file or directory: 'nvidia-smi'", "needs_gpu"),
+    ("Error: OPENAI_API_KEY is not set", "needs_account"),
     ("FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory", "needs_more_resources"),
     ("OSError: [Errno 28] No space left on device", "needs_more_resources"),
 ])
-def test_box_limits_in_a_failing_commands_output(output: str, reason: str):
-    assert output_limit(output, 1, False) == reason
+def test_box_limits_in_a_failing_commands_error_tail(output: str, reason: str):
+    assert output_limit("", output, 1, False) == reason
 
 
 def test_a_kill_or_a_timeout_is_the_boxs_limit():
-    assert output_limit("", 137, False) == "needs_more_resources"
-    assert output_limit("", None, True) == "needs_more_resources"
+    assert output_limit("", "", 137, False) == "needs_more_resources"
+    assert output_limit("", "", None, True) == "needs_more_resources"
 
 
 @pytest.mark.parametrize("output", [
@@ -49,9 +65,23 @@ def test_a_kill_or_a_timeout_is_the_boxs_limit():
     "KeyError: 'HOME'",
     "Let's go! config.toml not found",
     "error[E0425]: cannot find value `x` in this scope",
+    "WARNING: No GPU detected, falling back to CPU.\nTypeError: run() missing 1 required positional argument",
 ])
 def test_the_tools_own_errors_are_not_the_boxs(output: str):
-    assert output_limit(output, 1, False) is None
+    assert output_limit("", output, 1, False) is None
+
+
+def test_only_the_error_tail_is_read_and_warnings_do_not_count():
+    crash = "TypeError: 'NoneType' object is not callable"
+    early = "\n".join(["ImportError: libcuda.so.1: cannot open shared object file", *(f"step {i}" for i in range(70)),
+                       crash])
+    assert output_limit("", early, 1, False) is None
+    for warning in ("2026-10-29 01:02:03.4: W tensorflow/dso_loader.cc:64] Could not load dynamic library "
+                    "'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file",
+                    "WARNING: libcuda.so.1 not found, falling back to CPU"):
+        assert output_limit("", f"{warning}\n{crash}", 1, False) is None
+    assert output_limit("", f"ImportError: libcuda.so.1: cannot open shared object file\n{crash}", 1,
+                        False) == "needs_gpu"
 
 
 @pytest.mark.parametrize(("text", "reason"), [
@@ -64,6 +94,7 @@ def test_the_tools_own_errors_are_not_the_boxs(output: str):
     ("the hatch web-build step `npm run build` aborts in Node/V8 (exit 134)", "needs_more_resources"),
     ("the build needs root access to write /etc/udev", "needs_root"),
     ("requires CUDA 12 and an NVIDIA driver", "needs_gpu"),
+    ("the tool's installer can't build here: it needs Rust 1.91+", "needs_toolchain"),
 ])
 def test_box_limits_in_the_agents_words(text: str, reason: str):
     assert box_reason(text) == reason
@@ -75,26 +106,62 @@ def test_box_limits_in_the_agents_words(text: str, reason: str):
     "ImportError: No module named nvidia when importing tool.gpu",
     "Release v2.0 asset foo-linux-amd64.tar.gz returns 404; README also mentions `apt install foo`",
     "config.toml not found at the project root",
+    "CPU mode (no GPU needed) crashes with TypeError",
+    "works without Docker; its CLI exits 2",
+    "no sudo or root involved; the server exits 1 on start",
+    "it does not need a GPU, but crashes on load",
     None,
 ])
-def test_mentions_are_not_needs(text: str | None):
+def test_mentions_and_denied_needs_are_not_needs(text: str | None):
     assert box_reason(text) is None
 
 
 def rec(cid: int, command: str, code: int, out: str = "", seconds: float = 1.0, purpose: str | None = None,
-        timed_out: bool = False) -> CommandRecord:
+        timed_out: bool = False, err: str = "") -> CommandRecord:
     return CommandRecord(turn=cid, tool="run_command", command=command, exit_code=code, seconds=seconds,
-                         stdout=out, stderr="", timed_out=timed_out, command_id=cid, purpose=purpose)
+                         stdout=out, stderr=err, timed_out=timed_out, command_id=cid, purpose=purpose)
 
 
-def test_the_failing_commands_output_outweighs_the_agents_words():
-    words = "foo --help crashes with KeyError 'HOME'; the README's docker route was not tried (no docker in box)"
-    assert box_reason(words) == "needs_container"  # a side note, read alone
-    crash = rec(4, "foo --help", 1, "KeyError: 'HOME'")
-    assert failure_limit(words, crash, check_passed=False) is None
+TRACE = "Traceback (most recent call last):\n  File \"/tmp/hv/bin/hillock\", line 5\nModuleNotFoundError: No module named 'main'"
+HILLOCK = [rec(6, "git clone https://example.invalid/hillock.git src", 0),
+           rec(8, "python3 -m venv /tmp/hv && /tmp/hv/bin/pip install -U pip", 0),
+           rec(9, "/tmp/hv/bin/pip install -e ./src", 0), rec(10, "/tmp/hv/bin/hillock --help", 1, err=TRACE)]
+
+
+def test_the_tools_own_fault_needs_every_install_step_then_its_own_error():
+    verdict = {"step_ids": [6, 8, 9], "failing_id": 10, "checks": []}
+    evidence, _ = tool_fault(verdict, HILLOCK)
+    assert evidence == ("command 10 fails with ModuleNotFoundError after every install step succeeded")
+    cases = [
+        ({**verdict, "failing_id": None}, HILLOCK, "the log names no failing command"),
+        ({**verdict, "step_ids": []}, HILLOCK, "no install step ran before it"),
+        (verdict, [*HILLOCK[:2], rec(9, "/tmp/hv/bin/pip install -e ./src", 1), HILLOCK[3]],
+         "install step 9 did not succeed"),
+        (verdict, [*HILLOCK[:2], rec(9, "/tmp/hv/bin/pip install -e ./src | tail -3", 0), HILLOCK[3]],
+         "install step 9 did not succeed"),
+        ({**verdict, "step_ids": [6, 8, 9, 11]}, [*HILLOCK, rec(11, "pip list", 0)],
+         "command 10 ran before the install finished"),
+        ({**verdict, "step_ids": [6, 8], "failing_id": 9},
+         [*HILLOCK[:2], rec(9, "/tmp/hv/bin/pip install -e ./src", 1, err="error: can't find Rust compiler")],
+         "command 9 installs or fetches; it is not the tool's own command"),
+        (verdict, [*HILLOCK[:3], rec(10, "/tmp/hv/bin/hillock --help", 1, err="ImportError: libGL.so.1: cannot "
+                                     "open shared object file: No such file or directory")],
+         "command 10 hit a limit of the box (needs_root)"),
+        (verdict, [*HILLOCK[:3], rec(10, "/tmp/hv/bin/hillock check", 1, out="21/22 checks passed; 1 FAIL")],
+         "command 10 shows no error of the tool's own code"),
+    ]
+    for case, log, why in cases:
+        assert tool_fault(case, log) == (None, why)
+
+
+def test_the_reason_for_a_failure_that_is_not_the_tools():
+    holdspeak = [rec(2, "git clone --depth 1 https://example.invalid/holdspeak.git repo", 0),
+                 rec(5, "cd repo && uv pip install -e '.[linux]'", 1,
+                     err="You will have to install the kernel header files in order to continue")]
+    assert failure_reason({"step_ids": [2], "failing_id": 5, "checks": []}, holdspeak, "it broke") == "needs_root"
     # No failing command: the words decide, unless a check passed (the tool ran).
-    assert failure_limit("needs Rust 1.91+, absent here", None, check_passed=False) == "needs_toolchain"
-    assert failure_limit("needs Rust 1.91+, absent here", None, check_passed=True) is None
+    assert failure_reason({"checks": []}, [], "needs Rust 1.91+, absent here") == "needs_toolchain"
+    assert failure_reason({"checks": [{"passed": True}]}, [], "needs Rust 1.91+, absent here") is None
 
 
 def test_written_reasons_leave_out_the_uninformative_ones():
@@ -136,6 +203,7 @@ def test_commands_that_work_around_the_box(command: str, purpose: str | None):
     ("pyenv rehash", "rebuild the pyenv shim"),
     ("uv tool install foo", "install foo from PyPI (the npm package is only a stub)"),
     ("printf 'a = 1' > foo.toml", "write a stub config so foo starts"),
+    ("cd ~/.local/bin && ls && tool --version > out.txt", None),
 ])
 def test_ordinary_install_steps_are_not_workarounds(command: str, purpose: str | None):
     assert sandbox_only(command, purpose) is None

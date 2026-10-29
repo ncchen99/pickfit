@@ -51,7 +51,7 @@ from pickfit.schema import (
     is_passed,
 )
 from pickfit.score import refresh_scores
-from pickfit.verify.failure import WRITTEN_REASONS, cited_workarounds, failed_claim_limit, output_limit
+from pickfit.verify.failure import WRITTEN_REASONS, cited_workarounds, failure_reason, own_error, tool_fault
 from pickfit.verify.verdict import split_last, weaker
 
 if TYPE_CHECKING:
@@ -170,22 +170,27 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
             blocking = "; ".join([*workarounds, *([blocking] if blocking else [])])
     # A failure is the box's when the box's limit explains it; the software's only if it repeated.
     elif verdict.get("claimed_level") == "failed":
-        limit = failed_claim_limit(verdict, report.commands, blocking)
-        if limit is None and confirm is not None and confirm.failing is not None:
-            f = confirm.failing
-            limit = output_limit(f"{f.stdout}\n{f.stderr}", f.exit_code, f.timed_out)
-        if limit:
-            level, reason = "unverified", limit
-            notes.append(f"the box, not the software, explains the failure ({limit})")
-        elif level != "failed":
-            notes.append(f"the failure cannot be confirmed: {'; '.join((verdict.get('problems') or [])[:3])}")
-        elif confirm is not None and confirm.reproduced:
+        # Failed only on positive evidence of the tool's own fault, repeated in a fresh box.
+        evidence, why_not = tool_fault(verdict, report.commands)
+        repeated = confirm is not None and confirm.reproduced and confirm.failing is not None
+        rerun_error, rerun_why = own_error(confirm.failing) if repeated else (None, "")
+        if level == "failed" and evidence and rerun_error:
             replayed = True
+            notes.append(f"the tool's own fault: {evidence}; a fresh box repeated it")
         else:
-            why = confirm.error if confirm else "not rerun"
-            notes.append(f"the failure did not repeat in a fresh box ({why})")
-            level, reason = "unverified", "other"
-            blocking = f"not confirmed in a fresh box ({why}): {blocking}"
+            limit = failure_reason(verdict, report.commands, blocking, confirm)
+            if limit:
+                note = f"the box, not the software, explains the failure ({limit})"
+            elif evidence is None:
+                note = f"no evidence that the tool itself is at fault: {why_not}"
+            elif not repeated:
+                note = f"the failure did not repeat in a fresh box ({confirm.error if confirm else 'not rerun'})"
+            else:
+                note = f"the fresh box's rerun does not show the tool's own error: {rerun_why}"
+            notes.append(note)
+            if not limit:
+                blocking = f"{note}; {blocking}" if blocking else note
+            level, reason = "unverified", limit or "other"
 
     by_id = {c.command_id: c for c in report.commands if c.command_id is not None}
     step_ids = verdict.get("step_ids") or []

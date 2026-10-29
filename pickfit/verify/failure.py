@@ -1,16 +1,17 @@
 """Runs that did not pass: whose fault it is, and whether the failure repeats. No model call.
 
-- failure_limit(): a failure the box explains (a toolchain it forbids, root, a container
-  engine, a GPU, its memory, disk or time) is pickfit's limit, not the software's, so the
-  run becomes unverified with that reason instead of failed. The failing command's own
-  output decides (output_limit); only when the log names no failing command and no check
-  passed does the agent's description (box_reason).
-- sandbox_only() and cited_workarounds(): a command that only works around the box (a
-  shim for nvidia-smi, a fake docker) is not part of a user's install, so a run that
-  cites one, as a step, a setup or a check, neither passes nor fails.
-- failure_plan() and confirm_failure(): a suspected software failure is believed only
-  when a fresh box (network on) runs the cited steps, then the failing command, and
-  the failing command exits with the same non-zero code (or times out) again.
+A run is failed only with positive evidence that the tool itself is at fault (tool_fault): every cited
+install step succeeded, then the tool's own command failed with an error of the tool's code (a
+missing module, an AttributeError, a Node "Cannot find module") and no box limit in its error tail,
+and a fresh box repeated it (failure_plan, confirm_failure: same non-zero exit, no model call).
+Everything else is unverified (failure_reason): with a specific reason when the error tail shows a
+limit of the box (output_limit: no compiler, root, Docker, CUDA, memory, disk, time, an account),
+or, when the log names no failing command and no check passed, the agent's description does
+(box_reason); "other" when neither is clear.
+
+- sandbox_only() and cited_workarounds(): a command that only works around the box (a shim for
+  nvidia-smi, a fake docker) is not part of a user's install, so a run that cites one, as a step,
+  a setup, a check or the failing command, neither passes nor fails.
 - WRITTEN_REASONS: the unverified reasons worth writing back to a record; "other",
   "budget_exceeded" and "not_run" say nothing about the software.
 """
@@ -26,6 +27,7 @@ from typing import TYPE_CHECKING, Any, get_args
 from pickfit.schema import UnverifiedReason
 from pickfit.verify.box import Box, BoxError
 from pickfit.verify.replay import RanCommand, ReplayCommand, Replayer
+from pickfit.verify.verdict import masked_exit
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import CommandRecord
@@ -35,33 +37,128 @@ if TYPE_CHECKING:
 WRITTEN_REASONS: frozenset[str] = frozenset(get_args(UnverifiedReason.__value__)) - {
     "not_run", "budget_exceeded", "other"}
 
-# What a box limit prints. The box has no compiler, Rust or Go, no root, no Docker daemon,
-# 2 GiB of memory (Node's heap stops near 1 GiB) and a time limit per command.
-_TOOL = r"(?:rustc|rustup|cargo|go|gcc|cc|g\+\+|c\+\+|clang|make|cmake|javac|java|mvn|gradle|dotnet|zig)"
+# What a box limit prints at the end of a failing command. The box has no compiler, Rust or Go, no
+# root, no Docker daemon, no system packages beyond its image, 2 GiB of memory (Node's heap stops
+# near 1 GiB) and a time limit per command. Only the error tail is read (error_tail), so a warning
+# early in the output ("No GPU detected, falling back to CPU") does not decide.
+_TOOLCHAIN = r"(?:rustc|rustup|cargo|go|gcc|cc|g\+\+|c\+\+|clang|make|cmake|javac|java|mvn|gradle|dotnet|zig|pkg-config)"
+_ENGINE = r"(?:docker|podman)"
+
+
+def _missing(names: str) -> str:
+    """The ways a missing executable shows up: shell, Python, Node, Go, node-gyp."""
+    return (rf"\b{names}(?::| is)? (?:command )?not (?:found|installed)|\b{names}\b[^\n]{{0,60}}\bis not installed"
+            rf"|not found: {names}\b|spawn {names} ENOENT|exec: \"{names}\": executable file not found"
+            rf"|no such file or directory: '{names}'")
+
+
 _OUTPUT_LIMITS: list[tuple[str, re.Pattern[str]]] = [
     ("needs_container", re.compile(
-        r"cannot connect to the docker daemon|docker\.sock|neither docker nor podman"
-        r"|\b(?:docker|podman)\b(?::| is)? (?:command )?not (?:found|installed)|no container (?:engine|runtime)", re.I)),
+        rf"cannot connect to the docker daemon|docker\.sock|neither docker nor podman|no container (?:engine|runtime)"
+        rf"|{_missing(_ENGINE)}", re.I)),
+    ("needs_gpu", re.compile(
+        r"libcuda\.so[^\n]{0,60}(?:cannot open|not found)|cuda driver version is insufficient|no cuda-capable device"
+        r"|found no nvidia driver|nvidia-smi has failed|not compiled with cuda|" + _missing(r"nvidia-smi"), re.I)),
     ("needs_root", re.compile(
         r"are you root\?|must be run as root|requires? root|run (?:it )?with sudo|\bsudo: |system has not been booted"
-        r" with systemd|failed to connect to bus|EACCES: permission denied, \w+ '/(?:usr|etc|var|opt)/"
-        r"|permission denied[^\n]{0,40}\s/(?:usr|etc|var|opt|lib)/|linux/\w+\.h: no such file|kernel headers", re.I)),
+        r" with systemd|failed to connect to bus|read-only file system|kernel[- ]header|linux/\w+\.h: no such file"
+        r"|permission denied[^\n]{0,60}['\"\s]/(?:usr|etc|var|opt|lib|boot|sys)/"
+        r"|['\"]/(?:usr|etc|var|opt|lib)/[^'\"\n]*['\"]: permission denied"
+        r"|lib[\w.+-]+\.so(?:\.\d+)*: cannot open shared object file", re.I)),
     ("needs_toolchain", re.compile(
-        rf"\b{_TOOL}(?::| is)? (?:command )?not (?:found|installed)|can't find rust compiler"
-        r"|command '(?:[\w-]*-)?(?:gcc|cc|g\+\+|c\+\+)' failed|unable to execute '(?:gcc|cc)'"
-        rf"|(?:linker|compiler) [`'\"]?(?:cc|gcc)[`'\"]? not found|please install (?:rust|go|a c compiler|gcc)"
+        rf"{_missing(_TOOLCHAIN)}|can't find rust compiler|command '(?:[\w-]*-)?(?:gcc|cc|g\+\+|c\+\+)' failed"
+        r"|unable to execute '(?:gcc|cc)'|(?:linker|compiler) [`'\"]?(?:cc|gcc)[`'\"]? not found"
+        r"|please install (?:rust|go|a c compiler|gcc)"
         r"|\b(?:rust|rustc|cargo|golang|go toolchain|go 1\.\d+)\b[^\n]{0,30}\b(?:is )?(?:required|not found|missing)",
         re.I)),
-    ("needs_gpu", re.compile(
-        r"libcuda\.so|cuda driver version is insufficient|no cuda-capable device|found no nvidia driver"
-        r"|nvidia-smi has failed|torch\.cuda\.is_available\(\) is false|no gpu (?:found|detected|available)", re.I)),
+    ("needs_account", re.compile(
+        r"(?:api[_ -]?key|access token|auth token|credentials?)\b[^\n]{0,40}\b(?:missing|not set|not found"
+        r"|required|invalid)|\b401\b[^\n]{0,20}unauthori[sz]ed|\b403\b[^\n]{0,20}forbidden|not logged in"
+        r"|please (?:log ?in|sign in)|KeyError: '[A-Z_]*(?:API_KEY|TOKEN|SECRET)[A-Z_]*'", re.I)),
     ("needs_more_resources", re.compile(
         r"heap out of memory|reached heap limit|cannot allocate memory|\bmemoryerror\b|out of memory"
         r"|no space left on device|disk quota exceeded|file size limit exceeded", re.I)),
 ]
 
-# The same limits as an agent describes them: a need, not a mention ("needs Rust 1.91+", "no root
-# to install linux-headers", "neither docker nor podman", "aborts in V8 (exit 134)").
+# An error of the tool's own code: what a fresh box cannot blame on itself once every install step
+# succeeded (a wheel with no code, a module the package forgot, a typo in the tool).
+_TOOL_ERROR = re.compile(
+    r"^\s*(?:ModuleNotFoundError|ImportError|AttributeError|NameError|SyntaxError|IndentationError|TabError"
+    r"|UnboundLocalError|TypeError|KeyError|IndexError|RecursionError|NotImplementedError|ZeroDivisionError)\b"
+    r"|^\s*(?:Uncaught )?(?:ReferenceError|RangeError): |Error: Cannot find module|ERR_MODULE_NOT_FOUND"
+    r"|ERR_PACKAGE_PATH_NOT_EXPORTED|ERR_REQUIRE_ESM", re.M)
+
+# A command that installs or fetches, rather than runs the tool.
+_INSTALLS = re.compile(
+    r"\b(?:pip3?|pipx|uv|npm|pnpm|yarn|bun|cargo|go|gem|brew|apt(?:-get)?|conda|mamba|poetry|hatch|maturin)\s+"
+    r"(?:\S+\s+)?(?:install|add|i|build|sync|global)\b|\bgit\s+clone\b|\bc?make\b|\binstall\.sh\b|setup\.py"
+    r"|\b(?:curl|wget)\b|\btar\s+-?\w*x|\bunzip\b|-m venv\b")
+
+
+_WARNING = re.compile(r"(?i:\bwarn(?:ing)?s?\b)|(?:^|:\s)W(?:\d{4}\b|\s+[\w.]+/)")  # WARNING, glog's W1029, TF's W x/
+
+
+def error_tail(stdout: str, stderr: str, lines: int = 30) -> str:
+    """The last lines a failing command printed, warnings left out: the end of stderr, then of stdout."""
+    def last(text: str, n: int) -> list[str]:
+        return [line for line in text.splitlines() if line.strip() and not _WARNING.search(line)][-n:]
+    return "\n".join(last(stderr, lines) + last(stdout, lines // 3))
+
+
+def output_limit(stdout: str, stderr: str, exit_code: int | None, timed_out: bool) -> str | None:
+    """The UnverifiedReason when the end of a failing command's output shows a limit of the box.
+
+    60 lines: a build failure prints its error, then a traceback or a page of hints (pip, uv, npm).
+    """
+    if timed_out or exit_code == 137:  # ran past the box's time limit, or was killed (out of memory)
+        return "needs_more_resources"
+    tail = error_tail(stdout, stderr, 60)
+    return next((reason for reason, pattern in _OUTPUT_LIMITS if pattern.search(tail)), None)
+
+
+def own_error(failing: CommandRecord | RanCommand) -> tuple[str | None, str]:
+    """(the tool's own error, "") when the failing command's error tail shows one and no box limit,
+    else (None, why not)."""
+    cid = failing.command_id
+    limit = output_limit(failing.stdout, failing.stderr, failing.exit_code, failing.timed_out)
+    if limit:
+        return None, f"command {cid} hit a limit of the box ({limit})"
+    found = _TOOL_ERROR.search(error_tail(failing.stdout, failing.stderr))
+    if not found:
+        return None, f"command {cid} shows no error of the tool's own code"
+    return " ".join(found.group(0).split())[:80], ""
+
+
+def tool_fault(verdict: dict[str, Any], commands: list[CommandRecord]) -> tuple[str | None, str]:
+    """Positive evidence that the tool itself is at fault, as (evidence, ""), else (None, why there is none).
+
+    Every cited install step succeeded; the failing command ran after them, is the tool's own command
+    (not an install or a download), and fails with an error of the tool's code and no box limit in its
+    error tail. A fresh box must then repeat it (confirm_failure) before the run is failed.
+    """
+    by_id = {c.command_id: c for c in commands if c.command_id is not None}
+    fid = verdict.get("failing_id")
+    failing = by_id.get(fid) if fid is not None else None
+    if failing is None:
+        return None, "the log names no failing command"
+    steps = [by_id[i] for i in verdict.get("step_ids") or [] if i in by_id]
+    if not steps:
+        return None, "no install step ran before it"
+    for step in steps:
+        if step.exit_code != 0 or step.timed_out or masked_exit(step.command):
+            return None, f"install step {step.command_id} did not succeed"
+    if fid <= max(step.command_id for step in steps):
+        return None, f"command {fid} ran before the install finished"
+    if _INSTALLS.search(failing.command):
+        return None, f"command {fid} installs or fetches; it is not the tool's own command"
+    error, why = own_error(failing)
+    if error is None:
+        return None, why
+    return f"command {fid} fails with {error} after every install step succeeded", ""
+
+
+# How an agent describes a box limit: a need, not a mention ("needs Rust 1.91+", "no root to install
+# linux-headers", "neither docker nor podman", "aborts in V8 (exit 134)").
 _NEED = r"(?:no|neither|nor|without|needs?|requires?|required|absent|missing|forbidden|unavailable)"
 _PROSE_LIMITS: list[tuple[str, re.Pattern[str]]] = [
     ("needs_container", re.compile(
@@ -69,7 +166,7 @@ _PROSE_LIMITS: list[tuple[str, re.Pattern[str]]] = [
         r"|\b(?:docker|podman)\b[^.;]{0,20}\b(?:not (?:available|installed|present)|unavailable|missing|absent)\b",
         re.I)),
     ("needs_root", re.compile(
-        r"\bkernel[- ]headers\b|\blinux-headers\b|\b(?:no|without|needs?|requires?|requiring)\s+(?:root|sudo"
+        r"\bkernel[- ]headers?\b|\blinux-headers\b|\b(?:no|without|needs?|requires?|requiring)\s+(?:root|sudo"
         r"|superuser)\b|\bas root\b|\broot (?:access|privileges?|permissions?)\b"
         rf"|\b{_NEED}\b[^.;]{{0,20}}\b(?:apt(?:-get)? install|dpkg|systemd)\b", re.I)),
     ("needs_toolchain", re.compile(
@@ -82,42 +179,42 @@ _PROSE_LIMITS: list[tuple[str, re.Pattern[str]]] = [
         r"heap (?:limit|out of memory)|out of memory|\boom\b|\bv8\b[^.;]{0,30}\babort|abort[^.;]{0,30}\bv8\b"
         r"|no space left|disk (?:is )?full|ran out of (?:memory|disk)", re.I)),
 ]
-# Quoted text, code spans and import errors name things; they are not the box's limits.
-_MENTIONS = re.compile(r"`[^`]*`|'[^']*'|\"[^\"]*\"|(?:ModuleNotFoundError|ImportError)[^.;]*", re.I)
+# Quoted text, code spans and import errors name things; they are not the box's limits. An apostrophe
+# inside a word ("tool's", "can't") is not a quote.
+_MENTIONS = re.compile(r"`[^`\n]*`|(?<!\w)'[^'\n]{1,120}'(?!\w)|\"[^\"\n]{0,120}\""
+                       r"|(?:ModuleNotFoundError|ImportError)[^.;]*", re.I)
+# A need denied is no need: "no GPU needed", "works without Docker", "does not require root".
+_NEGATED = re.compile(r"\b(?:no|not|without|never)\b[^.;,()]{0,30}\b(?:needed|required|necessary|involved|used)\b"
+                      r"|\b(?:does|do|did|is|are)(?: not|n't) (?:need|require|use)s?\b[^.;,()]{0,30}"
+                      r"|\bworks? (?:fine )?without\b[^.;,()]{0,30}", re.I)
 
 
 def box_reason(text: str | None) -> str | None:
     """The UnverifiedReason when an agent's description of a failure states a need the box cannot meet."""
-    plain = _MENTIONS.sub(" ", text or "")
+    plain = _NEGATED.sub(" ", _MENTIONS.sub(" ", text or ""))
     return next((reason for reason, pattern in _PROSE_LIMITS if pattern.search(plain)), None)
 
 
-def output_limit(output: str, exit_code: int | None, timed_out: bool) -> str | None:
-    """The UnverifiedReason when a failing command's own output shows a limit of the box."""
-    if timed_out or exit_code == 137:  # ran past the box's time limit, or was killed (out of memory)
-        return "needs_more_resources"
-    return next((reason for reason, pattern in _OUTPUT_LIMITS if pattern.search(output)), None)
+def failure_reason(verdict: dict[str, Any], commands: list[CommandRecord], blocking_error: str | None,
+                   confirm: FailureCheck | None = None) -> str | None:
+    """The specific UnverifiedReason for a failed claim that is not the tool's proven fault, or None.
 
-
-def failure_limit(blocking_error: str | None, failing: CommandRecord | RanCommand | None,
-                  check_passed: bool) -> str | None:
-    """The box limit behind a failed claim, or None.
-
-    The failing command's output decides when the log names one. Without one, the agent's
-    description does, unless a check passed: then the tool ran, and no box limit stopped it.
+    The failing command's error tail decides when the log names one (or, failing that, the fresh box's
+    rerun). Without one, the agent's description does, unless a check passed: then the tool ran, and no
+    box limit stopped it.
     """
-    if failing is not None:
-        return output_limit(f"{failing.stdout}\n{failing.stderr}", failing.exit_code, failing.timed_out)
-    return None if check_passed else box_reason(blocking_error)
-
-
-def failed_claim_limit(verdict: dict[str, Any], commands: list[CommandRecord],
-                       blocking_error: str | None) -> str | None:
-    """failure_limit() for a log verdict (as a dict) and the agent's command log."""
     by_id = {c.command_id: c for c in commands if c.command_id is not None}
     fid = verdict.get("failing_id")
-    passed = any(c.get("passed") for c in verdict.get("checks") or [])
-    return failure_limit(blocking_error, by_id.get(fid) if fid is not None else None, passed)
+    failing = by_id.get(fid) if fid is not None else None
+    if failing is not None:
+        limit = output_limit(failing.stdout, failing.stderr, failing.exit_code, failing.timed_out)
+        if limit is None and confirm is not None and confirm.failing is not None:
+            f = confirm.failing
+            limit = output_limit(f.stdout, f.stderr, f.exit_code, f.timed_out)
+        return limit
+    if any(c.get("passed") for c in verdict.get("checks") or []):
+        return None
+    return box_reason(blocking_error)
 
 
 # A file named like a system command, written or linked into a directory on the box's PATH.
