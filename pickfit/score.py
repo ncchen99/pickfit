@@ -1,19 +1,21 @@
-"""Scores (P5.1, arch B.3): quality, popularity and treasure, kept apart, formula "b3.v2".
+"""Scores (P5.1, arch B.3): quality, popularity and treasure, kept apart, formula "b3.v3".
 
 quality (0-100) is a weighted mean of six components, each 0-1:
 
-- sandbox_verification 35: the best passed run; <=3 install actions 1.0, 4-6 0.85, more 0.7,
-  and x0.8 when the README had to be corrected to succeed; a failed run 0; no run: no data.
-  Actions are counted inside the recorded steps, which chain commands with && (install_actions);
-  looking around (ls, head, wc, --version) is not an action. A pitfall counts as a correction
-  unless pickfit's box explains it (no root, no toolchains, scripts read first, no GPU or
-  Docker...) or it is only about pickfit's --version/--help check (readme_fix).
-- install_docs 20: muse-spark-1.3 grades the README against B.3's 8-item rubric (0/1/2 each,
+- sandbox_verification 40: the best passed run's depth x step tier x 0.85 per README fix; a
+  failed run 0; no run: no data. Depth is how far the run got (VERIFICATION_DEPTH, per category:
+  a dev CLI is fully checked at function, a local AI tool at inference). Step tiers: <=3 install
+  actions 1.0, 4-6 0.85, more 0.7. Actions are counted inside the recorded steps, which chain
+  commands with && (install_actions); looking around (ls, head, wc, --version) is not an action.
+  A pitfall counts as a README fix unless pickfit's box explains it (no root, no toolchains,
+  scripts read first, no GPU or Docker...) or it is only about pickfit's --version/--help
+  check (readme_fix).
+- install_docs 25: muse-spark-1.3 grades the README against B.3's 8-item rubric (0/1/2 each,
   points / 16). Every item above 0 needs a verbatim quote; an item whose quote is not in the
   sources counts 0. The answer is kept in scores.docs_rubric and reused while the sources stay
   the same, so rescoring costs nothing.
-- maintenance 15: last push (0.35), last release (0.35), >=2 releases in a year (0.3).
-- engineering_hygiene 10: CI, tests, OSI license, changelog or release notes, lockfile.
+- maintenance 10: last push (0.35), last release (0.35), >=2 releases in a year (0.3).
+- engineering_hygiene 5: CI, tests, OSI license, changelog or release notes, lockfile.
 - responsiveness 10: issues opened by people outside the project (>=2), as they stood at the
   snapshot time: share closed and mean time to close.
 - usage_outcomes 10+: external report_outcome counts only, from 3 reports; its weight grows
@@ -24,8 +26,14 @@ The lowest binding_cap() then bounds the total. popularity (0-100) is a log-norm
 the signals collected (stars, forks, release downloads from GitHub; monthly downloads, registry
 count and the best HN score from pickfit.registries; dependents has no source), each against
 its in-category P95 over the collected candidates, plus a quarter of star velocity once the repo
-is 3 months old. A treasure has quality >= 70 and popularity <= 45; T = quality *
-(1 - popularity/100) orders treasures.
+is 3 months old.
+
+A treasure is a verified tool in the better half of verified tools by quality and the less-known
+part of the pool by popularity: quality >= TREASURE_MIN_QUALITY (80, about the verified median in
+each category under b3.v3) and popularity <= 45; T = quality * (1 - popularity/100) orders them.
+
+b3.v3 moved weight from maintenance and hygiene (near 1.0 for almost every record, since
+discovery takes young, active repos) to the sandbox run and the docs rubric, which do vary.
 
 Inputs are the record, the GitHub snapshot it was built from (runs/pipeline.db; fetched live
 when the pipeline database does not hold the repo), one REST call for issues and the registry
@@ -70,7 +78,7 @@ from pickfit.schema import (
     usage_outcomes_weight,
 )
 
-FORMULA_VERSION = "b3.v2"
+FORMULA_VERSION = "b3.v3"
 STAGE = "score-rubric"
 REASONING_EFFORT = "low"
 MAX_OUTPUT_TOKENS = 8_000  # reasoning shares it; at effort low one call used 4,000 and ran out
@@ -79,14 +87,14 @@ PROMPT_CACHE_KEY = "pickfit-rubric-v1"
 DEFAULT_CONCURRENCY = 4
 
 NOMINAL_WEIGHTS: dict[str, float] = {
-    "sandbox_verification": 35,
-    "install_docs": 20,
-    "maintenance": 15,
-    "engineering_hygiene": 10,
+    "sandbox_verification": 40,
+    "install_docs": 25,
+    "maintenance": 10,
+    "engineering_hygiene": 5,
     "responsiveness": 10,
     "usage_outcomes": 10,
 }
-# Where extra usage_outcomes weight comes from; the measured sandbox component keeps its 35.
+# Where extra usage_outcomes weight comes from; the measured sandbox component keeps its 40.
 SHRINKABLE = ("install_docs", "maintenance", "engineering_hygiene", "responsiveness")
 
 # --- quality components -------------------------------------------------------------------
@@ -225,16 +233,26 @@ def readme_fix(pitfall: Pitfall) -> bool:
     return not (_CHECK_PITFALL.search(said) and not _INSTALL_WORDS.search(said))
 
 
-def sandbox_score(verification: Verification) -> float | None:
-    """Best passed run's step score; 0 for a failure; None when nothing ran."""
+# How much of the tool a passed run proved (C.3). A dev CLI is fully checked once a README example
+# runs; a local AI tool once a tiny model generates text, and a one-shot CLI run proves less.
+VERIFICATION_DEPTH: dict[str, dict[str, float]] = {
+    "dev_cli": {"install": 0.6, "function": 1.0, "service": 1.0, "inference": 1.0},
+    "local_ai": {"install": 0.6, "function": 0.8, "service": 0.9, "inference": 1.0},
+}
+README_FIX_FACTOR = 0.85
+
+
+def sandbox_score(verification: Verification, category: str) -> float | None:
+    """Best passed run's depth x step tier x 0.85 per README fix; 0 for a failure; None when nothing ran."""
+    depth = VERIFICATION_DEPTH.get(category, VERIFICATION_DEPTH["dev_cli"])
     best: float | None = None
     for run in verification.runs:
         if not is_passed(run.level):
             continue
         n = install_actions([s.command for s in run.steps])
-        score = 1.0 if n <= 3 else 0.85 if n <= 6 else 0.7
-        if any(readme_fix(p) for p in run.pitfalls):
-            score = round(score * 0.8, 4)
+        tier = 1.0 if n <= 3 else 0.85 if n <= 6 else 0.7
+        fixes = sum(1 for p in run.pitfalls if readme_fix(p))
+        score = round(depth[run.level] * tier * README_FIX_FACTOR ** fixes, 4)
         best = score if best is None else max(best, score)
     if best is not None:
         return best
@@ -461,7 +479,7 @@ def build_scores(record: SoftwareRecord, snapshot: dict[str, Any] | None, issues
     """The scores object for a record; missing inputs leave their components or signals null."""
     as_of = snapshot_time(snapshot, now) if snapshot else now
     components: dict[str, float | None] = {
-        "sandbox_verification": sandbox_score(record.verification),
+        "sandbox_verification": sandbox_score(record.verification, record.category),
         "install_docs": round(rubric.items.score(), 4) if rubric else None,
         "maintenance": maintenance_score(snapshot, as_of) if snapshot else None,
         "engineering_hygiene": hygiene_score(snapshot, record.open_source) if snapshot else None,
@@ -497,7 +515,7 @@ def refresh_scores(data: dict[str, Any], now: datetime) -> str | None:
     verification = Verification.model_validate(data["verification"])
     outcomes = Outcomes.model_validate(data.get("outcomes") or {})
     components = {name: c["score"] for name, c in scores["quality"]["components"].items()}
-    components["sandbox_verification"] = sandbox_score(verification)
+    components["sandbox_verification"] = sandbox_score(verification, data["category"])
     components["usage_outcomes"] = usage_score(outcomes)
     cap_reason = binding_cap(data["kind"], data["repo"]["archived"], verification.level)
     quality = compose_quality(components, usage_outcomes_weight(outcomes.external.total()), cap_reason)

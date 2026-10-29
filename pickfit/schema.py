@@ -108,7 +108,10 @@ assert TOOL_KINDS <= set(get_args(Kind.__value__))
 # Verification levels that count as passed, strongest first (C.3).
 PASSED_LEVELS: tuple[str, ...] = ("inference", "service", "function", "install")
 
-TREASURE_MIN_QUALITY = 70
+# A treasure is a verified tool in the better half by quality and the less-known part by popularity.
+# 80 is about the median quality of verified tools in each category under formula b3.v3
+# (dev_cli 81.9, local_ai 80.7 on 2026-10-29); 45 is about the popularity median of the pool.
+TREASURE_MIN_QUALITY = 80
 TREASURE_MAX_POPULARITY = 45
 
 # Upper bounds on quality (B.3). All sit below the treasure threshold, so a
@@ -669,7 +672,7 @@ class Popularity(_Model):
 
 class Treasure(_Model):
     is_treasure: bool = Field(
-        description="Tool, verified, not archived, quality >= 70 and popularity <= 45."
+        description="Tool, verified, not archived, quality >= 80 and popularity <= 45."
     )
     value: float | None = Field(
         description="T = quality * (1 - popularity/100); null when either is null."
@@ -772,7 +775,8 @@ class Scores(_Model):
             and n <= TREASURE_MAX_POPULARITY
         )
         if self.treasure.is_treasure != eligible:
-            raise ValueError("is_treasure must be quality >= 70 and popularity <= 45")
+            raise ValueError(f"is_treasure must be quality >= {TREASURE_MIN_QUALITY} and "
+                             f"popularity <= {TREASURE_MAX_POPULARITY}")
         return self
 
 

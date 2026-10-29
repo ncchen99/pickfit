@@ -100,13 +100,18 @@ def fake_grade(points: int = 2, calls: list[str] | None = None):
 # --- components ---------------------------------------------------------------------------------
 
 
-def test_sandbox_component_follows_steps_pitfalls_and_failure() -> None:
-    assert sandbox_score(verification(run(steps=3))) == 1.0
-    assert sandbox_score(verification(run(steps=5))) == 0.85
-    assert sandbox_score(verification(run(steps=7))) == 0.7
-    assert sandbox_score(verification(run(steps=2, pitfalls=1))) == pytest.approx(0.8)
-    assert sandbox_score(verification(run(level="failed"))) == 0.0
-    assert sandbox_score(verification()) is None
+def test_sandbox_component_follows_depth_steps_readme_fixes_and_failure() -> None:
+    assert sandbox_score(verification(run(steps=3)), "dev_cli") == 1.0
+    assert sandbox_score(verification(run(steps=5)), "dev_cli") == 0.85
+    assert sandbox_score(verification(run(steps=7)), "dev_cli") == 0.7
+    assert sandbox_score(verification(run(steps=2, pitfalls=1)), "dev_cli") == 0.85
+    assert sandbox_score(verification(run(steps=2, pitfalls=2)), "dev_cli") == 0.7225
+    assert sandbox_score(verification(run(level="install")), "dev_cli") == 0.6  # no README example ran
+    assert sandbox_score(verification(run()), "local_ai") == 0.8  # a one-shot CLI run, no model served
+    assert sandbox_score(verification(run(level="service")), "local_ai") == 0.9
+    assert sandbox_score(verification(run(level="inference")), "local_ai") == 1.0
+    assert sandbox_score(verification(run(level="failed")), "dev_cli") == 0.0
+    assert sandbox_score(verification(), "dev_cli") is None
 
 
 def test_install_actions_count_inside_chained_steps_but_not_looking_around() -> None:
@@ -197,15 +202,15 @@ def test_usage_outcomes_need_three_external_reports_and_take_weight_from_four_co
                                                      "abandoned": 2}, "eval": {"installed": 50}})
     assert usage_score(outcomes) == pytest.approx((0.4 * 0.75 + 0.3 * 0.5) / 0.7, abs=1e-4)
     w = weights(20)
-    assert sum(w.values()) == pytest.approx(100) and w["sandbox_verification"] == 35
-    assert w["install_docs"] == pytest.approx(20 * (1 - 10 / 55), abs=1e-3)
+    assert sum(w.values()) == pytest.approx(100) and w["sandbox_verification"] == 40
+    assert w["install_docs"] == pytest.approx(25 * (1 - 10 / 50), abs=1e-3)
 
 
 def test_missing_components_leave_the_denominator_and_caps_bind() -> None:
     components = {"sandbox_verification": 1.0, "install_docs": 0.5, "maintenance": None,
                   "engineering_hygiene": None, "responsiveness": None, "usage_outcomes": None}
     q = compose_quality(components, 10, None)
-    assert q["total"] == pytest.approx(100 * (35 + 10) / 55, abs=0.05) and q["confidence"] == 0.55
+    assert q["total"] == pytest.approx(100 * (40 + 12.5) / 65, abs=0.05) and q["confidence"] == 0.65
     assert compose_quality(components, 10, "unverified")["total"] == 69.0
     assert compose_quality(dict.fromkeys(components), 10, None)["total"] is None
 
@@ -299,7 +304,7 @@ def test_write_back_keeps_scores_and_refreshes_what_follows_the_run(tmp_path: Pa
     assert after.verification.level == "function" and after.install.linux.run_id == "verify-2"
     s = after.scores
     assert s.quality.cap_reason is None
-    assert s.quality.components.sandbox_verification.score == pytest.approx(0.85 * 0.8)
+    assert s.quality.components.sandbox_verification.score == pytest.approx(0.85 * 0.85)
     assert s.docs_rubric == before.docs_rubric and s.popularity == before.popularity
     assert s.quality.components.install_docs == before.quality.components.install_docs
 
