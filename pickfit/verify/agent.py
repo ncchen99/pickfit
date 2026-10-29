@@ -87,7 +87,8 @@ _STR = {"type": "string"}
 _INT = {"type": "integer"}
 _LEVELS = ["function", "install", "service", "inference", "unverified", "failed"]
 _REASONS = ["needs_gpu", "apple_silicon_only", "macos_only", "windows_only", "gui_only",
-            "needs_account", "model_too_large", "needs_toolchain", "needs_root", "needs_container", "other"]
+            "needs_account", "model_too_large", "needs_toolchain", "needs_root", "needs_container",
+            "needs_more_resources", "other"]
 _METHODS = ["brew", "cargo", "pip", "pipx", "uv", "npm", "go", "binary", "docker", "script", "source", "other"]
 
 FINISH_TOOL = _fn(
@@ -273,8 +274,9 @@ inference = a tiny model generated text in answer to a generation request (POST 
 /v1/completions, /completion, /api/generate or /api/chat) sent to a server you started with \
 run_background; text from a one-shot CLI command counts as function. unverified = it cannot be checked here (set \
 unverified_reason): it needs a GPU, a GUI, an account, root (sudo, apt, kernel headers: needs_root), a container \
-engine (docker, podman: needs_container) or a language toolchain you must not install (Rust, Go: \
-needs_toolchain). Those are this box's limits, not the tool's. failed = the tool's own install or run breaks \
+engine (docker, podman: needs_container), a language toolchain you must not install (Rust, Go: \
+needs_toolchain) or more memory, disk or time than the box has (needs_more_resources). Those are this box's \
+limits, not the tool's. failed = the tool's own install or run breaks \
 (a broken package, a crash, a missing release asset): set blocking_error and failing_command_id.
 
 Rules:

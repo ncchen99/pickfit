@@ -84,6 +84,7 @@ type UnverifiedReason = Literal[
     "needs_toolchain",
     "needs_root",
     "needs_container",
+    "needs_more_resources",
     "budget_exceeded",
     "other",
 ]

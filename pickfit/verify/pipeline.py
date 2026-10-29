@@ -26,7 +26,13 @@ from typing import Any
 from pickfit.schema import VerificationRun, is_passed
 from pickfit.verify.agent import DEFAULT_MODE, AgentLimits, HistoryMode, VerifyAgent, VerifyReport, new_run_id
 from pickfit.verify.box import Box, BoxError
-from pickfit.verify.failure import FailureCheck, box_reason, confirm_failure, failure_plan
+from pickfit.verify.failure import (
+    FailureCheck,
+    cited_workarounds,
+    confirm_failure,
+    failed_claim_limit,
+    failure_plan,
+)
 from pickfit.verify.judge import JudgeResult, judge_checks
 from pickfit.verify.replay import Replayer, ReplayResult, plan_from
 from pickfit.verify.result import DATA_DIR, build_run, save_run, write_back
@@ -116,8 +122,14 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
     judge: JudgeResult | None = None
     confirm: FailureCheck | None = None
     notes: list[str] = []
-    plan_failure = failure_plan(agent.verdict, report.commands) if agent.verdict is not None and \
-        agent.verdict.level == "failed" and not box_reason((report.finish or {}).get("blocking_error")) else None
+    plan_failure = None
+    if agent.verdict is not None and agent.verdict.level == "failed":  # a box spent only on the tool's failure
+        finish = report.finish or {}
+        cited = agent.verdict.to_dict()
+        purposes = {s["command_id"]: s.get("purpose") for s in finish.get("steps") or []}
+        if not cited_workarounds(cited, report.commands, purposes) and \
+                not failed_claim_limit(cited, report.commands, finish.get("blocking_error")):
+            plan_failure = failure_plan(agent.verdict, report.commands)
     if plan_failure is not None:
         confirm_box = make_box(run_id, "confirm")
         box_began = time.monotonic()

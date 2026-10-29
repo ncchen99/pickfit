@@ -49,7 +49,7 @@ from pickfit.schema import (
     is_passed,
 )
 from pickfit.score import refresh_scores
-from pickfit.verify.failure import WRITTEN_REASONS, box_reason, sandbox_only
+from pickfit.verify.failure import WRITTEN_REASONS, cited_workarounds, failed_claim_limit, output_limit
 from pickfit.verify.verdict import split_last, weaker
 
 if TYPE_CHECKING:
@@ -155,9 +155,20 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
                 notes.append(f"the screen judge did not confirm it ({seen})")
                 level, reason = "unverified", "other"
 
-    # A failure is the box's when its error names a box limit; the software's only if it repeated.
-    if verdict.get("claimed_level") == "failed":
-        limit = box_reason(blocking)
+    # A command that only works around the box makes the run neither the tool's pass nor its failure.
+    purposes = {s["command_id"]: s.get("purpose") for s in finish.get("steps") or []}
+    workarounds = cited_workarounds(verdict, report.commands, purposes)
+    if workarounds:
+        notes += workarounds
+        if is_passed(level) or level == "failed":
+            level, reason = "unverified", "other"
+            blocking = "; ".join([*workarounds, *([blocking] if blocking else [])])
+    # A failure is the box's when the box's limit explains it; the software's only if it repeated.
+    elif verdict.get("claimed_level") == "failed":
+        limit = failed_claim_limit(verdict, report.commands, blocking)
+        if limit is None and confirm is not None and confirm.failing is not None:
+            f = confirm.failing
+            limit = output_limit(f"{f.stdout}\n{f.stderr}", f.exit_code, f.timed_out)
         if limit:
             level, reason = "unverified", limit
             notes.append(f"the box, not the software, explains the failure ({limit})")
@@ -178,18 +189,12 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
     else:
         step_commands = [by_id[i].command for i in step_ids if i in by_id]
     steps: list[InstallStep] = []
-    purposes = {s["command_id"]: s.get("purpose") for s in finish.get("steps") or []}
     for cid, command in zip(step_ids, step_commands):
         if len(command) > COMMAND_MAX:
             notes.append(f"step {cid} is longer than {COMMAND_MAX} characters")
             if is_passed(level):
                 level, reason = "unverified", "other"
             continue
-        workaround = sandbox_only(command, purposes.get(cid))
-        if workaround:  # a user's install would not run it, so the replayed path is not theirs
-            notes.append(f"step {cid} only works around the box: {workaround}")
-            if is_passed(level):
-                level, reason = "unverified", "other"
         steps.append(InstallStep(command=command, purpose=_clip(purposes.get(cid), 200)))
 
     smoke: list[SmokeTest] = []
