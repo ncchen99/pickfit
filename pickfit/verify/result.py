@@ -26,6 +26,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -127,9 +128,12 @@ def _record_check(command: str) -> tuple[str, list[SetupStep]] | None:
 
 def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeResult | None, *,
               evidence_dir: Path, screenshots: list[Path] | None = None,
-              judge_cost_usd: float = 0.0, confirm: FailureCheck | None = None
-              ) -> tuple[VerificationRun, list[str]]:
-    """The VerificationRun for one verification, plus notes on why the level was lowered."""
+              judge_cost_usd: float = 0.0, confirm: FailureCheck | None = None,
+              checked_at: datetime | None = None) -> tuple[VerificationRun, list[str]]:
+    """The VerificationRun for one verification, plus notes on why the level was lowered.
+
+    checked_at is when its last box ran; it defaults to now, right after the boxes ran.
+    """
     notes: list[str] = []
     verdict = report.verdict or {}
     finish = report.finish or {}
@@ -250,7 +254,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
     run = VerificationRun(
         id=report.run_id, level=level, unverified_reason=reason, os=report.box.get("os", "linux"),
         arch=report.box.get("arch", "x86_64"), method="sandbox", runner=report.box.get("runner"),
-        image=_clip(report.box.get("image"), 120), checked_at=taipei_now(),
+        image=_clip(report.box.get("image"), 120), checked_at=checked_at or taipei_now(),
         tool_version=_printed(finish.get("tool_version"), outputs),
         install_method=method if steps else None, replayed=replayed, steps=steps,
         smoke_tests=smoke,
