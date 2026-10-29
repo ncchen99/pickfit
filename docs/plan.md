@@ -118,8 +118,8 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 
 ### P4 MCP（10/28 hello → 10/31 細路徑 → 11/1 補完）
 
-- [ ] P4.1 hello 上線（＝P0.5）。
-- [x] P4.2 `build_index`＋`pickfit publish`：驗 schema → commit → 建索引 → `wrangler deploy`；資料壞了就不部署。（`pickfit publish --env` 完成，只用 `--dry-run` 測過，還沒真的部署）
+- [x] P4.1 hello 上線（＝P0.5）。
+- [x] P4.2 `build_index`＋`pickfit publish`：驗 schema → commit → 建索引 → `wrangler deploy`；資料壞了就不部署。（`pickfit publish --env` 完成。10/29 第一次正式部署：`https://pickfit-mcp.ncchen99.workers.dev/mcp`，遠端 D1 `pickfit` 已建表、`MODEL_API_KEY` 已設；評測用的兩個部署等 P6 開跑前再建）
 - [x] P4.3 D1 建表：`events`、`submissions`、`reverify_queue`、`meta_budget`（欄位照 arch E.3 的對照規則；`submissions` 要補 DDL）。不記 IP、不存需求原文，只存模型解析後的條件（brief 第 11 節）。（`worker/migrations/0001_init.sql`，目前只在本機 D1）
 - [x] P4.4 細路徑：`find_software` 照 arch F.2 走「硬條件篩選 → 該類別 ≤60 張候選卡 → 一次 `muse-spark-1.3` 呼叫（`store: false`、effort `low`）解析需求並取捨 → 程式守門（slug 必須在候選裡、理由對得上欄位）」；模型失敗或超預算就退回寶藏分數排序，標 `matched_by: rules`、`degraded: true`。`MODEL_API_KEY` 用 `wrangler secret put` 設定。`get_install_guide` 只回重播過的步驟，不呼叫模型。（本機 `wrangler dev`＋假資料完成，37 個測試；部署步驟見 `worker/README.md`。**與 arch F.2 不同**：工具宣稱支援使用者的 OS 或在該 OS 驗證過就列入，回應一律註明實際驗證過的 OS；要改回嚴格版改 `worker/src/filter.ts` 的 `fits()`）
 - [x] P4.5 補完：`find_alternatives`、`report_outcome`、`submit_software`；Host／Origin 檢查；Worker 每日上限與 `degraded`；回應帶 `how_we_know`、`evidence_url`、`matched_by`、`rec_id`。（10/29 完成，68 個 Worker 測試。另加評測專用唯讀部署：`TOOLS=readonly`、`eval` 環境 Meta 每日 $10、`eval-rules` 關掉模型配對。**還沒部署**，要念誠點頭後做 `wrangler d1 create`、遠端 migration、`ALLOWED_HOSTS`、`wrangler secret put`）
@@ -229,3 +229,4 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | 10/29 12:11 | P2.4 | 開放權重初篩完成（`d82efba`）：957 筆規則通過的候選全跑，留 907、拒 50；複查 83 筆、改判 18；5% 抽樣和 `muse-spark-1.3` 一致 34／34。抽取已改成跳過被拒的候選。照 1 → 5 → 30 → 全部放大 | Baseten $3.80；Meta 複查 $0.66（Meta 10/29 累計 $11.15，含其他 session） |
 | 10/29 12:12 | P2.6、P3.8 | 補本地 AI 與推論等級驗證兩個分支併入 main（merge `4944df7`）；388 個 Python、69 個 Worker 測試通過。新增 57 筆 profile（共 96 筆）；已驗證的本地 AI 工具 4 → 28 筆，其中 goinfer、xyntetik-runner 在沙盒實際載入小模型跑出推論；另多驗證 18 筆 CLI 工具。demo 第 10 筆改為 cluaiz。驗證加了 T4 GPU 選項（berth 只有裝假的 `nvidia-smi` 才過，維持未驗證）。新的 57 筆還沒評分 | Meta 累計 $12.09（10/29 $11.14）；這兩個 session 的 Modal 約 $0.31 |
 | 10/29 12:12 | — | **下一步**：新的 57 筆跑評分、寶藏分數校正（交給沒讀過 `eval/` 的 session）；寫回要擋掉「只在沙盒裡才需要的步驟」；部署 Worker 要念誠點頭；Mac 上親手驗 demo 前 3 筆（P6.4） | — |
+| 10/29 13:06 | P4.1、P4.2 | Worker 第一次正式部署（版本 `b53d4be6`，資料 commit `17924c7`、96 筆）：`https://pickfit-mcp.ncchen99.workers.dev/mcp`。遠端 D1 `pickfit` 建好並套用 0001、0002；`MODEL_API_KEY` 用 pipe 設成 secret。實測 5 個工具都在，問一題由 `muse-spark-1.3` 配對、沒有降級。新 57 筆的分數要等評分校正分支合併後再發布一次 | Worker 呼叫 1 次 |
