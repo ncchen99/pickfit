@@ -216,9 +216,10 @@ def _watch(args: argparse.Namespace) -> int:
         from pickfit.reverify import live_steps as reverify_steps
 
         reverifier = Reverifier(d1, reverify_steps(runner=args.runner), data_dir=args.data, runs_dir=runs_dir(),
-                                db_path=pipeline_db_path(), commit=not args.no_commit)
+                                db_path=pipeline_db_path(), commit=not args.no_commit,
+                                log=lambda line: print(line, flush=True))
     watcher = Watcher(d1, steps, settings, meta_ledger=default_ledger(), baseten_ledger=baseten_ledger(),
-                      reverifier=reverifier)
+                      reverifier=reverifier, log=lambda line: print(line, flush=True))
     print(f"watch · {d1.where} · every {args.interval:.0f}s · {args.concurrency} at a time · "
           f"hourly cap {settings.hourly_cap} · --max-usd {args.max_usd} · {args.runner} · "
           f"{'commit + publish' if args.publish else 'commit, no deploy' if settings.commit else 'no commit'}"
@@ -249,7 +250,7 @@ def _reverify(args: argparse.Namespace) -> int:
         print(f"pickfit reverify: {err}", file=sys.stderr)
         return 2
     reverifier = Reverifier(d1, steps, data_dir=args.data, runs_dir=runs_dir(), db_path=pipeline_db_path(),
-                            commit=not args.no_commit)
+                            commit=not args.no_commit, log=lambda line: print(line, flush=True))
     ledger = default_ledger()
     results = reverifier.run(args.limit, blocked=lambda: budget_blocked(
         [("Meta pipeline", ledger, WORST_CASE_META_USD)]))

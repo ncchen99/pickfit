@@ -84,7 +84,7 @@ env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p "…" \
 - 7 個 stage 存成 `(stage, success)`，對照寫在 `migrations/0001_init.sql` 開頭；`satisfaction` 存成 1／0／-1。
 - **計分**：`rec_id` 必須是 pickfit 7 天內發給這個 slug 的（`find_*` 推薦過它，或 `get_install_guide` 給過它的指南）。合格的回報保留 `rec_id`，不合格的存成 `rec_id = NULL`，所以「`rec_id IS NOT NULL` ＝ 計分」。回 `counted_in_score` 與 `not_counted_reason`。
 - **去重**：同一個 `(rec_id, slug, stage, success)` 只記一次，重送回 `deduplicated: true`、同一個 `report_id`（`0002` 把 `success` 加進唯一索引，否則「先失敗、修好後成功」的第二筆會被當成重複）。
-- **重驗**：`install_failed`／`first_run_failed`＋有效 `rec_id`＋知道 OS（參數或推薦時的 OS）＋有 `error_excerpt` → 寫進 `reverify_queue`；同一 `(slug, os)` 還在排隊就回 `already_queued`，做完（`done_at` 有值）後再失敗會重新排。
+- **重驗**：`install_failed`／`first_run_failed`＋有效 `rec_id`＋知道 OS（參數或推薦時的 OS）＋有 `error_excerpt` → 寫進 `reverify_queue`；同一 `(slug, os)` 還在排隊就回 `already_queued`，做完（`done_at` 有值）後再失敗會重新排。處理在管線：`pickfit reverify`（或 `pickfit watch --reverify`，P5.3）在全新沙盒重跑，把使用者照做失敗的步驟與錯誤（`<source>` 裡，當資料）告訴驗證 agent；只有通過、重播成功、而且步驟和紀錄不同的 run 才照 `write_back` 的規則寫回（不寫 `failed`、較強的通過紀錄保留），印出並存下該筆紀錄的 `git diff`，再設 `done_at`。沙盒是 Linux：macOS／Windows 的回報也在 Linux 重跑，結果會註明。
 - **個資**：`error_excerpt` 與 `note` 存之前先過 `src/scrub.ts`（家目錄的使用者名稱、email、`token=`／`Bearer` 之類的值、長串像金鑰的字元），`error_excerpt` 留最後 500 字元、`note` 最多 280 字元。`note` 是不可信的輸入：只給人看，**不出現在任何回應，也不送進模型**。
 
 ### `submit_software`
@@ -92,7 +92,12 @@ env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p "…" \
 - 只收 `github.com/<owner>/<repo>`（`.git`、大小寫、`/tree/...` 都正規化成 `https://github.com/owner/repo`）；其他網域、`/topics/...` 之類不是 repo 的路徑回工具錯誤。Threads 連結還沒做。
 - 一個 repo 一列（`submissions.url` 唯一）；重送只讀狀態（`already_submitted: true`）。已在目錄裡的 repo 直接回 `listed` 與 slug，不新增一列。
 - 每小時新提交上限 `SUBMIT_HOURLY_CAP`（預設 20，全體共用；不存 IP，所以沒辦法分人計）。
-- Worker 只排隊，處理在管線：`pickfit watch`（P5.2）讀 `status = 'queued'` 的列，更新 `status`（`reading` → `verifying` → `listed`／`listed_unverified`／`rejected`）、`slug`、`reason`、`updated_at`。
+- Worker 只排隊，處理在管線：`pickfit watch`（P5.2）每 60 秒讀 `status = 'queued'` 的列，更新 `status`（`reading` → `verifying` → `listed`／`listed_unverified`／`rejected`）、`slug`、`reason`、`updated_at`（時間格式和 Worker 一樣是 UTC `toISOString`）。
+  - 每筆走單筆管線：GitHub 資料 → 規則 → 初篩（Baseten 上的 Muse Spark Open）→ `muse-spark-1.3` 抽取 → 紀錄 → Modal 驗證（agent、全新沙盒重播、畫面判讀）→ 評分。紀錄先在 `runs/watch/<submission>/` 建好，全部完成才複製進 `data/software/` 並單獨 commit。
+  - 全部通過：預設只 commit，`status` 停在 `verifying`、`reason` 寫「下次 publish 上線」；加 `--publish` 才跑 `pickfit publish` 部署並改成 `listed`。沒驗證成（沙盒跑不了或沒通過）：commit、`listed_unverified`。
+  - 拒絕（`reason` 由程式寫，不放模型的文字）：非 GitHub repo、fixture、私有或不存在、已在 `data/software`（改回該紀錄的狀態）、和另一筆提交是同一個 repo、星數超過發現的上限（300）、規則擋下、初篩判定不是可安裝的軟體、不在 dev_cli／local_ai。
+  - 上限：每小時開始處理的筆數照 `SUBMIT_HOURLY_CAP`；共用帳本的 Meta（每日、總額）與 Baseten 預算要留得下一筆的最壞花費（約 $1）才開始；`--max-usd` 管整次執行。每筆的各階段秒數與「從提交到可發布」的時間記在 `runs/watch/jobs/<submission>.json`。
+  - `pickfit watch --status`（唯讀）列出 D1 的提交與重驗佇列；`--local` 用 `wrangler dev` 的本機 D1。
 
 ## 花費上限與 `degraded`
 
