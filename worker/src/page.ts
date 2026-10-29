@@ -67,14 +67,14 @@ function link(url: string | null | undefined, text: string): string {
 }
 
 const OS_NAME: Record<OS, string> = { macos: 'macOS', linux: 'Linux', windows: 'Windows' };
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const DAY = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
 export const osName = (os: OS | null | undefined) => (os ? OS_NAME[os] : 'an unknown OS');
 const system = (os: OS | null, arch: Arch | null) => `${osName(os)}${arch ? ` ${arch}` : ''}`;
 
 function day(iso: string | null): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso ?? '');
-  return m ? `${Number(m[3])} ${MONTHS[Number(m[2]) - 1]} ${m[1]}` : '';
+  const date = new Date(iso ?? '');
+  return Number.isNaN(date.getTime()) ? '' : DAY.format(date);
 }
 
 /** What the verification level proves, as a short headline. */
@@ -134,7 +134,7 @@ function listOf(items: string[]): string {
 }
 
 function command(text: string): string {
-  return `<div class="cmd"><pre><code>${esc(text)}</code></pre><button type="button" class="copy">Copy</button></div>`;
+  return `<div class="cmd"><pre translate="no"><code>${esc(text)}</code></pre><button type="button" class="copy">Copy</button></div>`;
 }
 
 /** The steps get_install_guide returns, for a person instead of an agent. */
@@ -269,13 +269,12 @@ const MODEL_FAILED = {
 
 function matchLine(out: FindOutput): string {
   const n = out.picks.length;
-  const chose = n === 0 ? 'found none that fits' : `picked ${n === 1 ? 'one' : n}`;
-  if (out.matched_by === 'rules') {
-    return `Ranked by rules among the ${out.considered} verified tools that meet your conditions; no model was used.`;
-  }
+  const meet = `${out.considered} verified ${out.considered === 1 ? 'tool meets' : 'tools meet'} your conditions`;
+  if (out.matched_by === 'rules') return `${meet}; these are ranked by rules, without a model.`;
+  // When more than the card limit meet them, coverage_note says how many the model compared.
   return (
-    `Meta’s ${esc(out.matched_by)} compared the ${out.considered} verified tools that meet your conditions and ${chose}. ` +
-    'Code checked every reason against the tool’s profile.'
+    `${meet}; Meta’s ${esc(out.matched_by)} ${n === 0 ? 'found none that fits' : `picked ${n === 1 ? 'one' : n}`}.` +
+    (n ? ' Code checked every reason against the tool’s profile.' : '')
   );
 }
 
@@ -346,8 +345,8 @@ const SELECT = {
   ],
   arch: [
     ['', 'Any CPU'],
-    ['arm64', 'arm64 (Apple silicon, ARM)'],
-    ['x86_64', 'x86_64 (Intel, AMD)'],
+    ['arm64', 'ARM64, Apple silicon'],
+    ['x86_64', 'x86-64, Intel or AMD'],
   ],
 } as const;
 
@@ -385,12 +384,15 @@ export function renderPage(input: PageInput): string {
 <title>pickfit: software that fits, installed and tested first</title>
 <meta name="description" content="Describe what you need. pickfit suggests lesser-known developer CLI tools and local AI tools it has installed and tested, with the evidence and the steps that worked.">
 <meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F3F5F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1525" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="${ICON}">
 <style nonce="${nonce}">${CSS}</style>
 </head>
 <body>
+<a class="skip" href="#need">Skip to the search box</a>
 <header class="top wrap">
-<a class="brand" href="/">${MARK}<span>pickfit</span></a>
+<a class="brand" href="/" translate="no">${MARK}<span>pickfit</span></a>
 <nav aria-label="Page"><a href="#how">How it works</a><a href="#agents">For agents</a></nav>
 </header>
 <main>
@@ -400,7 +402,7 @@ export function renderPage(input: PageInput): string {
 <form id="search" class="search" method="post" action="/search">
 <div class="need">
 <label for="need">I need</label>
-<textarea id="need" name="need" rows="1" minlength="3" maxlength="500" required autocomplete="off" spellcheck="true" placeholder="a free way to transcribe meeting recordings offline">${esc(form.need)}</textarea>
+<textarea id="need" name="need" rows="1" minlength="3" maxlength="500" required autocomplete="off" spellcheck="true" placeholder="a free way to transcribe meeting recordings offline…">${esc(form.need)}</textarea>
 </div>
 <div class="filters">
 <span class="filters-label">Runs on</span>
@@ -429,14 +431,14 @@ ${select('arch', form.arch, 'CPU architecture')}
 <h2>The same answers inside your coding agent</h2>
 <p>Agents get the same data and the same matching through MCP. Add pickfit to Claude Code:</p>
 ${command(`claude mcp add --transport http pickfit ${mcp}`)}
-<p class="quiet">Any MCP client that speaks streamable HTTP can connect to <code>${esc(mcp)}</code>.</p>
+<p class="quiet">Any MCP client that speaks streamable HTTP can connect to <code translate="no">${esc(mcp)}</code>.</p>
 </section>
 </main>
 <footer class="foot wrap">
 <p>pickfit ranks by fit, not stars. No ads, no paid placement, no referral links, and it doesn’t make any of the software it suggests.</p>
 <p>No account and no IP address stored. Your sentence goes to Meta’s Muse Spark with storage turned off; pickfit keeps only the conditions it parsed, such as the task and the OS.</p>
 </footer>
-<template id="loading"><div class="loading" role="status"><div class="bar" aria-hidden="true"></div><h2>Matching your need</h2><ol><li>Keep the verified tools that meet your OS, price and offline conditions</li><li>Muse Spark reads every remaining profile and picks the best fits</li><li>Code checks each reason against the profile</li></ol><p class="quiet">Usually 5 to 15 seconds.</p></div></template>
+<template id="loading"><div class="loading" role="status"><div class="bar" aria-hidden="true"></div><h2>Matching your need…</h2><ol><li>Keep the verified tools that meet your OS, price and offline conditions</li><li>Muse Spark reads every remaining profile and picks the best fits</li><li>Code checks each reason against the profile</li></ol><p class="quiet">Usually 5 to 15 seconds.</p></div></template>
 <template id="offline"><div class="notice error" role="alert"><h2>Couldn’t reach pickfit</h2><p>Check your connection and search again.</p></div></template>
 <script nonce="${nonce}">${SCRIPT}</script>
 </body>
@@ -459,6 +461,11 @@ a{color:inherit;text-decoration-thickness:1px;text-underline-offset:3px}
 a:hover{text-decoration-color:var(--tape);text-decoration-thickness:2px}
 :focus-visible{outline:3px solid var(--tape);outline-offset:2px;border-radius:4px}
 h1,h2,h3,.need label,.need textarea,.rank{font-family:var(--serif);font-weight:600;letter-spacing:-.01em}
+h1,h2,h3{text-wrap:balance}
+button{touch-action:manipulation;-webkit-tap-highlight-color:color-mix(in srgb,var(--tape) 35%,transparent)}
+.skip{position:absolute;left:12px;top:-60px;background:var(--ink);color:var(--paper);padding:10px 14px;border-radius:8px;z-index:1}
+.skip:focus{top:12px}
+section[id]{scroll-margin-top:16px}
 h1{font-size:clamp(30px,5.4vw,44px);line-height:1.12;margin:0 0 16px;max-width:22ch}
 h2{font-size:24px;line-height:1.25;margin:0 0 10px}
 h3{font-size:21px;line-height:1.3;margin:0}
@@ -486,14 +493,14 @@ code{font-family:var(--mono);font-size:.92em}
 select{font:inherit;color:var(--ink);background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:7px 10px;max-width:100%}
 .check{display:inline-flex;align-items:center;gap:7px;cursor:pointer;min-height:36px}
 .check input{width:18px;height:18px;accent-color:var(--ink);margin:0}
-.go{margin-left:auto;font:600 16px/1 var(--sans);color:var(--paper);background:var(--ink);border:0;border-radius:10px;padding:13px 20px;cursor:pointer;touch-action:manipulation}
+.go{margin-left:auto;font:600 16px/1 var(--sans);color:var(--paper);background:var(--ink);border:0;border-radius:10px;padding:13px 20px;cursor:pointer}
 .go:hover{background:color-mix(in srgb,var(--ink) 86%,var(--tape))}
 .go:disabled{opacity:.6;cursor:progress}
 .examples{display:none;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-top:22px;font-size:15px}
 .js .examples{display:flex}
 .examples button{font:inherit;color:var(--ink);background:none;border:0;padding:2px 0;cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:4px}
 .examples button:hover{text-decoration-color:var(--tape)}
-.results{scroll-margin-top:12px;padding-bottom:12px}
+.results{padding-bottom:12px}
 .results:focus{outline:none}
 .match-line{color:var(--quiet);border-top:1px solid var(--rule);padding-top:22px;margin-top:8px}
 .ask,.aside{background:var(--sheet);border-radius:12px;padding:14px 18px;margin:16px 0}
@@ -594,12 +601,6 @@ const SCRIPT = `
   need.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); form.requestSubmit(); }
   });
-  // Before the first search, preselect the visitor's desktop OS.
-  if (!out.firstElementChild && !form.elements.os.value) {
-    const ua = navigator.userAgent;
-    const os = /Android|iPhone|iPad/.test(ua) ? '' : /Mac/.test(ua) ? 'macos' : /Windows/.test(ua) ? 'windows' : /Linux/.test(ua) ? 'linux' : '';
-    form.elements.os.value = os;
-  }
   let busy = false;
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -607,7 +608,7 @@ const SCRIPT = `
     busy = true;
     go.disabled = true;
     go.textContent = 'Finding…';
-    status.textContent = 'Searching';
+    status.textContent = 'Searching…';
     out.setAttribute('aria-busy', 'true');
     out.replaceChildren(document.getElementById('loading').content.cloneNode(true));
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches;

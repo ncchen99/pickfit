@@ -40,7 +40,7 @@ const OS_VALUES = new Set(['macos', 'linux', 'windows']);
 const ARCH_VALUES = new Set(['arm64', 'x86_64']);
 const yes = (value: string | null) => value === '1' || value === 'on' || value === 'true';
 
-/** Form fields (or the same names in a ?query, to prefill the page). Unknown values are dropped. */
+/** The posted form. Unknown values are dropped. (No ?need= prefill: request URLs reach Workers logs.) */
 export function formFrom(params: URLSearchParams): FormValues {
   const os = params.get('os') ?? '';
   const arch = params.get('arch') ?? '';
@@ -202,7 +202,7 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
       const url = new URL(request.url);
       if (url.pathname === '/') {
         if (request.method !== 'GET' || !wantsHtml(request)) return null;
-        return page(url.origin, formFrom(url.searchParams), '', 200, { vary: 'Accept' });
+        return page(url.origin, EMPTY_FORM, '', 200, { vary: 'Accept' });
       }
       if (url.pathname !== '/search') return null;
       if (request.method === 'GET') return new Response(null, { status: 303, headers: { location: '/' } });

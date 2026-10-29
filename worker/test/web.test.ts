@@ -87,16 +87,11 @@ test('GET / is the page for a browser; anything else still gets the JSON health 
   assert.equal(s.metaCalls.length, 0);
 });
 
-test('?need= and the other fields prefill the form, escaped, without searching', async () => {
+test('the page never echoes a query string: request URLs reach Workers logs', async () => {
   const s = site();
-  const res = await s.send(
-    new Request('http://127.0.0.1:8787/?need=%3Cb%3Eparse+json%3C%2Fb%3E&os=linux&arch=nope&free_only=1', { headers: { accept: 'text/html' } }),
-  );
-  const html = await res.text();
-  assert.ok(html.includes('&lt;b&gt;parse json&lt;/b&gt;</textarea>'));
-  assert.ok(html.includes('<option value="linux" selected>'));
-  assert.ok(!html.includes('<option value="arm64" selected>') && !html.includes('<option value="x86_64" selected>'));
-  assert.match(html, /name="free_only" value="1" checked/);
+  const html = await (await s.send(new Request('http://127.0.0.1:8787/?need=secret-words&os=linux', { headers: { accept: 'text/html' } }))).text();
+  assert.ok(!html.includes('secret-words'));
+  assert.ok(html.includes('<option value="" selected>Any OS</option>'));
   assert.equal(s.metaCalls.length, 0);
 });
 
@@ -120,7 +115,7 @@ test('a search is find_software plus get_install_guide: reasons, verification, s
   assert.equal(s.metaCalls.length, 1);
   assert.equal(s.metaCalls[0].model, 'muse-spark-1.3');
   assert.match(JSON.stringify(s.metaCalls[0].input), /run a language model offline on my laptop/);
-  assert.match(html, /Meta’s muse-spark-1\.3 compared the \d+ verified tools that meet your conditions and picked 2/);
+  assert.match(html, /\d+ verified tools meet your conditions; Meta’s muse-spark-1\.3 picked 2\. Code checked every reason/);
 
   // Ranked picks with the fit, cited reasons, tradeoffs, best_free and the comparison.
   const [first, second] = html.split('<article class="pick"').slice(1);
@@ -194,7 +189,7 @@ test('a model failure says the results are ranked by rules', async () => {
   const s = site({}, () => Response.json({ error: 'bad request' }, { status: 400 }));
   const html = await (await s.search(MAC_LLM)).text();
   assert.match(html, /<div class="notice busy" role="status"><h2>Ranked without the model this time<\/h2>/);
-  assert.match(html, /Ranked by rules among the \d+ verified tools/);
+  assert.match(html, /\d+ verified tools meet your conditions; these are ranked by rules, without a model\./);
   assert.ok(html.includes('<article class="pick"'));
 });
 
