@@ -88,10 +88,10 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
     if macos:
         add(_probe(box, "non_admin", "id -u; id -Gn; sudo -n true 2>&1; echo sudo=$?", 20,
                    "not root, not in admin, sudo refused", _not_admin))
-        add(_probe(box, "firewall_locked", "pfctl -d", 20, "the box user cannot turn pf off",
-                   lambda r: r.exit_code != 0))
-        # The ways to root the review found (2026-10-29): the image's admin/admin, su in a pty, sshd or
-        # VNC on localhost (pf skips lo0), the auto-login password file, and the guest agent's binary.
+        # The network policy is host-side (softnet); the box's own start checks containment holds even for
+        # in-guest root. These probes keep the escalation surface small as defence in depth: the ways to
+        # root the review found (2026-10-29) -- the image's admin/admin, su in a pty, sshd or VNC on
+        # localhost, the auto-login password file, and the guest agent's binary.
         add(_probe(box, "admin_password", "dscl . -authonly admin admin", 20,
                    "admin's default password is gone", lambda r: r.exit_code != 0))
         add(_probe(box, "su_admin", SU_ADMIN, 30, "su admin with the default password fails",

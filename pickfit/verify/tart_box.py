@@ -54,6 +54,8 @@ import secrets
 import shlex
 import shutil
 import signal
+import socket
+import stat
 import subprocess
 import threading
 import time
@@ -131,55 +133,102 @@ AGENT_PLISTS = ("/Library/LaunchDaemons/org.cirruslabs.tart-guest-daemon.plist",
                 "/Library/LaunchAgents/org.cirruslabs.tart-guest-agent.plist")
 TIMEOUT_CMD = f"{GUEST_PYTHON} -I {HELPER_DIR}/timeout"
 DETACH_CMD = f"{GUEST_PYTHON} -I {HELPER_DIR}/detach"
-# Never reachable from the box: the same ranges as ModalBox, plus all of IPv6 (vmnet gives the guest none
-# that it needs). The host sits on 192.168.64.0/24, so it is covered.
-BLOCKED_NETS = ("0.0.0.0/8", "10.0.0.0/8", "100.64.0.0/10", "169.254.0.0/16", "172.16.0.0/12",
-                "192.168.0.0/16", "224.0.0.0/4", "240.0.0.0/4")
 ROOT_PATH = "PATH=/usr/bin:/bin:/usr/sbin:/sbin; export PATH"
 AGENT_WAIT_S = 240
 NETWORK_WAIT_S = 60
 STALE_S = 3 * 3600  # a running pf-verify VM older than this was left by a dead process
 REAP_GRACE_S = 300  # the host reaper stops and deletes a clone this long after its lifetime
-EGRESS_PROBE = "curl -sS -m 4 -o /dev/null http://1.1.1.1/"  # run as root: pf must stop it offline
 VM_LIMIT_HINT = ("macOS refused to start another VM (Apple allows two at once; bug FB22967193 can keep the "
                  "slots used after VMs stop). Check `tart list`; if no other macOS VM is running, reboot the Mac.")
 
+# The network policy lives on the HOST, in Tart's softnet packet filter, so nothing inside the guest --
+# not even root -- can change it (the box user can reach the auto-login admin, who has sudo; a guest-side
+# firewall was defeatable from there). Online uses softnet's own default: it allows the public internet
+# but blocks the private IPv4 ranges, link-local/metadata and the host, and isolates the bridge, so the
+# allow/block lists stay empty. Offline is a default-deny egress policy.
+SOFTNET_BIN = "softnet"
+SOFTNET_POLICY = {True: {"allow": [], "block": []}, False: {"allow": [], "block": ["0.0.0.0/0"]}}
+# Checked as root in the guest after every policy change: the internet is reachable only online, and the
+# host, cloud metadata and a private address are never reachable (softnet denies them to in-guest root too).
+PUBLIC_PROBE = "curl -sS -m 6 -o /dev/null -w '%{http_code}' https://pypi.org/simple/pip/"
+CONTAINED_PROBES = {"metadata": "169.254.169.254", "private": "10.0.0.1"}
 
-def pf_label(online: bool) -> str:
-    return "pickfit-online" if online else "pickfit-offline"
+
+def softnet_real_path(name: str = SOFTNET_BIN) -> str | None:
+    path = shutil.which(name)
+    return os.path.realpath(path) if path else None
 
 
-def pf_rules(online: bool, resolvers: list[str]) -> str:
-    """The guest's pf ruleset: online blocks local networks and the host; offline blocks everything.
+def softnet_ready(name: str = SOFTNET_BIN) -> str | None:
+    """None when softnet can self-elevate (setuid-root); otherwise the one-time command that sets it up.
 
-    Every rule carries a label, so the harness can tell from `pfctl -s rules` which set is loaded.
-    resolvers is the VM's gateway: DNS and DHCP renewals may reach it, nothing else on 192.168/16.
+    softnet needs root only to create the vmnet interface and tune DHCP, then drops back to the calling
+    user; Tart execs it directly, so the privilege has to come from a setuid bit, not from wrapping sudo.
     """
-    if not online:
-        rules = ["block drop all"]
-    else:
-        rules = ["block drop in all",
-                 "pass in quick inet proto udp from any port 67 to any port 68",  # DHCP replies
-                 "block return out quick inet6 all"]  # fail fast, so clients fall back to IPv4 at once
-        if resolvers:
-            rules += [f"pass out quick inet proto {{ tcp, udp }} to {{ {', '.join(resolvers)} }} port 53",
-                      f"pass out quick inet proto udp from any port 68 to {{ 255.255.255.255, "
-                      f"{', '.join(resolvers)} }} port 67"]
-        rules += [f"block drop out quick inet to {{ {', '.join(BLOCKED_NETS)} }}", "pass out inet all"]
-    label = pf_label(online)
-    return "set skip on lo0\n" + "".join(f'{rule} label "{label}"\n' for rule in rules)
+    real = softnet_real_path(name)
+    if real is None:
+        return "softnet is not installed; `brew install openai/tools/tart` pulls it"
+    info = os.stat(real)
+    if info.st_uid != 0 or not info.st_mode & stat.S_ISUID:
+        return ("softnet needs a one-time setuid-root bit (it drops back to you after setting up the "
+                f"network): sudo chown root:wheel {real} && sudo chmod u+s {real} && brew pin softnet")
+    return None
 
 
-def firewall_holds(info: str, rules: str, online: bool) -> str | None:
-    """None when pf is enabled and every loaded rule is pickfit's set for `online`; else what is wrong."""
-    if "Status: Enabled" not in info:
-        return "pf is not enabled"
-    loaded = [line for line in rules.splitlines() if line.strip() and not line.startswith(("No ALTQ", "ALTQ"))]
-    if not loaded:
-        return "no pf rules are loaded"
-    want = f'label "{pf_label(online)}"'
-    stray = [line for line in loaded if want not in line]
-    return f"unexpected pf rule: {stray[0][:120]}" if stray else None
+class SoftnetControl:
+    """The host end of Tart's softnet control channel.
+
+    Tart runs softnet as a sub-process and forwards the inherited control fd to it; on this end the
+    harness speaks newline-delimited JSON-RPC 2.0 and calls softnet.policy.set. One VM per softnet, so
+    vmId is omitted. The channel replaces the live allow/block lists without restarting the VM, and
+    softnet clears its flow table on a real change, so an established connection cannot outlive the cut.
+    """
+
+    def __init__(self) -> None:
+        self.parent, self.child = socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM)
+        os.set_inheritable(self.child.fileno(), True)
+        self.parent.settimeout(20)
+        self._id = 0
+        self._buf = b""
+
+    @property
+    def control_fd(self) -> int:
+        return self.child.fileno()
+
+    def close_child(self) -> None:
+        """Drop the child end in this process once Tart has inherited it."""
+        try:
+            self.child.close()
+        except OSError:
+            pass
+
+    def set_policy(self, online: bool) -> dict[str, Any]:
+        self._id += 1
+        req = {"jsonrpc": "2.0", "id": self._id, "method": "softnet.policy.set", "params": SOFTNET_POLICY[online]}
+        try:
+            self.parent.sendall((json.dumps(req) + "\n").encode())
+            reply = json.loads(self._readline())
+        except (OSError, ValueError) as err:
+            raise BoxError(f"softnet control channel failed: {type(err).__name__}: {err}") from err
+        if reply.get("error") is not None:
+            raise BoxError(f"softnet rejected the policy: {reply['error']}")
+        return reply.get("result") or {}
+
+    def _readline(self) -> bytes:
+        while b"\n" not in self._buf:
+            chunk = self.parent.recv(65536)
+            if not chunk:
+                raise BoxError("softnet control channel closed before replying")
+            self._buf += chunk
+        line, _, self._buf = self._buf.partition(b"\n")
+        return line
+
+    def close(self) -> None:
+        for sock in (self.parent, self.child):
+            try:
+                sock.close()
+            except OSError:
+                pass
 
 
 def base_manifest_path(base: str = BASE_VM, state_dir: Path | None = None) -> Path:
@@ -263,6 +312,7 @@ class TartBox(Box):
         self.resolvers: list[str] = []
         self.vm_proc: subprocess.Popen[bytes] | None = None
         self.vm_log: Path | None = None
+        self.control: SoftnetControl | None = None  # host end of softnet's policy channel
         self._timer: threading.Timer | None = None
         self._reaper: subprocess.Popen[bytes] | None = None
         self._lock = threading.Lock()
@@ -318,18 +368,39 @@ class TartBox(Box):
         self._timer.daemon = True
         self._timer.start()
 
+    def run_argv(self) -> tuple[list[str], int]:
+        """`tart run` with host-side softnet networking; also returns the control fd Tart must inherit."""
+        self.control = SoftnetControl()
+        fd = self.control.control_fd
+        argv = [self.tart, "run", "--no-graphics", "--no-audio", "--no-clipboard",
+                "--net-softnet", f"--net-softnet-control-fd={fd}", self.name]
+        return argv, fd
+
     def _boot(self) -> None:
+        setup = softnet_ready()
+        if setup:
+            raise BoxError(setup)
+        if self.control is not None:  # a second boot (prepare_base reboots the hardened base)
+            self.control.close()
+            self.control = None
         self.state_dir.mkdir(parents=True, exist_ok=True)
         self.vm_log = self.state_dir / f"{self.name}.log"
+        argv, control_fd = self.run_argv()
         with self.vm_log.open("wb") as out:
-            self.vm_proc = subprocess.Popen([self.tart, "run", "--no-graphics", "--no-audio", "--no-clipboard",
-                                             self.name], stdout=out, stderr=subprocess.STDOUT,
-                                            stdin=subprocess.DEVNULL, start_new_session=True)
+            self.vm_proc = subprocess.Popen(argv, stdout=out, stderr=subprocess.STDOUT,
+                                            stdin=subprocess.DEVNULL, start_new_session=True,
+                                            pass_fds=(control_fd,))
+        self.control.close_child()  # Tart has inherited it; keep only the host end
         deadline = time.monotonic() + AGENT_WAIT_S
         while time.monotonic() < deadline:
             if self.vm_proc.poll() is not None:
                 text = self.vm_log.read_text(errors="replace")[-800:]
-                hint = f" {VM_LIMIT_HINT}" if re.search(r"LimitExceeded|maximum number|limit", text, re.I) else ""
+                if re.search(r"softnet|operation not permitted|setuid|permission", text, re.I):
+                    hint = f" {softnet_ready() or 'softnet failed to start'}"
+                elif re.search(r"LimitExceeded|maximum number|limit", text, re.I):
+                    hint = f" {VM_LIMIT_HINT}"
+                else:
+                    hint = ""
                 raise BoxError(f"tart run exited with {self.vm_proc.returncode}: {text.strip()}{hint}")
             try:
                 probe = self._tart("exec", self.name, "true", timeout_s=20)
@@ -376,16 +447,18 @@ class TartBox(Box):
             if check.returncode != 0:
                 raise BoxError(f"the base VM is not hardened ({(check.stdout + check.stderr).strip()[-300:]}); "
                                "rebuild it with `pickfit verify --runner tart --prepare-base`")
+        # Wait for the default route, then pin DNS to the gateway. softnet's NAT already hands out a
+        # working resolver, so a pin failure is not fatal (the online check below resolves a hostname and
+        # would catch a real DNS fault); pinning only avoids a slow IPv6-resolver fallback if one appears.
         pin = (f"for i in $(seq 1 {NETWORK_WAIT_S}); do route -n get default >/dev/null 2>&1 && break; "
-               "sleep 1; done; gw=$(route -n get default | awk '/gateway:/ {print $2}'); "
+               "sleep 1; done; gw=$(route -n get default | awk '/gateway:/ {print $2}'); echo \"$gw\"; "
                "svc=$(networksetup -listallnetworkservices | sed -n 2p); "
-               "networksetup -setdnsservers \"$svc\" \"$gw\" && echo \"$gw\"")
+               "networksetup -setdnsservers \"$svc\" \"$gw\" 2>/dev/null || true")
         net = self._root(pin, NETWORK_WAIT_S + 20)
         self.resolvers = [ip for ip in net.stdout.split() if re.fullmatch(r"\d+\.\d+\.\d+\.\d+", ip)]
         if net.returncode != 0 or not self.resolvers:
             raise BoxError(f"guest network did not come up: {(net.stdout + net.stderr).strip()[-300:]}")
-        files = {"timeout": HELPER_TIMEOUT, "detach": HELPER_DETACH,
-                 "pf-online.conf": pf_rules(True, self.resolvers), "pf-offline.conf": pf_rules(False, [])}
+        files = {"timeout": HELPER_TIMEOUT, "detach": HELPER_DETACH}
         script = [f"set -e; mkdir -p {HELPER_DIR}"]
         for name, text in files.items():
             script.append(f"cat > {HELPER_DIR}/{name} <<'PICKFIT_EOF'\n{text}PICKFIT_EOF")
@@ -394,12 +467,14 @@ class TartBox(Box):
         script += [f"chown -R root:wheel {HELPER_DIR}; chmod 755 {HELPER_DIR}; chmod 644 {HELPER_DIR}/*",
                    f"mkdir -p {MAC_WORKDIR} {MAC_HOME}/.local/bin; chown -R {MAC_USER} {MAC_WORKDIR} {MAC_HOME}/.local",
                    "chmod 600 /tmp/tart-guest-agent.log /tmp/tart-guest-daemon.log 2>/dev/null || true",
-                   f"shutdown -h +{minutes} </dev/null >/dev/null 2>&1 &",
-                   "pfctl -E >/dev/null 2>&1 || true",
-                   f"pfctl -q -f {HELPER_DIR}/pf-online.conf"]
+                   f"shutdown -h +{minutes} </dev/null >/dev/null 2>&1 &"]
         proc = self._root("\n".join(script), 60)
         if proc.returncode != 0:
-            raise BoxError(f"box setup failed (firewall or helpers): {(proc.stdout + proc.stderr).strip()[-500:]}")
+            raise BoxError(f"box setup failed (helpers): {(proc.stdout + proc.stderr).strip()[-500:]}")
+        # The network policy is softnet's, on the host. Set the online policy explicitly (also proves the
+        # control channel works) and confirm containment holds even for in-guest root.
+        self.control.set_policy(True)
+        self.network_enabled = True
         self._check_firewall(online=True)
 
     def _expire(self) -> None:
@@ -424,6 +499,9 @@ class TartBox(Box):
                     self.vm_proc.kill()  # the VM ends with its `tart run` process
                     self.vm_proc.wait()
             self.vm_proc = None
+            if self.control is not None:
+                self.control.close()
+                self.control = None
             if not self.cloned:
                 self._stop_reaper()
                 return
@@ -494,31 +572,40 @@ class TartBox(Box):
         return proc.stdout[:max_bytes]
 
     def _check_firewall(self, *, online: bool) -> None:
-        """pf is on with pickfit's labelled set for `online`; offline, an internet connection really fails."""
-        probe = f"; {EGRESS_PROBE}; echo \"egress=$?\"" if not online else ""
-        proc = self._root(f"pfctl -s info 2>/dev/null | head -1; echo ---; pfctl -s rules 2>/dev/null; echo ---"
-                          f"{probe}", 30)
-        info, _, rest = proc.stdout.partition("---")
-        rules, _, tail = rest.partition("---")
-        problem = firewall_holds(info, rules, online)
-        if problem is None and not online:
-            m = re.search(r"egress=(\d+)", tail)
-            if m is None or m.group(1) not in ("6", "7", "28"):
-                problem = f"the network cut did not stop a connection to 1.1.1.1 ({tail.strip()[-120:]})"
-        if problem:
-            raise BoxError(f"firewall check failed ({'online' if online else 'offline'}): {problem}")
+        """Confirm softnet's host-side policy from inside the guest, as root (it must contain root too).
+
+        Online: the public internet is reachable and the host, cloud metadata and a private address are
+        not. Offline: the public internet is not reachable either. curl exits 0 when it connects and
+        non-zero (DNS/refused/timeout) when softnet drops the traffic.
+        """
+        checks = [f"{PUBLIC_PROBE} >/dev/null 2>&1; echo public=$?"]
+        if online:
+            for name, ip in CONTAINED_PROBES.items():
+                checks.append(f"curl -sS -m 6 -o /dev/null http://{ip}/ 2>/dev/null; echo {name}=$?")
+            checks.append("gw=$(route -n get default | awk '/gateway:/ {print $2}'); "
+                          "curl -sS -m 6 -o /dev/null http://$gw/ 2>/dev/null; echo host=$?")
+        out = self._root("; ".join(checks), 60).stdout
+        codes = dict(re.findall(r"(\w+)=(-?\d+)", out))
+        where = "online" if online else "offline"
+        if online and codes.get("public") != "0":
+            raise BoxError(f"firewall check (online): the internet was not reachable ({out.strip()[-160:]})")
+        if not online and codes.get("public") == "0":
+            raise BoxError(f"firewall check (offline): the internet was still reachable ({out.strip()[-160:]})")
+        if online:
+            reachable = [name for name in (*CONTAINED_PROBES, "host") if codes.get(name) == "0"]
+            if reachable:
+                raise BoxError(f"firewall check (online): softnet let the guest reach {', '.join(reachable)} "
+                               f"({out.strip()[-160:]})")
 
     def set_network(self, enabled: bool) -> None:
         self._require_started()
         if enabled == self.network_enabled:
             return
+        if self.control is None:
+            raise BoxError("no softnet control channel")
         if enabled:  # the cut must have held for as long as the box said it was offline
             self._check_firewall(online=False)
-        rules = f"{HELPER_DIR}/pf-{'online' if enabled else 'offline'}.conf"
-        # Flushing states drops connections that are already open, so nothing outlives the cut.
-        proc = self._root(f"pfctl -q -f {rules} && pfctl -q -F states", 30)
-        if proc.returncode != 0:
-            raise BoxError(f"pfctl failed: {(proc.stdout + proc.stderr).strip()[-300:]}")
+        self.control.set_policy(enabled)  # softnet clears its flow table, so open connections drop
         self._check_firewall(online=enabled)
         self.network_enabled = enabled
 
@@ -680,7 +767,7 @@ def prepare_base(*, source: str = SOURCE_IMAGE, base: str = BASE_VM, tart: str =
         if harden.returncode != 0:
             raise BoxError(f"hardening failed: {(harden.stdout + harden.stderr).strip()[-500:]}")
         # The firewall and helpers are written again by every clone; the base keeps none of them.
-        box._root(f"rm -rf {HELPER_DIR} {MAC_WORKDIR}; pfctl -d >/dev/null 2>&1 || true", 30)
+        box._root(f"rm -rf {HELPER_DIR} {MAC_WORKDIR}", 30)
         box.started = False
         _shutdown(box, log)
         box.vm_proc = None
