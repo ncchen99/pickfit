@@ -9,7 +9,9 @@
   or the project's own homepage.
 
 A package counts only when its registry entry links back to the repository (owner/name or an
-earlier name), so a same-named package of someone else never counts. Names to try come from the
+earlier owner/name), so a same-named package of someone else never counts. Download counts a
+source does not have (a package too new to be indexed, a failed lookup) are None, never 0, and
+monthly_downloads is None unless every package found has a known count. Names to try come from the
 install commands pickfit saw (README claims and replayed steps) and the root manifests.
 dependents stays uncounted: the only free source for it has not agreed to this use (arch G.4).
 """
@@ -26,6 +28,7 @@ import tomllib
 import urllib.parse
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx2
@@ -172,9 +175,15 @@ def _norm_url(url: str) -> str:
     return re.sub(r"(?:\.git)?/*$", "", url)
 
 
+def repo_targets(repos: Iterable[str]) -> list[str]:
+    """github.com/<owner>/<name> for each repo given as owner/name. A bare earlier name is left out:
+    github.com/<name> would match every repo of a GitHub user called <name>."""
+    return [f"github.com/{r.lower()}" for r in repos if r.count("/") == 1 and all(r.split("/"))]
+
+
 def links_repo(urls: Iterable[Any], repos: Iterable[str]) -> bool:
     """True when any URL is github.com/<owner>/<name> (or a page under it) for one of repos."""
-    targets = [f"github.com/{r.lower()}" for r in repos]
+    targets = repo_targets(repos)
     for url in urls:
         if not isinstance(url, str) or not url:
             continue
@@ -182,6 +191,42 @@ def links_repo(urls: Iterable[Any], repos: Iterable[str]) -> bool:
         if any(u == t or u.startswith(t + "/") or u.startswith(t + "#") or u.startswith(t + "?") for t in targets):
             return True
     return False
+
+
+def _about_project(homepage: str, full_name: str) -> bool:
+    """Is the homepage the project's own page? A bare personal or company domain is not: HN stories
+    on it are about other things too. It is when its host or path names the project."""
+    home = _norm_url(homepage)
+    host, _, path = home.partition("/")
+    if not host or host in SHARED_HOSTS or "." not in host:
+        return False
+    alnum = lambda text: re.sub(r"[^a-z0-9]", "", text.lower())  # noqa: E731
+    name = alnum(full_name.split("/")[-1])
+    label = alnum(host.removeprefix("www.").split(".")[0])
+    if len(name) >= 3 and name in alnum(path):
+        return True
+    return len(label) >= 3 and len(name) >= 3 and (label in name or name in label)
+
+
+def _count(value: Any) -> int | None:
+    """A download count as given; None when the source has none."""
+    return int(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+
+
+def _retry_after(value: str | None, default: float) -> float:
+    """Seconds from a Retry-After header (seconds or an HTTP date), kept within 1-60."""
+    if not value:
+        return default
+    try:
+        seconds = float(value)
+    except ValueError:
+        from email.utils import parsedate_to_datetime
+
+        try:
+            seconds = (parsedate_to_datetime(value) - datetime.now(UTC)).total_seconds()
+        except (TypeError, ValueError):
+            return default
+    return min(60.0, max(1.0, seconds))
 
 
 # --- the lookups --------------------------------------------------------------------------------
@@ -237,7 +282,9 @@ class Registries:
             self.requests += 1
             try:
                 resp = self._http.get(url, params=params)
-            except httpx2.TransportError as err:
+            except httpx2.TooManyRedirects:
+                raise RegistryError(f"{host}: too many redirects") from None
+            except httpx2.HTTPError as err:  # transport and decoding errors
                 if attempt == TRIES:
                     raise RegistryError(f"{host}: {type(err).__name__}") from None
                 time.sleep(1.5 * attempt)
@@ -250,7 +297,7 @@ class Registries:
                 except ValueError:
                     raise RegistryError(f"{host}: not JSON") from None
             if resp.status_code in (429, 500, 502, 503, 504) and attempt < TRIES:
-                time.sleep(float(resp.headers.get("retry-after") or 2.0 * attempt))
+                time.sleep(_retry_after(resp.headers.get("retry-after"), 2.0 * attempt))
                 continue
             raise RegistryError(f"{host}: HTTP {resp.status_code}")
         raise AssertionError("unreachable")
@@ -266,7 +313,7 @@ class Registries:
         if not links_repo(urls, repos):
             return None
         counts = self.get_json(f"https://api.npmjs.org/downloads/point/last-month/{name}")
-        return Package("npm", name, int(counts.get("downloads") or 0) if isinstance(counts, dict) else 0)
+        return Package("npm", name, _count(counts.get("downloads") if isinstance(counts, dict) else None))
 
     def pypi(self, name: str, repos: list[str]) -> Package | None:
         doc = self.get_json(f"https://pypi.org/pypi/{name}/json")
@@ -279,7 +326,12 @@ class Registries:
         downloads = None
         if self.pypi_downloads:
             recent = self.get_json(f"https://pypistats.org/api/packages/{name}/recent")
-            downloads = int((recent or {}).get("data", {}).get("last_month") or 0) if isinstance(recent, dict) else 0
+            data = recent.get("data") if isinstance(recent, dict) else None
+            # pypistats leaves last_month at 0 for a package under a month old while last_week already
+            # counts; the last 30 days hold the last 7, so the largest of the three is a lower bound.
+            counts = [_count(data.get(k)) for k in ("last_month", "last_week", "last_day")] if isinstance(
+                data, dict) else []
+            downloads = max((c for c in counts if c is not None), default=None)
         return Package("pypi", name, downloads)
 
     def crates(self, name: str, repos: list[str]) -> Package | None:
@@ -287,7 +339,8 @@ class Registries:
         crate = doc.get("crate") if isinstance(doc, dict) else None
         if not isinstance(crate, dict) or not links_repo([crate.get("repository"), crate.get("homepage")], repos):
             return None
-        return Package("crates", name, round(int(crate.get("recent_downloads") or 0) / 3))
+        recent = _count(crate.get("recent_downloads"))
+        return Package("crates", name, round(recent / 3) if recent is not None else None)
 
     def homebrew(self, name: str, repos: list[str]) -> Package | None:
         doc = self.get_json(f"https://formulae.brew.sh/api/formula/{name}.json")
@@ -296,17 +349,15 @@ class Registries:
         urls = [doc.get("homepage"), *((u or {}).get("url") for u in (doc.get("urls") or {}).values())]
         if not links_repo(urls, repos):
             return None
-        installs = (((doc.get("analytics") or {}).get("install") or {}).get("30d") or {})
-        return Package("homebrew", name, int(sum(v for v in installs.values() if isinstance(v, int))))
+        installs = ((doc.get("analytics") or {}).get("install") or {}).get("30d")
+        counts = [v for v in installs.values() if isinstance(v, int)] if isinstance(installs, dict) else []
+        return Package("homebrew", name, sum(counts) if counts else None)
 
     def hn_top_score(self, full_name: str, aliases: list[str], homepage: str | None) -> int:
         """Best points among HN stories linking to the repo or the project's homepage; 0 for none."""
-        targets = [f"github.com/{r.lower()}" for r in [full_name, *aliases]]
-        if homepage:
-            home = _norm_url(homepage)
-            host = home.split("/", 1)[0]
-            if host and host not in SHARED_HOSTS and "." in host:
-                targets.append(home)
+        targets = repo_targets([full_name, *aliases])
+        if homepage and _about_project(homepage, full_name):
+            targets.append(_norm_url(homepage))
         best = 0
         for target in targets:
             doc = self.get_json("https://hn.algolia.com/api/v1/search",
@@ -342,10 +393,13 @@ class Registries:
         except RegistryError as err:
             errors.append(f"hn: {err}")
             hn = None
-        counted = [p.monthly_downloads for p in found.values() if p.monthly_downloads is not None]
+        registry_failed = any(not e.startswith("hn") for e in errors)
+        counts = [p.monthly_downloads for p in found.values()]
+        # A partial sum would read as a real, too-low number: unknown unless every count is known.
+        downloads = None if registry_failed or not counts or None in counts else sum(counts)
         return RegistrySignals(
-            monthly_downloads=sum(counted) if counted else None,
-            registries_count=None if any(not e.startswith("hn") for e in errors) else len(found),
+            monthly_downloads=downloads,
+            registries_count=None if registry_failed else len(found),
             hn_top_score=hn,
             packages=[f"{p.registry}:{p.name}" for p in found.values()],
             errors=errors,

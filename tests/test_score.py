@@ -37,10 +37,12 @@ from pickfit.score import (
     maintenance_score,
     popularity,
     readme_fix,
+    readme_fixes,
     refresh_scores,
     responsiveness_score,
     sandbox_score,
     score_records,
+    treasure,
     usage_score,
     weights,
 )
@@ -120,7 +122,16 @@ def test_install_actions_count_inside_chained_steps_but_not_looking_around() -> 
     assert install_actions(["mkdir -p ~/.local/bin && curl -fsSLO https://x/r.tgz && tar -xzf r.tgz && "
                             "install -m 0755 r ~/.local/bin/r && r --version"]) == 4
     assert install_actions(['TAG=$(curl -fsSL https://api.github.com/x | grep tag_name | cut -d\\" -f4) && '
-                            "echo $TAG | tee /tmp/t && curl -fsSL -o /tmp/x.tgz https://x/$TAG.tgz"]) == 2
+                            "echo $TAG | tee /tmp/t && curl -fsSL -o /tmp/x.tgz https://x/$TAG.tgz"]) == 1
+    # a checksum check by assignment only looks: 5 actions, not 7
+    assert install_actions(["mkdir -p ~/.local/bin && curl -fsSL -o /tmp/z.tgz https://x/z.tgz",
+                            "curl -fsSL -o /tmp/z.sha256 https://x/z.sha256 && E=$(cut -d' ' -f1 /tmp/z.sha256) && "
+                            'A=$(sha256sum /tmp/z.tgz | cut -d\' \' -f1) && [ "$E" = "$A" ] && tar -xzf /tmp/z.tgz && '
+                            "cp z ~/.local/bin/"]) == 5
+    # heredoc lines are file content; writing a config file outside /tmp is one action
+    assert install_actions(["mkdir -p ~/.config/t && cat > ~/.config/t/c.toml <<EOF\nmodel = \"tiny\"\nport = 1\nEOF"]) == 2
+    assert install_actions(["curl -fsSL https://x.dev/i.sh > /tmp/i.sh && sh /tmp/i.sh",
+                            "echo 'export PATH=x' >> ~/.bashrc", "cat > /tmp/input.json <<'EOF'\n{}\nEOF"]) == 3
     assert install_actions(["cd /tmp && rm -f old && npm view tool && npm install -g tool 2>&1; which tool"]) == 1
     assert install_actions(["curl -fsSL https://x.dev/install | sh", "export PATH=\"$HOME/.x/bin:$PATH\""]) == 2
     assert install_actions(["git clone https://github.com/a/b && cd b && npm install && npm run build && "
@@ -141,6 +152,13 @@ def test_install_actions_count_inside_chained_steps_but_not_looking_around() -> 
     ("run tool directly after install", "binary lands in ~/.tool/bin, which is not on PATH", True),
     ("tool link", "tool pair", True),
     ("bun add -g tool then tool --version works", "symlink ~/.bun/bin/tool into ~/.local/bin", True),
+    # the README was right, the tool did it by itself, or only a note
+    ("tool doctor", "tool doctor exits 1 when optional keys/services are missing; not an install failure", False),
+    ("tool doctor checks the setup", "exits 1 when unconfigured — correct validator behavior for a fresh install",
+     False),
+    ("pipx install tool / pin tag v0.2.1", "uv tool install resolved tool==0.3.0, newer than the v0.2.1 tag", False),
+    ("npm install -g tool installs tool", "first tool invocation downloads the prebuilt binary", False),
+    ("npm install && npm run build", "npm install worked despite the pnpm pin; then npm run build", False),
 ])
 def test_readme_fix_leaves_out_what_the_box_explains(said: str, needed: str, fix: bool) -> None:
     assert readme_fix(Pitfall(readme_said=said, actually_needed=needed)) is fix
@@ -167,6 +185,16 @@ def test_hygiene_parts_ignore_vendored_files() -> None:
     vendored = ["node_modules/x/CHANGELOG.md", "vendor/y/go.sum", "src/main.go", "pkg/run_test.go"]
     assert hygiene_parts(vendored, [{"body": "Fixed the --json flag on Windows."}], None) == {
         "ci": False, "tests": True, "osi_license": False, "changelog": True, "lockfile": False}
+
+
+def test_a_pitfall_that_follows_from_a_box_blocked_step_is_not_a_readme_fix() -> None:
+    blocked = Pitfall(readme_said="tool generate path/to/repo",
+                      actually_needed="`tool generate /tmp/r` exits 1: Cannot reach Ollama at localhost:11434")
+    follows = Pitfall(readme_said="tool serve [path]",
+                      actually_needed='`tool serve /tmp/r` exits 1: No wiki found. Run "tool generate" first.')
+    other = Pitfall(readme_said="tool link", actually_needed="tool pair")
+    assert readme_fix(follows) and readme_fixes([blocked, follows]) == 0
+    assert readme_fixes([blocked, follows, other]) == 1
 
 
 def issue(assoc: str = "NONE", *, closed_days: float | None = None, pr: bool = False, merged: bool = False,
@@ -296,6 +324,31 @@ def test_scores_of_an_older_formula_that_break_todays_rules_are_replaced_and_the
     assert summary.written == ["tinyq"] and not summary.errors and calls == []  # the rubric was reused
     scores = SoftwareRecord.model_validate_json(path.read_text()).scores
     assert scores.formula_version == FORMULA_VERSION and scores.docs_rubric is not None
+
+
+def test_a_rescore_without_lookups_keeps_the_stored_signals(tmp_path: Path) -> None:
+    from pickfit.registries import RegistrySignals
+
+    class Fixed:
+        def lookup(self, *_: Any, **__: Any) -> RegistrySignals:
+            return RegistrySignals(monthly_downloads=900, registries_count=1, hn_top_score=12, packages=["npm:tinyq"])
+
+    db_path, out = setup_records(tmp_path)
+    score_records(out, db_path=db_path, model=MODEL, use_github=False, now=NOW, grade=fake_grade(),
+                  registries=Fixed())
+    path = out / "tinyq.json"
+    data = json.loads(path.read_text())
+    comps = {k: v["score"] for k, v in data["scores"]["quality"]["components"].items()}
+    data["scores"]["quality"] = compose_quality({**comps, "responsiveness": 0.5}, 10, None)  # measured before
+    data["scores"]["treasure"] = treasure(data["scores"]["quality"]["total"], data["scores"]["popularity"]["score"])
+    path.write_text(json.dumps(data))
+    before = SoftwareRecord.model_validate_json(path.read_text()).scores
+    again = score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=LATER,
+                          grade=fake_grade())
+    after = SoftwareRecord.model_validate_json(path.read_text()).scores
+    assert again.unchanged == ["tinyq"] and after.quality == before.quality
+    assert after.quality.components.responsiveness.score == 0.5
+    assert after.popularity.signals == before.popularity.signals and after.popularity.packages == ["npm:tinyq"]
 
 
 def test_unverified_records_are_capped_below_the_treasure_line(tmp_path: Path) -> None:
