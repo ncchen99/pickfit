@@ -668,13 +668,29 @@ def package_names(record: SoftwareRecord, snapshot: dict[str, Any] | None) -> di
     return merge_names(command_names(commands), manifest_names((snapshot or {}).get("manifests")))
 
 
+def load_for_scoring(path: Path) -> tuple[SoftwareRecord, DocsRubric | None]:
+    """The record and its stored rubric. Scores of an older formula may break today's rules (b3.v3
+    moved the treasure line from 70 to 80), so they are dropped instead of failing the record; their
+    rubric is kept for reuse."""
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        record = SoftwareRecord.model_validate(raw)
+    except ValidationError:
+        stale = raw.get("scores") or {}
+        if not stale or stale.get("formula_version") == FORMULA_VERSION:
+            raise
+        record = SoftwareRecord.model_validate({**raw, "scores": None})
+        return record, DocsRubric.model_validate(stale["docs_rubric"]) if stale.get("docs_rubric") else None
+    return record, record.scores.docs_rubric if record.scores else None
+
+
 def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: str, run_id: str,
               now: datetime, force: bool, dry_run: bool, grade: Callable[..., Graded] = grade_docs,
               registries: Any = None, **call: Any) -> dict[str, Any]:
     """Score one record file; returns a summary row (written, unchanged or error)."""
     from pickfit.extract import build_sources, sources_sha
 
-    record = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8"))
+    record, rubric = load_for_scoring(path)
     row: dict[str, Any] = {"slug": record.slug, "status": None, "cost_usd": 0.0, "rubric": None}
     if snapshot is None and gh is not None:
         snapshot = live_snapshot(gh, record.repo.full_name, now)
@@ -689,7 +705,6 @@ def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: st
         if registry.errors:
             row["registry_errors"] = registry.errors
     old = record.scores
-    rubric = old.docs_rubric if old else None
     if snapshot and (snapshot.get("readme") or "").strip():
         sources = build_sources(snapshot)
         if force or rubric is None or rubric.sources_sha != sources_sha(sources):

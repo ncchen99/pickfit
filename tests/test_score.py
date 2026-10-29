@@ -274,6 +274,30 @@ def test_scoring_writes_only_scores_and_reuses_the_rubric(tmp_path: Path) -> Non
     assert again.unchanged == ["tinyq"] and again.reused == 1 and calls == ["score:tinyq"]
 
 
+def test_scores_of_an_older_formula_that_break_todays_rules_are_replaced_and_the_rubric_kept(
+        tmp_path: Path) -> None:
+    db_path, out = setup_records(tmp_path)
+    score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW,
+                  grade=fake_grade())
+    path = out / "tinyq.json"
+    data = json.loads(path.read_text())
+    q = data["scores"]["quality"]["total"]
+    data["scores"]["formula_version"] = "older"
+    data["scores"]["popularity"]["score"] = 10.0  # a treasure under a line below today's quality
+    data["scores"]["treasure"] = {"is_treasure": True, "value": round(q * 0.9, 2)}
+    data["scores"]["quality"]["total"] = q = 75.0
+    data["scores"]["treasure"]["value"] = round(q * 0.9, 2)
+    with pytest.raises(ValueError, match="is_treasure must be"):
+        SoftwareRecord.model_validate(data)
+    path.write_text(json.dumps(data))
+    calls: list[str] = []
+    summary = score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False,
+                            now=LATER, grade=fake_grade(calls=calls))
+    assert summary.written == ["tinyq"] and not summary.errors and calls == []  # the rubric was reused
+    scores = SoftwareRecord.model_validate_json(path.read_text()).scores
+    assert scores.formula_version == FORMULA_VERSION and scores.docs_rubric is not None
+
+
 def test_unverified_records_are_capped_below_the_treasure_line(tmp_path: Path) -> None:
     db_path, out = setup_records(tmp_path, verified=False)
     score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW, grade=fake_grade())
