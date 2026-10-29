@@ -218,17 +218,20 @@ def failure_reason(verdict: dict[str, Any], commands: list[CommandRecord], block
     return box_reason(blocking_error)
 
 
-# A file named like a system command, written or linked into a directory on PATH: a user bin
-# directory of the box, or one the command itself puts on PATH.
+# A file named like a system command, created in a directory on PATH: a user bin directory of the
+# box, or one the command puts on PATH. The box has none of these commands, so such a file is a fake.
 _FAKED = re.compile(r"(?:nvidia-smi|rocm-smi|nvcc|lspci|docker|podman|sudo|systemctl|journalctl|uname"
                     r"|lsb_release|apt-get|apt|dpkg)")
+_USER_BINS = {"~/.local/bin", "~/.cargo/bin", "~/go/bin", "~/bin"}
 _USER_BIN = re.compile(r"(?:~|\$HOME|\$\{HOME\}|/home/[^/\s'\"]+)/(?:\.local/bin|\.cargo/bin|go/bin|bin)/?")
 _REDIRECT = re.compile(r"(?:^|[^<&\d])(?:\d?>>?|&>)\s*(?P<path>[^\s;&|<>]+)")
-_TEE = re.compile(r"\btee\s+(?:-a\s+)?(?P<path>[^\s;&|<>]+)")
+_TEE = re.compile(r"\btee\s+(?:(?:-a|--append)\s+)?(?P<path>[^\s;&|<>]+)")
 _DOWNLOAD = re.compile(r"(?:^|\s)(?:-\w*[oO]|--output(?:-document)?)(?:\s+|=)(?P<path>[^\s;&|<>]+)")
 _COPY = re.compile(r"(?:^|[;&|(]\s*|\n)\s*(?:ln|cp|mv|install)\b(?P<args>[^;&|\n<>]*)")
-_PATH_DIR = re.compile(r"\bPATH=[\"']?(?P<dir>[^\s:\"']+):")
-_CD = re.compile(r"\bcd\s+(?P<dir>[^\s;&|]+)")
+_CHMOD = re.compile(r"\bchmod\s+(?:-\w+\s+)*(?:[ugoa]*\+\w*x\w*|[0-7]{3,4})\s+(?P<paths>[^;&|\n<>]+)")
+_PATH_SET = re.compile(r"\bPATH=(?P<value>\"[^\"]*\"|'[^']*'|[^\s;&|]+)")
+_CD = re.compile(r"\bcd\s+(?P<dir>\"[^\"]+\"|'[^']+'|[^\s;&|]+)")
+_SCRIPT_WRITE = re.compile(r"\b(?:python3?|node|perl|ruby)\s+-[ce]\b")
 _SANDBOX_PURPOSE = re.compile(
     rf"\b(?:sandbox|box)[- ]only\b|\bonly (?:for|in|inside) (?:the |this )?(?:sandbox|box)\b|\bgvisor\b"
     rf"|\bwork(?:s|ed|ing)?[- ]?around (?:the |this )?(?:box|sandbox)\b"
@@ -236,26 +239,60 @@ _SANDBOX_PURPOSE = re.compile(
     rf"|\b{_FAKED.pattern}\b[^.;]{{0,30}}\b(?:shim|fake|stub|mock)\b", re.I)
 
 
+def _folder(path: str) -> str:
+    """A directory as written, with the home directory as ~ and $PWD/ or ./ dropped."""
+    path = re.sub(r"^(?:\$HOME|\$\{HOME\}|/home/[^/\s]+)(?=/|$)", "~", path.strip("'\""))
+    return re.sub(r"^(?:\$PWD|\$\{PWD\}|\.)/", "", path).rstrip("/")
+
+
+def _made_executable(command: str) -> set[str]:
+    """Files the command makes executable (chmod +x, 755)."""
+    return {p.strip("'\"") for m in _CHMOD.finditer(command) for p in m.group("paths").split()}
+
+
 def _written(command: str) -> list[str]:
-    """Paths the command writes: redirects, tee, curl/wget output, the destination of ln/cp/mv/install."""
+    """Paths the command creates: redirects, tee, curl/wget output, ln/cp/mv/install destinations
+    (a destination directory yields one path per source), files it makes executable."""
     paths = [m.group("path") for pattern in (_REDIRECT, _TEE, _DOWNLOAD) for m in pattern.finditer(command)]
     for m in _COPY.finditer(command):
-        args = [a for a in m.group("args").split() if not a.startswith("-")]
-        if len(args) >= 2:
-            paths.append(args[-1])
+        words = m.group("args").split()
+        target = next((words[i + 1] for i, w in enumerate(words[:-1])  # -t DIR, also in a cluster (ln -sft DIR)
+                       if w == "--target-directory" or re.fullmatch(r"-[a-zA-Z]*t", w)), None)
+        target = target or next((w.split("=", 1)[1] for w in words if w.startswith("--target-directory=")), None)
+        args = [w for w in words if not w.startswith("-") and w != target]
+        if target is None and len(args) >= 2:
+            target, args = args[-1], args[:-1]
+        if target is None:
+            continue
+        if _folder(target) in _USER_BINS:  # into a directory: each source keeps its name
+            paths += [f"{target.rstrip('/')}/{a.strip(chr(39) + chr(34)).rsplit('/', 1)[-1]}" for a in args]
+        else:
+            paths.append(target)
+    paths += _made_executable(command)
     return [p.strip("'\"") for p in paths]
 
 
 def sandbox_only(command: str, purpose: str | None = None) -> str | None:
     """Why a command only works around the box (it fakes a system command, or says so), else None."""
-    on_path = {d.rstrip("/") for d in _PATH_DIR.findall(command)}
-    in_bin = any(_USER_BIN.fullmatch(d) for d in _CD.findall(command))
+    on_path = {_folder(d) for m in _PATH_SET.finditer(command)
+               for d in m.group("value").strip("'\"").split(":") if d and "PATH" not in d}
+    in_bin = any(_folder(d) in _USER_BINS for d in _CD.findall(command))
+    executable = _made_executable(command)  # a fake command must be, wherever it is
     for path in _written(command):
         folder, _, name = path.rpartition("/")
         if not _FAKED.fullmatch(name):
             continue
-        if (folder and (_USER_BIN.fullmatch(folder) or folder.rstrip("/") in on_path)) or (not folder and in_bin):
+        place = _folder(folder) if folder else ""
+        if place in _USER_BINS or place in on_path or (not folder and (in_bin or on_path)) or path in executable:
             return f"it replaces the system command {name}"
+    loop = re.search(rf"\bfor\s+(?P<var>\w+)\s+in\b[^;\n]*\b(?P<name>{_FAKED.pattern})\b", command)
+    if loop and any(_folder(p.rpartition("/")[0]) in _USER_BINS and p.endswith(("$" + loop.group("var"),
+                                                                                 "${" + loop.group("var") + "}"))
+                    for p in _written(command)):  # for c in nvidia-smi lspci; do ... > ~/.local/bin/$c
+        return f"it replaces the system command {loop.group('name')}"
+    shim = re.search(rf"{_USER_BIN.pattern}(?P<name>{_FAKED.pattern})(?=$|[\s'\";&|)])", command)
+    if shim and _SCRIPT_WRITE.search(command):  # python3 -c "open('~/.local/bin/nvidia-smi', 'w')..."
+        return f"it replaces the system command {shim.group('name')}"
     if purpose and _SANDBOX_PURPOSE.search(purpose):
         return f"its purpose says so ({' '.join(purpose.split())[:80]})"
     return None

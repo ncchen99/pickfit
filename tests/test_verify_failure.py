@@ -261,6 +261,17 @@ def test_written_reasons_leave_out_the_uninformative_ones():
     ("mkdir -p /tmp/shim && printf '#!/bin/sh\necho 0' > /tmp/shim/nvidia-smi && chmod +x /tmp/shim/nvidia-smi "
      "&& PATH=/tmp/shim:$PATH tool --gpu", None),
     ("wget -qO ~/.local/bin/nvidia-smi https://example.invalid/fake && chmod +x ~/.local/bin/nvidia-smi", None),
+    ("printf '#!/bin/sh\\necho 0' > nvidia-smi && chmod +x nvidia-smi && mv nvidia-smi ~/.local/bin/", None),
+    ("cp docker $HOME/.local/bin/", None),
+    ("cd \"$HOME/.local/bin\" && printf '#!/bin/sh\\necho 0' > nvidia-smi", None),
+    ("printf '#!/bin/sh\\nexit 0' | tee --append ~/.local/bin/sudo", None),
+    ("install -m755 -t ~/.local/bin nvidia-smi", None),
+    ("ln -sft ~/.local/bin /tmp/fakes/nvidia-smi", None),
+    ("printf x > /tmp/shim/nvidia-smi && export PATH=$PATH:/tmp/shim && tool --gpu", None),
+    ("mkdir -p shim && printf x > shim/nvidia-smi && PATH=$PWD/shim:$PATH tool --gpu", None),
+    ("B=$HOME/.local/bin; printf '#!/bin/sh' > $B/nvidia-smi && chmod +x $B/nvidia-smi", None),
+    ("for c in nvidia-smi lspci; do printf '#!/bin/sh' > ~/.local/bin/$c; done", None),
+    ("python3 -c \"open('/home/sbx/.local/bin/nvidia-smi', 'w').write('#!/bin/sh')\"", None),
 ])
 def test_commands_that_work_around_the_box(command: str, purpose: str | None):
     assert sandbox_only(command, purpose)
@@ -283,6 +294,9 @@ def test_commands_that_work_around_the_box(command: str, purpose: str | None):
     ("printf 'a = 1' > foo.toml", "write a stub config so foo starts"),
     ("ls -l ~/.local/bin/docker > /dev/null 2>&1 && tool --version", None),
     ("cd ~/.local/bin && ls && tool --version > out.txt", None),
+    ("curl -fsSL https://example.invalid/tool-$(uname -m).tgz -o tool.tgz && tar xzf tool.tgz", None),
+    ("chmod +x ~/.local/bin/tool && docker --version", None),
+    ("for f in a b; do printf x > ~/.local/bin/$f; done", None),
 ])
 def test_ordinary_install_steps_are_not_workarounds(command: str, purpose: str | None):
     assert sandbox_only(command, purpose) is None
