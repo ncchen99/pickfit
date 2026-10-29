@@ -11,7 +11,7 @@
 A package counts only when its registry entry links back to the repository (owner/name or an
 earlier name), so a same-named package of someone else never counts. Names to try come from the
 install commands pickfit saw (README claims and replayed steps) and the root manifests.
-ecosyste.ms is not used: it has not agreed to this use (arch G.4). dependents stays uncounted.
+dependents stays uncounted: the only free source for it has not agreed to this use (arch G.4).
 """
 
 from __future__ import annotations
