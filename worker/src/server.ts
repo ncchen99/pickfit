@@ -85,7 +85,8 @@ const conditions = {
   limit: z.number().int().min(1).max(3).optional().describe('Default 3'),
 };
 
-const findInput = z.object({
+/** find_software's input; the web page validates its form with the same schema. */
+export const findInput = z.object({
   need: z
     .string()
     .min(3)
