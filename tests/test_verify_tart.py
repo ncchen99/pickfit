@@ -259,7 +259,7 @@ def test_network_cut_sets_softnet_policy_and_is_checked_as_root(make_box, fake_t
 def test_online_check_fails_if_the_host_or_metadata_is_reachable(make_box, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("FAKE_REACH_METADATA", "0")  # metadata answers despite softnet -> containment broken
     box = make_box()
-    with pytest.raises(BoxError, match="online.*metadata not dropped"):
+    with pytest.raises(BoxError, match="online.*metadata reachable"):
         box.start()
     assert not box.started
 
@@ -297,7 +297,7 @@ def test_validate_containment_runs_the_positive_and_negative_controls(make_box):
     assert results["probe_sees_open_host_port"][0]  # an open host port answered with the block off
     assert results["internet_online"][0]
     assert any(n.startswith("host_") and n.endswith("_blocked_online") and ok for n, (ok, _) in results.items())
-    assert results["metadata_blocked_online"][0] and results["ipv6_blocked_online"][0]
+    assert results["metadata_unreachable_online"][0] and results["ipv6_unreachable_online"][0]
     assert results["public_blocked_offline"][0] and results["resolver_blocked_offline"][0]
     assert box.network_enabled  # restored online
 

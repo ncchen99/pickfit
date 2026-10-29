@@ -161,10 +161,12 @@ PUBLIC_URL = "https://pypi.org/simple/pip/"
 # 5000/7000 AirPlay/ControlCenter), so if @host were NOT blocked an open one would answer (exit 0); with
 # it blocked every one drops (exit 28). Closed ports alone (22/80) could not tell blocked from refused.
 HOST_PORTS = (3000, 5000, 7000, 49152, 22, 80, 443, 88)
-# Never reachable in either phase: cloud metadata and a private address (positive-controlled in the
-# limits test via the host ports, which softnet filters the same way).
-CONTAINED_PROBES = {"metadata": "http://169.254.169.254/", "private": "http://10.255.255.1/"}
-IPV6_PROBE = "http://[2606:4700:4700::1111]/"  # a public IPv6 (Cloudflare); the guest must have no v6 egress
+# A private address reached via the default route: softnet drops it, so it must be a clean drop (28).
+PRIVATE_PROBE = {"private": "http://10.255.255.1/"}
+# Must be UNREACHABLE (any non-zero): cloud metadata is link-local (off the default route, so curl fails
+# fast with exit 7 where there is no such service) and the guest has no IPv6 route. 0 would mean egress.
+UNREACHABLE_PROBES = {"metadata": "http://169.254.169.254/", "ipv6": "http://[2606:4700:4700::1111]/"}
+IPV6_PROBE = UNREACHABLE_PROBES["ipv6"]
 
 
 def softnet_real_path(name: str = SOFTNET_BIN) -> str | None:
@@ -615,7 +617,7 @@ class TartBox(Box):
         return codes, out
 
     def _firewall_targets(self, online: bool) -> dict[str, str]:
-        targets = {"public": PUBLIC_URL, "ipv6": IPV6_PROBE, **CONTAINED_PROBES}
+        targets = {"public": PUBLIC_URL, **UNREACHABLE_PROBES, **PRIVATE_PROBE}
         for port in (5000, 7000, 3000, 22):
             targets[f"host{port}"] = f"http://$gw:{port}/"
         return targets
@@ -623,14 +625,15 @@ class TartBox(Box):
     def _check_firewall(self, *, online: bool) -> None:
         """Confirm softnet's host-side policy from inside the guest, as root (it must contain root too).
 
-        The host, a private address, cloud metadata and IPv6 must all be dropped (curl exit 28) in both
-        phases. The public internet must be reachable (0) online and dropped (28) offline. A refusal
-        (exit 7) fails: it means the packet reached the host. Fails closed if a probe cannot run.
+        The host ports and the private address must be a silent DROP (curl exit 28): a refusal (exit 7)
+        means the packet reached the host, so it fails. Cloud metadata (link-local) and IPv6 only have to
+        be unreachable (any non-zero; there is no route, so curl fails fast with 7). The public internet
+        must be reachable (0) online and dropped (28) offline. Fails closed if a probe cannot run.
         """
         codes, out = self._curl_codes(self._firewall_targets(online))
         where = "online" if online else "offline"
         bad: list[str] = []
-        must_drop = ["ipv6", *CONTAINED_PROBES, *(k for k in codes if k.startswith("host"))]
+        must_drop = ["private", *(k for k in codes if k.startswith("host"))]
         if not online:
             must_drop.append("public")
         elif codes["public"] != 0:
@@ -639,6 +642,9 @@ class TartBox(Box):
             if codes[name] != CURL_DROP:
                 how = "reached" if codes[name] in (0, 7) else f"exit {codes[name]}"
                 bad.append(f"{name} not dropped ({how})")
+        for name in UNREACHABLE_PROBES:
+            if codes[name] == 0:
+                bad.append(f"{name} reachable (the guest has egress to it)")
         if bad:
             raise BoxError(f"firewall check ({where}) failed: {'; '.join(bad)} | {out.strip()[-160:]}")
 
@@ -667,23 +673,28 @@ class TartBox(Box):
         # Negative control + the real online policy: every host port now drops.
         self.control.set_policy(True)
         self.network_enabled = True
-        codes, _ = self._curl_codes({**host_targets, "public": PUBLIC_URL, **CONTAINED_PROBES, "ipv6": IPV6_PROBE},
+        codes, _ = self._curl_codes({**host_targets, "public": PUBLIC_URL, **PRIVATE_PROBE, **UNREACHABLE_PROBES},
                                     timeout)
         for p in (open_ports or list(HOST_PORTS)):
             key = f"host{p}"
             rec(f"host_{p}_blocked_online", codes[key] == CURL_DROP, "host port drops (exit 28) once @host is blocked",
                 f"exit {codes[key]}")
         rec("internet_online", codes["public"] == 0, "public internet reachable online", f"exit {codes['public']}")
-        for name in (*CONTAINED_PROBES, "ipv6"):
-            rec(f"{name}_blocked_online", codes[name] == CURL_DROP, f"{name} drops online", f"exit {codes[name]}")
-        # Offline: everything drops, including the host, a public resolver and IPv6.
+        rec("private_blocked_online", codes["private"] == CURL_DROP, "private address drops online",
+            f"exit {codes['private']}")
+        for name in UNREACHABLE_PROBES:
+            rec(f"{name}_unreachable_online", codes[name] != 0, f"no {name} egress online", f"exit {codes[name]}")
+        # Offline: the host, public, a public resolver and the private address all drop; metadata/IPv6 stay
+        # unreachable.
         self.control.set_policy(False)
         self.network_enabled = False
-        off = self._curl_codes({"public": PUBLIC_URL, "resolver": "http://1.1.1.1/", "ipv6": IPV6_PROBE,
-                                "host5000": "http://$gw:5000/", **CONTAINED_PROBES}, timeout)[0]
-        for name in ("public", "resolver", "ipv6", "host5000", *CONTAINED_PROBES):
+        off = self._curl_codes({"public": PUBLIC_URL, "resolver": "http://1.1.1.1/",
+                                "host5000": "http://$gw:5000/", **PRIVATE_PROBE, **UNREACHABLE_PROBES}, timeout)[0]
+        for name in ("public", "resolver", "host5000", "private"):
             rec(f"{name}_blocked_offline", off[name] == CURL_DROP, f"{name} drops with the network cut",
                 f"exit {off[name]}")
+        for name in UNREACHABLE_PROBES:
+            rec(f"{name}_unreachable_offline", off[name] != 0, f"no {name} egress offline", f"exit {off[name]}")
         self.control.set_policy(True)
         self._check_firewall(online=True)
         self.network_enabled = True
