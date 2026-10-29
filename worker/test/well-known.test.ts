@@ -134,6 +134,7 @@ test('guard: a pickfit record under a slightly different name is never an outsid
   assert.equal(sameTool('Adapty', 'Adapty CLI'), true);
   assert.equal(sameTool('llama.cpp', 'llamastash'), false);
   assert.equal(sameTool('jq', 'jqp'), false); // too short to match on a prefix
+  assert.equal(sameTool('Whisper', 'faster-whisper'), false); // a different tool that contains the name
   assert.equal(dropped('Ollama'), null);
 });
 

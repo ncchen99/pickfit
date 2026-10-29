@@ -168,18 +168,21 @@ export function toolKey(text: string): string {
   return (core.length ? core : words).join('');
 }
 
-/** Two names for the same tool: equal keys, or one starts (or, from 5 letters, sits inside) the other. */
+/**
+ * Two names for the same tool: equal keys, or (from 4 letters) one starts the other, as in "Kesha" and
+ * "Kesha Voice Kit". Not containment: "faster-whisper" is not "Whisper".
+ */
 export function sameTool(a: string, b: string): boolean {
   const [x, y] = [toolKey(a), toolKey(b)];
   if (!x || !y) return false;
   const [short, long] = x.length <= y.length ? [x, y] : [y, x];
-  return short === long || (short.length >= 4 && long.startsWith(short)) || (short.length >= 5 && long.includes(short));
+  return short === long || (short.length >= 4 && long.startsWith(short));
 }
 
 /**
  * Code cannot tell whether the named tool exists, is free or fits; the
  * response says so. It checks what it can: a plain name that is neither a
- * pickfit entry under any form of its name (that would be a pick, or was
+ * pickfit entry under a longer or shorter form of its name (that would be a pick, or was
  * filtered out for a reason) nor the current tool, and plain prose that says
  * it is free, carries no link or command, and does not claim anyone checked it.
  * Nothing is cut: an answer that breaks a rule is dropped whole.
