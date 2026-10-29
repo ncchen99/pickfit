@@ -62,6 +62,9 @@ def test_d1_runs_wrangler_with_its_own_login(tmp_path: Path) -> None:
     assert kwargs["cwd"] == tmp_path and kwargs["capture_output"] and "env" not in kwargs
     local = D1(remote=False, worker_dir=tmp_path, env="eval", run=Wrangler(stdout=reply([], changes=1)))
     assert local.execute("UPDATE x SET y = 1") == 1 and local.where == "local D1 pickfit (env eval)"
+    # Local wrangler leaves changes out of meta, so counts that matter come from RETURNING rows.
+    silent = Wrangler(stdout=json.dumps([{"results": [], "success": True, "meta": {"duration": 0}}]))
+    assert D1(worker_dir=tmp_path, run=silent).execute("x") is None
     assert local._run.calls[0][0][6:7] == ["--local"] and local._run.calls[0][0][-2:] == ["--env", "eval"]
 
 
@@ -89,6 +92,10 @@ def test_sqlite_stand_in_has_the_workers_schema(tmp_path: Path) -> None:
     db.execute(sql("INSERT INTO submissions (id, url, status, submitted_at, updated_at) VALUES "
                    "('sub_1', 'https://github.com/o/r', 'queued', ?1, ?1)", "2026-10-30T10:00:00.000Z"))
     assert db.execute("UPDATE submissions SET status = 'reading' WHERE status = 'queued'") == 1
+    assert db.query("UPDATE submissions SET status = 'queued' WHERE status = 'reading' RETURNING id") == [
+        {"id": "sub_1"}]
+    assert db.query("UPDATE submissions SET status = 'reading' WHERE status = 'queued' RETURNING id") == [
+        {"id": "sub_1"}]  # the RETURNING write above was committed
     assert db.query("SELECT status FROM submissions") == [{"status": "reading"}]
     with pytest.raises(D1Error, match="CHECK constraint"):
         db.execute("UPDATE submissions SET status = 'ready'")

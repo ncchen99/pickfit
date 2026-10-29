@@ -77,9 +77,9 @@ def pending(d1: Database, limit: int) -> list[Report]:
 
 
 def mark_done(d1: Database, report: Report, now: datetime) -> int:
-    return d1.execute(sql("UPDATE reverify_queue SET done_at = ?4 WHERE slug = ?1 AND os = ?2 "
-                          "AND first_event_id = ?3 AND done_at IS NULL",
-                          report.slug, report.os, report.first_event_id, timestamp(now)))
+    return len(d1.query(sql("UPDATE reverify_queue SET done_at = ?4 WHERE slug = ?1 AND os = ?2 "
+                            "AND first_event_id = ?3 AND done_at IS NULL RETURNING slug",
+                            report.slug, report.os, report.first_event_id, timestamp(now))))
 
 
 @dataclass

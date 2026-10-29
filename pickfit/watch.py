@@ -138,8 +138,8 @@ def queued(d1: Database, limit: int) -> list[dict[str, Any]]:
 
 
 def claim(d1: Database, submission_id: str, now: datetime) -> bool:
-    return d1.execute(sql("UPDATE submissions SET status = 'reading', reason = NULL, updated_at = ?2 "
-                          "WHERE id = ?1 AND status = 'queued'", submission_id, timestamp(now))) == 1
+    return len(d1.query(sql("UPDATE submissions SET status = 'reading', reason = NULL, updated_at = ?2 "
+                            "WHERE id = ?1 AND status = 'queued' RETURNING id", submission_id, timestamp(now)))) == 1
 
 
 def set_status(d1: Database, submission_id: str, status: str, now: datetime, *, slug: str | None = None,

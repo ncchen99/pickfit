@@ -7,6 +7,9 @@ used and no token passes through pickfit; only the last lines of a failure are
 kept. `--command` takes no bound parameters, so values go in as SQL literals
 (`sql()` with ?1, ?2 placeholders, as in the Worker's own queries).
 
+Local wrangler (`--local`) does not report how many rows a statement changed,
+so a write whose count matters uses `UPDATE … RETURNING` through `query()`.
+
 `SqliteD1` has the same two methods on a SQLite file built from
 worker/migrations, so tests and local dry runs exercise the real schema and its
 CHECK constraints.
@@ -75,7 +78,7 @@ def sql(template: str, *params: Any) -> str:
 
 class Database(Protocol):
     def query(self, statement: str) -> list[dict[str, Any]]: ...
-    def execute(self, statement: str) -> int: ...
+    def execute(self, statement: str) -> int | None: ...
 
 
 def _tail(text: str) -> str:
@@ -128,9 +131,10 @@ class D1:
     def query(self, statement: str) -> list[dict[str, Any]]:
         return list(self._statement(statement)[-1].get("results") or [])
 
-    def execute(self, statement: str) -> int:
-        """Rows changed by the statement."""
-        return int((self._statement(statement)[-1].get("meta") or {}).get("changes") or 0)
+    def execute(self, statement: str) -> int | None:
+        """Rows changed by the statement; None when wrangler does not say (the local database)."""
+        changes = (self._statement(statement)[-1].get("meta") or {}).get("changes")
+        return None if changes is None else int(changes)
 
 
 class SqliteD1:
@@ -153,7 +157,8 @@ class SqliteD1:
     def query(self, statement: str) -> list[dict[str, Any]]:
         conn = self._connect()
         try:
-            return [dict(row) for row in conn.execute(statement).fetchall()]
+            with conn:  # an UPDATE … RETURNING is a query that writes
+                return [dict(row) for row in conn.execute(statement).fetchall()]
         except sqlite3.Error as err:
             raise D1Error(f"{self.where}: {err}") from None
         finally:
