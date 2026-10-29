@@ -19,6 +19,10 @@ export interface EventRow {
   client?: string | null;
   matched_by?: string | null;
   degraded?: boolean | null;
+  degraded_reason?: string | null;
+  /** Requests sent to Meta (2 = retried) and their HTTP statuses, null where none came back. */
+  model_attempts?: number | null;
+  model_statuses?: (number | null)[] | null;
   meta_cost_usd?: number | null;
   latency_ms?: number | null;
 }
@@ -54,8 +58,9 @@ export async function logEvent(db: D1Database, now: Date, row: EventRow, id = ne
     .prepare(
       `INSERT INTO events (id, ts, type, rec_id, slug, os, arch, category, need, results, stage, success,
                            satisfied, error_excerpt, replaced_by, note, reporter, client, matched_by, degraded,
-                           meta_cost_usd, latency_ms)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22)`,
+                           degraded_reason, model_attempts, model_statuses, meta_cost_usd, latency_ms)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22,
+               ?23, ?24, ?25)`,
     )
     .bind(
       id,
@@ -78,6 +83,9 @@ export async function logEvent(db: D1Database, now: Date, row: EventRow, id = ne
       row.client ?? null,
       row.matched_by ?? null,
       flag(row.degraded),
+      row.degraded_reason ?? null,
+      row.model_attempts ?? null,
+      row.model_statuses ? JSON.stringify(row.model_statuses) : null,
       row.meta_cost_usd ?? null,
       row.latency_ms ?? null,
     )
