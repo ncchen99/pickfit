@@ -234,7 +234,7 @@ def sandbox_score(verification: Verification) -> float | None:
         n = install_actions([s.command for s in run.steps])
         score = 1.0 if n <= 3 else 0.85 if n <= 6 else 0.7
         if any(readme_fix(p) for p in run.pitfalls):
-            score *= 0.8
+            score = round(score * 0.8, 4)
         best = score if best is None else max(best, score)
     if best is not None:
         return best
