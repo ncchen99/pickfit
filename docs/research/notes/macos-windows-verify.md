@@ -237,6 +237,43 @@
 
 ---
 
+### 5.6 第三輪審查：softnet 預設其實放行 host，探針被我放鬆（2026-10-29 深夜～10-30）
+
+第三輪對抗審查抓到兩件事，都成立：
+
+1. **softnet 的預設政策放行 vmnet gateway，而那就是本機。** README 明寫預設允許「send traffic to gateway IP of the vmnet bridge」。我原本的 online 政策是 `block=[]`（以為預設擋 host），所以**安裝階段** guest 能連到本機服務。實測：預設政策下，guest（root）連本機 `:3000`／`:5000`／`:7000` 得到 HTTP 回應（exit 0）。這台的應用防火牆是關的。
+2. **探針被我放鬆到不會失敗。** 我在 ae014c8 把 `host_blocked` 從「必須逾時（被丟棄）」改成「exit 非 0 即可」——但 exit 7 是「封包到了本機、被拒」，等於沒擋住。那次（215257）就是這樣「通過」的。**不該為了讓探針變綠就放寬它；探針失敗時該修的是政策。**
+
+**先實測再改**（在 clone 上，非驗證跑）：預設政策 → 本機 3000/5000/7000 可連（0）；改 `block=["@host"]`＋DNS 指到 1.1.1.1 → 每個本機埠都逾時丟棄（28）、PyPI 仍 200、metadata／private 丟棄；offline（`block 0.0.0.0/0`）→ 全丟棄。softnet 丟封包是**靜默丟棄**，所以「被擋」＝curl exit 28，「到了本機被拒」＝exit 7。
+
+**修正**（commit 2406517、8f4f43e）：
+
+- online 政策改成 `block=["@host"]`（offline 不變）。gateway 既然被擋就不能當 DNS，guest 改用公用 resolver（1.1.1.1、1.0.0.1）。
+- `_check_firewall` 變嚴格、fail-closed、以 root 執行：本機數個埠與一個 private 位址**必須靜默丟棄（exit 28）**，exit 7（到了本機）算失敗；metadata（link-local）與 IPv6 只要**連不到**（非 0 即可，本來就沒路由，curl 直接 exit 7）；公網只有 online 可連、offline 必須丟棄；查不到 gateway 或任何一項跑不出結果就失敗。
+- `--limits-test` 把網路探針**以 root 執行並記錄**，而且加了**正對照**：先放行 @host、找出一個真的會回應的本機埠（證明探針抓得到「連得到」），再擋 @host、確認同一埠變成丟棄（證明政策真的生效）。offline 另外檢查 host、resolver、IPv6。
+- 每個 run 記錄 base 的 build id（manifest `build_id` → `image`），所以一筆 run 指得出它用的是哪一次 base。
+- 文件／docstring 更正（不再說「預設擋 host」、不再提 guest pf）。
+
+**`--limits-test` 在新 base（build `c7b08f9f7074`）上 26／26**，正對照顯示 @host 放行時本機 5000／7000／3000 可連、擋了之後全部 28。
+
+**6 筆在這個新 base（同一個 build）重跑，全部通過並重播、judge working**（`muse-spark-1.3`；mi-lsp 第一次開機 guest agent 240 秒沒回應，重跑成功；cluaiz 第一次只到 function，重跑回到 service）：
+
+| slug | macOS 等級 | 斷網 smoke test | 秒 | Meta |
+|---|---|---|---|---|
+| mcp-audit | function | 是 | 163 | $0.044 |
+| patient-zero | function | 否（`npx` 每次連 registry） | 384 | $0.044 |
+| orbit | service | 是 | 411 | $0.063 |
+| mi-lsp | function | 是 | 992 | $0.104 |
+| shep | function | 是 | 1146 | $0.077 |
+| cluaiz | service | 是 | 354 | $0.158 |
+
+- 6 筆的 `install.macos` 都是重播過的步驟、base build 都是 `c7b08f9f7074`；索引裡 `verified_on_user_os`（macOS）為 true。
+- 計分（b3.v4 自動）：這一輪 shep 落在 76.4（Linux 75.2，之前那次偶然的 90.2 沒再出現）、cluaiz 81.5（service）。
+- 這一輪 Meta 約 $0.66（第一批＋mi-lsp/cluaiz 重跑）；本 task 累計約 $2.8，接近 $3 上限，之後非必要不再重跑。
+- **仍未解、已轉達**（同 5.5 結尾）：Worker 的 `verified_on_user_os` 不看 arch（6 筆都 arm64）；mi-lsp 的 `install.sh` 用 node 跑的 validator 只下載沒讀。
+
+---
+
 ## 6. 要念誠決定的事
 
 （10/29：第 1 項已決定走 Tart、guest 用 macOS 26，見 5.4。第 2、3 項還沒決定。另待念誠：要把防火牆移到 host 端（softnet）就要在這台 Mac 上親自設一次 setuid。）
