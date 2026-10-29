@@ -201,6 +201,42 @@
 - **shep 在 Mac 上照 brew 裝到的是 0.1.26**：tap 過期（release 是 0.18.2，10/29 出了 0.19.0），而且從原始碼編：brew 先裝 llvm 23.1.4（1.9 GB）與 rust 1.99.1（407 MB），cargo 再編約 4 分鐘。Linux 的紀錄是 0.18.2。agent 沒寫 pitfall，我依這次 run 的輸出與 release 清單手動補了一條 `readme_wrong` pitfall。shep 的品質分數從 75.2 變成 90.2（macOS run 只有 1 步、沒有計分程式認得的 README 修正，sandbox 0.7→1.0）；照過期 tap 裝的 run 該不該加分，由計分的 session 決定。
 - 這個 task 的 Meta 花費約 $1.56（合併前一輪 $0.50 沒寫回；合併後重跑 $0.63 被加固前的結果取代；加固後重跑 $0.42），在 $3 上限內；box 費用 $0。
 
+### 5.5 安全審查後改用 host 端防火牆（softnet，2026-10-29 晚）
+
+兩輪對抗審查指出：box 使用者（`sbx`）能變成 root。`tart exec` 由 **admin 的 Aqua 登入 session** 裡的 guest agent 服務（實測：拔掉那個 agent，exec 直接卡住，所以沒辦法把 exec 換到 root daemon），admin 有 NOPASSWD sudo，所以 guest 內的不受信任程式可以經由共用的 session 取得 admin→root，再關掉 **guest 內的** pf，而重播仍記成 `offline`。
+
+**修法：把網路政策搬到 host（Tart 的 softnet），guest 的 root 也改不了。**
+
+- 每台 VM 以 `tart run --net-softnet --net-softnet-control-fd=N` 開機；harness 經那個 fd 用 JSON-RPC 下 `softnet.policy.set`：online＝allow/block 皆空（softnet 預設就擋私有網段、link-local／metadata、host，並隔離 bridge，只放行公網），offline＝`block 0.0.0.0/0`。softnet 換政策時清空 flow table，已建立的連線會斷，所以斷網前開的連線撐不過切換。
+- 每次切換後，harness **以 guest 內的 root** 確認：online 時連得到公網、連不到 host／metadata／私有位址；offline 時連公網也失敗。這條驗證因此不再依賴任何 guest 內 root 改得動的東西。
+- softnet 要一次性 setuid-root（它建好網路介面後會把權限降回呼叫者）：念誠 10/29 設好（`-r-sr-xr-x root:wheel`）。沒設好時 box 會拒絕開機並印出設定指令。
+- 拿掉 guest pf；`--limits-test` 的 `firewall_locked`（sbx 關不掉 pf）移除，保留逃逸面探針（admin 密碼、su、遠端登入、agent 執行檔）當縱深防禦。**`--limits-test` 在 softnet base 上 17／17**（含 host／metadata／私有位址以 root 仍不可達、斷網以 root 仍不可達）。
+
+**順手修掉的其他審查項**：
+
+- `masked_exit` 的 bug（跨平台）：分隔符後的 `&&`／`||` 串接原本看第一個指令，於是把 `cat X && shep start Y` 誤判成「被 cat 遮住」，害重播漏跑 shep 的 start 步驟、flock 檢查跑在錯的狀態上。改成看最後一個 pipeline 的最後一個指令，加了回歸測試。
+- 把手動加進 shep run 的 pitfall 撤掉（審查指出不該把人寫的註記混進 agent 的 run，且計分的 `readme_fix()` 把它當成 box pitfall）。stale-tap 的事實改由重驗自然產生，不手改紀錄。
+- base build 再加固（這次重建已套用）：在 `sbx` 跑 brew **之前** 就把 guest agent 執行檔釘到 root 擁有的目錄；agent／daemon 的啟動 PATH 拿掉 `sbx` 擁有的 `/opt/homebrew/bin`；`describe()` 不再說「no GUI session」（改說 headless）。
+
+**在 softnet base 上重跑 6 筆（`muse-spark-1.3`，全部通過並重播、judge working）：**
+
+| slug | macOS 等級 | 斷網 smoke test | 秒 | Meta |
+|---|---|---|---|---|
+| mcp-audit | function | 是 | 152 | $0.035 |
+| patient-zero | function | 否（`npx` 每次連 registry） | 422 | $0.055 |
+| orbit | service | 是 | 197 | $0.072 |
+| mi-lsp | function | 是 | 1003 | $0.126 |
+| shep | function | 是 | 1009 | $0.060 |
+| cluaiz | service | 是 | 259 | $0.187 |
+
+- 6 筆的 `install.macos` 都是重播過的步驟，索引裡 `verified_on_user_os`（macOS）為 true（96 筆中這 6 筆）。
+- 審查點名的紀錄問題這輪都消失：shep 不再有壞掉的 `shep flock` smoke test；cluaiz 的離線 `first_task` 現在把測試模型（stories260K，1.2 MB）當成線上 setup 先抓；orbit 這輪沒把 `doctor` 當 smoke test（只留一條 note）。**仍在的小項**：mi-lsp 這輪完整讀了 `install.sh`，但 `install.sh` 用 node 跑的 `validate-worker-manifest.js` 只下載沒讀（比上輪好但沒全好）；這是共用 agent 提示的調整，交給驗證 agent 的 session。
+- 計分變動（公式 b3.v4 自動算，非手改）：shep 品質 75.2→90.2、cluaiz 74.7→81.5，因為 macOS 的安裝路徑比 Linux 乾淨（步驟少、無計分認得的 README 修正）。「用過期 tap 從原始碼編的乾淨 brew 步驟該不該給滿分」是計分 session 的事，已轉達。
+- 這一輪（softnet 重跑）Meta 約 $0.54；本 task 累計約 $2.1，在 $3 上限內；box $0。
+- **arch 未解**：softnet 之後 `verified_on_user_os` 仍只看 OS、不看 arch（這 6 筆都只跑 arm64），Intel Mac 使用者會誤看成 true；修法在 Worker（`worker/src/find.ts`、`cards.ts`），已轉達。
+
+---
+
 ## 6. 要念誠決定的事
 
 （10/29：第 1 項已決定走 Tart、guest 用 macOS 26，見 5.4。第 2、3 項還沒決定。另待念誠：要把防火牆移到 host 端（softnet）就要在這台 Mac 上親自設一次 setuid。）
