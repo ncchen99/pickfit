@@ -95,7 +95,7 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
     from pickfit.discover.run import pipeline_db_path
     from pickfit.meta import resolve_model
     from pickfit.verify.agent import DEFAULT_MODE, _runs_dir
-    from pickfit.verify.batch import load_candidates, record_slugs, run_batch, verified_slugs
+    from pickfit.verify.batch import load_candidates, recheck_slugs, record_slugs, run_batch, verified_slugs
     from pickfit.verify.pipeline import verify_task
     from pickfit.verify.result import DATA_DIR
 
@@ -107,6 +107,7 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
     data_dir = Path(args.data_dir) if args.data_dir else DATA_DIR
     skip = verified_slugs(runs_dir, since=args.since) if args.since else \
         set() if args.force else verified_slugs(runs_dir)
+    skip -= recheck_slugs(data_dir)  # a new release since a run that did not pass
     known = record_slugs(data_dir)
     repos = [*(args.repo or []), *(known if args.records else [])] or None
     if args.records and not known:

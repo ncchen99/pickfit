@@ -11,6 +11,10 @@ The rest are ranked demo-first: tools a user runs (CLI, TUI, local server)
 that process locally, need no API key and are free come first. Each runs the
 full pipeline (agent, replay, judge) in its own boxes; up to `concurrency` run
 at once. The summary lands in runs/verify/batch-<time>.json.
+
+A record whose runs did not pass is verified again once a newer release appears
+(recheck_slugs): `pickfit profiles` copies the latest release into the record, so
+the next batch picks it up even though it already has a run. No scheduler.
 """
 
 from __future__ import annotations
@@ -24,6 +28,7 @@ import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -117,6 +122,22 @@ def record_slugs(data_dir: Path) -> dict[str, str]:
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
             slugs[data["repo_id"]] = data["slug"]
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+    return slugs
+
+
+def recheck_slugs(data_dir: Path) -> set[str]:
+    """Slugs of records that have runs, none passed, and a release newer than the newest run."""
+    slugs: set[str] = set()
+    for path in sorted(data_dir.glob("*.json")):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            verification, release = data["verification"], data.get("last_release")
+            if not verification["runs"] or is_passed(verification["level"]) or not release:
+                continue
+            if datetime.fromisoformat(release["published_at"]) > datetime.fromisoformat(verification["checked_at"]):
+                slugs.add(data["slug"])
         except (OSError, ValueError, KeyError, TypeError):
             continue
     return slugs

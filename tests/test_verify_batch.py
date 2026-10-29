@@ -13,7 +13,14 @@ from typing import Any
 import pytest
 
 from pickfit.discover.store import PipelineDB
-from pickfit.verify.batch import load_candidates, record_slugs, run_batch, slug_for, verified_slugs
+from pickfit.verify.batch import (
+    load_candidates,
+    recheck_slugs,
+    record_slugs,
+    run_batch,
+    slug_for,
+    verified_slugs,
+)
 
 FIXTURES = Path(__file__).parent / "fixtures" / "verify"
 
@@ -166,3 +173,18 @@ def test_verified_slugs_reads_outcomes(tmp_path: Path):
     (tmp_path / "verify" / "broken" / "outcome.json").write_text("{")
     assert verified_slugs(tmp_path) == {"x", "y"}
     assert verified_slugs(tmp_path, since="20261029-01") == {"y"}
+
+
+def test_a_new_release_requeues_a_record_whose_runs_did_not_pass(tmp_path: Path):
+    def record(slug: str, level: str, checked_at: str | None, released: str | None) -> None:
+        runs = [{"id": f"verify-{slug}"}] if checked_at else []
+        data = {"slug": slug, "verification": {"level": level, "checked_at": checked_at, "runs": runs},
+                "last_release": {"published_at": released} if released else None}
+        (tmp_path / f"{slug}.json").write_text(json.dumps(data))
+
+    record("fixed", "failed", "2026-10-29T02:44:43+08:00", "2026-11-01T09:00:00Z")
+    record("boxed", "unverified", "2026-10-29T02:44:43+08:00", "2026-11-01T09:00:00Z")
+    record("same-release", "failed", "2026-10-29T02:44:43+08:00", "2026-10-27T19:03:47Z")
+    record("passed", "function", "2026-10-29T02:44:43+08:00", "2026-11-01T09:00:00Z")
+    record("never-run", "unverified", None, "2026-11-01T09:00:00Z")
+    assert recheck_slugs(tmp_path) == {"fixed", "boxed"}
