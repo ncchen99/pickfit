@@ -265,7 +265,7 @@ function fromRules(req: MatchRequest, candidates: Entry[], cards: Map<string, Ca
 /** statuses: HTTP status of each request sent to Meta (null where none came back). */
 type Attempt = { cost: number; statuses: (number | null)[] } & (
   | { answer: ModelAnswer; picks: GuardedPick[] }
-  | { failure: string; httpStatus: number | null }
+  | { failure: string; httpStatus: number | null; rejected?: ModelAnswer }
 );
 
 const notSent = (failure: string): Attempt => ({ failure, httpStatus: null, cost: 0, statuses: [] });
@@ -313,7 +313,7 @@ async function askModel(
     if (!answer) return { failure: 'model_bad_output', httpStatus: null, cost, statuses };
     const guarded = guardPicks(answer, cards, limit);
     if (answer.picks.length > 0 && guarded.picks.length === 0) {
-      return { failure: 'guard_rejected_all', httpStatus: null, cost, statuses };
+      return { failure: 'guard_rejected_all', httpStatus: null, cost, statuses, rejected: answer };
     }
     return { answer, picks: guarded.picks, cost, statuses };
   } catch (err) {
@@ -370,6 +370,11 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
       degradedReason = attempt.failure;
       httpStatus = attempt.httpStatus;
       choice = fromRules(req, candidates, cards, limit);
+      if (attempt.rejected) {
+        // Not shown (the whole answer was rejected), but the log still says what the model named.
+        const named = guardWellKnown(attempt.rejected, deps.catalog.entries, req.currentTool);
+        choice.wellKnown = { option: null, name: named.name, dropped: named.option ? 'answer_rejected' : named.dropped };
+      }
     }
   }
 
@@ -425,7 +430,10 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
         },
         parsed: choice.parsedNeed,
         // The model's own words, not the user's: which outside tool it named and whether code kept it.
-        well_known: choice.wellKnown.name ? { name: choice.wellKnown.name, dropped: choice.wellKnown.dropped } : null,
+        well_known:
+          choice.wellKnown.name || choice.wellKnown.dropped
+            ? { name: choice.wellKnown.name, dropped: choice.wellKnown.dropped }
+            : null,
         ...req.logged,
       },
       results: output.picks.map((pick) => pick.slug),
