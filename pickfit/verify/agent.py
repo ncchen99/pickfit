@@ -278,7 +278,9 @@ actually worked as a pitfall.
 - Budget: {max_commands} commands (run_command and run_background), {max_turns} turns, {minutes} minutes. \
 Combine steps with && when safe. list_dir and read_file do not use the command budget but do use turns.
 - You are not root: no sudo, no apt-get, nothing written outside $HOME and /tmp. Do not install language \
-toolchains (Rust, Go); pick another candidate. Do not pipe a downloaded script into a shell unread.
+toolchains (Rust, Go); pick another candidate. Do not pipe a downloaded script into a shell unread: \
+download it with a run_command that only downloads it (cite that as a step too), read it with read_file, \
+then run it.
 - After a failed command, hints from pickfit's rule table may follow. They can be wrong.
 """
 
@@ -296,6 +298,8 @@ https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2
 config.json, tokenizer.json, model.safetensors under \
 https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct/resolve/main/)
 - Ollama-style pull: smollm2:135m (271 MB, Apache-2.0)
+The inference check takes about four commands (download, server, a health or models request, generation): \
+keep them in reserve, and explore with read_file and list_dir, which are free, rather than --help runs. \
 If the tool has its own pull or download command, use it with one of these (or the smallest model its own \
 catalog lists, under about 300 MB) instead of curl. Download with its own run_command before you start the \
 server, so the server never fetches a model itself. Then send one generation request with temperature 0 \

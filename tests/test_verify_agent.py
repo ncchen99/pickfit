@@ -334,6 +334,7 @@ def test_prompt_names_tiny_models_only_for_local_ai(task):
     assert "https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf" in text
     assert "SmolLM2-135M-Instruct-Q8_0.gguf" in text and "smollm2:135m" in text
     assert "setup_ids list the download first, then the server's run_background" in text
+    assert "about four commands" in text and "keep them in reserve" in text
     assert text.index("Tiny models") < text.index('<source kind="readme"')
 
 
