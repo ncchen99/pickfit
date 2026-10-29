@@ -173,7 +173,7 @@
 - **瞄準 Best Agentic Use-Case。** 「選軟體、安裝、設定、驗證」本身就是多步驟的 agent 流程，跟這個獎的評審重點相符。
 - **可考慮順便拿 Best Build on Meta Open Weight Models**：若有一條路徑用 Muse Spark Open 或 Muse Glimmer（透過 Baseten 或 Modal），提交時標記出來。
 - **題目選「Build for Your World」**：繁中使用者、台灣開發者找不到合適軟體，是團隊親身遇到的問題。
-- **Demo 影片的結構**：**開頭第一句**說明賽前有什麼、這週做了什麼（官方 FAQ 的要求），例如「賽前我們只做了使用者研究與規劃，影片中的所有程式與功能都是這週做的」。接著用 15 秒講問題，再實際操作「agent 推薦並裝好軟體」的完整流程。
+- **Demo 影片的結構**：**開頭第一句**說明賽前有什麼、這週做了什麼（官方 FAQ 的要求），例如「賽前我們只做了使用者研究與規劃，影片中的所有程式與功能都是這週做的」。接著用 15 秒講問題，再實際操作「agent 推薦並裝好軟體」的完整流程，結尾講長期規劃（要講的內容見 [brief.md](brief.md) 第 5.1 節）。
 - **交件後在 X 發 demo 貼文**，可同時參加 Most Viral 與 Community Vote。
 - **組別已定：Indie Developer，個人參賽**（見 [brief.md](brief.md) 第 14 節）。
 
