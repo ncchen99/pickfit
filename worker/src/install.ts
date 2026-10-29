@@ -14,6 +14,10 @@ export interface InstallInput {
   rec_id?: string;
 }
 
+/** readme_wrong: following the README hits it; sandbox: only the sandbox needed it; tool_handled: the tool did it itself; note: nothing to fix. */
+export const PITFALL_KINDS = ['readme_wrong', 'sandbox', 'tool_handled', 'note'] as const;
+export type PitfallKind = (typeof PITFALL_KINDS)[number];
+
 export interface InstallOutput {
   rec_id: string;
   matched_by: 'rules';
@@ -50,7 +54,7 @@ export interface InstallOutput {
   verify: { command: string; expected_contains: string } | null;
   first_task: string | null;
   first_task_setup: { command: string; run_in_background: boolean }[];
-  known_issues: { readme_said: string; actually_needed: string }[];
+  known_issues: { readme_said: string; actually_needed: string; kind: PitfallKind | null }[];
   warnings: string[];
   sources: string[];
 }
@@ -123,7 +127,12 @@ export function installGuide(catalog: Catalog, input: InstallInput): InstallOutp
     verify: guide?.check ? { command: guide.check.command, expected_contains: guide.check.expected_signal } : null,
     first_task: guide?.first_task ?? null,
     first_task_setup: (guide?.first_task_setup ?? []).map((s) => ({ command: s.command, run_in_background: s.background })),
-    known_issues: guide?.pitfalls ?? [],
+    // Field by field, so whatever else the index carries never reaches the response.
+    known_issues: (guide?.pitfalls ?? []).map((p) => ({
+      readme_said: p.readme_said,
+      actually_needed: p.actually_needed,
+      kind: PITFALL_KINDS.includes(p.kind as PitfallKind) ? (p.kind as PitfallKind) : null,
+    })),
     warnings,
     sources: entry.sources,
   };

@@ -3,7 +3,7 @@ import { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { CARD_FIELDS } from './cards.ts';
 import { findAlternatives, findSoftware, type Deps } from './find.ts';
-import { installGuide, UnknownSlugError } from './install.ts';
+import { installGuide, PITFALL_KINDS, UnknownSlugError } from './install.ts';
 import { logEvent, logFailure } from './events.ts';
 import { ERROR_EXCERPT_MAX, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } from './outcome.ts';
 import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './submit.ts';
@@ -151,6 +151,10 @@ const installOutput = z.object({
     checked_at: z.string().nullable(),
     tool_version: z.string().nullable(),
     evidence_url: z.string().nullable(),
+    works_offline: z
+      .boolean()
+      .nullable()
+      .describe('true = its checks passed again with the network off after install; false = they needed the network; null = not checked'),
   }),
   applies_to_user_system: z.object({
     match: z.enum(['exact', 'same_os_other_arch', 'other_os', 'none']),
@@ -168,7 +172,20 @@ const installOutput = z.object({
   manual_steps: z.array(z.object({ title: z.string(), run_by: z.literal('user') })),
   verify: z.object({ command: z.string(), expected_contains: z.string() }).nullable(),
   first_task: z.string().nullable(),
-  known_issues: z.array(z.object({ readme_said: z.string(), actually_needed: z.string() })),
+  first_task_setup: z
+    .array(z.object({ command: z.string(), run_in_background: z.boolean() }))
+    .describe('Commands the first task needs first (an input file, a server), from the same run'),
+  known_issues: z.array(
+    z.object({
+      readme_said: z.string(),
+      actually_needed: z.string(),
+      kind: z
+        .enum(PITFALL_KINDS)
+        .nullable()
+        .optional()
+        .describe('readme_wrong = following the README hits it; sandbox = only the sandbox needed it; tool_handled = the tool did it itself; note = nothing to fix'),
+    }),
+  ),
   warnings: z.array(z.string()),
   sources: z.array(z.string()),
 });
