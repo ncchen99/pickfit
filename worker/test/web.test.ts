@@ -168,11 +168,11 @@ test('well_known_option is set apart, labelled not verified, and never looks lik
   const html = await (await s.search({ ...MAC_LLM, free_only: '1' })).text();
   const [picks, outside] = html.split('<aside class="outside"');
   assert.ok(outside, 'the well-known option is rendered');
-  assert.match(outside, /^ aria-label="Not verified by pickfit"><p class="unverified">Not verified by pickfit<\/p><h3>Also consider Ollama<\/h3>/);
+  assert.match(outside, /^ aria-label="Not verified by pickfit"><h3>Also consider Ollama, not verified by pickfit<\/h3>/);
   assert.ok(outside.includes(esc(why)));
   assert.match(outside, /pickfit has not installed it, has no install guide for it/);
   // No rank, badges, test record, install steps or links: nothing a verified pick has.
-  for (const mark of ['class="pick"', 'class="rank"', 'badge', 'class="record"', 'class="install"', '<a ']) {
+  for (const mark of ['class="pick"', 'data-ui', 'badge', 'class="record"', 'class="install"', '<a ']) {
     assert.ok(!outside.includes(mark), `well-known option has ${mark}`);
   }
   assert.ok(!picks.includes('Also consider'));
@@ -181,7 +181,8 @@ test('well_known_option is set apart, labelled not verified, and never looks lik
 test('nothing fits: the coverage note, no picks', async () => {
   const s = site({}, () => metaResponse(answer({ picks: [], best_free_slug: null })));
   const html = await (await s.search(MAC_LLM)).text();
-  assert.match(html, /<h2>No verified tool fits this yet<\/h2><p>None of the \d+ verified tools that meet the conditions fits this request\.<\/p>/);
+  assert.match(html, /<h2 class="results-title">Nothing fits yet<\/h2>/);
+  assert.match(html, /None of the \d+ verified tools that meet the conditions fits this request\./);
   assert.ok(!html.includes('<article class="pick"'));
 });
 
@@ -283,9 +284,40 @@ test('without the script, the form posts and gets the whole page back', async ()
   assert.match(html, /^<!doctype html>/);
   assert.ok(html.includes('offline &lt;for &quot;me&quot;&gt;</textarea>'));
   assert.ok(html.includes('<option value="macos" selected>'));
-  assert.match(html, /<section id="results"[^>]*><p class="match-line">/);
+  assert.match(html, /<section id="results"[^>]*><h2 class="results-title">2 tools fit your need<\/h2><p class="match-line">/);
   const nonce = /script-src 'nonce-([0-9a-f]+)'/.exec(res.headers.get('content-security-policy')!)![1];
   assert.ok(html.includes(`<script nonce="${nonce}">`));
+});
+
+test('before any search the page shows real catalog runs, never invented ones', async () => {
+  const s = site();
+  const html = await (await s.send(new Request('http://127.0.0.1:8787/', { headers: { accept: 'text/html' } }))).text();
+  // The hero's frame: the newest hidden gem whose run found a README problem, from the index.
+  const frame = html.slice(html.indexOf('<figure class="frame">'), html.indexOf('</figure>'));
+  assert.match(frame, /Fixture LLM Runner/);
+  assert.match(frame, /Its service answers requests/);
+  assert.match(frame, /Installed in a fresh Linux x86_64 sandbox, replayed from scratch, 28 Oct 2026\./);
+  assert.match(frame, /README:<\/span> make install<br><span class="quiet">What worked:<\/span> the install script/);
+  assert.match(frame, /curl -fsSL https:\/\/example\.invalid\/fixture\/fixture-llm-runner\/install\.sh \| sh/);
+  // The newest runs: one row per verified tool (5 fixtures), with where and when.
+  const table = html.slice(html.indexOf('<table class="runs" data-ui>'), html.indexOf('</table>'));
+  assert.equal(table.split('<tr><td class="kind">').length - 1, 5); // all 5 fixtures; the page shows up to 6
+  assert.match(html, /pickfit lists 5 tools\. 5 were installed and replayed in a fresh sandbox, and 1 is a hidden gem: high quality, little known\. 1 was installed by hand on a real machine\./);
+  // How it works: four stages for the same tool; the reasons come from rules.ts, citing their fields.
+  assert.equal(html.split('<li class="stage" data-stage=').length - 1, 4);
+  assert.match(html, /<input type="range" id="stage" min="0" max="3"/);
+  assert.match(html, /Runs on your machine without a cloud service<span class="cite">From its profile: processing is “local”/);
+  assert.equal(s.metaCalls.length, 0);
+});
+
+test('results: claim beside evidence, no rank numerals, and "built-in is enough" before the picks', async () => {
+  const s = site({}, () => metaResponse(answer({ no_install_option: 'Your OS already ships a tool that does this.' })));
+  const html = await (await s.search(MAC_LLM)).text();
+  assert.ok(html.indexOf('You may not need to install anything') < html.indexOf('<article class="pick"'));
+  assert.ok(!html.includes('class="rank"'));
+  for (const pick of html.split('<article class="pick"').slice(1)) {
+    assert.match(pick, /<div class="claim">[\s\S]*<\/div><div class="evidence"><section class="record" aria-label="Test record" data-ui>/);
+  }
 });
 
 // Rendering helpers, on crafted outputs.

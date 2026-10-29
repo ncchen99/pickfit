@@ -21,7 +21,7 @@ import type { Catalog } from './catalog.ts';
 import { settings, webSettings, type Env } from './env.ts';
 import { findSoftware, type Deps } from './find.ts';
 import { installGuide, type InstallOutput } from './install.ts';
-import { catalogStats, EMPTY_FORM, renderNotice, renderPage, renderResults, type FormValues, type SearchResult } from './page.ts';
+import { catalogShowcase, EMPTY_FORM, renderNotice, renderPage, renderResults, type FormValues, type SearchResult } from './page.ts';
 import { findInput } from './server.ts';
 
 /** Searches per visitor per minute; wrangler.jsonc's WEB_RATE_LIMITER uses the same number. */
@@ -92,7 +92,7 @@ const newNonce = () => crypto.randomUUID().replace(/-/g, '');
 const wantsHtml = (request: Request) => (request.headers.get('accept') ?? '').includes('text/html');
 
 export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
-  const stats = catalogStats(catalog);
+  const showcase = catalogShowcase(catalog);
   const now = options.now ?? (() => new Date());
   const cache = new Map<string, { at: number; result: SearchResult }>();
   /** Without the rate limiting binding: request times per hashed visitor key, this isolate only. */
@@ -100,7 +100,7 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
 
   function page(origin: string, form: FormValues, results: string, status = 200, extra: Record<string, string> = {}): Response {
     const nonce = newNonce();
-    return html(renderPage({ nonce, origin, stats, form, results }), status, nonce, extra);
+    return html(renderPage({ nonce, origin, showcase, form, results }), status, nonce, extra);
   }
 
   async function allow(request: Request, env: Env): Promise<boolean> {
