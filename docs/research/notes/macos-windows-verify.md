@@ -168,9 +168,37 @@
 | 11/1 | （選做）`platform_evidence` 跑全部 96 筆 |
 | 11/2 | 功能凍結 |
 
+### 5.4 實測（2026-10-29 16:20–18:15 台北）
+
+念誠 10/29 選 Tart。實作在 `pickfit/verify/tart_box.py`（`pickfit verify --runner tart`；`--prepare-base` 建 base VM）。
+
+**環境**：Tart 2.41.1（`openai/tools` tap）；image `ghcr.io/cirruslabs/macos-tahoe-base@sha256:4aaa751fa753…`（macOS 26.6.2，25G83），壓縮 26.4 GB，家裡網路約 2.5–4 MB/s，下載約 2 小時 50 分，落地 30 GB。base VM `pickfit-macos-26` 準備 147 秒：一般使用者 `sbx`（UID 1001，非 admin、沒有 sudo，擁有 `/opt/homebrew`），Homebrew 7.0.11、uv 0.13.6、pipx 1.18.6、node v26.13.0、CLT 的 Python 3.9.6；版本記在 `~/.pickfit/tart/pickfit-macos-26.json`。每台 box（clone＋開機＋防火牆）19–65 秒，同時只開 1 台。
+
+**`--limits-test` 13／13**：不是 root、不在 admin、sudo 被拒；`sbx` 關不掉 pf；環境變數沒有金鑰；169.254.169.254、10.0.0.1、主機（VM 的 gateway）都連不到（逾時，不是被拒）；斷網後 PyPI 不通、loopback 服務照常；恢復後再通；指令 3 秒被殺；1.7 GB 檔案被擋；fork 在 248 個行程停下。macOS 沒有單一行程的記憶體上限，VM 的 8 GB 就是上限，所以沒測 `memory_cap`。
+
+**實機才發現、已修正的事**：guest agent 以 `admin` 執行而 PATH 沒有 `/sbin`；vmnet 先給一個 IPv6 link-local DNS，擋住 IPv6 後每次查詢多等 3 秒，改成把 DNS 固定為 IPv4 gateway（3–34 ms）；macOS 的 `nohup` 在沒有 console 的 session 裡直接結束（`can't detach from console`），改用自己的 detach helper；`/usr/bin/python3` 是 xcrun shim，會塞 `SDKROOT`、`CPATH` 等變數給每個指令，改呼叫 CLT 的 python 本體；開機早期 `tart exec` 會卡住而不是失敗。
+
+**6 筆 demo 候選，main（ee303ed）合併後的程式重跑，全部通過並在全新 VM 重播**（`muse-spark-1.3`；合併前那一輪也是 6／6，結果沒有寫回，改用合併後的重跑）：
+
+| slug | macOS 等級（Linux） | 安裝 | 斷網 smoke test | 秒 | Meta |
+|---|---|---|---|---|---|
+| mcp-audit | function（function） | `uv tool install mcp-audit-scanner` | 是 | 123 | $0.057 |
+| patient-zero | function（function） | `npm install -g patient-zero@latest` | **否**（smoke test 要連網） | 285 | $0.114 |
+| orbit | function（service） | `npm install -g @orbit-tools/cli` | 是 | 208 | $0.071 |
+| mi-lsp | function（function） | 官方 `install.sh`（先下載、讀過再跑） | 是 | 869 | $0.137 |
+| shep | function（function） | `brew install shep-pm/shep/shep` | 是 | 918 | $0.060 |
+| cluaiz | function（service） | 官方 `install.sh` | 是 | 362 | $0.193 |
+
+- 6 筆的 `install.macos` 都換成重播過的步驟（`basis: replayed`），索引裡這 6 筆的 `verified_on_user_os`（macOS）變成 true；96 筆中原本是 0。
+- **shep 在 Mac 上照 brew 裝到的是 0.1.26**（tap 過期，而且用 cargo 從原始碼編，約 7 分鐘），Linux 的紀錄是 0.18.2。這是 Linux 驗證看不到的問題；紀錄照實寫，沒有改 profile。
+- orbit、cluaiz 在 Linux 到 service，在 macOS 只到 function（agent 宣稱 service，指令紀錄只撐得起 function）。
+- 這個 task 的 Meta 花費約 $1.14（合併前一輪 $0.50＋合併後重跑 $0.63），在 $3 上限內；box 費用 $0。
+
 ---
 
 ## 6. 要念誠決定的事
+
+（10/29：第 1 項已決定走 Tart、guest 用 macOS 26，見 5.4。第 2、3 項還沒決定。）
 
 1. **macOS 走 Tart 嗎？** 同意後我會執行：`brew install openai/tools/tart`；`tart pull ghcr.io/cirruslabs/macos-tahoe-base:latest`（約 25 GB 下載、約 33 GB 磁碟，clone 另佔變動量）。guest 用 macOS 26（建議）還是 27？
 2. **Windows 要不要在賽前用 GitHub Actions？** 要的話：(a) 接受 3.1 的條款風險；(b) 先到 GitHub Settings → Billing 把 Actions 預算設 $0（超過免費額度就停，不扣卡）；(c) 同意在 private repo 加一個 workflow、用 Cloudflare quick tunnel。不要的話，Windows 只做第 4 節的證據。
