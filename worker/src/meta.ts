@@ -22,21 +22,70 @@ export interface Usage {
 export interface MetaResult {
   text: string;
   usage: Usage;
+  /** All requests this call sent; an HTTP error costs nothing. */
   costUsd: number;
   latencyMs: number;
+  /** HTTP status of each request sent, in order: [200], or [503, 200] after a retry. */
+  statuses: (number | null)[];
 }
 
 export type MetaFailure = 'http' | 'timeout' | 'network' | 'incomplete' | 'no_output';
+
+interface FailureDetail {
+  costUsd?: number;
+  /** The HTTP status Meta returned; null for a timeout or a request that never got a response. */
+  status?: number | null;
+  /** Worth one retry: see isTransient. */
+  transient?: boolean;
+  /** How long Meta asked us to wait (Retry-After), when it said. */
+  retryAfterMs?: number | null;
+  statuses?: (number | null)[];
+}
 
 export class MetaCallError extends Error {
   readonly kind: MetaFailure;
   /** What the failed call may have cost; charged to the budget. */
   readonly costUsd: number;
-  constructor(kind: MetaFailure, message: string, costUsd = 0) {
+  readonly status: number | null;
+  readonly transient: boolean;
+  readonly retryAfterMs: number | null;
+  /** HTTP status of each request sent (null where none came back), in order. */
+  readonly statuses: (number | null)[];
+  constructor(kind: MetaFailure, message: string, detail: FailureDetail = {}) {
     super(message);
     this.kind = kind;
-    this.costUsd = costUsd;
+    this.costUsd = detail.costUsd ?? 0;
+    this.status = detail.status ?? null;
+    this.transient = detail.transient ?? false;
+    this.retryAfterMs = detail.retryAfterMs ?? null;
+    this.statuses = detail.statuses ?? [this.status];
   }
+}
+
+/** No retry with less than this left of the timeout: a match call takes 6-8 s, and a retry that times out is still charged. */
+const RETRY_MIN_LEFT_MS = 10_000;
+/** Honor Retry-After up to this; asked to wait longer, degrade now. */
+const RETRY_AFTER_MAX_MS = 5_000;
+/** Jittered wait before the retry when Meta gives no Retry-After. */
+const BACKOFF_MS = [200, 800] as const;
+
+/** A 404 that says the model is missing: Meta returned this for muse-spark-1.3, on and off, on 2026-10-29. */
+const MODEL_NOT_FOUND = /model_not_found|\bmodel\b[^\n]{0,80}\b(?:not found|does not exist)/i;
+
+/** Rate limits, server errors, and a 404 that says the model is missing (it came back minutes later). */
+export function isTransient(status: number, body: string): boolean {
+  return status === 429 || (status >= 500 && status <= 599) || (status === 404 && MODEL_NOT_FOUND.test(body));
+}
+
+/** Milliseconds from `retry-after-ms`, else `retry-after` (seconds or an HTTP date); null when absent. */
+export function retryAfterMs(headers: Headers, nowMs: number): number | null {
+  const ms = headers.get('retry-after-ms');
+  if (ms !== null && ms.trim() !== '' && Number.isFinite(Number(ms))) return Math.max(0, Number(ms));
+  const value = headers.get('retry-after')?.trim();
+  if (!value) return null;
+  if (Number.isFinite(Number(value))) return Math.max(0, Number(value) * 1000);
+  const at = Date.parse(value);
+  return Number.isNaN(at) ? null : Math.max(0, at - nowMs);
 }
 
 export function costUsd(usage: Usage): number {
@@ -95,40 +144,107 @@ export function requestBody(req: StructuredRequest): Record<string, unknown> {
   };
 }
 
-/** One structured call. Throws MetaCallError on anything short of a complete answer. */
-export async function callMeta(
+export interface CallOptions {
+  /** META_TIMEOUT_MS: both tries and the wait between them fit in it. */
+  timeoutMs: number;
+  fetch?: typeof fetch;
+  /** Milliseconds now, the wait before a retry, and jitter in [0, 1); seams for tests. */
+  clock?: () => number;
+  sleep?: (ms: number) => Promise<void>;
+  random?: () => number;
+}
+
+const pause = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/**
+ * One structured call, retried once after a transient HTTP error (429, 5xx,
+ * 404 model not found) when enough of timeoutMs is left. Never retried: an
+ * answer (even one that turns out bad), a timeout, a network error, or any
+ * other status. Throws MetaCallError on anything short of a complete answer.
+ */
+export async function callMeta(apiKey: string, body: Record<string, unknown>, opts: CallOptions): Promise<MetaResult> {
+  const clock = opts.clock ?? Date.now;
+  const deadline = clock() + opts.timeoutMs;
+  const statuses: (number | null)[] = [];
+  let spent = 0;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const result = await callOnce(apiKey, body, deadline - clock(), opts.fetch ?? fetch, clock);
+      return { ...result, costUsd: spent + result.costUsd, statuses: [...statuses, ...result.statuses] };
+    } catch (err) {
+      if (!(err instanceof MetaCallError)) throw err;
+      statuses.push(err.status);
+      spent += err.costUsd;
+      const wait = attempt === 1 ? retryWait(err, opts.random ?? Math.random) : null;
+      const leftMs = deadline - clock() - (wait ?? 0);
+      if (wait === null || leftMs < RETRY_MIN_LEFT_MS) {
+        throw new MetaCallError(err.kind, err.message, {
+          costUsd: spent,
+          status: err.status,
+          transient: err.transient,
+          retryAfterMs: err.retryAfterMs,
+          statuses,
+        });
+      }
+      console.log(JSON.stringify({ event: 'meta_retry', status: err.status, wait_ms: Math.round(wait), left_ms: Math.round(leftMs) }));
+      await (opts.sleep ?? pause)(wait);
+    }
+  }
+}
+
+/** How long to wait before the one retry, or null for no retry. */
+function retryWait(err: MetaCallError, random: () => number): number | null {
+  if (!err.transient) return null;
+  const jitter = BACKOFF_MS[0] + random() * (BACKOFF_MS[1] - BACKOFF_MS[0]);
+  if (err.retryAfterMs === null) return jitter;
+  return err.retryAfterMs <= RETRY_AFTER_MAX_MS ? Math.max(err.retryAfterMs, jitter) : null;
+}
+
+async function callOnce(
   apiKey: string,
   body: Record<string, unknown>,
-  opts: { timeoutMs: number; fetch?: typeof fetch },
+  timeoutMs: number,
+  doFetch: typeof fetch,
+  clock: () => number,
 ): Promise<MetaResult> {
-  const doFetch = opts.fetch ?? fetch;
-  const started = Date.now();
+  const started = clock();
   let response: Response;
   try {
     response = await doFetch(`${META_BASE_URL}/responses`, {
       method: 'POST',
       headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(opts.timeoutMs),
+      signal: AbortSignal.timeout(Math.max(1, timeoutMs)),
     });
   } catch (err) {
     const timedOut = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError');
     // A timed-out request may still be billed; charge the upper bound.
     const charge = timedOut ? estimateCostUsd(JSON.stringify(body).length) : 0;
-    throw new MetaCallError(timedOut ? 'timeout' : 'network', String(err), charge);
+    throw new MetaCallError(timedOut ? 'timeout' : 'network', String(err), { costUsd: charge });
   }
-  const latencyMs = Date.now() - started;
-  const raw: any = await response.json().catch(() => null);
+  const latencyMs = clock() - started;
+  const bodyText = await response.text().catch(() => '');
+  let raw: any = null;
+  try {
+    raw = JSON.parse(bodyText);
+  } catch {
+    // not JSON; handled below
+  }
+  const status = response.status;
   if (!response.ok) {
     const code = raw?.error?.code ?? raw?.error?.type ?? 'unknown';
-    throw new MetaCallError('http', `Meta API ${response.status} ${code}`);
+    throw new MetaCallError('http', `Meta API ${status} ${code}`, {
+      status,
+      transient: isTransient(status, bodyText),
+      retryAfterMs: retryAfterMs(response.headers, clock()),
+    });
   }
   const usage = readUsage(raw);
   const cost = usage ? costUsd(usage) : estimateCostUsd(JSON.stringify(body).length);
   if (raw?.status !== 'completed') {
-    throw new MetaCallError('incomplete', `response status ${raw?.status ?? 'missing'}`, cost);
+    throw new MetaCallError('incomplete', `response status ${raw?.status ?? 'missing'}`, { costUsd: cost, status });
   }
   const text = outputText(raw);
-  if (!text || !usage) throw new MetaCallError('no_output', 'no output text or usage', cost);
-  return { text, usage, costUsd: cost, latencyMs };
+  if (!text || !usage) throw new MetaCallError('no_output', 'no output text or usage', { costUsd: cost, status });
+  return { text, usage, costUsd: cost, latencyMs, statuses: [status] };
 }

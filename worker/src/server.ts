@@ -102,6 +102,11 @@ const findOutput = z.object({
   matched_by: z.string().describe('The Meta model that chose the picks, or "rules"'),
   degraded: z.boolean().describe('true = ranked by rules without the model (off, budget or failure)'),
   degraded_reason: z.string().nullable(),
+  model_attempts: z
+    .number()
+    .int()
+    .describe('Requests sent to Meta: 0 = model not used, 2 = retried once after a transient error'),
+  model_http_status: z.number().int().nullable().describe('When degraded_reason is model_http: the HTTP status Meta returned'),
   considered: z.number().int().describe('Verified tools that met the hard conditions'),
   picks: z.array(pick).max(3),
   best_free: z.object({ slug: z.string(), reason: z.string() }).nullable(),

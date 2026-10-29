@@ -2,7 +2,8 @@
  * find_software and find_alternatives (architecture F.2): hard filters
  * (code) -> every candidate card in one muse-spark-1.3 call that parses the
  * request and chooses -> guard (code). Without the model (off, no key, over
- * budget, failure, or every pick rejected) it ranks by rules and says so:
+ * budget, failure after one retry of a transient error, or every pick
+ * rejected) it ranks by rules and says so:
  * matched_by "rules", degraded true. find_alternatives sends the current tool
  * and its pain points too, drops the current tool from the candidates, and
  * may advise keeping it.
@@ -43,6 +44,8 @@ export interface Deps {
   client?: string | null;
   /** From the X-Pickfit-Reporter header; labels report_outcome rows. */
   reporter?: Reporter;
+  /** The wait before retrying Meta; a seam for tests. */
+  sleep?: (ms: number) => Promise<void>;
 }
 
 export interface PickOut {
@@ -79,6 +82,10 @@ export interface FindOutput {
   matched_by: string;
   degraded: boolean;
   degraded_reason: string | null;
+  /** Requests sent to Meta: 0 (model not used), 1, or 2 when a transient error was retried. */
+  model_attempts: number;
+  /** When degraded_reason is model_http: the status of Meta's last answer. */
+  model_http_status: number | null;
   considered: number;
   picks: PickOut[];
   best_free: { slug: string; reason: string } | null;
@@ -230,7 +237,13 @@ function fromRules(req: MatchRequest, candidates: Entry[], cards: Map<string, Ca
   };
 }
 
-type Attempt = { answer: ModelAnswer; picks: GuardedPick[]; cost: number } | { failure: string; cost: number };
+/** statuses: HTTP status of each request sent to Meta (null where none came back). */
+type Attempt = { cost: number; statuses: (number | null)[] } & (
+  | { answer: ModelAnswer; picks: GuardedPick[] }
+  | { failure: string; httpStatus: number | null }
+);
+
+const notSent = (failure: string): Attempt => ({ failure, httpStatus: null, cost: 0, statuses: [] });
 
 async function askModel(
   request: Record<string, unknown>,
@@ -241,8 +254,8 @@ async function askModel(
   now: Date,
 ): Promise<Attempt> {
   const { settings } = deps;
-  if (!settings.modelEnabled) return { failure: 'model_off', cost: 0 };
-  if (!settings.apiKey) return { failure: 'no_api_key', cost: 0 };
+  if (!settings.modelEnabled) return notSent('model_off');
+  if (!settings.apiKey) return notSent('no_api_key');
   const body = requestBody({
     instructions: instructions(limit, kind),
     input: matchInput(request, [...cards.values()]),
@@ -251,27 +264,38 @@ async function askModel(
   });
   try {
     const budget = await checkBudget(deps.db, now, estimateCostUsd(JSON.stringify(body).length), settings);
-    if (!budget.ok) return { failure: 'over_budget', cost: 0 };
+    if (!budget.ok) return notSent('over_budget');
   } catch {
-    return { failure: 'budget_unavailable', cost: 0 }; // cannot count spend, so do not spend
+    return notSent('budget_unavailable'); // cannot count spend, so do not spend
   }
   let cost = 0;
   try {
-    const result = await callMeta(settings.apiKey, body, { timeoutMs: settings.timeoutMs, fetch: deps.fetch });
+    // A retry fits in the cap checked above: the failed try was not charged.
+    const result = await callMeta(settings.apiKey, body, {
+      timeoutMs: settings.timeoutMs,
+      fetch: deps.fetch,
+      clock: () => deps.now().getTime(),
+      sleep: deps.sleep,
+    });
     cost = result.costUsd;
+    const { statuses } = result;
     // Token use for tuning; no request text.
     console.log(
-      JSON.stringify({ event: 'meta_call', kind, model: MATCH_MODEL, cards: cards.size, ...result.usage, cost_usd: cost, latency_ms: result.latencyMs }),
+      JSON.stringify({ event: 'meta_call', kind, model: MATCH_MODEL, cards: cards.size, ...result.usage, cost_usd: cost, latency_ms: result.latencyMs, statuses }),
     );
+    // From here on Meta has answered: a bad or rejected answer is never retried.
     const answer = parseAnswer(result.text);
-    if (!answer) return { failure: 'model_bad_output', cost };
+    if (!answer) return { failure: 'model_bad_output', httpStatus: null, cost, statuses };
     const guarded = guardPicks(answer, cards, limit);
-    if (answer.picks.length > 0 && guarded.picks.length === 0) return { failure: 'guard_rejected_all', cost };
-    return { answer, picks: guarded.picks, cost };
+    if (answer.picks.length > 0 && guarded.picks.length === 0) {
+      return { failure: 'guard_rejected_all', httpStatus: null, cost, statuses };
+    }
+    return { answer, picks: guarded.picks, cost, statuses };
   } catch (err) {
     if (err instanceof MetaCallError) {
       cost = err.costUsd;
-      return { failure: `model_${err.kind}`, cost };
+      const httpStatus = err.kind === 'http' ? err.status : null;
+      return { failure: `model_${err.kind}`, httpStatus, cost, statuses: err.statuses };
     }
     throw err;
   } finally {
@@ -304,17 +328,21 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   let choice: Choice;
   let matchedBy = 'rules';
   let degradedReason: string | null = null;
+  let httpStatus: number | null = null;
+  let statuses: (number | null)[] = [];
   let cost = 0;
   if (candidates.length === 0) {
     choice = NO_CHOICE;
   } else {
     const attempt = await askModel({ ...req.modelRequest, limit }, req.kind, cards, limit, deps, now);
     cost = attempt.cost;
+    statuses = attempt.statuses;
     if ('answer' in attempt) {
       matchedBy = MATCH_MODEL;
       choice = fromModel(attempt.answer, attempt.picks, entries, req.kind);
     } else {
       degradedReason = attempt.failure;
+      httpStatus = attempt.httpStatus;
       choice = fromRules(req, candidates, cards, limit);
     }
   }
@@ -337,6 +365,8 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     matched_by: matchedBy,
     degraded: degradedReason !== null,
     degraded_reason: degradedReason,
+    model_attempts: statuses.length,
+    model_http_status: httpStatus,
     considered: passed,
     picks: choice.picks.map((chosen) => pickOut(entries.get(chosen.slug)!, chosen, cond.os, matchedBy, passed)),
     best_free: choice.bestFree,
@@ -370,6 +400,9 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
       client: deps.client ?? null,
       matched_by: matchedBy,
       degraded: output.degraded,
+      degraded_reason: degradedReason,
+      model_attempts: statuses.length,
+      model_statuses: statuses,
       meta_cost_usd: cost,
       latency_ms: Date.now() - started,
     }).catch(logFailure(req.kind, output.rec_id)),
