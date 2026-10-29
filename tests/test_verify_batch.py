@@ -187,4 +187,10 @@ def test_a_new_release_requeues_a_record_whose_runs_did_not_pass(tmp_path: Path)
     record("same-release", "failed", "2026-10-29T02:44:43+08:00", "2026-10-27T19:03:47Z")
     record("passed", "function", "2026-10-29T02:44:43+08:00", "2026-11-01T09:00:00Z")
     record("never-run", "unverified", None, "2026-11-01T09:00:00Z")
-    assert recheck_slugs(tmp_path) == {"fixed", "boxed"}
+    runs = tmp_path / "runs"
+    assert recheck_slugs(tmp_path, runs) == {"fixed", "boxed"}
+    # A recheck after the release settles it, written back or not (it ended unverified "other").
+    attempt = runs / "verify" / "verify-fixed-20261101-180000-ab12"
+    attempt.mkdir(parents=True)
+    (attempt / "outcome.json").write_text(json.dumps({"slug": "fixed", "level": "unverified", "written": False}))
+    assert recheck_slugs(tmp_path, runs) == {"boxed"}

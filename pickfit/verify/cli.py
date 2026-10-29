@@ -107,7 +107,7 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
     data_dir = Path(args.data_dir) if args.data_dir else DATA_DIR
     skip = verified_slugs(runs_dir, since=args.since) if args.since else \
         set() if args.force else verified_slugs(runs_dir)
-    skip -= recheck_slugs(data_dir)  # a new release since a run that did not pass
+    skip -= recheck_slugs(data_dir, runs_dir)  # a new release since the last attempt, which did not pass
     known = record_slugs(data_dir)
     repos = [*(args.repo or []), *(known if args.records else [])] or None
     if args.records and not known:
