@@ -26,7 +26,7 @@
 | GitHub | ✅ `gh` 已登入 | 管線用 `GITHUB_TOKEN=$(gh auth token)`，不必另建 PAT |
 | Docker | ✅ OrbStack（docker context `orbstack`） | P3 的 `DockerBox` 在這上面跑過 |
 | Modal | ✅ token 在 `.env` | `MODAL_TOKEN_ID`／`MODAL_TOKEN_SECRET`；本機沒裝 CLI，用 `uvx --from modal modal …`；Python 端用 `uv run --python 3.12 --with modal …` |
-| Baseten | ✅ 10/29 核准 | 比賽 credits 與 2M TPM，key 只能用 `meta-models/muse-spark-open-1026`；key 放 `.env` 的 `BASETEN_API_KEY`（入帳狀態記在 `CLAUDE.local.md`） |
+| Baseten | ✅ 10/29 核准、實測通過 | key 只能用 `meta-models/muse-spark-open-1026`（`/v1/models` 有列）；限額 100 RPM、2M TPM；`reasoning_effort: low` 一次初篩 1.7 秒、約 560 token；強制 tool calling 可用，輸出符合 schema；key 放 `.env` 的 `BASETEN_API_KEY`（入帳狀態記在 `CLAUDE.local.md`） |
 | E2B | ❌ | 備案，Modal 不能用時才註冊 |
 | Python | 系統 3.9 | 專案用 `uv` 管 Python 3.12 |
 
@@ -78,7 +78,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 - [x] P0.4 GitHub search 實際量：`GITHUB_TOKEN=$(gh auth token) python3 spikes/ch_hosting_github.py counts`。完成標準：兩個類別近 7／14 天的筆數寫回 [research/notes/channels-hosting.md](research/notes/channels-hosting.md)。
 - [x] P0.5 hello MCP 上線：`spikes/mcp_stateless/` 用 `wrangler deploy` 部署到 `workers.dev`，`claude mcp add --transport http pickfit-hello <url>/mcp` 實連。完成標準：Claude Code 看得到並呼叫得到遠端 hello 工具。
 - [x] P0.6 Modal：帳號與 token 已就緒（第 1 節）；workspace 花費上限已設約 $80（念誠，10/28）。agent 在 subshell 只帶 `MODAL_TOKEN_ID`、`MODAL_TOKEN_SECRET`，跑 `uv run --python 3.12 --with modal python spikes/sb_modal_verify.py --install "pip install httpie" --smoke "http --version"`，量沙盒啟動時間與網路政策；只跑這一筆。
-- [ ] P0.7 👤 Baseten（10/29 核准，等念誠把 key 貼進 `.env`）：註冊並申請比賽 credits、建 key 放 `.env` 的 `BASETEN_API_KEY`、月預算 $20 開 enforce。核准後 agent 跑 `spikes/meta_baseten_hello.py`，確認 `meta-models/muse-spark-open-1026` 存在。
+- [x] P0.7 👤 Baseten（10/29 核准，key 已進 `.env`，spike 實測通過）：註冊並申請比賽 credits、建 key 放 `.env` 的 `BASETEN_API_KEY`、月預算 $20 開 enforce。核准後 agent 跑 `spikes/meta_baseten_hello.py`，確認 `meta-models/muse-spark-open-1026` 存在。
 - [x] P0.8 👤 Meta Billing（10/28 完成）：送出 credits 表單、Spend Limit 通知設 $50 與 $100。
 
 **G0（今晚）：已通過**（P0.2、P0.3）。json_schema 與 tool calling 能用就照計畫走。json_schema 不行 → 用 `finish` 工具＋pydantic 驗證；tool calling 不行 → 驗證 agent 改成「模型回 JSON 動作、程式執行」。兩者都不擋進度。
@@ -95,7 +95,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 - [x] P2.1 GitHub search：每類別 3 條 query（topic＋`created:`＋`pushed:`＋星數 5–300），序列化、間隔 ≥2.1 秒；補 repo、README、release。**discovery 的 query 依類別寫，不從評測題目推導，由沒讀過 `eval/` 的 session 撰寫**（[eval/README.md](../eval/README.md) 第 3 節）；每條 query 連同時間記在 trace。（實作：`pickfit/discover/`；query 與時間記在 `runs/pipeline.db` 的 `queries` 表）
 - [x] P2.2 正規化、去重、候選庫（`runs/pipeline.db`）：主鍵 `gh:<repo id>`、舊名進 `aliases`。移植 spike 時拿掉所有 ecosyste.ms 呼叫。
 - [x] P2.3 規則前置（arch B.1）：fork、archived、template、沒 README、函式庫訊號。從 `spikes/quality_signals.py` 移植時拿掉所有 ecosyste.ms 呼叫，改用 GitHub REST。（目前 496 筆過 466 筆、94%，偏寬；README-only 的可疑 repo 有擋下。P2.6 前再收緊）
-- [ ] P2.4 開放權重初篩（計畫內，需 P0.7）：Spark Open @ Baseten，低信心送 1.3 複查，抽 5% 比一致率。Baseten 沒核准或 `-1026` 不存在 → 用公開 model ID 自付（<$5）→ 再不行試 Modal Shared Endpoint（先確認 credits 能付）→ 最後才只用規則（會失去 Best Open Weight 資格，arch I #3、H.5 #6）。（10/29：Baseten 還沒核准，核准前不呼叫，因為帳號綁的是念誠自己的卡。P2.6 session 查過在 Modal 自架：4-bit 權重 537 GB、要 4 張 B300 約每小時 $28，下載權重要念誠本人填資料申請，不划算；Modal Shared Endpoint 能不能用比賽 credits 付還不知道。目前初篩＝規則＋Meta API。10/29 Baseten 核准，key 進 `.env` 並跑過 `spikes/meta_baseten_hello.py` 後就可以開始）
+- [ ] P2.4 開放權重初篩（計畫內，需 P0.7）：Spark Open @ Baseten，低信心送 1.3 複查，抽 5% 比一致率。Baseten 沒核准或 `-1026` 不存在 → 用公開 model ID 自付（<$5）→ 再不行試 Modal Shared Endpoint（先確認 credits 能付）→ 最後才只用規則（會失去 Best Open Weight 資格，arch I #3、H.5 #6）。（10/29：Baseten 還沒核准，核准前不呼叫，因為帳號綁的是念誠自己的卡。P2.6 session 查過在 Modal 自架：4-bit 權重 537 GB、要 4 張 B300 約每小時 $28，下載權重要念誠本人填資料申請，不划算；Modal Shared Endpoint 能不能用比賽 credits 付還不知道。目前初篩＝規則＋Meta API。10/29 Baseten 核准、spike 實測通過，可以開始）
 - [x] P2.5 抽取 v0：`muse-spark-1.3`，Responses、`text.format` strict，每欄附引用。照「1 → 5 → 30」放大。（開發時用 contributor 跑到 36 筆，全過 schema；程式檢查每段引用確實出現在來源，已在 v0 做好。1.3 正式批次在 P2.6，估每筆約 $0.017）
 - [x] P2.6 抽取收尾（10/30 上午，arch H.2）：程式檢查引用真的出現在來源、授權與 release 等事實欄位改用 API 值、重試、批次；晚上背景跑批次抽取，產生 P3 要用的 ≥30 份 profile。（10/29：規則 v2 過 452／496＝91.1%，多擋了釣魚套件、只有 README、只有二進位又沒授權的 repo；`muse-spark-1.3` 抽取 52 筆、平均 $0.014；寫出 39 筆 profile（dev_cli 23、local_ai 16），全部先標未驗證。待補：引用只證明那句話存在，不證明它支持填入的值；local_ai 產量偏低）
 
@@ -223,3 +223,4 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | 10/29 02:18 | P3.8、G2 | P3.8 分支併入 main（merge `c7a549b`）；342 個 Python、69 個 Worker 測試通過。39 筆中 25 筆在 Modal 通過並重播、寫回資料；10 筆 demo 候選（`docs/demo-candidates.md`）全部通過並重播，**G2 提前達成（10／10）**。驗證時找到 9 處 README 或 profile 寫錯（列在候選文件，沒有改寫抽取的事實） | Meta 累計 $4.92（10/29 $3.97）；Modal 約 $0.45 |
 | 10/29 02:18 | — | **下一步**：P5（計分、提交、回報閉環）；部署 Worker 要念誠點頭；Mac 上親手驗 demo 前 3 筆（P6.4）；本地 AI 類的已驗證工具偏少，需要時再加發現 query | — |
 | 10/29 | P0.7 | Baseten 核准比賽 credits（只能用 `meta-models/muse-spark-open-1026`）。`.env` 已留 `BASETEN_API_KEY` 欄位，等念誠從一次性連結取 key 貼上；之後跑 `spikes/meta_baseten_hello.py` 確認，P2.4 開放權重初篩解除封鎖 | — |
+| 10/29 11:55 | P0.7 | key 進 `.env`，`spikes/meta_baseten_hello.py` 一般模式與 `--tools` 都通過：`-1026` 存在、JSON 與 tool call 都符合 schema；限額 100 RPM、2M TPM。P2.4 解除封鎖 | Baseten 約 $0.003 |

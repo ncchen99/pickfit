@@ -15,7 +15,7 @@
   python3 spikes/meta_baseten_hello.py --tools
 
 只用 Python 標準函式庫。沒有 BASETEN_API_KEY 時只印說明、不發任何請求。
-狀態：未實測（2026-10-28 撰寫時沒有金鑰）。
+狀態：2026-10-29 實測通過（一般模式與 --tools；限額 100 RPM、2M TPM）。
 """
 
 from __future__ import annotations
