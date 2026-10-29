@@ -399,12 +399,15 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict
 
 def _failing_id(finish: FinishArgs, checks: list[ResolvedCheck], by_id: dict[int, CommandRecord],
                 problems: list[str]) -> int | None:
-    """The failed claim's failing command: the one cited, else the first cited check that exited non-zero
-    (the most basic one: a --help that crashes comes before an example that fails)."""
+    """The failed claim's failing command: the one cited, else the first cited check that failed with a
+    non-zero exit (the most basic one: a --help that crashes comes before an example that fails). A check
+    that passed with the non-zero exit it expected (a linter finding problems) is not a failure."""
+    passed = {c.command_id for c in checks if c.passed}
     cid = finish.failing_command_id
     if cid is None:
-        failed = [c.command_id for c in checks if c.exit_code not in (0, None) and by_id[c.command_id].tool
-                  == "run_command"]
+        failed = [c.command_id for c in checks if c.command_id not in passed
+                  and by_id[c.command_id].tool == "run_command"
+                  and (by_id[c.command_id].exit_code not in (0, None) or by_id[c.command_id].timed_out)]
         cid = failed[0] if failed else None
     record = by_id.get(cid) if cid is not None else None
     if record is None or record.tool != "run_command":
@@ -413,6 +416,9 @@ def _failing_id(finish: FinishArgs, checks: list[ResolvedCheck], by_id: dict[int
         return None
     if record.exit_code == 0 and not record.timed_out:
         problems.append(f"failing command {cid} exited 0")
+        return None
+    if cid in passed:
+        problems.append(f"failing command {cid} is a check that passed (exit {record.exit_code} was expected)")
         return None
     return cid
 
