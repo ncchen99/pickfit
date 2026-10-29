@@ -100,6 +100,11 @@ CREATE TABLE IF NOT EXISTS prescreens (
     latency_s REAL
 );
 CREATE INDEX IF NOT EXISTS prescreens_repo ON prescreens (repo_id, role, id);
+CREATE TABLE IF NOT EXISTS well_known (
+    repo_id TEXT PRIMARY KEY REFERENCES candidates (repo_id),
+    evidence TEXT NOT NULL,
+    saved_at TEXT NOT NULL
+);
 """
 
 
@@ -225,6 +230,19 @@ class PipelineDB:
                 "rules_version = ?, rules_at = ? WHERE repo_id = ?",
                 (label, int(passed), _dumps(reasons), version,
                  taipei_now().isoformat(timespec="seconds"), repo_id))
+
+    # -- well-known reference tools
+
+    def save_well_known(self, repo_id: str, evidence: dict[str, Any]) -> None:
+        """Why a candidate counts as well known (pickfit.discover.well_known); replaces an earlier row."""
+        with self._write() as conn:
+            conn.execute("INSERT OR REPLACE INTO well_known (repo_id, evidence, saved_at) VALUES (?, ?, ?)",
+                         (repo_id, _dumps(evidence), taipei_now().isoformat(timespec="seconds")))
+
+    def well_known(self) -> dict[str, dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute("SELECT repo_id, evidence FROM well_known").fetchall()
+        return {row["repo_id"]: _loads(row["evidence"]) for row in rows}
 
     # -- reading candidates
 

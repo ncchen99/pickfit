@@ -231,8 +231,12 @@ def _summary(text: str) -> str:
 
 
 def build_record(candidate: dict[str, Any], extraction: dict[str, Any], *, slug: str,
-                 now: datetime, existing: dict[str, Any] | None = None) -> SoftwareRecord:
-    """One record from a candidate row and its extraction row. Raises ValueError to skip."""
+                 now: datetime, existing: dict[str, Any] | None = None,
+                 well_known: dict[str, Any] | None = None) -> SoftwareRecord:
+    """One record from a candidate row and its extraction row. Raises ValueError to skip.
+
+    `well_known` is the install-count evidence stored by pickfit.discover.well_known, if any.
+    """
     result = ExtractionResult.model_validate(extraction["result"])
     repo = candidate["repo"]
     full_name = repo.get("full_name") or candidate["full_name"]
@@ -364,6 +368,8 @@ def build_record(candidate: dict[str, Any], extraction: dict[str, Any], *, slug:
         "first_seen_at": candidate["first_seen_at"],
         "updated_at": now.isoformat(timespec="seconds"),
     }
+    if well_known or (existing or {}).get("well_known"):
+        data["well_known"] = well_known or existing["well_known"]
     if existing:
         _keep_verified_work(data, existing)
         # A newer snapshot can change what the cap depends on (archived): refresh, no model call.
@@ -420,6 +426,7 @@ def write_profiles(db: PipelineDB, *, model: str, out_dir: Path = DEFAULT_OUT,
     taken = {data["slug"]: repo_id for repo_id, data in existing.items()}
     summary = WriteSummary()
     extractions = latest_extractions(db, model)
+    well_known = db.well_known()
     candidates = sorted((db.candidate(repo_id) for repo_id in extractions),
                         key=lambda c: (c["first_seen_at"], c["repo_id"]))
     for c in candidates:
@@ -428,7 +435,8 @@ def write_profiles(db: PipelineDB, *, model: str, out_dir: Path = DEFAULT_OUT,
         if not old and (not slug or taken.get(slug, c["repo_id"]) != c["repo_id"]):
             slug = slugify(c["full_name"].replace("/", "-"))
         try:
-            record = build_record(c, extractions[c["repo_id"]], slug=slug, now=now, existing=old)
+            record = build_record(c, extractions[c["repo_id"]], slug=slug, now=now, existing=old,
+                                  well_known=well_known.get(c["repo_id"]))
         except (ValueError, ValidationError) as err:
             reason = str(err).splitlines()[0][:200]
             summary.skipped[c["full_name"]] = reason

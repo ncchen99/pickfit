@@ -1381,8 +1381,21 @@
     "Treasure": {
       "additionalProperties": false,
       "properties": {
+        "excluded": {
+          "anyOf": [
+            {
+              "const": "well_known",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "well_known: a reference record of a well-known tool, never a treasure whatever its scores."
+        },
         "is_treasure": {
-          "description": "Tool, verified, not archived, quality >= 80 and popularity <= 45.",
+          "description": "Tool, verified, not archived, quality >= 80 and popularity <= 45, and not excluded.",
           "type": "boolean"
         },
         "value": {
@@ -1672,6 +1685,64 @@
       "maxLength": 2048,
       "pattern": "^https?://[^\\s/?#]+[^\\s]*$",
       "type": "string"
+    },
+    "WellKnown": {
+      "additionalProperties": false,
+      "description": "Why a record is a reference for a well-known tool: a rule over public install counts, not a hand pick.\n\nDiscovery keeps to the long tail (at most 300 stars); these records exist so a well-known free tool can\nstill be a pick when it fits better. They are never treasures (Treasure.excluded).",
+      "properties": {
+        "basis": {
+          "const": "homebrew_installs_on_request_365d",
+          "description": "Rank among Homebrew formulae by install-on-request over 365 days (formulae.brew.sh).",
+          "type": "string"
+        },
+        "checked_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "count": {
+          "description": "Installs on request in the period.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "max_rank": {
+          "description": "The threshold: well known means rank <= max_rank.",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "package": {
+          "maxLength": 100,
+          "pattern": "^homebrew:[a-z0-9][a-z0-9+@._-]*$",
+          "type": "string"
+        },
+        "period_end": {
+          "format": "date",
+          "type": "string"
+        },
+        "period_start": {
+          "format": "date",
+          "type": "string"
+        },
+        "rank": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "source_url": {
+          "$ref": "#/$defs/HttpsUrl"
+        }
+      },
+      "required": [
+        "basis",
+        "package",
+        "rank",
+        "count",
+        "max_rank",
+        "period_start",
+        "period_end",
+        "source_url",
+        "checked_at"
+      ],
+      "title": "WellKnown",
+      "type": "object"
     }
   },
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1885,6 +1956,18 @@
     },
     "verification": {
       "$ref": "#/$defs/Verification"
+    },
+    "well_known": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/WellKnown"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Set only on reference records of well-known tools; such a record is never a treasure."
     },
     "why_worth_it": {
       "anyOf": [

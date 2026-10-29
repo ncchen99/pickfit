@@ -539,11 +539,14 @@ def popularity(signals: dict[str, int | None], category: str, age_days: int | No
     return round(0.75 * absolute + 0.25 * velocity, 1)
 
 
-def treasure(quality: float | None, popularity_score: float | None) -> dict[str, Any]:
+def treasure(quality: float | None, popularity_score: float | None, well_known: bool = False) -> dict[str, Any]:
+    """A well-known reference record keeps its value but is never a treasure."""
+    excluded = {"excluded": "well_known"} if well_known else {}
     if quality is None or popularity_score is None:
-        return {"is_treasure": False, "value": None}
-    return {"is_treasure": quality >= TREASURE_MIN_QUALITY and popularity_score <= TREASURE_MAX_POPULARITY,
-            "value": round(treasure_value(quality, popularity_score), 2)}
+        return {"is_treasure": False, "value": None, **excluded}
+    return {"is_treasure": not well_known and quality >= TREASURE_MIN_QUALITY
+            and popularity_score <= TREASURE_MAX_POPULARITY,
+            "value": round(treasure_value(quality, popularity_score), 2), **excluded}
 
 
 # --- whole record ------------------------------------------------------------------------------
@@ -595,7 +598,7 @@ def build_scores(record: SoftwareRecord, snapshot: dict[str, Any] | None, issues
         "quality": quality,
         "popularity": {"score": pop, "signals": signals, "age_days": age_days,
                        "packages": registry.packages if registry else []},
-        "treasure": treasure(quality["total"], pop),
+        "treasure": treasure(quality["total"], pop, record.well_known is not None),
         "docs_rubric": rubric.model_dump(mode="json") if rubric else None,
     }
 
@@ -616,10 +619,11 @@ def refresh_scores(data: dict[str, Any], now: datetime) -> str | None:
     components["usage_outcomes"] = usage_score(outcomes)
     cap_reason = binding_cap(data["kind"], data["repo"]["archived"], verification.level)
     quality = compose_quality(components, usage_outcomes_weight(outcomes.external.total()), cap_reason)
-    if quality == scores["quality"]:
+    expected = treasure(quality["total"], scores["popularity"]["score"], data.get("well_known") is not None)
+    if quality == scores["quality"] and expected == scores["treasure"]:
         return None
     scores["quality"] = quality
-    scores["treasure"] = treasure(quality["total"], scores["popularity"]["score"])
+    scores["treasure"] = expected
     scores["computed_at"] = now.isoformat(timespec="seconds")
     return "scores refreshed from the record"
 

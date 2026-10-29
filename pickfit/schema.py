@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable, Iterator
+from datetime import date
 from typing import Annotated, Any, Generic, Literal, TypeVar, get_args
 
 from pydantic import (
@@ -714,10 +715,15 @@ class Popularity(_Model):
 
 class Treasure(_Model):
     is_treasure: bool = Field(
-        description="Tool, verified, not archived, quality >= 80 and popularity <= 45."
+        description="Tool, verified, not archived, quality >= 80 and popularity <= 45, and not excluded."
     )
     value: float | None = Field(
         description="T = quality * (1 - popularity/100); null when either is null."
+    )
+    excluded: Literal["well_known"] | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="well_known: a reference record of a well-known tool, never a treasure whatever its scores.",
     )
 
 
@@ -815,10 +821,11 @@ class Scores(_Model):
             and n is not None
             and q >= TREASURE_MIN_QUALITY
             and n <= TREASURE_MAX_POPULARITY
+            and self.treasure.excluded is None
         )
         if self.treasure.is_treasure != eligible:
             raise ValueError(f"is_treasure must be quality >= {TREASURE_MIN_QUALITY} and "
-                             f"popularity <= {TREASURE_MAX_POPULARITY}")
+                             f"popularity <= {TREASURE_MAX_POPULARITY}, and not excluded")
         return self
 
 
@@ -879,6 +886,32 @@ class FieldEvidence(_Model):
         return self
 
 
+class WellKnown(_Model):
+    """Why a record is a reference for a well-known tool: a rule over public install counts, not a hand pick.
+
+    Discovery keeps to the long tail (at most 300 stars); these records exist so a well-known free tool can
+    still be a pick when it fits better. They are never treasures (Treasure.excluded).
+    """
+
+    basis: Literal["homebrew_installs_on_request_365d"] = Field(
+        description="Rank among Homebrew formulae by install-on-request over 365 days (formulae.brew.sh)."
+    )
+    package: str = Field(pattern=r"^homebrew:[a-z0-9][a-z0-9+@._-]*$", max_length=100)
+    rank: int = Field(ge=1)
+    count: int = Field(ge=0, description="Installs on request in the period.")
+    max_rank: int = Field(ge=1, description="The threshold: well known means rank <= max_rank.")
+    period_start: date
+    period_end: date
+    source_url: HttpsUrl
+    checked_at: AwareDatetime
+
+    @model_validator(mode="after")
+    def _within_threshold(self) -> WellKnown:
+        if self.rank > self.max_rank:
+            raise ValueError("rank must be within max_rank")
+        return self
+
+
 class SoftwareRecord(_Model):
     """One software entry: the canonical file data/software/<slug>.json (software.v1)."""
 
@@ -916,6 +949,11 @@ class SoftwareRecord(_Model):
     last_release: Release | None
     verification: Verification
     scores: Scores | None = None
+    well_known: WellKnown | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="Set only on reference records of well-known tools; such a record is never a treasure.",
+    )
     outcomes: Outcomes = Field(default_factory=Outcomes)
     sources: list[Source] = Field(min_length=1)
     evidence: list[FieldEvidence]
@@ -961,6 +999,8 @@ class SoftwareRecord(_Model):
         """
         if self.scores is None:
             return self
+        if self.scores.treasure.excluded != ("well_known" if self.well_known else None):
+            raise ValueError("scores.treasure.excluded must be 'well_known' exactly when well_known is set")
         quality = self.scores.quality
         expected = binding_cap(self.kind, self.repo.archived, self.verification.level)
         if quality.cap_reason != expected:

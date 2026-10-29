@@ -172,6 +172,13 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
             "formula_version": scores.formula_version,
         } if scores else None,
         "sources": [s.url for s in record.sources if s.url][:5],
+        # A reference record of a well-known tool (never a treasure); null for the long tail.
+        "well_known": {
+            "package": record.well_known.package,
+            "rank": record.well_known.rank,
+            "count": record.well_known.count,
+            "period_end": record.well_known.period_end.isoformat(),
+        } if record.well_known else None,
     }
 
 
