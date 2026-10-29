@@ -9,7 +9,8 @@ import { ERROR_EXCERPT_MAX, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } 
 import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './submit.ts';
 
 const ABOUT =
-  'pickfit recommends lesser-known software that it has installed and tested in a sandbox. Scope today: developer CLI tools and local AI/LLM tools. ';
+  'pickfit recommends lesser-known software that it has installed and tested in a sandbox. Scope today: developer CLI tools and local AI/LLM tools. ' +
+  'well_known_option is not verified by pickfit; say so. ';
 const RULES = 'Ask at most 1-2 questions first (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars.';
 
 export const INSTRUCTIONS =
@@ -110,7 +111,22 @@ const findOutput = z.object({
   considered: z.number().int().describe('Verified tools that met the hard conditions'),
   picks: z.array(pick).max(3),
   best_free: z.object({ slug: z.string(), reason: z.string() }).nullable(),
-  no_install_option: z.string().nullable(),
+  no_install_option: z
+    .string()
+    .nullable()
+    .describe("Something built in or already installed that would be enough; from the model's general knowledge, not checked by pickfit"),
+  well_known_option: z
+    .object({
+      name: z.string(),
+      why: z.string().describe('One sentence from the model: why this free tool may fit better than the picks'),
+      verified: z.literal(false).describe('Always false: pickfit has not installed or checked it'),
+      how_we_know: z.string(),
+    })
+    .nullable()
+    .describe(
+      "A well-known free tool outside pickfit's data that may fit this person better than the picks; usually null. " +
+        'Not verified, no install guide (get_install_guide does not know it). Present it as such.',
+    ),
   clarifying_question: z.string().nullable(),
   coverage_note: z.string().nullable(),
 });
@@ -262,6 +278,7 @@ export function buildServer(deps: Deps): McpServer {
         'Use when the user wants a tool for a job and has not settled on a product (e.g. "a free offline CLI to transcribe audio on my Mac"). ' +
         'Before calling, ask at most one or two questions, and only if unknown: which OS, and whether it must be free or run fully offline. ' +
         'Returns up to 3 lesser-known tools whose install pickfit actually ran, ranked by fit (not popularity), each with reasons tied to its verified profile, trade-offs, verification evidence and separate quality/popularity scores, plus the best free option. ' +
+        'If a well-known free tool pickfit does not list may fit better, well_known_option names it: tell the user pickfit has not verified it. ' +
         'If clarifying_question is set, ask it and call again. Next: get_install_guide(slug, os, rec_id). Coverage: developer CLI tools and local AI/LLM tools.',
       inputSchema: findInput,
       outputSchema: findOutput,
@@ -278,7 +295,7 @@ export function buildServer(deps: Deps): McpServer {
         'Use when the user already uses a specific tool and wants something different ("replace X", "X is too slow / too expensive / needs an account"). ' +
         'Requires the current tool\'s name and what the user dislikes about it: ask for the dislike if they have not said it; do not guess. Ask for the OS only if unknown. ' +
         'Returns up to 3 lesser-known tools whose install pickfit actually ran, each with reasons tied to its verified profile, trade-offs against the current tool and verification evidence, ' +
-        'or keep_current advice when nothing fits better, plus the best free option. Next: get_install_guide(slug, os, rec_id).',
+        'or keep_current advice when nothing fits better, plus the best free option and, rarely, an unverified well-known free tool (well_known_option). Next: get_install_guide(slug, os, rec_id).',
       inputSchema: alternativesInput,
       outputSchema: alternativesOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },

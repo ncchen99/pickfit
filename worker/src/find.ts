@@ -15,7 +15,7 @@ import { ranSentence } from './evidence.ts';
 import type { Settings } from './env.ts';
 import { logEvent, logFailure, newId, type Reporter } from './events.ts';
 import { hardFilter, MAX_CARDS, type Conditions } from './filter.ts';
-import { clip, guardPicks, parseAnswer, type GuardedPick } from './guard.ts';
+import { clip, guardPicks, guardWellKnown, NO_WELL_KNOWN, parseAnswer, type GuardedPick, type GuardedWellKnown } from './guard.ts';
 import { callMeta, estimateCostUsd, MATCH_MODEL, MetaCallError, requestBody } from './meta.ts';
 import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer, type ModelReason } from './prompt.ts';
 import { nameKey, rankByRules, templateReasons } from './rules.ts';
@@ -90,6 +90,8 @@ export interface FindOutput {
   picks: PickOut[];
   best_free: { slug: string; reason: string } | null;
   no_install_option: string | null;
+  /** A well-known free tool outside pickfit's data that may fit better; never verified by pickfit. */
+  well_known_option: { name: string; why: string; verified: false; how_we_know: string } | null;
   clarifying_question: string | null;
   coverage_note: string | null;
 }
@@ -113,6 +115,19 @@ function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, 
       : `Chosen by ${matchedBy} among ${considered} tools that passed pickfit's hard filters; code checked each reason against the profile.`,
   );
   return parts.join(' ');
+}
+
+/** What pickfit did not check about a tool it only names; built from the request, not the model. */
+function outsideHowWeKnow(matchedBy: string, cond: Conditions): string {
+  const unchecked = ['its price'];
+  if (cond.os) unchecked.push(`that it runs on ${cond.os}`);
+  if (cond.must_run_locally) unchecked.push('that it works offline');
+  const last = unchecked.pop()!;
+  const list = unchecked.length ? `${unchecked.join(', ')} or ${last}` : last;
+  return (
+    `Named by ${matchedBy} from general knowledge, not from pickfit's data. ` +
+    `pickfit has not installed it, has no install guide for it and has not checked ${list}.`
+  );
 }
 
 function pickOut(entry: Entry, chosen: GuardedPick, os: OS | undefined, matchedBy: string, considered: number): PickOut {
@@ -167,6 +182,7 @@ interface Choice {
   parsedNeed: Record<string, unknown> | null;
   emptyByModel: boolean;
   keepCurrent: { recommended: boolean; reason: string } | null;
+  wellKnown: GuardedWellKnown;
 }
 
 const NO_CHOICE: Choice = {
@@ -177,12 +193,19 @@ const NO_CHOICE: Choice = {
   parsedNeed: null,
   emptyByModel: false,
   keepCurrent: null,
+  wellKnown: NO_WELL_KNOWN,
 };
 
 const shortList = (items: string[] | undefined, n: number, max: number) =>
   (Array.isArray(items) ? items : []).slice(0, n).map((s) => String(s).slice(0, max));
 
-function fromModel(answer: ModelAnswer, picks: GuardedPick[], entries: Map<string, Entry>, kind: MatchKind): Choice {
+function fromModel(
+  answer: ModelAnswer,
+  picks: GuardedPick[],
+  entries: Map<string, Entry>,
+  kind: MatchKind,
+  wellKnown: GuardedWellKnown,
+): Choice {
   const free = answer.best_free_slug ? entries.get(answer.best_free_slug) : undefined;
   const need = answer.need;
   const keep = answer.keep_current;
@@ -211,6 +234,7 @@ function fromModel(answer: ModelAnswer, picks: GuardedPick[], entries: Map<strin
       kind === 'alternatives' && typeof keep?.recommended === 'boolean'
         ? { recommended: keep.recommended, reason: clip(keep.reason, 300) ?? '' }
         : null,
+    wellKnown,
   };
 }
 
@@ -234,13 +258,14 @@ function fromRules(req: MatchRequest, candidates: Entry[], cards: Map<string, Ca
     parsedNeed: null,
     emptyByModel: false,
     keepCurrent: null, // rules cannot judge the current tool
+    wellKnown: NO_WELL_KNOWN, // rules know only pickfit's data
   };
 }
 
 /** statuses: HTTP status of each request sent to Meta (null where none came back). */
 type Attempt = { cost: number; statuses: (number | null)[] } & (
   | { answer: ModelAnswer; picks: GuardedPick[] }
-  | { failure: string; httpStatus: number | null }
+  | { failure: string; httpStatus: number | null; rejected?: ModelAnswer }
 );
 
 const notSent = (failure: string): Attempt => ({ failure, httpStatus: null, cost: 0, statuses: [] });
@@ -288,7 +313,7 @@ async function askModel(
     if (!answer) return { failure: 'model_bad_output', httpStatus: null, cost, statuses };
     const guarded = guardPicks(answer, cards, limit);
     if (answer.picks.length > 0 && guarded.picks.length === 0) {
-      return { failure: 'guard_rejected_all', httpStatus: null, cost, statuses };
+      return { failure: 'guard_rejected_all', httpStatus: null, cost, statuses, rejected: answer };
     }
     return { answer, picks: guarded.picks, cost, statuses };
   } catch (err) {
@@ -339,11 +364,17 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     statuses = attempt.statuses;
     if ('answer' in attempt) {
       matchedBy = MATCH_MODEL;
-      choice = fromModel(attempt.answer, attempt.picks, entries, req.kind);
+      const wellKnown = guardWellKnown(attempt.answer, deps.catalog.entries, req.currentTool);
+      choice = fromModel(attempt.answer, attempt.picks, entries, req.kind, wellKnown);
     } else {
       degradedReason = attempt.failure;
       httpStatus = attempt.httpStatus;
       choice = fromRules(req, candidates, cards, limit);
+      if (attempt.rejected) {
+        // Not shown (the whole answer was rejected), but the log still says what the model named.
+        const named = guardWellKnown(attempt.rejected, deps.catalog.entries, req.currentTool);
+        choice.wellKnown = { option: null, name: named.name, dropped: named.option ? 'answer_rejected' : named.dropped };
+      }
     }
   }
 
@@ -351,7 +382,8 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   const notes: string[] = [];
   if (candidates.length === 0) {
     notes.push(
-      `No verified ${what} in pickfit meets these conditions. Coverage today: developer CLI tools and local AI/LLM tools.`,
+      `No verified ${what} in pickfit meets these conditions. Coverage today: developer CLI tools and local AI/LLM tools. ` +
+        'pickfit lists only lesser-known tools, so a well-known one may still fit.',
     );
   } else if (choice.emptyByModel) {
     notes.push(`None of the ${candidates.length} verified tools that meet the conditions fits this request.`);
@@ -371,6 +403,9 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     picks: choice.picks.map((chosen) => pickOut(entries.get(chosen.slug)!, chosen, cond.os, matchedBy, passed)),
     best_free: choice.bestFree,
     no_install_option: choice.noInstall,
+    well_known_option: choice.wellKnown.option
+      ? { ...choice.wellKnown.option, verified: false, how_we_know: outsideHowWeKnow(matchedBy, cond) }
+      : null,
     clarifying_question: choice.question,
     coverage_note: notes.length ? notes.join(' ') : null,
   };
@@ -394,6 +429,11 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
           limit,
         },
         parsed: choice.parsedNeed,
+        // The model's own words, not the user's: which outside tool it named and whether code kept it.
+        well_known:
+          choice.wellKnown.name || choice.wellKnown.dropped
+            ? { name: choice.wellKnown.name, dropped: choice.wellKnown.dropped }
+            : null,
         ...req.logged,
       },
       results: output.picks.map((pick) => pick.slug),

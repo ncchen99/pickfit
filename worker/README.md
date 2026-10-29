@@ -45,11 +45,39 @@ env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p "…" \
 
 1. **硬條件（程式）**：只留有實跑過安裝步驟的（`install.<os>` 的 basis 是 `replayed` 或 `human`）；類別、`budget: free_only` → `pricing = free`、`must_run_locally` → `processing = local`、不需網路、不需 API key；作業系統要在 `platforms` 或已驗證過。只在別的 OS 驗證過的留下，但卡片與回應都會標明。`find_alternatives` 另外把使用者目前的工具（依 slug 或名稱比對到目錄裡的那筆）排除。
 2. **候選卡**：全部合格的卡（≤60 張，依 slug 排，不給模型看熱門度順序）。超過 60 張先取寶藏分數前 60（之後換 BM25）。
-3. **一次 `muse-spark-1.3`**（Responses API、`store: false`、`reasoning.effort: low`、strict JSON schema；slug 欄位的 enum 就是這次的候選）：解析需求成條件、選 1–3 個、每個理由引用一個卡片欄位與原值、取捨、和知名工具比、最好的免費選項、「內建就夠」、最多 1 個追問。模型固定在程式裡，不能換成 `-contributor`（使用者需求是私人資料）。`find_alternatives` 用同一份 prompt，**後面加 4 條規則**（`ALTERNATIVES_RULES`：只選做同一件事、至少解決一個痛點、保留 `must_keep` 的；和目前的工具比較；`keep_current`；解析出的痛點）；`find_software` 的 prompt 與 schema 不變。
-4. **守門（程式）**：slug 必須在候選裡；理由引用的值要真的出現在該欄位；理由不能和卡片矛盾（離線、免費、開源、在某 OS 驗證過、不需 key、不需 GPU）。不合的理由丟掉，沒有理由的推薦丟掉。
+3. **一次 `muse-spark-1.3`**（Responses API、`store: false`、`reasoning.effort: low`、strict JSON schema；slug 欄位的 enum 就是這次的候選）：解析需求成條件、選 1–3 個、每個理由引用一個卡片欄位與原值、取捨、和知名工具比、最好的免費選項、「內建就夠」、不在資料裡的知名免費工具（`well_known_option`，見下）、最多 1 個追問。模型固定在程式裡，不能換成 `-contributor`（使用者需求是私人資料）。`find_alternatives` 用同一份 prompt，**後面加 4 條規則**（`ALTERNATIVES_RULES`：只選做同一件事、至少解決一個痛點、保留 `must_keep` 的；和目前的工具比較；`keep_current`；解析出的痛點）；`find_software` 的 prompt 與 schema 不變。
+4. **守門（程式）**：slug 必須在候選裡；理由引用的值要真的出現在該欄位；理由不能和卡片矛盾（離線、免費、開源、在某 OS 驗證過、不需 key、不需 GPU）。不合的理由丟掉，沒有理由的推薦丟掉。`well_known_option` 另有自己的檢查（見下）。
 5. **退回規則**：模型關掉、沒有 key、超出預算、逾時、HTTP 錯誤（重試一次後仍失敗，見下面「重試」）、輸出壞掉、或推薦全被守門擋掉 → 依「（`find_alternatives`）卡片的 `alternatives_to` 提到目前的工具 → 需求關鍵字命中 → 在使用者 OS 驗證過 → 寶藏分數」排序，理由用模板（只從欄位產生），標 `matched_by: "rules"`、`degraded: true`、`degraded_reason`。規則模式不判斷 `keep_current`（回 `null`）。
 
 `find_alternatives` 的 `current`：`matched_slug` 是目錄裡的那筆（有的話，且不會出現在 picks）；`known` 是「目錄有它，或某張卡的 `alternatives_to` 提到它」。`keep_current.recommended: true` 表示沒有一個候選明顯比較好，這時 picks 可能是空的。
+
+### `well_known_option`：不在資料裡的知名免費工具（未驗證）
+
+資料只收 ≤300 星的長尾工具。有名的免費工具（或大廠產品的免費方案）真的比較適合某個人時，agent 只看 picks 就會錯過；中立也包括「不用付費」「內建就夠」（brief 第 2 節）。所以模型可以在 picks 之外**多講一個**，但 picks、`best_free` 照舊只從候選卡選。
+
+- **prompt 第 10 條**：通常是 null。只有當某個知名的免費工具（或知名產品的免費方案）比每個 pick 都適合、或沒有候選適合時，給 `well_known_name`（常用名稱）與 `well_known_why`（一句話，要說它免費或哪個免費方案就夠、為什麼比較適合）。它要符合 `<request>` 的每個條件（OS、預算、離線）。關於它的事實來自模型自己的知識（和第 7、9 條講的工具一樣），只能寫有把握的；不能說它被驗證或測試過；知名不是理由；不能是候選、使用者正在用的工具、或 `no_install_option` 講的那個。
+- **回應**：`well_known_option: { name, why, verified: false, how_we_know }` 或 `null`。`how_we_know` 由程式產生，說明是誰提的、pickfit 沒裝過、沒有安裝指南（`get_install_guide` 不認得它），以及沒查過的事：價格，加上使用者給了的條件（OS、離線）。
+- **程式能查的**（不合就整個丟掉，不截斷、不影響其他欄位）：
+  - 名稱：`None`、`N/A` 之類的佔位字當作沒給；其餘要是單純的名稱（≤60 字、≤5 個字、只有字母數字空白和 `. + _ ' -`，不是網域、不是指令、沒有控制或 bidi 字元），否則 `not_a_name`。
+  - 不是目錄裡的任何一筆，名稱寫法不同也算（`toolKey` 去掉 CLI、app、agent、engine 等通用字與版本號後，相同、或 4 字以上時一個是另一個的開頭；不比包含，因為 faster-whisper 不是 Whisper）：在目錄裡就該是 pick，或已被硬條件擋掉，不能改口說成「沒驗證過的知名工具」。
+  - 不是 `find_alternatives` 的目前工具：同樣的比對，對使用者給的 `current_software` 和模型解析的 `need.current_tool` 都比。
+  - `why`：≤300 字、純文字（沒有網址、網域、安裝指令、反引號、markdown、換行），要明確說它免費或開源（`not free`、`no free tier`、`free trial`、`hassle-free`、只限個人使用都不算），不能說 verified／tested／installed／checked／confirmed／vetted／proven／audited 或提到 pickfit。不截成一句，以免把模型自己寫的但書剪掉。
+  - `events.need.well_known` 記模型給的名稱與丟掉的原因（`dropped`；留下的是 `null`），沒給就是 `null`。`not_a_name` 只記原因、不記文字（可能是從需求抄來的）。整個答案被守門擋掉（`guard_rejected_all`）時也記，`dropped` 是 `answer_rejected`。
+- **程式查不到的**：工具存不存在、是不是真的免費、合不合 OS 與離線、是不是真的比較適合。所以只放一句話、標 `verified: false`，工具說明也要 agent 這樣轉告使用者。
+- **沒有模型時**：規則模式永遠是 `null`（規則只認得資料）。沒有候選時不呼叫模型，`coverage_note` 多一句「pickfit 只收比較不知名的工具，知名的可能仍適合」。
+- `no_install_option` 本來就是模型的一般知識；outputSchema 的說明現在寫明 pickfit 沒查過。server instructions 也多一句：`well_known_option` 沒經 pickfit 驗證，轉述時要說。
+
+實測（10/29，真資料 96 筆，8 題自擬的需求，不是評測題；`muse-spark-1.3` 8 次 $0.16，記在共用帳本）：3 題有提，5 題是 null，沒有編造的工具。
+
+| 需求 | picks | `well_known_option` |
+|---|---|---|
+| Mac 上免費、離線、好裝的本機 LLM 聊天 | xyntetik-runner | Ollama（句子說它「附帶模型」，不對：模型要另外下載。這就是要標未驗證的原因） |
+| 終端機格式化、篩選 curl 的 JSON | 無 | jq（`no_install_option` 另給 `python3 -m json.tool`） |
+| shell 裡模糊搜尋檔案與指令歷史 | 無 | fzf |
+| 安裝前檢查 MCP 設定的權限 | patient-zero | null |
+| 離線轉錄會議錄音、Linux GPU 上開 OpenAI 相容 API、換掉 Ollama、看誰佔用 port（`no_install_option` 給 `lsof`） | 有 | null |
+
+模型偏保守：GPU 伺服器那題沒提 vLLM、換掉 Ollama 那題沒提 llama.cpp。寧可少提，不要每題都推知名工具蓋過長尾的 picks。
 
 ### `report_outcome`
 
