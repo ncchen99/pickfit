@@ -189,8 +189,17 @@ def test_a_new_release_requeues_a_record_whose_runs_did_not_pass(tmp_path: Path)
     record("never-run", "unverified", None, "2026-11-01T09:00:00Z")
     runs = tmp_path / "runs"
     assert recheck_slugs(tmp_path, runs) == {"fixed", "boxed"}
-    # A recheck after the release settles it, written back or not (it ended unverified "other").
-    attempt = runs / "verify" / "verify-fixed-20261101-180000-ab12"
-    attempt.mkdir(parents=True)
-    (attempt / "outcome.json").write_text(json.dumps({"slug": "fixed", "level": "unverified", "written": False}))
+    def attempt(run_id: str, slug: str, stop: str | None) -> None:
+        folder = runs / "verify" / run_id
+        folder.mkdir(parents=True)
+        (folder / "outcome.json").write_text(json.dumps({"slug": slug, "level": "unverified", "written": False}))
+        if stop:
+            (folder / "report.json").write_text(json.dumps({"stop_reason": stop}))
+
+    # A recheck that never ran (the model 404ed, the box did not start, no report) does not settle it.
+    attempt("verify-fixed-20261101-180000-ab12", "fixed", "model_error")
+    attempt("verify-boxed-20261101-180000-ab12", "boxed", None)
+    assert recheck_slugs(tmp_path, runs) == {"fixed", "boxed"}
+    # One that ran settles it, written back or not (it ended unverified "other").
+    attempt("verify-fixed-20261101-190000-cd34", "fixed", "finished")
     assert recheck_slugs(tmp_path, runs) == {"boxed"}
