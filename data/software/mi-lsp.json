@@ -53,28 +53,28 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-mi-lsp-20261029-192019-e3c5",
+      "run_id": "verify-mi-lsp-20261029-221332-c116",
       "method": "script",
       "steps": [
         {
           "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh",
-          "purpose": "download install.sh for reading"
+          "purpose": "Download install.sh for reading/running"
         },
         {
           "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/validate-worker-manifest.js && wc -c /tmp/validate-worker-manifest.js && ls -l /tmp/*.sh /tmp/*.js",
-          "purpose": "download validator sibling file"
+          "purpose": "Download validator JS beside installer"
         },
         {
-          "command": "sh /tmp/install.sh 2>&1",
-          "purpose": "install CLI-only via install.sh"
+          "command": "sh /tmp/install.sh",
+          "purpose": "Install CLI-only via install.sh"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "mi-lsp version --format toon",
-        "expected_signal": "version: 0.16.6"
+        "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mi-lsp --version && mi-lsp version --format toon",
+        "expected_signal": "mi-lsp version 0.16.6"
       },
-      "first_task": "mi-lsp version --format toon"
+      "first_task": "mi-lsp init . --name myapp"
     },
     "linux": {
       "basis": "replayed",
@@ -131,7 +131,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T19:32:48.994780+08:00",
+    "checked_at": "2026-10-29T22:30:15.823232+08:00",
     "runs": [
       {
         "id": "verify-mi-lsp-20261029-013109-7303",
@@ -267,7 +267,7 @@
         "cost_usd": 0.101623
       },
       {
-        "id": "verify-mi-lsp-20261029-192019-e3c5",
+        "id": "verify-mi-lsp-20261029-221332-c116",
         "level": "function",
         "unverified_reason": null,
         "os": "macos",
@@ -275,31 +275,31 @@
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26",
-        "checked_at": "2026-10-29T19:32:48.994780+08:00",
+        "checked_at": "2026-10-29T22:30:15.823232+08:00",
         "tool_version": "0.16.6",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
             "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh",
-            "purpose": "download install.sh for reading"
+            "purpose": "Download install.sh for reading/running"
           },
           {
             "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/validate-worker-manifest.js && wc -c /tmp/validate-worker-manifest.js && ls -l /tmp/*.sh /tmp/*.js",
-            "purpose": "download validator sibling file"
+            "purpose": "Download validator JS beside installer"
           },
           {
-            "command": "sh /tmp/install.sh 2>&1",
-            "purpose": "install CLI-only via install.sh"
+            "command": "sh /tmp/install.sh",
+            "purpose": "Install CLI-only via install.sh"
           }
         ],
         "smoke_tests": [
           {
-            "command": "mi-lsp version --format toon",
-            "expected_signal": "version: 0.16.6",
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mi-lsp --version && mi-lsp version --format toon",
+            "expected_signal": "mi-lsp version 0.16.6",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "version: 0.16.6",
+            "observed_excerpt": "mi-lsp version 0.16.6 revision=a226978c522d protocol=mi-lsp-v1.1 rid=osx-arm64",
             "setup": [],
             "offline": true
           },
@@ -320,7 +320,7 @@
             "observed_excerpt": "workspace=myapp",
             "setup": [
               {
-                "command": "git init 2>&1 && cat > package.json <<'EOF'\n{\"name\": \"myapp\", \"version\": \"1.0.0\", \"main\": \"src/index.js\"}\nEOF\nmkdir -p src && cat > src/index.js <<'EOF'\n// daemon starter sample\nfunction startDaemon() { console.log(\"daemon starting\"); }\nmodule.exports = { startDaemon };\nEOF\ncat > README.sample.md <<'EOF'\n# myapp sample\nEOF\nls -la",
+                "command": "cat > package.json <<'EOF'\n{\"name\": \"myapp\", \"version\": \"1.0.0\", \"main\": \"index.js\"}\nEOF\ncat > index.js <<'EOF'\n// daemon starter sample for mi-lsp smoke test\nfunction startDaemon(opts) { console.log(\"daemon start\", opts); }\nmodule.exports = { startDaemon };\nEOF\ncat package.json && ls -la",
                 "background": false,
                 "port": null
               }
@@ -335,7 +335,7 @@
             "observed_excerpt": "workspace: myapp",
             "setup": [
               {
-                "command": "git init 2>&1 && cat > package.json <<'EOF'\n{\"name\": \"myapp\", \"version\": \"1.0.0\", \"main\": \"src/index.js\"}\nEOF\nmkdir -p src && cat > src/index.js <<'EOF'\n// daemon starter sample\nfunction startDaemon() { console.log(\"daemon starting\"); }\nmodule.exports = { startDaemon };\nEOF\ncat > README.sample.md <<'EOF'\n# myapp sample\nEOF\nls -la",
+                "command": "cat > package.json <<'EOF'\n{\"name\": \"myapp\", \"version\": \"1.0.0\", \"main\": \"index.js\"}\nEOF\ncat > index.js <<'EOF'\n// daemon starter sample for mi-lsp smoke test\nfunction startDaemon(opts) { console.log(\"daemon start\", opts); }\nmodule.exports = { startDaemon };\nEOF\ncat package.json && ls -la",
                 "background": false,
                 "port": null
               },
@@ -349,13 +349,13 @@
           },
           {
             "command": "mi-lsp nav intent \"how does the daemon start\" --workspace myapp --format toon",
-            "expected_signal": "backend: intent",
+            "expected_signal": "startDaemon",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "backend: intent",
+            "observed_excerpt": "qualified_name: \"index.js::startDaemon\"",
             "setup": [
               {
-                "command": "git init 2>&1 && cat > package.json <<'EOF'\n{\"name\": \"myapp\", \"version\": \"1.0.0\", \"main\": \"src/index.js\"}\nEOF\nmkdir -p src && cat > src/index.js <<'EOF'\n// daemon starter sample\nfunction startDaemon() { console.log(\"daemon starting\"); }\nmodule.exports = { startDaemon };\nEOF\ncat > README.sample.md <<'EOF'\n# myapp sample\nEOF\nls -la",
+                "command": "cat > package.json <<'EOF'\n{\"name\": \"myapp\", \"version\": \"1.0.0\", \"main\": \"index.js\"}\nEOF\ncat > index.js <<'EOF'\n// daemon starter sample for mi-lsp smoke test\nfunction startDaemon(opts) { console.log(\"daemon start\", opts); }\nmodule.exports = { startDaemon };\nEOF\ncat package.json && ls -la",
                 "background": false,
                 "port": null
               },
@@ -370,19 +370,19 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -fsSL .../scripts/install/install-agent.sh | sh and curl -fsSL .../scripts/install/install.sh | sh",
-            "actually_needed": "download https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js next to install.sh before running it, otherwise install fails with Error: Cannot find module '/tmp/validate-worker-manifest.js'",
+            "readme_said": "curl -fsSL .../scripts/install/install-agent.sh | sh (or install.sh | sh)",
+            "actually_needed": "Also download scripts/install/validate-worker-manifest.js beside install.sh/install-agent.sh before running; otherwise install fails with 'Cannot find module /tmp/validate-worker-manifest.js'",
             "kind": "readme_wrong"
           },
           {
-            "readme_said": "recommended installer adds CLI and mi-lsp skill via install-agent.sh",
-            "actually_needed": "used CLI-only install.sh because install-agent.sh CLI install succeeded but its final `npx skills add fgpaz/claude-skills` step fails with Authentication failed for https://github.com/fgpaz/claude-skills.git",
-            "kind": "note"
+            "readme_said": "Recommended installer install-agent.sh adds CLI plus mi-lsp skill",
+            "actually_needed": "Use CLI-only install.sh (candidate 2); install-agent.sh installs the CLI (mi-lsp v0.16.6 installed) but then fails cloning private skill repo fgpaz/claude-skills with 'Authentication failed' and exits 1",
+            "kind": "readme_wrong"
           },
           {
             "readme_said": "mi-lsp init . --name myapp",
-            "actually_needed": "needed `git init` plus a supported marker (package.json) and a source file (src/index.js) before `mi-lsp init . --name myapp` would succeed; empty dir with only README.md fails with no supported project markers found",
-            "kind": "note"
+            "actually_needed": "Create a project marker (package.json + index.js) in the target dir first; empty dir with only README.md fails with 'no supported project markers found'",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
@@ -392,17 +392,17 @@
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-mi-lsp-20261029-192019-e3c5/report.json",
+          "trace_path": "runs/verify/verify-mi-lsp-20261029-221332-c116/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-mi-lsp-20261029-192019-e3c5/check-1-cmd8.judged.png",
-            "runs/verify/verify-mi-lsp-20261029-192019-e3c5/check-2-cmd12.judged.png",
-            "runs/verify/verify-mi-lsp-20261029-192019-e3c5/check-3-cmd9.judged.png"
+            "runs/verify/verify-mi-lsp-20261029-221332-c116/check-1-cmd6.judged.png",
+            "runs/verify/verify-mi-lsp-20261029-221332-c116/check-2-cmd12.judged.png",
+            "runs/verify/verify-mi-lsp-20261029-221332-c116/check-3-cmd8.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.117867
+        "cost_usd": 0.125547
       }
     ]
   },
@@ -724,5 +724,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-29T19:32:48.995970+08:00"
+  "updated_at": "2026-10-29T22:30:15.824676+08:00"
 }

@@ -60,7 +60,7 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-shep-20261029-193248-ea26",
+      "run_id": "verify-shep-20261029-223015-dfe7",
       "method": "brew",
       "steps": [
         {
@@ -70,7 +70,7 @@
       ],
       "manual_steps": [],
       "check": {
-        "command": "shep --version",
+        "command": "shep --version && which shep",
         "expected_signal": "shep 0.1.26"
       },
       "first_task": "shep welcome"
@@ -126,7 +126,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T19:48:56.916358+08:00",
+    "checked_at": "2026-10-29T22:47:04.960359+08:00",
     "runs": [
       {
         "id": "verify-shep-20261029-012344-4cd6",
@@ -257,7 +257,7 @@
         "cost_usd": 0.076973
       },
       {
-        "id": "verify-shep-20261029-193248-ea26",
+        "id": "verify-shep-20261029-223015-dfe7",
         "level": "function",
         "unverified_reason": null,
         "os": "macos",
@@ -265,7 +265,7 @@
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26",
-        "checked_at": "2026-10-29T19:48:56.916358+08:00",
+        "checked_at": "2026-10-29T22:47:04.960359+08:00",
         "tool_version": "0.1.26",
         "install_method": "brew",
         "replayed": true,
@@ -277,11 +277,20 @@
         ],
         "smoke_tests": [
           {
-            "command": "shep --version",
+            "command": "shep --version && which shep",
             "expected_signal": "shep 0.1.26",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "shep 0.1.26",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "shep --help",
+            "expected_signal": "A process manager for your flock",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "A process manager for your flock",
             "setup": [],
             "offline": true
           },
@@ -295,43 +304,76 @@
             "offline": true
           },
           {
-            "command": "shep flock",
-            "expected_signal": "hello",
+            "command": "shep start ./Flockfile.toml",
+            "expected_signal": "online",
             "exit_code": 0,
-            "passed": false,
-            "observed_excerpt": "0 api online 2509 0 - - 3.2M 7s - -",
-            "setup": [],
-            "offline": null
+            "passed": true,
+            "observed_excerpt": "0 api online 2648 0 - - 880.0K 0s - -",
+            "setup": [
+              {
+                "command": "mkdir -p bin && printf '#!/bin/sh\\nwhile true; do echo \"api listening on :8080\"; sleep 5; done\\n' > bin/api && printf '#!/bin/sh\\nwhile true; do echo \"worker ready\"; sleep 5; done\\n' > bin/worker && chmod +x bin/api bin/worker && printf '[[app]]\\nname = \"api\"\\nscript = \"./bin/api\"\\n\\n[[app]]\\nname = \"worker\"\\nscript = \"./bin/worker\"\\n' > Flockfile.toml && cat Flockfile.toml && ls -l bin/api bin/worker",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           },
           {
-            "command": "cat > /tmp/Flockfile2.toml <<'EOF'\n[[app]]\nname = \"api\"\nscript = \"/bin/sh\"\nargs = [\"-c\", \"echo api listening on :8080; sleep 300\"]\nEOF\nshep start /tmp/Flockfile2.toml && sleep 2 && shep bleats --no-follow --lines 4",
-            "expected_signal": "api | api listening on :8080",
+            "command": "sleep 2 && shep bleats --no-follow --lines 4",
+            "expected_signal": "api listening on :8080",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "api | api listening on :8080",
-            "setup": [],
+            "setup": [
+              {
+                "command": "mkdir -p bin && printf '#!/bin/sh\\nwhile true; do echo \"api listening on :8080\"; sleep 5; done\\n' > bin/api && printf '#!/bin/sh\\nwhile true; do echo \"worker ready\"; sleep 5; done\\n' > bin/worker && chmod +x bin/api bin/worker && printf '[[app]]\\nname = \"api\"\\nscript = \"./bin/api\"\\n\\n[[app]]\\nname = \"worker\"\\nscript = \"./bin/worker\"\\n' > Flockfile.toml && cat Flockfile.toml && ls -l bin/api bin/worker",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "shep flock",
+            "expected_signal": "online",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0 api online 2648 0 - - 3.2M 2s - -",
+            "setup": [
+              {
+                "command": "mkdir -p bin && printf '#!/bin/sh\\nwhile true; do echo \"api listening on :8080\"; sleep 5; done\\n' > bin/api && printf '#!/bin/sh\\nwhile true; do echo \"worker ready\"; sleep 5; done\\n' > bin/worker && chmod +x bin/api bin/worker && printf '[[app]]\\nname = \"api\"\\nscript = \"./bin/api\"\\n\\n[[app]]\\nname = \"worker\"\\nscript = \"./bin/worker\"\\n' > Flockfile.toml && cat Flockfile.toml && ls -l bin/api bin/worker",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "shep lookout",
+            "actually_needed": "shep lookout refuses when stdout is redirected and requires an interactive terminal, so it cannot be smoke-tested headless; used shep start/flock/bleats instead",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show welcome banner with tagline, api app online with listening log, and version 0.1.26.",
+          "observed": "Screenshots show shep 0.1.26 version, welcome tour with shepherd tagline, and help header.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-shep-20261029-193248-ea26/report.json",
+          "trace_path": "runs/verify/verify-shep-20261029-223015-dfe7/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-shep-20261029-193248-ea26/check-1-cmd4.judged.png",
-            "runs/verify/verify-shep-20261029-193248-ea26/check-2-cmd9.judged.png",
-            "runs/verify/verify-shep-20261029-193248-ea26/check-3-cmd2.judged.png"
+            "runs/verify/verify-shep-20261029-223015-dfe7/check-1-cmd2.judged.png",
+            "runs/verify/verify-shep-20261029-223015-dfe7/check-2-cmd4.judged.png",
+            "runs/verify/verify-shep-20261029-223015-dfe7/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.053592
+        "cost_usd": 0.06016
       }
     ]
   },
@@ -671,5 +713,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-29T19:48:56.922625+08:00"
+  "updated_at": "2026-10-29T22:47:04.961615+08:00"
 }
