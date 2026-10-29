@@ -443,7 +443,7 @@ def test_run_discover_end_to_end(tmp_path: Path) -> None:
     assert funnel["rules"] == {**funnel["rules"], "checked": 2, "passed": 1,
                                "by_label": {"tool": 1, "rejected": 1}}
     assert funnel["rules"]["reject_reasons"] == {"reject:fork": 1}
-    assert funnel["prescreen"]["status"] in ("skipped", "not_built")
+    assert funnel["prescreen"]["status"] in ("skipped", "not_run")
     assert any(line.startswith("github requests:") for line in lines)
     # A second run fetches no details again: nothing was pushed in between.
     before = len(fake.requests)

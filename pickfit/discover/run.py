@@ -26,10 +26,10 @@ def pipeline_db_path() -> Path:
 
 
 def prescreen_status() -> dict[str, Any]:
-    """P2.4 open-weight prescreen: not built until a Baseten key exists, so candidates pass through."""
+    """Why the P2.4 prescreen has no rows yet; the funnel shows its rows once it has run."""
     if get_env("BASETEN_API_KEY"):
-        return {"status": "not_built", "model": None, "cost_usd": 0.0,
-                "note": "BASETEN_API_KEY is set but the prescreen is not implemented yet"}
+        return {"status": "not_run", "model": None, "cost_usd": 0.0,
+                "note": "run `pickfit prescreen --limit N`"}
     return {"status": "skipped", "model": None, "cost_usd": 0.0,
             "note": "BASETEN_API_KEY not set; rule-passed candidates go straight to extraction"}
 

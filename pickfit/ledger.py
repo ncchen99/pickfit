@@ -83,6 +83,9 @@ class Caps:
 
 
 PIPELINE_CAPS = Caps(total_usd=100.0, daily_usd=pipeline_daily_cap)
+# Baseten's hackathon credits are separate from Meta's, so they get their own budget in the same
+# file. $100 of credits, $80 hard stop: the account has a card on file that is charged past them.
+BASETEN_CAPS = Caps(total_usd=80.0, daily_usd=lambda day: 25.0)
 
 
 def taipei_now(clock: Callable[[], datetime] | None = None) -> datetime:
@@ -290,3 +293,8 @@ class Ledger:
 def default_ledger() -> Ledger:
     """The shared ledger: PICKFIT_LEDGER if set, else ~/.pickfit/ledger.sqlite."""
     return Ledger(get_env("PICKFIT_LEDGER") or DEFAULT_PATH)
+
+
+def baseten_ledger() -> Ledger:
+    """The Baseten budget in the shared ledger file (prescreen calls on Muse Spark Open)."""
+    return Ledger(get_env("PICKFIT_LEDGER") or DEFAULT_PATH, budget="baseten", caps=BASETEN_CAPS)

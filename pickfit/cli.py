@@ -59,6 +59,15 @@ def _extract(args: argparse.Namespace) -> int:
     return 0 if summary["errors"] == 0 else 1
 
 
+def _prescreen(args: argparse.Namespace) -> int:
+    from pickfit.prescreen import run_prescreen
+
+    summary = run_prescreen(limit=args.limit, repo_ids=args.repo, force=args.force,
+                            concurrency=args.concurrency, review=not args.no_review)
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+    return 0 if summary["failed"] == 0 else 1
+
+
 def _profiles(args: argparse.Namespace) -> int:
     from pickfit.discover.run import pipeline_db_path
     from pickfit.discover.store import PipelineDB
@@ -96,6 +105,18 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     d.add_argument("--skip-details", action="store_true",
                    help="only search; do not fetch README, releases or files")
     d.set_defaults(func=_discover)
+
+    from pickfit.prescreen import DEFAULT_CONCURRENCY as PRESCREEN_CONCURRENCY
+
+    s = sub.add_parser("prescreen", help="screen rule-passed candidates with Muse Spark Open on Baseten "
+                                         "(paid; low-confidence and a 5%% sample reviewed by muse-spark-1.3)")
+    s.add_argument("--limit", type=int, required=True, help="candidates to screen in this run")
+    s.add_argument("--repo", action="append", help="screen this repo id (gh:<id>) or owner/name")
+    s.add_argument("--force", action="store_true", help="screen again even if already screened")
+    s.add_argument("--concurrency", type=int, default=PRESCREEN_CONCURRENCY,
+                   help=f"candidates in flight at once (default {PRESCREEN_CONCURRENCY}; Baseten allows 100 RPM)")
+    s.add_argument("--no-review", action="store_true", help="screen only; skip muse-spark-1.3 reviews")
+    s.set_defaults(func=_prescreen)
 
     e = sub.add_parser("extract", help="read candidates with a Meta model into ExtractionResult (paid)")
     e.add_argument("--limit", type=int, required=True, help="candidates to extract in this run")

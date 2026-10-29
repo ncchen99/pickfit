@@ -80,6 +80,26 @@ CREATE TABLE IF NOT EXISTS extractions (
     latency_s REAL
 );
 CREATE INDEX IF NOT EXISTS extractions_repo ON extractions (repo_id, id);
+CREATE TABLE IF NOT EXISTS prescreens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    repo_id TEXT NOT NULL REFERENCES candidates (repo_id),
+    run_id TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    role TEXT NOT NULL,
+    provider TEXT NOT NULL,
+    model TEXT NOT NULL,
+    reasoning_effort TEXT NOT NULL,
+    status TEXT NOT NULL,
+    sources_sha TEXT NOT NULL,
+    result TEXT,
+    keep INTEGER,
+    review_reason TEXT,
+    error TEXT,
+    usage TEXT,
+    cost_usd REAL NOT NULL DEFAULT 0,
+    latency_s REAL
+);
+CREATE INDEX IF NOT EXISTS prescreens_repo ON prescreens (repo_id, role, id);
 """
 
 
@@ -249,12 +269,53 @@ class PipelineDB:
             rows = conn.execute("SELECT * FROM extractions ORDER BY id").fetchall()
         return [_row_to_extraction(row) for row in rows]
 
+    # -- prescreen
+
+    def save_prescreen(self, *, repo_id: str, run_id: str, role: str, provider: str, model: str,
+                       reasoning_effort: str, status: str, sources_sha: str,
+                       result: dict[str, Any] | None, keep: bool | None, review_reason: str | None,
+                       error: str | None, usage: dict[str, Any] | None, cost_usd: float,
+                       latency_s: float | None) -> int:
+        with self._write() as conn:
+            cur = conn.execute(
+                "INSERT INTO prescreens (repo_id, run_id, created_at, role, provider, model, "
+                "reasoning_effort, status, sources_sha, result, keep, review_reason, error, usage, "
+                "cost_usd, latency_s) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (repo_id, run_id, taipei_now().isoformat(timespec="seconds"), role, provider, model,
+                 reasoning_effort, status, sources_sha, _dumps(result) if result is not None else None,
+                 None if keep is None else int(keep), review_reason, error,
+                 _dumps(usage) if usage is not None else None, cost_usd, latency_s))
+            return int(cur.lastrowid)
+
+    def prescreens(self) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute("SELECT * FROM prescreens ORDER BY id").fetchall()
+        return [_row_to_prescreen(row) for row in rows]
+
+    def prescreen_decisions(self) -> dict[str, dict[str, Any]]:
+        """Latest usable screen and review per repo, and the decision they add up to.
+
+        A review overrides the screen. Only rows with a parsed answer count; a repo whose
+        calls all failed has no decision and is treated as not screened.
+        """
+        latest: dict[str, dict[str, dict[str, Any]]] = {}
+        for p in self.prescreens():
+            if p["status"] == "ok":
+                latest.setdefault(p["repo_id"], {})[p["role"]] = p
+        out = {}
+        for repo_id, roles in latest.items():
+            final = roles.get("review") or roles.get("screen")
+            out[repo_id] = {"screen": roles.get("screen"), "review": roles.get("review"),
+                            "keep": final["keep"], "decided_by": final["role"],
+                            "sources_sha": final["sources_sha"]}
+        return out
+
     # -- funnel
 
     def funnel(self, prescreen: dict[str, Any] | None = None) -> dict[str, Any]:
         """Counts, models and cost per funnel stage (discover -> rules -> prescreen -> extract).
 
-        Prescreen has no rows of its own yet; the caller says how it ran.
+        With no prescreen rows, `prescreen` (from the caller) says why it did not run.
         """
         cands = self.candidates()
         with self._connect() as conn:
@@ -307,7 +368,8 @@ class PipelineDB:
                 "model": None,
                 "cost_usd": 0.0,
             },
-            "prescreen": prescreen or {"status": "not_run", "model": None, "cost_usd": 0.0},
+            "prescreen": self._prescreen_funnel() or prescreen
+                         or {"status": "not_run", "model": None, "cost_usd": 0.0},
             "extract": {
                 "candidates": len(latest),
                 "calls": len(all_extractions),
@@ -321,6 +383,42 @@ class PipelineDB:
                                      "cost_usd": round(cost_by_model[model], 6)}
                              for model, rows in sorted(latest_by_model.items())},
             },
+        }
+
+
+    def _prescreen_funnel(self) -> dict[str, Any] | None:
+        rows = self.prescreens()
+        if not rows:
+            return None
+        decisions = self.prescreen_decisions()
+        cost_by_model: Counter[str] = Counter()
+        tokens: Counter[str] = Counter()
+        for p in rows:
+            cost_by_model[p["model"]] += p["cost_usd"]
+            tokens.update({k: v for k, v in (p["usage"] or {}).items() if isinstance(v, int)})
+        both = [d for d in decisions.values() if d["screen"] and d["review"]]
+        agree = sum(1 for d in both if d["screen"]["keep"] == d["review"]["keep"])
+        sampled = [d for d in both if d["review"]["review_reason"] == "sample"]
+        sample_agree = sum(1 for d in sampled if d["screen"]["keep"] == d["review"]["keep"])
+        return {
+            "status": "ran",
+            "screened": sum(1 for d in decisions.values() if d["screen"]),
+            "kept": sum(1 for d in decisions.values() if d["keep"]),
+            "rejected": sum(1 for d in decisions.values() if not d["keep"]),
+            "decided_by": dict(Counter(d["decided_by"] for d in decisions.values())),
+            "reviewed": len(both),
+            "review_reasons": dict(Counter(d["review"]["review_reason"] for d in both)),
+            "review_overturned": len(both) - agree,
+            # The random sample is the unbiased agreement figure; reviews of low-confidence
+            # screens disagree more by design.
+            "sample_agreement": {"n": len(sampled), "agree": sample_agree,
+                                 "rate": round(sample_agree / len(sampled), 3) if sampled else None},
+            "calls": len(rows),
+            "by_status": dict(Counter(p["status"] for p in rows)),
+            "models": dict(Counter(p["model"] for p in rows)),
+            "tokens": dict(tokens),
+            "cost_by_model": {m: round(c, 6) for m, c in sorted(cost_by_model.items())},
+            "cost_usd": round(sum(p["cost_usd"] for p in rows), 6),
         }
 
 
@@ -346,3 +444,12 @@ def _row_to_extraction(row: sqlite3.Row) -> dict[str, Any]:
     e["usage"] = _loads(e["usage"])
     e["cache_hit"] = bool(e["cache_hit"])
     return e
+
+
+def _row_to_prescreen(row: sqlite3.Row) -> dict[str, Any]:
+    p = dict(row)
+    p["result"] = _loads(p["result"])
+    p["usage"] = _loads(p["usage"])
+    if p["keep"] is not None:
+        p["keep"] = bool(p["keep"])
+    return p

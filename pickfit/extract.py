@@ -316,6 +316,8 @@ def select_candidates(db: PipelineDB, *, model: str, limit: int, repo_ids: list[
                       force: bool = False) -> list[dict[str, Any]]:
     """Rule-passed candidates not yet extracted from the same sources by this model.
 
+    Candidates the prescreen rejected are skipped unless asked for by id; unscreened ones still go.
+
     Tools before uncertain ones, the two categories interleaved, most recently pushed first.
     """
     if repo_ids:
@@ -324,10 +326,13 @@ def select_candidates(db: PipelineDB, *, model: str, limit: int, repo_ids: list[
                 or set(c["aliases"]) & wanted]
     else:
         pool = db.candidates("WHERE rule_passed = 1")
+    prescreen = db.prescreen_decisions()
     todo = []
     for c in pool:
         if not (c.get("readme") or "").strip():
             continue
+        if not repo_ids and prescreen.get(c["repo_id"], {}).get("keep") is False:
+            continue  # the open-weight prescreen (or its review) said this is not usable software
         last = db.last_extraction(c["repo_id"], model)
         if not force and last and last["status"] in _DONE and last["sources_sha"] == sources_sha(
                 build_sources(c)):
