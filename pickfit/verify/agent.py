@@ -248,8 +248,9 @@ itself cannot work here.
 the README writes it, on the sample files if the work dir has them; otherwise create the input it needs \
 (a heredoc in run_command). If the example fails, treat it like an install error: read the message, add \
 the missing step, run the example again, and record the missing step as a pitfall. For a server or local \
-AI tool, start it with run_background, query its health or /v1/models endpoint, and run one tiny \
-inference if a model under about 300 MB is available.
+AI tool, start it with run_background, query its health or /v1/models endpoint, and, if it runs language \
+models, send it one tiny generation request with a model under about 300 MB (for a local AI tool the task \
+names public ones and how to cite the download).
 4. Judge exit codes by the README's meaning: a linter or validator that finds problems may correctly exit 1.
 5. Call finish once, at the end, alone.
 
@@ -263,7 +264,9 @@ smoke tests exactly, the smoke tests with the network off.
 
 Levels: install = installed, on PATH, --version or --help works. function = also a README example ran \
 with sensible output. service = a local server started and answered a health or models request. \
-inference = a tiny model actually generated text. unverified = it cannot be checked here (set \
+inference = a tiny model generated text in answer to a generation request (POST to /v1/chat/completions, \
+/v1/completions, /completion, /api/generate or /api/chat) sent to a server you started with \
+run_background; text from a one-shot CLI command counts as function. unverified = it cannot be checked here (set \
 unverified_reason). failed = it does not install or run within the budget (set blocking_error).
 
 Rules:
@@ -275,9 +278,35 @@ actually worked as a pitfall.
 - Budget: {max_commands} commands (run_command and run_background), {max_turns} turns, {minutes} minutes. \
 Combine steps with && when safe. list_dir and read_file do not use the command budget but do use turns.
 - You are not root: no sudo, no apt-get, nothing written outside $HOME and /tmp. Do not install language \
-toolchains (Rust, Go); pick another candidate. Do not pipe a downloaded script into a shell unread.
+toolchains (Rust, Go); pick another candidate. Do not pipe a downloaded script into a shell unread: \
+download it with a run_command that only downloads it (cite that as a step too), read it with read_file, \
+then run it.
 - After a failed command, hints from pickfit's rule table may follow. They can be wrong.
 """
+
+# Public models small enough for an inference check, licenses and URLs checked 2026-10-29.
+# stories260K: karpathy/tinyllamas weights (MIT), GGUF by ggml-org. SmolLM2-135M-Instruct:
+# HuggingFaceTB (Apache-2.0), GGUF by bartowski; Ollama's smollm2:135m is the same model.
+TINY_MODELS = """\
+Tiny models for the inference check (public, no account; keep downloads under about 300 MB):
+- GGUF, llama.cpp-style engines: stories260K (1.2 MB, MIT): mkdir -p ~/models && curl -fL -o \
+~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf
+- GGUF chat model, if the tool needs a chat template or rejects stories260K: SmolLM2-135M-Instruct Q8_0 \
+(145 MB, Apache-2.0): mkdir -p ~/models && curl -fL -o ~/models/SmolLM2-135M-Instruct-Q8_0.gguf \
+https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf
+- safetensors or a Hugging Face model id: HuggingFaceTB/SmolLM2-135M-Instruct (269 MB, Apache-2.0; \
+config.json, tokenizer.json, model.safetensors under \
+https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct/resolve/main/)
+- Ollama-style pull: smollm2:135m (271 MB, Apache-2.0)
+The inference check takes about four commands (download, server, a health or models request, generation): \
+keep them in reserve, and explore with read_file and list_dir, which are free, rather than --help runs. \
+If the tool has its own pull or download command, use it with one of these (or the smallest model its own \
+catalog lists, under about 300 MB) instead of curl. Download with its own run_command before you start the \
+server, so the server never fetches a model itself. Then send one generation request with temperature 0 \
+and about 16 max tokens as its own run_command, and cite it as a smoke test whose setup_ids list the \
+download first, then the server's run_background: a fresh box runs setups with the network on and the \
+check with it off. Its expected_signal must not depend on the sampled words (a JSON key such as \
+completion_tokens)."""
 
 
 def _escape(text: str) -> str:
@@ -312,6 +341,9 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
         "no accounts, no GUI.",
         f"The README is saved in the work dir as README.md ({len(task.readme)} characters).",
     ]
+    if box.gpu:
+        lines.insert(3, f"GPU: one NVIDIA {box.gpu} (driver and nvidia-smi present, no CUDA toolkit), so GPU "
+                        "examples can run here; use the smallest model the tool supports.")
     if task.files:
         names = ", ".join(sorted(task.files))
         lines.append(f"The work dir is also a sample project to try the tool on, with these files: {names}. "
@@ -333,6 +365,8 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
         for t in ex.smoke_test_candidates:
             shown = f" (README shows: {t.expected_output})" if t.expected_output else ""
             lines.append(f"- {t.command}{shown}")
+    if ex.category.value == "local_ai":
+        lines += ["", TINY_MODELS]
     pre = ex.prerequisites
     stated = [*(r.value for r in pre.runtimes), *(s.value for s in pre.system_packages)]
     if stated:

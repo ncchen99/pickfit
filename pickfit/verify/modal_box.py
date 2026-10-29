@@ -52,6 +52,10 @@ READ_TIMEOUT_S = 20  # read_file: a FIFO or a device would block `head` forever
 # Billed on max(request, use); request = limit here, so this is the cost per second alive.
 CORE_USD_PER_S = 0.00003942
 GIB_USD_PER_S = 0.00000667
+# GPU sandboxes run only under gVisor, can be preempted, and bill GPUs at the
+# plain rate (same note, read 2026-10-28). Only the small cards: a local AI
+# tool's smoke test runs the smallest model it supports.
+GPU_USD_PER_S = {"T4": 0.59 / 3600, "L4": 0.80 / 3600, "A10": 1.10 / 3600}
 BOX_UID = 1000
 # Never reachable from a box: cloud metadata and link-local, private and shared address space.
 BLOCKED_NETS = ("0.0.0.0/8", "10.0.0.0/8", "100.64.0.0/10", "169.254.0.0/16", "172.16.0.0/12",
@@ -115,8 +119,12 @@ class ModalBox(Box):
     image = sandbox_image_tag()
 
     def __init__(self, *, limits: BoxLimits = BoxLimits(), tags: dict[str, str] | None = None,
-                 app_name: str = APP_NAME, client: Any = None, log: Callable[[str], None] = print) -> None:
+                 app_name: str = APP_NAME, client: Any = None, gpu: str | None = None,
+                 log: Callable[[str], None] = print) -> None:
+        if gpu is not None and gpu not in GPU_USD_PER_S:
+            raise ValueError(f"gpu must be one of {sorted(GPU_USD_PER_S)}, got {gpu!r}")
         self.limits = limits
+        self.gpu = gpu
         self.tags = {"pickfit": "verify", **(tags or {})}
         self.app_name = app_name
         self.client = client
@@ -133,10 +141,13 @@ class ModalBox(Box):
         """Sandbox.create arguments other than app, image and client (separate so tests can check them)."""
         lim = self.limits
         cores = lim.cpus / 2  # Modal counts physical cores; one core is two vCPU
-        return {"runtime": "gvisor", "timeout": lim.lifetime_s, "cpu": (cores, cores),
-                "memory": (lim.memory_mb, lim.memory_mb), "workdir": "/",
-                "outbound_cidr_allowlist": ONLINE_CIDRS, "outbound_domain_allowlist": [],
-                "tags": self.tags}
+        kwargs = {"runtime": "gvisor", "timeout": lim.lifetime_s, "cpu": (cores, cores),
+                  "memory": (lim.memory_mb, lim.memory_mb), "workdir": "/",
+                  "outbound_cidr_allowlist": ONLINE_CIDRS, "outbound_domain_allowlist": [],
+                  "tags": self.tags}
+        if self.gpu:
+            kwargs["gpu"] = self.gpu
+        return kwargs
 
     def start(self) -> None:
         if self.started:
@@ -181,7 +192,8 @@ class ModalBox(Box):
         self.started = False
 
     def usd_per_second(self) -> float:
-        return self.limits.cpus / 2 * CORE_USD_PER_S + self.limits.memory_mb / 1024 * GIB_USD_PER_S
+        gpu = GPU_USD_PER_S[self.gpu] if self.gpu else 0.0
+        return self.limits.cpus / 2 * CORE_USD_PER_S + self.limits.memory_mb / 1024 * GIB_USD_PER_S + gpu
 
     # -- commands and files
 

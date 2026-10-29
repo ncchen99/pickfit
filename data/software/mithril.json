@@ -1,0 +1,475 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mithril",
+  "repo_id": "gh:1316603289",
+  "name": "Mithril",
+  "summary": "Orchestration engine that routes requests across LLM providers via one Ollama-compatible API.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "cli",
+    "gguf",
+    "inference",
+    "llm",
+    "local-llm",
+    "mcp",
+    "multi-agent",
+    "ollama",
+    "openai"
+  ],
+  "use_cases": [
+    "Backend for Junie",
+    "Backend for OpenCode",
+    "Backend for Open WebUI",
+    "Backend for LangChain / LlamaIndex",
+    "MCP server for Claude Desktop"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://giacomosaccaggi.github.io/Mithril/",
+  "repo": {
+    "url": "https://github.com/GiacomoSaccaggi/Mithril",
+    "full_name": "GiacomoSaccaggi/Mithril",
+    "created_at": "2026-07-29T22:08:21Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "gemini",
+      "openai"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install GiacomoSaccaggi/tap/mithril",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "mithril serve"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mithril-20261029-024859-a8c9",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install mithril-cli 2>&1",
+          "purpose": "Install mithril-cli with uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mithril --version 2>&1",
+        "expected_signal": "mithril 1.0.0"
+      },
+      "first_task": "curl -s http://localhost:16180/health 2>&1"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install mithril-cli",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "mithril serve"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v1.0.0",
+    "published_at": "2026-09-22T15:31:36Z",
+    "url": "https://github.com/GiacomoSaccaggi/Mithril/releases/tag/v1.0.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:49:55.748109+08:00",
+    "runs": [
+      {
+        "id": "verify-mithril-20261029-024859-a8c9",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:49:55.748109+08:00",
+        "tool_version": "1.0.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install mithril-cli 2>&1",
+            "purpose": "Install mithril-cli with uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mithril --version 2>&1",
+            "expected_signal": "mithril 1.0.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mithril 1.0.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://localhost:16180/health 2>&1",
+            "expected_signal": "\"status\":\"ok\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"model_loaded\":false,\"status\":\"ok\",\"version\":\"1.0.0\"}",
+            "setup": [
+              {
+                "command": "mithril serve 2>&1",
+                "background": true,
+                "port": 16180
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl http://localhost:16180/api/tags",
+            "expected_signal": "\"models\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"models\":[{\"details\":{\"family\":\"qwen2\",\"format\":\"gguf\",\"parameter_size\":\"1.5B\",\"quantization_level\":\"Q4_K_M\"},\"model\":\"qwen-1.5b\",\"name\":\"qwen2:1.5b\",\"size\":0},{\"details\":{\"family\":\"qwen2\",\"format\":\"gguf\",\"parameter_size\":\"7B\",\"quantization_level\":\"Q4_K_M\"},\"model\":\"qwen-7b\",\"name\":\"qwen2:7b\",\"siz…",
+            "setup": [
+              {
+                "command": "mithril serve 2>&1",
+                "background": true,
+                "port": 16180
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://localhost:16180/v1/models 2>&1",
+            "expected_signal": "\"object\":\"list\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"data\":[{\"created\":1700000000,\"id\":\"qwen2:1.5b\",\"object\":\"model\",\"owned_by\":\"mithril\"},{\"created\":1700000000,\"id\":\"qwen2:7b\",\"object\":\"model\",\"owned_by\":\"mithril\"},{\"created\":1700000000,\"id\":\"qwen2:14b\",\"object\":\"model\",\"owned_by\":\"mithril\"},{\"created\":1700000000,\"id\":\"llama:8b\",\"object\":\"model\",\"…",
+            "setup": [
+              {
+                "command": "mithril serve 2>&1",
+                "background": true,
+                "port": 16180
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install mithril-cli",
+            "actually_needed": "uv tool install mithril-cli (README pip install fails on PEP 668 externally-managed system)"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show mithril 1.0.0 version, health status ok, and api/tags returning a models list.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mithril-20261029-024859-a8c9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mithril-20261029-024859-a8c9/check-1-cmd2.judged.png",
+            "runs/verify/verify-mithril-20261029-024859-a8c9/check-2-cmd6.judged.png",
+            "runs/verify/verify-mithril-20261029-024859-a8c9/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.039789
+      }
+    ]
+  },
+  "scores": null,
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/GiacomoSaccaggi/Mithril",
+      "fetched_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/GiacomoSaccaggi/Mithril/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:31:12+08:00"
+    },
+    {
+      "id": "release:v1.0.0",
+      "kind": "release",
+      "url": "https://github.com/GiacomoSaccaggi/Mithril/releases/tag/v1.0.0",
+      "fetched_at": "2026-10-29T02:31:12+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A multi-model orchestration backend.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:14+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "mithril serve",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:14+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Combine any mix of LLM providers (Gemini, OpenAI, Anthropic, Groq, JEV, local GGUF) into a single Ollama-compatible API endpoint.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:14+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Mithril",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:14+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "| **Windows** | x86_64 | `mithril-windows-x64.zip` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:14+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "mithril config set gemini \"AIza...\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:14+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/1",
+      "source_id": "readme",
+      "quote": "mithril config set openai \"sk-...\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:14+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.0.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:31:12+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Point Junie at `http://localhost:16180`, select your fellowship as the model",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:14+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Same — Ollama API compatible",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:14+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Add as Ollama connection",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:14+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Use OpenAI API at `http://localhost:16180/v1/chat/completions`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:14+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "`mithril mcp-stdio`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:14+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install GiacomoSaccaggi/tap/mithril",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:14+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "pip install mithril-cli",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:14+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "pip install mithril-cli",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:14+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "| **Local GGUF** | jevos-v4, qwen-1.5b, qwen-14b, llama-8b | Direct inference via llama.cpp (free, private, fast for routing) |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:14+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:11+08:00",
+  "updated_at": "2026-10-29T02:49:55.749372+08:00"
+}

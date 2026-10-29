@@ -1,0 +1,405 @@
+{
+  "schema_version": "software.v1",
+  "slug": "lucinate",
+  "repo_id": "gh:1214586312",
+  "name": "lucinate",
+  "summary": "Terminal chat client for OpenClaw, Hermes, and OpenAI-compatible endpoints with streaming.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agents",
+    "cli",
+    "hermes-agent",
+    "lucinate",
+    "ollama",
+    "ollama-client",
+    "openai",
+    "openai-client",
+    "openclaw",
+    "openclaw-ui"
+  ],
+  "use_cases": [
+    "chat with OpenClaw agents from the terminal",
+    "switch between saved backend connections",
+    "run shell commands locally or on the gateway",
+    "manage scheduled cron jobs from the terminal",
+    "replay multi-step prompt routines"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://lucinate.ai",
+  "repo": {
+    "url": "https://github.com/lucinate-ai/lucinate",
+    "full_name": "lucinate-ai/lucinate",
+    "created_at": "2026-04-18T19:22:44Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Go 1.25+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-lucinate-20261029-025810-c0fa",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "TAG=$(curl -fsSL https://api.github.com/repos/lucinate-ai/lucinate/releases/latest | grep tag_name | cut -d\\\" -f4) && echo $TAG | tee /tmp/ltag && curl -fsSL -o /tmp/luc.tgz https://github.com/lucinate-ai/lucinate/releases/download/$TAG/lucinate_${TAG#v}_linux_amd64.tar.gz",
+          "purpose": "Download lucinate release tarball"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/luc.tgz -C /tmp && install -m 755 /tmp/lucinate ~/.local/bin/lucinate",
+          "purpose": "Extract and install lucinate binary"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "lucinate --version",
+        "expected_signal": "lucinate 1.25.0"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://raw.githubusercontent.com/lucinate-ai/lucinate/main/install/lucinate.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Approve device pairing on the gateway host with openclaw device approve"
+      ],
+      "check": null,
+      "first_task": "lucinate"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v1.25.0",
+    "published_at": "2026-08-02T23:31:07Z",
+    "url": "https://github.com/lucinate-ai/lucinate/releases/tag/v1.25.0"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:59:12.872634+08:00",
+    "runs": [
+      {
+        "id": "verify-lucinate-20261029-025810-c0fa",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:59:12.872634+08:00",
+        "tool_version": "1.25.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "TAG=$(curl -fsSL https://api.github.com/repos/lucinate-ai/lucinate/releases/latest | grep tag_name | cut -d\\\" -f4) && echo $TAG | tee /tmp/ltag && curl -fsSL -o /tmp/luc.tgz https://github.com/lucinate-ai/lucinate/releases/download/$TAG/lucinate_${TAG#v}_linux_amd64.tar.gz",
+            "purpose": "Download lucinate release tarball"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/luc.tgz -C /tmp && install -m 755 /tmp/lucinate ~/.local/bin/lucinate",
+            "purpose": "Extract and install lucinate binary"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lucinate --version",
+            "expected_signal": "lucinate 1.25.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lucinate 1.25.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lucinate --help",
+            "expected_signal": "Usage: lucinate",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: lucinate [--version|-v] [<command> [args...]]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/lucinate-ai/lucinate/main/install/lucinate.sh | sh",
+            "actually_needed": "Install to ~/.local/bin manually (fetch latest tag, download linux_amd64 tarball, extract, install to ~/.local/bin) because /usr/local/bin is not writable and sudo is unavailable"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The terminal shows lucinate 1.25.0 printed after --version.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lucinate-20261029-025810-c0fa/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lucinate-20261029-025810-c0fa/check-1-cmd10.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.071641
+      }
+    ]
+  },
+  "scores": null,
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/lucinate-ai/lucinate",
+      "fetched_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/lucinate-ai/lucinate/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:34:02+08:00"
+    },
+    {
+      "id": "release:v1.25.0",
+      "kind": "release",
+      "url": "https://github.com/lucinate-ai/lucinate/releases/tag/v1.25.0",
+      "fetched_at": "2026-10-29T02:34:02+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Create and delete agents directly from the TUI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:24+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "github_api",
+      "quote": "connect to the gateway, pick an agent, and chat with streaming responses",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:24+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Terminal-native chat client for OpenClaw, Hermes, Ollama and OpenAI-compatible providers.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:24+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Chat with your <a href=\"https://github.com/openclaw/openclaw\">OpenClaw</a> agents, a <a href=\"https://github.com/nousresearch/hermes-agent\">Hermes</a> profile, or any OpenAI-compatible endpoint",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:24+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "lucinate — the terminal-native AI chat client",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:24+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Or, if you have Go 1.25+:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:24+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "connect to an OpenClaw gateway over WebSocket.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:24+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.25.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:34:02+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Chat with your <a href=\"https://github.com/openclaw/openclaw\">OpenClaw</a> agents",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:24+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Switch between saved connections with `/connections`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:24+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "run locally with `!` or remotely on the gateway with `!!`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:24+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "list, edit, run, create, and duplicate scheduled jobs without leaving the terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:24+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "replay them with `/routine <name>`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:24+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://raw.githubusercontent.com/lucinate-ai/lucinate/main/install/lucinate.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:24+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "connect to an OpenClaw gateway over WebSocket.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:38:24+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-29T02:59:12.873552+08:00"
+}

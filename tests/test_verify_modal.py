@@ -107,6 +107,15 @@ def test_create_kwargs_use_gvisor_hard_limits_and_an_allowlist():
     assert ModalBox().usd_per_second() == pytest.approx(0.00003942 + 2 * 0.00000667)
 
 
+def test_gpu_box_asks_modal_for_the_card_and_prices_it():
+    assert "gpu" not in ModalBox().create_kwargs()
+    box = ModalBox(gpu="T4")
+    assert box.create_kwargs()["gpu"] == "T4" and box.create_kwargs()["runtime"] == "gvisor"
+    assert box.usd_per_second() == pytest.approx(ModalBox().usd_per_second() + 0.59 / 3600)
+    with pytest.raises(ValueError, match="gpu must be one of"):
+        ModalBox(gpu="H100")
+
+
 def test_commands_run_as_the_box_user_with_limits_and_no_host_env(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("MODEL_API_KEY", "LLM_123_never")
     box = started(FakeSandbox([(0, [b"hel", b"lo\n"], [b"warn\n"])]), BoxLimits(pids=256, nofile=1024, home_mb=1536))

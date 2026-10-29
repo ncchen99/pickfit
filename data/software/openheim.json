@@ -1,0 +1,378 @@
+{
+  "schema_version": "software.v1",
+  "slug": "openheim",
+  "repo_id": "gh:1142378550",
+  "name": "openheim",
+  "summary": "Multi-provider LLM agent runtime with TUI, CLI, and ACP server.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent",
+    "anthropic",
+    "cli",
+    "llm",
+    "ollama",
+    "openai",
+    "websocket"
+  ],
+  "use_cases": [
+    "list files in the current directory",
+    "read, write and edit files via agent tools",
+    "search codebase and fetch web content",
+    "save and recall long-term memory notes",
+    "delegate tasks to subagents"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://openheim.io",
+  "repo": {
+    "url": "https://github.com/weirdstuff-dev/openheim",
+    "full_name": "weirdstuff-dev/openheim",
+    "created_at": "2026-01-26T10:31:15Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Rust 1.91+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "API key for at least one supported provider"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-openheim-20261029-030311-aac5",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fSL https://github.com/weirdstuff-dev/openheim/releases/download/v0.17.1/openheim-v0.17.1-x86_64-unknown-linux-gnu.tar.gz -o /tmp/openheim.tar.gz && mkdir -p /tmp/openheim-rel ~/.local/bin && tar -xzf /tmp/openheim.tar.gz -C /tmp/openheim-rel && cp /tmp/openheim-rel/openheim ~/.local/bin/openheim && chmod +x ~/.local/bin/openheim && ls -l ~/.local/bin/openheim",
+          "purpose": "Download prebuilt Linux x86_64 release and install to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "openheim --help",
+        "expected_signal": "Usage: openheim [OPTIONS] [COMMAND]"
+      },
+      "first_task": "openheim init"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.17.1",
+    "published_at": "2026-10-26T06:29:08Z",
+    "url": "https://github.com/weirdstuff-dev/openheim/releases/tag/v0.17.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T03:03:58.570501+08:00",
+    "runs": [
+      {
+        "id": "verify-openheim-20261029-030311-aac5",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T03:03:58.570501+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fSL https://github.com/weirdstuff-dev/openheim/releases/download/v0.17.1/openheim-v0.17.1-x86_64-unknown-linux-gnu.tar.gz -o /tmp/openheim.tar.gz && mkdir -p /tmp/openheim-rel ~/.local/bin && tar -xzf /tmp/openheim.tar.gz -C /tmp/openheim-rel && cp /tmp/openheim-rel/openheim ~/.local/bin/openheim && chmod +x ~/.local/bin/openheim && ls -l ~/.local/bin/openheim",
+            "purpose": "Download prebuilt Linux x86_64 release and install to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "openheim --help",
+            "expected_signal": "Usage: openheim [OPTIONS] [COMMAND]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: openheim [OPTIONS] [COMMAND]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "openheim init",
+            "expected_signal": "Config file created at /home/sbx/.openheim/config.toml",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Config file created at /home/sbx/.openheim/config.toml",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install openheim (requires Rust 1.91+)",
+            "actually_needed": "Download prebuilt x86_64-unknown-linux-gnu tarball from GitHub releases v0.17.1 and copy openheim binary to ~/.local/bin; no Rust toolchain needed"
+          },
+          {
+            "readme_said": "Standard --version flag assumed available",
+            "actually_needed": "openheim supports --help but not --version (exits 2 with 'unexpected argument --version'); use openheim --help"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show init creating the config file and --help printing usage with commands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-openheim-20261029-030311-aac5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-openheim-20261029-030311-aac5/check-1-cmd6.judged.png",
+            "runs/verify/verify-openheim-20261029-030311-aac5/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.048216
+      }
+    ]
+  },
+  "scores": null,
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/weirdstuff-dev/openheim",
+      "fetched_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/weirdstuff-dev/openheim/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:33:53+08:00"
+    },
+    {
+      "id": "release:v0.17.1",
+      "kind": "release",
+      "url": "https://github.com/weirdstuff-dev/openheim/releases/tag/v0.17.1",
+      "fetched_at": "2026-10-29T02:33:53+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "a headless CLI, an ACP stdio agent (for Zed, Claude Code, and other ACP clients)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:29+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "cargo install openheim",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:29+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "built-in shell, file read/write/edit, directory listing, ripgrep-style search, web fetch",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:29+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**A fast, multi-provider LLM agent runtime built in Rust.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:29+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# <img src=\"openheim-logo.png\" width=\"36\" height=\"36\" alt=\"\" valign=\"middle\" /> openheim",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:29+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "- Rust 1.91+",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:29+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "An API key for at least one supported provider",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:29+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.17.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:33:53+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "openheim run \"List the files in the current directory\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:29+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Tool execution** — built-in shell, file read/write/edit, directory listing",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:29+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "ripgrep-style search, web fetch",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:29+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "ask the agent to remember something and it saves a note via the `remember` tool",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:29+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "delegate a self-contained task to another agent (its own persona, model, and tools) via the always-on `delegate_task` tool",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:29+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "OpenAI, Anthropic Claude, Google Gemini, and any OpenAI-compatible endpoint (Ollama, vLLM, LM Studio, etc.)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:29+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-29T03:03:58.571640+08:00"
+}

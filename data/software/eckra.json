@@ -1,0 +1,426 @@
+{
+  "schema_version": "software.v1",
+  "slug": "eckra",
+  "repo_id": "gh:1138379369",
+  "name": "Eckra",
+  "summary": "AI-powered Git tool that writes commit messages and manages staging, branches, and remotes in one dashboard.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "ai-commit",
+    "anthropic",
+    "cli",
+    "commit-message",
+    "gemini",
+    "git",
+    "lazygit",
+    "llm",
+    "lm-studio"
+  ],
+  "use_cases": [
+    "generate AI-assisted commit message from diff",
+    "view status and staged files",
+    "generate AI project timeline from commit history",
+    "browse interactive commit graph across branches",
+    "print release notes since last tag"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://www.npmjs.com/package/eckra",
+  "repo": {
+    "url": "https://github.com/sudoeren/eckra",
+    "full_name": "sudoeren/eckra",
+    "created_at": "2026-01-20T15:45:32Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js 22.13 or newer"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/sudoeren/eckra/master/scripts/install.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "eckra"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-eckra-20261029-025912-ecf4",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g eckra",
+          "purpose": "Install eckra via npm candidate 1"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "eckra --version",
+        "expected_signal": "1.6.1"
+      },
+      "first_task": "eckra doctor"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://raw.githubusercontent.com/sudoeren/eckra/master/scripts/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "eckra"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v1.6.1",
+    "published_at": "2026-10-23T10:35:23Z",
+    "url": "https://github.com/sudoeren/eckra/releases/tag/v1.6.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T03:01:45.260279+08:00",
+    "runs": [
+      {
+        "id": "verify-eckra-20261029-025912-ecf4",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T03:01:45.260279+08:00",
+        "tool_version": "1.6.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g eckra",
+            "purpose": "Install eckra via npm candidate 1"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "eckra --version",
+            "expected_signal": "1.6.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.6.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "eckra --help",
+            "expected_signal": "Usage: eckra [options] [command]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: eckra [options] [command]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "eckra doctor",
+            "expected_signal": "Summary: 4 passed, 1 failed",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "Summary: 4 passed, 1 failed",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "`eckra status` shows status and staged files",
+            "actually_needed": "first run has no config so `eckra status` launches the interactive onboarding wizard; seeding ~/.eckra/config.json with {\"onboarded\":true} skips it, but `eckra status` still ends with an interactive `Press Enter...` prompt and hangs when stdin is closed"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "eckra doctor shows Summary: 4 passed, 1 failed with expected provider failure, and --version prints 1.6.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-eckra-20261029-025912-ecf4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-eckra-20261029-025912-ecf4/check-1-cmd5.judged.png",
+            "runs/verify/verify-eckra-20261029-025912-ecf4/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.136055
+      }
+    ]
+  },
+  "scores": null,
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/sudoeren/eckra",
+      "fetched_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/sudoeren/eckra/blob/master/README.md",
+      "fetched_at": "2026-10-29T02:33:52+08:00"
+    },
+    {
+      "id": "release:v1.6.1",
+      "kind": "release",
+      "url": "https://github.com/sudoeren/eckra/releases/tag/v1.6.1",
+      "fetched_at": "2026-10-29T02:33:52+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "eckra is an interactive, AI-powered Git management tool.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:45+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "npm install -g eckra",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:45+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "eckra is an interactive, AI-powered Git management tool.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:45+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "AI-powered Git management: commits, stories, and the whole repo in one place",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:45+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1 align=\"center\">Eckra</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:45+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "npm and Homebrew need Node.js 22.13 or newer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:45+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.6.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:33:52+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "`eckra commit`  | `c`   | AI-assisted commit flow",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:45+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Status and staged files",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:45+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "AI project timeline",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:45+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Interactive commit graph",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:45+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Print release notes since the last tag (non-interactive)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:45+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/sudoeren/eckra/master/scripts/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:45+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/sudoeren/eckra/master/scripts/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:45+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://raw.githubusercontent.com/sudoeren/eckra/master/scripts/install.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:45+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "no API key needed to start, cloud providers are optional",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:45+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-29T03:01:45.261452+08:00"
+}

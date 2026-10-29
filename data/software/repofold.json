@@ -1,0 +1,413 @@
+{
+  "schema_version": "software.v1",
+  "slug": "repofold",
+  "repo_id": "gh:1301604274",
+  "name": "RepoFold",
+  "summary": "Generates a cited documentation wiki from a local git repo using local Ollama models.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "cli",
+    "development",
+    "development-tools",
+    "documentation",
+    "llm",
+    "offline",
+    "ollama",
+    "tree-sitter",
+    "typescript"
+  ],
+  "use_cases": [
+    "generate a documentation wiki from a local git repository",
+    "preview a previously generated wiki"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://repofold.dev",
+  "repo": {
+    "url": "https://github.com/Neilbenji/repofold",
+    "full_name": "Neilbenji/repofold",
+    "created_at": "2026-07-15T12:42:15Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js 20+"
+    ],
+    "system_packages": [
+      "git"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-repofold-20261029-025701-407b",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone https://github.com/Neilbenji/repofold.git && ls repofold && cat repofold/package.json",
+          "purpose": "clone repofold source per candidate 1"
+        },
+        {
+          "command": "cd repofold && npm install",
+          "purpose": "install dependencies with npm per README"
+        },
+        {
+          "command": "cd repofold && npm run build",
+          "purpose": "build TypeScript CLI per README"
+        },
+        {
+          "command": "cd repofold && npm install -g . && which repofold && repofold --version",
+          "purpose": "global install so repofold is on PATH"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "repofold --version",
+        "expected_signal": "0.1.0"
+      },
+      "first_task": "repofold serve /tmp/demorepo --port 4173"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "AGPL-3.0",
+  "processing": "local",
+  "last_release": null,
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:59:12.830184+08:00",
+    "runs": [
+      {
+        "id": "verify-repofold-20261029-025701-407b",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:59:12.830184+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/Neilbenji/repofold.git && ls repofold && cat repofold/package.json",
+            "purpose": "clone repofold source per candidate 1"
+          },
+          {
+            "command": "cd repofold && npm install",
+            "purpose": "install dependencies with npm per README"
+          },
+          {
+            "command": "cd repofold && npm run build",
+            "purpose": "build TypeScript CLI per README"
+          },
+          {
+            "command": "cd repofold && npm install -g . && which repofold && repofold --version",
+            "purpose": "global install so repofold is on PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "repofold --version",
+            "expected_signal": "0.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.1.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "repofold --help",
+            "expected_signal": "Usage: repofold [options] [command]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: repofold [options] [command]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "repofold generate --help",
+            "expected_signal": "Usage: repofold generate [options] [path]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: repofold generate [options] [path]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "repofold serve --help",
+            "expected_signal": "Usage: repofold serve [options] [path]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: repofold serve [options] [path]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "repofold serve /tmp/demorepo --port 4173",
+            "expected_signal": "No wiki found at /tmp/demorepo/repofold-wiki.",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "No wiki found at /tmp/demorepo/repofold-wiki. Run \"repofold generate\" first.",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/demorepo && cd /tmp/demorepo && git init -q 2>/dev/null; echo 'console.log(\"hello\");' > hello.js && git add -A && git -c user.email=t@t.t -c user.name=t commit -qm init && git log --oneline && ls -la",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "git clone + npm install && npm run build && npm install -g .",
+            "actually_needed": "npm install worked despite packageManager pin pnpm@10.14.0; then `npm run build` (tsc + copy-assets) then `npm install -g .` to put repofold 0.1.0 on ~/.local/bin PATH"
+          },
+          {
+            "readme_said": "repofold generate path/to/your/repo --serve",
+            "actually_needed": "`repofold generate /tmp/demorepo` exits 1 with 'Cannot reach Ollama at http://localhost:11434. Is it running?' — full wiki generation needs Ollama + qwen3:8b (multi-GB) + large context (OLLAMA_CONTEXT_LENGTH=24576) and 15-30+ min, not available in sandbox"
+          },
+          {
+            "readme_said": "repofold serve [path]",
+            "actually_needed": "`repofold serve /tmp/demorepo` exits 1 with 'No wiki found at /tmp/demorepo/repofold-wiki. Run \"repofold generate\" first.' until a wiki has been generated"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show the expected missing-wiki message for serve and version 0.1.0 for --version.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-repofold-20261029-025701-407b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-repofold-20261029-025701-407b/check-1-cmd11.judged.png",
+            "runs/verify/verify-repofold-20261029-025701-407b/check-2-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.055265
+      }
+    ]
+  },
+  "scores": null,
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Neilbenji/repofold",
+      "fetched_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Neilbenji/repofold/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:33:05+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "neither from the CLI nor from the generated site.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:43+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "repofold generate path/to/your/repo --serve",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:43+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "generate or update the wiki (default command)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:43+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Generate a documentation wiki from a local git repository, fully offline.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:43+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# RepoFold",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:43+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requirements: Node.js 20+, git, and [Ollama](https://ollama.com).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:43+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Requirements: Node.js 20+, git, and [Ollama](https://ollama.com).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:43+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "No telemetry, no analytics, no external requests of any kind",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:43+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Generate a documentation wiki from a local git repository, fully offline.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:43+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "preview a previously generated wiki",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:43+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "You can use RepoFold freely, including commercially and inside your company.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:43+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Your code never leaves your machine: the only network traffic is to your own local",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:43+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:05+08:00",
+  "updated_at": "2026-10-29T02:59:12.831608+08:00"
+}

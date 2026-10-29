@@ -1,0 +1,415 @@
+{
+  "schema_version": "software.v1",
+  "slug": "brainstorm-mcp",
+  "repo_id": "gh:1164440516",
+  "name": "brainstorm-mcp",
+  "summary": "MCP server that runs multi-round debates between AI models and returns a synthesis.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "ai-agents",
+    "ai-debate",
+    "brainstorming",
+    "claude",
+    "claude-code",
+    "deepseek",
+    "gemini",
+    "groq",
+    "llm"
+  ],
+  "use_cases": [
+    "compare Redis vs PostgreSQL for session storage",
+    "review a diff for security issues",
+    "debate whether to use GraphQL or REST"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://www.npmjs.com/package/brainstorm-mcp",
+  "repo": {
+    "url": "https://github.com/spranab/brainstorm-mcp",
+    "full_name": "spranab/brainstorm-mcp",
+    "created_at": "2026-02-23T04:44:43Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g brainstorm-mcp",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "brainstorm-mcp"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-brainstorm-mcp-20261029-024720-d6b5",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g brainstorm-mcp",
+          "purpose": "Global npm install of brainstorm-mcp"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "which brainstorm-mcp && npm list -g brainstorm-mcp",
+        "expected_signal": "brainstorm-mcp@1.8.0"
+      },
+      "first_task": "which brainstorm-mcp && npm list -g brainstorm-mcp"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g brainstorm-mcp",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "brainstorm-mcp"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v1.8.0",
+    "published_at": "2026-09-29T23:47:01Z",
+    "url": "https://github.com/spranab/brainstorm-mcp/releases/tag/v1.8.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:48:59.531533+08:00",
+    "runs": [
+      {
+        "id": "verify-brainstorm-mcp-20261029-024720-d6b5",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:48:59.531533+08:00",
+        "tool_version": "1.8.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g brainstorm-mcp",
+            "purpose": "Global npm install of brainstorm-mcp"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "which brainstorm-mcp && npm list -g brainstorm-mcp",
+            "expected_signal": "brainstorm-mcp@1.8.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "└── brainstorm-mcp@1.8.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "node /tmp/probe.mjs",
+            "expected_signal": "TOOLS:brainstorm",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "TOOLS:brainstorm,brainstorm_respond,brainstorm_collect,brainstorm_quick,brainstorm_review,list_providers,add_provider",
+            "setup": [
+              {
+                "command": "cat > /tmp/probe.mjs <<'EOF'\nimport { spawn } from 'node:child_process';\nconst child = spawn('brainstorm-mcp', [], { stdio: ['pipe','pipe','pipe'] });\nlet buf = '';\nconst responses = [];\nchild.stdout.on('data', d => { buf += d.toString(); });\nchild.stderr.on('data', d => { process.stderr.write(d); });\nfunction send(obj){ child.stdin.write(JSON.stringify(obj)+'\\n'); }\nfunction waitFor(id, timeoutMs=10000){\n  return new Promise((resolve,reject)=>{\n    const start=Date.now();\n    const t=setInterval(()=>{\n      const lines=buf.split('\\n');\n      for(const line of lines){\n        const s=line.trim();\n        if(!s.startsWith('{')) continue;\n        try{\n          const o=JSON.parse(s);\n          if(o.id===id){ clearInterval(t); resolve(o); return; }\n        }catch{}\n      }\n      if(Date.now()-start>timeoutMs){ clearInterval(t); reject(new Error('timeout waiting id '+id+' buf:'+buf.slice(0,2000))); }\n    },100);\n  });\n}\nawait new Promise(r=>setTimeout(r,1500));\nsend({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'probe',version:'1.0'}}});\nconst init = await waitFor(1);\nconsole.log('INITIALIZE_OK:'+JSON.stringify(init.result?.serverInfo||init.result||init).slice(0,500));\nsend({jsonrpc:'2.0',method:'notifications/initialized'});\nawait new Promise(r=>setTimeout(r,500));\nsend({jsonrpc:'2.0',id:2,method:'tools/list',params:{}});\nconst tools = await waitFor(2);\nconst names=(tools.result?.tools||[]).map(t=>t.name);\nconsole.log('TOOLS:'+names.join(','));\nfor(const n of ['brainstorm','brainstorm_quick','brainstorm_review','list_providers']){ if(!names.includes(n)) throw new Error('missing tool '+n); }\nconsole.log('PROBE_PASS');\n// also try list_providers via tools/call without keys\nsend({jsonrpc:'2.0',id:3,method:'tools/call',params:{name:'list_providers',arguments:{}}});\nconst lp = await waitFor(3);\nconsole.log('LIST_PROVIDERS_OK:'+JSON.stringify(lp.result||lp.error).slice(0,2000));\nchild.kill();\nsetTimeout(()=>process.exit(0),500);\nEOF\necho written && wc -l /tmp/probe.mjs",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Manual Install shows `brainstorm-mcp` with no documented flags, implying standard --help/--version checks.",
+            "actually_needed": "Binary takes no --help/--version flags: any args are ignored and it starts the MCP server on stdio printing 'Brainstorm MCP server running on stdio' to stderr and blocks; version is only reported via package.json (1.8.0) and MCP initialize serverInfo."
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show brainstorm-mcp 1.8.0 installed and MCP probe initializing with brainstorm tools and passing.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-brainstorm-mcp-20261029-024720-d6b5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-brainstorm-mcp-20261029-024720-d6b5/check-1-cmd5.judged.png",
+            "runs/verify/verify-brainstorm-mcp-20261029-024720-d6b5/check-2-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.049218
+      }
+    ]
+  },
+  "scores": null,
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/spranab/brainstorm-mcp",
+      "fetched_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/spranab/brainstorm-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:30:44+08:00"
+    },
+    {
+      "id": "release:v1.8.0",
+      "kind": "release",
+      "url": "https://github.com/spranab/brainstorm-mcp/releases/tag/v1.8.0",
+      "fetched_at": "2026-10-29T02:30:44+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "as an MCP server that needs no API keys in hosted mode.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:39+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "claude mcp add brainstorm -- npx -y brainstorm-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:39+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "brainstorm-mcp runs multi-round debates between GPT, Gemini, DeepSeek, Claude",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:39+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# brainstorm-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:39+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "**Cross-platform** — Works on macOS, Windows, and Linux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:39+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "In **hosted mode**, no external API calls are made.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:39+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.8.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:30:44+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Use brainstorm_quick to compare Redis vs PostgreSQL for session storage",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:39+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Review this diff for security issues",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:39+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Brainstorm using opus, sonnet, and haiku about whether we should use GraphQL or REST.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:39+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g brainstorm-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:39+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g brainstorm-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:39+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g brainstorm-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:39+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "In **API mode**, prompts are sent directly from your machine to the model providers you configure",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:39+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:27:54+08:00",
+  "updated_at": "2026-10-29T02:48:59.532690+08:00"
+}

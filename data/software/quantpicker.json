@@ -1,0 +1,443 @@
+{
+  "schema_version": "software.v1",
+  "slug": "quantpicker",
+  "repo_id": "gh:1430563404",
+  "name": "quantpicker",
+  "summary": "Measures GGUF quants on your GPU for speed and quality loss to pick the fastest acceptable one.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "benchmark",
+    "gguf",
+    "llama-cpp",
+    "llm",
+    "local-llm",
+    "quantization",
+    "rust"
+  ],
+  "use_cases": [
+    "measure GGUF quants and pick fastest within quality limit",
+    "find GGUF repos on Hugging Face",
+    "list quants and check what fits GPU memory without downloading"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/alleyxd/quantpicker",
+    "full_name": "alleyxd/quantpicker",
+    "created_at": "2026-10-23T04:13:31Z",
+    "archived": false
+  },
+  "platforms": [
+    "windows",
+    "linux",
+    "macos"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": "optional",
+    "apple_silicon_only": false,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "HF_TOKEN"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install quantpicker",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "quantpicker search qwen3 8b"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-quantpicker-20261029-024548-1d72",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install quantpicker",
+          "purpose": "isolated install of README pip package via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "quantpicker --version",
+        "expected_signal": "quantpicker 0.1.0"
+      },
+      "first_task": "quantpicker search qwen3 8b"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install quantpicker",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "quantpicker search qwen3 8b"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.1.0",
+    "published_at": "2026-10-23T04:16:54Z",
+    "url": "https://github.com/alleyxd/quantpicker/releases/tag/v0.1.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:49:04.881701+08:00",
+    "runs": [
+      {
+        "id": "verify-quantpicker-20261029-024548-1d72",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:49:04.881701+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install quantpicker",
+            "purpose": "isolated install of README pip package via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "quantpicker --version",
+            "expected_signal": "quantpicker 0.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "quantpicker 0.1.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "quantpicker --help",
+            "expected_signal": "Usage: quantpicker [OPTIONS] [REPO]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: quantpicker [OPTIONS] [REPO]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "quantpicker search qwen3 8b",
+            "expected_signal": "unsloth/Qwen3-8B-GGUF",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ unsloth/Qwen3-8B-GGUF ┆ 135K ┆ 158 │",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "quantpicker list unsloth/Qwen3-8B-GGUF --vram 24",
+            "expected_signal": "unsloth/Qwen3-8B-GGUF on 24.0 GiB",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "unsloth/Qwen3-8B-GGUF on 24.0 GiB (keeping 1.5 GiB for context):",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "quantpicker list unsloth/Qwen3-8B-GGUF",
+            "actually_needed": "quantpicker list unsloth/Qwen3-8B-GGUF --vram 24"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show search results containing unsloth/Qwen3-8B-GGUF, its quant size table on 24.0 GiB, and version quantpicker 0.1.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-quantpicker-20261029-024548-1d72/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-quantpicker-20261029-024548-1d72/check-1-cmd5.judged.png",
+            "runs/verify/verify-quantpicker-20261029-024548-1d72/check-2-cmd7.judged.png",
+            "runs/verify/verify-quantpicker-20261029-024548-1d72/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.042253
+      }
+    ]
+  },
+  "scores": null,
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/alleyxd/quantpicker",
+      "fetched_at": "2026-10-29T02:28:11+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/alleyxd/quantpicker/blob/main/README.md",
+      "fetched_at": "2026-10-28T19:05:54+08:00"
+    },
+    {
+      "id": "release:v0.1.0",
+      "kind": "release",
+      "url": "https://github.com/alleyxd/quantpicker/releases/tag/v0.1.0",
+      "fetched_at": "2026-10-28T19:05:54+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "quantpicker unsloth/Qwen3-8B-GGUF",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "quantpicker unsloth/Qwen3-8B-GGUF",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "it downloads each GGUF quant, times it with `llama-bench`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Which quant of a model should you run? Q4_K_M is the usual answer, but it's a guess.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# quantpicker",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "There are also binaries for Windows, Linux\nand macOS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "force a backend: cuda, vulkan, metal, cpu",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/prerequisites/apple_silicon_only",
+      "source_id": "release:v0.1.0",
+      "quote": "Binaries for Windows (x64), Linux (x64) and macOS (Apple Silicon)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "it downloads each GGUF quant",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "Gated repos work with `HF_TOKEN` set.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:11+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:11+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:11+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:11+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.1.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-28T19:05:54+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "measure and pick",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "find GGUF repos",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "show quants and what fits, no download",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install quantpicker",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "pip install quantpicker",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "pip install quantpicker",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "measures it on\nyour own GPU",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:37:52+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-28T19:03:23+08:00",
+  "updated_at": "2026-10-29T02:49:04.882391+08:00"
+}

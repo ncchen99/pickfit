@@ -1,0 +1,457 @@
+{
+  "schema_version": "software.v1",
+  "slug": "quartermaster",
+  "repo_id": "gh:1272469664",
+  "name": "Quartermaster",
+  "summary": "Local platform that auto-configures models for VRAM and serves chat, images, voice via API.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "anthropic-api",
+    "gguf",
+    "golang",
+    "image-generation",
+    "inference-server",
+    "llamacpp",
+    "llm",
+    "llm-inference",
+    "llm-serving",
+    "local-ai"
+  ],
+  "use_cases": [
+    "chat privately with local LLMs in household",
+    "generate and edit images with local diffusion models",
+    "synthesize speech and transcribe audio locally",
+    "search Hugging Face and download quants from app",
+    "serve local models via OpenAI-compatible API"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://quartermaster-labs.github.io/Quartermaster/",
+  "repo": {
+    "url": "https://github.com/Quartermaster-Labs/Quartermaster",
+    "full_name": "Quartermaster-Labs/Quartermaster",
+    "created_at": "2026-06-17T16:30:45Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Go 1.26+ and Node.js 24 for the UI"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "docker",
+      "steps": [
+        {
+          "command": "docker run -d --name quartermaster \\\n  -p 127.0.0.1:1250:8080 \\\n  -v quartermaster-data:/data \\\n  -v /path/to/models:/data/models \\\n  ghcr.io/quartermaster-labs/quartermaster:latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "curl http://host/logs                          # up to the last 10KB"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-quartermaster-20261029-024440-0dd7",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -sL -o /tmp/qm-SHA256SUMS https://github.com/Quartermaster-Labs/Quartermaster/releases/download/v1.7.2/SHA256SUMS && cat /tmp/qm-SHA256SUMS && mkdir -p ~/.local/bin && curl -sL -o ~/.local/bin/quartermaster https://github.com/Quartermaster-Labs/Quartermaster/releases/download/v1.7.2/quartermaster-linux-amd64 && chmod +x ~/.local/bin/quartermaster && ls -lh ~/.local/bin/quartermaster && sha256sum ~/.local/bin/quartermaster",
+          "purpose": "download verified linux-amd64 binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "quartermaster --version",
+        "expected_signal": "version: v1.7.2"
+      },
+      "first_task": "curl -s http://127.0.0.1:12501/logs"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "docker",
+      "steps": [
+        {
+          "command": "docker run -d --name quartermaster \\\n  -p 127.0.0.1:1250:8080 \\\n  -v quartermaster-data:/data \\\n  -v /path/to/models:/data/models \\\n  ghcr.io/quartermaster-labs/quartermaster:latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "curl http://host/logs                          # up to the last 10KB"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.7.2",
+    "published_at": "2026-10-15T09:20:39Z",
+    "url": "https://github.com/Quartermaster-Labs/Quartermaster/releases/tag/v1.7.2"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:45:41.398964+08:00",
+    "runs": [
+      {
+        "id": "verify-quartermaster-20261029-024440-0dd7",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:45:41.398964+08:00",
+        "tool_version": "v1.7.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sL -o /tmp/qm-SHA256SUMS https://github.com/Quartermaster-Labs/Quartermaster/releases/download/v1.7.2/SHA256SUMS && cat /tmp/qm-SHA256SUMS && mkdir -p ~/.local/bin && curl -sL -o ~/.local/bin/quartermaster https://github.com/Quartermaster-Labs/Quartermaster/releases/download/v1.7.2/quartermaster-linux-amd64 && chmod +x ~/.local/bin/quartermaster && ls -lh ~/.local/bin/quartermaster && sha256sum ~/.local/bin/quartermaster",
+            "purpose": "download verified linux-amd64 binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "quartermaster --version",
+            "expected_signal": "version: v1.7.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "version: v1.7.2 (d3668e9), built at 2026-10-15T09:18:43Z",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "quartermaster --help",
+            "expected_signal": "-config string",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "-config string",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:12501/logs",
+            "expected_signal": "Quartermaster listening on http://127.0.0.1:12501",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "18:45:33 [INFO] Quartermaster listening on http://127.0.0.1:12501",
+            "setup": [
+              {
+                "command": "cat > /tmp/qm-test.yaml <<'EOF'\nmodels:\n  model1:\n    cmd: llama-server --port ${PORT} --model /tmp/dummy.gguf\nEOF\ncat /tmp/qm-test.yaml",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "quartermaster -config /tmp/qm-test.yaml -listen 127.0.0.1:12501",
+                "background": true,
+                "port": 12501
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "-help says -log-file: pass an empty string to disable",
+            "actually_needed": "omit -log-file entirely (use default log file); passing -log-file \"\" panics with nil-pointer dereference in fileLog.Write"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show Quartermaster starting and listening on 127.0.0.1:12501 and reporting version v1.7.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-quartermaster-20261029-024440-0dd7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-quartermaster-20261029-024440-0dd7/check-1-cmd12.judged.png",
+            "runs/verify/verify-quartermaster-20261029-024440-0dd7/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.073053
+      }
+    ]
+  },
+  "scores": null,
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Quartermaster-Labs/Quartermaster",
+      "fetched_at": "2026-10-29T02:28:36+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Quartermaster-Labs/Quartermaster/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:31:22+08:00"
+    },
+    {
+      "id": "release:v1.7.2",
+      "kind": "release",
+      "url": "https://github.com/Quartermaster-Labs/Quartermaster/releases/tag/v1.7.2",
+      "fetched_at": "2026-10-29T02:31:22+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Quartermaster is an all-in-one local inference platform.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:36+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "It also ships with a chat app of its own, which makes it a private ChatGPT for the household",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:36+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Local AI for your whole house: chat, images and voice on your own GPU.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:36+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Quartermaster is an all-in-one local inference platform. Point it at your models folder",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:36+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Quartermaster",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:36+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Windows, Linux, macOS and Docker, from the same single binary.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:36+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires Go 1.26+ (see `go.mod`) and Node.js 24 for the UI.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:36+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Release builds check GitHub for updates, and that is the only outbound call it makes on",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:36+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:36+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:36+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:36+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:36+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:36+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.7.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:31:22+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "which makes it a private ChatGPT for the household",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:36+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Images in the same catalog",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:36+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Text to speech against your local voices, and transcription",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:36+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Search Hugging Face from inside the app",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:36+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "github_api",
+      "quote": "behind one OpenAI- and Anthropic-compatible API.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:36+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "docker run -d --name quartermaster \\\n  -p 127.0.0.1:1250:8080 \\\n  -v quartermaster-data:/data \\\n  -v /path/to/models:/data/models \\\n  ghcr.io/quartermaster-labs/quartermaster:latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:36+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "docker run -d --name quartermaster \\\n  -p 127.0.0.1:1250:8080 \\\n  -v quartermaster-data:/data \\\n  -v /path/to/models:/data/models \\\n  ghcr.io/quartermaster-labs/quartermaster:latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:36+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "docker run -d --name quartermaster \\\n  -p 127.0.0.1:1250:8080 \\\n  -v quartermaster-data:/data \\\n  -v /path/to/models:/data/models \\\n  ghcr.io/quartermaster-labs/quartermaster:latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:36+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Runs on your hardware",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:36+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:17+08:00",
+  "updated_at": "2026-10-29T02:45:41.400260+08:00"
+}

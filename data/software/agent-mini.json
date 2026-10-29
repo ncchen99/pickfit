@@ -1,0 +1,380 @@
+{
+  "schema_version": "software.v1",
+  "slug": "agent-mini",
+  "repo_id": "gh:1172333651",
+  "name": "Agent Mini",
+  "summary": "Local-first AI agent with shell, file, web and memory tools driven by small local models.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent",
+    "ai",
+    "cli",
+    "llm",
+    "local-first",
+    "ollama",
+    "python",
+    "telegram-bot"
+  ],
+  "use_cases": [
+    "Run a command in the workspace",
+    "Read a file or line range",
+    "Search the web via DuckDuckGo",
+    "Fetch a public page as text",
+    "Save and search persistent memory facts"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/mohsinkaleem/agent-mini",
+    "full_name": "mohsinkaleem/agent-mini",
+    "created_at": "2026-03-04T07:30:30Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-agent-mini-20261029-024541-c365",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install agent-mini 2>&1",
+          "purpose": "Install agent-mini via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "agent-mini --version 2>&1",
+        "expected_signal": "agent-mini, version 0.5.0"
+      },
+      "first_task": "printf '\\n\\n\\n\\n\\n' | agent-mini init 2>&1"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.5.0",
+    "published_at": "2026-10-14T13:52:24Z",
+    "url": "https://github.com/mohsinkaleem/agent-mini/releases/tag/v0.5.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:46:27.757056+08:00",
+    "runs": [
+      {
+        "id": "verify-agent-mini-20261029-024541-c365",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:46:27.757056+08:00",
+        "tool_version": "0.5.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install agent-mini 2>&1",
+            "purpose": "Install agent-mini via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "agent-mini --version 2>&1",
+            "expected_signal": "agent-mini, version 0.5.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "agent-mini, version 0.5.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "agent-mini --help 2>&1",
+            "expected_signal": "Commands:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Commands:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "printf '\\n\\n\\n\\n\\n' | agent-mini init 2>&1",
+            "expected_signal": "Config saved to",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ Config saved to /home/sbx/.agent-mini/config.json",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "agent-mini doctor 2>&1",
+            "expected_signal": "is unreachable",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "✗ Provider ollama at http://localhost:11434 is unreachable (ConnectError)",
+            "setup": [
+              {
+                "command": "printf '\\n\\n\\n\\n\\n' | agent-mini init 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install agent-mini",
+            "actually_needed": "uv tool install agent-mini (isolated install; avoids PEP 668 / read-only system)"
+          },
+          {
+            "readme_said": "agent-mini init (interactive wizard with no non-interactive flag)",
+            "actually_needed": "printf '\\n\\n\\n\\n\\n' | agent-mini init to accept defaults non-interactively"
+          },
+          {
+            "readme_said": "agent-mini doctor checks provider, model, tool support and permissions",
+            "actually_needed": "doctor exits 1 reporting ollama unreachable when no local model server runs; config/workspace/sandbox/budget checks still pass"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.5.0, help with Commands list, and init saving config successfully.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-agent-mini-20261029-024541-c365/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-agent-mini-20261029-024541-c365/check-1-cmd2.judged.png",
+            "runs/verify/verify-agent-mini-20261029-024541-c365/check-2-cmd3.judged.png",
+            "runs/verify/verify-agent-mini-20261029-024541-c365/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.04831
+      }
+    ]
+  },
+  "scores": null,
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/mohsinkaleem/agent-mini",
+      "fetched_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/mohsinkaleem/agent-mini/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:33:55+08:00"
+    },
+    {
+      "id": "release:v0.5.0",
+      "kind": "release",
+      "url": "https://github.com/mohsinkaleem/agent-mini/releases/tag/v0.5.0",
+      "fetched_at": "2026-10-29T02:33:55+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "agent-mini chat",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:49+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "pip install agent-mini",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:49+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "driven by a small model on your own machine (tuned on 4B and 9B)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:49+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A small, local-first AI agent you can read in an afternoon: shell, files, web and memory, driven by a small model on your own machine",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:49+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Agent Mini",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:49+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.5.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:33:55+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Run a command in the workspace; reports the exit code when it fails.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:49+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Read a file, or a line range of a big one",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:49+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "DuckDuckGo search, no key needed",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:49+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Fetch a public page as text (private and loopback hosts are refused)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:49+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Save facts for later sessions (same key = update) and search them",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:49+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "**Local-first**: Ollama by default, OpenAI or any OpenAI-compatible server (LM Studio, vLLM, llama.cpp) if you prefer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:49+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-29T02:46:27.757787+08:00"
+}

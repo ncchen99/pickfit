@@ -1,0 +1,395 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mcp-inicio-ia",
+  "repo_id": "gh:1437042149",
+  "name": "mcp-inicio-ia",
+  "summary": "MCP server indexing Markdown docs in SQLite FTS5 with notes and Ollama assistant.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "docker",
+    "fts5",
+    "mcp",
+    "model-context-protocol",
+    "ollama",
+    "python",
+    "sqlite",
+    "stdio"
+  ],
+  "use_cases": [
+    "search indexed documents by relevance",
+    "read indexed document by ID with pagination",
+    "save user note from a text file",
+    "expose server context via MCP resource",
+    "prepare research query from a question"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/em4nu3i69dll/mcp-inicio-ia",
+    "full_name": "em4nu3i69dll/mcp-inicio-ia",
+    "created_at": "2026-10-28T12:17:45Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.12"
+    ],
+    "system_packages": [
+      "SQLite with FTS5"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mcp-inicio-ia-20261029-024627-e8b2",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone https://github.com/em4nu3i69dll/mcp-inicio-ia.git repo && ls -la repo && cat repo/requirements.txt && cat repo/pyproject.toml 2>/dev/null; cat repo/setup.py 2>/dev/null; python3 --version; python3 -c \"import sqlite3; print(sqlite3.sqlite_version); print(sqlite3.connect(':memory:').execute(\\\"SELECT sqlite_compileoption_used('ENABLE_FTS5')\\\").fetchone())\"",
+          "purpose": "Clone repository source"
+        },
+        {
+          "command": "cd repo && python3 -m pip install -r requirements.txt && python3 -m pip install --no-deps .",
+          "purpose": "Install requirements and package with pip per README"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "cd repo && python3 -m mcp_inicio --help",
+        "expected_signal": "usage: mcp-inicio"
+      },
+      "first_task": "cd repo && python3 -m mcp_inicio preparar"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": null,
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:47:50.757035+08:00",
+    "runs": [
+      {
+        "id": "verify-mcp-inicio-ia-20261029-024627-e8b2",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:47:50.757035+08:00",
+        "tool_version": "1.0.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/em4nu3i69dll/mcp-inicio-ia.git repo && ls -la repo && cat repo/requirements.txt && cat repo/pyproject.toml 2>/dev/null; cat repo/setup.py 2>/dev/null; python3 --version; python3 -c \"import sqlite3; print(sqlite3.sqlite_version); print(sqlite3.connect(':memory:').execute(\\\"SELECT sqlite_compileoption_used('ENABLE_FTS5')\\\").fetchone())\"",
+            "purpose": "Clone repository source"
+          },
+          {
+            "command": "cd repo && python3 -m pip install -r requirements.txt && python3 -m pip install --no-deps .",
+            "purpose": "Install requirements and package with pip per README"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd repo && python3 -m mcp_inicio --help",
+            "expected_signal": "usage: mcp-inicio",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: mcp-inicio [-h] [--base BASE]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd repo && python3 -m mcp_inicio preparar",
+            "expected_signal": "\"indexados\": 3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"indexados\": 3,",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd repo && python3 -m mcp_inicio comprobar",
+            "expected_signal": "\"conectado\": true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"conectado\": true,",
+            "setup": [
+              {
+                "command": "cd repo && python3 -m mcp_inicio preparar",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd repo && python3 -m unittest discover -s pruebas -v",
+            "expected_signal": "Ran 20 tests",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Ran 20 tests in 3.928s",
+            "setup": [
+              {
+                "command": "cd repo && python3 -m mcp_inicio preparar",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show successful outputs: preparar indexed 3, comprobar connected true, and help usage displayed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mcp-inicio-ia-20261029-024627-e8b2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mcp-inicio-ia-20261029-024627-e8b2/check-1-cmd4.judged.png",
+            "runs/verify/verify-mcp-inicio-ia-20261029-024627-e8b2/check-2-cmd5.judged.png",
+            "runs/verify/verify-mcp-inicio-ia-20261029-024627-e8b2/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.040149
+      }
+    ]
+  },
+  "scores": null,
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/em4nu3i69dll/mcp-inicio-ia",
+      "fetched_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/em4nu3i69dll/mcp-inicio-ia/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:30:56+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Servidor MCP con documentos, búsqueda local, notas y un asistente con Ollama.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:12+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Instalá las dependencias y prepará el espacio.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:12+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Servidor MCP con documentos, búsqueda local, notas y un asistente con Ollama.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:12+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# mcp-inicio-ia",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:12+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Activá el entorno en Linux o macOS.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:12+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requisitos mínimos de Python 3.12 y SQLite con FTS5.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:12+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Requisitos mínimos de Python 3.12 y SQLite con FTS5.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:12+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Fragmentos ordenados por relevancia",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:12+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Contenido numerado, hasta cien líneas",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:12+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Guardá una nota desde un archivo de texto.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:12+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "`inicio://contexto` describe el alcance del servidor y el uso de fuentes.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:12+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "El prompt `investigar` recibe una pregunta y prepara una consulta con búsqueda",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:12+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "La conexión remota a Ollama requiere HTTPS.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:12+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:27:54+08:00",
+  "updated_at": "2026-10-29T02:47:50.757810+08:00"
+}

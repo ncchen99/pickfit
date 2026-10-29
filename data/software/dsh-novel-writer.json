@@ -1,0 +1,427 @@
+{
+  "schema_version": "software.v1",
+  "slug": "dsh-novel-writer",
+  "repo_id": "gh:1335850864",
+  "name": "dsh-novel-writer",
+  "summary": "Local workbench for Chinese novels that prepares chapter material and checks style locally.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-writing",
+    "chinese-novel",
+    "cordis",
+    "creative-writing",
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "dsh-plugins",
+    "llm",
+    "local-first"
+  ],
+  "use_cases": [
+    "fetch materials for the next chapter before writing",
+    "self-check a chapter against style baseline",
+    "build prioritized revision todo list with line numbers",
+    "inspect foreshadowing spans and character absences across chapters",
+    "search book semantically in natural language locally"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://siweina.github.io/dsh-novel-writer/",
+  "repo": {
+    "url": "https://github.com/siweina/dsh-novel-writer",
+    "full_name": "siweina/dsh-novel-writer",
+    "created_at": "2026-08-16T11:16:49Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node >= 22.3"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-dsh-novel-writer-20261029-024558-9594",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g dsh-novel-writer",
+          "purpose": "npm global install dsh-novel-writer"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "which dsh-novel-writer-mcp && npm list -g dsh-novel-writer",
+        "expected_signal": "dsh-novel-writer@6.9.0"
+      },
+      "first_task": "which dsh-novel-writer-mcp && npm list -g dsh-novel-writer"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v6.9.0",
+    "published_at": "2026-10-22T14:02:25Z",
+    "url": "https://github.com/siweina/dsh-novel-writer/releases/tag/v6.9.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:52:36.550523+08:00",
+    "runs": [
+      {
+        "id": "verify-dsh-novel-writer-20261029-024558-9594",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:52:36.550523+08:00",
+        "tool_version": "6.9.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g dsh-novel-writer",
+            "purpose": "npm global install dsh-novel-writer"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "which dsh-novel-writer-mcp && npm list -g dsh-novel-writer",
+            "expected_signal": "dsh-novel-writer@6.9.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "└── dsh-novel-writer@6.9.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "printf '%s\\n' '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{}}}' '{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"novel_books\",\"arguments\":{}}}' '{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":{\"name\":\"novel_read\",\"arguments\":{\"book\":\"测试小说\",\"chapter\":1}}}' | dsh-novel-writer-mcp --root /tmp/novels-demo",
+            "expected_signal": "- 测试小说: 1 章, 159 字",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"<path>novels</path>\\n<type>novel-library</type>\\n<content>\\n\\n- 测试小说: 1 章, 159 字\\n\\n</content>\"}]}}",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/novels-demo/测试小说 && cat > /tmp/novels-demo/测试小说/第01章.md <<'EOF'\n# 第01章 初遇\n\n林昭站在码头上，海风吹过她的发梢。对街那盏灯，亮了。\n\n她把怀表捏在掌心，翻过来看背面。背面刻着一行小字，被磨得只剩半边。她认出了父亲的名字。\n\n“你回来了。”沈砚的声音从身后传来，带着海水的咸味。\n\n林昭没有回头，只是轻轻点烛，照亮了桌上的海图。海图上红铅笔圈出一片礁区，那是父亲失踪的地方。\nEOF\ncat /tmp/novels-demo/测试小说/第01章.md && ls -R /tmp/novels-demo",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/novels-demo/novels && mv /tmp/novels-demo/测试小说 /tmp/novels-demo/novels/ 2>&1; ls -R /tmp/novels-demo",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "printf '%s\\n' '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{}}}' '{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"novel_chapters\",\"arguments\":{\"book\":\"测试小说\"}}}' '{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":{\"name\":\"novel_read\",\"arguments\":{\"book\":\"测试小说\",\"chapter\":\"1\"}}}' | dsh-novel-writer-mcp --root /tmp/novels-demo",
+            "expected_signal": "林昭站在码头上，海风吹过她的发梢",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"jsonrpc\":\"2.0\",\"id\":3,\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"<path>novels/测试小说/第01章.md</path>\\n<type>novel-chapter</type>\\n<content>\\n1: # 第01章 初遇\\n2: \\n3: 林昭站在码头上，海风吹过她的发梢。对街那盏灯，亮了。\\n4: \\n5: 她把怀表捏在掌心，翻过来看背面。背面刻着一行小字，被磨得只剩半边。她认出了父亲的名字。\\n6: \\n7: “你回来了。”沈砚的声音从身后传来，带着海水的咸味。\\n8: \\n9: 林昭没有回头，只是轻轻…",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/novels-demo/测试小说 && cat > /tmp/novels-demo/测试小说/第01章.md <<'EOF'\n# 第01章 初遇\n\n林昭站在码头上，海风吹过她的发梢。对街那盏灯，亮了。\n\n她把怀表捏在掌心，翻过来看背面。背面刻着一行小字，被磨得只剩半边。她认出了父亲的名字。\n\n“你回来了。”沈砚的声音从身后传来，带着海水的咸味。\n\n林昭没有回头，只是轻轻点烛，照亮了桌上的海图。海图上红铅笔圈出一片礁区，那是父亲失踪的地方。\nEOF\ncat /tmp/novels-demo/测试小说/第01章.md && ls -R /tmp/novels-demo",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/novels-demo/novels && mv /tmp/novels-demo/测试小说 /tmp/novels-demo/novels/ 2>&1; ls -R /tmp/novels-demo",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "dsh plugin add dsh-novel-writer / dsh plugin add github:siweina/dsh-novel-writer#main",
+            "actually_needed": "dsh CLI is not installed in the box, so `dsh plugin add ...` cannot run; installed the npm package globally with `npm install -g dsh-novel-writer` which provides `dsh-novel-writer-mcp` on PATH (~/.local/bin)"
+          },
+          {
+            "readme_said": "command supports --version or --help",
+            "actually_needed": "binary supports neither --version nor --help; any flag is ignored and the stdio MCP server starts and waits on stdin (a bare --help hangs). Used `npm list -g dsh-novel-writer` to show version 6.9.0 and MCP initialize to show serverInfo version."
+          },
+          {
+            "readme_said": "--root /你的小说库路径",
+            "actually_needed": "library root must contain a `novels/` subdirectory: <root>/novels/<book>/第01章.md; placing the book directly under --root returns empty library"
+          },
+          {
+            "readme_said": "novel_read reading a chapter",
+            "actually_needed": "novel_read `chapter` must be a string (e.g. \"1\" or \"第01章\"); passing a JSON number 1 fails with 参数 \"chapter\" 不能为空字符串"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show v6.9.0 installed, library lists 测试小说 with 1 chapter, and chapter read returns the expected opening line.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-dsh-novel-writer-20261029-024558-9594/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-dsh-novel-writer-20261029-024558-9594/check-1-cmd5.judged.png",
+            "runs/verify/verify-dsh-novel-writer-20261029-024558-9594/check-2-cmd9.judged.png",
+            "runs/verify/verify-dsh-novel-writer-20261029-024558-9594/check-3-cmd12.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.131619
+      }
+    ]
+  },
+  "scores": null,
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/siweina/dsh-novel-writer",
+      "fetched_at": "2026-10-29T02:29:05+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/siweina/dsh-novel-writer/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:33:06+08:00"
+    },
+    {
+      "id": "release:v6.9.0",
+      "kind": "release",
+      "url": "https://github.com/siweina/dsh-novel-writer/releases/tag/v6.9.0",
+      "fetched_at": "2026-10-29T02:33:06+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "为 DeepSeek Harness（DSH）打造；同一套能力也可作为 **MCP 服务器**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:13+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "github_api",
+      "quote": "给中文网文作者的本地写作工作台",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:13+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "24MB 中文模型随包本地推理，零 token、正文不出本机",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:13+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "动笔前一次调用取齐 16 项材料",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:13+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "github_api",
+      "quote": "name: siweina/dsh-novel-writer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:13+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "要求 **Node ≥ 22.3**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:13+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "不需要服务器、不需要联网、不需要常驻。",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:13+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:05+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:05+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:05+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:05+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:05+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v6.9.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:33:06+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "「给下一章取材料」",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:13+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "「自检这一章」",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:13+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "「把这章排成改稿清单」",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:13+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "「看看全书结构」",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:13+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "自然语言搜全书语义相关段落",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:13+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "零 API 花费、正文不出本机",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:13+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "github_api",
+      "quote": "正文不出本机",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:13+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:05+08:00",
+  "updated_at": "2026-10-29T02:52:36.551260+08:00"
+}

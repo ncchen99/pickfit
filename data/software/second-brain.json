@@ -1,0 +1,374 @@
+{
+  "schema_version": "software.v1",
+  "slug": "second-brain",
+  "repo_id": "gh:1239217922",
+  "name": "Second Brain",
+  "summary": "Local knowledge vault CLI with hybrid search, entity graph, and MCP access to notes.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "embeddings",
+    "graphrag",
+    "hybrid-search",
+    "knowledge-base",
+    "local-ai",
+    "local-first",
+    "mcp",
+    "mcp-server",
+    "note-taking"
+  ],
+  "use_cases": [
+    "ingest a file into the knowledge base",
+    "hybrid search notes and transcripts",
+    "get a cited multi-hop answer from the corpus",
+    "generate a digest of newly landed notes",
+    "resurface older notes due for review"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/mshtawythug/second-brain",
+    "full_name": "mshtawythug/second-brain",
+    "created_at": "2026-05-14T22:01:26Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-second-brain-20261029-025701-4b94",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install secondbrain-py 2>&1",
+          "purpose": "Install secondbrain-py with uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "brain --version",
+        "expected_signal": "brain 0.3.0"
+      },
+      "first_task": "brain doctor"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.3.0",
+    "published_at": "2026-08-08T12:38:04Z",
+    "url": "https://github.com/mshtawythug/second-brain/releases/tag/v0.3.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:57:55.033299+08:00",
+    "runs": [
+      {
+        "id": "verify-second-brain-20261029-025701-4b94",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:57:55.033299+08:00",
+        "tool_version": "0.3.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install secondbrain-py 2>&1",
+            "purpose": "Install secondbrain-py with uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "brain --version",
+            "expected_signal": "brain 0.3.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "brain 0.3.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "brain --help",
+            "expected_signal": "Zero-Ollama taste test",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ demo Zero-Ollama taste test: spin up a throwaway Postgres, seed a synthetic │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "brain doctor",
+            "expected_signal": "DATABASE_URL is not set",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "env FAIL — DATABASE_URL is not set.",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brain doctor checks environment, database, embedder, daemons",
+            "actually_needed": "brain doctor exits 1 when unconfigured, reporting missing DATABASE_URL and missing /home/sbx/.brain/.env — correct validator behavior for a fresh install"
+          },
+          {
+            "readme_said": "brain demo spins up a sandbox Postgres with no personal data",
+            "actually_needed": "Docker not found — brain demo needs Docker, or pass --database-url <postgres-url>; Docker is not installed in the box so the demo cannot run here"
+          },
+          {
+            "readme_said": "pipx install secondbrain-py / pin git tag v0.2.1",
+            "actually_needed": "uv tool install secondbrain-py resolved secondbrain-py==0.3.0 from PyPI (brain 0.3.0), newer than the v0.2.1 tag pinned elsewhere in the README"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show brain doctor correctly reporting DATABASE_URL is not set with exit 1, and brain --version printing brain 0.3.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-second-brain-20261029-025701-4b94/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-second-brain-20261029-025701-4b94/check-1-cmd5.judged.png",
+            "runs/verify/verify-second-brain-20261029-025701-4b94/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.042901
+      }
+    ]
+  },
+  "scores": null,
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/mshtawythug/second-brain",
+      "fetched_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/mshtawythug/second-brain/blob/master/README.md",
+      "fetched_at": "2026-10-29T02:34:06+08:00"
+    },
+    {
+      "id": "release:v0.3.0",
+      "kind": "release",
+      "url": "https://github.com/mshtawythug/second-brain/releases/tag/v0.3.0",
+      "fetched_at": "2026-10-29T02:34:06+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Local-first personal knowledge base CLI — hybrid FTS + pgvector search",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:26+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Install the CLI, then run the offline demo",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:26+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Stores career docs, interview prep, Krisp transcripts, Slack threads, Gmail, and authored Markdown notes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:26+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Local, queryable knowledge base and note vault with hybrid search and an entity-graph layer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:26+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Second Brain",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:26+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "so it works fully offline.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:26+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.3.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:34:06+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "brain ingest ~/Documents/resume.pdf --tag career",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:26+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "brain search \"what did I tell my manager about the migration\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:26+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "brain ask \"what did we decide about the data pipeline?\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:26+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "brain brief",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:26+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "brain resurface",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:26+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "github_api",
+      "quote": "Runs fully local on Ollama (no cloud, no API keys)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:26+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-29T02:57:55.034740+08:00"
+}

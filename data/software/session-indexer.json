@@ -1,0 +1,507 @@
+{
+  "schema_version": "software.v1",
+  "slug": "session-indexer",
+  "repo_id": "gh:1280115630",
+  "name": "session-indexer",
+  "summary": "Per-project semantic search over Claude Code session history stored in SQLite.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "claude-code",
+    "cli",
+    "embeddings",
+    "golang",
+    "ollama",
+    "rag",
+    "semantic-search",
+    "session-history",
+    "sqlite"
+  ],
+  "use_cases": [
+    "find what was decided about a topic across past sessions",
+    "inject relevant past context at session start",
+    "index JSONL transcripts into per-project SQLite store",
+    "query distilled facts about implementation status",
+    "browse what is in the index by day without a query"
+  ],
+  "alternatives_to": [
+    "mempalace",
+    "agentmemory",
+    "MemMachine"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://valpere.github.io/projects/session-indexer/",
+  "repo": {
+    "url": "https://github.com/valpere/session-indexer",
+    "full_name": "valpere/session-indexer",
+    "created_at": "2026-06-25T09:29:49Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Go 1.26.9+"
+    ],
+    "system_packages": [
+      "jq"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install ./cmd/session-indexer",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "session-indexer search \"config validation approach\" --db .claude/sessions.db"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-session-indexer-20261029-025701-5419",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -sL -o /tmp/session-indexer https://github.com/valpere/session-indexer/releases/download/v0.3.0/session-indexer_v0.3.0_linux_amd64 && chmod +x /tmp/session-indexer && mkdir -p ~/.local/bin && cp /tmp/session-indexer ~/.local/bin/session-indexer",
+          "purpose": "Download v0.3.0 linux_amd64 binary release and install to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "session-indexer --version",
+        "expected_signal": "session-indexer version v0.3.0"
+      },
+      "first_task": "session-indexer search \"config validation approach\" --db .claude/sessions.db"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install ./cmd/session-indexer",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "session-indexer search \"config validation approach\" --db .claude/sessions.db"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.3.0",
+    "published_at": "2026-08-27T07:16:58Z",
+    "url": "https://github.com/valpere/session-indexer/releases/tag/v0.3.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T02:58:10.193384+08:00",
+    "runs": [
+      {
+        "id": "verify-session-indexer-20261029-025701-5419",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T02:58:10.193384+08:00",
+        "tool_version": "v0.3.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sL -o /tmp/session-indexer https://github.com/valpere/session-indexer/releases/download/v0.3.0/session-indexer_v0.3.0_linux_amd64 && chmod +x /tmp/session-indexer && mkdir -p ~/.local/bin && cp /tmp/session-indexer ~/.local/bin/session-indexer",
+            "purpose": "Download v0.3.0 linux_amd64 binary release and install to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "session-indexer --version",
+            "expected_signal": "session-indexer version v0.3.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "session-indexer version v0.3.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "session-indexer search \"config validation approach\" --db .claude/sessions.db",
+            "expected_signal": "The config validation approach will use JSON schema",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "The config validation approach will use JSON schema with strict defaults and early error reporting for missing keys.",
+            "setup": [
+              {
+                "command": "mkdir -p .claude && cat > /tmp/sample.jsonl <<'EOF'\n{\"type\":\"user\",\"sessionId\":\"s-test-1\",\"timestamp\":\"2026-06-25T10:00:00Z\",\"message\":{\"role\":\"user\",\"content\":\"We discussed the config validation approach using a schema validator and strict mode for the session indexer project, this needs to be long enough to index properly.\"}}\n{\"type\":\"assistant\",\"sessionId\":\"s-test-1\",\"timestamp\":\"2026-06-25T10:00:05Z\",\"message\":{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"The config validation approach will use JSON schema with strict defaults and early error reporting for missing keys.\"}]}}\nEOF\ncp /tmp/sample.jsonl ./sample.jsonl && rm -f .claude/sessions.db && session-indexer mine ./sample.jsonl --db .claude/sessions.db",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "session-indexer stats --db .claude/sessions.db",
+            "expected_signal": "Chunks total: 2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Chunks total: 2",
+            "setup": [
+              {
+                "command": "mkdir -p .claude && cat > /tmp/sample.jsonl <<'EOF'\n{\"type\":\"user\",\"sessionId\":\"s-test-1\",\"timestamp\":\"2026-06-25T10:00:00Z\",\"message\":{\"role\":\"user\",\"content\":\"We discussed the config validation approach using a schema validator and strict mode for the session indexer project, this needs to be long enough to index properly.\"}}\n{\"type\":\"assistant\",\"sessionId\":\"s-test-1\",\"timestamp\":\"2026-06-25T10:00:05Z\",\"message\":{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"The config validation approach will use JSON schema with strict defaults and early error reporting for missing keys.\"}]}}\nEOF\ncp /tmp/sample.jsonl ./sample.jsonl && rm -f .claude/sessions.db && session-indexer mine ./sample.jsonl --db .claude/sessions.db",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "session-indexer sessions --db .claude/sessions.db",
+            "expected_signal": "2 chunks (0 embedded, 0 distilled, 1 sessions)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2026-06-25 2 chunks (0 embedded, 0 distilled, 1 sessions)",
+            "setup": [
+              {
+                "command": "mkdir -p .claude && cat > /tmp/sample.jsonl <<'EOF'\n{\"type\":\"user\",\"sessionId\":\"s-test-1\",\"timestamp\":\"2026-06-25T10:00:00Z\",\"message\":{\"role\":\"user\",\"content\":\"We discussed the config validation approach using a schema validator and strict mode for the session indexer project, this needs to be long enough to index properly.\"}}\n{\"type\":\"assistant\",\"sessionId\":\"s-test-1\",\"timestamp\":\"2026-06-25T10:00:05Z\",\"message\":{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"The config validation approach will use JSON schema with strict defaults and early error reporting for missing keys.\"}]}}\nEOF\ncp /tmp/sample.jsonl ./sample.jsonl && rm -f .claude/sessions.db && session-indexer mine ./sample.jsonl --db .claude/sessions.db",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go install ./cmd/session-indexer / go build -o bin/session-indexer ./cmd/session-indexer (requires Go 1.26.9+)",
+            "actually_needed": "No Go toolchain in box and installing one is disallowed; used pre-built binary session-indexer_v0.3.0_linux_amd64 from GitHub Releases (v0.3.0) copied to ~/.local/bin/session-indexer"
+          },
+          {
+            "readme_said": "session-indexer tree <jsonl-path> [--json]",
+            "actually_needed": "v0.3.0 binary reports error: unknown command \"tree\"; mine/search/stats/sessions/list/show all work"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show expected output: search returns the config validation sentence, stats shows 2 chunks, and version prints v0.3.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-session-indexer-20261029-025701-5419/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-session-indexer-20261029-025701-5419/check-1-cmd11.judged.png",
+            "runs/verify/verify-session-indexer-20261029-025701-5419/check-2-cmd12.judged.png",
+            "runs/verify/verify-session-indexer-20261029-025701-5419/check-3-cmd10.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.085416
+      }
+    ]
+  },
+  "scores": null,
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/valpere/session-indexer",
+      "fetched_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/valpere/session-indexer/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:34:10+08:00"
+    },
+    {
+      "id": "release:v0.3.0",
+      "kind": "release",
+      "url": "https://github.com/valpere/session-indexer/releases/tag/v0.3.0",
+      "fetched_at": "2026-10-29T02:34:10+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "session-indexer search \"config validation approach\" --db .claude/sessions.db",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Search manually at any time",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "session-indexer search  <query>      --db .claude/sessions.db [--limit N] [--json]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Per-project semantic search over Claude Code session history. Indexes JSONL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# session-indexer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Pre-built binaries for Linux/macOS/Windows are attached to each",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "**Go 1.26.9+** — to build the binary",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "**jq** — used by hooks and `/recall` for JSON formatting",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.3.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:34:10+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "needing to find\n\"what did we decide about X\" across dozens of past sessions.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Automatically injects relevant past context\nat session start.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Indexes JSONL\ntranscripts into a per-project SQLite store; retrieves via bge-m3 embeddings",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Query\nsession-indexer facts search \"implementation status\" --db .claude/sessions.db",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "What's in the store, by day (the default — see why below)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "[mempalace](https://github.com/MemPalace/mempalace),",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "[agentmemory](https://github.com/rohitg00/agentmemory), and",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "[MemMachine](https://github.com/MemMachine/MemMachine) all run on a single",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "go install ./cmd/session-indexer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "go install ./cmd/session-indexer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "go install ./cmd/session-indexer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "**Scope: single developer, single machine.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:40:27+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-29T02:58:10.194428+08:00"
+}

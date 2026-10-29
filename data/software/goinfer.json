@@ -1,0 +1,472 @@
+{
+  "schema_version": "software.v1",
+  "slug": "goinfer",
+  "repo_id": "gh:1259448554",
+  "name": "goinfer",
+  "summary": "Pure-Go library and binaries for running open-weight LLMs locally from safetensors or GGUF.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-server",
+    "cgo-free",
+    "edge-ai",
+    "gemma",
+    "gguf",
+    "go",
+    "golang",
+    "llama",
+    "llm-inference",
+    "local-llm"
+  ],
+  "use_cases": [
+    "constrain generation to a Go struct or JSON Schema",
+    "serve a local model to a coding agent via OpenAI API",
+    "extract a scanned invoice image into a Go struct"
+  ],
+  "alternatives_to": [
+    "Ollama",
+    "vLLM",
+    "llama.cpp"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/townsendmerino/goinfer",
+    "full_name": "townsendmerino/goinfer",
+    "created_at": "2026-06-04T14:16:16Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Go>=1.27"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go get github.com/townsendmerino/goinfer/decoder@latest github.com/townsendmerino/goinfer/tokenizer@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "goinfer-chat models"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-goinfer-20261029-114824-da1e",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin && curl -fL -o ~/.local/bin/goinfer-serve https://github.com/townsendmerino/goinfer/releases/latest/download/goinfer-serve-linux-amd64 && curl -fL -o ~/.local/bin/goinfer-chat https://github.com/townsendmerino/goinfer/releases/latest/download/goinfer-chat-linux-amd64 && chmod +x ~/.local/bin/goinfer-serve ~/.local/bin/goinfer-chat && ls -lh ~/.local/bin/goinfer-*",
+          "purpose": "Download linux-amd64 serve+chat binaries to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "goinfer-serve --version",
+        "expected_signal": "goinfer-serve v0.23.0"
+      },
+      "first_task": "goinfer-chat models"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go get github.com/townsendmerino/goinfer/decoder@latest github.com/townsendmerino/goinfer/tokenizer@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "goinfer-chat models"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.23.0",
+    "published_at": "2026-10-15T15:13:47Z",
+    "url": "https://github.com/townsendmerino/goinfer/releases/tag/v0.23.0"
+  },
+  "verification": {
+    "level": "inference",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T11:49:35.922265+08:00",
+    "runs": [
+      {
+        "id": "verify-goinfer-20261029-114824-da1e",
+        "level": "inference",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T11:49:35.922265+08:00",
+        "tool_version": "v0.23.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin && curl -fL -o ~/.local/bin/goinfer-serve https://github.com/townsendmerino/goinfer/releases/latest/download/goinfer-serve-linux-amd64 && curl -fL -o ~/.local/bin/goinfer-chat https://github.com/townsendmerino/goinfer/releases/latest/download/goinfer-chat-linux-amd64 && chmod +x ~/.local/bin/goinfer-serve ~/.local/bin/goinfer-chat && ls -lh ~/.local/bin/goinfer-*",
+            "purpose": "Download linux-amd64 serve+chat binaries to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "goinfer-serve --version",
+            "expected_signal": "goinfer-serve v0.23.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "goinfer-serve v0.23.0 (2c42c6a34300)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "goinfer-chat models",
+            "expected_signal": "Downloads come from Hugging Face",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Downloads come from Hugging Face and are sha256-verified against a digest this",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -fsSL http://127.0.0.1:8080/v1/models",
+            "expected_signal": "\"id\":\"SmolLM2-135M-Instruct-Q8_0\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"data\":[{\"context_length\":8192,\"context_window\":8192,\"created\":1793245769,\"decisions\":{\"calibrated\":false,\"endpoint\":\"/v1/systemone\",\"kinds\":[\"noul\",\"choice\",\"score\"],\"route\":\"label\",\"template\":\"chat-v1\"},\"decode_path\":\"cpu (int4) [int4 layout: canonical (down, embed, gate/up, qkv)]\",\"id\":\"SmolLM2…",
+            "setup": [
+              {
+                "command": "goinfer-serve --help > /tmp/serve_help.txt 2>&1 && goinfer-chat models > /tmp/models.txt 2>&1 && mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && curl -fL -o ~/models/SmolLM2-135M-Instruct-Q8_0.gguf https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf && ls -lh ~/models/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "goinfer-serve --model ~/models/SmolLM2-135M-Instruct-Q8_0.gguf --backend cpu",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsSL http://127.0.0.1:8080/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"SmolLM2-135M-Instruct-Q8_0\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hi\"}],\"temperature\":0,\"max_tokens\":16}'",
+            "expected_signal": "\"completion_tokens\":16",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"choices\":[{\"finish_reason\":\"length\",\"index\":0,\"message\":{\"content\":\"I'm here to help you. I'm a helpful AI, trained by H\",\"role\":\"assistant\"}}],\"created\":1793245769,\"id\":\"chatcmpl-ddd71229cb0b0960cea2c3ebd701fa45\",\"model\":\"SmolLM2-135M-Instruct-Q8_0\",\"object\":\"chat.completion\",\"usage\":{\"prompt_to…",
+            "setup": [
+              {
+                "command": "goinfer-serve --help > /tmp/serve_help.txt 2>&1 && goinfer-chat models > /tmp/models.txt 2>&1 && mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && curl -fL -o ~/models/SmolLM2-135M-Instruct-Q8_0.gguf https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf && ls -lh ~/models/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "goinfer-serve --model ~/models/SmolLM2-135M-Instruct-Q8_0.gguf --backend cpu",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go get ... / go install ... and curl example for goinfer-serve-darwin-arm64",
+            "actually_needed": "download goinfer-serve-linux-amd64 and goinfer-chat-linux-amd64 from latest release (v0.23.0) to ~/.local/bin as goinfer-serve and goinfer-chat; Go toolchain install candidates were skipped because the box has no Go toolchain and installing one is disallowed"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show expected output: model list with Hugging Face notice, /v1/models listing SmolLM2-135M, and goinfer-serve v0.23.0 version.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-goinfer-20261029-114824-da1e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-goinfer-20261029-114824-da1e/check-1-cmd4.judged.png",
+            "runs/verify/verify-goinfer-20261029-114824-da1e/check-2-cmd10.judged.png",
+            "runs/verify/verify-goinfer-20261029-114824-da1e/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.0993
+      }
+    ]
+  },
+  "scores": null,
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/townsendmerino/goinfer",
+      "fetched_at": "2026-10-29T02:28:30+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/townsendmerino/goinfer/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:29:46+08:00"
+    },
+    {
+      "id": "release:v0.23.0",
+      "kind": "release",
+      "url": "https://github.com/townsendmerino/goinfer/releases/tag/v0.23.0",
+      "fetched_at": "2026-10-29T02:29:46+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "the single-shot runtime; point it at your own GGUF",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:35:12+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Nothing to build and no Go toolchain needed.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:35:12+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "goinfer targets **single-user local inference**: one process, one machine,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:35:12+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Pure-Go, no-cgo local LLM inference — run Gemma, Qwen, Llama and friends from safetensors or GGUF in a single static binary.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:35:12+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# goinfer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:35:12+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Binaries for macOS, Linux and Windows (Intel and",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:35:12+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires Go 1.27+.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:35:12+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:30+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:30+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:30+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:30+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.23.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:46+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "constrain generation to a Go struct or a JSON Schema",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:35:12+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "release:v0.23.0",
+      "quote": "pointing a coding agent — Claude Code, Codex or opencode — at a model running on",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:35:12+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "A scanned invoice in, a Go struct out.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:35:12+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "ahead of Ollama in all 12 cells, 1.05–1.47×; the margin narrows with depth on the 7B",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:35:12+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "To saturate a datacentre GPU with concurrent requests, use vLLM.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:35:12+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "No Python, no llama.cpp, no C toolchain, no daemon.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:35:12+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "go get github.com/townsendmerino/goinfer/decoder@latest github.com/townsendmerino/goinfer/tokenizer@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:35:12+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "go get github.com/townsendmerino/goinfer/decoder@latest github.com/townsendmerino/goinfer/tokenizer@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:35:12+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "go get github.com/townsendmerino/goinfer/decoder@latest github.com/townsendmerino/goinfer/tokenizer@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:35:12+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "runs\noffline. Recorded on an Apple M1 Pro",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-29T02:35:12+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-28T19:03:23+08:00",
+  "updated_at": "2026-10-29T11:49:35.924971+08:00"
+}

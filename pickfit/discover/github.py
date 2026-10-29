@@ -53,14 +53,28 @@ monotonic = time.monotonic
 
 # Topics per demo category (brief section 14). Written from the category
 # definitions alone, not from the eval questions (eval/README.md section 3).
+# "a+b" means a repo must carry both topics.
 TOPICS: dict[str, tuple[str, ...]] = {
     "dev_cli": ("cli", "tui", "terminal"),
-    "local_ai": ("local-llm", "ollama", "llama-cpp"),
+    "local_ai": (
+        "local-llm", "ollama", "llama-cpp",
+        # Added 2026-10-29 from the same definition ("local model runners, inference
+        # servers, offline AI tools"); the first three found few CLI or server tools.
+        # Model runners and their file format:
+        "gguf", "llamacpp", "local-inference", "llm-inference",
+        # Inference servers:
+        "inference-server", "inference-engine",
+        # Offline AI tools, including offline speech:
+        "local-ai", "offline-ai", "llm+offline", "whisper-cpp", "speech-to-text+offline",
+        "text-to-speech+offline",
+        # Command-line front ends to a local runner:
+        "ollama+cli",
+    ),
 }
 STARS = "5..300"
 PUSHED_DAYS = 14
 # Created this year, pushed recently, a few stars but not famous, not a fork, not archived.
-QUERY_TEMPLATE = ("topic:{topic} created:>={created} pushed:>={pushed} stars:{stars} "
+QUERY_TEMPLATE = ("{topics} created:>={created} pushed:>={pushed} stars:{stars} "
                   "fork:false archived:false")
 # Most recently updated first: recent activity says something about maintenance;
 # sorting by stars would rank by popularity, which is what pickfit tries not to do.
@@ -86,8 +100,9 @@ def build_queries(today: date, *, pushed_days: int = PUSHED_DAYS,
     unknown = set(categories or []) - TOPICS.keys()
     if unknown:
         raise ValueError(f"unknown categories {sorted(unknown)}; expected {sorted(TOPICS)}")
-    return [Query(category, topic, QUERY_TEMPLATE.format(topic=topic, created=created,
-                                                         pushed=pushed, stars=STARS))
+    return [Query(category, topic, QUERY_TEMPLATE.format(
+                topics=" ".join(f"topic:{t}" for t in topic.split("+")), created=created,
+                pushed=pushed, stars=STARS))
             for category, topics in TOPICS.items() if categories is None or category in categories
             for topic in topics]
 
