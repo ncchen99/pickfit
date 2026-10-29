@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 
-from pickfit.d1 import sql, timestamp
+from pickfit.d1 import D1Error, sql, timestamp
 from pickfit.ledger import TAIPEI, BudgetExceeded, Caps, Ledger
 from pickfit.schema import SoftwareRecord
 from pickfit.watch import (MAX_ATTEMPTS, READY_REASON, Settings, Steps, Watcher, normalize_repo_url,
@@ -391,3 +391,125 @@ def test_a_reason_is_clipped_to_what_d1_accepts(env: dict[str, Any]) -> None:
 ])
 def test_urls_normalize_like_the_worker(url: str, expected: str | None) -> None:
     assert normalize_repo_url(url) == expected
+
+
+# --- what happens after a record lands --------------------------------------------------
+
+
+class FlakyD1:
+    """The D1 stand-in, failing statements that contain `needle` the first `times` times."""
+
+    def __init__(self, inner: Any, needle: str, times: int = 1) -> None:
+        self.inner, self.needle, self.left = inner, needle, times
+
+    def _check(self, statement: str) -> None:
+        if self.needle in statement and self.left > 0:
+            self.left -= 1
+            raise D1Error("wrangler exit 1: timed out")
+
+    def query(self, statement: str) -> list[dict[str, Any]]:
+        self._check(statement)
+        return self.inner.query(statement)
+
+    def execute(self, statement: str) -> Any:
+        self._check(statement)
+        return self.inner.execute(statement)
+
+
+def make(env: dict[str, Any], pipeline: Pipeline, *, db: Any = None, lines: list[str] | None = None,
+         **kwargs: Any) -> Watcher:
+    settings = {k: kwargs.pop(k) for k in list(kwargs) if k in Settings.__dataclass_fields__}
+    s = Settings(data_dir=env["data"], runs_dir=env["tmp"] / "runs", db_path=env["tmp"] / "runs" / "pipeline.db",
+                 worker_dir=env["worker"], **settings)
+    return Watcher(db or env["d1"], pipeline.steps(), s, clock=lambda: NOW,
+                   log=(lines if lines is not None else []).append, **kwargs)
+
+
+def test_a_failed_status_write_after_the_commit_resumes_as_ready(env: dict[str, Any]) -> None:
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    pipeline = Pipeline(env["tmp"])
+    jobs = make(env, pipeline, db=FlakyD1(env["d1"], "reason = 'Installed, replayed")).run(once=True)
+    assert [j.result for j in jobs] == ["retry", "ready"]  # not "listed": nothing was deployed
+    row = submission(env["d1"], "sub_1")
+    assert (row["status"], row["reason"]) == ("verifying", READY_REASON)
+    assert pipeline.calls.count("verify") == 1  # the second try only reported the landed record
+    assert git(env["data"], "log", "--format=%s").count("Add tinyq") == 1
+
+
+def test_a_failed_commit_leaves_data_software_clean(env: dict[str, Any]) -> None:
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    lock = env["data"].parent.parent / ".git" / "index.lock"
+    lock.write_text("")
+    runs = [passed_run(f"run-20261030-linux-{i}", ["cargo install tinyq"], method="cargo") for i in range(2)]
+    w = make(env, Pipeline(env["tmp"], runs=runs))
+    [first] = w.run(once=True)[:1]
+    assert first.result == "retry" and not first.landed
+    assert git(env["data"], "status", "--porcelain", "--untracked-files=all") == ""
+    lock.unlink()
+    env["d1"].execute("UPDATE submissions SET status = 'queued'")  # what the requeue already did
+    [second] = make(env, Pipeline(env["tmp"], runs=runs[1:])).run(once=True)
+    assert second.result == "ready" and second.commit
+
+
+def test_the_same_repository_in_flight_is_refused(env: dict[str, Any]) -> None:
+    submit(env["d1"], "sub_2", "https://github.com/someone/old-name")
+    pipeline = Pipeline(env["tmp"], repos={"someone/old-name": repo_item(7, "someone/tinyq")},
+                        details={"someone/tinyq": DETAILS})
+    w = make(env, pipeline)
+    w._repos_in_flight["gh:7"] = "https://github.com/someone/tinyq"  # sub_1 is reading it right now
+    job = w.process({"id": "sub_2", "url": "https://github.com/someone/old-name",
+                     "submitted_at": "2026-10-30T10:00:00.000Z"})
+    assert job.result == "rejected" and "another submission pickfit is reading now" in job.reason
+    assert pipeline.calls == [] and w._repos_in_flight == {"gh:7": "https://github.com/someone/tinyq"}
+
+
+def test_a_record_of_the_same_repository_that_lands_meanwhile_wins(env: dict[str, Any]) -> None:
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    pipeline = Pipeline(env["tmp"])
+    real = pipeline.verify
+
+    def verify_while_another_lands(task: Any, data_dir: Path, log: Any) -> Any:
+        (env["data"] / "someone-tinyq.json").write_text(json.dumps({**EXAMPLE, "slug": "someone-tinyq",
+                                                                    "repo_id": "gh:7"}))
+        return real(task, data_dir, log)
+
+    pipeline.verify = verify_while_another_lands  # type: ignore[assignment]
+    [job] = make(env, pipeline).run(once=True)
+    assert job.result == "rejected" and job.reason == "Already in pickfit's directory as someone-tinyq."
+    assert not (env["data"] / "tinyq.json").exists()
+
+
+def test_ready_records_become_listed_once_the_live_worker_serves_them(env: dict[str, Any]) -> None:
+    from pickfit.index import load_records
+
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    live = {"sha": "an older deploy"}
+    [job] = make(env, Pipeline(env["tmp"]), live_sha=lambda: live["sha"]).run(once=True)
+    assert job.result == "ready"
+    w = make(env, Pipeline(env["tmp"]), live_sha=lambda: live["sha"])
+    assert w._mark_deployed() == []  # the live Worker still serves the old data
+    live["sha"] = load_records(env["data"])[1]  # someone ran pickfit publish
+    assert w._mark_deployed() == ["sub_1"]
+    row = submission(env["d1"], "sub_1")
+    assert (row["status"], row["slug"], row["reason"]) == ("listed", "tinyq", None)
+    saved = json.loads((env["tmp"] / "runs" / "watch" / "jobs" / "sub_1.json").read_text())
+    assert saved["result"] == "listed" and saved["seconds_to_listed"] == 400.0
+
+
+def test_publish_lists_earlier_ready_records_too(env: dict[str, Any]) -> None:
+    from pickfit.index import load_records
+
+    repos = {"someone/tinyq": repo_item(7, "someone/tinyq"), "someone/second": repo_item(8, "someone/second")}
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    runs = [passed_run(f"run-20261030-linux-{i}", ["cargo install tinyq"], method="cargo") for i in range(2)]
+    make(env, Pipeline(env["tmp"], repos=repos, runs=runs[:1])).run(once=True)  # ready, not deployed
+    submit(env["d1"], "sub_2", "https://github.com/someone/second", at="2026-10-30T10:01:00.000Z")
+    deployed: dict[str, str] = {}
+
+    def publish(data_dir: Path, worker_dir: Path, out: Any) -> int:
+        deployed["sha"] = load_records(data_dir)[1]
+        return 0
+
+    make(env, Pipeline(env["tmp"], repos=repos, runs=runs[1:]), publish=True, publish_fn=publish,
+         live_sha=lambda: deployed.get("sha")).run(once=True)
+    assert [submission(env["d1"], s)["status"] for s in ("sub_1", "sub_2")] == ["listed", "listed"]

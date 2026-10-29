@@ -194,13 +194,17 @@ def _watch(args: argparse.Namespace) -> int:
     from pickfit.discover.github import GitHubError, runs_dir
     from pickfit.discover.run import pipeline_db_path
     from pickfit.ledger import baseten_ledger, default_ledger
-    from pickfit.watch import Settings, Watcher, hourly_cap, live_steps
+    from pickfit.watch import Settings, Watcher, hourly_cap, live_data_sha, live_steps
 
     d1 = _d1(args)
     if args.status:
         return _queue_status(d1)
     if args.publish and args.no_commit:
         print("pickfit watch: --publish deploys committed data only; drop --no-commit", file=sys.stderr)
+        return 2
+    if args.publish and args.reverify:
+        print("pickfit watch: --reverify rewrites steps from a user's report; read its diff and publish yourself, "
+              "so not with --publish", file=sys.stderr)
         return 2
     settings = Settings(data_dir=args.data, runs_dir=runs_dir(), db_path=pipeline_db_path(), worker_dir=args.worker,
                         commit=not args.no_commit, publish=args.publish, hourly_cap=hourly_cap(args.worker),
@@ -219,7 +223,8 @@ def _watch(args: argparse.Namespace) -> int:
                                 db_path=pipeline_db_path(), commit=not args.no_commit,
                                 log=lambda line: print(line, flush=True))
     watcher = Watcher(d1, steps, settings, meta_ledger=default_ledger(), baseten_ledger=baseten_ledger(),
-                      reverifier=reverifier, log=lambda line: print(line, flush=True))
+                      reverifier=reverifier, log=lambda line: print(line, flush=True),
+                      live_sha=None if args.local else live_data_sha(args.worker))
     print(f"watch · {d1.where} · every {args.interval:.0f}s · {args.concurrency} at a time · "
           f"hourly cap {settings.hourly_cap} · --max-usd {args.max_usd} · {args.runner} · "
           f"{'commit + publish' if args.publish else 'commit, no deploy' if settings.commit else 'no commit'}"
@@ -277,7 +282,8 @@ def _add_queue_commands(sub: argparse._SubParsersAction) -> None:
     common(w)
     w.add_argument("--once", action="store_true", help="take what is queued now, finish it, and stop")
     w.add_argument("--publish", action="store_true",
-                   help="deploy the Worker (pickfit publish) after each record that passes every check")
+                   help="deploy the Worker (pickfit publish) after each record that passes every check "
+                        "(not with --reverify)")
     w.add_argument("--reverify", action="store_true", help="also take reported failures from reverify_queue")
     w.add_argument("--status", action="store_true", help="read-only: list submissions and the reverify queue")
     w.add_argument("--interval", type=float, default=DEFAULT_INTERVAL_S, help="seconds between polls (default 60)")

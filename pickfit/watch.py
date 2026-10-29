@@ -11,11 +11,16 @@ pipeline:
 
 The record is built in runs/watch/<submission>/software/, so data/software
 changes only when a record is finished: then it is copied in and committed
-alone (one commit per record). D1 follows each step: reading -> verifying ->
+alone (one commit per record; a failed commit puts data/software back). From
+that moment the job is `landed`: a later try of the same submission only
+reports what is already there, it never runs the pipeline again or calls its
+own record "already listed". D1 follows each step: reading -> verifying ->
 
 - verifying with READY_REASON: every check passed and the commit is made;
   nothing is deployed unless `publish` (`--publish`) is on;
-- listed: `--publish` deployed it, so find_software can recommend it;
+- listed: deployed, either by `--publish` or by anyone's `pickfit publish`
+  (seen when the live Worker's data_sha256 equals data/software's), so
+  find_software can recommend it;
 - listed_unverified: committed without a verified install (never recommended);
 - rejected: the reason is written by this program, never by a model, since it
   goes back to whoever submitted.
@@ -23,8 +28,8 @@ alone (one commit per record). D1 follows each step: reading -> verifying ->
 Refused before any model call: URLs that are not a GitHub repository, test
 fixtures, private or missing repositories, repositories already in
 data/software (they get the existing record's status) or taken by another
-submission, repositories above the discovery star range, and whatever the
-rules reject.
+submission (also one still in flight), repositories above the discovery star
+range, and whatever the rules reject.
 
 Limits: at most SUBMIT_HOURLY_CAP submissions start per rolling hour (the cap
 the Worker applies to intake, from wrangler.jsonc); a submission starts only
@@ -42,6 +47,7 @@ import shutil
 import subprocess
 import threading
 import time
+import urllib.request
 from collections.abc import Callable, Iterator
 from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import contextmanager
@@ -178,6 +184,7 @@ class Job:
     result: str | None = None  # ready | listed | listed_unverified | rejected | retry | waiting
     level: str | None = None
     run_id: str | None = None
+    landed: bool = False  # the record is in data/software (and committed, unless --no-commit)
     commit: str | None = None
     publish_check: list[str] | None = None  # problems `pickfit publish --dry-run` would report
     stages: dict[str, float] = field(default_factory=dict)  # seconds
@@ -285,6 +292,24 @@ def git(repo: Path, *args: str) -> str:
     return subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True, text=True).stdout
 
 
+def live_data_sha(worker_dir: Path) -> Callable[[], str | None]:
+    """data_sha256 of what the deployed Worker serves (GET / on its first ALLOWED_HOSTS name), or None."""
+    from pickfit.publish import check_wrangler
+
+    _, variables = check_wrangler(worker_dir)
+    host = str(variables.get("ALLOWED_HOSTS", "")).split(",")[0].strip()
+
+    def fetch() -> str | None:
+        if not host:
+            return None
+        try:
+            with urllib.request.urlopen(f"https://{host}/", timeout=10) as response:
+                return json.loads(response.read(100_000)).get("data_sha256")
+        except (OSError, ValueError):
+            return None
+    return fetch
+
+
 @dataclass
 class Settings:
     data_dir: Path
@@ -303,9 +328,12 @@ class Watcher:
     def __init__(self, d1: Database, steps: Steps, settings: Settings, *, meta_ledger: Ledger | None = None,
                  baseten_ledger: Ledger | None = None, clock: Callable[[], datetime] | None = None,
                  log: Callable[[str], None] = print, publish_fn: Callable[..., int] | None = None,
-                 reverifier: Any = None) -> None:
+                 reverifier: Any = None, live_sha: Callable[[], str | None] | None = None) -> None:
         if settings.publish and not settings.commit:
             raise ValueError("--publish needs commits: pickfit publish deploys committed data only")
+        if settings.publish and reverifier is not None:
+            raise ValueError("--publish with --reverify would deploy steps rewritten from a user's report "
+                             "unread; read the diff, then run pickfit publish yourself")
         self.d1 = d1
         self.steps = steps
         self.s = settings
@@ -321,6 +349,8 @@ class Watcher:
         self._state_lock = threading.Lock()
         self._running: dict[str, Future[Job]] = {}
         self._slugs_in_flight: set[str] = set()
+        self._repos_in_flight: dict[str, str] = {}  # repo_id -> the submission URL taking it
+        self._live_sha = live_sha or (lambda: None)
         self._log_lock = threading.Lock()
         self.spent_usd = 0.0
         self.reverifier = reverifier  # pickfit.reverify.Reverifier: also take the reverify queue
@@ -398,11 +428,20 @@ class Watcher:
         sid = sub["id"]
         log = self._say(sid)
         earlier = self._saved(sid)
-        job = Job(submission_id=sid, url=sub["url"], submitted_at=sub["submitted_at"],
-                  started_at=self.now().isoformat(), failures=earlier.failures if earlier else 0)
-        log(f"start · {job.url} · try {job.failures + 1}")
+        resume = bool(earlier and earlier.landed and earlier.slug and
+                      (self.s.data_dir / f"{earlier.slug}.json").exists())
+        if resume:
+            job = earlier
+            job.notes.append("landed on an earlier try: reporting it, not running the pipeline again")
+        else:
+            job = Job(submission_id=sid, url=sub["url"], submitted_at=sub["submitted_at"],
+                      started_at=self.now().isoformat(), failures=earlier.failures if earlier else 0)
+        log(f"start · {job.url} · try {job.failures + 1}{' · resuming a landed record' if resume else ''}")
         try:
-            self._run(job, log)
+            if resume:
+                self._report_landed(job, log)
+            else:
+                self._run(job, log)
         except _AlreadyListed:
             pass
         except Rejected as err:
@@ -416,10 +455,11 @@ class Watcher:
         except Exception as err:  # noqa: BLE001 - Retry, IndexBuildError, a bug: the row must not stay in reading
             self._fail(job, f"{type(err).__name__}: {str(err)[:300]}", log)
         finally:
-            if job.slug:
-                with self._state_lock:
-                    self._slugs_in_flight.discard(job.slug)
             with self._state_lock:
+                if job.slug:
+                    self._slugs_in_flight.discard(job.slug)
+                if job.repo_id and self._repos_in_flight.get(job.repo_id) == job.url:
+                    self._repos_in_flight.pop(job.repo_id)
                 self.spent_usd += sum(job.cost_usd.get(k, 0.0) for k in ("meta", "baseten"))
             self._save(job)
         log(f"done · {job.summary()}")
@@ -429,7 +469,7 @@ class Watcher:
         job.failures += 1
         job.notes.append(what)
         log(f"problem: {what}")
-        if job.failures >= MAX_ATTEMPTS:
+        if job.failures >= MAX_ATTEMPTS and not job.landed:  # a landed record is there: keep reporting it
             self._finish(job, "rejected", "rejected",
                          f"pickfit could not finish reading this repository after {job.failures} tries.", log)
         else:
@@ -522,12 +562,17 @@ class Watcher:
         self._land(job, record_dir, not_passed, log)
 
     def _refuse_known(self, job: Job) -> None:
-        """A repository another submission took is refused; one already in data/software takes that record's status."""
+        """A repository another submission took (or is taking) is refused; one already in data/software
+        takes that record's status."""
         for other in self.saved_jobs():
             if other.repo_id == job.repo_id and other.submission_id != job.submission_id and \
-                    other.result not in (None, "retry", "waiting", "rejected"):
+                    (other.landed or other.result not in (None, "retry", "waiting", "rejected")):
                 raise Rejected(f"Same repository as an earlier submission ({other.url}).")
-        # Two submissions of one repository in flight at once: the second loses the slug in _write_record.
+        with self._state_lock:
+            taking = self._repos_in_flight.get(job.repo_id)
+            if taking and taking != job.url:
+                raise Rejected(f"Same repository as another submission pickfit is reading now ({taking}).")
+            self._repos_in_flight[job.repo_id] = job.url
         for path in sorted(self.s.data_dir.glob("*.json")):
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
@@ -617,30 +662,57 @@ class Watcher:
         record = SoftwareRecord.model_validate_json((record_dir / f"{job.slug}.json").read_text(encoding="utf-8"))
         passed = is_passed(record.verification.level) and any(
             guide.basis == "replayed" for _, guide in record.install.guides())
-        job.level = record.verification.level
         target = self.s.data_dir / f"{job.slug}.json"
         with self._git_lock, self._stage(job, "commit"):
+            for path in self.s.data_dir.glob("*.json"):  # one record per repository, or the index refuses them all
+                try:
+                    if json.loads(path.read_text(encoding="utf-8")).get("repo_id") == job.repo_id:
+                        raise Rejected(f"Already in pickfit's directory as {path.stem}.")
+                except (OSError, ValueError):
+                    continue
             shutil.copyfile(record_dir / f"{job.slug}.json", target)
-            if self.s.commit:
-                took = (self.now() - _parse_time(job.submitted_at)).total_seconds()
-                git(self.s.data_dir, "add", "--", target.name)
-                git(self.s.data_dir, "commit", "-q", "-m",
-                    f"Add {job.slug} from a submission (pickfit watch)\n\n{job.url}\n"
-                    f"Submission {job.submission_id}; verification {record.verification.level}"
-                    f"{', replayed' if passed else ''}; {took:.0f}s after submission.", "--", target.name)
-                job.commit = git(self.s.data_dir, "rev-parse", "--short", "HEAD").strip()
-            check = plan(self.s.data_dir, self.s.worker_dir, allow_dirty=not self.s.commit)
-            job.publish_check = check.problems
+            try:
+                if self.s.commit:
+                    took = (self.now() - _parse_time(job.submitted_at)).total_seconds()
+                    git(self.s.data_dir, "add", "--", target.name)
+                    git(self.s.data_dir, "commit", "-q", "-m",
+                        f"Add {job.slug} from a submission (pickfit watch)\n\n{job.url}\n"
+                        f"Submission {job.submission_id}; verification {record.verification.level}"
+                        f"{', replayed' if passed else ''}; {took:.0f}s after submission.", "--", target.name)
+                    job.commit = git(self.s.data_dir, "rev-parse", "--short", "HEAD").strip()
+            except Exception:  # nothing half-done stays behind: the next try starts from a clean data/software
+                if self.s.commit:
+                    subprocess.run(["git", "reset", "-q", "--", target.name], cwd=self.s.data_dir,
+                                   capture_output=True)
+                target.unlink(missing_ok=True)
+                raise
+            job.landed = True
+            self._save(job)  # from here on a failed status write resumes instead of running again
+            job.publish_check = plan(self.s.data_dir, self.s.worker_dir, allow_dirty=not self.s.commit).problems
+        self._report_landed(job, log, not_passed)
+
+    def _report_landed(self, job: Job, log: Callable[[str], None], not_passed: str | None = None) -> None:
+        """Write the D1 status a landed record has: ready (or listed once deployed), or listed_unverified."""
+        record = SoftwareRecord.model_validate_json((self.s.data_dir / f"{job.slug}.json").read_text(encoding="utf-8"))
+        job.level = record.verification.level
+        passed = is_passed(record.verification.level) and any(
+            guide.basis == "replayed" for _, guide in record.install.guides())
         if not passed:
             job.result = "listed_unverified"
-            self._status(job, "listed_unverified", reason=f"Added without a verified install: {not_passed}.")
+            why = not_passed or f"the sandbox run did not pass ({record.verification.unverified_reason or job.level})"
+            self._status(job, "listed_unverified", reason=f"Added without a verified install: {why}.")
             return
-        job.ready_at = self.now().isoformat()
-        job.seconds_to_ready = round((self.now() - _parse_time(job.submitted_at)).total_seconds(), 1)
+        if job.listed_at:  # deployed on an earlier try; only its status write failed
+            job.result = "listed"
+            self._status(job, "listed", reason=None)
+            return
+        job.ready_at = job.ready_at or self.now().isoformat()
+        job.seconds_to_ready = job.seconds_to_ready or round(
+            (self.now() - _parse_time(job.submitted_at)).total_seconds(), 1)
         job.result = "ready"
         self._status(job, "verifying", reason=READY_REASON)
-        if check.problems:
-            log(f"publish dry run: {len(check.problems)} problem(s): {'; '.join(check.problems)[:300]}")
+        if job.publish_check:
+            log(f"publish dry run: {len(job.publish_check)} problem(s): {'; '.join(job.publish_check)[:300]}")
         else:
             log(f"ready to publish ({job.commit or 'not committed'}) · {job.seconds_to_ready:.0f}s after submission")
         if self.s.publish:
@@ -661,10 +733,42 @@ class Watcher:
             return
         for job in jobs:
             job.stages["publish"] = took
-            job.listed_at = self.now().isoformat()
-            job.seconds_to_listed = round((self.now() - _parse_time(job.submitted_at)).total_seconds(), 1)
+        self._mark_listed(jobs)
+        self._mark_deployed()  # earlier ready records went out with this deploy too
+
+    def _mark_listed(self, jobs: list[Job]) -> None:
+        for job in jobs:
+            job.listed_at = job.listed_at or self.now().isoformat()
+            job.seconds_to_listed = round((_parse_time(job.listed_at) - _parse_time(job.submitted_at)).total_seconds(),
+                                          1)
             job.result = "listed"
             self._status(job, "listed", reason=None)
+
+    def _mark_deployed(self) -> list[str]:
+        """Ready records the live Worker now serves (its data_sha256 is data/software's) become listed."""
+        from pickfit.index import IndexBuildError, load_records
+
+        with self._state_lock:
+            running = set(self._running)
+        ready = [j for j in self.saved_jobs() if j.result == "ready" and j.submission_id not in running]
+        if not ready:
+            return []
+        try:
+            _, local = load_records(self.s.data_dir)
+        except IndexBuildError:
+            return []
+        if self._live_sha() != local:
+            return []
+        try:
+            self._mark_listed(ready)
+        except D1Error as err:
+            self.log(f"[watch] deployed, but D1 not updated yet: {err}")
+            return []
+        finally:
+            for job in ready:
+                self._save(job)
+        self.log(f"[watch] deployed, now listed: {', '.join(j.slug or j.submission_id for j in ready)}")
+        return [j.submission_id for j in ready]
 
     # -- the loop
 
@@ -684,6 +788,7 @@ class Watcher:
             return []
         if back:
             self.log(f"[watch] back to the queue (no watcher for {STALE_AFTER}): {', '.join(back)}")
+        self._mark_deployed()
         started: list[str] = []
         for sub in todo:
             why = self.blocked()
@@ -708,7 +813,10 @@ class Watcher:
         with self._state_lock:
             if self._reverify is not None and not self._reverify.done():
                 return False
+            finished, self._reverify = self._reverify, None
             busy = len(self._running)
+        if finished is not None and finished.exception() is not None:
+            self.log(f"[watch] reverify failed: {type(finished.exception()).__name__}: {finished.exception()}")
         if busy >= self.s.concurrency:
             return False
         try:
@@ -724,7 +832,11 @@ class Watcher:
             return budget_blocked([("Meta pipeline", self.meta_ledger, WORST_CASE_META_USD * (busy + 1))])
 
         def work() -> list[Any]:
-            results = self.reverifier.run(1, blocked=blocked)
+            try:
+                results = self.reverifier.run(1, blocked=blocked)
+            except Exception as err:  # noqa: BLE001 - D1 unreachable while listing the queue, say
+                self.log(f"[watch] reverify failed: {type(err).__name__}: {str(err)[:300]}")
+                return []
             with self._state_lock:
                 self.spent_usd += sum(r.cost_usd for r in results)
             return results
@@ -747,7 +859,7 @@ class Watcher:
                     done += [f.result() for f in futures]
                     if reverify is not None:
                         reverify.result()
-                    if not started:
-                        return done
+                    if not [sid for sid in started if sid != "reverify"]:
+                        return done  # a report that stays pending (busy, retry) waits for the next run
                     continue
                 sleep(max(0.0, self.s.interval_s - (time.monotonic() - began)))
