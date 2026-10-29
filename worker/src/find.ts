@@ -73,6 +73,8 @@ export interface PickOut {
   how_we_know: string;
   evidence_url: string | null;
   scores: { quality: number | null; popularity: number | null; treasure: boolean };
+  /** A reference record of a well-known tool (verified like the rest, never a treasure); null for the long tail. */
+  well_known: { package: string; rank: number; count: number; period_end: string } | null;
   repo: string;
   homepage: string | null;
 }
@@ -104,6 +106,12 @@ export interface AlternativesOutput extends FindOutput {
 function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, considered: number): string {
   const parts: string[] = [];
   if (guide) parts.push(ranSentence(guide));
+  if (entry.well_known) {
+    const { package: pkg, rank, period_end } = entry.well_known;
+    parts.push(
+      `A well-known tool listed as a reference: ${pkg} is #${rank} in Homebrew installs over the year to ${period_end}; never counted as a treasure.`,
+    );
+  }
   if (entry.scores) {
     const q = entry.scores.quality === null ? 'n/a' : Math.round(entry.scores.quality);
     const p = entry.scores.popularity === null ? 'n/a' : Math.round(entry.scores.popularity);
@@ -169,6 +177,7 @@ function pickOut(entry: Entry, chosen: GuardedPick, os: OS | undefined, matchedB
       popularity: entry.scores?.popularity ?? null,
       treasure: entry.scores?.treasure ?? false,
     },
+    well_known: entry.well_known ?? null,
     repo: entry.repo_url,
     homepage: entry.homepage,
   };
@@ -241,7 +250,9 @@ function fromModel(
 function fromRules(req: MatchRequest, candidates: Entry[], cards: Map<string, Card>, limit: number): Choice {
   const os = req.conditions.os;
   const ranked = rankByRules(candidates, req.rulesText, os, req.currentTool);
-  const top = ranked.slice(0, limit);
+  // Like the guard: at most one well-known reference record among the picks.
+  const firstWellKnown = ranked.find((entry) => entry.well_known);
+  const top = ranked.filter((entry) => !entry.well_known || entry === firstWellKnown).slice(0, limit);
   const free = ranked.find((entry) => entry.pricing === 'free');
   const osSets = new Set(top.map((entry) => entry.platforms.slice().sort().join(',')));
   return {
@@ -378,7 +389,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   if (candidates.length === 0) {
     notes.push(
       `No verified ${what} in pickfit meets these conditions. Coverage today: developer CLI tools and local AI/LLM tools. ` +
-        'pickfit lists only lesser-known tools, so a well-known one may still fit.',
+        'pickfit lists mostly lesser-known tools, so a well-known one may still fit.',
     );
   } else if (choice.emptyByModel) {
     notes.push(`None of the ${candidates.length} verified tools that meet the conditions fits this request.`);

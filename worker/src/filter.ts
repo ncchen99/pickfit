@@ -43,7 +43,8 @@ export interface Filtered {
  * Entries that meet every hard condition, in slug order (no popularity order
  * for the model to lean on). A tool that claims the user's OS but was verified
  * only elsewhere stays in; its card and the response say so.
- * Above MAX_CARDS, the highest treasure values are kept (BM25 is the planned upgrade).
+ * Above MAX_CARDS, the highest treasure values are kept (BM25 is the planned upgrade), and so is
+ * every well-known reference record (a handful), which a treasure order would always drop.
  */
 export function hardFilter(entries: Entry[], cond: Conditions): Filtered {
   const passed = entries.filter((entry) => fits(entry, cond));
@@ -51,7 +52,11 @@ export function hardFilter(entries: Entry[], cond: Conditions): Filtered {
     passed.length <= MAX_CARDS
       ? passed
       : [...passed]
-          .sort((a, b) => (b.scores?.treasure_value ?? -1) - (a.scores?.treasure_value ?? -1))
+          .sort(
+            (a, b) =>
+              Number(Boolean(b.well_known)) - Number(Boolean(a.well_known)) ||
+              (b.scores?.treasure_value ?? -1) - (a.scores?.treasure_value ?? -1),
+          )
           .slice(0, MAX_CARDS)
           .sort((a, b) => a.slug.localeCompare(b.slug));
   return { candidates, passed: passed.length };

@@ -77,6 +77,8 @@ export interface Entry {
     formula_version: string;
   } | null;
   sources: string[];
+  /** A reference record of a well-known tool, chosen by Homebrew install rank; null (or absent in older indexes) for the long tail. */
+  well_known?: { package: string; rank: number; count: number; period_end: string } | null;
 }
 
 export interface Catalog {

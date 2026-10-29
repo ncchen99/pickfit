@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { findAlternatives, findSoftware, type FindInput } from '../src/find.ts';
+import { hardFilter, MAX_CARDS } from '../src/filter.ts';
 import { guardWellKnown } from '../src/guard.ts';
 import { MATCH_INSTRUCTIONS } from '../src/prompt.ts';
 import { answer, fixtureCatalog, harness, metaResponse } from './helpers.ts';
@@ -122,5 +123,59 @@ test('without the model there is no well-known option; with no candidates the no
   );
   assert.equal(h.requests.length, 0);
   assert.equal(none.well_known_option, null);
-  assert.match(none.coverage_note ?? '', /No verified tool.*lists only lesser-known tools, so a well-known one may still fit\./);
+  assert.match(none.coverage_note ?? '', /No verified tool.*lists mostly lesser-known tools, so a well-known one may still fit\./);
+});
+
+// Reference records of well-known tools (phase 2): real picks with verified steps, flagged, never treasures.
+const OLLAMA_REF = { package: 'homebrew:ollama', rank: 23, count: 655153, period_end: '2026-10-29' };
+
+function withReferences(h: ReturnType<typeof harness>, slugs: string[]) {
+  for (const slug of slugs) {
+    const entry = h.deps.catalog.bySlug.get(slug)!;
+    entry.well_known = { ...OLLAMA_REF, package: `homebrew:${slug}` };
+  }
+}
+
+test('a well-known reference record is a real pick, flagged, and at most one is kept', async () => {
+  const h = harness(() => metaResponse(answer()));
+  withReferences(h, ['fixture-llm-runner', 'fixture-chat-tui']);
+  const out = await findSoftware(MAC_OFFLINE, h.deps);
+
+  // The model chose both; the guard keeps the first reference record only.
+  assert.deepEqual(out.picks.map((p) => p.slug), ['fixture-llm-runner']);
+  const [pick] = out.picks;
+  assert.deepEqual(pick.well_known, { ...OLLAMA_REF, package: 'homebrew:fixture-llm-runner' });
+  assert.match(pick.how_we_know, /A well-known tool listed as a reference: homebrew:fixture-llm-runner is #23 in Homebrew installs/);
+  assert.equal(pick.verification.verified_on_user_os, true); // verified like the rest
+  // The model sees the flag on the card, and the prompt says what it means.
+  const input = h.requests[0].body.input[1].content as string;
+  assert.match(input, /"slug":"fixture-llm-runner"[^\n]*"well_known":true/);
+  assert.match(input, /"slug":"fixture-transcribe"[^\n]*"well_known":false/);
+  assert.match(MATCH_INSTRUCTIONS, /well_known true is a reference record of a well-known tool/);
+});
+
+test('long-tail picks carry well_known null; rules keep at most one reference record too', async () => {
+  const plain = await findSoftware(MAC_OFFLINE, harness(() => metaResponse(answer())).deps);
+  assert.ok(plain.picks.every((p) => p.well_known === null));
+
+  const h = harness(null, { modelEnabled: false });
+  withReferences(h, ['fixture-llm-runner', 'fixture-chat-tui', 'fixture-transcribe']);
+  const out = await findSoftware({ need: 'local language model chat offline', os: 'linux' }, h.deps);
+  assert.equal(out.matched_by, 'rules');
+  assert.equal(out.picks.filter((p) => p.well_known).length, 1);
+  assert.ok(out.picks.length >= 2);
+});
+
+test('above MAX_CARDS the reference records stay among the cards', () => {
+  const base = fixtureCatalog().bySlug.get('fixture-json-query')!;
+  const entries = Array.from({ length: MAX_CARDS + 5 }, (_, i) => ({
+    ...structuredClone(base),
+    slug: `tail-${String(i).padStart(2, '0')}`,
+    scores: { ...base.scores!, treasure_value: 90 },
+  }));
+  entries.push({ ...structuredClone(base), slug: 'famous', well_known: OLLAMA_REF, scores: { ...base.scores!, treasure_value: 5 } });
+  const { candidates, passed } = hardFilter(entries, { os: 'linux' });
+  assert.equal(passed, MAX_CARDS + 6);
+  assert.equal(candidates.length, MAX_CARDS);
+  assert.ok(candidates.some((e) => e.slug === 'famous'));
 });

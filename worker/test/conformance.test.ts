@@ -24,6 +24,8 @@ function index(): unknown {
   Object.assign(entry('fixture-llm-runner').install.linux.pitfalls[0], { kind: 'surprise', seen_in: 'step 2' });
   entry('fixture-cloud-summarize').install = {};
   entry('fixture-json-query').repo_url = 'https://github.com/example/json-query';
+  // A reference record of a well-known tool: its picks carry the well_known object.
+  entry('fixture-llm-runner').well_known = { package: 'homebrew:fixture-llm-runner', rank: 23, count: 655153, period_end: '2026-10-29' };
   return data;
 }
 

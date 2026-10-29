@@ -65,6 +65,10 @@ const pick = z.object({
     popularity: z.number().nullable().describe('0-100; scored separately from quality'),
     treasure: z.boolean().describe('High quality, low popularity'),
   }),
+  well_known: z
+    .object({ package: z.string(), rank: z.number().int(), count: z.number().int(), period_end: z.string() })
+    .nullable()
+    .describe('Set when this pick is a reference record of a well-known tool (Homebrew install rank); verified like the rest, never a treasure'),
   repo: z.string(),
   homepage: z.string().nullable(),
 });
@@ -276,7 +280,7 @@ export function buildServer(deps: Deps): McpServer {
       description:
         'Use when the user wants a tool for a job and has not settled on a product (e.g. "a free offline CLI to transcribe audio on my Mac"). ' +
         'Before calling, ask at most one or two questions, and only if unknown: which OS, and whether it must be free or run fully offline. ' +
-        'Returns up to 3 lesser-known tools whose install pickfit actually ran, ranked by fit (not popularity), each with reasons tied to its verified profile, trade-offs, verification evidence and separate quality/popularity scores, plus the best free option. ' +
+        'Returns up to 3 tools whose install pickfit actually ran, mostly lesser-known (at most one well-known reference, flagged well_known), ranked by fit (not popularity), each with reasons tied to its verified profile, trade-offs, verification evidence and separate quality/popularity scores, plus the best free option. ' +
         'If a well-known free tool pickfit does not list may fit better, well_known_option names it: tell the user pickfit has not verified it. ' +
         'If clarifying_question is set, ask it and call again. Next: get_install_guide(slug, os, rec_id). Coverage: developer CLI tools and local AI/LLM tools.',
       inputSchema: findInput,
@@ -293,7 +297,7 @@ export function buildServer(deps: Deps): McpServer {
       description:
         'Use when the user already uses a specific tool and wants something different ("replace X", "X is too slow / too expensive / needs an account"). ' +
         'Requires the current tool\'s name and what the user dislikes about it: ask for the dislike if they have not said it; do not guess. Ask for the OS only if unknown. ' +
-        'Returns up to 3 lesser-known tools whose install pickfit actually ran, each with reasons tied to its verified profile, trade-offs against the current tool and verification evidence, ' +
+        'Returns up to 3 tools whose install pickfit actually ran (at most one well-known reference, flagged well_known), each with reasons tied to its verified profile, trade-offs against the current tool and verification evidence, ' +
         'or keep_current advice when nothing fits better, plus the best free option and, rarely, an unverified well-known free tool (well_known_option). Next: get_install_guide(slug, os, rec_id).',
       inputSchema: alternativesInput,
       outputSchema: alternativesOutput,

@@ -90,9 +90,11 @@ export function guardPicks(answer: ModelAnswer, cards: Map<string, Card>, limit:
   let droppedPicks = 0;
   let droppedReasons = 0;
   const seen = new Set<string>();
+  let wellKnown = 0;
   for (const pick of answer.picks as ModelPick[]) {
     const card = cards.get(pick.slug);
-    if (!card || seen.has(pick.slug) || picks.length >= limit) {
+    // At most one well-known reference record, so lesser-known tools that fit keep the other places.
+    if (!card || seen.has(pick.slug) || picks.length >= limit || (card.well_known === true && wellKnown > 0)) {
       droppedPicks++;
       continue;
     }
@@ -103,6 +105,7 @@ export function guardPicks(answer: ModelAnswer, cards: Map<string, Card>, limit:
       continue;
     }
     seen.add(pick.slug);
+    if (card.well_known === true) wellKnown++;
     const fit = clip(pick.fit, 300);
     picks.push({
       slug: pick.slug,

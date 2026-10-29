@@ -39,6 +39,7 @@ export const CARD_FIELDS = [
   'last_release',
   'quality',
   'popularity',
+  'well_known',
 ] as const;
 export type CardField = (typeof CARD_FIELDS)[number];
 
@@ -82,5 +83,6 @@ export function toCard(entry: Entry, os?: OS): Card {
     last_release: entry.last_release,
     quality: entry.scores?.quality ?? null,
     popularity: entry.scores?.popularity ?? null,
+    well_known: Boolean(entry.well_known),
   };
 }
