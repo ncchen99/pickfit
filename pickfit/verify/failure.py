@@ -217,23 +217,44 @@ def failure_reason(verdict: dict[str, Any], commands: list[CommandRecord], block
     return box_reason(blocking_error)
 
 
-# A file named like a system command, written or linked into a directory on the box's PATH.
-_FAKED = r"nvidia-smi|rocm-smi|nvcc|lspci|docker|podman|sudo|systemctl|journalctl|uname|lsb_release|apt-get|apt|dpkg"
-_USER_BIN = r"(?:~|\$HOME|\$\{HOME\}|/home/[^/\s'\"]+)/(?:\.local/bin|\.cargo/bin|go/bin|bin)/"
-_SHIM_PATH = re.compile(rf"['\"]?{_USER_BIN}(?P<name>{_FAKED})(?=$|[\s'\";&|)])")
-_WRITES = re.compile(r">|\btee\b|\bln\b|\bcp\b|\bmv\b|\binstall\b|\bchmod\b|\s-o\s|\s-O\s|--output\b")
+# A file named like a system command, written or linked into a directory on PATH: a user bin
+# directory of the box, or one the command itself puts on PATH.
+_FAKED = re.compile(r"(?:nvidia-smi|rocm-smi|nvcc|lspci|docker|podman|sudo|systemctl|journalctl|uname"
+                    r"|lsb_release|apt-get|apt|dpkg)")
+_USER_BIN = re.compile(r"(?:~|\$HOME|\$\{HOME\}|/home/[^/\s'\"]+)/(?:\.local/bin|\.cargo/bin|go/bin|bin)/?")
+_REDIRECT = re.compile(r"(?:^|[^<&\d])(?:\d?>>?|&>)\s*(?P<path>[^\s;&|<>]+)")
+_TEE = re.compile(r"\btee\s+(?:-a\s+)?(?P<path>[^\s;&|<>]+)")
+_DOWNLOAD = re.compile(r"(?:^|\s)(?:-\w*[oO]|--output(?:-document)?)(?:\s+|=)(?P<path>[^\s;&|<>]+)")
+_COPY = re.compile(r"(?:^|[;&|(]\s*|\n)\s*(?:ln|cp|mv|install)\b(?P<args>[^;&|\n<>]*)")
+_PATH_DIR = re.compile(r"\bPATH=[\"']?(?P<dir>[^\s:\"']+):")
+_CD = re.compile(r"\bcd\s+(?P<dir>[^\s;&|]+)")
 _SANDBOX_PURPOSE = re.compile(
     rf"\b(?:sandbox|box)[- ]only\b|\bonly (?:for|in|inside) (?:the |this )?(?:sandbox|box)\b|\bgvisor\b"
     rf"|\bwork(?:s|ed|ing)?[- ]?around (?:the |this )?(?:box|sandbox)\b"
-    rf"|\b(?:shim|fake|stub|mock)\b[^.;]{{0,30}}\b(?:{_FAKED})\b|\b(?:{_FAKED})\b[^.;]{{0,30}}\b(?:shim|fake|stub|mock)\b",
-    re.I)
+    rf"|\b(?:shim|fake|stub|mock)\b[^.;]{{0,30}}\b{_FAKED.pattern}\b"
+    rf"|\b{_FAKED.pattern}\b[^.;]{{0,30}}\b(?:shim|fake|stub|mock)\b", re.I)
+
+
+def _written(command: str) -> list[str]:
+    """Paths the command writes: redirects, tee, curl/wget output, the destination of ln/cp/mv/install."""
+    paths = [m.group("path") for pattern in (_REDIRECT, _TEE, _DOWNLOAD) for m in pattern.finditer(command)]
+    for m in _COPY.finditer(command):
+        args = [a for a in m.group("args").split() if not a.startswith("-")]
+        if len(args) >= 2:
+            paths.append(args[-1])
+    return [p.strip("'\"") for p in paths]
 
 
 def sandbox_only(command: str, purpose: str | None = None) -> str | None:
     """Why a command only works around the box (it fakes a system command, or says so), else None."""
-    shim = _SHIM_PATH.search(command)
-    if shim and _WRITES.search(command):
-        return f"it replaces the system command {shim.group('name')}"
+    on_path = {d.rstrip("/") for d in _PATH_DIR.findall(command)}
+    in_bin = any(_USER_BIN.fullmatch(d) for d in _CD.findall(command))
+    for path in _written(command):
+        folder, _, name = path.rpartition("/")
+        if not _FAKED.fullmatch(name):
+            continue
+        if (folder and (_USER_BIN.fullmatch(folder) or folder.rstrip("/") in on_path)) or (not folder and in_bin):
+            return f"it replaces the system command {name}"
     if purpose and _SANDBOX_PURPOSE.search(purpose):
         return f"its purpose says so ({' '.join(purpose.split())[:80]})"
     return None

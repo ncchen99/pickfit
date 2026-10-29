@@ -183,6 +183,10 @@ def test_written_reasons_leave_out_the_uninformative_ones():
     ("mkdir -p ~/go/bin && ln -sf /bin/true ~/go/bin/docker", None),
     ("export BERTH_PCI=0", "sandbox-only PCI workaround so the daemon can start"),
     ("export X=1", "fake nvidia-smi output for gVisor"),
+    ("cd ~/.local/bin && printf '#!/bin/sh\nexit 0\n' > sudo && chmod +x sudo", None),
+    ("mkdir -p /tmp/shim && printf '#!/bin/sh\necho 0' > /tmp/shim/nvidia-smi && chmod +x /tmp/shim/nvidia-smi "
+     "&& PATH=/tmp/shim:$PATH tool --gpu", None),
+    ("wget -qO ~/.local/bin/nvidia-smi https://example.invalid/fake && chmod +x ~/.local/bin/nvidia-smi", None),
 ])
 def test_commands_that_work_around_the_box(command: str, purpose: str | None):
     assert sandbox_only(command, purpose)
@@ -203,6 +207,7 @@ def test_commands_that_work_around_the_box(command: str, purpose: str | None):
     ("pyenv rehash", "rebuild the pyenv shim"),
     ("uv tool install foo", "install foo from PyPI (the npm package is only a stub)"),
     ("printf 'a = 1' > foo.toml", "write a stub config so foo starts"),
+    ("ls -l ~/.local/bin/docker > /dev/null 2>&1 && tool --version", None),
     ("cd ~/.local/bin && ls && tool --version > out.txt", None),
 ])
 def test_ordinary_install_steps_are_not_workarounds(command: str, purpose: str | None):
