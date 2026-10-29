@@ -63,7 +63,7 @@ from pickfit.verify.failure import (
     structural_defect,
     tool_command,
 )
-from pickfit.verify.verdict import split_last, weaker
+from pickfit.verify.verdict import split_last, unread_scripts, weaker
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import CommandRecord, VerifyReport
@@ -268,6 +268,16 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         reason = "other"
     outputs = [f"{c.stdout}\n{c.stderr}" for c in report.commands]
     method = infer_install_method([s.command for s in steps], finish.get("install_method"))
+    pitfalls = [Pitfall(readme_said=_clip(p["readme_said"], 300) or "-",
+                        actually_needed=_clip(p["actually_needed"], 300) or "-", kind=p.get("kind"))
+                for p in finish.get("pitfalls") or []]
+    # A downloaded script the install ran, or brought in, that nothing read first: a note, not a block.
+    for cid, name in unread_scripts(verdict.get("step_ids") or [], report.commands):
+        notes.append(f"step {cid} runs or brings in {name}, which nothing read first")
+        if not any(name in f"{p.readme_said} {p.actually_needed}" for p in pitfalls):
+            pitfalls.append(Pitfall(readme_said=f"install step {cid} runs or brings in {name}", kind="note",
+                                    actually_needed=f"nothing to change; a note: {name} was downloaded and used in "
+                                                    "the box without being read first, so pickfit did not inspect it"))
     run = VerificationRun(
         id=report.run_id, level=level, unverified_reason=reason, os=report.box.get("os", "linux"),
         arch=report.box.get("arch", "x86_64"), method="sandbox", runner=report.box.get("runner"),
@@ -275,9 +285,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         tool_version=_printed(finish.get("tool_version"), outputs),
         install_method=method if steps else None, replayed=replayed, steps=steps,
         smoke_tests=smoke,
-        pitfalls=[Pitfall(readme_said=_clip(p["readme_said"], 300) or "-",
-                          actually_needed=_clip(p["actually_needed"], 300) or "-", kind=p.get("kind"))
-                  for p in finish.get("pitfalls") or []],
+        pitfalls=pitfalls,
         blocking_error=_clip(blocking, 500),
         judge=Judge(verdict=judge.verdict, observed=_clip(judge.observed, 300) or "", model=judge.model)
         if judge else None,

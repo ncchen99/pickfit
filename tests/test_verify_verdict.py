@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 
 from pickfit.verify.agent import CommandRecord, FinishArgs
-from pickfit.verify.verdict import check_kind, log_verdict, masked_exit, split_last, written_paths
+from pickfit.verify.verdict import check_kind, log_verdict, masked_exit, split_last, unread_scripts, written_paths
 
 
 @pytest.mark.parametrize("command", [
@@ -220,3 +220,25 @@ def test_a_step_that_runs_a_file_only_an_uncited_command_wrote():
     # Citing the download (even with its head) fixes it.
     assert log_verdict(claim("install", [1, 2], [{"command_id": 3, "expected_signal": "0.4.3"}]),
                        log).level == "install"
+
+
+def test_downloaded_scripts_a_step_runs_or_brings_in_unread():
+    def read(path: str) -> CommandRecord:
+        return CommandRecord(turn=0, tool="read_file", command=f"{path} [0-4000]", exit_code=0, seconds=0.0)
+
+    # mi-lsp: the installer was read, the helper it runs (downloaded beside it) was not.
+    log = [rec(1, "curl -fsSL https://x.dev/install.sh -o install.sh", 0),
+           rec(2, "curl -fsSL https://x.dev/validate-worker-manifest.js -o validate-worker-manifest.js", 0),
+           read("install.sh"), rec(3, "bash install.sh --skip-worker-install", 0)]
+    assert unread_scripts([1, 2, 3], log) == [(2, "validate-worker-manifest.js")]
+    assert unread_scripts([1, 2, 3], [*log[:3], read("/home/sbx/work/validate-worker-manifest.js"), log[3]]) == []
+    # Downloaded and run in one step, never read.
+    assert unread_scripts([1], [rec(1, "curl -fsSL https://x.dev/i.sh -o /tmp/i.sh && sh /tmp/i.sh", 0)]) == [
+        (1, "i.sh")]
+    # Read with head before the step that runs it; a read only after it does not count.
+    fetch, run = rec(1, "curl -fsSL https://x.dev/i.sh -o /tmp/i.sh", 0), rec(3, "sh /tmp/i.sh", 0)
+    assert unread_scripts([1, 3], [fetch, rec(2, "head -40 /tmp/i.sh", 0), run]) == []
+    assert unread_scripts([1, 3], [fetch, run, rec(4, "cat /tmp/i.sh", 0)]) == [(3, "i.sh")]
+    # A release tarball and the binary in it are not scripts to read.
+    assert unread_scripts([1, 2], [rec(1, "curl -fL -o tool.tgz https://x.dev/tool.tgz && tar xzf tool.tgz", 0),
+                                   rec(2, "./tool --version", 0)]) == []

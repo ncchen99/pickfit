@@ -143,6 +143,57 @@ def written_paths(command: str) -> set[str]:
     return {p for p in _WRITES.findall(command) if not p.startswith("/dev/") and not p[:1].isdigit()}
 
 
+_DOWNLOADS = re.compile(r"\b(?:curl|wget)\b")
+_SCRIPT = re.compile(r"\.(?:sh|bash|zsh|js|mjs|cjs|ts|py|ps1|rb|pl)$")
+_INTERPRETED = re.compile(r"(?:^|[\s;&|(])(?:sh|bash|zsh|node|deno|bun|python3?|ruby|perl|pwsh|source|\.)\s+"
+                          r"(?:-\S+\s+)*([^\s;&|<>]+)")
+_READS = re.compile(r"\b(?:cat|head|tail|less|more|bat|nl|sed\s+-n)\b")
+
+
+def unread_scripts(step_ids: list[int], commands: list[CommandRecord]) -> list[tuple[int, str]]:
+    """(step id, file name) for each downloaded script a cited step runs, or brings in, unread.
+
+    Downloaded: curl or wget wrote it. A step runs it with an interpreter (sh, bash, node, python ...);
+    one a cited step downloads with a script's extension may run inside another script, as an
+    installer's helper does. Read: read_file, or cat/head/tail/less/more/sed -n, before the step that
+    runs it (before the last cited step, for one no step runs directly).
+    """
+    cited = set(step_ids)
+    downloaded: dict[str, int] = {}  # file name -> the cited step that downloaded it (0: an uncited command)
+    first_read: dict[str, int] = {}  # file name -> position in the log
+    first_run: dict[str, tuple[int, int]] = {}  # file name -> (position, step id) of the first cited step running it
+    last_step = -1
+    for at, record in enumerate(commands):
+        if record.tool == "read_file":
+            first_read.setdefault(record.command.split(" [", 1)[0].rsplit("/", 1)[-1], at)
+        elif _READS.search(record.command):
+            for name in downloaded:
+                if re.search(rf"(?:^|[\s/'\"]){re.escape(name)}\b", record.command):
+                    first_read.setdefault(name, at)
+        if record.tool != "run_command":
+            continue
+        if _DOWNLOADS.search(record.command):
+            for path in written_paths(record.command):
+                name = path.rsplit("/", 1)[-1]
+                if record.command_id in cited or name not in downloaded:
+                    downloaded[name] = record.command_id if record.command_id in cited else 0
+        if record.command_id in cited:
+            last_step = at
+            for path in _INTERPRETED.findall(record.command):
+                first_run.setdefault(path.rsplit("/", 1)[-1], (at, record.command_id))
+    found = []
+    for name, step in downloaded.items():
+        if name in first_run:
+            deadline, step = first_run[name]
+        elif step and _SCRIPT.search(name):
+            deadline = last_step
+        else:
+            continue
+        if first_read.get(name, deadline) >= deadline:
+            found.append((step, name))
+    return sorted(found)
+
+
 def masked_exit(command: str) -> str | None:
     """Why the recorded exit code of `command` may not be its real result, or None."""
     parts = _top_level(command)

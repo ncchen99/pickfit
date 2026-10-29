@@ -348,6 +348,24 @@ def test_write_back_records_the_box_reason(tmp_path: Path):
     assert (verification.level, verification.unverified_reason) == ("unverified", "needs_container")
 
 
+def test_a_downloaded_script_run_unread_is_a_note_not_a_block(tmp_path: Path):
+    from pickfit.score import readme_fixes
+
+    fetch = "curl -fsSL https://example.invalid/install.sh -o install.sh && bash install.sh"
+    script = {**SCRIPT, "curl -fsSL": (0, "installed graphtty", "")}
+    server = FakeServer(response("r1", run_cmd(fetch)), response("r2", run_cmd("graphtty --version")),
+                        response("r3", run_cmd(GRAPH)), response("r4", run_cmd("graphtty graph.json")),
+                        response("r5", finish(level="function", steps=[1], smoke=SMOKE, install_method="script")),
+                        judge_answer("working"))
+    outcome, _ = verify(tmp_path, server, Boxes({"agent": script, "replay": script}))
+    run = outcome.run
+    assert run.level == "function" and run.replayed
+    note = run.pitfalls[-1]
+    assert (note.kind, note.readme_said) == ("note", "install step 1 runs or brings in install.sh")
+    assert readme_fixes(run.pitfalls) == 0  # a note about pickfit's check, not a fix to the README
+    assert "step 1 runs or brings in install.sh, which nothing read first" in outcome.notes
+
+
 def test_write_back_updates_the_record(tmp_path: Path):
     data_dir = tmp_path / "data"
     data_dir.mkdir()
