@@ -1,6 +1,6 @@
 # pickfit MCP server（Cloudflare Worker）
 
-無狀態的 Streamable HTTP MCP server（官方 TypeScript SDK v2 的 `createMcpHandler`，新舊兩代協定都收）。5 個工具：`find_software`、`find_alternatives`、`get_install_guide`、`report_outcome`、`submit_software`（`TOOLS=readonly` 時只有前 3 個，見「評測部署」）。**還沒部署**，只在本機跑；部署步驟見文末的檢查清單。
+無狀態的 Streamable HTTP MCP server（官方 TypeScript SDK v2 的 `createMcpHandler`，新舊兩代協定都收）。5 個工具：`find_software`、`find_alternatives`、`get_install_guide`、`report_outcome`、`submit_software`（`TOOLS=readonly` 時只有前 3 個，見「評測部署」）。已部署在 `https://pickfit-mcp.ncchen99.workers.dev/mcp`（10/29 起）；部署步驟見文末的檢查清單。
 
 ## 怎麼跑
 
