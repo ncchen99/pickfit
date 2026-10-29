@@ -3,9 +3,10 @@
 The program lists candidates deterministically and the model only chooses
 among them, so it does not install from memory. Order (sandbox-verify-design
 1.2): package managers -> release binaries -> install scripts -> build from
-source. Within package managers, isolated user-level installs come first.
-Methods the Linux box cannot run (brew, docker, Windows-only commands) are
-kept aside with the reason, not dropped silently.
+source. Within package managers, isolated user-level installs come first;
+in the macOS box Homebrew comes before them (pickfit.profiles ranks macOS
+guides the same way). Methods a box cannot run (brew on Linux, docker,
+commands for another OS) are kept aside with the reason, not dropped silently.
 """
 
 from __future__ import annotations
@@ -21,16 +22,18 @@ Origin = Literal["readme", "derived"]
 # Lower sorts first. cargo and go compile from source and the box has no Rust or Go
 # toolchain, so they sit after release binaries and install scripts.
 METHOD_ORDER: dict[str, int] = {
+    "brew": 9,  # only reaches the ranking on macOS
     "uv": 10, "pipx": 11, "npm": 12, "pip": 13,
     "binary": 20,
     "script": 30,
     "cargo": 40, "go": 41,
     "source": 50, "other": 51,
 }
-# Never run in the Linux box; kept as guides or reasons.
-NOT_IN_BOX: dict[str, str] = {
-    "brew": "Homebrew is not in the Linux box; kept as the macOS guide",
-    "docker": "there is no Docker daemon inside the box",
+# Never run in the box for that OS; kept as guides or reasons.
+NOT_IN_BOX: dict[str, dict[str, str]] = {
+    "linux": {"brew": "Homebrew is not in the Linux box; kept as the macOS guide",
+              "docker": "there is no Docker daemon inside the box"},
+    "macos": {"docker": "there is no Docker daemon inside the box"},
 }
 NEEDS: dict[str, str] = {
     "cargo": "needs a Rust toolchain, which the box does not have",
@@ -38,6 +41,10 @@ NEEDS: dict[str, str] = {
     "source": "build from source: slowest path, last resort",
     "script": "download the script first and read it; do not pipe it straight into a shell",
     "npm": "the box sets the npm prefix to ~/.local, so -g works without root",
+}
+NEEDS_BY_OS: dict[str, dict[str, str]] = {
+    "macos": {"npm": "npm is Homebrew's; -g installs under /opt/homebrew, which the box user owns",
+              "brew": "the box user owns /opt/homebrew, so brew works without sudo"},
 }
 
 # `pip install <one package>`, optionally `python -m` and `--user`/`-U`.
@@ -98,11 +105,13 @@ def rank_install_methods(claims: list[InstallClaim], os: str = "linux") -> Insta
             where = "/".join(claim.platforms)
             skipped.append(Skipped(claim.method, command, f"the README gives it for {where} only"))
             continue
-        if claim.method in NOT_IN_BOX:
-            skipped.append(Skipped(claim.method, command, NOT_IN_BOX[claim.method]))
+        not_here = NOT_IN_BOX.get(os, NOT_IN_BOX["linux"])
+        if claim.method in not_here:
+            skipped.append(Skipped(claim.method, command, not_here[claim.method]))
             continue
+        needs = {**NEEDS, **NEEDS_BY_OS.get(os, {})}
         entries: list[tuple[str, str, Origin, str | None]] = [
-            (claim.method, command, "readme", NEEDS.get(claim.method))]
+            (claim.method, command, "readme", needs.get(claim.method))]
         if claim.method == "pip":
             entries += [(method, cmd, "derived", note) for method, cmd, note in _derived_from_pip(command)]
         for method, cmd, origin, note in entries:

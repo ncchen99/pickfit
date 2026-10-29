@@ -5,7 +5,10 @@ user has no capabilities, cloud metadata and private ranges are unreachable,
 the network cut blocks the internet but not localhost and can be undone, a
 command is killed at its timeout, and file size, process count and memory are
 capped. No model is called. Measured 2026-10-29: Docker kills only the process
-that goes over the memory limit; Modal kills the whole sandbox.
+that goes over the memory limit; Modal kills the whole sandbox. A macOS box has
+no /proc and no per-process memory cap (the VM's RAM is the cap), so it checks
+instead that the box user is not an admin, cannot sudo or change the firewall,
+and cannot reach the host.
 """
 
 from __future__ import annotations
@@ -44,6 +47,12 @@ def _probe(box: Box, name: str, command: str, timeout_s: int, expect: str,
     return ProbeResult(name, bool(check(result)), expect, result.exit_code, result.seconds, _detail(result))
 
 
+def _not_admin(result: ExecResult) -> bool:
+    lines = result.stdout.splitlines()
+    groups = lines[1].split() if len(lines) > 1 else ["?"]
+    return lines[:1] != ["0"] and "admin" not in groups and "sudo=0" not in result.stdout
+
+
 def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeResult]:
     """Run every probe in a started box; restores the network before returning."""
     results: list[ProbeResult] = []
@@ -53,9 +62,16 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
         log(f"  {'ok  ' if result.ok else 'FAIL'} {result.name}: {result.expect} · exit {result.exit_code} · "
             f"{result.seconds:.1f}s · {result.detail[:140]}")
 
-    add(_probe(box, "non_root", "id -u; grep CapEff /proc/self/status", 20,
-               "uid 1000, no effective capabilities",
-               lambda r: r.stdout.split()[:1] == ["1000"] and "CapEff:\t0000000000000000" in r.stdout))
+    macos = box.os == "macos"
+    if macos:
+        add(_probe(box, "non_admin", "id -u; id -Gn; sudo -n true 2>&1; echo sudo=$?", 20,
+                   "not root, not in admin, sudo refused", _not_admin))
+        add(_probe(box, "firewall_locked", "pfctl -d", 20, "the box user cannot turn pf off",
+                   lambda r: r.exit_code != 0))
+    else:
+        add(_probe(box, "non_root", "id -u; grep CapEff /proc/self/status", 20,
+                   "uid 1000, no effective capabilities",
+                   lambda r: r.stdout.split()[:1] == ["1000"] and "CapEff:\t0000000000000000" in r.stdout))
     # The base image sets GPG_KEY (the public Python release key id); real secrets look like these.
     add(_probe(box, "no_secrets_in_env", "env | cut -d= -f1 | sort | tr '\\n' ' '", 20,
                "no API_KEY/TOKEN/SECRET/PASSWORD variables",
@@ -65,7 +81,11 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
                "169.254.169.254 unreachable", lambda r: r.exit_code != 0))
     add(_probe(box, "private_blocked", "curl -sS -m 5 http://10.0.0.1/", 20,
                "10.0.0.1 unreachable", lambda r: r.exit_code != 0))
-    box.exec("setsid nohup python3 -m http.server 8765 --bind 127.0.0.1 >/dev/null 2>&1 < /dev/null & sleep 2", 20)
+    if macos:  # dropped, not refused: a refusal would mean the packet reached the host
+        add(_probe(box, "host_blocked", "curl -sS -m 5 http://$(route -n get default | awk '/gateway/ {print $2}'):22/",
+                   20, "the host (the VM's gateway) times out", lambda r: r.exit_code == 28))
+    box.exec(f"{box.setsid} nohup python3 -m http.server 8765 --bind 127.0.0.1 >/dev/null 2>&1 < /dev/null & "
+             "sleep 2", 20)
     box.set_network(False)
     try:
         add(_probe(box, "offline_internet", PYPI, 30, "PyPI unreachable with the network off",
@@ -79,13 +99,16 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
     timed = box.exec("sleep 30", 3)
     add(ProbeResult("command_timeout", timed.timed_out and timed.seconds < 15, "sleep 30 killed at 3 s",
                     timed.exit_code, timed.seconds, _detail(timed)))
-    add(_probe(box, "file_size_cap", "head -c 1700M /dev/zero > big.bin; code=$?; ls -l big.bin; rm -f big.bin; "
+    big = "dd if=/dev/zero of=big.bin bs=1m count=1700" if macos else "head -c 1700M /dev/zero > big.bin"
+    add(_probe(box, "file_size_cap", f"{big}; code=$?; ls -l big.bin; rm -f big.bin; "
                "exit $code", 180, "a 1.7 GB file is cut off", lambda r: r.exit_code != 0))
     add(_probe(box, "process_cap",
                "python3 -c \"\nimport os, time\nn = 0\ntry:\n    while n < 2000:\n        if os.fork() == 0:\n"
                "            time.sleep(15); os._exit(0)\n        n += 1\nexcept OSError as e:\n"
                "    print('blocked after', n, e)\nelse:\n    print('forked', n)\n\"", 60,
                "fork stops before 2000 processes", lambda r: "blocked after" in r.stdout))
+    if macos:
+        return results
     # Last: on Modal the memory limit kills the whole sandbox, not just the process.
     expect = "3 GiB allocation fails"
     try:

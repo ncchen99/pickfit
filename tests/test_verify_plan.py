@@ -32,6 +32,15 @@ def test_evnx_ranks_package_managers_then_script_then_toolchains():
     assert all("windows" in s.reason for s in plan.skipped if s.method == "other")
 
 
+def test_macos_box_ranks_brew_first_and_keeps_windows_aside():
+    plan = plan_for(extraction("evnx"), "macos")
+    assert [c.method for c in plan.candidates] == ["brew", "pipx", "npm", "script", "cargo"]
+    assert "owns /opt/homebrew" in plan.candidates[0].note and "Homebrew" in plan.candidates[2].note
+    assert [s.method for s in plan.skipped] == ["other", "other"]
+    docker = rank_install_methods([claim("docker", "docker run x/y")], "macos")
+    assert not docker.candidates and docker.skipped[0].method == "docker"
+
+
 def test_pip_gets_isolated_alternatives_first():
     plan = plan_for(extraction("graphtty"))
     assert [c.command for c in plan.candidates] == [
