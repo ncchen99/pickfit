@@ -24,6 +24,28 @@ from pickfit.ledger import taipei_now
 from pickfit.verify.box import Box, BoxError, ExecResult
 
 PYPI = "curl -sS -I -m 15 -o /dev/null -w '%{http_code}' https://pypi.org/simple/pip/"
+# su admin in a pseudo-terminal, answering the password prompt with the image's default password.
+SU_ADMIN = """python3 - <<'PICKFIT_PY'
+import os, pty, select, time
+pid, fd = pty.fork()
+if pid == 0:
+    os.execv("/usr/bin/su", ["su", "admin", "-c", "echo PICKFIT_SU_OK"])
+out, sent, end = b"", False, time.time() + 15
+while time.time() < end:
+    if not select.select([fd], [], [], 0.5)[0]:
+        continue
+    try:
+        data = os.read(fd, 1024)
+    except OSError:
+        break
+    if not data:
+        break
+    out += data
+    if not sent and b"assword" in out:
+        os.write(fd, b"admin\\n")
+        sent = True
+print(out.decode(errors="replace"))
+PICKFIT_PY"""
 
 
 @dataclass
@@ -68,6 +90,22 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
                    "not root, not in admin, sudo refused", _not_admin))
         add(_probe(box, "firewall_locked", "pfctl -d", 20, "the box user cannot turn pf off",
                    lambda r: r.exit_code != 0))
+        # The ways to root the review found (2026-10-29): the image's admin/admin, su in a pty, sshd or
+        # VNC on localhost (pf skips lo0), the auto-login password file, and the guest agent's binary.
+        add(_probe(box, "admin_password", "dscl . -authonly admin admin", 20,
+                   "admin's default password is gone", lambda r: r.exit_code != 0))
+        add(_probe(box, "su_admin", SU_ADMIN, 30, "su admin with the default password fails",
+                   lambda r: "PICKFIT_SU_OK" not in r.stdout.replace("echo PICKFIT_SU_OK", "")))
+        add(_probe(box, "remote_login_closed",
+                   "for p in 22 5900; do (echo > /dev/tcp/127.0.0.1/$p) 2>/dev/null && echo \"open $p\"; done; true",
+                   20, "nothing listens on localhost 22 or 5900", lambda r: "open" not in r.stdout))
+        add(_probe(box, "kcpassword_unreadable", "cat /etc/kcpassword", 20,
+                   "the auto-login password file is root-only", lambda r: r.exit_code != 0))
+        add(_probe(box, "agent_binary_locked",
+                   "for f in /usr/local/libexec/pickfit-agent /usr/local/libexec/pickfit-agent/tart-guest-agent "
+                   "/Library/LaunchDaemons /Library/LaunchAgents; do test -w $f && echo \"writable $f\"; done; true",
+                   20, "the box user cannot replace the guest agent or its launchd plists",
+                   lambda r: "writable" not in r.stdout))
     else:
         add(_probe(box, "non_root", "id -u; grep CapEff /proc/self/status", 20,
                    "uid 1000, no effective capabilities",

@@ -168,7 +168,10 @@ def background_script(command: str, port: int | None, wait_s: int, tag: int | st
     outside a console session, so TartBox brings a helper).
     """
     log = f"$HOME/.pickfit-bg/{tag}.log"
-    start = (f"mkdir -p $HOME/.pickfit-bg && {detach} bash -c {shlex.quote(command)} "
+    # `&` applies to one command, so the shell forks it straight into `detach`: with `a && b &`,
+    # macOS's bash 3.2 keeps a subshell that holds the caller's stdout, and the command never
+    # returns (measured 2026-10-29; bash 5 execs the last command and hid this on Linux).
+    start = (f"mkdir -p $HOME/.pickfit-bg || exit 1; {detach} bash -c {shlex.quote(command)} "
              f"> {log} 2>&1 < /dev/null & P=$!; echo \"pid $P\"; ")
     if port:
         probe = (f"for i in $(seq 1 {max(wait_s, 1)}); do "

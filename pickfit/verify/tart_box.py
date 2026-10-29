@@ -10,15 +10,32 @@
   that owns the Homebrew prefix, so `brew install` works without root. Each
   command runs under `ulimit` caps and an in-guest timeout that kills its
   process group (macOS has no `timeout` or `setsid`, and its `nohup` fails
-  outside a console session; small helpers in a root-owned directory stand in). The VM's own CPU, memory and disk are the
-  outer caps; macOS enforces no per-process memory limit.
+  outside a console session; small helpers in a root-owned directory stand
+  in). The VM's own CPU, memory and disk are the outer caps; macOS enforces
+  no per-process memory limit.
+- The base is hardened against sbx becoming root (review 2026-10-29): the
+  image's admin/admin account gets a random password made inside the guest
+  and never printed (the guest agent logs every command line to a
+  world-readable file), with /etc/kcpassword root-only so auto-login still
+  starts the agent; Remote Login and Screen Sharing are off; only root may
+  su; and the guest agent runs from a root-owned copy, not from the
+  sbx-owned /opt/homebrew. Every box checks all of that before it runs a
+  model command and refuses an unhardened base.
 - Network: the guest's pf firewall, loaded as root by the harness, blocks
   private ranges, link-local (cloud metadata) and the host (only DNS to the
   resolver is allowed), and IPv6. DNS is pinned to the IPv4 resolver (the
   VM's gateway): vmnet also hands out an IPv6 link-local resolver first, and
   with IPv6 blocked every lookup waited 3 s for it (measured 2026-10-29).
   set_network(False) blocks everything but loopback and drops existing
-  connections. sbx cannot change pf.
+  connections. sbx cannot change pf. After every change the harness checks
+  that pf is enabled with pickfit's labelled ruleset, and offline that a
+  connection to the internet really fails; before turning the network back
+  on it checks that the cut held, so `offline` is never claimed on a word.
+  The policy lives in the guest: moving it to the host (softnet) needs a
+  one-time setuid step on the Mac, which is the owner's to take.
+- Lifetime: besides the harness's timer, the guest schedules its own
+  shutdown and a detached host process stops and deletes the clone, so a
+  dead harness does not leave a VM running.
 - Apple allows at most two macOS VMs at once per Mac, and an open bug
   (FB22967193, reported on macOS 26.5) can leave the limit "used up" until the
   host reboots: run one box at a time, and stop when start() reports it.
@@ -31,10 +48,12 @@ FSL-1.1-ALv2, free for any use other than a competing product.
 from __future__ import annotations
 
 import json
+import os
 import re
 import secrets
 import shlex
 import shutil
+import signal
 import subprocess
 import threading
 import time
@@ -107,6 +126,9 @@ except OSError as err:
 signal.signal(signal.SIGHUP, signal.SIG_IGN)
 os.execvp(sys.argv[1], sys.argv[1:])
 """
+AGENT_DIR = "/usr/local/libexec/pickfit-agent"  # root-owned home of the guest agent binary (see HARDEN_ROOT)
+AGENT_PLISTS = ("/Library/LaunchDaemons/org.cirruslabs.tart-guest-daemon.plist",
+                "/Library/LaunchAgents/org.cirruslabs.tart-guest-agent.plist")
 TIMEOUT_CMD = f"{GUEST_PYTHON} -I {HELPER_DIR}/timeout"
 DETACH_CMD = f"{GUEST_PYTHON} -I {HELPER_DIR}/detach"
 # Never reachable from the box: the same ranges as ModalBox, plus all of IPv6 (vmnet gives the guest none
@@ -117,24 +139,47 @@ ROOT_PATH = "PATH=/usr/bin:/bin:/usr/sbin:/sbin; export PATH"
 AGENT_WAIT_S = 240
 NETWORK_WAIT_S = 60
 STALE_S = 3 * 3600  # a running pf-verify VM older than this was left by a dead process
+REAP_GRACE_S = 300  # the host reaper stops and deletes a clone this long after its lifetime
+EGRESS_PROBE = "curl -sS -m 4 -o /dev/null http://1.1.1.1/"  # run as root: pf must stop it offline
 VM_LIMIT_HINT = ("macOS refused to start another VM (Apple allows two at once; bug FB22967193 can keep the "
                  "slots used after VMs stop). Check `tart list`; if no other macOS VM is running, reboot the Mac.")
 
 
+def pf_label(online: bool) -> str:
+    return "pickfit-online" if online else "pickfit-offline"
+
+
 def pf_rules(online: bool, resolvers: list[str]) -> str:
-    """The guest's pf ruleset: online blocks local networks and the host; offline blocks everything."""
+    """The guest's pf ruleset: online blocks local networks and the host; offline blocks everything.
+
+    Every rule carries a label, so the harness can tell from `pfctl -s rules` which set is loaded.
+    resolvers is the VM's gateway: DNS and DHCP renewals may reach it, nothing else on 192.168/16.
+    """
     if not online:
-        return "set skip on lo0\nblock drop all\n"
-    lines = ["set skip on lo0",
-             "block drop in all",
-             "pass in quick inet proto udp from any port 67 to any port 68",  # DHCP replies
-             "block return out quick inet6 all"]  # fail fast, so clients fall back to IPv4 at once
-    if resolvers:
-        lines.append(f"pass out quick inet proto {{ tcp, udp }} to {{ {', '.join(resolvers)} }} port 53")
-    lines += ["pass out quick inet proto udp from any port 68 to any port 67",
-              f"block drop out quick inet to {{ {', '.join(BLOCKED_NETS)} }}",
-              "pass out inet all"]
-    return "\n".join(lines) + "\n"
+        rules = ["block drop all"]
+    else:
+        rules = ["block drop in all",
+                 "pass in quick inet proto udp from any port 67 to any port 68",  # DHCP replies
+                 "block return out quick inet6 all"]  # fail fast, so clients fall back to IPv4 at once
+        if resolvers:
+            rules += [f"pass out quick inet proto {{ tcp, udp }} to {{ {', '.join(resolvers)} }} port 53",
+                      f"pass out quick inet proto udp from any port 68 to {{ 255.255.255.255, "
+                      f"{', '.join(resolvers)} }} port 67"]
+        rules += [f"block drop out quick inet to {{ {', '.join(BLOCKED_NETS)} }}", "pass out inet all"]
+    label = pf_label(online)
+    return "set skip on lo0\n" + "".join(f'{rule} label "{label}"\n' for rule in rules)
+
+
+def firewall_holds(info: str, rules: str, online: bool) -> str | None:
+    """None when pf is enabled and every loaded rule is pickfit's set for `online`; else what is wrong."""
+    if "Status: Enabled" not in info:
+        return "pf is not enabled"
+    loaded = [line for line in rules.splitlines() if line.strip() and not line.startswith(("No ALTQ", "ALTQ"))]
+    if not loaded:
+        return "no pf rules are loaded"
+    want = f'label "{pf_label(online)}"'
+    stray = [line for line in loaded if want not in line]
+    return f"unexpected pf rule: {stray[0][:120]}" if stray else None
 
 
 def base_manifest_path(base: str = BASE_VM, state_dir: Path | None = None) -> Path:
@@ -219,6 +264,7 @@ class TartBox(Box):
         self.vm_proc: subprocess.Popen[bytes] | None = None
         self.vm_log: Path | None = None
         self._timer: threading.Timer | None = None
+        self._reaper: subprocess.Popen[bytes] | None = None
         self._lock = threading.Lock()
 
     def describe(self) -> str:
@@ -246,6 +292,9 @@ class TartBox(Box):
         if shutil.which(self.tart) is None:
             raise BoxError("tart not found; install it with `brew install openai/tools/tart`")
         self.manifest = load_manifest(self.base, self.state_dir)
+        if not self.manifest.get("hardened"):
+            raise BoxError(f"base VM {self.base!r} predates hardening; `tart delete {self.base}` and run "
+                           "`pickfit verify --runner tart --prepare-base`")
         self.image = image_label(self.manifest)
         began = time.monotonic()
         try:
@@ -254,6 +303,7 @@ class TartBox(Box):
             if clone.returncode != 0:
                 raise BoxError(f"tart clone {self.base} failed: {clone.stderr.strip()[-500:]}")
             self.cloned = True
+            self._start_reaper()
             sized = self._tart("set", self.name, "--cpu", str(self.cpus), "--memory", str(self.memory_mb))
             if sized.returncode != 0:
                 raise BoxError(f"tart set failed: {sized.stderr.strip()[-300:]}")
@@ -298,8 +348,34 @@ class TartBox(Box):
         return self._tart("exec", self.name, "sudo", "-n", "/bin/sh", "-c", f"{ROOT_PATH}\n{script}",
                           timeout_s=timeout_s + 15)
 
-    def _setup(self) -> None:
-        """Helpers, the firewall and the work dir, as root, before any model command."""
+    def _start_reaper(self) -> None:
+        """A host process in its own session that stops and deletes the clone if nobody else does."""
+        tart, name = shlex.quote(self.tart), shlex.quote(self.name)
+        script = (f"sleep {self.limits.lifetime_s + REAP_GRACE_S}; {tart} stop {name} --timeout 5 >/dev/null 2>&1; "
+                  f"{tart} delete {name} >/dev/null 2>&1")
+        self._reaper = subprocess.Popen(["/bin/sh", "-c", script], stdin=subprocess.DEVNULL,
+                                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+
+    def _stop_reaper(self) -> None:
+        if self._reaper is not None and self._reaper.poll() is None:
+            try:
+                os.killpg(self._reaper.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            self._reaper.wait()
+        self._reaper = None
+
+    def _setup(self, *, hardened: bool = True) -> None:
+        """Helpers, the firewall and the work dir, as root, before any model command.
+
+        hardened: refuse a base whose admin account, remote logins, su or guest agent still let the
+        box user become root (prepare_base turns it off until it has hardened the base).
+        """
+        if hardened:
+            check = self._root(HARDENED_CHECK, 60)
+            if check.returncode != 0:
+                raise BoxError(f"the base VM is not hardened ({(check.stdout + check.stderr).strip()[-300:]}); "
+                               "rebuild it with `pickfit verify --runner tart --prepare-base`")
         pin = (f"for i in $(seq 1 {NETWORK_WAIT_S}); do route -n get default >/dev/null 2>&1 && break; "
                "sleep 1; done; gw=$(route -n get default | awk '/gateway:/ {print $2}'); "
                "svc=$(networksetup -listallnetworkservices | sed -n 2p); "
@@ -313,36 +389,54 @@ class TartBox(Box):
         script = [f"set -e; mkdir -p {HELPER_DIR}"]
         for name, text in files.items():
             script.append(f"cat > {HELPER_DIR}/{name} <<'PICKFIT_EOF'\n{text}PICKFIT_EOF")
+        # The guest stops itself a minute after the lifetime, whatever happens to the harness.
+        minutes = self.limits.lifetime_s // 60 + 2
         script += [f"chown -R root:wheel {HELPER_DIR}; chmod 755 {HELPER_DIR}; chmod 644 {HELPER_DIR}/*",
                    f"mkdir -p {MAC_WORKDIR} {MAC_HOME}/.local/bin; chown -R {MAC_USER} {MAC_WORKDIR} {MAC_HOME}/.local",
+                   "chmod 600 /tmp/tart-guest-agent.log /tmp/tart-guest-daemon.log 2>/dev/null || true",
+                   f"shutdown -h +{minutes} </dev/null >/dev/null 2>&1 &",
                    "pfctl -E >/dev/null 2>&1 || true",
-                   f"pfctl -q -f {HELPER_DIR}/pf-online.conf",
-                   "pfctl -s info 2>/dev/null | head -1"]
+                   f"pfctl -q -f {HELPER_DIR}/pf-online.conf"]
         proc = self._root("\n".join(script), 60)
-        if proc.returncode != 0 or "Status: Enabled" not in proc.stdout:
+        if proc.returncode != 0:
             raise BoxError(f"box setup failed (firewall or helpers): {(proc.stdout + proc.stderr).strip()[-500:]}")
+        self._check_firewall(online=True)
 
     def _expire(self) -> None:
         self.log(f"tart: {self.name} reached its {self.limits.lifetime_s}s lifetime; stopping it")
         self.close()
 
     def close(self) -> None:
+        """Stop and delete the clone. Never raises: a clone it cannot delete is left to the reaper."""
         with self._lock:
+            self.started = False
             if self._timer is not None:
                 self._timer.cancel()
                 self._timer = None
             if self.vm_proc is not None and self.vm_proc.poll() is None:
-                self._tart("stop", self.name, "--timeout", "10", timeout_s=90)
+                try:
+                    self._tart("stop", self.name, "--timeout", "10", timeout_s=90)
+                except BoxError as err:
+                    self.log(f"tart: stop {self.name}: {err}")
                 try:
                     self.vm_proc.wait(timeout=30)
                 except subprocess.TimeoutExpired:
-                    self.vm_proc.kill()
+                    self.vm_proc.kill()  # the VM ends with its `tart run` process
                     self.vm_proc.wait()
             self.vm_proc = None
-            if self.cloned:
-                self._tart("delete", self.name, timeout_s=120)
-                self.cloned = False
-            self.started = False
+            if not self.cloned:
+                self._stop_reaper()
+                return
+            try:
+                deleted = self._tart("delete", self.name, timeout_s=120)
+                why = deleted.stderr.strip()[-200:] if deleted.returncode else ""
+            except BoxError as err:
+                why = str(err)
+            if why:
+                self.log(f"tart: could not delete {self.name} ({why}); its reaper retries after the lifetime")
+                return
+            self.cloned = False
+            self._stop_reaper()
 
     # -- commands and files
 
@@ -399,15 +493,33 @@ class TartBox(Box):
             raise BoxError(f"cannot read {path}: {proc.stderr.decode(errors='replace').strip()[-300:]}")
         return proc.stdout[:max_bytes]
 
+    def _check_firewall(self, *, online: bool) -> None:
+        """pf is on with pickfit's labelled set for `online`; offline, an internet connection really fails."""
+        probe = f"; {EGRESS_PROBE}; echo \"egress=$?\"" if not online else ""
+        proc = self._root(f"pfctl -s info 2>/dev/null | head -1; echo ---; pfctl -s rules 2>/dev/null; echo ---"
+                          f"{probe}", 30)
+        info, _, rest = proc.stdout.partition("---")
+        rules, _, tail = rest.partition("---")
+        problem = firewall_holds(info, rules, online)
+        if problem is None and not online:
+            m = re.search(r"egress=(\d+)", tail)
+            if m is None or m.group(1) not in ("6", "7", "28"):
+                problem = f"the network cut did not stop a connection to 1.1.1.1 ({tail.strip()[-120:]})"
+        if problem:
+            raise BoxError(f"firewall check failed ({'online' if online else 'offline'}): {problem}")
+
     def set_network(self, enabled: bool) -> None:
         self._require_started()
         if enabled == self.network_enabled:
             return
+        if enabled:  # the cut must have held for as long as the box said it was offline
+            self._check_firewall(online=False)
         rules = f"{HELPER_DIR}/pf-{'online' if enabled else 'offline'}.conf"
         # Flushing states drops connections that are already open, so nothing outlives the cut.
         proc = self._root(f"pfctl -q -f {rules} && pfctl -q -F states", 30)
         if proc.returncode != 0:
             raise BoxError(f"pfctl failed: {(proc.stdout + proc.stderr).strip()[-300:]}")
+        self._check_firewall(online=enabled)
         self.network_enabled = enabled
 
 
@@ -425,6 +537,67 @@ if dseditgroup -o checkmember -m {MAC_USER} admin >/dev/null 2>&1; then echo "{M
 chown -R {MAC_USER} {BREW_PREFIX}
 mdutil -a -i off >/dev/null 2>&1 || true
 softwareupdate --schedule off >/dev/null 2>&1 || true
+"""
+# Run last in prepare_base, as root. Nothing secret appears in a command line: tart-guest-agent logs every
+# command it runs to a world-readable file, so the password is made, used and dropped inside the guest.
+HARDEN_ROOT = rf"""
+set -e
+# 1. The guest agent runs from a root-owned copy: the image starts it from /opt/homebrew, which the box user
+#    owns, so the box user could swap the binary that launchd restarts as root.
+src=$(/usr/bin/readlink -f /opt/homebrew/bin/tart-guest-agent)
+mkdir -p {AGENT_DIR}
+install -o root -g wheel -m 755 "$src" {AGENT_DIR}/tart-guest-agent
+for plist in {' '.join(AGENT_PLISTS)}; do
+  /usr/libexec/PlistBuddy -c "Set :ProgramArguments:0 {AGENT_DIR}/tart-guest-agent" "$plist"
+done
+# 2. admin/admin -> a random password; /etc/kcpassword (root only) keeps the auto-login that starts the agent.
+umask 077
+PICKFIT_ADMIN_PW="$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | cut -c1-32)"
+export PICKFIT_ADMIN_PW
+test "${{#PICKFIT_ADMIN_PW}}" -eq 32
+dscl . -passwd /Users/admin "$PICKFIT_ADMIN_PW"
+{GUEST_PYTHON} -I - <<'PICKFIT_PY'
+import os
+key = (125, 137, 82, 35, 210, 188, 221, 234, 163, 185, 31)  # macOS's kcpassword XOR key
+pw = os.environ["PICKFIT_ADMIN_PW"].encode()
+pw += bytes(-len(pw) % 12)
+fd = os.open("/etc/kcpassword", os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+os.write(fd, bytes(b ^ key[i % len(key)] for i, b in enumerate(pw)))
+os.close(fd)
+PICKFIT_PY
+unset PICKFIT_ADMIN_PW
+chown root:wheel /etc/kcpassword
+chmod 600 /etc/kcpassword
+umask 022
+# 3. No remote logins: sshd and Screen Sharing listen on all interfaces, and pf skips lo0.
+for svc in com.openssh.sshd com.apple.screensharing; do
+  launchctl disable system/$svc
+  launchctl bootout system/$svc 2>/dev/null || true
+done
+# 4. Only root may su.
+grep -q pam_deny.so /etc/pam.d/su ||   perl -0pi -e 's/^(auth\s+sufficient\s+pam_rootok\.so[^
+]*
+)/$1auth       required       pam_deny.so
+/m' /etc/pam.d/su
+"""
+# Every box runs this as root before any model command; a non-zero exit refuses the base.
+HARDENED_CHECK = rf"""
+fail() {{ echo "$1"; exit 1; }}
+dseditgroup -o checkmember -m {MAC_USER} admin >/dev/null 2>&1 && fail "{MAC_USER} is an admin"
+dscl . -authonly admin admin >/dev/null 2>&1 && fail "admin still has the default password"
+[ "$(stat -f '%Su %Lp' /etc/kcpassword)" = "root 600" ] || fail "/etc/kcpassword is not root-only"
+lsof -nP -iTCP:22 -iTCP:5900 -sTCP:LISTEN >/dev/null 2>&1 && fail "Remote Login or Screen Sharing is on"
+grep -Eq '^auth[[:space:]]+required[[:space:]]+pam_deny.so' /etc/pam.d/su || fail "su is open to other users"
+for plist in {' '.join(AGENT_PLISTS)}; do
+  bin=$(/usr/libexec/PlistBuddy -c "Print :ProgramArguments:0" "$plist") || fail "cannot read $plist"
+  [ "$bin" = "{AGENT_DIR}/tart-guest-agent" ] || fail "guest agent starts from $bin"
+done
+ps -axo comm | grep -q '^/opt/homebrew/.*tart-guest-agent' && fail "a guest agent runs from /opt/homebrew"
+for path in / /usr /usr/local /usr/local/libexec {AGENT_DIR} {AGENT_DIR}/tart-guest-agent; do
+  [ "$(stat -f %Su "$path")" = root ] || fail "$path is not owned by root"
+  sudo -u {MAC_USER} /bin/test -w "$path" && fail "{MAC_USER} can write $path"
+done
+exit 0
 """
 PREPARE_USER = ("brew analytics off && brew install uv pipx node && brew cleanup -s --prune=all && "
                 "rm -rf ~/Library/Caches/Homebrew ~/Library/Logs/Homebrew")
@@ -449,20 +622,33 @@ def source_digest(tart: str = TART, source: str = SOURCE_IMAGE) -> str | None:
     return None
 
 
+def _shutdown(box: TartBox, log: Callable[[str], None]) -> None:
+    """A clean guest shutdown, so clones boot from a consistent disk."""
+    box._root("shutdown -h now", 30)
+    if box.vm_proc is not None:
+        try:
+            box.vm_proc.wait(timeout=180)
+        except subprocess.TimeoutExpired:
+            log("tart: the base did not shut down within 180s; stopping it")
+
+
 def prepare_base(*, source: str = SOURCE_IMAGE, base: str = BASE_VM, tart: str = TART,
                  log: Callable[[str], None] = print) -> dict[str, Any]:
-    """Build the base VM every box clones: the box user, Homebrew owned by it, uv, pipx and node.
+    """Build and harden the base VM every box clones: the box user, Homebrew owned by it, uv, pipx, node.
 
-    Needs `tart pull <source>` first (about 25 GB). Writes ~/.pickfit/tart/<base>.json.
+    Needs `tart pull <source>` first (about 25 GB). The base is booted a second time after hardening,
+    which proves auto-login (and so the guest agent) still works, and checked like every box will
+    check it. Only then is ~/.pickfit/tart/<base>.json written; a failed build deletes the base VM.
     """
     if subprocess.run([tart, "get", base], capture_output=True).returncode == 0:
         raise BoxError(f"base VM {base!r} already exists; `tart delete {base}` to rebuild it")
+    base_manifest_path(base).unlink(missing_ok=True)  # a manifest without its VM describes nothing
     began = time.monotonic()
     proc = subprocess.run([tart, "clone", source, base], capture_output=True, text=True, timeout=1800)
     if proc.returncode != 0:
         raise BoxError(f"tart clone {source} failed: {proc.stderr.strip()[-500:]}")
     box = TartBox(base=base, name=base, tart=tart, limits=BoxLimits(lifetime_s=3600, max_command_s=1800), log=log)
-    box.cloned = False  # never delete the base on close
+    box.cloned = False  # close() never deletes the base; a failure below does
     try:
         box.manifest = {"macos": "26"}
         box._boot()
@@ -470,7 +656,7 @@ def prepare_base(*, source: str = SOURCE_IMAGE, base: str = BASE_VM, tart: str =
         root = box._root(PREPARE_ROOT, 300)
         if root.returncode != 0:
             raise BoxError(f"base setup failed: {(root.stdout + root.stderr).strip()[-800:]}")
-        box._setup()
+        box._setup(hardened=False)
         box.started = True
         log("tart: brew install uv pipx node (as the box user)")
         user = box.exec(PREPARE_USER, 1800)
@@ -482,17 +668,28 @@ def prepare_base(*, source: str = SOURCE_IMAGE, base: str = BASE_VM, tart: str =
         for key, command in VERSIONS.items():
             result = box.exec(command, 60)
             manifest[key] = result.stdout.strip().splitlines()[-1] if result.ok and result.stdout.strip() else None
+        log("tart: hardening (admin password, remote logins, su, guest agent)")
+        harden = box._root(HARDEN_ROOT, 120)
+        if harden.returncode != 0:
+            raise BoxError(f"hardening failed: {(harden.stdout + harden.stderr).strip()[-500:]}")
         # The firewall and helpers are written again by every clone; the base keeps none of them.
         box._root(f"rm -rf {HELPER_DIR} {MAC_WORKDIR}; pfctl -d >/dev/null 2>&1 || true", 30)
-        box._root("shutdown -h now", 30)  # a clean shutdown, so clones boot from a consistent disk
-        if box.vm_proc is not None:
-            try:
-                box.vm_proc.wait(timeout=180)
-            except subprocess.TimeoutExpired:
-                log("tart: the base did not shut down within 180s; stopping it")
-    finally:
         box.started = False
+        _shutdown(box, log)
+        box.vm_proc = None
+        log("tart: booting the hardened base once more (auto-login with the new password)")
+        box._boot()
+        check = box._root(HARDENED_CHECK, 60)
+        if check.returncode != 0:
+            raise BoxError(f"the hardened base fails its check: {(check.stdout + check.stderr).strip()[-300:]}")
+        manifest["hardened"] = True
+        _shutdown(box, log)
+    except BaseException:
         box.close()
+        subprocess.run([tart, "delete", base], capture_output=True, timeout=120)
+        log(f"tart: base build failed; deleted {base}")
+        raise
+    box.close()
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     base_manifest_path(base).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     log(f"tart: base {base} ready in {time.monotonic() - began:.0f}s · {image_label(manifest)}")
