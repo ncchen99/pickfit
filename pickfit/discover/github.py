@@ -273,6 +273,17 @@ class GitHub:
                          {"ref": ref}, accept="application/vnd.github.raw+json")
         return resp.text if resp is not None else None
 
+    def repo(self, full_name: str) -> dict[str, Any] | None:
+        """The repository object, or None when it no longer exists."""
+        resp = self._get("repo", f"/repos/{full_name}")
+        return resp.json() if resp is not None else None
+
+    def issues(self, full_name: str, per_page: int = 100) -> list[dict[str, Any]]:
+        """The newest issues and pull requests in either state, newest first (scoring)."""
+        resp = self._get("issues", f"/repos/{full_name}/issues",
+                         {"state": "all", "sort": "created", "direction": "desc", "per_page": per_page})
+        return resp.json() if resp is not None else []
+
     def details(self, repo: dict[str, Any]) -> dict[str, Any]:
         """README, newest releases, file tree and root manifests for a normalized repo."""
         full_name, ref = repo["full_name"], repo["default_branch"] or "HEAD"

@@ -673,12 +673,86 @@ class Treasure(_Model):
     )
 
 
+class RubricItem(_Model):
+    score: Literal[0, 1, 2] = Field(description="0: missing; 1: partial or vague; 2: clear and complete.")
+    quote: str | None = Field(
+        max_length=QUOTE_MAX,
+        description=(
+            "For 1 or 2: a snippet (<=200 chars) copied verbatim from one source that shows "
+            "the item; null for 0."
+        ),
+    )
+
+    @field_validator("quote", mode="before")
+    @classmethod
+    def _clip_quote(cls, quote: Any) -> Any:
+        return _clip(quote, QUOTE_MAX)
+
+
+class DocsRubricItems(_Model):
+    """The eight documentation items of B.3's install_docs component, graded from the sources only."""
+
+    what_it_does: RubricItem = Field(description="What the software does and its main features.")
+    who_it_is_for: RubricItem = Field(description="Who it is for, or the jobs it suits.")
+    prerequisites: RubricItem = Field(
+        description="What must exist first (runtimes, OS packages, hardware, accounts), or that nothing does."
+    )
+    install_per_os: RubricItem = Field(
+        description="Copy-paste install commands for each platform it supports."
+    )
+    first_run_example: RubricItem = Field(
+        description="A first command or example to run after install, with the output to expect."
+    )
+    config_and_keys: RubricItem = Field(
+        description="Configuration, environment variables and API keys, or that none are needed."
+    )
+    troubleshooting_uninstall: RubricItem = Field(
+        description="Common problems or an FAQ, and how to update or uninstall."
+    )
+    license_and_platforms: RubricItem = Field(
+        description="The license and the platforms it runs on, as the sources name them."
+    )
+
+    def items(self) -> list[tuple[str, RubricItem]]:
+        return [(name, getattr(self, name)) for name in type(self).model_fields]
+
+    def score(self) -> float:
+        """install_docs component score: points / 16."""
+        return sum(item.score for _, item in self.items()) / (2 * len(type(self).model_fields))
+
+
+class DocsRubric(_Model):
+    """The model's rubric answer behind install_docs, kept so scores can be refreshed without a call."""
+
+    model: str
+    checked_at: AwareDatetime
+    sources_sha: str = Field(
+        pattern=r"^[0-9a-f]{64}$", description="sha256 of the rendered sources the model read."
+    )
+    items: DocsRubricItems
+    unquoted: list[str] = Field(
+        default=[], description="Items set to 0 because their quote is not in the sources."
+    )
+
+
 class Scores(_Model):
     formula_version: str = Field(min_length=1, max_length=40)
     computed_at: AwareDatetime
     quality: Quality
     popularity: Popularity
     treasure: Treasure
+    docs_rubric: DocsRubric | None = Field(
+        default=None, description="Rubric behind quality.components.install_docs; null when not graded."
+    )
+
+    @model_validator(mode="after")
+    def _check_rubric(self) -> Scores:
+        docs = self.quality.components.install_docs.score
+        if self.docs_rubric is not None and (
+            docs is None or abs(docs - self.docs_rubric.items.score()) > 0.001
+        ):
+            raise ValueError("install_docs.score must be docs_rubric points / 16")
+        return self
 
     @model_validator(mode="after")
     def _check_treasure(self) -> Scores:

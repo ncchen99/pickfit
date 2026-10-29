@@ -35,6 +35,7 @@ from pickfit.extract import Source as ExtractSource
 from pickfit.extract import build_sources, normalize_for_match
 from pickfit.ledger import taipei_now
 from pickfit.schema import TOOL_KINDS, ExtractionResult, InstallClaim, SoftwareRecord
+from pickfit.score import refresh_scores
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUT = REPO_ROOT / "data" / "software"
@@ -365,6 +366,8 @@ def build_record(candidate: dict[str, Any], extraction: dict[str, Any], *, slug:
     }
     if existing:
         _keep_verified_work(data, existing)
+        # A newer snapshot can change what the cap depends on (archived): refresh, no model call.
+        refresh_scores(data, now)
     return SoftwareRecord.model_validate(data)
 
 
