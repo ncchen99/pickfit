@@ -179,6 +179,10 @@ test('guard: why must be plain prose, without links, commands or markup, and is 
     assert.equal(result(why).dropped, 'not_plain_prose', why);
   }
   assert.equal(result('Ollama is free. ' + 'It runs offline. '.repeat(20)).dropped, 'too_long');
+  // Words that only look like a command start ("curl in", "go into") are prose.
+  const curl = 'jq is free and pretty-prints and filters JSON piped from curl in a Linux terminal.';
+  assert.equal(result(curl).option?.why, curl);
+  assert.equal(result('Ollama is free and lets you go into chat right away.').dropped, null);
   // Abbreviations and caveats stay: nothing is cut.
   const caveat = 'ChatGPT has a free tier that covers this. It does not work offline.';
   assert.equal(result(caveat).option?.why, caveat);

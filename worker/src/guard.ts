@@ -143,7 +143,7 @@ const PLACEHOLDER = /^(none|null|nil|n\/?a|nothing|unknown|not applicable|no (to
 // Letters, digits, spaces and the few marks tool names use (llama.cpp, C++, yt-dlp, Node.js).
 const PLAIN_NAME = /^[\p{L}\p{N}][\p{L}\p{N} .+_'-]*$/u;
 const DOMAIN = /\.(com|org|net|io|dev|ai|app|sh|co|me|so|xyz)$/i;
-const COMMAND = /\b(sudo|curl|wget|brew|npm|npx|pnpm|yarn|pip3?|pipx|uvx?|cargo|go|apt(-get)?|dnf|yum|winget|choco|scoop|docker|git)\s+(install|add|i|get|run|tool|clone|-\S)/i;
+const COMMAND = /\b(sudo|curl|wget|brew|npm|npx|pnpm|yarn|pip3?|pipx|uvx?|cargo|go|apt(-get)?|dnf|yum|winget|choco|scoop|docker|git)\s+((install|add|i|get|run|tool|clone)\b|-\S)/i;
 // Plain prose: no markup, backticks, pipes, brackets, control or bidi characters, no line breaks.
 const PROSE = /^[\p{L}\p{N} .,;:'"()%+&!?\/–—-]+$/u;
 const URL_LIKE = /https?:|www\.|:\/\/|\b[a-z0-9-]+\.(com|org|net|io|dev|ai|app|sh|co|me|so|xyz)\b/i;
