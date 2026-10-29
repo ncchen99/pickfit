@@ -222,23 +222,85 @@ def test_a_step_that_runs_a_file_only_an_uncited_command_wrote():
                        log).level == "install"
 
 
-def test_downloaded_scripts_a_step_runs_or_brings_in_unread():
-    def read(path: str) -> CommandRecord:
-        return CommandRecord(turn=0, tool="read_file", command=f"{path} [0-4000]", exit_code=0, seconds=0.0)
+def read(path: str, ok: bool = True) -> CommandRecord:
+    return CommandRecord(turn=0, tool="read_file", command=f"{path} [0-4000]", exit_code=0 if ok else None,
+                         seconds=0.0, stderr="" if ok else "No such file or directory")
 
-    # mi-lsp: the installer was read, the helper it runs (downloaded beside it) was not.
-    log = [rec(1, "curl -fsSL https://x.dev/install.sh -o install.sh", 0),
-           rec(2, "curl -fsSL https://x.dev/validate-worker-manifest.js -o validate-worker-manifest.js", 0),
-           read("install.sh"), rec(3, "bash install.sh --skip-worker-install", 0)]
-    assert unread_scripts([1, 2, 3], log) == [(2, "validate-worker-manifest.js")]
-    assert unread_scripts([1, 2, 3], [*log[:3], read("/home/sbx/work/validate-worker-manifest.js"), log[3]]) == []
-    # Downloaded and run in one step, never read.
-    assert unread_scripts([1], [rec(1, "curl -fsSL https://x.dev/i.sh -o /tmp/i.sh && sh /tmp/i.sh", 0)]) == [
-        (1, "i.sh")]
-    # Read with head before the step that runs it; a read only after it does not count.
+
+def unread(log: list[CommandRecord], steps: list[int] | None = None) -> list[tuple]:
+    cited = steps if steps is not None else [r.command_id for r in log if r.command_id is not None]
+    return [tuple(u) for u in unread_scripts(cited, log)]
+
+
+MI_LSP = [rec(1, "curl -fsSL https://x.dev/install.sh -o install.sh", 0),
+          rec(2, "curl -fsSL https://x.dev/validate-worker-manifest.js -o validate-worker-manifest.js", 0),
+          read("install.sh"), rec(3, "bash install.sh --skip-worker-install", 0)]
+
+
+def test_a_helper_the_installer_runs_must_be_read_before_the_installer():
+    assert unread(MI_LSP) == [(3, "validate-worker-manifest.js", "brought in", "install.sh")]
+    assert unread([*MI_LSP[:3], read("validate-worker-manifest.js"), MI_LSP[3]]) == []
+    # Read only after the installer ran (before a later PATH step) is too late.
+    late = [*MI_LSP, read("validate-worker-manifest.js"), rec(4, "ln -sf ~/.mi/bin/mi-lsp ~/.local/bin/mi-lsp", 0)]
+    assert unread(late) == [(3, "validate-worker-manifest.js", "brought in", "install.sh")]
+    # A downloaded script no downloaded script could run (a linter's sample input) is no helper.
+    sample = [rec(1, "curl -fsSLo example.py https://x.dev/example.py", 0), rec(2, "ruff check example.py", 1)]
+    assert unread(sample) == []
+
+
+@pytest.mark.parametrize("command", [
+    "curl -fsSL https://x.dev/install.sh | bash",
+    "curl -o- https://x.dev/install.sh | bash -s -- --yes",
+    "wget -qO- https://x.dev/install.sh | sh",
+    "bash <(curl -fsSL https://x.dev/install.sh)",
+    'sh -c "$(curl -fsSL https://x.dev/install.sh)"',
+])
+def test_a_script_run_straight_from_the_network_is_always_noted(command: str):
+    assert unread([rec(1, command, 0)]) == [(1, "https://x.dev/install.sh", "piped", None)]
+
+
+@pytest.mark.parametrize("fetch", [
+    "curl -fsSLo install.sh https://x.dev/install.sh",
+    "curl -LO https://x.dev/install.sh",
+    "curl -o \"install.sh\" https://x.dev/install.sh",
+    "curl --output=install.sh https://x.dev/install.sh",
+    "wget -qO install.sh https://x.dev/install.sh",
+    "wget https://x.dev/install.sh?ref=main",
+])
+def test_download_spellings(fetch: str):
+    assert unread([rec(1, f"{fetch} && bash install.sh", 0)]) == [(1, "install.sh", "ran", None)]
+
+
+def test_what_counts_as_reading_a_script_before_it_runs():
     fetch, run = rec(1, "curl -fsSL https://x.dev/i.sh -o /tmp/i.sh", 0), rec(3, "sh /tmp/i.sh", 0)
-    assert unread_scripts([1, 3], [fetch, rec(2, "head -40 /tmp/i.sh", 0), run]) == []
-    assert unread_scripts([1, 3], [fetch, run, rec(4, "cat /tmp/i.sh", 0)]) == [(3, "i.sh")]
-    # A release tarball and the binary in it are not scripts to read.
-    assert unread_scripts([1, 2], [rec(1, "curl -fL -o tool.tgz https://x.dev/tool.tgz && tar xzf tool.tgz", 0),
-                                   rec(2, "./tool --version", 0)]) == []
+    for reading in ("head -40 /tmp/i.sh", "sed -ne '1,200p' /tmp/i.sh", "awk 'NR<=200' /tmp/i.sh"):
+        assert unread([fetch, rec(2, reading, 0), run], [1, 3]) == []
+    assert unread([rec(1, "curl -fsSL https://x.dev/i.sh -o i.sh && cat i.sh", 0), rec(3, "sh i.sh", 0)]) == []
+    # Running it with its output cut by tail, a read after it ran, a failed read_file, or one before the
+    # download: not a read.
+    not_reads = [
+        [fetch, rec(2, "bash /tmp/i.sh 2>&1 | tail -40", 1), run],
+        [fetch, run, rec(4, "cat /tmp/i.sh", 0)],
+        [fetch, read("/tmp/i.sh", ok=False), run],
+        [read("i.sh"), fetch, run],
+    ]
+    for log in not_reads:
+        assert unread(log, [1, 3]) == [(3, "i.sh", "ran", None)], log
+
+
+def test_how_a_downloaded_file_is_run():
+    assert unread([rec(1, "curl -fsSL -o install https://x.dev/install && chmod +x install && ./install", 0)]) == [
+        (1, "install", "ran", None)]
+    assert unread([rec(1, "curl -fsSL -o get.py https://x.dev/get.py", 0), rec(2, "python3 - < get.py", 0)]) == [
+        (2, "get.py", "ran", None)]
+    assert unread([rec(1, "curl -fsSLO https://x.dev/env.sh", 0), rec(2, "source env.sh && tool --version", 0)]) == [
+        (2, "env.sh", "ran", None)]
+
+
+def test_files_that_are_not_downloaded_scripts():
+    # Written by the agent itself, a release tarball and its binary, an uncited run.
+    assert unread([rec(1, "curl -fsSL -o data.json https://x.dev/d.json && cat > run.sh <<'EOF'\necho hi\nEOF", 0),
+                   rec(2, "bash run.sh", 0)]) == []
+    assert unread([rec(1, "curl -fL -o tool.tgz https://x.dev/tool.tgz && tar xzf tool.tgz", 0),
+                   rec(2, "./tool --version", 0)]) == []
+    assert unread([rec(1, "curl -fsSL https://x.dev/i.sh | bash", 0)], steps=[]) == []
