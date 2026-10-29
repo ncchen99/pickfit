@@ -53,32 +53,28 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-mi-lsp-20261029-174350-3b92",
+      "run_id": "verify-mi-lsp-20261029-192019-e3c5",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install-agent.sh -o /tmp/install-agent.sh && ls -l /tmp/install-agent.sh && wc -c /tmp/install-agent.sh",
-          "purpose": "Download install-agent.sh for reading before running"
-        },
-        {
           "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh",
-          "purpose": "Download install.sh for reading before running"
+          "purpose": "download install.sh for reading"
         },
         {
-          "command": "mkdir -p /tmp/mi-install && cp /tmp/install-agent.sh /tmp/mi-install/ && cp /tmp/install.sh /tmp/mi-install/ && curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/mi-install/validate-worker-manifest.js && ls -l /tmp/mi-install/ && wc -c /tmp/mi-install/*",
-          "purpose": "Stage installers and download sibling validate-worker-manifest.js"
+          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/validate-worker-manifest.js && wc -c /tmp/validate-worker-manifest.js && ls -l /tmp/*.sh /tmp/*.js",
+          "purpose": "download validator sibling file"
         },
         {
-          "command": "sh /tmp/mi-install/install.sh",
-          "purpose": "Run CLI-only installer sh /tmp/mi-install/install.sh"
+          "command": "sh /tmp/install.sh 2>&1",
+          "purpose": "install CLI-only via install.sh"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "mi-lsp --version",
-        "expected_signal": "mi-lsp version 0.16.6 revision=a226978c522d protocol=mi-lsp-v1.1 rid=osx-arm64"
+        "command": "mi-lsp version --format toon",
+        "expected_signal": "version: 0.16.6"
       },
-      "first_task": "mi-lsp init . --name myapp"
+      "first_task": "mi-lsp version --format toon"
     },
     "linux": {
       "basis": "replayed",
@@ -135,7 +131,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T17:58:20.180283+08:00",
+    "checked_at": "2026-10-29T19:32:48.994780+08:00",
     "runs": [
       {
         "id": "verify-mi-lsp-20261029-013109-7303",
@@ -271,7 +267,7 @@
         "cost_usd": 0.101623
       },
       {
-        "id": "verify-mi-lsp-20261029-174350-3b92",
+        "id": "verify-mi-lsp-20261029-192019-e3c5",
         "level": "function",
         "unverified_reason": null,
         "os": "macos",
@@ -279,44 +275,40 @@
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26",
-        "checked_at": "2026-10-29T17:58:20.180283+08:00",
+        "checked_at": "2026-10-29T19:32:48.994780+08:00",
         "tool_version": "0.16.6",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install-agent.sh -o /tmp/install-agent.sh && ls -l /tmp/install-agent.sh && wc -c /tmp/install-agent.sh",
-            "purpose": "Download install-agent.sh for reading before running"
-          },
-          {
             "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh",
-            "purpose": "Download install.sh for reading before running"
+            "purpose": "download install.sh for reading"
           },
           {
-            "command": "mkdir -p /tmp/mi-install && cp /tmp/install-agent.sh /tmp/mi-install/ && cp /tmp/install.sh /tmp/mi-install/ && curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/mi-install/validate-worker-manifest.js && ls -l /tmp/mi-install/ && wc -c /tmp/mi-install/*",
-            "purpose": "Stage installers and download sibling validate-worker-manifest.js"
+            "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/validate-worker-manifest.js && wc -c /tmp/validate-worker-manifest.js && ls -l /tmp/*.sh /tmp/*.js",
+            "purpose": "download validator sibling file"
           },
           {
-            "command": "sh /tmp/mi-install/install.sh",
-            "purpose": "Run CLI-only installer sh /tmp/mi-install/install.sh"
+            "command": "sh /tmp/install.sh 2>&1",
+            "purpose": "install CLI-only via install.sh"
           }
         ],
         "smoke_tests": [
           {
-            "command": "mi-lsp --version",
-            "expected_signal": "mi-lsp version 0.16.6 revision=a226978c522d protocol=mi-lsp-v1.1 rid=osx-arm64",
+            "command": "mi-lsp version --format toon",
+            "expected_signal": "version: 0.16.6",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "mi-lsp version 0.16.6 revision=a226978c522d protocol=mi-lsp-v1.1 rid=osx-arm64",
+            "observed_excerpt": "version: 0.16.6",
             "setup": [],
             "offline": true
           },
           {
             "command": "mi-lsp --help",
-            "expected_signal": "Use \"mi-lsp [command] --help\" for more information about a command.",
+            "expected_signal": "Manage workspace aliases",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Use \"mi-lsp [command] --help\" for more information about a command.",
+            "observed_excerpt": "workspace Manage workspace aliases and warm state",
             "setup": [],
             "offline": true
           },
@@ -328,27 +320,7 @@
             "observed_excerpt": "workspace=myapp",
             "setup": [
               {
-                "command": "cat > go.mod <<'EOF'\nmodule myapp\n\ngo 1.24\nEOF\ncat > main.go <<'EOF'\npackage main\n\nimport \"fmt\"\n\n// StartDaemon starts the background daemon process.\nfunc StartDaemon() {\n\tfmt.Println(\"daemon starting\")\n}\n\nfunc main() {\n\tStartDaemon()\n}\nEOF\ngit init -q && ls -la",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "mi-lsp nav intent \"how does the daemon start\" --workspace myapp --format toon",
-            "expected_signal": "symbol: StartDaemon",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "symbol: StartDaemon",
-            "setup": [
-              {
-                "command": "cat > go.mod <<'EOF'\nmodule myapp\n\ngo 1.24\nEOF\ncat > main.go <<'EOF'\npackage main\n\nimport \"fmt\"\n\n// StartDaemon starts the background daemon process.\nfunc StartDaemon() {\n\tfmt.Println(\"daemon starting\")\n}\n\nfunc main() {\n\tStartDaemon()\n}\nEOF\ngit init -q && ls -la",
-                "background": false,
-                "port": null
-              },
-              {
-                "command": "mi-lsp init . --name myapp",
+                "command": "git init 2>&1 && cat > package.json <<'EOF'\n{\"name\": \"myapp\", \"version\": \"1.0.0\", \"main\": \"src/index.js\"}\nEOF\nmkdir -p src && cat > src/index.js <<'EOF'\n// daemon starter sample\nfunction startDaemon() { console.log(\"daemon starting\"); }\nmodule.exports = { startDaemon };\nEOF\ncat > README.sample.md <<'EOF'\n# myapp sample\nEOF\nls -la",
                 "background": false,
                 "port": null
               }
@@ -363,7 +335,27 @@
             "observed_excerpt": "workspace: myapp",
             "setup": [
               {
-                "command": "cat > go.mod <<'EOF'\nmodule myapp\n\ngo 1.24\nEOF\ncat > main.go <<'EOF'\npackage main\n\nimport \"fmt\"\n\n// StartDaemon starts the background daemon process.\nfunc StartDaemon() {\n\tfmt.Println(\"daemon starting\")\n}\n\nfunc main() {\n\tStartDaemon()\n}\nEOF\ngit init -q && ls -la",
+                "command": "git init 2>&1 && cat > package.json <<'EOF'\n{\"name\": \"myapp\", \"version\": \"1.0.0\", \"main\": \"src/index.js\"}\nEOF\nmkdir -p src && cat > src/index.js <<'EOF'\n// daemon starter sample\nfunction startDaemon() { console.log(\"daemon starting\"); }\nmodule.exports = { startDaemon };\nEOF\ncat > README.sample.md <<'EOF'\n# myapp sample\nEOF\nls -la",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mi-lsp init . --name myapp",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mi-lsp nav intent \"how does the daemon start\" --workspace myapp --format toon",
+            "expected_signal": "backend: intent",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "backend: intent",
+            "setup": [
+              {
+                "command": "git init 2>&1 && cat > package.json <<'EOF'\n{\"name\": \"myapp\", \"version\": \"1.0.0\", \"main\": \"src/index.js\"}\nEOF\nmkdir -p src && cat > src/index.js <<'EOF'\n// daemon starter sample\nfunction startDaemon() { console.log(\"daemon starting\"); }\nmodule.exports = { startDaemon };\nEOF\ncat > README.sample.md <<'EOF'\n# myapp sample\nEOF\nls -la",
                 "background": false,
                 "port": null
               },
@@ -378,39 +370,39 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -fsSL .../scripts/install/install-agent.sh | sh (or install.sh | sh)",
-            "actually_needed": "Download validate-worker-manifest.js next to install.sh (e.g. into /tmp/mi-install/) and run the installer from that directory so node can resolve the sibling validator module",
+            "readme_said": "curl -fsSL .../scripts/install/install-agent.sh | sh and curl -fsSL .../scripts/install/install.sh | sh",
+            "actually_needed": "download https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js next to install.sh before running it, otherwise install fails with Error: Cannot find module '/tmp/validate-worker-manifest.js'",
             "kind": "readme_wrong"
           },
           {
-            "readme_said": "The recommended installer adds the CLI and the mi-lsp skill",
-            "actually_needed": "The CLI (mi-lsp v0.16.6) installs fine, but the install-agent skill step fails because https://github.com/fgpaz/claude-skills.git requires authentication; use the CLI-only install.sh to get a clean install",
+            "readme_said": "recommended installer adds CLI and mi-lsp skill via install-agent.sh",
+            "actually_needed": "used CLI-only install.sh because install-agent.sh CLI install succeeded but its final `npx skills add fgpaz/claude-skills` step fails with Authentication failed for https://github.com/fgpaz/claude-skills.git",
             "kind": "note"
           },
           {
             "readme_said": "mi-lsp init . --name myapp",
-            "actually_needed": "Create project markers first (go.mod + main.go and git init) before running init; a directory with only README.md is rejected",
+            "actually_needed": "needed `git init` plus a supported marker (package.json) and a source file (src/index.js) before `mi-lsp init . --name myapp` would succeed; empty dir with only README.md fails with no supported project markers found",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three screenshots show success: workspace init, StartDaemon intent result, and correct version string.",
+          "observed": "Screenshots show version 0.16.6 output, successful init with workspace=myapp, and help listing workspace alias management.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-mi-lsp-20261029-174350-3b92/report.json",
+          "trace_path": "runs/verify/verify-mi-lsp-20261029-192019-e3c5/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-mi-lsp-20261029-174350-3b92/check-1-cmd13.judged.png",
-            "runs/verify/verify-mi-lsp-20261029-174350-3b92/check-2-cmd14.judged.png",
-            "runs/verify/verify-mi-lsp-20261029-174350-3b92/check-3-cmd8.judged.png"
+            "runs/verify/verify-mi-lsp-20261029-192019-e3c5/check-1-cmd8.judged.png",
+            "runs/verify/verify-mi-lsp-20261029-192019-e3c5/check-2-cmd12.judged.png",
+            "runs/verify/verify-mi-lsp-20261029-192019-e3c5/check-3-cmd9.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.137401
+        "cost_usd": 0.117867
       }
     ]
   },
@@ -732,5 +724,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-29T17:58:20.184687+08:00"
+  "updated_at": "2026-10-29T19:32:48.995970+08:00"
 }

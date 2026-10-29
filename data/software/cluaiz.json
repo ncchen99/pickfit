@@ -58,16 +58,16 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-cluaiz-20261029-173421-ef6e",
+      "run_id": "verify-cluaiz-20261029-191456-a3ef",
       "method": "script",
       "steps": [
         {
           "command": "curl -fsSL https://cluaiz.com/install.sh -o /tmp/cluaiz-install.sh && ls -l /tmp/cluaiz-install.sh && wc -c /tmp/cluaiz-install.sh",
-          "purpose": "Download install script for reading before running"
+          "purpose": "Download install script to read before running"
         },
         {
           "command": "sh /tmp/cluaiz-install.sh",
-          "purpose": "Install Cluaiz release v0.1.0 mac-arm64 into ~/.cluaiz/bin"
+          "purpose": "Install Cluaiz release v0.1.0 for mac-arm64"
         }
       ],
       "manual_steps": [],
@@ -124,7 +124,7 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T17:40:22.947790+08:00",
+    "checked_at": "2026-10-29T19:18:17.347281+08:00",
     "runs": [
       {
         "id": "verify-cluaiz-20261029-024155-8b17",
@@ -240,26 +240,26 @@
         "cost_usd": 0.06861
       },
       {
-        "id": "verify-cluaiz-20261029-173421-ef6e",
-        "level": "function",
+        "id": "verify-cluaiz-20261029-191456-a3ef",
+        "level": "service",
         "unverified_reason": null,
         "os": "macos",
         "arch": "arm64",
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26",
-        "checked_at": "2026-10-29T17:40:22.947790+08:00",
+        "checked_at": "2026-10-29T19:18:17.347281+08:00",
         "tool_version": "0.1.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
             "command": "curl -fsSL https://cluaiz.com/install.sh -o /tmp/cluaiz-install.sh && ls -l /tmp/cluaiz-install.sh && wc -c /tmp/cluaiz-install.sh",
-            "purpose": "Download install script for reading before running"
+            "purpose": "Download install script to read before running"
           },
           {
             "command": "sh /tmp/cluaiz-install.sh",
-            "purpose": "Install Cluaiz release v0.1.0 mac-arm64 into ~/.cluaiz/bin"
+            "purpose": "Install Cluaiz release v0.1.0 for mac-arm64"
           }
         ],
         "smoke_tests": [
@@ -283,13 +283,13 @@
           },
           {
             "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && cluaiz show ~/models/stories260K.gguf",
-            "expected_signal": "Plan on this machine now",
+            "expected_signal": "stories260K.gguf",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Plan on this machine now",
+            "observed_excerpt": "id stories260K.gguf",
             "setup": [
               {
-                "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/ && cluaiz pull --help && echo \"---SHOW-HELP---\" && cluaiz show --help && echo \"---RUN-HELP---\" && cluaiz run --help | head -n 80",
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -l ~/models/",
                 "background": false,
                 "port": null
               }
@@ -297,16 +297,31 @@
             "offline": true
           },
           {
-            "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && cluaiz run ~/models/stories260K.gguf \"Hello\" --temp 0 -n 16",
-            "expected_signal": "little girl named Lily",
+            "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && cluaiz run ~/models/stories260K.gguf \"Say hello in five words.\" --ctx-size 512",
+            "expected_signal": "Lily said.",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "As she was walking, she saw the tree and saw a big, red trap in the park. She had an ideal whattally like a shiny cloth and the shine was fast. She saw her friend, a little girl named Lily, Tom, cutter, a little bird flest, she felter and started to open the tape, butterfly.",
+            "observed_excerpt": "\"Hell, flow, blue!\" Lily said. As she climbed the blue and a slide, a big, shiny blueble!\" said Whe clumbled. In the end, there was a big blue.",
             "setup": [
               {
-                "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/ && cluaiz pull --help && echo \"---SHOW-HELP---\" && cluaiz show --help && echo \"---RUN-HELP---\" && cluaiz run --help | head -n 80",
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -l ~/models/",
                 "background": false,
                 "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsSL http://127.0.0.1:8000/health; echo \"---MODELS---\"; curl -fsSL http://127.0.0.1:8000/v1/models -H \"Authorization: Bearer $(cat ~/.cluaiz/session.token)\"",
+            "expected_signal": "\"status\":\"alive\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"engine\":\"Cluaiz Engine\",\"message\":\"Cluaiz Engine is alive and operational.\",\"status\":\"alive\",\"version\":\"0.1.0\"}---MODELS---",
+            "setup": [
+              {
+                "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && cluaiz serve",
+                "background": true,
+                "port": 8000
               }
             ],
             "offline": true
@@ -314,39 +329,39 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -fsSL https://cluaiz.com/install.sh | sh then use cluaiz",
-            "actually_needed": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" before using cluaiz in the same shell",
-            "kind": "note"
+            "readme_said": "curl -fsSL https://cluaiz.com/install.sh | sh",
+            "actually_needed": "Download https://cluaiz.com/install.sh to /tmp/cluaiz-install.sh, read it, then run with sh /tmp/cluaiz-install.sh",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "cluaiz show unsloth/Qwen3-4B-GGUF",
-            "actually_needed": "cluaiz show accepts a local path (cluaiz show ~/models/stories260K.gguf) instead of a registry id; used tiny local GGUF so the check replays offline",
-            "kind": "note"
+            "readme_said": "cluaiz is usable immediately after install",
+            "actually_needed": "Run cluaiz via export PATH=\"$HOME/.cluaiz/bin:$PATH\" (installer appends to shell rc files but new PATH is not active in this shell)",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "curl with Authorization: Bearer $(cat ~/.cluaiz/session.token)",
-            "actually_needed": "server requires Authorization disabled by default (permission.json api_auth.required false); no Bearer token needed for /health and /v1/models",
-            "kind": "note"
+            "readme_said": "cluaiz show unsloth/Qwen3-4B-GGUF shows the plan",
+            "actually_needed": "cluaiz show <registry-id> errors with model not installed unless first pulled; cluaiz show <path-to-.gguf> works offline on a local file",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three checks show model info with plan, generated story text containing the expected phrase, and version 0.1.0.",
+          "observed": "Screenshots show model info with stories260K.gguf, a long generated story containing Lily said, and version cluaiz 0.1.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-cluaiz-20261029-173421-ef6e/report.json",
+          "trace_path": "runs/verify/verify-cluaiz-20261029-191456-a3ef/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-cluaiz-20261029-173421-ef6e/check-1-cmd7.judged.png",
-            "runs/verify/verify-cluaiz-20261029-173421-ef6e/check-2-cmd8.judged.png",
-            "runs/verify/verify-cluaiz-20261029-173421-ef6e/check-3-cmd3.judged.png"
+            "runs/verify/verify-cluaiz-20261029-191456-a3ef/check-1-cmd9.judged.png",
+            "runs/verify/verify-cluaiz-20261029-191456-a3ef/check-2-cmd11.judged.png",
+            "runs/verify/verify-cluaiz-20261029-191456-a3ef/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.192887
+        "cost_usd": 0.139576
       }
     ]
   },
@@ -692,5 +707,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-29T17:40:22.951997+08:00"
+  "updated_at": "2026-10-29T19:18:17.348574+08:00"
 }

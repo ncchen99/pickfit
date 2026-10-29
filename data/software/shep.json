@@ -60,7 +60,7 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-shep-20261029-175820-1a97",
+      "run_id": "verify-shep-20261029-193248-ea26",
       "method": "brew",
       "steps": [
         {
@@ -126,7 +126,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T18:13:38.129488+08:00",
+    "checked_at": "2026-10-29T19:48:56.916358+08:00",
     "runs": [
       {
         "id": "verify-shep-20261029-012344-4cd6",
@@ -257,7 +257,7 @@
         "cost_usd": 0.076973
       },
       {
-        "id": "verify-shep-20261029-175820-1a97",
+        "id": "verify-shep-20261029-193248-ea26",
         "level": "function",
         "unverified_reason": null,
         "os": "macos",
@@ -265,7 +265,7 @@
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26",
-        "checked_at": "2026-10-29T18:13:38.129488+08:00",
+        "checked_at": "2026-10-29T19:48:56.916358+08:00",
         "tool_version": "0.1.26",
         "install_method": "brew",
         "replayed": true,
@@ -286,15 +286,6 @@
             "offline": true
           },
           {
-            "command": "shep --help",
-            "expected_signal": "A process manager for your flock",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "A process manager for your flock",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "shep welcome",
             "expected_signal": "the shepherd keeps them running",
             "exit_code": 0,
@@ -304,69 +295,63 @@
             "offline": true
           },
           {
-            "command": "cat > /tmp/Flockfile.toml <<'EOF'\n[[app]]\nname = \"api\"\nscript = \"/bin/sleep\"\nargs = [\"60\"]\n\n[[app]]\nname = \"worker\"\nscript = \"/bin/sleep\"\nargs = [\"60\"]\nEOF\nshep start /tmp/Flockfile.toml",
-            "expected_signal": "online",
+            "command": "shep flock",
+            "expected_signal": "hello",
             "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "0 api online 2603 0 - - 128.0K 0s - -",
+            "passed": false,
+            "observed_excerpt": "0 api online 2509 0 - - 3.2M 7s - -",
             "setup": [],
-            "offline": true
+            "offline": null
           },
           {
-            "command": "shep flock",
-            "expected_signal": "api online",
+            "command": "cat > /tmp/Flockfile2.toml <<'EOF'\n[[app]]\nname = \"api\"\nscript = \"/bin/sh\"\nargs = [\"-c\", \"echo api listening on :8080; sleep 300\"]\nEOF\nshep start /tmp/Flockfile2.toml && sleep 2 && shep bleats --no-follow --lines 4",
+            "expected_signal": "api | api listening on :8080",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "0 api online 2603 0 - - 1.2M 0s - -",
-            "setup": [
-              {
-                "command": "cat > /tmp/Flockfile.toml <<'EOF'\n[[app]]\nname = \"api\"\nscript = \"/bin/sleep\"\nargs = [\"60\"]\n\n[[app]]\nname = \"worker\"\nscript = \"/bin/sleep\"\nargs = [\"60\"]\nEOF\nshep start /tmp/Flockfile.toml",
-                "background": false,
-                "port": null
-              }
-            ],
+            "observed_excerpt": "api | api listening on :8080",
+            "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "Flockfile example shows only script = \"./bin/api\" with no args field documented",
-            "actually_needed": "Use script = \"/bin/sleep\" with args = [\"60\"] as separate list; the combined string is treated as one executable path",
-            "kind": "note"
+            "readme_said": "brew install shep-pm/shep/shep",
+            "actually_needed": "The tap still ships shep 0.1.26 (releases: 0.18.2, then 0.19.0 on 2026-10-29) and builds it from source: brew first pours llvm 23.1.4 (1.9 GB) and rust 1.99.1 (407 MB), then cargo takes ~4 min. The release's shep-aarch64-apple-darwin.tar.gz is current.",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show welcome banner with tagline, both flock apps online, and correct version string.",
+          "observed": "Screenshots show welcome banner with tagline, api app online with listening log, and version 0.1.26.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-shep-20261029-175820-1a97/report.json",
+          "trace_path": "runs/verify/verify-shep-20261029-193248-ea26/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-shep-20261029-175820-1a97/check-1-cmd4.judged.png",
-            "runs/verify/verify-shep-20261029-175820-1a97/check-2-cmd9.judged.png",
-            "runs/verify/verify-shep-20261029-175820-1a97/check-3-cmd2.judged.png"
+            "runs/verify/verify-shep-20261029-193248-ea26/check-1-cmd4.judged.png",
+            "runs/verify/verify-shep-20261029-193248-ea26/check-2-cmd9.judged.png",
+            "runs/verify/verify-shep-20261029-193248-ea26/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.060465
+        "cost_usd": 0.053592
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T18:13:38+08:00",
+    "computed_at": "2026-10-29T19:48:56+08:00",
     "quality": {
-      "total": 82.7,
+      "total": 90.2,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -409,7 +394,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 39.45
+      "value": 43.03
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -692,5 +677,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-29T18:13:38.131212+08:00"
+  "updated_at": "2026-10-29T19:48:56.922625+08:00"
 }
