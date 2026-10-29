@@ -165,10 +165,12 @@ def test_failed_and_unverified_claims_stand():
 
 
 def test_a_failed_claim_needs_a_command_that_failed():
-    # No failing command cited: the last cited check that exited non-zero stands in for it.
-    verdict = log_verdict(claim("failed", [1], [{"command_id": 5, "expected_signal": "ok"}],
+    # No failing command cited: the first cited check that exited non-zero stands in for it.
+    verdict = log_verdict(claim("failed", [1], [{"command_id": 2, "expected_signal": "0.10.18"},
+                                                {"command_id": 3, "expected_signal": "Error", "expected_exit_code": 2},
+                                                {"command_id": 5, "expected_signal": "ok"}],
                                 blocking_error="validate rejects the example"), LOG)
-    assert (verdict.level, verdict.failing_id) == ("failed", 5)
+    assert (verdict.level, verdict.failing_id) == ("failed", 3)
     # Nothing failed, or the cited command exited 0: nothing a fresh box could repeat.
     verdict = log_verdict(claim("failed", [], [], blocking_error="no wheel"), LOG)
     assert (verdict.level, verdict.unverified_reason, verdict.failing_id) == ("unverified", "other", None)

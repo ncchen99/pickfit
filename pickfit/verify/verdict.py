@@ -399,12 +399,13 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict
 
 def _failing_id(finish: FinishArgs, checks: list[ResolvedCheck], by_id: dict[int, CommandRecord],
                 problems: list[str]) -> int | None:
-    """The failed claim's failing command: the one cited, else the last cited check that exited non-zero."""
+    """The failed claim's failing command: the one cited, else the first cited check that exited non-zero
+    (the most basic one: a --help that crashes comes before an example that fails)."""
     cid = finish.failing_command_id
     if cid is None:
         failed = [c.command_id for c in checks if c.exit_code not in (0, None) and by_id[c.command_id].tool
                   == "run_command"]
-        cid = failed[-1] if failed else None
+        cid = failed[0] if failed else None
     record = by_id.get(cid) if cid is not None else None
     if record is None or record.tool != "run_command":
         problems.append("failing_command_id cites no run_command" if cid is not None else
