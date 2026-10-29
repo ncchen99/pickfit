@@ -57,18 +57,18 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-orbit-20261029-221015-d87c",
+      "run_id": "verify-orbit-20261030-000442-0367",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g @orbit-tools/cli",
-          "purpose": "Install Orbit via npm candidate 1"
+          "purpose": "Install Orbit CLI globally via npm"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "orbit --help",
-        "expected_signal": "Usage: orbit [OPTIONS] <COMMAND>"
+        "command": "orbit --version",
+        "expected_signal": "orbit 0.38.0"
       },
       "first_task": "orbit init --non-interactive --machine-name box --task-prefix BOX"
     },
@@ -106,7 +106,7 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T22:13:32.416649+08:00",
+    "checked_at": "2026-10-30T00:11:33.393499+08:00",
     "runs": [
       {
         "id": "verify-orbit-20261029-011619-a952",
@@ -223,25 +223,34 @@
         "cost_usd": 0.047145
       },
       {
-        "id": "verify-orbit-20261029-221015-d87c",
+        "id": "verify-orbit-20261030-000442-0367",
         "level": "service",
         "unverified_reason": null,
         "os": "macos",
         "arch": "arm64",
         "method": "sandbox",
         "runner": "tart-vz",
-        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26",
-        "checked_at": "2026-10-29T22:13:32.416649+08:00",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-10-30T00:11:33.393499+08:00",
         "tool_version": "0.38.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g @orbit-tools/cli",
-            "purpose": "Install Orbit via npm candidate 1"
+            "purpose": "Install Orbit CLI globally via npm"
           }
         ],
         "smoke_tests": [
+          {
+            "command": "orbit --version",
+            "expected_signal": "orbit 0.38.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "orbit 0.38.0",
+            "setup": [],
+            "offline": true
+          },
           {
             "command": "orbit --help",
             "expected_signal": "Usage: orbit [OPTIONS] <COMMAND>",
@@ -256,19 +265,34 @@
             "expected_signal": "machine identity (created)",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "machine identity (created): name=\"box\", id=hm_ff8011d3cf8296b4, task_prefix=BOX",
+            "observed_excerpt": "machine identity (created): name=\"box\", id=hm_fac9f4681f530119, task_prefix=BOX",
             "setup": [],
             "offline": true
           },
           {
-            "command": "curl -s -o /tmp/orbit-index.html -w HTTP_CODE:%{http_code} http://127.0.0.1:7878/",
-            "expected_signal": "HTTP_CODE:200",
+            "command": "orbit doctor",
+            "expected_signal": "no remote hosts are registered",
             "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "HTTP_CODE:200",
+            "passed": false,
+            "observed_excerpt": "hosts ok no remote hosts are registered",
             "setup": [
               {
-                "command": "orbit web serve --no-open --port 7878",
+                "command": "orbit init --non-interactive --machine-name box --task-prefix BOX",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:7878/",
+            "expected_signal": "200",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "200",
+            "setup": [
+              {
+                "command": "orbit web serve --port 7878 --no-open",
                 "background": true,
                 "port": 7878
               }
@@ -279,38 +303,28 @@
         "pitfalls": [
           {
             "readme_said": "orbit init",
-            "actually_needed": "orbit init --non-interactive --machine-name box --task-prefix BOX (plain `orbit init` is interactive and would hang with stdin closed)",
+            "actually_needed": "run non-interactively as `orbit init --non-interactive --machine-name box --task-prefix BOX` (any 2-5 uppercase-letter prefix); stdin is closed so the interactive prompts cannot be answered",
             "kind": "sandbox"
-          },
-          {
-            "readme_said": "orbit doctor checks health",
-            "actually_needed": "orbit doctor exits 1 with provider:opus error `CLI 'claude' was not found` when no agent CLI is installed; README requires an authenticated agent CLI which the box lacks, so exit 1 is the validator correctly reporting a missing prerequisite",
-            "kind": "note"
-          },
-          {
-            "readme_said": "npm install -g @orbit-tools/cli",
-            "actually_needed": "no extra step needed: despite npm warn about allowScripts for postinstall, orbit 0.38.0 was on PATH and --version worked",
-            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three checks show expected output: init created machine identity, web server returned HTTP 200, and help shows usage.",
+          "observed": "Screenshots show orbit init creating machine identity, local server returning HTTP 200, and version reporting 0.38.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-orbit-20261029-221015-d87c/report.json",
+          "trace_path": "runs/verify/verify-orbit-20261030-000442-0367/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-orbit-20261029-221015-d87c/check-1-cmd6.judged.png",
-            "runs/verify/verify-orbit-20261029-221015-d87c/check-2-cmd13.judged.png",
-            "runs/verify/verify-orbit-20261029-221015-d87c/check-3-cmd3.judged.png"
+            "runs/verify/verify-orbit-20261030-000442-0367/check-1-cmd7.judged.png",
+            "runs/verify/verify-orbit-20261030-000442-0367/check-2-cmd11.judged.png",
+            "runs/verify/verify-orbit-20261030-000442-0367/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.0716
+        "cost_usd": 0.06269
       }
     ]
   },
@@ -650,5 +664,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-29T22:13:32.422624+08:00"
+  "updated_at": "2026-10-30T00:11:33.558145+08:00"
 }
