@@ -9,7 +9,8 @@ import { ERROR_EXCERPT_MAX, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } 
 import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './submit.ts';
 
 const ABOUT =
-  'pickfit recommends lesser-known software that it has installed and tested in a sandbox. Scope today: developer CLI tools and local AI/LLM tools. ';
+  'pickfit recommends lesser-known software that it has installed and tested in a sandbox. Scope today: developer CLI tools and local AI/LLM tools. ' +
+  'well_known_option is not verified by pickfit; say so. ';
 const RULES = 'Ask at most 1-2 questions first (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars.';
 
 export const INSTRUCTIONS =
