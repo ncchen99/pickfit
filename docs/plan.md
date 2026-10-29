@@ -97,7 +97,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 - [x] P2.3 規則前置（arch B.1）：fork、archived、template、沒 README、函式庫訊號。從 `spikes/quality_signals.py` 移植時拿掉所有 ecosyste.ms 呼叫，改用 GitHub REST。（目前 496 筆過 466 筆、94%，偏寬；README-only 的可疑 repo 有擋下。P2.6 前再收緊）
 - [x] P2.4 開放權重初篩：Spark Open @ Baseten（`meta-models/muse-spark-open-1026`、`reasoning_effort: low`、強制 tool call），低信心、矛盾（`usable_software` 與 kind 對不上）、kind 為 other 或失敗的送 `muse-spark-1.3` 複查（覆蓋初篩），另固定抽 5% 複查比一致率。不給星數。被拒的候選抽取時跳過。Baseten 在帳本裡有自己的預算（總額 $80、每日 $25）。指令 `pickfit prescreen --limit N`。（10/29：957 筆規則通過的全跑完：留 907、拒 50（函式庫 29、研究或 benchmark 10、demo 3、框架 3 等）；複查 83 筆，其中 18 筆被 1.3 改判（都在被標記的案例裡）；**5% 抽樣 34／34 一致**。每筆初篩約 $0.004、1–2 秒。已寫出的 39 筆 profile 沒有被拒的。發現：初篩信心幾乎都 ≥0.9，低信心門檻只觸發 1 次；模型判的類別有 305 筆是 other，和 query 類別不一致，還沒拿來用）
 - [x] P2.5 抽取 v0：`muse-spark-1.3`，Responses、`text.format` strict，每欄附引用。照「1 → 5 → 30」放大。（開發時用 contributor 跑到 36 筆，全過 schema；程式檢查每段引用確實出現在來源，已在 v0 做好。1.3 正式批次在 P2.6，估每筆約 $0.017）
-- [x] P2.6 抽取收尾（10/30 上午，arch H.2）：程式檢查引用真的出現在來源、授權與 release 等事實欄位改用 API 值、重試、批次；晚上背景跑批次抽取，產生 P3 要用的 ≥30 份 profile。（10/29：規則 v2 過 452／496＝91.1%，多擋了釣魚套件、只有 README、只有二進位又沒授權的 repo；`muse-spark-1.3` 抽取 52 筆、平均 $0.014；寫出 39 筆 profile（dev_cli 23、local_ai 16），全部先標未驗證。待補：引用只證明那句話存在，不證明它支持填入的值；local_ai 產量偏低）
+- [x] P2.6 抽取收尾（10/30 上午，arch H.2）：程式檢查引用真的出現在來源、授權與 release 等事實欄位改用 API 值、重試、批次；晚上背景跑批次抽取，產生 P3 要用的 ≥30 份 profile。（10/29：規則 v2 過 452／496＝91.1%，多擋了釣魚套件、只有 README、只有二進位又沒授權的 repo；`muse-spark-1.3` 抽取 52 筆、平均 $0.014；寫出 39 筆 profile（dev_cli 23、local_ai 16），全部先標未驗證。待補：引用只證明那句話存在，不證明它支持填入的值；local_ai 產量偏低。同日補本地 AI：依類別定義加 13 條 query、抽取前先只用 GitHub 資料排序，多寫 57 筆 profile（local_ai 37、dev_cli 20），共 96 筆）
 
 **完成標準**：`pickfit discover` 產生 ≥150 筆候選；漏斗每一格標模型與花費；5 份抽取檔過 schema。推理 token 超過估算 2 倍就降 effort。
 
@@ -110,7 +110,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 - [x] P3.5 重播：全新 Box 照記錄的步驟重跑，成功才寫回 `install` 與 `verification`。（`--write-back` 只在 P2.6 資料的副本上測過）
 - [x] P3.6 `ModalBox`（需 P0.6）：`runtime="gvisor"`、資源上限、先開網路安裝再收緊、預建 image、`--limits-test`。（`--limits-test` 12／12；沙盒 3–4 秒啟動；記憶體超限時 Modal 會把整個沙盒停掉）
 - [x] P3.7 批次：`pickfit verify --batch N --concurrency 5`，demo 類別優先。（10 筆測試候選：第一輪 7／10，修好 3 個問題後 10／10 通過並重播；每筆中位數 91 秒、Meta 約 $0.08）
-- [x] P3.8 挑 10 筆 demo 候選（Mac 能裝、免費、能離線）。（10/29：見 `docs/demo-candidates.md`。39 筆中 11 筆不能在 Linux 沙盒跑（多是圖形介面 app），其餘 28 筆有 25 筆通過並重播、寫回資料；10 筆候選全部通過並重播。Mac 上的安裝還沒實測（P6.4）；10 筆中只有 1 筆本地 AI 工具。schema 補上「斷網是否通過」與測試前的準備指令）
+- [x] P3.8 挑 10 筆 demo 候選（Mac 能裝、免費、能離線）。（10/29：見 `docs/demo-candidates.md`。39 筆中 11 筆不能在 Linux 沙盒跑（多是圖形介面 app），其餘 28 筆有 25 筆通過並重播、寫回資料；10 筆候選全部通過並重播。Mac 上的安裝還沒實測（P6.4）；10 筆中原本只有 1 筆本地 AI 工具（localm）；同日補本地 AI 後，第 10 筆改為 cluaiz（斷網時 `/health` 有回應，官方安裝支援 macOS arm64），另列 8 筆本地 AI 備選。schema 補上「斷網是否通過」與測試前的準備指令）
 - [ ] P3.9 Show HN 管道（計畫內，10/30 最後做，1.5 h）：沿用 `spikes/ch_comm_hn_showhn.py`；落後就第一個砍（arch H.5 #2）。
 
 **10/30 完成標準**：一個「照 README 會失敗」的工具，由 Muse Spark 自己讀錯誤、補步驟、呼叫 `finish`，trace 看得到推理摘要；≥30 份 profile 已 commit。修不好 → 10/31 上午繼續修，細路徑 MCP 延到 11/1；用規則表兜底，只做到「安裝驗證」等級。
@@ -227,3 +227,5 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | 10/29 12:07 | P5.1、P5.4、P5.5 | P5 分支併入 main（merge `fdea9ed`）；375 個 Python、69 個 Worker 測試通過。39 筆都有評分（公式 `b3.v1`），驗證紀錄與安裝步驟沒變；run page 與 Meta 用量報表可用。寶藏分數待校正 | Meta 累計 $11.91（10/29 $10.96，含其他 session） |
 | 10/29 12:07 | — | **下一步**：補本地 AI 的分支（local_ai 已驗證 4 → 28，新增 57 筆）測完再問念誠要不要合併，新增的要跑評分；推論等級驗證另有 session 在做；寶藏分數校正；部署 Worker 要念誠點頭；Mac 上親手驗 demo 前 3 筆（P6.4） | — |
 | 10/29 12:20 | P2.4 | 開放權重初篩完成（`d82efba`）：957 筆規則通過的候選全跑，留 907、拒 50；複查 83 筆、改判 18；5% 抽樣和 `muse-spark-1.3` 一致 34／34。抽取已改成跳過被拒的候選。照 1 → 5 → 30 → 全部放大 | Baseten $3.80；Meta 複查 $0.66（Meta 10/29 累計 $11.15，含其他 session） |
+| 10/29 12:12 | P2.6、P3.8 | 補本地 AI 與推論等級驗證兩個分支併入 main（merge `4944df7`）；388 個 Python、69 個 Worker 測試通過。新增 57 筆 profile（共 96 筆）；已驗證的本地 AI 工具 4 → 28 筆，其中 goinfer、xyntetik-runner 在沙盒實際載入小模型跑出推論；另多驗證 18 筆 CLI 工具。demo 第 10 筆改為 cluaiz。驗證加了 T4 GPU 選項（berth 只有裝假的 `nvidia-smi` 才過，維持未驗證）。新的 57 筆還沒評分 | Meta 累計 $12.09（10/29 $11.14）；這兩個 session 的 Modal 約 $0.31 |
+| 10/29 12:12 | — | **下一步**：新的 57 筆跑評分、寶藏分數校正（交給沒讀過 `eval/` 的 session）；寫回要擋掉「只在沙盒裡才需要的步驟」；部署 Worker 要念誠點頭；Mac 上親手驗 demo 前 3 筆（P6.4） | — |
