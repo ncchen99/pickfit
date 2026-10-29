@@ -114,10 +114,115 @@
     "url": "https://github.com/roandejager/Hillock/releases/tag/v1.0.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "failed",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T14:37:43.446146+08:00",
+    "runs": [
+      {
+        "id": "verify-hillock-20261029-024443-0330",
+        "level": "failed",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T14:37:43.446146+08:00",
+        "tool_version": "1.0.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/roandejager/Hillock.git hillock-src",
+            "purpose": "clone Hillock source (PyPI wheel is empty)"
+          },
+          {
+            "command": "python3 -m venv /tmp/hv && /tmp/hv/bin/pip install --upgrade pip setuptools wheel",
+            "purpose": "create venv /tmp/hv and upgrade pip/setuptools"
+          },
+          {
+            "command": "/tmp/hv/bin/pip install -e ./hillock-src",
+            "purpose": "pip install -e ./hillock-src with dependencies"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "/tmp/hv/bin/hillock --help",
+            "expected_signal": "ModuleNotFoundError: No module named 'main'",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "ModuleNotFoundError: No module named 'main'",
+            "setup": [
+              {
+                "command": "git clone https://github.com/roandejager/Hillock.git hillock-src",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 -m venv /tmp/hv && /tmp/hv/bin/pip install --upgrade pip setuptools wheel",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "/tmp/hv/bin/pip install -e ./hillock-src",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "cd hillock-src && /tmp/hv/bin/python verify_hillock.py",
+            "expected_signal": "SUMMARY: 21/22 checks passed",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "SUMMARY: 21/22 checks passed",
+            "setup": [
+              {
+                "command": "git clone https://github.com/roandejager/Hillock.git hillock-src",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 -m venv /tmp/hv && /tmp/hv/bin/pip install --upgrade pip setuptools wheel",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "/tmp/hv/bin/pip install -e ./hillock-src",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install hillock gives working install",
+            "actually_needed": "PyPI wheel installs no modules (top_level.txt empty, RECORD lists only dist-info) so `hillock --help` raises ModuleNotFoundError: No module named 'main'"
+          },
+          {
+            "readme_said": "pip install -e . then `hillock` CLI / `python verify_hillock.py` work",
+            "actually_needed": "editable `pip install -e .` only maps `assets` (see __editable__ finder) so `hillock` entry point still fails; must run `cd hillock-src && /tmp/hv/bin/python verify_hillock.py` from repo root with venv python"
+          },
+          {
+            "readme_said": "python verify_hillock.py validates database constraints, Hebbian math and HDC gating",
+            "actually_needed": "suite ends SUMMARY: 21/22 checks passed with [FAIL] gate-zero-leaks expected 0 hallucination leaks, got 1 (exit 1) on reruns"
+          }
+        ],
+        "blocking_error": "PyPI hillock-1.0.0 wheel ships no code (RECORD has only dist-info, top_level.txt empty) so `hillock --help` fails with ModuleNotFoundError: No module named 'main'; `pip install -e .` from source has the same setuptools mapping (only `assets`) so the console script stays broken; README CPU suite `verify_hillock.py` runs but ends 21/22 with gate-zero-leaks FAIL (expected 0 leaks, got 1).",
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-hillock-20261029-024443-0330/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.164943
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -360,5 +465,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-29T02:38:40+08:00"
+  "updated_at": "2026-10-29T14:37:43.450440+08:00"
 }
