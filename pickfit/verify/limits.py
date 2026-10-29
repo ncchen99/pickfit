@@ -119,9 +119,11 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
                "169.254.169.254 unreachable", lambda r: r.exit_code != 0))
     add(_probe(box, "private_blocked", "curl -sS -m 5 http://10.0.0.1/", 20,
                "10.0.0.1 unreachable", lambda r: r.exit_code != 0))
-    if macos:  # dropped, not refused: a refusal would mean the packet reached the host
-        add(_probe(box, "host_blocked", "curl -sS -m 5 http://$(route -n get default | awk '/gateway/ {print $2}'):22/",
-                   20, "the host (the VM's gateway) times out", lambda r: r.exit_code == 28))
+    if macos:  # softnet refuses the host fast (exit 7); a guest-side block would time out (28); 0 = reached
+        add(_probe(box, "host_blocked",
+                   "gw=$(route -n get default | awk '/gateway/ {print $2}'); test -n \"$gw\" && "
+                   "curl -sS -m 5 -o /dev/null http://$gw:22/", 20,
+                   "the host (the VM's gateway) is unreachable", lambda r: r.exit_code != 0))
     box.exec(f"{box.detach} python3 -m http.server 8765 --bind 127.0.0.1 >/dev/null 2>&1 < /dev/null & "
              "sleep 2", 20)
     box.set_network(False)
