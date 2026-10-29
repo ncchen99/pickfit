@@ -662,6 +662,9 @@ class Popularity(_Model):
     score: float | None = Field(ge=0, le=100)
     signals: PopularitySignals
     age_days: int | None = Field(ge=0, description="Repo age; velocity applies from 90 days.")
+    packages: list[str] = Field(
+        default=[], description="Registry packages that link back to the repo, e.g. 'npm:adapty'."
+    )
 
 
 class Treasure(_Model):

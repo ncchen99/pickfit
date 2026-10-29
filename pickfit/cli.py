@@ -156,6 +156,8 @@ def _add_score_command(sub: argparse._SubParsersAction) -> None:
     s.add_argument("--force", action="store_true", help="grade the README again even if it has not changed")
     s.add_argument("--no-github", action="store_true",
                    help="no GitHub calls: skip responsiveness and live snapshots for repos not in --db")
+    s.add_argument("--no-registries", action="store_true",
+                   help="no npm, PyPI, crates.io, Homebrew or Hacker News lookups (their popularity signals stay null)")
     s.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY, help="records at once")
     s.add_argument("--dry-run", action="store_true", help="compute and print; write nothing")
     s.add_argument("--verbose", action="store_true", help="print every record's scores")

@@ -22,6 +22,7 @@ from pickfit.schema import (
     DocsRubric,
     DocsRubricItems,
     Outcomes,
+    Pitfall,
     SoftwareRecord,
     Verification,
     VerificationRun,
@@ -32,8 +33,10 @@ from pickfit.score import (
     compose_quality,
     grade_docs,
     hygiene_parts,
+    install_actions,
     maintenance_score,
     popularity,
+    readme_fix,
     refresh_scores,
     responsiveness_score,
     sandbox_score,
@@ -106,6 +109,38 @@ def test_sandbox_component_follows_steps_pitfalls_and_failure() -> None:
     assert sandbox_score(verification()) is None
 
 
+def test_install_actions_count_inside_chained_steps_but_not_looking_around() -> None:
+    assert install_actions(["curl -fsSL https://x.dev/install.sh -o /tmp/i.sh && wc -c /tmp/i.sh && head -n 100 /tmp/i.sh",
+                            "sh /tmp/i.sh"]) == 2
+    assert install_actions(["mkdir -p ~/.local/bin && curl -fsSLO https://x/r.tgz && tar -xzf r.tgz && "
+                            "install -m 0755 r ~/.local/bin/r && r --version"]) == 4
+    assert install_actions(['TAG=$(curl -fsSL https://api.github.com/x | grep tag_name | cut -d\\" -f4) && '
+                            "echo $TAG | tee /tmp/t && curl -fsSL -o /tmp/x.tgz https://x/$TAG.tgz"]) == 2
+    assert install_actions(["cd /tmp && rm -f old && npm view tool && npm install -g tool 2>&1; which tool"]) == 1
+    assert install_actions(["curl -fsSL https://x.dev/install | sh", "export PATH=\"$HOME/.x/bin:$PATH\""]) == 2
+    assert install_actions(["git clone https://github.com/a/b && cd b && npm install && npm run build && "
+                            "npm install -g ."]) == 4
+    assert install_actions(["echo 'a && b; c' && go version"]) == 0  # separators inside quotes stay put
+
+
+@pytest.mark.parametrize(("said", "needed", "fix"), [
+    ("tool --version", "use `tool version`; --version exits 2", False),  # pickfit's own check
+    ("pip install tool", "uv tool install tool (PEP 668 externally-managed system)", False),
+    ("go install github.com/a/tool@latest", "downloaded the release binary (no Go toolchain in the box)", False),
+    ("sudo install -m 0755 tool /usr/local/bin", "install to ~/.local/bin", False),
+    ("curl -fsSL https://x.dev/install.sh | sh", "download it first, read it, then run sh /tmp/install.sh", False),
+    ("tool serve", "needs --backend cpu on a box with no NVIDIA driver", False),
+    ("Visual C++ redistributable", "no redistributable needed on Linux", False),
+    ("curl -fsSL https://x.dev/install.sh | sh", "run it with --skip-worker; the default run fails at worker install",
+     True),
+    ("run tool directly after install", "binary lands in ~/.tool/bin, which is not on PATH", True),
+    ("tool link", "tool pair", True),
+    ("bun add -g tool then tool --version works", "symlink ~/.bun/bin/tool into ~/.local/bin", True),
+])
+def test_readme_fix_leaves_out_what_the_box_explains(said: str, needed: str, fix: bool) -> None:
+    assert readme_fix(Pitfall(readme_said=said, actually_needed=needed)) is fix
+
+
 def test_maintenance_counts_push_release_and_cadence_not_commits() -> None:
     as_of = datetime(2026, 10, 28, 12, 0, tzinfo=TAIPEI)
     repo = {"pushed_at": "2026-10-20T00:00:00Z", "created_at": "2025-01-01T00:00:00Z"}
@@ -130,24 +165,29 @@ def test_hygiene_parts_ignore_vendored_files() -> None:
 
 
 def issue(assoc: str = "NONE", *, closed_days: float | None = None, pr: bool = False, merged: bool = False,
-          bot: bool = False) -> dict[str, Any]:
-    item: dict[str, Any] = {"author_association": assoc, "created_at": "2026-10-01T00:00:00Z",
+          bot: bool = False, opened: str = "2026-10-01") -> dict[str, Any]:
+    item: dict[str, Any] = {"author_association": assoc, "created_at": f"{opened}T00:00:00Z",
                             "closed_at": None, "user": {"login": "dependabot[bot]" if bot else "u", "type": "User"}}
     if closed_days is not None:
-        item["closed_at"] = f"2026-10-{1 + int(closed_days):02d}T00:00:00Z"
+        day = datetime.fromisoformat(f"{opened}T00:00:00+00:00").day
+        item["closed_at"] = f"{opened[:8]}{day + int(closed_days):02d}T00:00:00Z"
     if pr:
         item["pull_request"] = {"merged_at": "2026-10-03T00:00:00Z" if merged else None}
     return item
 
 
-def test_responsiveness_counts_only_outside_issues() -> None:
-    assert responsiveness_score(None) is None
+def test_responsiveness_counts_only_outside_issues_as_they_stood_at_the_snapshot() -> None:
+    as_of = datetime(2026, 10, 28, 12, 0, tzinfo=TAIPEI)
+    assert responsiveness_score(None, as_of) is None
     insiders = [issue("OWNER", closed_days=1), issue("MEMBER"), issue(bot=True), issue()]
-    assert responsiveness_score(insiders) is None  # one outside issue is too few
+    assert responsiveness_score(insiders, as_of) is None  # one outside issue is too few
     two = [issue(closed_days=2), issue()]
-    assert responsiveness_score(two) == pytest.approx(0.5 * 0.5 + 0.5 * 1.0)
+    assert responsiveness_score(two, as_of) == pytest.approx(0.5 * 0.5 + 0.5 * 1.0)
     prs = [issue(pr=True, merged=True), issue(pr=True, merged=True), issue(pr=True)]
-    assert responsiveness_score(two + prs) == pytest.approx(0.4 * 0.5 + 0.4 * 1.0 + 0.2 * 2 / 3, abs=1e-4)
+    assert responsiveness_score(two + prs, as_of) == responsiveness_score(two, as_of)  # PRs are left out
+    later = [issue(opened="2026-10-29"), issue(opened="2026-10-25"), issue(opened="2026-10-02", closed_days=27)]
+    # opened after as_of, still open but under 7 days old, closed after as_of: only the last counts, as open
+    assert responsiveness_score(two + later, as_of) == pytest.approx(0.5 * 1 / 3 + 0.5 * 1.0, abs=1e-4)
 
 
 def test_usage_outcomes_need_three_external_reports_and_take_weight_from_four_components() -> None:
@@ -170,14 +210,18 @@ def test_missing_components_leave_the_denominator_and_caps_bind() -> None:
     assert compose_quality(dict.fromkeys(components), 10, None)["total"] is None
 
 
-def test_popularity_is_log_normalized_by_category_with_velocity_after_90_days() -> None:
-    signals = {"stars": 20_000, "forks": None, "release_downloads": None, "monthly_downloads": None,
-               "dependents": None, "hn_top_score": None, "registries_count": None}
-    assert popularity(signals, "dev_cli", age_days=30) == 100.0
+def test_popularity_is_log_normalized_to_the_category_p95_with_velocity_after_90_days() -> None:
+    signals = {"stars": 191, "forks": None, "release_downloads": None, "monthly_downloads": None,
+               "dependents": 5_000, "hn_top_score": None, "registries_count": None}
+    assert popularity(signals, "dev_cli", age_days=30) == 100.0  # dependents has no ref and is ignored
     assert popularity(signals, "local_ai", age_days=30) < 100.0
-    small = {**signals, "stars": 17, "forks": 2}
-    young, old = popularity(small, "dev_cli", 60), popularity(small, "dev_cli", 720)
-    assert young < 45 and old < young  # 17 stars over two years is slow growth
+    median = {**signals, "stars": 17, "forks": 2}  # about the candidates' median
+    young, old = popularity(median, "dev_cli", 60), popularity(median, "dev_cli", 720)
+    assert 45 < young < 60 and old < young  # 17 stars over two years is slow growth
+    unknown = {**median, "stars": 3, "forks": 0, "registries_count": 0, "hn_top_score": 0}
+    assert popularity(unknown, "dev_cli", 60) < 30
+    hn = {**unknown, "hn_top_score": 2}
+    assert popularity(hn, "dev_cli", 60) - popularity(unknown, "dev_cli", 60) < 10  # a post with 2 points
     assert popularity(dict.fromkeys(signals), "dev_cli", 10) is None
 
 
@@ -205,7 +249,7 @@ def test_scoring_writes_only_scores_and_reuses_the_rubric(tmp_path: Path) -> Non
     db_path, out = setup_records(tmp_path)
     before = SoftwareRecord.model_validate_json((out / "tinyq.json").read_text()).model_dump(mode="json")
     calls: list[str] = []
-    summary = score_records(out, db_path=db_path, model=MODEL, use_github=False, now=LATER,
+    summary = score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=LATER,
                             grade=fake_grade(calls=calls))
     assert summary.written == ["tinyq"] and calls == ["score:tinyq"] and not summary.errors
     after = json.loads((out / "tinyq.json").read_text())
@@ -217,15 +261,17 @@ def test_scoring_writes_only_scores_and_reuses_the_rubric(tmp_path: Path) -> Non
     assert comps.sandbox_verification.score == 1.0 and comps.install_docs.score == 1.0
     assert comps.responsiveness.score is None and comps.usage_outcomes.score is None
     assert scores.quality.cap_reason is None and scores.popularity.signals.stars == 42
-    assert scores.treasure.is_treasure and scores.treasure.value > 0
-    again = score_records(out, db_path=db_path, model=MODEL, use_github=False, now=LATER,
+    assert scores.popularity.signals.registries_count is None and scores.popularity.packages == []
+    assert scores.treasure.value > 0
+    assert scores.treasure.is_treasure is (scores.quality.total >= 70 and scores.popularity.score <= 45)
+    again = score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=LATER,
                           grade=fake_grade(calls=calls))
     assert again.unchanged == ["tinyq"] and again.reused == 1 and calls == ["score:tinyq"]
 
 
 def test_unverified_records_are_capped_below_the_treasure_line(tmp_path: Path) -> None:
     db_path, out = setup_records(tmp_path, verified=False)
-    score_records(out, db_path=db_path, model=MODEL, use_github=False, now=NOW, grade=fake_grade())
+    score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW, grade=fake_grade())
     scores = SoftwareRecord.model_validate_json((out / "tinyq.json").read_text()).scores
     assert scores.quality.cap_reason == "unverified" and scores.quality.total <= 69
     assert scores.quality.components.sandbox_verification.score is None
@@ -234,7 +280,7 @@ def test_unverified_records_are_capped_below_the_treasure_line(tmp_path: Path) -
 
 def test_profiles_rewrite_keeps_scores(tmp_path: Path) -> None:
     db_path, out = setup_records(tmp_path)
-    score_records(out, db_path=db_path, model=MODEL, use_github=False, now=NOW, grade=fake_grade())
+    score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW, grade=fake_grade())
     scored = json.loads((out / "tinyq.json").read_text())
     again = write_profiles(PipelineDB(db_path), model=MODEL, out_dir=out, now=NOW)
     assert again.unchanged == ["tinyq"]
@@ -243,7 +289,7 @@ def test_profiles_rewrite_keeps_scores(tmp_path: Path) -> None:
 
 def test_write_back_keeps_scores_and_refreshes_what_follows_the_run(tmp_path: Path) -> None:
     db_path, out = setup_records(tmp_path, verified=False)
-    score_records(out, db_path=db_path, model=MODEL, use_github=False, now=NOW, grade=fake_grade(1))
+    score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW, grade=fake_grade(1))
     before = SoftwareRecord.model_validate_json((out / "tinyq.json").read_text()).scores
     assert before.quality.cap_reason == "unverified"
     new_run = VerificationRun.model_validate(run("verify-2", steps=5, pitfalls=1))
