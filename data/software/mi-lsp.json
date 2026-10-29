@@ -52,17 +52,32 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-mi-lsp-20261029-174350-3b92",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install-agent.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install-agent.sh -o /tmp/install-agent.sh && ls -l /tmp/install-agent.sh && wc -c /tmp/install-agent.sh",
+          "purpose": "Download install-agent.sh for reading before running"
+        },
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh",
+          "purpose": "Download install.sh for reading before running"
+        },
+        {
+          "command": "mkdir -p /tmp/mi-install && cp /tmp/install-agent.sh /tmp/mi-install/ && cp /tmp/install.sh /tmp/mi-install/ && curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/mi-install/validate-worker-manifest.js && ls -l /tmp/mi-install/ && wc -c /tmp/mi-install/*",
+          "purpose": "Stage installers and download sibling validate-worker-manifest.js"
+        },
+        {
+          "command": "sh /tmp/mi-install/install.sh",
+          "purpose": "Run CLI-only installer sh /tmp/mi-install/install.sh"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "mi-lsp --version",
+        "expected_signal": "mi-lsp version 0.16.6 revision=a226978c522d protocol=mi-lsp-v1.1 rid=osx-arm64"
+      },
       "first_task": "mi-lsp init . --name myapp"
     },
     "linux": {
@@ -120,7 +135,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:36:01.717392+08:00",
+    "checked_at": "2026-10-29T17:58:20.180283+08:00",
     "runs": [
       {
         "id": "verify-mi-lsp-20261029-013109-7303",
@@ -227,11 +242,13 @@
         "pitfalls": [
           {
             "readme_said": "curl -fsSL .../install-agent.sh | sh",
-            "actually_needed": "Also download validate-worker-manifest.js next to install.sh; install-agent.sh fetched alone fails with 'Cannot find module /tmp/validate-worker-manifest.js'"
+            "actually_needed": "Also download validate-worker-manifest.js next to install.sh; install-agent.sh fetched alone fails with 'Cannot find module /tmp/validate-worker-manifest.js'",
+            "kind": null
           },
           {
             "readme_said": "curl -fsSL .../install.sh | sh",
-            "actually_needed": "Run as 'sh /tmp/install.sh --skip-worker-install'; default run fails at 'mi-lsp worker install' with 'staged worker did not pass protocol verification' and rolls back, and 'worker status' reports bundled worker 'permission denied' and 'dotnet is not available'"
+            "actually_needed": "Run as 'sh /tmp/install.sh --skip-worker-install'; default run fails at 'mi-lsp worker install' with 'staged worker did not pass protocol verification' and rolls back, and 'worker status' reports bundled worker 'permission denied' and 'dotnet is not available'",
+            "kind": null
           }
         ],
         "blocking_error": null,
@@ -252,6 +269,148 @@
         },
         "actor_model": "muse-spark-1.3",
         "cost_usd": 0.101623
+      },
+      {
+        "id": "verify-mi-lsp-20261029-174350-3b92",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26",
+        "checked_at": "2026-10-29T17:58:20.180283+08:00",
+        "tool_version": "0.16.6",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install-agent.sh -o /tmp/install-agent.sh && ls -l /tmp/install-agent.sh && wc -c /tmp/install-agent.sh",
+            "purpose": "Download install-agent.sh for reading before running"
+          },
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh",
+            "purpose": "Download install.sh for reading before running"
+          },
+          {
+            "command": "mkdir -p /tmp/mi-install && cp /tmp/install-agent.sh /tmp/mi-install/ && cp /tmp/install.sh /tmp/mi-install/ && curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/mi-install/validate-worker-manifest.js && ls -l /tmp/mi-install/ && wc -c /tmp/mi-install/*",
+            "purpose": "Stage installers and download sibling validate-worker-manifest.js"
+          },
+          {
+            "command": "sh /tmp/mi-install/install.sh",
+            "purpose": "Run CLI-only installer sh /tmp/mi-install/install.sh"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mi-lsp --version",
+            "expected_signal": "mi-lsp version 0.16.6 revision=a226978c522d protocol=mi-lsp-v1.1 rid=osx-arm64",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mi-lsp version 0.16.6 revision=a226978c522d protocol=mi-lsp-v1.1 rid=osx-arm64",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mi-lsp --help",
+            "expected_signal": "Use \"mi-lsp [command] --help\" for more information about a command.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Use \"mi-lsp [command] --help\" for more information about a command.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mi-lsp init . --name myapp",
+            "expected_signal": "workspace=myapp",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "workspace=myapp",
+            "setup": [
+              {
+                "command": "cat > go.mod <<'EOF'\nmodule myapp\n\ngo 1.24\nEOF\ncat > main.go <<'EOF'\npackage main\n\nimport \"fmt\"\n\n// StartDaemon starts the background daemon process.\nfunc StartDaemon() {\n\tfmt.Println(\"daemon starting\")\n}\n\nfunc main() {\n\tStartDaemon()\n}\nEOF\ngit init -q && ls -la",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mi-lsp nav intent \"how does the daemon start\" --workspace myapp --format toon",
+            "expected_signal": "symbol: StartDaemon",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "symbol: StartDaemon",
+            "setup": [
+              {
+                "command": "cat > go.mod <<'EOF'\nmodule myapp\n\ngo 1.24\nEOF\ncat > main.go <<'EOF'\npackage main\n\nimport \"fmt\"\n\n// StartDaemon starts the background daemon process.\nfunc StartDaemon() {\n\tfmt.Println(\"daemon starting\")\n}\n\nfunc main() {\n\tStartDaemon()\n}\nEOF\ngit init -q && ls -la",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mi-lsp init . --name myapp",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mi-lsp workspace which --format toon",
+            "expected_signal": "workspace: myapp",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "workspace: myapp",
+            "setup": [
+              {
+                "command": "cat > go.mod <<'EOF'\nmodule myapp\n\ngo 1.24\nEOF\ncat > main.go <<'EOF'\npackage main\n\nimport \"fmt\"\n\n// StartDaemon starts the background daemon process.\nfunc StartDaemon() {\n\tfmt.Println(\"daemon starting\")\n}\n\nfunc main() {\n\tStartDaemon()\n}\nEOF\ngit init -q && ls -la",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mi-lsp init . --name myapp",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL .../scripts/install/install-agent.sh | sh (or install.sh | sh)",
+            "actually_needed": "Download validate-worker-manifest.js next to install.sh (e.g. into /tmp/mi-install/) and run the installer from that directory so node can resolve the sibling validator module",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "The recommended installer adds the CLI and the mi-lsp skill",
+            "actually_needed": "The CLI (mi-lsp v0.16.6) installs fine, but the install-agent skill step fails because https://github.com/fgpaz/claude-skills.git requires authentication; use the CLI-only install.sh to get a clean install",
+            "kind": "note"
+          },
+          {
+            "readme_said": "mi-lsp init . --name myapp",
+            "actually_needed": "Create project markers first (go.mod + main.go and git init) before running init; a directory with only README.md is rejected",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show success: workspace init, StartDaemon intent result, and correct version string.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mi-lsp-20261029-174350-3b92/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mi-lsp-20261029-174350-3b92/check-1-cmd13.judged.png",
+            "runs/verify/verify-mi-lsp-20261029-174350-3b92/check-2-cmd14.judged.png",
+            "runs/verify/verify-mi-lsp-20261029-174350-3b92/check-3-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.137401
       }
     ]
   },
@@ -573,5 +732,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-29T14:40:05+08:00"
+  "updated_at": "2026-10-29T17:58:20.184687+08:00"
 }

@@ -59,17 +59,20 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-shep-20261029-175820-1a97",
       "method": "brew",
       "steps": [
         {
           "command": "brew install shep-pm/shep/shep",
-          "purpose": null
+          "purpose": "Install shep via Homebrew tap"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "shep --version",
+        "expected_signal": "shep 0.1.26"
+      },
       "first_task": "shep welcome"
     },
     "linux": {
@@ -123,7 +126,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:24:55.794242+08:00",
+    "checked_at": "2026-10-29T18:13:38.129488+08:00",
     "runs": [
       {
         "id": "verify-shep-20261029-012344-4cd6",
@@ -225,11 +228,13 @@
         "pitfalls": [
           {
             "readme_said": "cargo install shep",
-            "actually_needed": "downloaded and verified shep-x86_64-unknown-linux-gnu.tar.gz from GitHub releases (shep-v0.18.2) and copied shep, shep-runtime, shep-dev into ~/.local/bin"
+            "actually_needed": "downloaded and verified shep-x86_64-unknown-linux-gnu.tar.gz from GitHub releases (shep-v0.18.2) and copied shep, shep-runtime, shep-dev into ~/.local/bin",
+            "kind": null
           },
           {
             "readme_said": "Visual C++ redistributable prerequisite",
-            "actually_needed": "no redistributable needed on Linux"
+            "actually_needed": "no redistributable needed on Linux",
+            "kind": null
           }
         ],
         "blocking_error": null,
@@ -250,20 +255,118 @@
         },
         "actor_model": "muse-spark-1.3",
         "cost_usd": 0.076973
+      },
+      {
+        "id": "verify-shep-20261029-175820-1a97",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26",
+        "checked_at": "2026-10-29T18:13:38.129488+08:00",
+        "tool_version": "0.1.26",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install shep-pm/shep/shep",
+            "purpose": "Install shep via Homebrew tap"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "shep --version",
+            "expected_signal": "shep 0.1.26",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "shep 0.1.26",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "shep --help",
+            "expected_signal": "A process manager for your flock",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "A process manager for your flock",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "shep welcome",
+            "expected_signal": "the shepherd keeps them running",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "( o o )--, the shepherd keeps them running",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cat > /tmp/Flockfile.toml <<'EOF'\n[[app]]\nname = \"api\"\nscript = \"/bin/sleep\"\nargs = [\"60\"]\n\n[[app]]\nname = \"worker\"\nscript = \"/bin/sleep\"\nargs = [\"60\"]\nEOF\nshep start /tmp/Flockfile.toml",
+            "expected_signal": "online",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0 api online 2603 0 - - 128.0K 0s - -",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "shep flock",
+            "expected_signal": "api online",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0 api online 2603 0 - - 1.2M 0s - -",
+            "setup": [
+              {
+                "command": "cat > /tmp/Flockfile.toml <<'EOF'\n[[app]]\nname = \"api\"\nscript = \"/bin/sleep\"\nargs = [\"60\"]\n\n[[app]]\nname = \"worker\"\nscript = \"/bin/sleep\"\nargs = [\"60\"]\nEOF\nshep start /tmp/Flockfile.toml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Flockfile example shows only script = \"./bin/api\" with no args field documented",
+            "actually_needed": "Use script = \"/bin/sleep\" with args = [\"60\"] as separate list; the combined string is treated as one executable path",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show welcome banner with tagline, both flock apps online, and correct version string.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-shep-20261029-175820-1a97/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-shep-20261029-175820-1a97/check-1-cmd4.judged.png",
+            "runs/verify/verify-shep-20261029-175820-1a97/check-2-cmd9.judged.png",
+            "runs/verify/verify-shep-20261029-175820-1a97/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.060465
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:40:05+08:00",
+    "computed_at": "2026-10-29T18:13:38+08:00",
     "quality": {
-      "total": 75.2,
+      "total": 82.7,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.7,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -306,7 +409,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 35.87
+      "value": 39.45
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -589,5 +692,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-29T14:40:05+08:00"
+  "updated_at": "2026-10-29T18:13:38.131212+08:00"
 }

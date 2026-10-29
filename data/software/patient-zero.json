@@ -56,18 +56,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-patient-zero-20261029-172732-8cec",
       "method": "npm",
       "steps": [
         {
-          "command": "npx patient-zero@latest",
-          "purpose": null
+          "command": "npm install -g patient-zero@latest && patient-zero --version && patient-zero scan --offline --no-github",
+          "purpose": "install patient-zero globally with npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "npx patient-zero@latest"
+      "check": {
+        "command": "patient-zero --version",
+        "expected_signal": "0.2.1"
+      },
+      "first_task": "patient-zero scan --offline --no-github"
     },
     "linux": {
       "basis": "replayed",
@@ -103,7 +106,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:15:07.025898+08:00",
+    "checked_at": "2026-10-29T17:32:17.706702+08:00",
     "runs": [
       {
         "id": "verify-patient-zero-20261029-011302-75a6",
@@ -181,6 +184,94 @@
         },
         "actor_model": "muse-spark-1.3",
         "cost_usd": 0.039294
+      },
+      {
+        "id": "verify-patient-zero-20261029-172732-8cec",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26",
+        "checked_at": "2026-10-29T17:32:17.706702+08:00",
+        "tool_version": "0.2.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g patient-zero@latest && patient-zero --version && patient-zero scan --offline --no-github",
+            "purpose": "install patient-zero globally with npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "patient-zero --version",
+            "expected_signal": "0.2.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.2.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "npx -y patient-zero@latest --help",
+            "expected_signal": "Usage: patient-zero",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: patient-zero [options] [command]",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "npx patient-zero@latest",
+            "expected_signal": "No known IoCs matched",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[32m✅\u001b[39m No known IoCs matched.",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "patient-zero scan --offline --no-github",
+            "expected_signal": "IoC: bundled (offline)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[2m0.03s · coverage 2025-09-08 → present · 7 families · 6 indicators · IoC: \u001b[33mbundled (offline)\u001b[39m\u001b[22m",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "badge says runs offline_capable but main text only shows online `npx patient-zero@latest` with `IoC: fresh`",
+            "actually_needed": "use `patient-zero scan --offline` (discovered via `scan --help`) which uses the bundled IoC snapshot with `IoC: bundled (offline)` and needs no network",
+            "kind": "note"
+          },
+          {
+            "readme_said": "README shows a chalk@4.0.0 CRITICAL finding as example output",
+            "actually_needed": "clean scan reports `No known IoCs matched` because the bundled snapshot currently has `package:[]` (0 package indicators); the chalk@4.0.0 finding at the top of the README is illustrative (GHSA-demo-chalk)",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show patient-zero v0.2.1 completing scans with No known IoCs matched, offline bundled IoCs, and version 0.2.1 printed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-patient-zero-20261029-172732-8cec/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-patient-zero-20261029-172732-8cec/check-1-cmd3.judged.png",
+            "runs/verify/verify-patient-zero-20261029-172732-8cec/check-2-cmd13.judged.png",
+            "runs/verify/verify-patient-zero-20261029-172732-8cec/check-3-cmd12.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.114005
       }
     ]
   },
@@ -528,5 +619,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:07:48+08:00",
-  "updated_at": "2026-10-29T14:40:05+08:00"
+  "updated_at": "2026-10-29T17:32:17.710309+08:00"
 }

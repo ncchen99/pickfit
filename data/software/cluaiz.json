@@ -57,18 +57,25 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-cluaiz-20261029-173421-ef6e",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://cluaiz.com/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://cluaiz.com/install.sh -o /tmp/cluaiz-install.sh && ls -l /tmp/cluaiz-install.sh && wc -c /tmp/cluaiz-install.sh",
+          "purpose": "Download install script for reading before running"
+        },
+        {
+          "command": "sh /tmp/cluaiz-install.sh",
+          "purpose": "Install Cluaiz release v0.1.0 mac-arm64 into ~/.cluaiz/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "cluaiz show unsloth/Qwen3-4B-GGUF"
+      "check": {
+        "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && cluaiz --version",
+        "expected_signal": "cluaiz 0.1.0"
+      },
+      "first_task": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && cluaiz show ~/models/stories260K.gguf"
     },
     "linux": {
       "basis": "replayed",
@@ -117,7 +124,7 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:42:56.109414+08:00",
+    "checked_at": "2026-10-29T17:40:22.947790+08:00",
     "runs": [
       {
         "id": "verify-cluaiz-20261029-024155-8b17",
@@ -204,11 +211,13 @@
         "pitfalls": [
           {
             "readme_said": "curl -fsSL https://cluaiz.com/install.sh | sh",
-            "actually_needed": "download the script first (curl -fsSL https://cluaiz.com/install.sh -o /tmp/install.sh), read it, then run sh /tmp/install.sh"
+            "actually_needed": "download the script first (curl -fsSL https://cluaiz.com/install.sh -o /tmp/install.sh), read it, then run sh /tmp/install.sh",
+            "kind": null
           },
           {
             "readme_said": "run cluaiz directly after install",
-            "actually_needed": "binary installs to ~/.cluaiz/bin, which is not on PATH; each use needs export PATH=\"$HOME/.cluaiz/bin:$PATH\" before cluaiz"
+            "actually_needed": "binary installs to ~/.cluaiz/bin, which is not on PATH; each use needs export PATH=\"$HOME/.cluaiz/bin:$PATH\" before cluaiz",
+            "kind": null
           }
         ],
         "blocking_error": null,
@@ -229,6 +238,115 @@
         },
         "actor_model": "muse-spark-1.3",
         "cost_usd": 0.06861
+      },
+      {
+        "id": "verify-cluaiz-20261029-173421-ef6e",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26",
+        "checked_at": "2026-10-29T17:40:22.947790+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://cluaiz.com/install.sh -o /tmp/cluaiz-install.sh && ls -l /tmp/cluaiz-install.sh && wc -c /tmp/cluaiz-install.sh",
+            "purpose": "Download install script for reading before running"
+          },
+          {
+            "command": "sh /tmp/cluaiz-install.sh",
+            "purpose": "Install Cluaiz release v0.1.0 mac-arm64 into ~/.cluaiz/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && cluaiz --version",
+            "expected_signal": "cluaiz 0.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "cluaiz 0.1.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && cluaiz --help",
+            "expected_signal": "Run and serve local AI models",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Run and serve local AI models",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && cluaiz show ~/models/stories260K.gguf",
+            "expected_signal": "Plan on this machine now",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Plan on this machine now",
+            "setup": [
+              {
+                "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/ && cluaiz pull --help && echo \"---SHOW-HELP---\" && cluaiz show --help && echo \"---RUN-HELP---\" && cluaiz run --help | head -n 80",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && cluaiz run ~/models/stories260K.gguf \"Hello\" --temp 0 -n 16",
+            "expected_signal": "little girl named Lily",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "As she was walking, she saw the tree and saw a big, red trap in the park. She had an ideal whattally like a shiny cloth and the shine was fast. She saw her friend, a little girl named Lily, Tom, cutter, a little bird flest, she felter and started to open the tape, butterfly.",
+            "setup": [
+              {
+                "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/ && cluaiz pull --help && echo \"---SHOW-HELP---\" && cluaiz show --help && echo \"---RUN-HELP---\" && cluaiz run --help | head -n 80",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://cluaiz.com/install.sh | sh then use cluaiz",
+            "actually_needed": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" before using cluaiz in the same shell",
+            "kind": "note"
+          },
+          {
+            "readme_said": "cluaiz show unsloth/Qwen3-4B-GGUF",
+            "actually_needed": "cluaiz show accepts a local path (cluaiz show ~/models/stories260K.gguf) instead of a registry id; used tiny local GGUF so the check replays offline",
+            "kind": "note"
+          },
+          {
+            "readme_said": "curl with Authorization: Bearer $(cat ~/.cluaiz/session.token)",
+            "actually_needed": "server requires Authorization disabled by default (permission.json api_auth.required false); no Bearer token needed for /health and /v1/models",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show model info with plan, generated story text containing the expected phrase, and version 0.1.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-cluaiz-20261029-173421-ef6e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-cluaiz-20261029-173421-ef6e/check-1-cmd7.judged.png",
+            "runs/verify/verify-cluaiz-20261029-173421-ef6e/check-2-cmd8.judged.png",
+            "runs/verify/verify-cluaiz-20261029-173421-ef6e/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.192887
       }
     ]
   },
@@ -574,5 +692,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-29T14:40:05+08:00"
+  "updated_at": "2026-10-29T17:40:22.951997+08:00"
 }
