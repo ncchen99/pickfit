@@ -156,7 +156,9 @@ def test_command_budget_forces_a_finish_only_turn(task, ledger, tmp_path):
         response("r3", finish(level="failed", blocking_error="ran out of commands")),
     )
     report = agent(task, FakeBox(), server, ledger, tmp_path, limits=AgentLimits(max_commands=2)).run()
-    assert report.stop_reason == "finished" and report.verdict["level"] == "failed"
+    # A failed claim that names no failing command is not a failure the replay could repeat.
+    assert report.stop_reason == "finished" and report.verdict["claimed_level"] == "failed"
+    assert report.verdict["level"] == "unverified"
     last = server.requests[-1]
     assert last["tools"] == [FINISH_TOOL]
     assert "Stop working: the command budget (2) is used up" in last["input"][-1]["content"]

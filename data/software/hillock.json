@@ -114,22 +114,137 @@
     "url": "https://github.com/roandejager/Hillock/releases/tag/v1.0.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "failed",
+    "unverified_reason": null,
+    "checked_at": "2026-10-29T16:05:56.231891+08:00",
+    "runs": [
+      {
+        "id": "verify-hillock-20261029-024443-0330",
+        "level": "failed",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T16:05:56.231891+08:00",
+        "tool_version": "1.0.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/roandejager/Hillock.git hillock-src",
+            "purpose": "clone Hillock source (PyPI wheel is empty)"
+          },
+          {
+            "command": "python3 -m venv /tmp/hv && /tmp/hv/bin/pip install --upgrade pip setuptools wheel",
+            "purpose": "create venv /tmp/hv and upgrade pip/setuptools"
+          },
+          {
+            "command": "/tmp/hv/bin/pip install -e ./hillock-src",
+            "purpose": "pip install -e ./hillock-src with dependencies"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "/tmp/hv/bin/hillock --help",
+            "expected_signal": "ModuleNotFoundError: No module named 'main'",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "ModuleNotFoundError: No module named 'main'",
+            "setup": [
+              {
+                "command": "git clone https://github.com/roandejager/Hillock.git hillock-src",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 -m venv /tmp/hv && /tmp/hv/bin/pip install --upgrade pip setuptools wheel",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "/tmp/hv/bin/pip install -e ./hillock-src",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "cd hillock-src && /tmp/hv/bin/python verify_hillock.py",
+            "expected_signal": "SUMMARY: 21/22 checks passed",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "SUMMARY: 21/22 checks passed",
+            "setup": [
+              {
+                "command": "git clone https://github.com/roandejager/Hillock.git hillock-src",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 -m venv /tmp/hv && /tmp/hv/bin/pip install --upgrade pip setuptools wheel",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "/tmp/hv/bin/pip install -e ./hillock-src",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install hillock gives working install",
+            "actually_needed": "PyPI wheel installs no modules (top_level.txt empty, RECORD lists only dist-info) so `hillock --help` raises ModuleNotFoundError: No module named 'main'",
+            "kind": null
+          },
+          {
+            "readme_said": "pip install -e . then `hillock` CLI / `python verify_hillock.py` work",
+            "actually_needed": "editable `pip install -e .` only maps `assets` (see __editable__ finder) so `hillock` entry point still fails; must run `cd hillock-src && /tmp/hv/bin/python verify_hillock.py` from repo root with venv python",
+            "kind": null
+          },
+          {
+            "readme_said": "python verify_hillock.py validates database constraints, Hebbian math and HDC gating",
+            "actually_needed": "suite ends SUMMARY: 21/22 checks passed with [FAIL] gate-zero-leaks expected 0 hallucination leaks, got 1 (exit 1) on reruns",
+            "kind": null
+          }
+        ],
+        "blocking_error": "failed on a check of the published wheel hillock-1.0.0-py3-none-any.whl (artifact_check): it holds only dist-info files and declares the console script main:run_cli with no module main. The sandbox agrees: after git clone, venv and pip install -e, `hillock --help` raises ModuleNotFoundError: No module named 'main', again in a fresh box, and the probe found no module main installed.",
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-hillock-20261029-024443-0330/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.164943,
+        "artifact_check": {
+          "artifact": "https://files.pythonhosted.org/packages/81/cd/f9f1171e76e1ac0e311969f002cbd6f76965f6d21c7b7722cd93bc524a5a/hillock-1.0.0-py3-none-any.whl",
+          "sha256": "5cf2e1fb6981a7698ed4bfa4de274f3600c0d88af07e3455b13505a715101fad",
+          "finding": "the wheel holds only its hillock-1.0.0.dist-info files (METADATA, WHEEL, RECORD, entry_points.txt, top_level.txt, licenses/LICENSE); entry_points.txt declares hillock = main:run_cli and top_level.txt is empty, so no module main ships",
+          "checked_at": "2026-10-29T16:41:08+08:00",
+          "checked_by": "Claude Code (P3 verification session), by listing the published wheel's files; not a box"
+        }
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:40:05+08:00",
+    "computed_at": "2026-10-29T14:54:32+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 40.0,
+      "confidence": 0.9,
+      "cap": 40,
+      "cap_reason": "verification_failed",
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -170,7 +285,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 9.11
+      "value": 5.28
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -453,5 +568,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-29T14:40:05+08:00"
+  "updated_at": "2026-10-29T16:41:19.808516+08:00"
 }

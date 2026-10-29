@@ -8,10 +8,20 @@ is checked again instead of trusted. Steps and smoke tests are the commands as
 the replay ran them; the model's own words only survive as pitfalls and the
 tool version, and the version only if some output printed it.
 
-write_back() updates data/software/<slug>.json only for a passed, replayed run:
-the run replaces the earlier run on the same OS, arch and method, the
-Linux install guide becomes the replayed steps, and existing scores are
-refreshed for the new runs (refresh_scores, no model call).
+The pipeline never makes a run failed; only a person's run (method human), or a
+check of the published package by hand (artifact_check), can. A failed claim is
+unverified: with the box limit its error shows, else "suspected_tool_fault",
+with what the log, a fresh box and the structure probe found (failure.py) as
+evidence in blocking_error and a failed smoke test.
+A step that only works around the box (a shim) keeps a run from passing.
+
+write_back() updates data/software/<slug>.json for a passed, replayed run, or an
+unverified run whose reason describes the software; never for a failed run. The
+run replaces the earlier run on the same OS, arch and method, except that a run
+that did not pass is never written on an OS with a passed run, nor over a failed
+run, and a weaker pass never replaces a stronger one. A passed run's
+steps become that OS's install guide; existing scores are refreshed for the new
+runs (refresh_scores, no model call).
 """
 
 from __future__ import annotations
@@ -19,6 +29,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -26,6 +37,7 @@ from pickfit.env import REPO_ROOT
 from pickfit.ledger import taipei_now
 from pickfit.schema import (
     COMMAND_MAX,
+    PASSED_LEVELS,
     SETUP_MAX,
     Check,
     InstallGuide,
@@ -42,10 +54,20 @@ from pickfit.schema import (
     is_passed,
 )
 from pickfit.score import refresh_scores
+from pickfit.verify.failure import (
+    WRITTEN_REASONS,
+    cited_workarounds,
+    error_tail,
+    failure_reason,
+    own_error,
+    structural_defect,
+    tool_command,
+)
 from pickfit.verify.verdict import split_last, weaker
 
 if TYPE_CHECKING:
-    from pickfit.verify.agent import VerifyReport
+    from pickfit.verify.agent import CommandRecord, VerifyReport
+    from pickfit.verify.failure import FailureCheck
     from pickfit.verify.judge import JudgeResult
     from pickfit.verify.replay import ReplayResult
 
@@ -117,8 +139,12 @@ def _record_check(command: str) -> tuple[str, list[SetupStep]] | None:
 
 def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeResult | None, *,
               evidence_dir: Path, screenshots: list[Path] | None = None,
-              judge_cost_usd: float = 0.0) -> tuple[VerificationRun, list[str]]:
-    """The VerificationRun for one verification, plus notes on why the level was lowered."""
+              judge_cost_usd: float = 0.0, confirm: FailureCheck | None = None,
+              checked_at: datetime | None = None) -> tuple[VerificationRun, list[str]]:
+    """The VerificationRun for one verification, plus notes on why the level was lowered.
+
+    checked_at is when its last box ran; it defaults to now, right after the boxes ran.
+    """
     notes: list[str] = []
     verdict = report.verdict or {}
     finish = report.finish or {}
@@ -145,6 +171,41 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
                 notes.append(f"the screen judge did not confirm it ({seen})")
                 level, reason = "unverified", "other"
 
+    evidence: CommandRecord | None = None
+    # A command that only works around the box makes the run neither the tool's pass nor its failure.
+    purposes = {s["command_id"]: s.get("purpose") for s in finish.get("steps") or []}
+    workarounds = cited_workarounds(verdict, report.commands, purposes)
+    if workarounds:
+        notes += workarounds
+        if is_passed(level) or level == "failed":
+            level, reason = "unverified", "other"
+            blocking = "; ".join([*workarounds, *([blocking] if blocking else [])])
+    elif level == "failed" or verdict.get("claimed_level") == "failed":
+        # The pipeline never writes failed (a person's run does): a failed claim is the box's limit when
+        # the error shows one, else a suspicion, with what the log, a fresh box and the probe found.
+        suspect, why_not = tool_command(verdict, report.commands)
+        limit = failure_reason(verdict, report.commands, blocking)
+        found: list[str] = []
+        if suspect is not None:
+            error, why = own_error(suspect)
+            found.append(f"command {suspect.command_id} exits {suspect.exit_code}"
+                         + (f" with {error}" if error else f" ({why})"))
+            evidence = suspect  # kept as a failed smoke test: the command, its exit code, its error
+        else:
+            found.append(f"nothing checked further ({why_not})")
+        if confirm is not None:
+            found.append("it failed again in a fresh box" if confirm.reproduced else f"fresh box: {confirm.error}")
+            defect = structural_defect(confirm.structure)
+            if defect:
+                found.append(f"probe: {defect}")
+        level, reason = "unverified", limit or "suspected_tool_fault"
+        if limit:
+            notes.append(f"the box, not the software, explains the failure ({limit})")
+        else:
+            note = f"suspected tool fault, not proven: {'; '.join(found)}"
+            notes.append(note)
+            blocking = f"{note}; {blocking}" if blocking else note
+
     by_id = {c.command_id: c for c in report.commands if c.command_id is not None}
     step_ids = verdict.get("step_ids") or []
     if replay and replay.steps:
@@ -152,7 +213,6 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
     else:
         step_commands = [by_id[i].command for i in step_ids if i in by_id]
     steps: list[InstallStep] = []
-    purposes = {s["command_id"]: s.get("purpose") for s in finish.get("steps") or []}
     for cid, command in zip(step_ids, step_commands):
         if len(command) > COMMAND_MAX:
             notes.append(f"step {cid} is longer than {COMMAND_MAX} characters")
@@ -192,6 +252,12 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
                                    exit_code=c["exit_code"], passed=c["passed"],
                                    observed_excerpt=_clip(c.get("observed_excerpt"), 300),
                                    setup=setup + before))
+    failing = evidence
+    fitted = _record_check(failing.command) if failing else None
+    if failing and fitted and not any(t.command == fitted[0] for t in smoke):
+        smoke.append(SmokeTest(command=fitted[0], expected_signal="", exit_code=failing.exit_code, passed=False,
+                               observed_excerpt=_clip(error_tail(failing.stdout, failing.stderr, 4), 300),
+                               setup=fitted[1]))
     if is_passed(level) and level != "install" and not any(t.passed for t in smoke):
         level = "install"
         notes.append("no passing smoke test fits the record")
@@ -202,17 +268,15 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         reason = "other"
     outputs = [f"{c.stdout}\n{c.stderr}" for c in report.commands]
     method = infer_install_method([s.command for s in steps], finish.get("install_method"))
-    if level == "failed" and not blocking:
-        blocking = finish.get("summary") or "not given"
     run = VerificationRun(
         id=report.run_id, level=level, unverified_reason=reason, os=report.box.get("os", "linux"),
         arch=report.box.get("arch", "x86_64"), method="sandbox", runner=report.box.get("runner"),
-        image=_clip(report.box.get("image"), 120), checked_at=taipei_now(),
+        image=_clip(report.box.get("image"), 120), checked_at=checked_at or taipei_now(),
         tool_version=_printed(finish.get("tool_version"), outputs),
         install_method=method if steps else None, replayed=replayed, steps=steps,
         smoke_tests=smoke,
         pitfalls=[Pitfall(readme_said=_clip(p["readme_said"], 300) or "-",
-                          actually_needed=_clip(p["actually_needed"], 300) or "-")
+                          actually_needed=_clip(p["actually_needed"], 300) or "-", kind=p.get("kind"))
                   for p in finish.get("pitfalls") or []],
         blocking_error=_clip(blocking, 500),
         judge=Judge(verdict=judge.verdict, observed=_clip(judge.observed, 300) or "", model=judge.model)
@@ -255,22 +319,48 @@ def install_guide(run: VerificationRun) -> InstallGuide:
         first_task=example.command[:300] if example else None)
 
 
+def _unwritable(run: VerificationRun) -> str | None:
+    """Why a run says nothing a record should keep, or None."""
+    if run.level == "failed":
+        return "the pipeline never writes failed (a person's run does)"
+    if is_passed(run.level):
+        return None if run.replayed else f"level {run.level}, replayed False"
+    if run.unverified_reason in WRITTEN_REASONS:
+        return None
+    return f"unverified ({run.unverified_reason}) says nothing about the software"
+
+
 def write_back(run: VerificationRun, slug: str, data_dir: Path = DATA_DIR) -> tuple[bool, str]:
-    """Record a passed, replayed run in data/software/<slug>.json; (written, why)."""
-    if not (is_passed(run.level) and run.replayed):
-        return False, f"not written: level {run.level}, replayed {run.replayed}"
+    """Record a run in data/software/<slug>.json; (written, why)."""
+    why = _unwritable(run)
+    if why:
+        return False, f"not written: {why}"
     path = data_dir / f"{slug}.json"
     if not path.exists():
         return False, f"not written: {_rel(path) or path} does not exist yet"
     record = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8"))
+    if not is_passed(run.level):
+        held = next((r for r in record.verification.runs if r.os == run.os and is_passed(r.level)), None)
+        if held:
+            return False, f"not written: {run.level} would sit beside the passed {run.os} run {held.id}"
+        failed = next((r for r in record.verification.runs if (r.os, r.arch, r.method) == (run.os, run.arch, run.method)
+                       and r.level == "failed"), None)
+        if failed:
+            return False, f"not written: {run.level} would replace the failed run {failed.id}; only a pass does"
+    same = next((r for r in record.verification.runs if (r.os, r.arch, r.method) == (run.os, run.arch, run.method)
+                 and is_passed(r.level)), None)
+    if same and is_passed(run.level) and PASSED_LEVELS.index(run.level) > PASSED_LEVELS.index(same.level):
+        return False, f"not written: {run.level} would replace the stronger {same.level} run {same.id}"
     runs = [r for r in record.verification.runs if (r.os, r.arch, r.method) != (run.os, run.arch, run.method)]
     runs.append(run)
     level = best_level(runs)
-    verification = Verification(level=level, unverified_reason=None if level != "unverified" else "other",
-                                checked_at=max(r.checked_at for r in runs), runs=runs)
+    newest = max((r for r in runs if r.level == "unverified"), key=lambda r: r.checked_at, default=None)
+    verification = Verification(level=level, unverified_reason=newest.unverified_reason if level == "unverified"
+                                and newest else None, checked_at=max(r.checked_at for r in runs), runs=runs)
     data: dict[str, Any] = record.model_dump(mode="json")
     data["verification"] = verification.model_dump(mode="json")
-    data["install"] = {**data["install"], run.os: install_guide(run).model_dump(mode="json")}
+    if is_passed(run.level):
+        data["install"] = {**data["install"], run.os: install_guide(run).model_dump(mode="json")}
     now = taipei_now()
     data["updated_at"] = now.isoformat()
     # The sandbox component and the quality cap follow the runs: recompute them, no model call.

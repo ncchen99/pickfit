@@ -72,7 +72,7 @@ def run(run_id: str = "verify-1", *, level: str = "function", steps: int = 1, pi
             "pitfalls": [{"readme_said": "a", "actually_needed": "b"}] * pitfalls,
             "evidence": {"trace_path": f"runs/verify/{run_id}/report.json"}}
     if level == "failed":
-        data.update(replayed=False, steps=[], blocking_error="no wheel")
+        data.update(method="human", replayed=False, steps=[], blocking_error="no wheel")  # failed: a person's run
     return data
 
 
