@@ -59,7 +59,7 @@ env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p "…" \
 - **回應**：`well_known_option: { name, why, verified: false, how_we_know }` 或 `null`。`how_we_know` 由程式產生，說明是誰提的、pickfit 沒裝過、沒有安裝指南（`get_install_guide` 不認得它），以及沒查過的事：價格，加上使用者給了的條件（OS、離線）。
 - **程式能查的**（不合就整個丟掉，不截斷、不影響其他欄位）：
   - 名稱：`None`、`N/A` 之類的佔位字當作沒給；其餘要是單純的名稱（≤60 字、≤5 個字、只有字母數字空白和 `. + _ ' -`，不是網域、不是指令、沒有控制或 bidi 字元），否則 `not_a_name`。
-  - 不是目錄裡的任何一筆，名稱寫法不同也算（`toolKey` 去掉 CLI、app、agent、engine 等通用字與版本號後，相同、或一個是另一個的開頭、或 5 字以上被包含）：在目錄裡就該是 pick，或已被硬條件擋掉，不能改口說成「沒驗證過的知名工具」。
+  - 不是目錄裡的任何一筆，名稱寫法不同也算（`toolKey` 去掉 CLI、app、agent、engine 等通用字與版本號後，相同、或 4 字以上時一個是另一個的開頭；不比包含，因為 faster-whisper 不是 Whisper）：在目錄裡就該是 pick，或已被硬條件擋掉，不能改口說成「沒驗證過的知名工具」。
   - 不是 `find_alternatives` 的目前工具：同樣的比對，對使用者給的 `current_software` 和模型解析的 `need.current_tool` 都比。
   - `why`：≤300 字、純文字（沒有網址、網域、安裝指令、反引號、markdown、換行），要明確說它免費或開源（`not free`、`no free tier`、`free trial`、`hassle-free`、只限個人使用都不算），不能說 verified／tested／installed／checked／confirmed／vetted／proven／audited 或提到 pickfit。不截成一句，以免把模型自己寫的但書剪掉。
   - `events.need.well_known` 記模型給的名稱與丟掉的原因（`dropped`；留下的是 `null`），沒給就是 `null`。`not_a_name` 只記原因、不記文字（可能是從需求抄來的）。整個答案被守門擋掉（`guard_rejected_all`）時也記，`dropped` 是 `answer_rejected`。
