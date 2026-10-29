@@ -574,7 +574,8 @@ select{font:inherit;color:var(--ink);background:var(--sheet);border:1px solid va
 .top nav{gap:14px;font-size:14px}
 .hero{padding-top:20px}
 .lede{font-size:16.5px}
-.need{flex-direction:column;gap:2px}
+.need{flex-direction:column;align-items:stretch;gap:2px}
+.need textarea{flex:none}
 .go{margin-left:0;width:100%}
 .filters select{flex:1 1 40%}
 .pick{grid-template-columns:32px minmax(0,1fr)}
