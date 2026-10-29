@@ -274,6 +274,26 @@
 
 ---
 
+### 5.7 第四輪審查：擋掉 IPv4 multicast（2026-10-30）
+
+第四輪確認 @host 修正與嚴格探針成立、6 筆紀錄與 artifact 一致、base build id 對得上。還剩一個 medium：**softnet 把 224.0.0.0/4（multicast）與 255.255.255.255 當成 globally routable**，所以 online（`block ["@host"]`）時 guest 仍能打到本機的 mDNSResponder／SSDP，讀到這台的 `.local` 名稱與 Bonjour 服務。實測重現：guest 對 224.0.0.251:5353 送 mDNS 查詢，本機回了 124 bytes。
+
+**修正**（commit 30e7091）：
+
+- online block 改成 `["@host", "224.0.0.0/4", "255.255.255.255/32"]`。guest 自己的 private /29（含其 directed broadcast）本來就被 softnet 預設擋掉（private 不是 routable）。clone 實測：加了之後 mDNS 不再有回應、PyPI 仍 200、網路與 DHCP 照常。
+- `_check_firewall`（online）與 limits 的正對照都加了 mDNS 探針（多播查詢 → online 必須無回應；放行時有回應）。**`--limits-test` 27／27**。
+- docstring 更正：政策只過濾 **egress**；softnet 這個模式不過濾 host→guest 的封包，所以本機的主動廣播仍可能被動到達 guest（列為已知限制，但 guest 無法藉此抓取或外送，不影響離線驗證）。另外 metadata／IPv6 的「連不到」只證明 guest 沒有路由、不證明 softnet 在過濾；真正證明政策生效的是 host 埠與 mDNS 的正對照。
+
+**沒有重跑 6 筆**：multicast 這個洞是**安裝階段**對本機的資訊洩漏，不改變任何工具的安裝結果，而離線階段（`block 0.0.0.0/0`）本來就把 multicast 一起擋了，所以 6 筆紀錄（base build `c7b08f9f7074`）仍成立。Meta 已近 $3 上限，這一輪只跑 limits test（不花 Meta）。
+
+**已知限制／未解**（記錄，非這次要修）：
+
+- softnet legacy 模式只過濾 egress，不過濾入站；本機未經請求的廣播可被動到達 guest。要連入站都擋，得看 softnet 是否有 flow-table 模式；目前當已知限制記著。
+- NAT hairpin：家用路由器可能可經自己的公網 WAN 位址被打到（繞一圈）。這要先找出 WAN 位址才能擋，成本高，記為已知限制。
+- 第三輪結尾列的兩項已在別處修掉：Worker 的 `verified_on_user_os` 已看 arch（併入 c199445）；「讀過 installer 會執行的腳本」的提示規則在 P3 分支上。
+
+---
+
 ## 6. 要念誠決定的事
 
 （10/29：第 1 項已決定走 Tart、guest 用 macOS 26，見 5.4。第 2、3 項還沒決定。另待念誠：要把防火牆移到 host 端（softnet）就要在這台 Mac 上親自設一次 setuid。）
