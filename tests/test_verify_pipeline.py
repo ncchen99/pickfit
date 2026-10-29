@@ -172,6 +172,19 @@ def test_a_failure_the_box_explains_is_unverified_with_its_reason(tmp_path: Path
     assert "the box, not the software, explains the failure (needs_toolchain)" in outcome.notes
 
 
+def test_a_step_that_fakes_a_system_command_keeps_the_run_from_passing(tmp_path: Path):
+    shim = "printf '#!/bin/sh\\necho 0' > ~/.local/bin/nvidia-smi && chmod +x ~/.local/bin/nvidia-smi"
+    smoke = [{**t, "command_id": t["command_id"] + 1, "setup_ids": [i + 1 for i in t["setup_ids"]]} for t in SMOKE]
+    server = FakeServer(response("r1", run_cmd("uv tool install graphtty")), response("r2", run_cmd(shim)),
+                        response("r3", run_cmd("graphtty --version")), response("r4", run_cmd(GRAPH)),
+                        response("r5", run_cmd("graphtty graph.json")),
+                        response("r6", finish(level="function", steps=[1, 2], smoke=smoke)), judge_answer("working"))
+    outcome, _ = verify(tmp_path, server, Boxes({}))
+    run = outcome.run
+    assert (run.level, run.unverified_reason, run.replayed) == ("unverified", "other", True)
+    assert "step 2 only works around the box: it replaces the system command nvidia-smi" in run.blocking_error
+
+
 def bare_record(data_dir: Path) -> Path:
     """The example record with no runs, as a profile has before verification."""
     data_dir.mkdir(exist_ok=True)

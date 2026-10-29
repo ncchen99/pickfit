@@ -11,6 +11,7 @@ tool version, and the version only if some output printed it.
 A failed claim is the box's when its error names a box limit (failure.py): the
 run becomes unverified with that reason. Otherwise it stays failed only if a
 fresh box repeated the failure (replayed then means "the failure repeated").
+A step that only works around the box (a shim) keeps a run from passing.
 
 write_back() updates data/software/<slug>.json for a passed, replayed run, a
 repeated failure, or an unverified run whose reason describes the software. The
@@ -48,7 +49,7 @@ from pickfit.schema import (
     is_passed,
 )
 from pickfit.score import refresh_scores
-from pickfit.verify.failure import WRITTEN_REASONS, box_reason
+from pickfit.verify.failure import WRITTEN_REASONS, box_reason, sandbox_only
 from pickfit.verify.verdict import split_last, weaker
 
 if TYPE_CHECKING:
@@ -184,6 +185,11 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
             if is_passed(level):
                 level, reason = "unverified", "other"
             continue
+        workaround = sandbox_only(command, purposes.get(cid))
+        if workaround:  # a user's install would not run it, so the replayed path is not theirs
+            notes.append(f"step {cid} only works around the box: {workaround}")
+            if is_passed(level):
+                level, reason = "unverified", "other"
         steps.append(InstallStep(command=command, purpose=_clip(purposes.get(cid), 200)))
 
     smoke: list[SmokeTest] = []

@@ -3,6 +3,8 @@
 - box_reason(): a failure the box explains (a toolchain it forbids, root, a container
   engine, a GPU stack) is pickfit's limit, not the software's, so the run becomes
   unverified with that reason instead of failed.
+- sandbox_only(): a step that only works around the box (a shim for nvidia-smi, a
+  fake docker) is not part of a user's install, so a run that needs one does not pass.
 - failure_plan() and confirm_failure(): a suspected software failure is believed only
   when a fresh box (network on) runs the cited steps, then the failing command, and
   the failing command exits with the same non-zero code (or times out) again.
@@ -56,6 +58,26 @@ def box_reason(text: str | None) -> str | None:
     for reason, pattern in _BOX_LIMITS:
         if text and pattern.search(text):
             return reason
+    return None
+
+
+_FAKED = r"nvidia-smi|rocm-smi|nvcc|lspci|docker|podman|sudo|systemctl|journalctl|uname|lsb_release|apt-get|apt|dpkg"
+_BIN_DIR = r"['\"]?(?:~|\$HOME|\$\{HOME\}|/home/[^/\s]+|/usr/local|/tmp/\S*)?/(?:\.local/)?bin/"
+_SHIM = re.compile(
+    rf"(?:>>?|\btee\s+(?:-a\s+)?)\s*{_BIN_DIR}(?P<a>{_FAKED})\b"
+    rf"|\bln\s+-\w*s\w*\s+\S+\s+{_BIN_DIR}(?P<b>{_FAKED})\b")
+_SANDBOX_PURPOSE = re.compile(
+    r"\b(?:sandbox|box)[- ]only\b|\bshim\b|\bfake\b|\bstub\b|\bgvisor\b"
+    r"|\bwork(?:s|ing)?[- ]?around (?:the |this )?(?:box|sandbox)\b", re.I)
+
+
+def sandbox_only(command: str, purpose: str | None = None) -> str | None:
+    """Why a step only works around the box (it fakes a system command, or says so), else None."""
+    shim = _SHIM.search(command)
+    if shim:
+        return f"it replaces the system command {shim.group('a') or shim.group('b')}"
+    if purpose and _SANDBOX_PURPOSE.search(purpose):
+        return f"its purpose says so ({' '.join(purpose.split())[:80]})"
     return None
 
 

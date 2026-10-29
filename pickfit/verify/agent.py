@@ -289,6 +289,8 @@ Combine steps with && when safe. list_dir and read_file do not use the command b
 toolchains (Rust, Go); pick another candidate. Do not pipe a downloaded script into a shell unread: \
 download it with a run_command that only downloads it (cite that as a step too), read it with read_file, \
 then run it.
+- Do not fake a system command (a shim for nvidia-smi, docker or sudo) to get past the box; finish unverified \
+with the reason instead.
 - After a failed command, hints from pickfit's rule table may follow. They can be wrong.
 """
 

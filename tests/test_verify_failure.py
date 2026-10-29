@@ -1,11 +1,11 @@
-"""Whose failure it is, and whether it repeats."""
+"""Whose failure it is, and steps that only work around the box."""
 
 from __future__ import annotations
 
 import pytest
 
 from pickfit.verify.agent import CommandRecord, FinishArgs
-from pickfit.verify.failure import WRITTEN_REASONS, box_reason, failure_plan
+from pickfit.verify.failure import WRITTEN_REASONS, box_reason, failure_plan, sandbox_only
 from pickfit.verify.verdict import log_verdict
 
 
@@ -40,6 +40,28 @@ def test_software_failures_are_not_the_boxs(text: str | None):
 def test_written_reasons_leave_out_the_uninformative_ones():
     assert {"needs_toolchain", "needs_root", "needs_container", "needs_gpu", "gui_only"} <= WRITTEN_REASONS
     assert not {"not_run", "budget_exceeded", "other"} & WRITTEN_REASONS
+
+
+@pytest.mark.parametrize(("command", "purpose"), [
+    ("printf '#!/bin/bash\\nexec /bin/nvidia-smi \"$@\"\\n' > ~/.local/bin/nvidia-smi && chmod +x "
+     "~/.local/bin/nvidia-smi", "Install PCI workaround shim cleanly"),
+    ("ln -sf /bin/true $HOME/.local/bin/docker", None),
+    ("cat > /home/sbx/.local/bin/sudo <<'EOF'\n#!/bin/sh\nexec \"$@\"\nEOF", None),
+    ("export BERTH_PCI=0", "sandbox-only PCI workaround so the daemon can start"),
+])
+def test_steps_that_work_around_the_box(command: str, purpose: str | None):
+    assert sandbox_only(command, purpose)
+
+
+@pytest.mark.parametrize(("command", "purpose"), [
+    ("curl -fL -o ~/.local/bin/berth https://example.invalid/berth-linux-amd64 && chmod +x ~/.local/bin/berth",
+     "Download and install berth binary"),
+    ("install -Dm755 berth-linux-amd64 ~/.local/bin/berth", "install into the box's ~/.local/bin"),
+    ("ln -s ~/.local/share/ggrun/ggrun ~/.local/bin/ggrun", "put ggrun on PATH"),
+    ("echo 'export PATH=$HOME/.cargo/bin:$PATH' >> ~/.bashrc", None),
+])
+def test_ordinary_install_steps_are_not_workarounds(command: str, purpose: str | None):
+    assert sandbox_only(command, purpose) is None
 
 
 def rec(cid: int, command: str, code: int, seconds: float = 1.0) -> CommandRecord:
