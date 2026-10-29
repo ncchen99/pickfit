@@ -7,6 +7,45 @@
       ],
       "type": "string"
     },
+    "ArtifactCheck": {
+      "additionalProperties": false,
+      "description": "A check of the published package file itself, made by hand, not by a box.\n\nBox limits cannot change what a published file holds, so this, or a person's run, is the\nonly ground for a failed verdict. The pipeline never writes one.",
+      "properties": {
+        "artifact": {
+          "$ref": "#/$defs/HttpsUrl",
+          "description": "The published file checked, e.g. a wheel on PyPI."
+        },
+        "checked_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "checked_by": {
+          "description": "Who checked it, and how.",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        },
+        "finding": {
+          "description": "What the file holds, or lacks.",
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact",
+        "sha256",
+        "finding",
+        "checked_at",
+        "checked_by"
+      ],
+      "title": "ArtifactCheck",
+      "type": "object"
+    },
     "Audience": {
       "enum": [
         "end_user",
@@ -1459,6 +1498,18 @@
         },
         "arch": {
           "$ref": "#/$defs/Arch"
+        },
+        "artifact_check": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactCheck"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "A check of the published package by hand: the only ground for a failed sandbox run."
         },
         "blocking_error": {
           "anyOf": [

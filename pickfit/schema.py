@@ -522,6 +522,20 @@ class Judge(_Model):
     model: str
 
 
+class ArtifactCheck(_Model):
+    """A check of the published package file itself, made by hand, not by a box.
+
+    Box limits cannot change what a published file holds, so this, or a person's run, is the
+    only ground for a failed verdict. The pipeline never writes one.
+    """
+
+    artifact: HttpsUrl = Field(description="The published file checked, e.g. a wheel on PyPI.")
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    finding: str = Field(min_length=1, max_length=500, description="What the file holds, or lacks.")
+    checked_at: AwareDatetime
+    checked_by: str = Field(min_length=1, max_length=100, description="Who checked it, and how.")
+
+
 class RunEvidence(_Model):
     """Where to see the proof. Screenshots are redrawn from terminal output."""
 
@@ -563,6 +577,11 @@ class VerificationRun(_Model):
     evidence: RunEvidence
     actor_model: str | None = None
     cost_usd: float | None = Field(default=None, ge=0)
+    artifact_check: ArtifactCheck | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="A check of the published package by hand: the only ground for a failed sandbox run.",
+    )
 
     @model_validator(mode="after")
     def _check_outcome(self) -> VerificationRun:
