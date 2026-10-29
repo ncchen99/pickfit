@@ -356,16 +356,15 @@ def _cited(cited: Any) -> str | None:
 
 
 def render_report(report: ReportedFailure) -> list[str]:
-    """What a user reported: the steps pickfit gave them and the error, as data (P5.3)."""
+    """What a user reported, structured fields only (P5.3): no reporter text reaches the model."""
     what = "the install failed" if report.stage == "install_failed" else "the first run failed"
     system = f"{report.os}/{report.arch}" if report.arch else report.os
     lines = [f"A user followed pickfit's recorded steps on {system} and {what}. Check whether those steps still "
-             "work here; if they do not, find steps that do. Either way, finish with the steps that worked here."]
+             "work here; if they do not, find steps that do, using only what the README, the repository and "
+             "its package registry show. Either way, finish with the steps that worked here."]
     if report.steps:
         lines.append(f"Steps pickfit gave the user (run before on {report.guide_os or 'an unknown system'}):")
         lines += [f"- {command}" for command in report.steps]
-    if report.error_excerpt:
-        lines.append(source_block("user_report", report.error_excerpt, stage=report.stage, os=report.os))
     return lines
 
 

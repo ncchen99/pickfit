@@ -25,14 +25,13 @@ README_MAX_BYTES = 512_000
 class ReportedFailure:
     """A user's failed install or first run, queued by report_outcome for a fresh check (P5.3).
 
-    error_excerpt was scrubbed by the Worker (at most 500 characters) and is still untrusted:
-    the agent sees it inside a <source> block.
+    Only structured fields: anyone holding a rec_id can file a report, so its free text (the
+    error excerpt, the note) never reaches the model. The steps are pickfit's own recorded ones.
     """
 
     stage: str  # install_failed | first_run_failed
     os: str
     arch: str | None
-    error_excerpt: str | None
     steps: tuple[str, ...]  # the commands of the guide pickfit gave the user
     guide_os: str | None  # where those steps were run
 
