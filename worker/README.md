@@ -143,7 +143,7 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
   - **快取**：同樣的需求（忽略大小寫與多餘空白）加同樣的條件，10 分鐘內在同一個 isolate 直接重用結果，不呼叫模型、不寫事件，頁面註明是剛才的結果。鍵是雜湊，不留原話；`degraded` 的結果不快取，下一次會再試模型。
   - **跨站**：`POST /search` 和 `/mcp` 一樣檢查 Host 與 Origin，別的網站的表單不能花這裡的預算。表單超過 4 KB 回 413；需求要 3–500 字，否則 400，都不呼叫模型。
 - **安全**：每個回應一個 CSP nonce（`default-src 'none'`，只允許自己的 inline script／style、`connect-src 'self'`、`form-action 'self'`、`frame-ancestors 'none'`）。資料與模型輸出全部跳脫；連結只收 http(s)，帶 `rel="noopener noreferrer"`，`Referrer-Policy: no-referrer`。沒有第三方字型或腳本。
-- **評測部署**：`env.eval`、`env.eval-rules` 設 `WEB_SEARCH: "off"`，`/` 永遠是 JSON、`/search` 是 404；`ratelimits` 綁定也不會被 env 繼承。
+- **評測部署**：`env.eval`、`env.eval-rules` 設 `WEB_SEARCH: "off"`，`/` 永遠是 JSON、`/search` 是 404。`WEB_DAILY_CAP_USD` 與 `ratelimits` 也照列（wrangler 不會把它們繼承進 env，少了會警告），只是用不到。
 - **實測**（10/29，本機 `wrangler dev`、真資料 96 筆、5 個自擬需求，不是評測題）：8 次 `muse-spark-1.3` 共 $0.139，平均 6.9 秒。git commit 訊息（Linux x86-64）→ Eckra，在你的系統上驗證過；講課影片離線字幕（macOS arm64、免費、離線）→ babelscribe，標「沒在你的系統上驗證」；壓測 OpenAI 相容端點（Linux）→ servebench；本機記錄 LLM API 花費（免費、不限 OS）→ TokenTracker；RAW 修圖（macOS、免費，不在涵蓋範圍）→ 沒有合適的，`well_known_option` 是 darktable，標未驗證。
 
 ## 評測部署（凍結、唯讀）
