@@ -1,13 +1,19 @@
-"""Runs that did not pass: whose fault it is, and whether the failure repeats. No model call.
+"""Runs that did not pass: whose fault it is. No model call.
 
-A run is failed only with positive evidence that the tool itself is at fault (tool_fault): every cited
-install step succeeded, then the tool's own command failed with an error of the tool's code (a
-missing module, an AttributeError, a Node "Cannot find module") and no box limit in its error tail,
-and a fresh box repeated it (failure_plan, confirm_failure: same non-zero exit, no model call).
-Everything else is unverified (failure_reason): with a specific reason when the error tail shows a
-limit of the box (output_limit: no compiler, root, Docker, CUDA, memory, disk, time, an account),
-or, when the log names no failing command and no check passed, the agent's description does
-(box_reason); "other" when neither is clear.
+A sandbox run is failed only on structural evidence about the installed package itself, which no
+limit of the box can produce (structural_defect): a fresh box reruns the cited install steps, then a
+probe reads the package's own metadata and finds that its console script's module is not installed
+(Python: entry_points and RECORD, plus the import system's finders), or that its npm bin file is not
+in a package with no install scripts. The probe runs only when the agent claims failed, every cited
+install step succeeded, and the failing command is the tool's own (tool_command), with no box limit
+in its error tail.
+
+Runtime errors alone do not make a run failed: a box limit can look like any exception. When the
+failing command shows an error of the tool's code (own_error) but no structural defect, the run is
+unverified "suspected_tool_fault", with the command, its exit code and its error tail as evidence
+for a human check or another environment. A specific box reason comes from the error tail
+(output_limit: no compiler, root, Docker, CUDA, memory, disk, an account) or, when the log names no
+failing command and no check passed, from the agent's description (box_reason); "other" otherwise.
 
 - sandbox_only() and cited_workarounds(): a command that only works around the box (a shim for
   nvidia-smi, a fake docker) is not part of a user's install, so a run that cites one, as a step,
@@ -18,7 +24,9 @@ or, when the log names no failing command and no check passed, the agent's descr
 
 from __future__ import annotations
 
+import json
 import re
+import shlex
 import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
@@ -91,8 +99,9 @@ _TOOL_ERROR = re.compile(
 # A command that installs or fetches, rather than runs the tool.
 _INSTALLS = re.compile(
     r"\b(?:pip3?|pipx|uv|npm|pnpm|yarn|bun|cargo|go|gem|brew|apt(?:-get)?|conda|mamba|poetry|hatch|maturin)\s+"
-    r"(?:\S+\s+)?(?:install|add|i|build|sync|global)\b|\bgit\s+clone\b|\bc?make\b|\binstall\.sh\b|setup\.py"
-    r"|\b(?:curl|wget)\b|\btar\s+-?\w*x|\bunzip\b|-m venv\b")
+    r"(?:\S+\s+)?(?:install|add|i|build|sync|global|get|binstall)\b|\bgit\s+clone\b|\bc?make\b"
+    r"|\b(?:install|setup|bootstrap)\.(?:sh|py|ps1)\b|setup\.py|-m (?:pip|venv|ensurepip)\b|\bnpx\b"
+    r"|\b(?:curl|wget)\b|\btar\s+-?\w*x|\bunzip\b|\bdeno\s+install\b")
 
 
 _WARNING = re.compile(r"(?i:\bwarn(?:ing)?s?\b)|(?:^|:\s)W(?:\d{4}\b|\s+[\w.]+/)")  # WARNING, glog's W1029, TF's W x/
@@ -110,7 +119,7 @@ def output_limit(stdout: str, stderr: str, exit_code: int | None, timed_out: boo
 
     60 lines: a build failure prints its error, then a traceback or a page of hints (pip, uv, npm).
     """
-    if timed_out or exit_code == 137:  # ran past the box's time limit, or was killed (out of memory)
+    if exit_code == 137 and not timed_out:  # killed: out of memory (a timeout alone says nothing)
         return "needs_more_resources"
     tail = error_tail(stdout, stderr, 60)
     return next((reason for reason, pattern in _OUTPUT_LIMITS if pattern.search(tail)), None)
@@ -123,24 +132,24 @@ def own_error(failing: CommandRecord | RanCommand) -> tuple[str | None, str]:
     limit = output_limit(failing.stdout, failing.stderr, failing.exit_code, failing.timed_out)
     if limit:
         return None, f"command {cid} hit a limit of the box ({limit})"
-    found = _TOOL_ERROR.search(error_tail(failing.stdout, failing.stderr))
+    tail = error_tail(failing.stdout, failing.stderr)
+    found = _TOOL_ERROR.search(tail)
     if not found:
         return None, f"command {cid} shows no error of the tool's own code"
-    return " ".join(found.group(0).split())[:80], ""
+    line = tail[tail.rfind("\n", 0, found.start()) + 1:].split("\n", 1)[0]
+    return " ".join(line.split())[:160], ""
 
 
-def tool_fault(verdict: dict[str, Any], commands: list[CommandRecord]) -> tuple[str | None, str]:
-    """Positive evidence that the tool itself is at fault, as (evidence, ""), else (None, why there is none).
-
-    Every cited install step succeeded; the failing command ran after them, is the tool's own command
-    (not an install or a download), and fails with an error of the tool's code and no box limit in its
-    error tail. A fresh box must then repeat it (confirm_failure) before the run is failed.
-    """
+def tool_command(verdict: dict[str, Any], commands: list[CommandRecord]) -> tuple[CommandRecord | None, str]:
+    """The failing command when it is the tool's own, run after every cited install step succeeded;
+    else (None, why not)."""
     by_id = {c.command_id: c for c in commands if c.command_id is not None}
     fid = verdict.get("failing_id")
     failing = by_id.get(fid) if fid is not None else None
     if failing is None:
         return None, "the log names no failing command"
+    if failing.tool != "run_command":
+        return None, f"command {fid} is not a run_command"
     steps = [by_id[i] for i in verdict.get("step_ids") or [] if i in by_id]
     if not steps:
         return None, "no install step ran before it"
@@ -151,10 +160,7 @@ def tool_fault(verdict: dict[str, Any], commands: list[CommandRecord]) -> tuple[
         return None, f"command {fid} ran before the install finished"
     if _INSTALLS.search(failing.command):
         return None, f"command {fid} installs or fetches; it is not the tool's own command"
-    error, why = own_error(failing)
-    if error is None:
-        return None, why
-    return f"command {fid} fails with {error} after every install step succeeded", ""
+    return failing, ""
 
 
 # How an agent describes a box limit: a need, not a mention ("needs Rust 1.91+", "no root to install
@@ -195,23 +201,18 @@ def box_reason(text: str | None) -> str | None:
     return next((reason for reason, pattern in _PROSE_LIMITS if pattern.search(plain)), None)
 
 
-def failure_reason(verdict: dict[str, Any], commands: list[CommandRecord], blocking_error: str | None,
-                   confirm: FailureCheck | None = None) -> str | None:
+def failure_reason(verdict: dict[str, Any], commands: list[CommandRecord], blocking_error: str | None
+                   ) -> str | None:
     """The specific UnverifiedReason for a failed claim that is not the tool's proven fault, or None.
 
-    The failing command's error tail decides when the log names one (or, failing that, the fresh box's
-    rerun). Without one, the agent's description does, unless a check passed: then the tool ran, and no
+    The failing command's error tail in the agent's log decides when the log names one. Without one, the agent's description does, unless a check passed: then the tool ran, and no
     box limit stopped it.
     """
     by_id = {c.command_id: c for c in commands if c.command_id is not None}
     fid = verdict.get("failing_id")
     failing = by_id.get(fid) if fid is not None else None
     if failing is not None:
-        limit = output_limit(failing.stdout, failing.stderr, failing.exit_code, failing.timed_out)
-        if limit is None and confirm is not None and confirm.failing is not None:
-            f = confirm.failing
-            limit = output_limit(f.stdout, f.stderr, f.exit_code, f.timed_out)
-        return limit
+        return output_limit(failing.stdout, failing.stderr, failing.exit_code, failing.timed_out)
     if any(c.get("passed") for c in verdict.get("checks") or []):
         return None
     return box_reason(blocking_error)
@@ -284,6 +285,104 @@ def cited_workarounds(verdict: dict[str, Any], commands: list[CommandRecord],
     return found
 
 
+# ---------------------------------------------------------------- the package's own structure
+
+# Run in the box by its python3 after the install steps: which installed package provides the
+# failing executable, and does that package hold what its metadata names? It reads metadata and the
+# import system's finders, and runs none of the tool's code.
+_PROBE = r'''
+import glob, json, os, re, shutil, subprocess, sys, tempfile
+INNER = """
+import importlib.metadata as md, importlib.util, json, sys
+name = sys.argv[1]
+for dist in md.distributions():
+    for ep in dist.entry_points:
+        if ep.group in ("console_scripts", "gui_scripts") and ep.name == name:
+            top = ep.value.split(":")[0].split(".")[0].strip()
+            files = [str(f).replace(chr(92), "/") for f in dist.files or []]
+            print(json.dumps({"kind": "python", "dist": dist.metadata["Name"], "version": dist.version,
+                              "entry_point": ep.value, "module": top,
+                              "in_files": any(f == top + ".py" or f.startswith(top + "/") or (f.startswith(top + ".")
+                                              and f.endswith((".so", ".pyd"))) for f in files),
+                              "importable": importlib.util.find_spec(top) is not None,
+                              "source": "direct" if dist.read_text("direct_url.json") else "index"}))
+            sys.exit(0)
+print(json.dumps({"kind": "python", "dist": None}))
+"""
+name = sys.argv[1]
+exe = os.path.expanduser(name) if "/" in name else shutil.which(name)
+if exe and os.path.isfile(exe):
+    head = open(exe, "rb").read(512).decode("utf-8", "replace")
+    m = re.search(r"exec' \"([^\"]+)\"", head) or re.match(r"#!\s*(?:\S*/env\s+)?(\S+)", head)
+    interp = m.group(1) if m else ""
+    if "python" in os.path.basename(interp):
+        r = subprocess.run([interp, "-c", INNER, os.path.basename(exe)], cwd=tempfile.mkdtemp(),
+                           capture_output=True, text=True, timeout=60)
+        lines = r.stdout.strip().splitlines()
+        print(lines[-1] if lines else json.dumps({"kind": "python", "error": r.stderr[-200:]}))
+        sys.exit(0)
+base = os.path.basename(name)
+root = subprocess.run(["npm", "root", "-g"], capture_output=True, text=True).stdout.strip() if shutil.which("npm") else ""
+for pj in sorted(glob.glob(os.path.join(root, "*", "package.json")) + glob.glob(os.path.join(root, "@*", "*", "package.json"))) if root else []:
+    try:
+        data = json.load(open(pj))
+    except Exception:
+        continue
+    bins = data.get("bin") or {}
+    if isinstance(bins, str):
+        bins = {str(data.get("name", "")).split("/")[-1]: bins}
+    if base in bins:
+        scripts = data.get("scripts") or {}
+        print(json.dumps({"kind": "npm", "package": data.get("name"), "version": data.get("version"), "bin": bins[base],
+                          "exists": os.path.exists(os.path.join(os.path.dirname(pj), bins[base])),
+                          "install_scripts": sorted(k for k in scripts if k in ("preinstall", "install", "postinstall"))}))
+        sys.exit(0)
+print(json.dumps({"kind": "unknown", "exe": exe}))
+'''
+
+
+def executable(command: str) -> str | None:
+    """The program a command runs last: the first word of its last `&&`/`;` part, before any pipe."""
+    part = re.split(r"&&|\|\||;|\n", command)[-1].split("|")[0].strip()
+    try:
+        words = shlex.split(part)
+    except ValueError:
+        words = part.split()
+    words = [w for w in words if not re.match(r"^\w+=", w)]
+    while words and words[0] in ("env", "exec", "command", "time", "nohup"):
+        words = words[1:]
+    return words[0] if words else None
+
+
+def structure_probe(command: str) -> str | None:
+    """The box command that reads the structure of the package behind a failing command, or None."""
+    program = executable(command)
+    return f"python3 - {shlex.quote(program)} <<'PICKFIT_PROBE'\n{_PROBE}\nPICKFIT_PROBE" if program else None
+
+
+def parse_structure(stdout: str) -> dict[str, Any] | None:
+    lines = [line for line in stdout.splitlines() if line.startswith("{")]
+    try:
+        return json.loads(lines[-1]) if lines else None
+    except ValueError:
+        return None
+
+
+def structural_defect(structure: dict[str, Any] | None) -> str | None:
+    """Evidence that the installed package lacks what its own metadata names, or None."""
+    if not structure:
+        return None
+    if structure.get("kind") == "python" and structure.get("dist") and not structure.get("in_files") \
+            and not structure.get("importable"):
+        source = "a local or VCS source" if structure.get("source") == "direct" else "the package index"
+        return (f"the installed {structure['dist']} {structure.get('version')} (from {source}) declares the console "
+                f"script {structure.get('entry_point')}, and no module {structure.get('module')} is installed")
+    if structure.get("kind") == "npm" and structure.get("exists") is False and not structure.get("install_scripts"):
+        return (f"the installed npm package {structure.get('package')} {structure.get('version')} names bin "
+                f"{structure.get('bin')}, and the package has no such file")
+    return None
+
+
 # ---------------------------------------------------------------- confirming a failure
 
 
@@ -294,6 +393,7 @@ class FailurePlan:
     failing: ReplayCommand
     exit_code: int | None  # as the agent saw it
     timed_out: bool
+    probe: str | None = None  # structure_probe() for the failing command
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -315,7 +415,8 @@ def failure_plan(verdict: LogVerdict, commands: list[CommandRecord]) -> FailureP
     check = next((c for c in verdict.checks if c.command_id == fid), None)
     setups = [i for i in (check.setup_ids if check else []) if i < fid and i not in steps and i in by_id]
     return FailurePlan(steps=tuple(command(i) for i in steps), setups=tuple(command(i) for i in setups),
-                       failing=command(fid), exit_code=failing.exit_code, timed_out=failing.timed_out)
+                       failing=command(fid), exit_code=failing.exit_code, timed_out=failing.timed_out,
+                       probe=structure_probe(failing.command))
 
 
 @dataclass
@@ -324,6 +425,7 @@ class FailureCheck:
     steps: list[RanCommand] = field(default_factory=list)
     failing: RanCommand | None = None
     error: str | None = None  # why it did not reproduce
+    structure: dict[str, Any] | None = None  # parse_structure() of the probe, run after every step succeeded
     seconds: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
@@ -332,7 +434,8 @@ class FailureCheck:
 
 def confirm_failure(box: Box, plan: FailurePlan, task: VerifyTask, *,
                     log: Callable[[str], None] = print) -> FailureCheck:
-    """Rerun the plan in one fresh, started box, with the network on. Exit codes decide."""
+    """Rerun the plan in one fresh, started box, with the network on: the steps, the failing command
+    (exit codes decide whether it repeated), then the structure probe."""
     began = time.monotonic()
     result = FailureCheck(reproduced=False)
     replayer = Replayer(box, log=log)
@@ -360,6 +463,11 @@ def confirm_failure(box: Box, plan: FailurePlan, task: VerifyTask, *,
                 result.error = f"command {plan.failing.command_id} failed differently ({now}, was {was})"
             else:
                 result.reproduced = True
+            if plan.probe:
+                probe = box.exec(plan.probe, 120)
+                result.structure = parse_structure(probe.stdout) or {"kind": "error", "exit": probe.exit_code,
+                                                                     "stderr": probe.stderr[-300:]}
+                log(f"  structure: {result.structure}")
     except BoxError as err:
         result.error = f"box error: {err}"
     result.seconds = round(time.monotonic() - began, 1)

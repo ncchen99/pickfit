@@ -85,6 +85,7 @@ type UnverifiedReason = Literal[
     "needs_root",
     "needs_container",
     "needs_more_resources",
+    "suspected_tool_fault",
     "budget_exceeded",
     "other",
 ]
@@ -551,7 +552,7 @@ class VerificationRun(_Model):
     replayed: bool = Field(
         description=(
             "A fresh sandbox replayed the run with the same outcome: the steps and checks "
-            "passed again, or, for a failed run, the failure repeated."
+            "passed again, or, for a failed run, it reinstalled the package and found the same defect."
         )
     )
     steps: list[InstallStep] = Field(description="The successful path, in order.")

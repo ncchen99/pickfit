@@ -2,18 +2,30 @@
 
 from __future__ import annotations
 
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
 import pytest
 
 from pickfit.verify.agent import CommandRecord, FinishArgs
 from pickfit.verify.failure import (
+    _PROBE,
     WRITTEN_REASONS,
     box_reason,
     cited_workarounds,
+    executable,
     failure_plan,
     failure_reason,
     output_limit,
+    own_error,
+    parse_structure,
     sandbox_only,
-    tool_fault,
+    structural_defect,
+    structure_probe,
+    tool_command,
 )
 from pickfit.verify.verdict import log_verdict
 
@@ -54,9 +66,9 @@ def test_box_limits_in_a_failing_commands_error_tail(output: str, reason: str):
     assert output_limit("", output, 1, False) == reason
 
 
-def test_a_kill_or_a_timeout_is_the_boxs_limit():
+def test_a_kill_is_the_boxs_limit_but_a_timeout_says_nothing():
     assert output_limit("", "", 137, False) == "needs_more_resources"
-    assert output_limit("", "", None, True) == "needs_more_resources"
+    assert output_limit("", "", None, True) is None  # a foreground server, a TUI waiting on stdin
 
 
 @pytest.mark.parametrize("output", [
@@ -128,10 +140,9 @@ HILLOCK = [rec(6, "git clone https://example.invalid/hillock.git src", 0),
            rec(9, "/tmp/hv/bin/pip install -e ./src", 0), rec(10, "/tmp/hv/bin/hillock --help", 1, err=TRACE)]
 
 
-def test_the_tools_own_fault_needs_every_install_step_then_its_own_error():
+def test_the_tools_own_command_needs_every_install_step_first():
     verdict = {"step_ids": [6, 8, 9], "failing_id": 10, "checks": []}
-    evidence, _ = tool_fault(verdict, HILLOCK)
-    assert evidence == ("command 10 fails with ModuleNotFoundError after every install step succeeded")
+    assert tool_command(verdict, HILLOCK) == (HILLOCK[3], "")
     cases = [
         ({**verdict, "failing_id": None}, HILLOCK, "the log names no failing command"),
         ({**verdict, "step_ids": []}, HILLOCK, "no install step ran before it"),
@@ -144,14 +155,77 @@ def test_the_tools_own_fault_needs_every_install_step_then_its_own_error():
         ({**verdict, "step_ids": [6, 8], "failing_id": 9},
          [*HILLOCK[:2], rec(9, "/tmp/hv/bin/pip install -e ./src", 1, err="error: can't find Rust compiler")],
          "command 9 installs or fetches; it is not the tool's own command"),
-        (verdict, [*HILLOCK[:3], rec(10, "/tmp/hv/bin/hillock --help", 1, err="ImportError: libGL.so.1: cannot "
-                                     "open shared object file: No such file or directory")],
-         "command 10 hit a limit of the box (needs_root)"),
-        (verdict, [*HILLOCK[:3], rec(10, "/tmp/hv/bin/hillock check", 1, out="21/22 checks passed; 1 FAIL")],
-         "command 10 shows no error of the tool's own code"),
+        ({**verdict, "failing_id": 11}, [*HILLOCK, rec(11, "python3 -m pip install hillock", 1)],
+         "command 11 installs or fetches; it is not the tool's own command"),
     ]
     for case, log, why in cases:
-        assert tool_fault(case, log) == (None, why)
+        assert tool_command(case, log) == (None, why)
+
+
+def test_an_error_of_the_tools_code_is_only_a_suspicion():
+    assert own_error(HILLOCK[3]) == ("ModuleNotFoundError: No module named 'main'", "")
+    assert own_error(rec(10, "hillock --help", 1, err="ImportError: libGL.so.1: cannot open shared object file: "
+                         "No such file or directory")) == (None, "command 10 hit a limit of the box (needs_root)")
+    assert own_error(rec(10, "hillock check", 1, out="21/22 checks passed; 1 FAIL")) == (
+        None, "command 10 shows no error of the tool's own code")
+
+
+def test_the_program_a_failing_command_runs():
+    assert executable("/tmp/hv/bin/hillock --help") == "/tmp/hv/bin/hillock"
+    assert executable("cd src && FOO=1 env tool run --x | head -3") == "tool"
+    assert executable("") is None
+    assert "PICKFIT_PROBE" in structure_probe("hillock --help") and structure_probe("") is None
+
+
+@pytest.mark.parametrize(("structure", "defect"), [
+    ({"kind": "python", "dist": "hillock", "version": "1.0.0", "entry_point": "main:main", "module": "main",
+      "in_files": False, "importable": False, "source": "direct"},
+     "the installed hillock 1.0.0 (from a local or VCS source) declares the console script main:main, and no "
+     "module main is installed"),
+    ({"kind": "python", "dist": "hillock", "module": "main", "in_files": False, "importable": True}, None),
+    ({"kind": "python", "dist": "hillock", "module": "main", "in_files": True, "importable": False}, None),
+    ({"kind": "python", "dist": None}, None),
+    ({"kind": "npm", "package": "foo", "version": "1.2.0", "bin": "dist/cli.js", "exists": False,
+      "install_scripts": []},
+     "the installed npm package foo 1.2.0 names bin dist/cli.js, and the package has no such file"),
+    # A postinstall may have been meant to make it (and may have been skipped or blocked here).
+    ({"kind": "npm", "package": "foo", "bin": "bin/foo", "exists": False, "install_scripts": ["postinstall"]}, None),
+    ({"kind": "unknown"}, None),
+    (None, None),
+])
+def test_a_structural_defect_needs_the_packages_own_metadata(structure, defect):
+    assert structural_defect(structure) == defect
+
+
+def fake_install(root: Path, *, ships_module: bool) -> Path:
+    """A distribution `fakepkg` with console script `fakecli` -> fakemod:main, installed under root."""
+    site = root / "site"
+    info = site / "fakepkg-0.1.dist-info"
+    info.mkdir(parents=True)
+    (info / "METADATA").write_text("Metadata-Version: 2.1\nName: fakepkg\nVersion: 0.1\n")
+    (info / "entry_points.txt").write_text("[console_scripts]\nfakecli = fakemod:main\n")
+    record = ["fakepkg-0.1.dist-info/METADATA,,", "fakepkg-0.1.dist-info/RECORD,,"]
+    if ships_module:
+        (site / "fakemod.py").write_text("def main():\n    pass\n")
+        record.append("fakemod.py,,")
+    (info / "RECORD").write_text("\n".join(record) + "\n")
+    script = root / "bin" / "fakecli"
+    script.parent.mkdir()
+    script.write_text(f"#!{sys.executable}\nfrom fakemod import main\nmain()\n")
+    script.chmod(0o755)
+    return script
+
+
+@pytest.mark.parametrize(("ships_module", "missing"), [(False, True), (True, False)])
+def test_the_probe_reads_the_installed_metadata(tmp_path: Path, ships_module: bool, missing: bool):
+    script = fake_install(tmp_path, ships_module=ships_module)
+    env = {**os.environ, "PYTHONPATH": str(tmp_path / "site")}
+    result = subprocess.run([sys.executable, "-", str(script)], input=_PROBE, capture_output=True, text=True,
+                            env=env, timeout=60, check=True)
+    structure = parse_structure(result.stdout)
+    assert structure["dist"] == "fakepkg" and structure["entry_point"] == "fakemod:main"
+    assert (structure["in_files"], structure["importable"]) == (not missing, not missing)
+    assert bool(structural_defect(structure)) == missing
 
 
 def test_the_reason_for_a_failure_that_is_not_the_tools():

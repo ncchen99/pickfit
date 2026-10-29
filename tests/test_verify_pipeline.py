@@ -147,39 +147,66 @@ def failed_turns(blocking: str = "the wheel ships no code", failing: int | None 
                                   failing_command_id=failing))]
 
 
-def test_a_failure_counts_only_when_a_fresh_box_repeats_it(tmp_path: Path):
-    boxes = Boxes({"agent": BROKEN, "confirm": BROKEN})
+def probe_says(**structure: Any) -> dict[str, tuple[int, str, str]]:
+    """A box script entry answering the structure probe."""
+    return {"PICKFIT_PROBE": (0, json.dumps({"kind": "python", "dist": "graphtty", "version": "0.4.1",
+                                             "entry_point": "graphtty.cli:main", "module": "graphtty",
+                                             "source": "index", **structure}), "")}
+
+
+NO_CODE = probe_says(in_files=False, importable=False)
+INTACT = probe_says(in_files=True, importable=True)
+
+
+def test_a_failure_counts_only_with_a_structural_defect_in_the_package(tmp_path: Path):
+    boxes = Boxes({"agent": BROKEN, "confirm": {**NO_CODE, **BROKEN}})
     outcome, lines = verify(tmp_path, FakeServer(*failed_turns()), boxes)
     run = outcome.run
-    assert run.level == "failed" and run.replayed and run.blocking_error == "the wheel ships no code"
+    assert run.level == "failed" and run.replayed
+    assert run.blocking_error == ("the installed graphtty 0.4.1 (from the package index) declares the console script "
+                                  "graphtty.cli:main, and no module graphtty is installed; the wheel ships no code")
     assert [role for role, _ in boxes.made] == ["agent", "confirm"] and boxes.made[1][1].closed
-    assert [c for c, _ in boxes.made[1][1].ran] == ["uv tool install graphtty", "graphtty --version"]
+    ran = [c for c, _ in boxes.made[1][1].ran]
+    assert ran[:2] == ["uv tool install graphtty", "graphtty --version"] and "PICKFIT_PROBE" in ran[2]
     assert [(t.command, t.passed, t.exit_code) for t in run.smoke_tests] == [("graphtty --version", False, 1)]
     assert (outcome.evidence_dir / "confirm.json").exists() and "failure repeated" in "\n".join(lines)
-    # The fresh box installs it fine: not the software's failure after all.
-    outcome, _ = verify(tmp_path, FakeServer(*failed_turns()), Boxes({"agent": BROKEN}))
+
+
+def test_a_runtime_error_without_a_structural_defect_is_only_a_suspicion(tmp_path: Path):
+    # The package holds what its metadata names: the same error, repeated, is still only a suspicion.
+    outcome, _ = verify(tmp_path, FakeServer(*failed_turns()), Boxes({"agent": BROKEN, "confirm": {**INTACT, **BROKEN}}))
+    run = outcome.run
+    assert (run.level, run.unverified_reason, run.replayed) == ("unverified", "suspected_tool_fault", False)
+    assert run.blocking_error.startswith(
+        "suspected tool fault, not proven: command 2 exits 1 again in a fresh box with ModuleNotFoundError: "
+        "No module named 'graphtty'; the wheel ships no code")
+    assert [(t.command, t.passed, t.exit_code, t.observed_excerpt) for t in run.smoke_tests] == [
+        ("graphtty --version", False, 1, "ModuleNotFoundError: No module named 'graphtty'")]
+    # The fresh box runs it fine: not even a suspicion.
+    outcome, _ = verify(tmp_path, FakeServer(*failed_turns()), Boxes({"agent": BROKEN, "confirm": INTACT}))
     run = outcome.run
     assert (run.level, run.unverified_reason, run.replayed) == ("unverified", "other", False)
     assert run.blocking_error.startswith("the failure did not repeat in a fresh box (command 2 passed in a fresh box)")
 
 
-@pytest.mark.parametrize(("script", "turns", "why"), [
-    # An install step fails: whatever it printed, that is not positive evidence against the tool.
+@pytest.mark.parametrize(("script", "turns", "roles", "why"), [
+    # An install step fails: whatever it printed, that says nothing against the tool. No box is spent.
     ({"uv tool install graphtty": (1, "", "error: subprocess-exited-with-error")},
      [response("r1", run_cmd("uv tool install graphtty")),
       response("r2", finish(level="failed", blocking_error="the wheel does not build", failing_command_id=1))],
-     "no evidence that the tool itself is at fault: no install step ran before it"),
-    # The tool's own command fails, but with no error of its code (a test suite reporting a failure).
+     ["agent"], "no evidence that the tool itself is at fault: no install step ran before it"),
+    # The tool's own command fails with no error of its code (a self-test reporting a failure), and the
+    # package is intact.
     ({**SCRIPT, "graphtty --version": (1, "1 of 22 checks failed", "")},
      failed_turns("its self-test reports a failure"),
-     "no evidence that the tool itself is at fault: command 2 shows no error of the tool's own code"),
+     ["agent", "confirm"], "no evidence that the tool itself is at fault: command 2 shows no error of the tool's own code"),
 ])
-def test_a_failure_without_positive_evidence_is_unverified(tmp_path: Path, script, turns, why):
-    boxes = Boxes({"agent": script})
+def test_a_failure_without_evidence_is_unverified(tmp_path: Path, script, turns, roles, why):
+    boxes = Boxes({"agent": script, "confirm": {**INTACT, **script}})
     outcome, _ = verify(tmp_path, FakeServer(*turns), boxes)
     run = outcome.run
     assert (run.level, run.unverified_reason) == ("unverified", "other")
-    assert [role for role, _ in boxes.made] == ["agent"]  # no box spent confirming it
+    assert [role for role, _ in boxes.made] == roles
     assert run.blocking_error.startswith(why)
 
 
@@ -201,8 +228,8 @@ def test_the_agents_words_decide_only_when_the_log_names_no_failure(tmp_path: Pa
     # A failing command whose output shows the tool's own fault: the description's mention of Rust
     # does not make it the box's.
     turns = failed_turns("graphtty crashes; its source build also requires Rust 1.91+")
-    outcome, _ = verify(tmp_path, FakeServer(*turns), Boxes({"agent": BROKEN, "confirm": BROKEN}))
-    assert outcome.run.level == "failed" and outcome.run.replayed
+    outcome, _ = verify(tmp_path, FakeServer(*turns), Boxes({"agent": BROKEN, "confirm": {**INTACT, **BROKEN}}))
+    assert outcome.run.unverified_reason == "suspected_tool_fault"
     # No failing command and no check passed: the description decides.
     server = FakeServer(response("r1", run_cmd("uv tool install graphtty")),
                         response("r2", finish(level="failed", blocking_error="needs Rust 1.91+, absent here")))
@@ -260,9 +287,9 @@ def bare_record(data_dir: Path) -> Path:
     return path
 
 
-def test_write_back_keeps_a_repeated_failure_but_never_over_a_pass(tmp_path: Path):
+def test_write_back_keeps_a_proven_failure_but_never_over_a_pass(tmp_path: Path):
     path = bare_record(tmp_path / "data")
-    boxes = Boxes({"agent": BROKEN, "confirm": BROKEN})
+    boxes = Boxes({"agent": BROKEN, "confirm": {**NO_CODE, **BROKEN}})
     outcome, _ = verify(tmp_path, FakeServer(*failed_turns()), boxes, write=True, data_dir=path.parent)
     assert outcome.written
     record = SoftwareRecord.model_validate_json(path.read_text())
@@ -275,6 +302,15 @@ def test_write_back_keeps_a_repeated_failure_but_never_over_a_pass(tmp_path: Pat
     assert not outcome.written
     assert outcome.write_note == "not written: failed would sit beside the passed linux run run-20261031-linux-1"
     assert json.loads(path.read_text()) == passed
+
+
+def test_write_back_keeps_a_suspicion_as_unverified(tmp_path: Path):
+    path = bare_record(tmp_path / "data")
+    outcome, _ = verify(tmp_path, FakeServer(*failed_turns()), Boxes({"agent": BROKEN, "confirm": {**INTACT, **BROKEN}}),
+                        write=True, data_dir=path.parent)
+    assert outcome.written
+    verification = SoftwareRecord.model_validate_json(path.read_text()).verification
+    assert (verification.level, verification.unverified_reason) == ("unverified", "suspected_tool_fault")
 
 
 def test_write_back_records_the_box_reason(tmp_path: Path):

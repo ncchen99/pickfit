@@ -694,7 +694,7 @@ class VerifyAgent:
         if args.level == "unverified" and args.unverified_reason is None:
             args.unverified_reason = "other"
         if args.level == "failed" and not args.blocking_error:
-            args.blocking_error = args.summary or "not given"
+            args.blocking_error = args.summary.strip() or "not given"
         verdict = log_verdict(args, self.report.commands)
         self.verdict = verdict
         self.report.finish = args.model_dump()
