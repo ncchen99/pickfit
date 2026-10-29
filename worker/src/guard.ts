@@ -3,10 +3,13 @@
  * be one of this request's candidates, and every reason must match the card
  * field it cites and must not contradict the card (offline, free, open
  * source, an OS). Reasons that fail are dropped; a pick with no reason left is
- * dropped.
+ * dropped. The well-known option, the one tool named from outside the
+ * candidates, gets the few checks code can make about it.
  */
 import { CARD_FIELDS, type Card, type CardValue } from './cards.ts';
+import type { Entry } from './catalog.ts';
 import type { ModelAnswer, ModelPick, ModelReason } from './prompt.ts';
+import { nameKey } from './rules.ts';
 
 const norm = (text: string) => text.trim().toLowerCase().replace(/\s+/g, ' ');
 
@@ -111,6 +114,48 @@ export function guardPicks(answer: ModelAnswer, cards: Map<string, Card>, limit:
     });
   }
   return { picks, droppedPicks, droppedReasons };
+}
+
+export interface WellKnown {
+  name: string;
+  why: string;
+}
+
+export interface GuardedWellKnown {
+  option: WellKnown | null;
+  /** The name the model gave, kept or not; for the event log. */
+  name: string | null;
+  /** Why the option was dropped, when it was. */
+  dropped: string | null;
+}
+
+export const NO_WELL_KNOWN: GuardedWellKnown = { option: null, name: null, dropped: null };
+
+const CLAIMS_CHECKED = /\bpickfit\b|\b(verified|tested|vetted|checked)\b/i;
+
+/**
+ * Code cannot tell whether the named tool exists, is free or fits; the
+ * response says so. It checks what it can: a plain name that is neither a
+ * pickfit entry (that would be a pick, or was filtered out for a reason) nor
+ * the current tool, and one sentence that says it is free and does not claim
+ * anyone checked it.
+ */
+export function guardWellKnown(answer: ModelAnswer, entries: Entry[], current?: string): GuardedWellKnown {
+  const raw = typeof answer.well_known_name === 'string' ? answer.well_known_name.trim() : '';
+  if (!raw) return NO_WELL_KNOWN;
+  const name = raw.slice(0, 60);
+  const drop = (dropped: string): GuardedWellKnown => ({ option: null, name, dropped });
+  const key = nameKey(raw);
+  if (raw.length > 60 || !key || /[\n<>]|:\/\//.test(raw)) return drop('not_a_name');
+  if (entries.some((entry) => nameKey(entry.slug) === key || nameKey(entry.name) === key)) return drop('listed_in_pickfit');
+  if (current && nameKey(current) === key) return drop('current_tool');
+  const text = clip(answer.well_known_why, 1000);
+  // One sentence: cut at the first sentence end ("llama.cpp" has no space after its dot).
+  const why = text ? (text.match(/^.*?[.!?](?=\s|$)/s)?.[0] ?? text).slice(0, 240) : null;
+  if (!why) return drop('no_reason');
+  if (!/\bfree\b/i.test(why)) return drop('not_said_free');
+  if (CLAIMS_CHECKED.test(why)) return drop('claims_checked');
+  return { option: { name, why }, name, dropped: null };
 }
 
 /** Minimal shape check; strict decoding should guarantee it, but code does not assume. */

@@ -91,6 +91,12 @@ test('find_software conforms: picks, a clarifying question, empty, no candidates
   const picks = await call('model picks', LLM);
   assert.ok(picks.picks.length > 0 && picks.best_free && !picks.degraded);
 
+  s.answers(() =>
+    metaResponse(answer({ well_known_name: 'Ollama', well_known_why: 'Ollama is free, runs offline on macOS and is simpler to set up.' })),
+  );
+  const outside = await call('well-known option', LLM);
+  assert.deepEqual([outside.well_known_option.name, outside.well_known_option.verified], ['Ollama', false]);
+
   s.answers(() => metaResponse(answer({ clarifying_question: 'Do you need a GUI or is a terminal fine?' })));
   assert.ok((await call('clarifying question', LLM)).clarifying_question);
 

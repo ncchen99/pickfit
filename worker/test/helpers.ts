@@ -161,6 +161,8 @@ export function answer(overrides: Partial<ModelAnswer> = {}): ModelAnswer {
     best_free_slug: 'fixture-llm-runner',
     best_free_reason: 'Free, open source and runs offline.',
     no_install_option: null,
+    well_known_name: null,
+    well_known_why: null,
     clarifying_question: null,
     ...overrides,
   };
