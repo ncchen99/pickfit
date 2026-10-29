@@ -168,37 +168,42 @@
 | 11/1 | （選做）`platform_evidence` 跑全部 96 筆 |
 | 11/2 | 功能凍結 |
 
-### 5.4 實測（2026-10-29 16:20–18:15 台北）
+### 5.4 實測（2026-10-29 16:20–19:50 台北）
 
 念誠 10/29 選 Tart。實作在 `pickfit/verify/tart_box.py`（`pickfit verify --runner tart`；`--prepare-base` 建 base VM）。
 
-**環境**：Tart 2.41.1（`openai/tools` tap）；image `ghcr.io/cirruslabs/macos-tahoe-base@sha256:4aaa751fa753…`（macOS 26.6.2，25G83），壓縮 26.4 GB，家裡網路約 2.5–4 MB/s，下載約 2 小時 50 分，落地 30 GB。base VM `pickfit-macos-26` 準備 147 秒：一般使用者 `sbx`（UID 1001，非 admin、沒有 sudo，擁有 `/opt/homebrew`），Homebrew 7.0.11、uv 0.13.6、pipx 1.18.6、node v26.13.0、CLT 的 Python 3.9.6；版本記在 `~/.pickfit/tart/pickfit-macos-26.json`。每台 box（clone＋開機＋防火牆）19–65 秒，同時只開 1 台。
+**環境**：Tart 2.41.1（`openai/tools` tap）；image `ghcr.io/cirruslabs/macos-tahoe-base@sha256:4aaa751fa753…`（macOS 26.6.2，25G83），壓縮 26.4 GB，家裡網路約 2.5–4 MB/s，下載約 2 小時 50 分，落地 30 GB。base VM `pickfit-macos-26` 準備約 150 秒：一般使用者 `sbx`（UID 1001，非 admin、沒有 sudo，擁有 `/opt/homebrew`），Homebrew 7.0.11、uv 0.13.6、pipx 1.18.6、node v26.13.0、CLT 的 Python 3.9.6；版本記在 `~/.pickfit/tart/pickfit-macos-26.json`。每台 box（clone＋開機＋檢查＋防火牆）約 20–30 秒，同時只開 1 台。
 
-**`--limits-test` 13／13**：不是 root、不在 admin、sudo 被拒；`sbx` 關不掉 pf；環境變數沒有金鑰；169.254.169.254、10.0.0.1、主機（VM 的 gateway）都連不到（逾時，不是被拒）；斷網後 PyPI 不通、loopback 服務照常；恢復後再通；指令 3 秒被殺；1.7 GB 檔案被擋；fork 在 248 個行程停下。macOS 沒有單一行程的記憶體上限，VM 的 8 GB 就是上限，所以沒測 `memory_cap`。
+**安全審查（10/29 18:50）後的加固**：獨立審查確認 box 使用者能變成 root：image 的 `admin`/`admin` 帳號有 NOPASSWD sudo，`sbx` 能用 pty 跑 `su admin`、或 `ssh admin@127.0.0.1`（pf 跳過 lo0），再 `sudo pfctl -d` 關掉防火牆，而重播照樣記 `offline: true`。實測屬實：`sbx` 執行 `dscl . -authonly admin admin` 成功，sshd（22）與螢幕共享（5900）都在聽，`/etc/kcpassword` 人人可讀。修補時另外發現：guest agent 的 LaunchDaemon（root）與 LaunchAgent 都從 `sbx` 擁有的 `/opt/homebrew/bin` 啟動。現在：
 
-**實機才發現、已修正的事**：guest agent 以 `admin` 執行而 PATH 沒有 `/sbin`；vmnet 先給一個 IPv6 link-local DNS，擋住 IPv6 後每次查詢多等 3 秒，改成把 DNS 固定為 IPv4 gateway（3–34 ms）；macOS 的 `nohup` 在沒有 console 的 session 裡直接結束（`can't detach from console`），改用自己的 detach helper；`/usr/bin/python3` 是 xcrun shim，會塞 `SDKROOT`、`CPATH` 等變數給每個指令，改呼叫 CLT 的 python 本體；開機早期 `tart exec` 會卡住而不是失敗。
+- `--prepare-base` 在 guest 裡產生 admin 的隨機密碼（不進 repo、不印出；guest agent 會把每條指令寫進人人可讀的 log，所以密碼不出現在任何指令列），改寫 `/etc/kcpassword`（只有 root 可讀）讓自動登入照常啟動 agent；關掉 Remote Login 與螢幕共享；`/etc/pam.d/su` 只准 root；agent 改從 root 擁有的 `/usr/local/libexec/pickfit-agent/` 啟動。加固後重開一次 base（證明自動登入與 agent 正常）並跑完整檢查才寫 manifest；建置失敗就刪掉 base 與舊 manifest。
+- 每台 box 在跑任何 model 指令前以 root 檢查上面每一項，不合格就拒用。
+- pf 規則加 label；每次切換網路後檢查 pf 啟用且載入的是 pickfit 的那一組；斷網時以 root 實際連 1.1.1.1 必須失敗；恢復網路前再確認斷網一直有效。任何一項不成立就是 box error，不會記成 offline。
+- VM 壽命：guest 自己排 `shutdown -h +N`，host 另有獨立 session 的 reaper 在壽命＋5 分鐘後停掉並刪除 clone；`close()` 不會丟例外，刪不掉就留給 reaper。DHCP 規則只放行到 gateway 與廣播。
+- 防火牆政策仍在 guest 裡。改到 host 端（Tart softnet：`--net-softnet-allow/-block`，執行中用 `--net-softnet-control-fd` 換政策）可行，guest 的 root 也改不了；但 softnet 要 setuid root，需要念誠在這台 Mac 上親自執行一次 `sudo`，所以這次沒做。
 
-**6 筆 demo 候選，main（ee303ed）合併後的程式重跑，全部通過並在全新 VM 重播**（`muse-spark-1.3`；合併前那一輪也是 6／6，結果沒有寫回，改用合併後的重跑）：
+**`--limits-test` 18／18**（加固後的 base）：不是 root、不在 admin、sudo 被拒；`sbx` 關不掉 pf；admin 的預設密碼失效（`dscl -authonly` 失敗）；pty 裡 `su admin` 輸入預設密碼得到 `su: Sorry`；localhost 的 22 與 5900 沒人聽；`/etc/kcpassword` 讀不到；換不掉 agent 的執行檔與 launchd plist；環境變數沒有金鑰；169.254.169.254、10.0.0.1、主機（VM 的 gateway）都連不到（逾時）；斷網後 PyPI 不通、loopback 服務照常；恢復後再通；指令 3 秒被殺；1.7 GB 檔案被擋；fork 在 248 個行程停下。macOS 沒有單一行程的記憶體上限，VM 的 8 GB 就是上限，所以沒測 `memory_cap`。
+
+**實機才發現、已修正的事**：guest agent 以 `admin` 執行而 PATH 沒有 `/sbin`；vmnet 先給一個 IPv6 link-local DNS，擋住 IPv6 後每次查詢多等 3 秒，改成把 DNS 固定為 IPv4 gateway（3–34 ms）；macOS 的 `nohup` 在沒有 console 的 session 裡直接結束，改用自己的 detach helper；`/usr/bin/python3` 是 xcrun shim，會塞 `SDKROOT`、`CPATH` 等變數，改呼叫 CLT 的 python 本體；開機早期 `tart exec` 會卡住；admin 有 Secure Token，連 root 改密碼都要給舊密碼。**`run_background` 在 macOS 一律 exit 124**：背景腳本寫成 `a && b &`，bash 3.2 會留一個握著 stdout 的 subshell，指令永遠不回來（bash 5 直接 exec，所以 Linux 沒事）；改成只把一個指令丟到背景後，1.4 秒回來、exit 0。之前把 orbit、cluaiz 只到 function 歸因於「agent 宣稱 service、指令紀錄撐不起」是錯的，真正原因是這個 bug。
+
+**6 筆 demo 候選，在加固後的 base 上用合併 main（ee303ed）的程式重跑，全部通過並在全新 VM 重播**（`muse-spark-1.3`）：
 
 | slug | macOS 等級（Linux） | 安裝 | 斷網 smoke test | 秒 | Meta |
 |---|---|---|---|---|---|
-| mcp-audit | function（function） | `uv tool install mcp-audit-scanner` | 是 | 123 | $0.057 |
-| patient-zero | function（function） | `npm install -g patient-zero@latest` | **否**（smoke test 要連網） | 285 | $0.114 |
-| orbit | function（service） | `npm install -g @orbit-tools/cli` | 是 | 208 | $0.071 |
-| mi-lsp | function（function） | 官方 `install.sh`（先下載、讀過再跑） | 是 | 869 | $0.137 |
-| shep | function（function） | `brew install shep-pm/shep/shep` | 是 | 918 | $0.060 |
-| cluaiz | function（service） | 官方 `install.sh` | 是 | 362 | $0.193 |
+| mcp-audit | function（function） | `uv tool install mcp-audit-scanner` | 是 | 108 | $0.043 |
+| patient-zero | function（function） | `npx -y patient-zero@latest`（沒有全域安裝） | **否**：步驟與 smoke test 都走 `npx`，每次都要連 npm registry | 278 | $0.028 |
+| orbit | **service**（service） | `npm install -g @orbit-tools/cli` | 是 | 122 | $0.042 |
+| mi-lsp | function（function） | 官方 `install.sh`（agent 讀完整份 `install.sh`，但 `install.sh` 用 node 執行的 `validate-worker-manifest.js` 只下載、沒讀） | 是 | 750 | $0.118 |
+| shep | function（function） | `brew install shep-pm/shep/shep` | 是 | 968 | $0.054 |
+| cluaiz | **service**（service） | 官方 `install.sh`（先下載、讀過再跑） | 是 | 201 | $0.140 |
 
-- 6 筆的 `install.macos` 都換成重播過的步驟（`basis: replayed`），索引裡這 6 筆的 `verified_on_user_os`（macOS）變成 true；96 筆中原本是 0。
-- **shep 在 Mac 上照 brew 裝到的是 0.1.26**（tap 過期，而且用 cargo 從原始碼編，約 7 分鐘），Linux 的紀錄是 0.18.2。這是 Linux 驗證看不到的問題；紀錄照實寫，沒有改 profile。
-- orbit、cluaiz 在 Linux 到 service，在 macOS 只到 function（agent 宣稱 service，指令紀錄只撐得起 function）。
-- 這個 task 的 Meta 花費約 $1.14（合併前一輪 $0.50＋合併後重跑 $0.63），在 $3 上限內；box 費用 $0。
-
----
+- 6 筆的 `install.macos` 都是重播過的步驟（`basis: replayed`），索引裡這 6 筆的 `verified_on_user_os`（macOS）是 true；96 筆中原本是 0。**但 Worker 判斷時沒看 CPU 架構**（`worker/src/find.ts:120`、`worker/src/cards.ts:67` 只看 `entry.install[os]` 在不在），6 筆都只跑過 arm64，Intel Mac 使用者也會看到 true；索引已帶 `install.macos.run.arch`，修法是使用者給了 arch 時要求相符。這屬於 Worker，交給協調的 session。
+- **shep 在 Mac 上照 brew 裝到的是 0.1.26**：tap 過期（release 是 0.18.2，10/29 出了 0.19.0），而且從原始碼編：brew 先裝 llvm 23.1.4（1.9 GB）與 rust 1.99.1（407 MB），cargo 再編約 4 分鐘。Linux 的紀錄是 0.18.2。agent 沒寫 pitfall，我依這次 run 的輸出與 release 清單手動補了一條 `readme_wrong` pitfall。shep 的品質分數從 75.2 變成 90.2（macOS run 只有 1 步、沒有計分程式認得的 README 修正，sandbox 0.7→1.0）；照過期 tap 裝的 run 該不該加分，由計分的 session 決定。
+- 這個 task 的 Meta 花費約 $1.56（合併前一輪 $0.50 沒寫回；合併後重跑 $0.63 被加固前的結果取代；加固後重跑 $0.42），在 $3 上限內；box 費用 $0。
 
 ## 6. 要念誠決定的事
 
-（10/29：第 1 項已決定走 Tart、guest 用 macOS 26，見 5.4。第 2、3 項還沒決定。）
+（10/29：第 1 項已決定走 Tart、guest 用 macOS 26，見 5.4。第 2、3 項還沒決定。另待念誠：要把防火牆移到 host 端（softnet）就要在這台 Mac 上親自設一次 setuid。）
 
 1. **macOS 走 Tart 嗎？** 同意後我會執行：`brew install openai/tools/tart`；`tart pull ghcr.io/cirruslabs/macos-tahoe-base:latest`（約 25 GB 下載、約 33 GB 磁碟，clone 另佔變動量）。guest 用 macOS 26（建議）還是 27？
 2. **Windows 要不要在賽前用 GitHub Actions？** 要的話：(a) 接受 3.1 的條款風險；(b) 先到 GitHub Settings → Billing 把 Actions 預算設 $0（超過免費額度就停，不扣卡）；(c) 同意在 private repo 加一個 workflow、用 Cloudflare quick tunnel。不要的話，Windows 只做第 4 節的證據。
