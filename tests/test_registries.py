@@ -118,6 +118,12 @@ def test_a_count_the_source_does_not_have_is_unknown_not_zero() -> None:
     assert both.registries_count == 2 and both.monthly_downloads is None  # npm alone would be a partial sum
 
 
+def test_pypistats_month_not_filled_in_yet_uses_the_week_as_a_lower_bound() -> None:
+    reg = Registries(http=server({"pypi.org/pypi/tinyq/json": LINKED, "pypistats.org/api/packages/tinyq/recent":
+                                  {"data": {"last_day": 19, "last_month": 0, "last_week": 114}}}), min_interval_s={})
+    assert reg.lookup("someone/tinyq", names={"pypi": {"tinyq"}}).monthly_downloads == 114
+
+
 def test_a_failed_registry_leaves_downloads_unknown_too(monkeypatch: Any) -> None:
     import pickfit.registries
 

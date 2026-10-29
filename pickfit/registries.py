@@ -327,7 +327,11 @@ class Registries:
         if self.pypi_downloads:
             recent = self.get_json(f"https://pypistats.org/api/packages/{name}/recent")
             data = recent.get("data") if isinstance(recent, dict) else None
-            downloads = _count(data.get("last_month") if isinstance(data, dict) else None)
+            # pypistats leaves last_month at 0 for a package under a month old while last_week already
+            # counts; the last 30 days hold the last 7, so the largest of the three is a lower bound.
+            counts = [_count(data.get(k)) for k in ("last_month", "last_week", "last_day")] if isinstance(
+                data, dict) else []
+            downloads = max((c for c in counts if c is not None), default=None)
         return Package("pypi", name, downloads)
 
     def crates(self, name: str, repos: list[str]) -> Package | None:
