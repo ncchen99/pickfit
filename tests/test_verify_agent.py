@@ -287,6 +287,56 @@ def test_run_background_waits_for_the_port(task, ledger, tmp_path):
     assert report.commands[-1].tool == "run_background" and report.commands[-1].exit_code == 0
 
 
+def local_ai(task: VerifyTask) -> VerifyTask:
+    data = json.loads((FIXTURES / "evnx.json").read_text())["extraction"]
+    data["category"] = {"value": "local_ai", "quote": "runs GGUF models locally"}
+    return VerifyTask(task.slug, task.repo_url, task.readme, ExtractionResult.model_validate(data))
+
+
+DOWNLOAD = ("mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf "
+            "https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf")
+ENGINE_BOX = {
+    "pipx install evnx": (0, "installed package evnx 0.10.18", ""),
+    "stories260K-f32.gguf": (0, "", "100 1157k  100 1157k"),
+    "setsid nohup": (0, "pid 42\nport 8080 open after 1s\n--- log tail ---\nlistening", ""),
+    "/v1/completions": (0, '{"choices":[{"text":" Once upon a time"}],"usage":{"completion_tokens":8}}', ""),
+    "-p Once": (0, "Once upon a time there was a girl", ""),
+}
+
+
+@pytest.mark.parametrize("check, setup_ids, signal, level", [
+    ("curl -fsS http://127.0.0.1:8080/v1/completions -H 'Content-Type: application/json' "
+     "-d '{\"prompt\":\"Once\",\"max_tokens\":8,\"temperature\":0}'", [2, 3], "completion_tokens", "inference"),
+    ("evnx-cli -m ~/models/stories260K.gguf -p Once -n 8", [2], "Once upon", "function"),
+])
+def test_generation_request_to_a_started_server_reaches_inference(task, ledger, tmp_path, check, setup_ids,
+                                                                   signal, level):
+    smoke = [{"command_id": 4, "setup_ids": setup_ids, "expected_signal": signal, "expected_exit_code": 0,
+              "observed_excerpt": signal}]
+    server = FakeServer(
+        response("r1", run_cmd("pipx install evnx")),
+        response("r2", run_cmd(DOWNLOAD)),
+        response("r3", ("run_background", {"command": "evnx-server -m ~/models/stories260K.gguf --port 8080",
+                                           "port": 8080, "wait_s": 30})),
+        response("r4", run_cmd(check)),
+        response("r5", finish(level="inference", steps=[1], smoke=smoke)),
+    )
+    report = agent(local_ai(task), FakeBox(ENGINE_BOX), server, ledger, tmp_path).run()
+    # Text from a one-shot CLI is function; only a generation request to the started server is inference.
+    assert report.verdict["level"] == level and report.verdict["problems"] == []
+    assert report.verdict["checks"][0]["kind"] == ("generation" if level == "inference" else "example")
+
+
+def test_prompt_names_tiny_models_only_for_local_ai(task):
+    plan = plan_for(task.extraction)
+    assert "Tiny models" not in render_task(task, plan, FakeBox(), AgentLimits())
+    text = render_task(local_ai(task), plan, FakeBox(), AgentLimits())
+    assert "https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf" in text
+    assert "SmolLM2-135M-Instruct-Q8_0.gguf" in text and "smollm2:135m" in text
+    assert "setup_ids list the download first, then the server's run_background" in text
+    assert text.index("Tiny models") < text.index('<source kind="readme"')
+
+
 # ---------------------------------------------------------------- pieces
 
 
