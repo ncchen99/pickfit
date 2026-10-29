@@ -43,7 +43,7 @@ env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p "…" \
 
 ### `find_software`、`find_alternatives` 怎麼配對（architecture F.2）
 
-1. **硬條件（程式）**：只留有實跑過安裝步驟的（`install.<os>` 的 basis 是 `replayed` 或 `human`）；類別、`budget: free_only` → `pricing = free`、`must_run_locally` → `processing = local`、不需網路、不需 API key；作業系統要在 `platforms` 或已驗證過。只在別的 OS 驗證過的留下，但卡片與回應都會標明。`find_alternatives` 另外把使用者目前的工具（依 slug 或名稱比對到目錄裡的那筆）排除。
+1. **硬條件（程式）**：只留有實跑過安裝步驟的（`install.<os>` 的 basis 是 `replayed` 或 `human`）；類別、`budget: free_only` → `pricing = free`、`must_run_locally` → `processing = local`、不需網路、不需 API key；作業系統要在 `platforms` 或已驗證過。只在別的 OS 驗證過的留下，但卡片與回應都會標明。`verified_on_user_os` 要 OS 相同；請求有給 `arch` 時，跑的 CPU 架構也要相同，所以只在 arm64 Mac 跑過的，對 Intel Mac 是 `false`，並在取捨裡寫明。沒給 `arch` 就只看 OS，回應的 `verification.arch` 和 `get_install_guide` 的 note 會寫出實際跑的架構。`find_alternatives` 另外把使用者目前的工具（依 slug 或名稱比對到目錄裡的那筆）排除。
 2. **候選卡**：全部合格的卡（≤60 張，依 slug 排，不給模型看熱門度順序）。超過 60 張先取寶藏分數前 60（之後換 BM25）。
 3. **一次 `muse-spark-1.3`**（Responses API、`store: false`、`reasoning.effort: low`、strict JSON schema；slug 欄位的 enum 就是這次的候選）：解析需求成條件、選 1–3 個、每個理由引用一個卡片欄位與原值、取捨、和知名工具比、最好的免費選項、「內建就夠」、最多 1 個追問。模型固定在程式裡，不能換成 `-contributor`（使用者需求是私人資料）。`find_alternatives` 用同一份 prompt，**後面加 4 條規則**（`ALTERNATIVES_RULES`：只選做同一件事、至少解決一個痛點、保留 `must_keep` 的；和目前的工具比較；`keep_current`；解析出的痛點）；`find_software` 的 prompt 與 schema 不變。
 4. **守門（程式）**：slug 必須在候選裡；理由引用的值要真的出現在該欄位；理由不能和卡片矛盾（離線、免費、開源、在某 OS 驗證過、不需 key、不需 GPU）。不合的理由丟掉，沒有理由的推薦丟掉。

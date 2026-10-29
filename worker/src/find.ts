@@ -8,7 +8,7 @@
  * and its pain points too, drops the current tool from the candidates, and
  * may advise keeping it.
  */
-import { bestGuide, type Arch, type Catalog, type Entry, type InstallGuide, type OS } from './catalog.ts';
+import { bestGuide, verifiedOnUserSystem, type Arch, type Catalog, type Entry, type InstallGuide, type OS } from './catalog.ts';
 import { toCard, type Card } from './cards.ts';
 import { checkBudget, recordSpend } from './budget.ts';
 import { ranSentence } from './evidence.ts';
@@ -115,14 +115,28 @@ function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, 
   return parts.join(' ');
 }
 
-function pickOut(entry: Entry, chosen: GuardedPick, os: OS | undefined, matchedBy: string, considered: number): PickOut {
+function pickOut(
+  entry: Entry,
+  chosen: GuardedPick,
+  os: OS | undefined,
+  arch: Arch | undefined,
+  matchedBy: string,
+  considered: number,
+): PickOut {
   const guide = bestGuide(entry, os);
-  const onUserOs = os ? entry.install[os] !== undefined : null;
+  const onUserOs = verifiedOnUserSystem(entry, os, arch);
   const tradeoffs = [...chosen.tradeoffs];
   if (os && !onUserOs && guide) {
-    const said = tradeoffs.some((t) => /verif|tested|checked/i.test(t) && t.toLowerCase().includes(guide.run.os));
+    // Run on the user's OS but another CPU architecture, or on another OS.
+    const otherArch = guide.run.os === os;
+    const ranOn = otherArch ? guide.run.arch : guide.run.os;
+    const said = tradeoffs.some((t) => /verif|tested|checked/i.test(t) && t.toLowerCase().includes(ranOn));
     if (!said) {
-      tradeoffs.unshift(`Verified on ${guide.run.os} only; pickfit has not run its ${os} install steps yet.`);
+      tradeoffs.unshift(
+        otherArch
+          ? `Verified on ${os} ${guide.run.arch} only; pickfit has not run its install steps on ${arch}.`
+          : `Verified on ${guide.run.os} only; pickfit has not run its ${os} install steps yet.`,
+      );
     }
   }
   return {
@@ -323,7 +337,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   const limit = Math.min(Math.max(cond.limit ?? 3, 1), 3);
   const { candidates, passed } = hardFilter(deps.catalog.entries, cond);
   const entries = new Map(candidates.map((entry) => [entry.slug, entry]));
-  const cards = new Map(candidates.map((entry) => [entry.slug, toCard(entry, cond.os)]));
+  const cards = new Map(candidates.map((entry) => [entry.slug, toCard(entry, cond.os, cond.arch)]));
 
   let choice: Choice;
   let matchedBy = 'rules';
@@ -368,7 +382,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     model_attempts: statuses.length,
     model_http_status: httpStatus,
     considered: passed,
-    picks: choice.picks.map((chosen) => pickOut(entries.get(chosen.slug)!, chosen, cond.os, matchedBy, passed)),
+    picks: choice.picks.map((chosen) => pickOut(entries.get(chosen.slug)!, chosen, cond.os, cond.arch, matchedBy, passed)),
     best_free: choice.bestFree,
     no_install_option: choice.noInstall,
     clarifying_question: choice.question,

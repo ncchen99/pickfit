@@ -82,6 +82,8 @@ export function installGuide(catalog: Catalog, input: InstallInput): InstallOutp
     note = `Checked on ${run.os}/${run.arch}, not ${input.arch}.`;
   } else {
     match = 'exact';
+    // No arch given: exact for the OS only, so say which CPU the run was on.
+    if (!input.arch) note = `Checked on ${run.os}/${run.arch}; the request did not say this machine's CPU architecture.`;
   }
   const steps = (guide?.steps ?? []).map((step, i) => ({
     order: i + 1,

@@ -56,7 +56,10 @@ const pick = z.object({
     method: z.enum(['sandbox', 'human']).nullable(),
     replayed: z.boolean(),
     checked_at: z.string().nullable(),
-    verified_on_user_os: z.boolean().nullable(),
+    verified_on_user_os: z
+      .boolean()
+      .nullable()
+      .describe('true = pickfit ran the install steps on your OS, and on your CPU architecture when arch was given; null = no os given'),
   }),
   how_we_know: z.string(),
   evidence_url: z.string().nullable(),

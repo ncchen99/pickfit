@@ -3,7 +3,7 @@
  * Values are flat (string, number, boolean, string list) so the guard can
  * check every reason against the field it cites.
  */
-import { verifiedOn, type Entry, type OS } from './catalog.ts';
+import { verifiedOn, verifiedOnUserSystem, type Arch, type Entry, type OS } from './catalog.ts';
 
 export type CardValue = string | number | boolean | string[] | null;
 export type Card = Record<CardField, CardValue> & { slug: string };
@@ -48,7 +48,7 @@ function runLabel(entry: Entry, os: OS): string {
   return `${os} ${guide.run.arch}: ${how}, ${guide.run.level} check passed, ${guide.run.checked_at.slice(0, 10)}`;
 }
 
-export function toCard(entry: Entry, os?: OS): Card {
+export function toCard(entry: Entry, os?: OS, arch?: Arch): Card {
   const userGuide = os ? entry.install[os] : undefined;
   const pre = entry.prerequisites;
   return {
@@ -64,7 +64,7 @@ export function toCard(entry: Entry, os?: OS): Card {
     alternatives_to: entry.alternatives_to,
     platforms: entry.platforms,
     verified_on: verifiedOn(entry).map((name) => runLabel(entry, name)),
-    verified_on_user_os: os ? userGuide !== undefined : null,
+    verified_on_user_os: verifiedOnUserSystem(entry, os, arch),
     install_method_user_os: userGuide ? userGuide.method : null,
     manual_steps: userGuide ? userGuide.manual_steps : [],
     pricing: entry.pricing,

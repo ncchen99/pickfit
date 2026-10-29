@@ -111,6 +111,17 @@ export function bestGuide(entry: Entry, os?: OS): InstallGuide | null {
   return guides[0] ?? null;
 }
 
+/**
+ * Did pickfit run the install steps on the user's system: their OS, and their
+ * CPU architecture when they gave one? An arm64-only macOS run is not an Intel
+ * Mac. Without an arch this answers for the OS only. null without an OS.
+ */
+export function verifiedOnUserSystem(entry: Entry, os?: OS, arch?: Arch): boolean | null {
+  if (!os) return null;
+  const guide = entry.install[os];
+  return guide !== undefined && (arch === undefined || guide.run.arch === arch);
+}
+
 /** OSes with install steps that were actually run (replayed in a sandbox or done by hand). */
 export function verifiedOn(entry: Entry): OS[] {
   return OSES.filter((os) => entry.install[os] !== undefined);
