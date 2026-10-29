@@ -142,6 +142,12 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
   - **每人頻率**：`ratelimits` 綁定 `WEB_RATE_LIMITER`，每分鐘 6 次（以 Cloudflare 機房計）。鍵是「UTC 日期＋IP」的 SHA-256 前 32 字元，只存在限流計數器裡，不進 D1、不進 log。沒有綁定時（例如在別的環境）改用這個 isolate 記憶體裡的計數；綁定出錯時放行並記 `web_rate_limit_failed`，花費仍受網頁上限擋。超過回 429、`Retry-After: 60` 與「Busy」訊息，不呼叫模型、不寫事件。
   - **快取**：同樣的需求（忽略大小寫與多餘空白）加同樣的條件，10 分鐘內在同一個 isolate 直接重用結果，不呼叫模型、不寫事件，頁面註明是剛才的結果。鍵是雜湊，不留原話；`degraded` 的結果不快取，下一次會再試模型。
   - **跨站**：`POST /search` 和 `/mcp` 一樣檢查 Host 與 Origin，別的網站的表單不能花這裡的預算。表單超過 4 KB 回 413；需求要 3–500 字，否則 400，都不呼叫模型。
+- **設計**（10/30 改版）：用 frontend-design 與 taste-skill 做、web-design-guidelines 檢查。概念是「pickfit 在沙盒裝好一款工具時寫下的試跑紀錄，就是每個推薦印在上面的那張單子」。
+  - 首屏：「Tools that fit, [一張真的試跑紀錄] tested first.」，搜尋框就在下面。
+  - 結果：左邊是主張、右邊是證據，主張在捲動時停住。沒有排名數字（配對不是排名）。「內建就夠了」放在 picks 前面。沒驗證過的工具沒有試跑紀錄。
+  - 搜尋前：最新的試跑表、另一個寶藏工具被修正的 README，以及一個四段的滑桿，帶同一款工具走過讀懂、安裝、配對、交付。這些全部從索引讀，不呼叫模型、不捏造。
+  - 字級五階、一個強調色；沒有細線、外框、陰影、眉標、emoji。
+  - taste-skill 檢查器從 8 FAIL／7 WARN 降到 0 FAIL／4 WARN。剩下的 4 個 WARN 都有理由：程式碼用等寬字；沒有照片或影片（軟體的圖就是自己的介面）；動態只回應使用者的操作。
 - **安全**：每個回應一個 CSP nonce（`default-src 'none'`，只允許自己的 inline script／style、`connect-src 'self'`、`form-action 'self'`、`frame-ancestors 'none'`）。資料與模型輸出全部跳脫；連結只收 http(s)，帶 `rel="noopener noreferrer"`，`Referrer-Policy: no-referrer`。沒有第三方字型或腳本。
 - **評測部署**：`env.eval`、`env.eval-rules` 設 `WEB_SEARCH: "off"`，`/` 永遠是 JSON、`/search` 是 404。`WEB_DAILY_CAP_USD` 與 `ratelimits` 也照列（wrangler 不會把它們繼承進 env，少了會警告），只是用不到。
 - **實測**（10/29，本機 `wrangler dev`、真資料 96 筆、5 個自擬需求，不是評測題）：8 次 `muse-spark-1.3` 共 $0.139，平均 6.9 秒。git commit 訊息（Linux x86-64）→ Eckra，在你的系統上驗證過；講課影片離線字幕（macOS arm64、免費、離線）→ babelscribe，標「沒在你的系統上驗證」；壓測 OpenAI 相容端點（Linux）→ servebench；本機記錄 LLM API 花費（免費、不限 OS）→ TokenTracker；RAW 修圖（macOS、免費，不在涵蓋範圍）→ 沒有合適的，`well_known_option` 是 darktable，標未驗證。
