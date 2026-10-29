@@ -33,6 +33,7 @@ from pickfit.env import REPO_ROOT
 from pickfit.ledger import taipei_now
 from pickfit.schema import (
     COMMAND_MAX,
+    PASSED_LEVELS,
     SETUP_MAX,
     Check,
     InstallGuide,
@@ -319,6 +320,10 @@ def write_back(run: VerificationRun, slug: str, data_dir: Path = DATA_DIR) -> tu
         held = next((r for r in record.verification.runs if r.os == run.os and is_passed(r.level)), None)
         if held:
             return False, f"not written: {run.level} would sit beside the passed {run.os} run {held.id}"
+    same = next((r for r in record.verification.runs if (r.os, r.arch, r.method) == (run.os, run.arch, run.method)
+                 and is_passed(r.level)), None)
+    if same and is_passed(run.level) and PASSED_LEVELS.index(run.level) > PASSED_LEVELS.index(same.level):
+        return False, f"not written: {run.level} would replace the stronger {same.level} run {same.id}"
     runs = [r for r in record.verification.runs if (r.os, r.arch, r.method) != (run.os, run.arch, run.method)]
     runs.append(run)
     level = best_level(runs)

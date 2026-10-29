@@ -286,6 +286,17 @@ def test_write_back_updates_the_record(tmp_path: Path):
     assert updated.verification.level == "function"
 
 
+def test_write_back_keeps_a_stronger_passed_run(tmp_path: Path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    record = json.loads((FIXTURES / "software_example.json").read_text()) | {"slug": "graphtty"}
+    (data_dir / "graphtty.json").write_text(json.dumps(record))
+    outcome, _ = verify(tmp_path, FakeServer(*agent_turns("install"), judge_answer("working")), Boxes({}),
+                        write=True, data_dir=data_dir)
+    assert outcome.run.level == "install" and not outcome.written
+    assert outcome.write_note == "not written: install would replace the stronger function run run-20261031-linux-1"
+
+
 def test_write_back_skips_unpassed_runs_and_missing_records(tmp_path: Path):
     outcome, _ = verify(tmp_path, FakeServer(*agent_turns(), judge_answer("inconclusive")), Boxes({}),
                         write=True, data_dir=tmp_path / "nowhere")
