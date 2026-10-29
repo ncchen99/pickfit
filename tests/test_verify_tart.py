@@ -123,6 +123,11 @@ if cmd == "exec":
         sys.exit(0)
     if "networksetup" in script:
         print("gw=192.168.64.1"); sys.exit(0)
+    if script.rstrip().endswith("/mdns"):
+        phase = open(phase_path).read().strip() if os.path.exists(phase_path) else "online"
+        answered = phase == "poscontrol" or env("FAKE_MDNS_LEAK")
+        print("mdns=answered 10.0.0.1 100" if answered else "mdns=no-answer")
+        sys.exit(0 if answered else 1)
     names = re.findall(r"echo (\w+)=\$\?", script)
     if names and "curl" in script:
         phase = open(phase_path).read().strip() if os.path.exists(phase_path) else "online"
@@ -199,7 +204,7 @@ def test_start_clones_boots_with_softnet_blocks_host_and_close_deletes(make_box,
 
 
 def test_online_policy_blocks_the_host():
-    assert SOFTNET_POLICY[True] == {"allow": [], "block": ["@host"]}  # not {} -- the default allows the host
+    assert SOFTNET_POLICY[True]["block"] == ["@host", "224.0.0.0/4", "255.255.255.255/32"]  # host + multicast
     assert SOFTNET_POLICY[False] == {"allow": [], "block": ["0.0.0.0/0"]}
 
 
@@ -264,6 +269,13 @@ def test_online_check_fails_if_the_host_or_metadata_is_reachable(make_box, monke
     assert not box.started
 
 
+def test_online_check_fails_if_multicast_mdns_reaches_the_host(make_box, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("FAKE_MDNS_LEAK", "1")  # the host answers mDNS despite the block
+    box = make_box()
+    with pytest.raises(BoxError, match="multicast mDNS was answered"):
+        box.start()
+
+
 def test_a_refusal_is_not_accepted_as_blocked(make_box, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("FAKE_REACH_HOST", "7")  # host refuses (reached) rather than dropping
     box = make_box()
@@ -297,6 +309,7 @@ def test_validate_containment_runs_the_positive_and_negative_controls(make_box):
     assert results["probe_sees_open_host_port"][0]  # an open host port answered with the block off
     assert results["internet_online"][0]
     assert any(n.startswith("host_") and n.endswith("_blocked_online") and ok for n, (ok, _) in results.items())
+    assert results["mdns_answered_without_block"][0] and results["mdns_blocked_online"][0]
     assert results["metadata_unreachable_online"][0] and results["ipv6_unreachable_online"][0]
     assert results["public_blocked_offline"][0] and results["resolver_blocked_offline"][0]
     assert box.network_enabled  # restored online

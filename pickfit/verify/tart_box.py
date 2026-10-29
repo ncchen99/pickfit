@@ -24,17 +24,24 @@
 - Network: the policy lives on the HOST, in Tart's softnet packet filter, so
   in-guest root cannot change it. softnet's own default allows the public
   internet AND the vmnet gateway, and that gateway is this Mac (measured: host
-  ports answered the guest under the default), so online explicitly blocks
-  @host; private ranges, link-local/metadata and IPv6 are not globally
-  routable and the default already drops them. Because the gateway is blocked
-  it cannot be the DNS resolver, so the guest uses public resolvers (1.1.1.1).
-  Offline is block 0.0.0.0/0. softnet drops blocked traffic silently, so after
-  every policy change the harness confirms AS ROOT that the host, a private
-  address, metadata and IPv6 all time out (curl exit 28, not a refusal), that
-  the internet is reachable only online, and before re-enabling that the cut
-  held -- `offline` is never claimed on a word. The limits test adds a
-  positive control (an open host port answers with the block off, then drops
-  with it on) so the probe cannot silently pass.
+  ports and mDNS answered the guest under the default), so online explicitly
+  blocks @host plus multicast (224.0.0.0/4) and the limited broadcast; private
+  ranges and IPv6 are not globally routable and the default already drops them.
+  Because the gateway is blocked it cannot be the DNS resolver, so the guest
+  uses public resolvers (1.1.1.1). Offline is block 0.0.0.0/0. This filters
+  EGRESS only -- softnet in this mode does not filter host->guest frames, so an
+  unsolicited host announcement can still reach the guest passively; that does
+  not let the guest fetch or exfiltrate, so it does not affect the offline
+  verification, and it is recorded as a known limit. softnet drops blocked
+  egress silently, so after every policy change the harness confirms AS ROOT
+  that the host ports and a private address time out (curl exit 28, not a
+  refusal), that multicast mDNS is not answered, that the internet is reachable
+  only online, and before re-enabling that the cut held -- `offline` is never
+  claimed on a word. (The metadata and IPv6 checks only assert the guest has no
+  route to them; the host-port and mDNS positive controls are what prove
+  softnet is actively filtering.) The limits test adds a positive control (an
+  open host port and mDNS answer with the block off, then drop with it on)
+  so the probe cannot silently pass.
 - Lifetime: besides the harness's timer, the guest schedules its own
   shutdown and a detached host process stops and deletes the clone, so a
   dead harness does not leave a VM running.
@@ -133,8 +140,29 @@ os.execvp(sys.argv[1], sys.argv[1:])
 AGENT_DIR = "/usr/local/libexec/pickfit-agent"  # root-owned home of the guest agent binary (see HARDEN_ROOT)
 AGENT_PLISTS = ("/Library/LaunchDaemons/org.cirruslabs.tart-guest-daemon.plist",
                 "/Library/LaunchAgents/org.cirruslabs.tart-guest-agent.plist")
+# mDNS reachability probe: send a multicast mDNS query to 224.0.0.251:5353 and wait briefly for a reply.
+# Exit 0 means the host answered (multicast reached it); 1 means no answer; 2 means the send itself failed
+# (also "did not reach"). Run as root in the guest, it proves whether softnet's multicast block holds.
+HELPER_MDNS = """\
+import socket, struct, sys
+pkt = (struct.pack(">HHHHHH", 0, 0, 1, 0, 0, 0)
+       + b"".join(bytes([len(p)]) + p for p in (b"_services", b"_dns-sd", b"_udp", b"local")) + b"\\x00"
+       + struct.pack(">HH", 12, 1))
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+s.settimeout(3)
+try:
+    s.sendto(pkt, ("224.0.0.251", 5353))
+    data, addr = s.recvfrom(2048)
+    print(f"mdns=answered {addr[0]} {len(data)}"); sys.exit(0)
+except socket.timeout:
+    print("mdns=no-answer"); sys.exit(1)
+except OSError as err:
+    print(f"mdns=unreachable {err}"); sys.exit(2)
+"""
 TIMEOUT_CMD = f"{GUEST_PYTHON} -I {HELPER_DIR}/timeout"
 DETACH_CMD = f"{GUEST_PYTHON} -I {HELPER_DIR}/detach"
+MDNS_CMD = f"{GUEST_PYTHON} -I {HELPER_DIR}/mdns"
 ROOT_PATH = "PATH=/usr/bin:/bin:/usr/sbin:/sbin; export PATH"
 AGENT_WAIT_S = 240
 NETWORK_WAIT_S = 60
@@ -152,7 +180,12 @@ VM_LIMIT_HINT = ("macOS refused to start another VM (Apple allows two at once; b
 # drops them. Offline is a default-deny egress policy. softnet drops blocked traffic silently, so a
 # blocked destination shows up as a curl connect timeout (exit 28), never a refusal (exit 7 = reached).
 SOFTNET_BIN = "softnet"
-SOFTNET_POLICY = {True: {"allow": [], "block": ["@host"]}, False: {"allow": [], "block": ["0.0.0.0/0"]}}
+# softnet admits any "globally routable" IPv4, and 224.0.0.0/4 (multicast) and 255.255.255.255 count as
+# global, so the default lets the guest reach the Mac's mDNSResponder/SSDP on the vmnet bridge (measured
+# 2026-10-30: an mDNS query answered from the host). Block them alongside @host. The guest's own private
+# /29 (incl. its directed broadcast) is already dropped by the default, since private is not routable.
+HOST_BLOCK = ["@host", "224.0.0.0/4", "255.255.255.255/32"]
+SOFTNET_POLICY = {True: {"allow": [], "block": HOST_BLOCK}, False: {"allow": [], "block": ["0.0.0.0/0"]}}
 # DNS cannot go to the gateway any more (it is @host, now blocked), so the guest uses public resolvers.
 PUBLIC_DNS = ("1.1.1.1", "1.0.0.1")
 CURL_DROP = 28  # softnet silently drops -> curl's connect times out; 0 = reached, 7 = reached+refused
@@ -484,7 +517,7 @@ class TartBox(Box):
                            f"{(net.stdout + net.stderr).strip()[-300:]}")
         self.gateway = gw.group(1)
         self.resolvers = list(PUBLIC_DNS)
-        files = {"timeout": HELPER_TIMEOUT, "detach": HELPER_DETACH}
+        files = {"timeout": HELPER_TIMEOUT, "detach": HELPER_DETACH, "mdns": HELPER_MDNS}
         script = [f"set -e; mkdir -p {HELPER_DIR}"]
         for name, text in files.items():
             script.append(f"cat > {HELPER_DIR}/{name} <<'PICKFIT_EOF'\n{text}PICKFIT_EOF")
@@ -645,8 +678,15 @@ class TartBox(Box):
         for name in UNREACHABLE_PROBES:
             if codes[name] == 0:
                 bad.append(f"{name} reachable (the guest has egress to it)")
+        # Multicast reaches the host's mDNSResponder/SSDP unless blocked; the online block covers it.
+        if online and self._mdns_answered():
+            bad.append("multicast mDNS was answered by the host")
         if bad:
             raise BoxError(f"firewall check ({where}) failed: {'; '.join(bad)} | {out.strip()[-160:]}")
+
+    def _mdns_answered(self) -> bool:
+        """True if a multicast mDNS query is answered (i.e. multicast reached the host). Run as root."""
+        return self._root(MDNS_CMD, 20).returncode == 0
 
     def validate_containment(self, timeout: int = 4) -> list[tuple[str, bool, str, str]]:
         """Positive/negative control for the limits test (as root): prove the probe can see an open host
@@ -670,6 +710,9 @@ class TartBox(Box):
         rec("probe_sees_open_host_port", bool(open_ports),
             "an open host port answers when @host is allowed (proves the probe is not a no-op)",
             f"reachable: {open_ports}" if open_ports else f"none of {list(HOST_PORTS)} answered")
+        # Positive control for multicast: with the host allowed, the mDNS query should be answered.
+        rec("mdns_answered_without_block", self._mdns_answered(),
+            "the host answers mDNS when multicast is allowed (proves the mDNS probe works)", "")
         # Negative control + the real online policy: every host port now drops.
         self.control.set_policy(True)
         self.network_enabled = True
@@ -680,6 +723,8 @@ class TartBox(Box):
             rec(f"host_{p}_blocked_online", codes[key] == CURL_DROP, "host port drops (exit 28) once @host is blocked",
                 f"exit {codes[key]}")
         rec("internet_online", codes["public"] == 0, "public internet reachable online", f"exit {codes['public']}")
+        rec("mdns_blocked_online", not self._mdns_answered(), "the host does not answer mDNS once multicast "
+            "is blocked", "")
         rec("private_blocked_online", codes["private"] == CURL_DROP, "private address drops online",
             f"exit {codes['private']}")
         for name in UNREACHABLE_PROBES:
