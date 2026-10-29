@@ -1,29 +1,49 @@
-"""Scores (P5.1, arch B.3): quality, popularity and treasure, kept apart, formula "b3.v1".
+"""Scores (P5.1, arch B.3): quality, popularity and treasure, kept apart, formula "b3.v4".
 
 quality (0-100) is a weighted mean of six components, each 0-1:
 
-- sandbox_verification 35: the best passed run; <=3 steps 1.0, 4-6 0.85, more 0.7, and x0.8
-  when the README had to be corrected (the run has pitfalls); a failed run 0; no run: no data.
-- install_docs 20: muse-spark-1.3 grades the README against B.3's 8-item rubric (0/1/2 each,
+- sandbox_verification 40: the best passed run's depth x step tier x 0.85 per README fix; a
+  failed run 0; no run: no data. Depth is how far the run got (VERIFICATION_DEPTH, per category:
+  a dev CLI is fully checked at function, a local AI tool at inference). Step tiers: <=3 install
+  actions 1.0, 4-6 0.85, more 0.7. Actions are counted inside the recorded steps, which chain
+  commands with && (install_actions); looking around (ls, head, wc, --version, a VAR=$(...) that
+  only looks) is not an action, and heredoc lines are file content. A pitfall counts as a README
+  fix unless pickfit's box explains it (no root, no toolchains, scripts read first, no GPU,
+  Docker, keys or configuration...), it says the README was right or the tool did the step by
+  itself, it follows from a step the box blocked, or it is only about pickfit's --version/--help
+  check (readme_fixes).
+- install_docs 25: muse-spark-1.3 grades the README against B.3's 8-item rubric (0/1/2 each,
   points / 16). Every item above 0 needs a verbatim quote; an item whose quote is not in the
   sources counts 0. The answer is kept in scores.docs_rubric and reused while the sources stay
   the same, so rescoring costs nothing.
-- maintenance 15: last push (0.35), last release (0.35), >=2 releases in a year (0.3).
-- engineering_hygiene 10: CI, tests, OSI license, changelog or release notes, lockfile.
-- responsiveness 10: issues opened by people outside the project (>=2): share closed and mean
-  time to close; the share of their pull requests merged when there are >=3.
+- maintenance 10: last push (0.35), last release (0.35), >=2 releases in a year (0.3).
+- engineering_hygiene 5: CI, tests, OSI license, changelog or release notes, lockfile.
+- responsiveness 10: issues opened by people outside the project (>=2), as they stood at the
+  snapshot time: share closed and mean time to close.
 - usage_outcomes 10+: external report_outcome counts only, from 3 reports; its weight grows
   with the count (usage_outcomes_weight) and is taken from the four components above.
 
 A component without data drops out of the denominator; confidence is the weight that had data.
 The lowest binding_cap() then bounds the total. popularity (0-100) is a log-normalized mean of
-the signals collected (stars, forks, release downloads; the others stay null until a source is
-wired), plus a quarter of star velocity once the repo is 3 months old. A treasure has
-quality >= 70 and popularity <= 45; T = quality * (1 - popularity/100) orders treasures.
+the signals collected (stars, forks, release downloads from GitHub; monthly downloads, registry
+count and the best HN score from pickfit.registries; dependents has no source), each against
+its in-category P95 over the collected candidates, plus a quarter of star velocity once the repo
+is 3 months old.
+
+A treasure is a verified tool in the better half of verified tools by quality and the less-known
+part of the pool by popularity: quality >= TREASURE_MIN_QUALITY (80, about the verified median in
+each category under b3.v3) and popularity <= 45; T = quality * (1 - popularity/100) orders them.
+
+b3.v3 moved weight from maintenance and hygiene (near 1.0 for almost every record, since
+discovery takes young, active repos) to the sandbox run and the docs rubric, which do vary.
+b3.v4 fixes what a review found: README fixes that were not, look-around assignments counted as
+actions, missing download counts stored as 0, partial download sums, and HN stories matched on a
+bare personal or company domain. A rescore with --no-github or --no-registries keeps the stored
+responsiveness and registry signals.
 
 Inputs are the record, the GitHub snapshot it was built from (runs/pipeline.db; fetched live
-when the pipeline database does not hold the repo) and one REST call for issues. Ages are
-measured at the snapshot time, so the same snapshot always gives the same scores.
+when the pipeline database does not hold the repo), one REST call for issues and the registry
+lookups. Ages are measured at the snapshot time, so the same snapshot gives the same quality.
 refresh_scores() recomputes the parts that follow verification and outcomes without any call;
 verification write-back and `pickfit profiles` use it.
 """
@@ -34,6 +54,7 @@ import json
 import math
 import os
 import re
+import shlex
 import sys
 import time
 from collections.abc import Callable
@@ -54,6 +75,7 @@ from pickfit.schema import (
     DocsRubric,
     DocsRubricItems,
     Outcomes,
+    Pitfall,
     SoftwareRecord,
     Verification,
     binding_cap,
@@ -62,7 +84,7 @@ from pickfit.schema import (
     usage_outcomes_weight,
 )
 
-FORMULA_VERSION = "b3.v1"
+FORMULA_VERSION = "b3.v4"
 STAGE = "score-rubric"
 REASONING_EFFORT = "low"
 MAX_OUTPUT_TOKENS = 8_000  # reasoning shares it; at effort low one call used 4,000 and ran out
@@ -71,14 +93,14 @@ PROMPT_CACHE_KEY = "pickfit-rubric-v1"
 DEFAULT_CONCURRENCY = 4
 
 NOMINAL_WEIGHTS: dict[str, float] = {
-    "sandbox_verification": 35,
-    "install_docs": 20,
-    "maintenance": 15,
-    "engineering_hygiene": 10,
+    "sandbox_verification": 40,
+    "install_docs": 25,
+    "maintenance": 10,
+    "engineering_hygiene": 5,
     "responsiveness": 10,
     "usage_outcomes": 10,
 }
-# Where extra usage_outcomes weight comes from; the measured sandbox component keeps its 35.
+# Where extra usage_outcomes weight comes from; the measured sandbox component keeps its 40.
 SHRINKABLE = ("install_docs", "maintenance", "engineering_hygiene", "responsiveness")
 
 # --- quality components -------------------------------------------------------------------
@@ -92,20 +114,225 @@ def _time(value: str | None) -> datetime | None:
     return datetime.fromisoformat(value) if value else None
 
 
-def _steps(commands: list[str]) -> int:
-    return sum(1 for c in commands if not re.match(r"^\s*cd(\s|$)", c))
+def _split(text: str, seps: tuple[str, ...]) -> list[str]:
+    """Split shell text on separators outside quotes and $(...)."""
+    parts: list[str] = []
+    buf: list[str] = []
+    quote: str | None = None
+    depth = 0
+    i = 0
+    while i < len(text):
+        c = text[i]
+        if quote:
+            if c == "\\" and quote == '"':
+                buf.append(text[i:i + 2])
+                i += 2
+                continue
+            quote = None if c == quote else quote
+        elif c in "'\"`":
+            quote = c
+        elif c == "\\":
+            buf.append(text[i:i + 2])
+            i += 2
+            continue
+        elif text.startswith("$(", i):
+            depth += 1
+            buf.append("$(")
+            i += 2
+            continue
+        elif depth and c in "()":
+            depth += 1 if c == "(" else -1
+        elif not depth:
+            sep = next((s for s in seps if text.startswith(s, i)
+                        and not (s == "|" and text.startswith("||", i))), None)
+            if sep is not None:
+                parts.append("".join(buf))
+                buf = []
+                i += len(sep)
+                continue
+        buf.append(c)
+        i += 1
+    parts.append("".join(buf))
+    return [p.strip() for p in parts if p.strip()]
 
 
-def sandbox_score(verification: Verification) -> float | None:
-    """Best passed run's step score; 0 for a failure; None when nothing ran."""
+# Commands that only look around or clean up after an earlier try; they are not install actions.
+_LOOKS = frozenset({
+    "cd", "ls", "cat", "head", "tail", "wc", "file", "echo", "printf", "which", "type", "command", "pwd", "true",
+    ":", "test", "[", "stat", "du", "df", "env", "id", "whoami", "uname", "grep", "tee", "sha256sum", "shasum",
+    "md5sum", "rm", "sleep", "readlink", "realpath", "find", "jq", "sort", "cut", "date",
+})
+_CHECK_ARGS = frozenset({"--version", "-V", "version", "--help", "-h", "help"})
+_QUERIES = frozenset({"view", "info", "show", "list", "ls", "search", "outdated"})
+
+
+_HEREDOC = re.compile(r"<<-?\s*(['\"]?)(\w+)\1")
+
+
+def _strip_heredocs(text: str) -> str:
+    """Drop heredoc bodies: their lines are file content, not commands."""
+    lines, out, i = text.split("\n"), [], 0
+    while i < len(lines):
+        out.append(lines[i])
+        m = _HEREDOC.search(lines[i])
+        i += 1
+        if m:
+            while i < len(lines) and lines[i].strip() != m.group(2):
+                i += 1
+            i += 1
+    return "\n".join(out)
+
+
+def _substitution(value: str) -> str | None:
+    """The command inside a value that is one $(...) or `...` (optionally in double quotes), else None."""
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] == '"':
+        value = value[1:-1].strip()
+    if value.startswith("`") and value.endswith("`") and value.count("`") == 2:
+        return value[1:-1]
+    if not value.startswith("$("):
+        return None
+    depth = 0
+    for i, c in enumerate(value):
+        depth += c == "("
+        depth -= c == ")"
+        if depth == 0 and i > 1:
+            return value[2:i] if i == len(value) - 1 else None
+    return None
+
+
+def _written(words: list[str], prog: str) -> list[str]:
+    """Files a segment writes: redirection targets (not /dev/*, not 2>&1), and tee's arguments."""
+    out = []
+    for i, w in enumerate(words):
+        m = re.fullmatch(r"\d?>>?(.*)", w)
+        if m and not m.group(1).startswith("&"):
+            target = m.group(1) or (words[i + 1] if i + 1 < len(words) else "")
+            if target and not target.startswith("/dev/"):
+                out.append(target)
+    if prog == "tee":
+        out += [w for w in words[1:] if not w.startswith("-") and not re.match(r"\d?>", w)]
+    return out
+
+
+def _acts(segment: str) -> bool:
+    """Does one pipeline segment change the box (download, install, link, write config, set PATH)?"""
+    m = re.fullmatch(r"\s*([A-Za-z_]\w*)=(.*)", segment, re.S)
+    if m and (inner := _substitution(m.group(2))) is not None:
+        return install_actions([inner]) > 0  # VAR=$(...) acts only if its command does
+    try:
+        words = shlex.split(segment)
+    except ValueError:
+        words = segment.split()
+    while words and re.match(r"[A-Za-z_]\w*=", words[0]):
+        if len(words) == 1:
+            return False  # VAR=value sets a shell variable only
+        words = words[1:]
+    if not words:
+        return False
+    prog = words[0].rsplit("/", 1)[-1]
+    written = _written(words, prog)
+    args = [w for w in words[1:] if not re.match(r"\d?[<>]", w) and w not in written]
+    if prog in _LOOKS or (prog == "sed" and "-i" not in args):
+        return any(not t.startswith("/tmp/") for t in written)  # cat > ~/.config/x.toml writes config
+    if prog.startswith("python") and args[:1] == ["-c"]:
+        return False
+    if prog == "curl" and not written and not any(
+            a in ("--output", "--remote-name") or re.fullmatch(r"-[A-Za-z]*[oO][A-Za-z]*", a) for a in args):
+        return False  # prints only; piped into a shell, the shell is the action
+    if args and set(args) <= _CHECK_ARGS:
+        return False  # tool --version, go version
+    if args and (args[0] in _QUERIES or "--dry-run" in args) and prog in (
+            "npm", "pnpm", "yarn", "bun", "pip", "pip3", "pipx", "uv", "brew", "cargo"):
+        return False
+    return True
+
+
+def install_actions(commands: list[str]) -> int:
+    """B.3's step count: actions inside the recorded steps, which the agent chains with &&.
+
+    `curl -o x && wc -c x && head x` is one action; `mkdir && curl -o && chmod +x` is three.
+    """
+    return sum(1 for command in commands for statement in _split(_strip_heredocs(command), ("&&", "||", ";", "\n"))
+               if any(_acts(seg) for seg in _split(statement, ("|",))))
+
+
+# Pitfalls that pickfit's box explains, not the README (pickfit/verify/agent.py): the agent is not
+# root, may not install language toolchains and reads a downloaded script before running it; system
+# pip is externally managed; the box is a fresh install with no GPU, Docker, systemd, browser,
+# terminal, account, keys, configuration or model server; and smoke tests use pickfit's tiny models.
+_BOX_PITFALL = re.compile(
+    r"\bsudo\b|\bnon-root\b|\b(?:without|no) root\b|/usr/local/bin|\bapt(?:-get)?\b|\.deb\b|\bdpkg\b"
+    r"|\b(?:go|cargo) (?:install|get|build)\b|\btoolchains?\b|\b(?:Rust|Go) \d"
+    r"|\bPEP ?668\b|externally[- ]managed"
+    r"|\b(?:GPU|CUDA|NVIDIA|VRAM|Docker|systemd|systemctl|Ollama|browser|TTY|stdin|interactive|prompts?)\b"
+    r"|\blog(?:ged)? ?in\b|\baccount\b|\bkeys?\b|\bcredentials\b|\bsecrets\b"
+    r"|\bunconfigured\b|\bnot configured\b|\bfresh install\b"
+    r"|\bmodel server\b|\bin (?:the |this )?box\b|\b(?:the|this) box\b|\bbox has no\b|\b\d+(?:\.\d+)? ?GB\b"
+    r"|\bstories260K\b|\bSmolLM",
+    re.I)
+# The README was right, the tool did the step by itself, or the pitfall is only a note: nothing to
+# correct. (The verify agent records every difference from the README, not only wrong ones.)
+_NOT_A_FIX = re.compile(
+    r"\b(?:not|no \w+) (?:needed|required)\b|\bworks without\b|\bautomatically\b|\bauto-\w+"
+    r"|\bby itself\b|\bon its own\b"
+    r"|\bfirst (?:\w+ )?(?:run|invocation|use|call)\b[^.;]*\b(?:downloads?|fetch(?:es)?|creates?|installs?)\b"
+    r"|\bworked (?:despite|as)\b|\bas (?:documented|written)\b|\b(?:correct|expected) (?:\w+ )?behaviou?r\b"
+    r"|\bnot an install failure\b|\bnewer than\b|\bolder than\b|\bresolved [\w.-]+==",
+    re.I)
+_PIPED_INSTALLER = re.compile(r"\|\s*(?:ba|z)?sh\b")
+_FAILED = re.compile(r"\bfail|\berror\b|\bexits? [1-9]|\b404\b|\bnot found\b|\bmissing\b|\bbroken\b|\bwrong\b"
+                     r"|\bpanics?\b|\bcrash", re.I)
+# pickfit's own install check (--version or --help works), which READMEs rarely promise.
+_CHECK_PITFALL = re.compile(r"--version|--help|\bversion (?:sub)?command\b", re.I)
+_INSTALL_WORDS = re.compile(r"\b(?:npm|pnpm|bun|yarn|pip3?|pipx|uv|cargo|brew|go)\s+(?:i|install|add|tool)\b"
+                            r"|install\.sh|\|\s*(?:ba|z)?sh\b|\bPATH\b", re.I)
+
+
+def readme_fix(pitfall: Pitfall) -> bool:
+    """B.3's "had to correct the README to succeed": a pitfall the box and pickfit's checks do not explain."""
+    said, needed = pitfall.readme_said, pitfall.actually_needed
+    if _BOX_PITFALL.search(f"{said} {needed}") or _NOT_A_FIX.search(needed):
+        return False
+    if _PIPED_INSTALLER.search(said) and not _FAILED.search(needed):
+        return False  # the agent downloads and reads a piped installer first
+    return not (_CHECK_PITFALL.search(said) and not _INSTALL_WORDS.search(said))
+
+
+def _command_key(text: str) -> str | None:
+    words = re.sub(r"[`'\"]", " ", text).lower().split()
+    return " ".join(words[:2]) if len(words) >= 2 else None
+
+
+def readme_fixes(pitfalls: list[Pitfall]) -> int:
+    """README fixes in one run. A pitfall that only follows from a step the box blocked (`serve` fails
+    because `generate` needs a model server) is the box's too."""
+    blocked = {key for p in pitfalls if _BOX_PITFALL.search(f"{p.readme_said} {p.actually_needed}")
+               and (key := _command_key(p.readme_said))}
+    return sum(1 for p in pitfalls if readme_fix(p)
+               and not any(key in p.actually_needed.lower() for key in blocked))
+
+
+# How much of the tool a passed run proved (C.3). A dev CLI is fully checked once a README example
+# runs; a local AI tool once a tiny model generates text, and a one-shot CLI run proves less.
+VERIFICATION_DEPTH: dict[str, dict[str, float]] = {
+    "dev_cli": {"install": 0.6, "function": 1.0, "service": 1.0, "inference": 1.0},
+    "local_ai": {"install": 0.6, "function": 0.8, "service": 0.9, "inference": 1.0},
+}
+README_FIX_FACTOR = 0.85
+
+
+def sandbox_score(verification: Verification, category: str) -> float | None:
+    """Best passed run's depth x step tier x 0.85 per README fix; 0 for a failure; None when nothing ran."""
+    depth = VERIFICATION_DEPTH.get(category, VERIFICATION_DEPTH["dev_cli"])
     best: float | None = None
     for run in verification.runs:
         if not is_passed(run.level):
             continue
-        n = _steps([s.command for s in run.steps])
-        score = 1.0 if n <= 3 else 0.85 if n <= 6 else 0.7
-        if run.pitfalls:
-            score *= 0.8
+        n = install_actions([s.command for s in run.steps])
+        tier = 1.0 if n <= 3 else 0.85 if n <= 6 else 0.7
+        fixes = readme_fixes(run.pitfalls)
+        score = round(depth[run.level] * tier * README_FIX_FACTOR ** fixes, 4)
         best = score if best is None else max(best, score)
     if best is not None:
         return best
@@ -184,25 +411,36 @@ def _external(item: dict[str, Any]) -> bool:
     return not bot and item.get("author_association") not in INSIDERS
 
 
-def responsiveness_score(items: list[dict[str, Any]] | None) -> float | None:
-    """Issues by outside people (>=2): closed share 0.4, mean days to close 0.4; their PRs merged 0.2."""
+RESPONSE_GRACE_DAYS = 7
+
+
+def responsiveness_score(items: list[dict[str, Any]] | None, as_of: datetime) -> float | None:
+    """Issues by outside people (>=2), as they stood at as_of: closed share 0.5, mean days to close 0.5.
+
+    Pull requests are left out: on these repos most "outside" PRs come from the authors' own other
+    accounts and agents. An issue still open at as_of but younger than RESPONSE_GRACE_DAYS has not
+    had its chance yet and is left out. Judging at the snapshot time keeps reruns stable.
+    """
     if items is None:
         return None
-    outside = [i for i in items if _external(i)]
-    issues = [i for i in outside if "pull_request" not in i]
-    prs = [i for i in outside if "pull_request" in i]
+    issues = []
+    for item in items:
+        created = _time(item.get("created_at"))
+        if "pull_request" in item or not _external(item) or created is None or created > as_of:
+            continue
+        closed = _time(item.get("closed_at"))
+        closed = closed if closed is not None and closed <= as_of else None
+        if closed is None and _days(as_of, created) < RESPONSE_GRACE_DAYS:
+            continue
+        issues.append((created, closed))
     if len(issues) < 2:
         return None
-    closed = [i for i in issues if i.get("closed_at")]
-    share = len(closed) / len(issues)
-    if closed:
-        mean = sum(_days(_time(i["closed_at"]), _time(i["created_at"])) for i in closed) / len(closed)
-        speed = _ladder(mean, ((7, 1.0), (30, 0.6), (90, 0.3))) or 0.1
+    closed_days = [_days(closed, created) for created, closed in issues if closed is not None]
+    share = len(closed_days) / len(issues)
+    if closed_days:
+        speed = _ladder(sum(closed_days) / len(closed_days), ((7, 1.0), (30, 0.6), (90, 0.3))) or 0.1
     else:
         speed = 0.0
-    if len(prs) >= 3:
-        merged = sum(1 for p in prs if (p.get("pull_request") or {}).get("merged_at")) / len(prs)
-        return round(0.4 * share + 0.4 * speed + 0.2 * merged, 4)
     return round(0.5 * share + 0.5 * speed, 4)
 
 
@@ -250,14 +488,20 @@ def compose_quality(components: dict[str, float | None], usage_weight: float,
 
 POPULARITY_WEIGHTS = {"stars": 0.35, "monthly_downloads": 0.15, "forks": 0.10, "dependents": 0.10,
                       "release_downloads": 0.10, "hn_top_score": 0.10, "registries_count": 0.10}
-# Reference values that score 100 (notes/quality-scoring.md 3.2). Uncalibrated first guesses,
-# fixed under this formula version so scores do not drift as candidates are added.
+# Reference values that score 100: the in-category P95 over the collected candidates, as B.3 asks
+# once candidates exist (scripts/calibrate_popularity.py over the rule-passed candidates in
+# runs/pipeline.db on 2026-10-29: dev_cli 217, local_ai 740). monthly_downloads is calibrated
+# without PyPI (pypistats is queried only for scored records). Most candidates are on no registry
+# and never reached HN, so those P95s (1 registry, 3 HN points) are raised to REF_FLOORS: a story
+# with a point or two is only someone posting it. dependents has no source and no ref. Fixed under
+# this formula version so scores do not drift as candidates are added.
 POPULARITY_REFS: dict[str, dict[str, float]] = {
-    "dev_cli": {"stars": 20_000, "monthly_downloads": 200_000, "forks": 1_500, "dependents": 2_000,
-                "release_downloads": 200_000, "hn_top_score": 500, "registries_count": 8},
-    "local_ai": {"stars": 60_000, "monthly_downloads": 500_000, "forks": 6_000, "dependents": 2_000,
-                 "release_downloads": 500_000, "hn_top_score": 800, "registries_count": 6},
+    "dev_cli": {"stars": 190.2, "forks": 17.2, "release_downloads": 6105.0, "monthly_downloads": 17548.2,
+                "registries_count": 1, "hn_top_score": 10, "star_velocity": 32.3},
+    "local_ai": {"stars": 196.1, "forks": 26.0, "release_downloads": 4067.1, "monthly_downloads": 8947.1,
+                 "registries_count": 1, "hn_top_score": 10, "star_velocity": 31.7},
 }
+REF_FLOORS = {"monthly_downloads": 100, "registries_count": 1, "hn_top_score": 10}
 VELOCITY_MIN_AGE_DAYS = 90
 DAYS_PER_MONTH = 30.4375
 
@@ -266,23 +510,24 @@ def _norm(x: float, ref: float) -> float:
     return min(100.0, 100 * math.log10(1 + x) / math.log10(1 + ref))
 
 
-def popularity_signals(snapshot: dict[str, Any]) -> dict[str, int | None]:
+def popularity_signals(snapshot: dict[str, Any], registry: Any = None) -> dict[str, int | None]:
+    """GitHub signals from the snapshot; registry and HN signals from a RegistrySignals, when looked up."""
     repo = snapshot["repo"]
     assets = [a for r in snapshot.get("releases") or [] for a in r.get("assets") or []]
     return {
         "stars": repo.get("stargazers_count"),
-        "monthly_downloads": None,
+        "monthly_downloads": registry.monthly_downloads if registry else None,
         "forks": repo.get("forks_count"),
         "dependents": None,
         "release_downloads": sum(a.get("downloads") or 0 for a in assets) if assets else None,
-        "hn_top_score": None,
-        "registries_count": None,
+        "hn_top_score": registry.hn_top_score if registry else None,
+        "registries_count": registry.registries_count if registry else None,
     }
 
 
 def popularity(signals: dict[str, int | None], category: str, age_days: int | None) -> float | None:
     refs = POPULARITY_REFS.get(category, POPULARITY_REFS["dev_cli"])
-    have = {name: value for name, value in signals.items() if value is not None}
+    have = {name: value for name, value in signals.items() if value is not None and name in refs}
     if not have:
         return None
     absolute = sum(POPULARITY_WEIGHTS[n] * _norm(v, refs[n]) for n, v in have.items()) \
@@ -290,7 +535,7 @@ def popularity(signals: dict[str, int | None], category: str, age_days: int | No
     stars = signals.get("stars")
     if stars is None or age_days is None or age_days < VELOCITY_MIN_AGE_DAYS:
         return round(absolute, 1)
-    velocity = _norm(stars / (age_days / DAYS_PER_MONTH), refs["stars"] / 24)
+    velocity = _norm(stars / (age_days / DAYS_PER_MONTH), refs["star_velocity"])
     return round(0.75 * absolute + 0.25 * velocity, 1)
 
 
@@ -309,21 +554,38 @@ def snapshot_time(snapshot: dict[str, Any], fallback: datetime) -> datetime:
     return _time(snapshot.get("details_at") or snapshot.get("last_seen_at")) or fallback
 
 
+def kept_registry(scores: Any) -> Any:
+    """The registry and HN signals as stored, for a rescore that does not look them up again."""
+    from pickfit.registries import RegistrySignals
+
+    signals = scores.popularity.signals
+    return RegistrySignals(monthly_downloads=signals.monthly_downloads, registries_count=signals.registries_count,
+                           hn_top_score=signals.hn_top_score, packages=list(scores.popularity.packages))
+
+
 def build_scores(record: SoftwareRecord, snapshot: dict[str, Any] | None, issues: list[dict[str, Any]] | None,
-                 rubric: DocsRubric | None, *, now: datetime) -> dict[str, Any]:
-    """The scores object for a record; missing inputs leave their components or signals null."""
+                 rubric: DocsRubric | None, *, now: datetime, registry: Any = None,
+                 kept: Any = None) -> dict[str, Any]:
+    """The scores object for a record. Inputs that were not fetched (issues None, registry None) come
+    from `kept`, the stored scores, when given; otherwise their components or signals stay null."""
     as_of = snapshot_time(snapshot, now) if snapshot else now
+    if issues is None and kept is not None:
+        responsiveness = kept.quality.components.responsiveness.score
+    else:
+        responsiveness = responsiveness_score(issues, as_of)
+    if registry is None and kept is not None:
+        registry = kept_registry(kept)
     components: dict[str, float | None] = {
-        "sandbox_verification": sandbox_score(record.verification),
+        "sandbox_verification": sandbox_score(record.verification, record.category),
         "install_docs": round(rubric.items.score(), 4) if rubric else None,
         "maintenance": maintenance_score(snapshot, as_of) if snapshot else None,
         "engineering_hygiene": hygiene_score(snapshot, record.open_source) if snapshot else None,
-        "responsiveness": responsiveness_score(issues),
+        "responsiveness": responsiveness,
         "usage_outcomes": usage_score(record.outcomes),
     }
     cap_reason = binding_cap(record.kind, record.repo.archived, record.verification.level)
     quality = compose_quality(components, usage_outcomes_weight(record.outcomes.external.total()), cap_reason)
-    signals = popularity_signals(snapshot) if snapshot else dict.fromkeys(POPULARITY_WEIGHTS)
+    signals = popularity_signals(snapshot, registry) if snapshot else dict.fromkeys(POPULARITY_WEIGHTS)
     created = record.repo.created_at
     age_days = max(0, int(_days(as_of, created))) if created else None
     pop = popularity(signals, record.category, age_days)
@@ -331,7 +593,8 @@ def build_scores(record: SoftwareRecord, snapshot: dict[str, Any] | None, issues
         "formula_version": FORMULA_VERSION,
         "computed_at": now.isoformat(timespec="seconds"),
         "quality": quality,
-        "popularity": {"score": pop, "signals": signals, "age_days": age_days},
+        "popularity": {"score": pop, "signals": signals, "age_days": age_days,
+                       "packages": registry.packages if registry else []},
         "treasure": treasure(quality["total"], pop),
         "docs_rubric": rubric.model_dump(mode="json") if rubric else None,
     }
@@ -349,7 +612,7 @@ def refresh_scores(data: dict[str, Any], now: datetime) -> str | None:
     verification = Verification.model_validate(data["verification"])
     outcomes = Outcomes.model_validate(data.get("outcomes") or {})
     components = {name: c["score"] for name, c in scores["quality"]["components"].items()}
-    components["sandbox_verification"] = sandbox_score(verification)
+    components["sandbox_verification"] = sandbox_score(verification, data["category"])
     components["usage_outcomes"] = usage_score(outcomes)
     cap_reason = binding_cap(data["kind"], data["repo"]["archived"], verification.level)
     quality = compose_quality(components, usage_outcomes_weight(outcomes.external.total()), cap_reason)
@@ -492,13 +755,39 @@ def live_snapshot(gh: Any, full_name: str, now: datetime) -> dict[str, Any] | No
             "details_pushed_at": repo.get("pushed_at"), **gh.details(repo)}
 
 
+def package_names(record: SoftwareRecord, snapshot: dict[str, Any] | None) -> dict[str, set[str]]:
+    """Registry names to try: install commands pickfit saw (README claims, replayed steps) and root manifests."""
+    from pickfit.registries import command_names, manifest_names, merge_names
+
+    commands = [s.command for run in record.verification.runs for s in run.steps]
+    if record.install:
+        commands += [s.command for _, guide in record.install.guides() for s in guide.steps]
+    return merge_names(command_names(commands), manifest_names((snapshot or {}).get("manifests")))
+
+
+def load_for_scoring(path: Path) -> tuple[SoftwareRecord, DocsRubric | None]:
+    """The record and its stored rubric. Scores of an older formula may break today's rules (b3.v3
+    moved the treasure line from 70 to 80), so they are dropped instead of failing the record; their
+    rubric is kept for reuse."""
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        record = SoftwareRecord.model_validate(raw)
+    except ValidationError:
+        stale = raw.get("scores") or {}
+        if not stale or stale.get("formula_version") == FORMULA_VERSION:
+            raise
+        record = SoftwareRecord.model_validate({**raw, "scores": None})
+        return record, DocsRubric.model_validate(stale["docs_rubric"]) if stale.get("docs_rubric") else None
+    return record, record.scores.docs_rubric if record.scores else None
+
+
 def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: str, run_id: str,
               now: datetime, force: bool, dry_run: bool, grade: Callable[..., Graded] = grade_docs,
-              **call: Any) -> dict[str, Any]:
+              registries: Any = None, **call: Any) -> dict[str, Any]:
     """Score one record file; returns a summary row (written, unchanged or error)."""
     from pickfit.extract import build_sources, sources_sha
 
-    record = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8"))
+    record, rubric = load_for_scoring(path)
     row: dict[str, Any] = {"slug": record.slug, "status": None, "cost_usd": 0.0, "rubric": None}
     if snapshot is None and gh is not None:
         snapshot = live_snapshot(gh, record.repo.full_name, now)
@@ -506,8 +795,13 @@ def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: st
     else:
         row["snapshot"] = "pipeline_db" if snapshot else None
     issues = gh.issues(record.repo.full_name) if gh is not None else None
+    registry = None
+    if registries is not None:
+        registry = registries.lookup(record.repo.full_name, aliases=list(record.aliases),
+                                     homepage=record.homepage, names=package_names(record, snapshot))
+        if registry.errors:
+            row["registry_errors"] = registry.errors
     old = record.scores
-    rubric = old.docs_rubric if old else None
     if snapshot and (snapshot.get("readme") or "").strip():
         sources = build_sources(snapshot)
         if force or rubric is None or rubric.sources_sha != sources_sha(sources):
@@ -524,7 +818,8 @@ def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: st
             row["rubric"] = "reused"
     elif rubric is not None:
         row["rubric"] = "kept"  # no README to grade now: keep the earlier answer
-    scores = build_scores(record, snapshot, issues, rubric, now=now)
+    # --no-github and --no-registries keep what was measured before instead of blanking it.
+    scores = build_scores(record, snapshot, issues, rubric, now=now, registry=registry, kept=old)
     row.update(quality=scores["quality"]["total"], confidence=scores["quality"]["confidence"],
                cap_reason=scores["quality"]["cap_reason"], popularity=scores["popularity"]["score"],
                treasure=scores["treasure"]["is_treasure"], treasure_value=scores["treasure"]["value"],
@@ -544,9 +839,9 @@ def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: st
 
 def score_records(data_dir: Path, *, db_path: Path | None, model: str, slugs: list[str] | None = None,
                   force: bool = False, dry_run: bool = False, use_github: bool = True,
-                  concurrency: int = DEFAULT_CONCURRENCY, limit: int | None = None,
+                  use_registries: bool = True, concurrency: int = DEFAULT_CONCURRENCY, limit: int | None = None,
                   now: datetime | None = None, log: Callable[[str], None] | None = None,
-                  **call: Any) -> ScoreSummary:
+                  registries: Any = None, **call: Any) -> ScoreSummary:
     """Score records under data_dir (all, or `slugs`); writes only `scores` and `updated_at`."""
     log = log or (lambda line: None)
     now = now or taipei_now()
@@ -572,11 +867,16 @@ def score_records(data_dir: Path, *, db_path: Path | None, model: str, slugs: li
         from pickfit.discover.github import GitHub, github_token
 
         gh = GitHub(github_token())
+    own_registries = registries is None and use_registries
+    if own_registries:
+        from pickfit.registries import Registries
+
+        registries = Registries()
     summary = ScoreSummary()
 
     def work(path: Path) -> dict[str, Any]:
         return score_one(path, snapshot=snapshots.get(path.stem), gh=gh, model=model, run_id=run_id,
-                         now=now, force=force, dry_run=dry_run, **call)
+                         now=now, force=force, dry_run=dry_run, registries=registries, **call)
 
     try:
         with ThreadPoolExecutor(max_workers=max(1, concurrency)) as pool:
@@ -608,6 +908,8 @@ def score_records(data_dir: Path, *, db_path: Path | None, model: str, slugs: li
     finally:
         if gh is not None:
             gh.close()
+        if own_registries:
+            registries.close()
     summary.rows.sort(key=lambda r: r["slug"])
     return summary
 
@@ -625,6 +927,7 @@ def main_score(args: Any) -> int:
                                 db_path=Path(args.db) if args.db else pipeline_db_path(),
                                 model=resolve_model(args.model), slugs=args.slug, force=args.force,
                                 dry_run=args.dry_run, use_github=not args.no_github,
+                                use_registries=not args.no_registries,
                                 concurrency=args.concurrency, limit=args.limit,
                                 log=lambda line: print(line, file=sys.stderr))
     except GitHubError as err:

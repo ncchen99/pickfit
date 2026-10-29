@@ -79,34 +79,83 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_root",
+    "checked_at": "2026-10-29T01:36:11.566432+08:00",
+    "runs": [
+      {
+        "id": "verify-holdspeak-20261029-013109-6659",
+        "level": "unverified",
+        "unverified_reason": "needs_root",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-29T01:36:11.566432+08:00",
+        "tool_version": null,
+        "install_method": "uv",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "rm -rf repo && git clone --depth 1 https://github.com/karolswdev/HoldSpeak.git repo && ls repo",
+            "purpose": "Shallow clone HoldSpeak repo"
+          }
+        ],
+        "smoke_tests": [],
+        "pitfalls": [
+          {
+            "readme_said": "`git clone https://github.com/karolswdev/HoldSpeak.git`",
+            "actually_needed": "shallow clone `git clone --depth 1` succeeded in ~24s; full `git clone` timed out after 120s",
+            "kind": null
+          },
+          {
+            "readme_said": "`uv pip install -e '.[linux]'` works on Linux",
+            "actually_needed": "`evdev-binary` wheel provides working `evdev` module, but pip still wants to build `evdev` from source which needs kernel headers unavailable without root",
+            "kind": null
+          },
+          {
+            "readme_said": "install builds the bundled web UI automatically",
+            "actually_needed": "editable install runs hatch hook `npm ci && npm run build` which aborted with V8 abort/exit 134 in this box",
+            "kind": null
+          }
+        ],
+        "blocking_error": "Editable install failed: pynput→evdev 2.0.0 needs kernel headers (linux/input.h missing, no root to install linux-headers) and the hatch web-build step `npm run build` aborts in Node/V8 (exit 134). No holdspeak command was installed so --version/doctor could not run.",
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-holdspeak-20261029-013109-6659/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.112105
+      }
+    ]
   },
   "scores": {
-    "formula_version": "b3.v1",
-    "computed_at": "2026-10-29T02:35:07+08:00",
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-29T14:40:05+08:00",
     "quality": {
       "total": 69.0,
-      "confidence": 0.45,
+      "confidence": 0.4,
       "cap": 69,
       "cap_reason": "unverified",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 35.0
+          "weight": 40.0
         },
         "install_docs": {
           "score": 0.8125,
-          "weight": 20.0
+          "weight": 25.0
         },
         "maintenance": {
           "score": 1.0,
-          "weight": 15.0
+          "weight": 10.0
         },
         "engineering_hygiene": {
           "score": 1.0,
-          "weight": 10.0
+          "weight": 5.0
         },
         "responsiveness": {
           "score": null,
@@ -119,21 +168,24 @@
       }
     },
     "popularity": {
-      "score": 42.8,
+      "score": 75.5,
       "signals": {
         "stars": 249,
-        "monthly_downloads": null,
+        "monthly_downloads": 27,
         "forks": 2,
         "dependents": null,
         "release_downloads": null,
-        "hn_top_score": null,
-        "registries_count": null
+        "hn_top_score": 0,
+        "registries_count": 1
       },
-      "age_days": 216
+      "age_days": 216,
+      "packages": [
+        "pypi:holdspeak"
+      ]
     },
     "treasure": {
       "is_treasure": false,
-      "value": 39.47
+      "value": 16.91
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -448,5 +500,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-10-29T02:35:07+08:00"
+  "updated_at": "2026-10-29T15:06:05.172494+08:00"
 }

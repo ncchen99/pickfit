@@ -29,7 +29,8 @@ export interface InstallGuide {
   first_task_setup: { command: string; background: boolean }[];
   /** true: every passing check also passed with the network off; null: not checked offline. */
   works_offline: boolean | null;
-  pitfalls: { readme_said: string; actually_needed: string }[];
+  /** kind arrives with the P3 pitfall tags; older runs have none. */
+  pitfalls: { readme_said: string; actually_needed: string; kind?: string | null }[];
   run: RunSummary;
 }
 

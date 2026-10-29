@@ -16,5 +16,6 @@
 - 產品必須使用 Meta 的模型；新增第三方程式碼、資料、素材前先確認授權。
 - 不要 commit API key 或其他機密。
 - 建資料與配對（發現、抽取、驗證、配對、計分）的 session 不讀 `eval/`，避免照著評測題目準備資料或調配對；只有評測執行與評分讀。
+- 每個 session 都在自己的 worktree 與分支上工作，不直接在主 checkout 的 `main` 上 commit；如果一開始就在主 checkout，先開 worktree 再改檔案。合併進 `main`、在 `docs/plan.md` 記進度，由協調的 session 做（狀態列的時間＝那次 commit 的時間）。
 
 賽前研究的位置記在 `CLAUDE.local.md`（不進 repo）。

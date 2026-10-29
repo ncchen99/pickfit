@@ -116,7 +116,7 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
     from pickfit.discover.run import pipeline_db_path
     from pickfit.meta import resolve_model
     from pickfit.verify.agent import DEFAULT_MODE, _runs_dir
-    from pickfit.verify.batch import load_candidates, record_slugs, run_batch, verified_slugs
+    from pickfit.verify.batch import load_candidates, recheck_slugs, record_slugs, run_batch, verified_slugs
     from pickfit.verify.pipeline import verify_task
     from pickfit.verify.result import DATA_DIR
 
@@ -129,6 +129,7 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
     runner = {"tart": "tart-vz"}.get(args.runner)  # macOS runs do not count Linux ones as done
     skip = verified_slugs(runs_dir, since=args.since, runner=runner) if args.since else \
         set() if args.force else verified_slugs(runs_dir, runner=runner)
+    skip -= recheck_slugs(data_dir, runs_dir)  # a new release since the last attempt, which did not pass
     known = record_slugs(data_dir)
     repos = [*(args.repo or []), *(known if args.records else [])] or None
     if args.records and not known:

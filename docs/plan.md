@@ -118,20 +118,21 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 
 ### P4 MCP（10/28 hello → 10/31 細路徑 → 11/1 補完）
 
-- [ ] P4.1 hello 上線（＝P0.5）。
-- [x] P4.2 `build_index`＋`pickfit publish`：驗 schema → commit → 建索引 → `wrangler deploy`；資料壞了就不部署。（`pickfit publish --env` 完成，只用 `--dry-run` 測過，還沒真的部署）
+- [x] P4.1 hello 上線（＝P0.5）。
+- [x] P4.2 `build_index`＋`pickfit publish`：驗 schema → commit → 建索引 → `wrangler deploy`；資料壞了就不部署。（`pickfit publish --env` 完成。10/29 第一次正式部署：`https://pickfit-mcp.ncchen99.workers.dev/mcp`，遠端 D1 `pickfit` 已建表、`MODEL_API_KEY` 已設；評測用的兩個部署等 P6 開跑前再建）
 - [x] P4.3 D1 建表：`events`、`submissions`、`reverify_queue`、`meta_budget`（欄位照 arch E.3 的對照規則；`submissions` 要補 DDL）。不記 IP、不存需求原文，只存模型解析後的條件（brief 第 11 節）。（`worker/migrations/0001_init.sql`，目前只在本機 D1）
 - [x] P4.4 細路徑：`find_software` 照 arch F.2 走「硬條件篩選 → 該類別 ≤60 張候選卡 → 一次 `muse-spark-1.3` 呼叫（`store: false`、effort `low`）解析需求並取捨 → 程式守門（slug 必須在候選裡、理由對得上欄位）」；模型失敗或超預算就退回寶藏分數排序，標 `matched_by: rules`、`degraded: true`。`MODEL_API_KEY` 用 `wrangler secret put` 設定。`get_install_guide` 只回重播過的步驟，不呼叫模型。（本機 `wrangler dev`＋假資料完成，37 個測試；部署步驟見 `worker/README.md`。**與 arch F.2 不同**：工具宣稱支援使用者的 OS 或在該 OS 驗證過就列入，回應一律註明實際驗證過的 OS；要改回嚴格版改 `worker/src/filter.ts` 的 `fits()`）
 - [x] P4.5 補完：`find_alternatives`、`report_outcome`、`submit_software`；Host／Origin 檢查；Worker 每日上限與 `degraded`；回應帶 `how_we_know`、`evidence_url`、`matched_by`、`rec_id`。（10/29 完成，68 個 Worker 測試。另加評測專用唯讀部署：`TOOLS=readonly`、`eval` 環境 Meta 每日 $10、`eval-rules` 關掉模型配對。**還沒部署**，要念誠點頭後做 `wrangler d1 create`、遠端 migration、`ALLOWED_HOSTS`、`wrangler secret put`）
 
 ### P5 計分、提交、回報閉環（11/1–11/2）
 
-- [x] P5.1 計分：規則分項＋`muse-spark-1.3` 文件 rubric＋寶藏分數（arch B.3，記 `formula_version`）。（10/29：`pickfit score`，公式 `b3.v1`；39 筆都有分開的品質、知名度、寶藏分數，已驗證的品質中位數 85，未驗證的壓在 69 以下；文件 rubric 每筆一次 1.3 呼叫，README 沒變就重用。待校正：寶藏分數分不開（25 筆已驗證有 22 筆算寶藏）、步驟數分級沒作用、知名度 7 項訊號有 4 項空白；校正由沒讀過 `eval/` 的 session 做）
+- [x] P5.1 計分：規則分項＋`muse-spark-1.3` 文件 rubric＋寶藏分數（arch B.3，記 `formula_version`）。（10/29：`pickfit score`，公式 `b3.v1`；39 筆都有分開的品質、知名度、寶藏分數，已驗證的品質中位數 85，未驗證的壓在 69 以下；文件 rubric 每筆一次 1.3 呼叫，README 沒變就重用。待校正：寶藏分數分不開（25 筆已驗證有 22 筆算寶藏）、步驟數分級沒作用、知名度 7 項訊號有 4 項空白；校正由沒讀過 `eval/` 的 session 做。同日校正為 `b3.v3`（念誠選方案 1、寶藏門檻 80）：沙盒分數看驗證深度與安裝難度、只有真的修 README 才扣分，知名度改用候選池第 95 百分位當基準並補上下載量、套件庫、HN；96 筆已驗證 67 筆，品質中位數 81.2，寶藏 15 筆。審查找到的誤判（README 修正判斷、查不到下載量記成 0）交回 P5 session 修）
 - [ ] P5.2 `pickfit watch`：每 60 秒讀 D1 `submissions` → 跑單筆管線 → publish。
 - [ ] P5.3 回報 → 重驗 → git diff（計畫內）。只用**真的**失敗（評測或 Mac 實裝時照指南失敗的那一筆）測試與展示，回報標 `reporter: dev`；不送捏造的失敗回報（arch H.4、B.3）。
 - [x] P5.4 run page：從 trace 產生靜態 HTML（計畫內）。（10/29：`scripts/run_page.py`，用方向鍵逐步看一次驗證；範例用 mcp-audit。trace 在不進 git 的 `runs/`；失敗的 run 目前沒留 trace）
 - [x] P5.5 Meta 用量報表：從 trace 產生 README 與影片要用的數字。（10/29：`scripts/meta_usage.py`；02:46 時各 session 合計 1,429 次請求、80% 命中快取；沙盒驗證 79 次有 63 次通過並重播，每次中位數 73 秒、$0.048）
 - [ ] P5.6 👤 11/1 晚上 demo 主案＋2 個備案定案；挑影片「供給端」那一幕（arch H.4 的 1:55–2:30）要提交的第三方 repo：不能是自己的作品，而且**從未送進 pickfit**。
+- [ ] P5.7 產品網頁（交件前必做，見 brief 第 4.5 節）：使用者用一句自然語言搜尋，背後走和 MCP 同一份資料、同一套配對，回傳最適合的軟體，附理由、驗證結果與安裝方式；呈現 pickfit 的品牌與設計。demo 從 agent 帶到網頁現場（brief 第 5 節第 7 幕）。11/2 晚上功能凍結前完成；來不及就縮成只有搜尋與結果頁，不砍。
 
 **11/1 完成標準**：≥30 筆 verified（目標 50），每筆有分開的品質、知名度、寶藏分數；在 Claude Code 用 `submit_software` 貼一個第三方 repo（**不能是 P5.6 留給錄影的那一個**），約 10 分鐘內出現在 `find_software`。
 
@@ -226,6 +227,13 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | 10/29 11:55 | P0.7 | key 進 `.env`，`spikes/meta_baseten_hello.py` 一般模式與 `--tools` 都通過：`-1026` 存在、JSON 與 tool call 都符合 schema；限額 100 RPM、2M TPM。P2.4 解除封鎖 | Baseten 約 $0.003 |
 | 10/29 12:07 | P5.1、P5.4、P5.5 | P5 分支併入 main（merge `fdea9ed`）；375 個 Python、69 個 Worker 測試通過。39 筆都有評分（公式 `b3.v1`），驗證紀錄與安裝步驟沒變；run page 與 Meta 用量報表可用。寶藏分數待校正 | Meta 累計 $11.91（10/29 $10.96，含其他 session） |
 | 10/29 12:07 | — | **下一步**：補本地 AI 的分支（local_ai 已驗證 4 → 28，新增 57 筆）測完再問念誠要不要合併，新增的要跑評分；推論等級驗證另有 session 在做；寶藏分數校正；部署 Worker 要念誠點頭；Mac 上親手驗 demo 前 3 筆（P6.4） | — |
-| 10/29 12:20 | P2.4 | 開放權重初篩完成（`d82efba`）：957 筆規則通過的候選全跑，留 907、拒 50；複查 83 筆、改判 18；5% 抽樣和 `muse-spark-1.3` 一致 34／34。抽取已改成跳過被拒的候選。照 1 → 5 → 30 → 全部放大 | Baseten $3.80；Meta 複查 $0.66（Meta 10/29 累計 $11.15，含其他 session） |
+| 10/29 12:11 | P2.4 | 開放權重初篩完成（`d82efba`）：957 筆規則通過的候選全跑，留 907、拒 50；複查 83 筆、改判 18；5% 抽樣和 `muse-spark-1.3` 一致 34／34。抽取已改成跳過被拒的候選。照 1 → 5 → 30 → 全部放大 | Baseten $3.80；Meta 複查 $0.66（Meta 10/29 累計 $11.15，含其他 session） |
 | 10/29 12:12 | P2.6、P3.8 | 補本地 AI 與推論等級驗證兩個分支併入 main（merge `4944df7`）；388 個 Python、69 個 Worker 測試通過。新增 57 筆 profile（共 96 筆）；已驗證的本地 AI 工具 4 → 28 筆，其中 goinfer、xyntetik-runner 在沙盒實際載入小模型跑出推論；另多驗證 18 筆 CLI 工具。demo 第 10 筆改為 cluaiz。驗證加了 T4 GPU 選項（berth 只有裝假的 `nvidia-smi` 才過，維持未驗證）。新的 57 筆還沒評分 | Meta 累計 $12.09（10/29 $11.14）；這兩個 session 的 Modal 約 $0.31 |
 | 10/29 12:12 | — | **下一步**：新的 57 筆跑評分、寶藏分數校正（交給沒讀過 `eval/` 的 session）；寫回要擋掉「只在沙盒裡才需要的步驟」；部署 Worker 要念誠點頭；Mac 上親手驗 demo 前 3 筆（P6.4） | — |
+| 10/29 13:06 | P4.1、P4.2 | Worker 第一次正式部署（版本 `b53d4be6`，資料 commit `17924c7`、96 筆）：`https://pickfit-mcp.ncchen99.workers.dev/mcp`。遠端 D1 `pickfit` 建好並套用 0001、0002；`MODEL_API_KEY` 用 pipe 設成 secret。實測 5 個工具都在，問一題由 `muse-spark-1.3` 配對、沒有降級。新 57 筆的分數要等評分校正分支合併後再發布一次 | Worker 呼叫 1 次 |
+| 10/29 14:31 | P5.1 | 評分校正 `b3.v3` 併入 main（merge `408b8e6`）；408 個 Python、69 個 Worker 測試通過。96 筆只有分數欄位變了；寶藏 28 → 15 筆（CLI 8、本地 AI 7），demo 候選只剩 mcp-audit、phantom 有寶藏標記。另修：第一次部署讓 2 個發布測試失敗（`d94d8c3`）、registries.py 註解不再出現 ecosyste.ms（`63b20b4`）。Worker 重新發布（版本 `dd5fe5f4`）。審查 workflow 確認 6 個計分誤判（README 修正判斷、查不到下載量記成 0 等），交回 P5 session。部署後前兩次 `find_software` 因 `model_http` 退回規則排序，Worker 遇到這種錯誤不會重試 | Worker 呼叫 4 次 |
+| 10/29 14:47 | P5.1 | 評分 `b3.v4` 併入 main（merge `ca1767e`），修掉審查找到的 10 個問題：README 修正判斷從 21 筆降到 15 筆、檢查用指令不再算安裝步驟、查不到的下載量記成 null。5 筆品質和審查算出的正確值一致（second-brain 93.2、all-code 90.2 等）；寶藏仍 15 筆（second-brain 加入、babelscribe 移出），all-code 第一。420 個 Python、69 個 Worker 測試通過；Worker 重新發布（版本 `a186681b`）。Worker 模型呼叫的重試交給 P4.5 session（14:30 前後 Meta 間歇回 404「model not found」） | Meta $0（文件評分全部重用） |
+| 10/29 15:14 | P5.7 | 文件分支併入 main（merge `9a074a0`），只動 brief.md、hackathon-rules.md：補上重複造輪子的代價（維護、成本、token）、從使用者渴望描述（這場比賽實質是創新創業競賽，兩個面向都講）、收錄的兩條路（長期有很多開發者投稿，用同一套 agentic 審查）、影片要講的問題與長期規劃（brief 5.1）。念誠決定產品網頁改成交件前必做（自然語言搜尋、和 MCP 同一套平台、呈現品牌），新增 P5.7 | — |
+| 10/29 15:28 | P4.5 | Worker 的 Meta 重試併入 main（merge `42e0fe9`）：遇到 429、5xx、404「model not found」在逾時內重試一次，events 多記 `degraded_reason`、`model_attempts`、`model_statuses`。先對遠端 D1 套用 migration 0003 再發布（版本 `7e81b751`）；420 個 Python、78 個 Worker 測試通過，live 實測有記錄。審查順帶發現 main 上 `get_install_guide` 的回應不符合它宣告的 outputSchema（多了 `works_offline`、`first_task_setup`），嚴格驗證的用戶端會拒收，交給 P4.5 修。P3 的失敗紀錄分支審查仍有會把沙盒限制寫成「工具失敗」的情況，先不合併 | Worker 呼叫 2 次 |
+| 10/29 15:41 | P4.5 | `get_install_guide` 的格式修正併入 main（merge `189a3e2`）：宣告補上 `works_offline`、`first_task_setup`、`known_issues[].kind`，新增 5 個工具共 21 種回應的格式測試。Worker 重新發布（版本 `68023a9c`）；線上 126 份安裝指南（macOS 96 筆、Linux 與 Windows 各抽 15 筆）全部符合宣告的格式。83 個 Worker 測試通過 | Worker 不呼叫模型 |
+| 10/29 16:45 | P3 | 失敗紀錄的處理併入 main（merge `f91679f`），經 4 輪對抗審查後定案：管線**不會自動寫「失敗」**，沙盒看到的錯誤一律寫成「未驗證」（沙盒限制給具體原因，否則 `suspected_tool_fault`），失敗指令、全新沙盒與結構檢查的結果留作證據；「失敗」只能來自人工驗證或人工檢查發布檔案（`artifact_check`）。hillock 保留失敗（PyPI wheel 只有 dist-info、沒有程式碼），coderai `needs_container`、holdspeak `needs_root`，`checked_at` 改為沙盒實際執行的時間。另含：差異類型標記（`readme_wrong`、`sandbox`、`tool_handled`、`note`）、有新版本才重新排隊、擋假系統指令、較弱的通過不覆蓋較強的。555 個 Python、83 個 Worker 測試通過；Worker 重新發布（版本 `2be896e0`） | Meta $0.04、Modal 約 $0.03 |

@@ -1,6 +1,7 @@
 """pickfit publish, dry run only: every refusal, and the plan when the data is good."""
 
 import json
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -39,8 +40,9 @@ def repo(tmp_path: Path) -> Path:
     worker = tmp_path / "worker"
     worker.mkdir()
     config = (WORKER / "wrangler.jsonc").read_text(encoding="utf-8")
-    config = config.replace("00000000-0000-0000-0000-000000000000", REAL_DB_ID)
-    config = config.replace('"ALLOWED_HOSTS": ""', '"ALLOWED_HOSTS": "pickfit-mcp.someone.workers.dev"')
+    # The real file holds placeholders or live deploy values; pin every section to fake ones.
+    config = re.sub(r'"database_id": "[^"]*"', f'"database_id": "{REAL_DB_ID}"', config)
+    config = re.sub(r'"ALLOWED_HOSTS": "[^"]*"', '"ALLOWED_HOSTS": "pickfit-mcp.someone.workers.dev"', config)
     (worker / "wrangler.jsonc").write_text(config, encoding="utf-8")
     git(tmp_path, "init", "-q")
     git(tmp_path, "add", ".")

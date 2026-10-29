@@ -158,10 +158,31 @@ def test_service_and_inference_need_a_background_server():
 
 
 def test_failed_and_unverified_claims_stand():
-    verdict = log_verdict(claim("failed", [], [], blocking_error="no wheel for this platform"), LOG)
-    assert verdict.level == "failed" and verdict.agrees
+    verdict = log_verdict(claim("failed", [1], [], blocking_error="validate breaks", failing_command_id=3), LOG)
+    assert verdict.level == "failed" and verdict.agrees and verdict.failing_id == 3
     verdict = log_verdict(claim("unverified", [], [], unverified_reason="needs_gpu"), LOG)
     assert (verdict.level, verdict.unverified_reason) == ("unverified", "needs_gpu")
+
+
+def test_a_failed_claim_needs_a_command_that_failed():
+    # No failing command cited: the first cited check that failed with a non-zero exit stands in for it.
+    # Check 3 exited 2 as it expected (it passed), so it is not the failure.
+    verdict = log_verdict(claim("failed", [1], [{"command_id": 2, "expected_signal": "0.10.18"},
+                                                {"command_id": 3, "expected_signal": "Error", "expected_exit_code": 2},
+                                                {"command_id": 5, "expected_signal": "ok"}],
+                                blocking_error="validate rejects the example"), LOG)
+    assert (verdict.level, verdict.failing_id) == ("failed", 5)
+    # Citing that passing check as the failing command is refused too.
+    verdict = log_verdict(claim("failed", [1], [{"command_id": 3, "expected_signal": "Error", "expected_exit_code": 2}],
+                                blocking_error="validate rejects the example", failing_command_id=3), LOG)
+    assert verdict.level == "unverified"
+    assert "failing command 3 is a check that passed (exit 2 was expected)" in verdict.problems
+    # Nothing failed, or the cited command exited 0: nothing a fresh box could repeat.
+    verdict = log_verdict(claim("failed", [], [], blocking_error="no wheel"), LOG)
+    assert (verdict.level, verdict.unverified_reason, verdict.failing_id) == ("unverified", "other", None)
+    assert verdict.problems == ["a failed claim needs failing_command_id: the command that failed"]
+    verdict = log_verdict(claim("failed", [1], [], blocking_error="x", failing_command_id=2), LOG)
+    assert verdict.level == "unverified" and verdict.problems == ["failing command 2 exited 0"]
 
 
 def test_long_steps_and_steps_cited_as_setup():

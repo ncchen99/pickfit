@@ -13,7 +13,7 @@ from pickfit import meta
 from pickfit.ledger import Caps, Ledger
 from pickfit.schema import SoftwareRecord, VerificationRun
 from pickfit.verify.pipeline import verify_task
-from pickfit.verify.result import infer_install_method
+from pickfit.verify.result import infer_install_method, write_back
 from pickfit.verify.task import load_fixture
 from verify_fakes import FakeBox, FakeServer, finish, response, run_cmd
 
@@ -62,7 +62,8 @@ def agent_turns(level: str = "function") -> list[dict[str, Any]]:
             response("r5", finish(level=level, steps=[1], smoke=SMOKE, install_method="uv",
                                   tool_version="0.4.1",
                                   pitfalls=[{"readme_said": "pip install graphtty",
-                                             "actually_needed": "uv tool install graphtty"}]))]
+                                             "actually_needed": "uv tool install graphtty",
+                                             "kind": "readme_wrong"}]))]
 
 
 class Boxes:
@@ -100,7 +101,7 @@ def test_full_pass_is_replayed_offline_and_judged(tmp_path: Path):
     assert run.smoke_tests[0].setup == []
     assert [s.command for s in run.smoke_tests[1].setup] == [GRAPH]  # the input file it reads
     assert run.install_method == "uv" and run.tool_version == "0.4.1"
-    assert run.pitfalls[0].actually_needed == "uv tool install graphtty"
+    assert run.pitfalls[0].actually_needed == "uv tool install graphtty" and run.pitfalls[0].kind == "readme_wrong"
     assert run.runner == "fake" and (run.os, run.arch, run.method) == ("linux", "x86_64", "sandbox")
     assert run.cost_usd and run.cost_usd > 0
     # Two fresh boxes, both closed; the replay ran the checks with the network off.
@@ -136,13 +137,215 @@ def test_failed_replay_skips_the_judge(tmp_path: Path):
     assert not (outcome.evidence_dir / "judge.json").exists()
 
 
-def test_failed_claim_is_recorded_without_replay(tmp_path: Path):
+BROKEN = {**SCRIPT, "graphtty --version": (1, "", "ModuleNotFoundError: No module named 'graphtty'")}
+
+
+def failed_turns(blocking: str = "the wheel ships no code", failing: int | None = 2) -> list[dict[str, Any]]:
+    return [response("r1", run_cmd("uv tool install graphtty")),
+            response("r2", run_cmd("graphtty --version")),
+            response("r3", finish(level="failed", steps=[1], smoke=SMOKE[:1], blocking_error=blocking,
+                                  failing_command_id=failing))]
+
+
+def probe_says(**structure: Any) -> dict[str, tuple[int, str, str]]:
+    """A box script entry answering the structure probe."""
+    return {"PICKFIT_PROBE": (0, json.dumps({"kind": "python", "dist": "graphtty", "version": "0.4.1",
+                                             "entry_point": "graphtty.cli:main", "module": "graphtty",
+                                             "source": "index", **structure}), "")}
+
+
+NO_CODE = probe_says(in_files=False, importable=False)
+INTACT = probe_says(in_files=True, importable=True)
+
+
+def test_a_structural_defect_is_evidence_not_a_verdict(tmp_path: Path):
+    boxes = Boxes({"agent": BROKEN, "confirm": {**NO_CODE, **BROKEN}})
+    outcome, lines = verify(tmp_path, FakeServer(*failed_turns()), boxes)
+    run = outcome.run
+    assert (run.level, run.unverified_reason, run.replayed) == ("unverified", "suspected_tool_fault", False)
+    assert run.blocking_error == (
+        "suspected tool fault, not proven: command 2 exits 1 with ModuleNotFoundError: No module named 'graphtty'; "
+        "it failed again in a fresh box; probe: the installed graphtty 0.4.1 (from the package index) declares the "
+        "console script graphtty.cli:main, and no module graphtty is installed; the wheel ships no code")
+    assert [role for role, _ in boxes.made] == ["agent", "confirm"] and boxes.made[1][1].closed
+    ran = [c for c, _ in boxes.made[1][1].ran]
+    assert ran[:2] == ["uv tool install graphtty", "graphtty --version"] and "PICKFIT_PROBE" in ran[2]
+    assert [(t.command, t.passed, t.exit_code, t.observed_excerpt) for t in run.smoke_tests] == [
+        ("graphtty --version", False, 1, "ModuleNotFoundError: No module named 'graphtty'")]
+    assert (outcome.evidence_dir / "confirm.json").exists() and "failure repeated" in "\n".join(lines)
+
+
+def test_a_failure_the_fresh_box_does_not_repeat_is_still_only_a_suspicion(tmp_path: Path):
+    outcome, _ = verify(tmp_path, FakeServer(*failed_turns()), Boxes({"agent": BROKEN, "confirm": INTACT}))
+    run = outcome.run
+    assert (run.level, run.unverified_reason) == ("unverified", "suspected_tool_fault")
+    assert run.blocking_error.startswith(
+        "suspected tool fault, not proven: command 2 exits 1 with ModuleNotFoundError: No module named 'graphtty'; "
+        "fresh box: command 2 passed in a fresh box")
+
+
+@pytest.mark.parametrize(("agent", "confirm", "turns"), [
+    (BROKEN, {**NO_CODE, **BROKEN}, failed_turns()),  # a structural defect, repeated
+    (BROKEN, {**NO_CODE, **SCRIPT}, failed_turns()),  # a defect, but the command passes in the fresh box
+    (BROKEN, {**INTACT, **BROKEN}, failed_turns()),
+    (BROKEN, SCRIPT, failed_turns(failing=None)),
+    ({"uv tool install graphtty": (1, "", "error: can't find Rust compiler")}, SCRIPT,
+     [response("r1", run_cmd("uv tool install graphtty")),
+      response("r2", finish(level="failed", blocking_error="no wheel", failing_command_id=1))]),
+    (BROKEN, SCRIPT, [response("r1", run_cmd("uv tool install graphtty")),
+                      response("r2", finish(level="failed", blocking_error="needs Rust 1.91+, absent here"))]),
+])
+def test_the_pipeline_never_writes_failed(tmp_path: Path, agent, confirm, turns):
+    path = bare_record(tmp_path / "data")
+    outcome, _ = verify(tmp_path, FakeServer(*turns), Boxes({"agent": agent, "confirm": confirm}), write=True,
+                        data_dir=path.parent)
+    assert outcome.run.level == "unverified" and outcome.run.artifact_check is None
+    assert SoftwareRecord.model_validate_json(path.read_text()).verification.level != "failed"
+
+
+@pytest.mark.parametrize(("script", "turns", "roles", "why"), [
+    # An install step fails: whatever it printed, that says nothing against the tool. No box is spent.
+    ({"uv tool install graphtty": (1, "", "error: subprocess-exited-with-error")},
+     [response("r1", run_cmd("uv tool install graphtty")),
+      response("r2", finish(level="failed", blocking_error="the wheel does not build", failing_command_id=1))],
+     ["agent"], "suspected tool fault, not proven: nothing checked further (no install step ran before it)"),
+    # The tool's own command fails with no error of its code (a self-test reporting a failure), and the
+    # package is intact.
+    ({**SCRIPT, "graphtty --version": (1, "1 of 22 checks failed", "")},
+     failed_turns("its self-test reports a failure"),
+     ["agent", "confirm"], "suspected tool fault, not proven: command 2 exits 1 (command 2 shows no error of the "
+                           "tool's own code); it failed again in a fresh box"),
+])
+def test_a_failure_with_little_evidence_is_a_suspicion(tmp_path: Path, script, turns, roles, why):
+    boxes = Boxes({"agent": script, "confirm": {**INTACT, **script}})
+    outcome, _ = verify(tmp_path, FakeServer(*turns), boxes)
+    run = outcome.run
+    assert (run.level, run.unverified_reason) == ("unverified", "suspected_tool_fault")
+    assert [role for role, _ in boxes.made] == roles
+    assert run.blocking_error.startswith(why)
+
+
+def test_a_failure_the_box_explains_is_unverified_with_its_reason(tmp_path: Path):
+    # The failing command's own output shows the box's limit: no box is spent confirming it.
+    no_rust = {"uv tool install graphtty": (1, "", "error: can't find Rust compiler")}
     server = FakeServer(response("r1", run_cmd("uv tool install graphtty")),
-                        response("r2", finish(level="failed", blocking_error="no wheel for py3.12")))
-    boxes = Boxes({"agent": {"uv tool install": (1, "", "no wheel")}})
+                        response("r2", finish(level="failed", blocking_error="the wheel does not build",
+                                              failing_command_id=1)))
+    boxes = Boxes({"agent": no_rust})
     outcome, _ = verify(tmp_path, server, boxes)
-    assert outcome.run.level == "failed" and outcome.run.blocking_error == "no wheel for py3.12"
+    run = outcome.run
+    assert (run.level, run.unverified_reason) == ("unverified", "needs_toolchain")
     assert [role for role, _ in boxes.made] == ["agent"]
+    assert "the box, not the software, explains the failure (needs_toolchain)" in outcome.notes
+
+
+def test_the_agents_words_decide_only_when_the_log_names_no_failure(tmp_path: Path):
+    # A failing command whose output shows the tool's own fault: the description's mention of Rust
+    # does not make it the box's.
+    turns = failed_turns("graphtty crashes; its source build also requires Rust 1.91+")
+    outcome, _ = verify(tmp_path, FakeServer(*turns), Boxes({"agent": BROKEN, "confirm": {**INTACT, **BROKEN}}))
+    assert outcome.run.unverified_reason == "suspected_tool_fault"
+    # No failing command and no check passed: the description decides.
+    server = FakeServer(response("r1", run_cmd("uv tool install graphtty")),
+                        response("r2", finish(level="failed", blocking_error="needs Rust 1.91+, absent here")))
+    outcome, _ = verify(tmp_path, server, Boxes({"agent": BROKEN}))
+    assert (outcome.run.level, outcome.run.unverified_reason) == ("unverified", "needs_toolchain")
+
+
+def test_a_step_that_fakes_a_system_command_keeps_the_run_from_passing(tmp_path: Path):
+    shim = "printf '#!/bin/sh\\necho 0' > ~/.local/bin/nvidia-smi && chmod +x ~/.local/bin/nvidia-smi"
+    smoke = [{**t, "command_id": t["command_id"] + 1, "setup_ids": [i + 1 for i in t["setup_ids"]]} for t in SMOKE]
+    server = FakeServer(response("r1", run_cmd("uv tool install graphtty")), response("r2", run_cmd(shim)),
+                        response("r3", run_cmd("graphtty --version")), response("r4", run_cmd(GRAPH)),
+                        response("r5", run_cmd("graphtty graph.json")),
+                        response("r6", finish(level="function", steps=[1, 2], smoke=smoke)), judge_answer("working"))
+    outcome, _ = verify(tmp_path, server, Boxes({}))
+    run = outcome.run
+    assert (run.level, run.unverified_reason, run.replayed) == ("unverified", "other", True)
+    assert "step 2 only works around the box: it replaces the system command nvidia-smi" in run.blocking_error
+    # Cited only as a smoke test's setup, the shim still keeps the run from passing.
+    smoke = [{**SMOKE[0], "command_id": 3, "setup_ids": [2]}]
+    server = FakeServer(response("r1", run_cmd("uv tool install graphtty")), response("r2", run_cmd(SHIM)),
+                        response("r3", run_cmd("graphtty --version")),
+                        response("r4", finish(level="install", steps=[1], smoke=smoke)), judge_answer("working"))
+    outcome, _ = verify(tmp_path, server, Boxes({}))
+    assert (outcome.run.level, outcome.run.unverified_reason) == ("unverified", "other")
+    assert "setup 2 only works around the box" in outcome.run.blocking_error
+
+
+def test_a_failure_the_agents_shim_caused_is_neither_confirmed_nor_the_tools(tmp_path: Path):
+    crashes = {**SCRIPT, "graphtty --version": (1, "", "ValueError: could not parse nvidia-smi output")}
+    server = FakeServer(response("r1", run_cmd("uv tool install graphtty")), response("r2", run_cmd(SHIM)),
+                        response("r3", run_cmd("graphtty --version")),
+                        response("r4", finish(level="failed", steps=[1, 2], failing_command_id=3,
+                                              blocking_error="graphtty crashes at startup with a ValueError")))
+    boxes = Boxes({"agent": crashes, "confirm": crashes})
+    outcome, _ = verify(tmp_path, server, boxes)
+    run = outcome.run
+    assert (run.level, run.unverified_reason, run.replayed) == ("unverified", "other", False)
+    assert [role for role, _ in boxes.made] == ["agent"]  # no box spent confirming it
+    assert "step 2 only works around the box: it replaces the system command nvidia-smi" in run.blocking_error
+
+
+SHIM = "printf '#!/bin/sh\\necho 0' > ~/.local/bin/nvidia-smi && chmod +x ~/.local/bin/nvidia-smi"
+
+
+def bare_record(data_dir: Path) -> Path:
+    """The example record with no runs, as a profile has before verification."""
+    data_dir.mkdir(exist_ok=True)
+    record = json.loads((FIXTURES / "software_example.json").read_text())
+    record.update(slug="graphtty", scores=None)
+    record["verification"] = {"level": "unverified", "unverified_reason": "not_run", "checked_at": None, "runs": []}
+    record["install"]["linux"] = None
+    path = data_dir / "graphtty.json"
+    path.write_text(json.dumps(record))
+    return path
+
+
+def test_write_back_keeps_a_failed_run_until_a_pass(tmp_path: Path):
+    """A failed run (from a person, or a check of the published package) is replaced only by a pass."""
+    path = bare_record(tmp_path / "data")
+    record = json.loads(path.read_text())
+    failed = json.loads((FIXTURES / "software_example.json").read_text())["verification"]["runs"][0] | {
+        "level": "failed", "blocking_error": "the wheel ships no code", "smoke_tests": [], "judge": None,
+        "artifact_check": {"artifact": "https://files.example.invalid/graphtty-0.4.1-py3-none-any.whl",
+                           "sha256": "0" * 64, "finding": "only dist-info files", "checked_by": "a person",
+                           "checked_at": "2026-10-30T09:00:00+08:00"}}
+    record["verification"] = {"level": "failed", "unverified_reason": None, "checked_at": failed["checked_at"],
+                              "runs": [failed]}
+    path.write_text(json.dumps(record))
+    outcome, _ = verify(tmp_path, FakeServer(*failed_turns()), Boxes({"agent": BROKEN, "confirm": {**INTACT, **BROKEN}}),
+                        write=True, data_dir=path.parent)
+    assert outcome.run.unverified_reason == "suspected_tool_fault" and not outcome.written
+    assert outcome.write_note == "not written: unverified would replace the failed run run-20261031-linux-1; only a pass does"
+    outcome, _ = verify(tmp_path, FakeServer(*agent_turns(), judge_answer("working")), Boxes({}), write=True,
+                        data_dir=path.parent)
+    assert outcome.written
+    assert SoftwareRecord.model_validate_json(path.read_text()).verification.level == "function"
+    # write_back itself refuses a failed run, whatever made it.
+    run = VerificationRun.model_validate(failed)
+    assert write_back(run, "graphtty", path.parent) == (False, "not written: the pipeline never writes failed "
+                                                               "(a person's run does)")
+
+
+def test_write_back_keeps_a_suspicion_as_unverified(tmp_path: Path):
+    path = bare_record(tmp_path / "data")
+    outcome, _ = verify(tmp_path, FakeServer(*failed_turns()), Boxes({"agent": BROKEN, "confirm": {**INTACT, **BROKEN}}),
+                        write=True, data_dir=path.parent)
+    assert outcome.written
+    verification = SoftwareRecord.model_validate_json(path.read_text()).verification
+    assert (verification.level, verification.unverified_reason) == ("unverified", "suspected_tool_fault")
+
+
+def test_write_back_records_the_box_reason(tmp_path: Path):
+    path = bare_record(tmp_path / "data")
+    server = FakeServer(response("r1", run_cmd("uv tool install graphtty")),
+                        response("r2", finish(level="failed",
+                                              blocking_error="No container engine in the box (neither docker nor podman)")))
+    outcome, _ = verify(tmp_path, server, Boxes({"agent": BROKEN}), write=True, data_dir=path.parent)
+    assert outcome.written
+    verification = SoftwareRecord.model_validate_json(path.read_text()).verification
+    assert (verification.level, verification.unverified_reason) == ("unverified", "needs_container")
 
 
 def test_write_back_updates_the_record(tmp_path: Path):
@@ -164,10 +367,22 @@ def test_write_back_updates_the_record(tmp_path: Path):
     assert updated.verification.level == "function"
 
 
+def test_write_back_keeps_a_stronger_passed_run(tmp_path: Path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    record = json.loads((FIXTURES / "software_example.json").read_text()) | {"slug": "graphtty"}
+    (data_dir / "graphtty.json").write_text(json.dumps(record))
+    outcome, _ = verify(tmp_path, FakeServer(*agent_turns("install"), judge_answer("working")), Boxes({}),
+                        write=True, data_dir=data_dir)
+    assert outcome.run.level == "install" and not outcome.written
+    assert outcome.write_note == "not written: install would replace the stronger function run run-20261031-linux-1"
+
+
 def test_write_back_skips_unpassed_runs_and_missing_records(tmp_path: Path):
     outcome, _ = verify(tmp_path, FakeServer(*agent_turns(), judge_answer("inconclusive")), Boxes({}),
                         write=True, data_dir=tmp_path / "nowhere")
-    assert not outcome.written and outcome.write_note == "not written: level unverified, replayed True"
+    assert not outcome.written
+    assert outcome.write_note == "not written: unverified (other) says nothing about the software"
     outcome, _ = verify(tmp_path, FakeServer(*agent_turns(), judge_answer("working")), Boxes({}),
                         write=True, data_dir=tmp_path / "nowhere")
     assert not outcome.written and "does not exist yet" in outcome.write_note

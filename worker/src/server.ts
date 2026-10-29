@@ -3,7 +3,7 @@ import { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { CARD_FIELDS } from './cards.ts';
 import { findAlternatives, findSoftware, type Deps } from './find.ts';
-import { installGuide, UnknownSlugError } from './install.ts';
+import { installGuide, PITFALL_KINDS, UnknownSlugError } from './install.ts';
 import { logEvent, logFailure } from './events.ts';
 import { ERROR_EXCERPT_MAX, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } from './outcome.ts';
 import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './submit.ts';
@@ -102,6 +102,11 @@ const findOutput = z.object({
   matched_by: z.string().describe('The Meta model that chose the picks, or "rules"'),
   degraded: z.boolean().describe('true = ranked by rules without the model (off, budget or failure)'),
   degraded_reason: z.string().nullable(),
+  model_attempts: z
+    .number()
+    .int()
+    .describe('Requests sent to Meta: 0 = model not used, 2 = retried once after a transient error'),
+  model_http_status: z.number().int().nullable().describe('When degraded_reason is model_http: the HTTP status Meta returned'),
   considered: z.number().int().describe('Verified tools that met the hard conditions'),
   picks: z.array(pick).max(3),
   best_free: z.object({ slug: z.string(), reason: z.string() }).nullable(),
@@ -146,6 +151,10 @@ const installOutput = z.object({
     checked_at: z.string().nullable(),
     tool_version: z.string().nullable(),
     evidence_url: z.string().nullable(),
+    works_offline: z
+      .boolean()
+      .nullable()
+      .describe('true = its checks passed again with the network off after install; false = they needed the network; null = not checked'),
   }),
   applies_to_user_system: z.object({
     match: z.enum(['exact', 'same_os_other_arch', 'other_os', 'none']),
@@ -163,7 +172,20 @@ const installOutput = z.object({
   manual_steps: z.array(z.object({ title: z.string(), run_by: z.literal('user') })),
   verify: z.object({ command: z.string(), expected_contains: z.string() }).nullable(),
   first_task: z.string().nullable(),
-  known_issues: z.array(z.object({ readme_said: z.string(), actually_needed: z.string() })),
+  first_task_setup: z
+    .array(z.object({ command: z.string(), run_in_background: z.boolean() }))
+    .describe('Commands the first task needs first (an input file, a server), from the same run'),
+  known_issues: z.array(
+    z.object({
+      readme_said: z.string(),
+      actually_needed: z.string(),
+      kind: z
+        .enum(PITFALL_KINDS)
+        .nullable()
+        .optional()
+        .describe('readme_wrong = following the README hits it; sandbox = only the sandbox needed it; tool_handled = the tool did it itself; note = nothing to fix'),
+    }),
+  ),
   warnings: z.array(z.string()),
   sources: z.array(z.string()),
 });

@@ -12,6 +12,11 @@ The rest are ranked demo-first: tools a user runs (CLI, TUI, local server)
 that process locally, need no API key and are free come first. Each runs the
 full pipeline (agent, replay, judge) in its own boxes; up to `concurrency` run
 at once. The summary lands in runs/verify/batch-<time>.json.
+
+A record whose runs did not pass is verified again once a newer release appears
+(recheck_slugs): `pickfit profiles` copies the latest release into the record, so
+the next batch picks it up even though it already has a run. An attempt after the
+release (under runs/verify/, written back or not) settles it. No scheduler.
 """
 
 from __future__ import annotations
@@ -25,12 +30,13 @@ import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from pydantic import ValidationError
 
-from pickfit.ledger import taipei_now
+from pickfit.ledger import TAIPEI, taipei_now
 from pickfit.schema import TOOL_KINDS, ExtractionResult, is_passed
 from pickfit.verify.plan import plan_for
 from pickfit.verify.task import VerifyTask
@@ -123,6 +129,29 @@ def record_slugs(data_dir: Path) -> dict[str, str]:
     return slugs
 
 
+def recheck_slugs(data_dir: Path, runs_dir: Path) -> set[str]:
+    """Slugs of records that have runs, none passed, and a release newer than the newest attempt.
+
+    The newest attempt is the later of the record's newest run and the newest run under
+    runs_dir/verify/, so a recheck that was not written back still counts.
+    """
+    attempts = last_attempts(runs_dir)
+    slugs: set[str] = set()
+    for path in sorted(data_dir.glob("*.json")):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            verification, release = data["verification"], data.get("last_release")
+            if not verification["runs"] or is_passed(verification["level"]) or not release:
+                continue
+            tried = max(datetime.fromisoformat(verification["checked_at"]),
+                        attempts.get(data["slug"], datetime.min.replace(tzinfo=TAIPEI)))
+            if datetime.fromisoformat(release["published_at"]) > tried:
+                slugs.add(data["slug"])
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+    return slugs
+
+
 def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
                     categories: list[str] | None = None, skip_slugs: set[str] | None = None,
                     known_slugs: dict[str, str] | None = None, gpu: bool = False,
@@ -182,6 +211,31 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
 
 
 _RUN_TIME = re.compile(r"-(\d{8}-\d{6})-[0-9a-f]{4}$")
+
+
+NEVER_RAN = ("model_error", "box_error")  # the agent's stop reasons when the model or the box failed it
+
+
+def last_attempts(runs_dir: Path) -> dict[str, datetime]:
+    """Slug -> start time of its newest run under runs/verify/ (from the run id, Taipei time).
+
+    A run the model or the box stopped before the agent could work (model_error, box_error, or no
+    report at all) is not an attempt.
+    """
+    latest: dict[str, datetime] = {}
+    for path in (runs_dir / "verify").glob("*/outcome.json"):
+        m = _RUN_TIME.search(path.parent.name)
+        try:
+            slug = json.loads(path.read_text(encoding="utf-8"))["slug"]
+            stop = json.loads((path.parent / "report.json").read_text(encoding="utf-8")).get("stop_reason")
+        except (OSError, ValueError, KeyError, AttributeError):
+            continue
+        if stop in NEVER_RAN:
+            continue
+        if m:
+            started = datetime.strptime(m.group(1), "%Y%m%d-%H%M%S").replace(tzinfo=TAIPEI)
+            latest[slug] = max(started, latest.get(slug, started))
+    return latest
 
 
 def verified_slugs(runs_dir: Path, since: str | None = None, runner: str | None = None) -> set[str]:

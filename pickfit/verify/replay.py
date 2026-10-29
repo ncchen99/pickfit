@@ -148,7 +148,7 @@ class Replayer:
         self.log = log
         self.timeout = command_timeout_s
 
-    def _exec(self, cmd: ReplayCommand) -> RanCommand:
+    def rerun(self, cmd: ReplayCommand) -> RanCommand:
         if cmd.tool == "run_background":
             wait = min(cmd.wait_s or 30, BACKGROUND_WAIT_S)
             result = self.box.exec(background_script(cmd.command, cmd.port, wait, f"replay-{cmd.command_id}",
@@ -167,7 +167,7 @@ class Replayer:
         return ran
 
     def _check(self, check: ReplayCheck) -> tuple[RanCommand, bool, list[str]]:
-        ran = self._exec(check.run)
+        ran = self.rerun(check.run)
         ok, problems = evaluate_check(ran, check.expected_exit_code, check.expected_signal)
         return ran, ok, problems
 
@@ -195,13 +195,13 @@ class Replayer:
             result.error = "no steps to replay"
             return
         for step in plan.steps:
-            ran = self._exec(step)
+            ran = self.rerun(step)
             result.steps.append(ran)
             if not ran.ok:
                 result.error = f"step {step.command_id} exited {ran.exit_code}: {_one_line(step.command)}"
                 return
         for setup in plan.setups:
-            ran = self._exec(setup)
+            ran = self.rerun(setup)
             result.setups.append(ran)
             if not ran.ok:
                 result.error = f"setup {setup.command_id} exited {ran.exit_code}: {_one_line(setup.command)}"

@@ -81,9 +81,15 @@ type UnverifiedReason = Literal[
     "gui_only",
     "needs_account",
     "model_too_large",
+    "needs_toolchain",
+    "needs_root",
+    "needs_container",
+    "needs_more_resources",
+    "suspected_tool_fault",
     "budget_exceeded",
     "other",
 ]
+type PitfallKind = Literal["readme_wrong", "sandbox", "tool_handled", "note"]
 type CapReason = Literal["archived", "verification_failed", "not_a_tool", "unverified"]
 type SourceKind = Literal[
     "github_api", "readme", "release", "manifest", "package_registry",
@@ -108,7 +114,10 @@ assert TOOL_KINDS <= set(get_args(Kind.__value__))
 # Verification levels that count as passed, strongest first (C.3).
 PASSED_LEVELS: tuple[str, ...] = ("inference", "service", "function", "install")
 
-TREASURE_MIN_QUALITY = 70
+# A treasure is a verified tool in the better half by quality and the less-known part by popularity.
+# 80 is about the median quality of verified tools in each category under formula b3.v3
+# (dev_cli 81.9, local_ai 80.7 on 2026-10-29); 45 is about the popularity median of the pool.
+TREASURE_MIN_QUALITY = 80
 TREASURE_MAX_POPULARITY = 45
 
 # Upper bounds on quality (B.3). All sit below the treasure threshold, so a
@@ -495,6 +504,14 @@ class Pitfall(_Model):
 
     readme_said: str = Field(min_length=1, max_length=300)
     actually_needed: str = Field(min_length=1, max_length=300)
+    kind: PitfallKind | None = Field(
+        default=None,
+        description=(
+            "readme_wrong: a user following the README would hit it; sandbox: only the box needed it; "
+            "tool_handled: the tool did the step by itself; note: worth knowing, nothing to fix. "
+            "null: not tagged (older runs)."
+        ),
+    )
 
 
 class Judge(_Model):
@@ -503,6 +520,20 @@ class Judge(_Model):
     verdict: Literal["working", "error_visible", "inconclusive"]
     observed: str = Field(max_length=300)
     model: str
+
+
+class ArtifactCheck(_Model):
+    """A check of the published package file itself, made by hand, not by a box.
+
+    Box limits cannot change what a published file holds, so this, or a person's run, is the
+    only ground for a failed verdict. The pipeline never writes one.
+    """
+
+    artifact: HttpsUrl = Field(description="The published file checked, e.g. a wheel on PyPI.")
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    finding: str = Field(min_length=1, max_length=500, description="What the file holds, or lacks.")
+    checked_at: AwareDatetime
+    checked_by: str = Field(min_length=1, max_length=100, description="Who checked it, and how.")
 
 
 class RunEvidence(_Model):
@@ -532,7 +563,12 @@ class VerificationRun(_Model):
     checked_at: AwareDatetime
     tool_version: str | None = Field(default=None, max_length=60)
     install_method: InstallMethod | None = None
-    replayed: bool = Field(description="A fresh sandbox replayed the steps and passed.")
+    replayed: bool = Field(
+        description=(
+            "A fresh sandbox replayed the steps with the same outcome: for a passed run, the "
+            "steps and checks passed again."
+        )
+    )
     steps: list[InstallStep] = Field(description="The successful path, in order.")
     smoke_tests: list[SmokeTest] = []
     pitfalls: list[Pitfall] = []
@@ -541,6 +577,11 @@ class VerificationRun(_Model):
     evidence: RunEvidence
     actor_model: str | None = None
     cost_usd: float | None = Field(default=None, ge=0)
+    artifact_check: ArtifactCheck | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="A check of the published package by hand: the only ground for a failed sandbox run.",
+    )
 
     @model_validator(mode="after")
     def _check_outcome(self) -> VerificationRun:
@@ -556,6 +597,9 @@ class VerificationRun(_Model):
                 raise ValueError(f"a {self.level!r} run needs at least one passing smoke test")
         if self.level == "failed" and not self.blocking_error:
             raise ValueError("a failed run must record blocking_error")
+        if self.level == "failed" and self.method == "sandbox" and self.artifact_check is None:
+            raise ValueError("a sandbox run is never failed on its own: failed needs a person's run, "
+                             "or a check of the published package (artifact_check)")
         return self
 
 
@@ -571,7 +615,8 @@ def best_level(runs: list[VerificationRun]) -> str:
 class Verification(_Model):
     """Summary over runs; keeps only the latest run per OS, arch and method.
 
-    Older runs live in git history, so a newer failure replaces an older pass.
+    Older runs live in git history. Write-back never replaces a passed run with one
+    that did not pass, and writes a failure only on an OS with no passed run.
     """
 
     level: VerificationLevel = Field(description="best_level(runs); unverified when no runs.")
@@ -662,11 +707,14 @@ class Popularity(_Model):
     score: float | None = Field(ge=0, le=100)
     signals: PopularitySignals
     age_days: int | None = Field(ge=0, description="Repo age; velocity applies from 90 days.")
+    packages: list[str] = Field(
+        default=[], description="Registry packages that link back to the repo, e.g. 'npm:adapty'."
+    )
 
 
 class Treasure(_Model):
     is_treasure: bool = Field(
-        description="Tool, verified, not archived, quality >= 70 and popularity <= 45."
+        description="Tool, verified, not archived, quality >= 80 and popularity <= 45."
     )
     value: float | None = Field(
         description="T = quality * (1 - popularity/100); null when either is null."
@@ -769,7 +817,8 @@ class Scores(_Model):
             and n <= TREASURE_MAX_POPULARITY
         )
         if self.treasure.is_treasure != eligible:
-            raise ValueError("is_treasure must be quality >= 70 and popularity <= 45")
+            raise ValueError(f"is_treasure must be quality >= {TREASURE_MIN_QUALITY} and "
+                             f"popularity <= {TREASURE_MAX_POPULARITY}")
         return self
 
 

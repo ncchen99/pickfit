@@ -111,9 +111,27 @@ def without_runs(doc):
     doc["install"]["linux"] = None
 
 
+ARTIFACT_CHECK = {
+    "artifact": "https://files.example.invalid/frobtail-1.2.0-py3-none-any.whl",
+    "sha256": "0" * 64,
+    "finding": "only dist-info files; the console script's module frobtail is not in the wheel",
+    "checked_at": "2026-11-02T08:00:00Z",
+    "checked_by": "a person, by listing the wheel's files",
+}
+
+
 def with_failed_run(doc):
+    """A person's failed run on linux, the way failed reaches a record."""
     run = doc["verification"]["runs"][0]
-    run.update(level="failed", replayed=False, blocking_error="frobtail: command not found")
+    run.update(level="failed", method="human", runner="mac-m5", replayed=False,
+               blocking_error="frobtail: command not found")
+    doc["verification"]["level"] = "failed"
+    doc["install"]["linux"] = None
+
+
+def with_failed_sandbox_run(doc):
+    run = doc["verification"]["runs"][0]
+    run.update(level="failed", blocking_error="frobtail: command not found")
     doc["verification"]["level"] = "failed"
     doc["install"]["linux"] = None
 
@@ -124,10 +142,11 @@ def with_newer_failed_run(doc):
         "id": "run-20261102-linux-1",
         "level": "failed",
         "checked_at": "2026-11-02T08:00:00Z",
-        "replayed": False,
+        "replayed": True,
         "smoke_tests": [],
         "judge": None,
         "blocking_error": "frobtail: command not found",
+        "artifact_check": ARTIFACT_CHECK,
     }
     runs.append(newer)
     doc["verification"]["checked_at"] = newer["checked_at"]
@@ -170,6 +189,7 @@ MUTATIONS = {
     "level does not match runs": ("level must be", set_path("verification", "level", "inference")),
     "newer run on the same target kept": ("latest run per os", with_newer_failed_run),
     "passed sandbox run not replayed": ("replay", set_path(*RUN, "replayed", False)),
+    "failed sandbox run on its own": ("never failed on its own", with_failed_sandbox_run),
     "passed run judged error_visible": (
         "judge's verdict",
         set_path(*RUN, "judge", "verdict", "error_visible"),
@@ -242,6 +262,15 @@ def test_invalid_records_rejected(example, error, mutate):
     mutate(example)
     with pytest.raises(ValidationError, match=error):
         SoftwareRecord.model_validate(example)
+
+
+@pytest.mark.parametrize("failed", [with_failed_run, both(with_failed_sandbox_run,
+                                                          set_path(*RUN, "artifact_check", ARTIFACT_CHECK))])
+def test_failed_needs_a_person_or_a_check_of_the_published_package(example, failed):
+    both(failed, capped(40.0, "verification_failed", 40))(example)
+    record = SoftwareRecord.model_validate(example)
+    assert record.verification.level == "failed"
+    assert record.model_dump(mode="json") == example  # artifact_check is left out when there is none
 
 
 def test_capped_record_validates(example):
