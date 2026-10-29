@@ -13,7 +13,7 @@
  * verified gets no slip at all.
  */
 import { toCard } from './cards.ts';
-import { bestGuide, type Arch, type Catalog, type Entry, type InstallGuide, type OS } from './catalog.ts';
+import { bestGuide, verifiedOnUserSystem, type Arch, type Catalog, type Entry, type InstallGuide, type OS } from './catalog.ts';
 import type { FindOutput, PickOut } from './find.ts';
 import { PIPE_TO_SHELL, type InstallOutput } from './install.ts';
 import { templateReasons } from './rules.ts';
@@ -27,6 +27,9 @@ export interface FormValues {
 }
 
 export const EMPTY_FORM: FormValues = { need: '', os: '', arch: '', free_only: false, offline: false };
+
+/** Why the web page did not ask the model: its daily share, the total cap, or no way to count spend. */
+export type BudgetStop = 'web_daily' | 'total' | 'unavailable';
 
 /** One search: find_software's output and get_install_guide's for each pick (by slug). */
 export interface SearchResult {
@@ -232,12 +235,20 @@ function record(pick: PickOut, guide: InstallOutput | undefined, form: FormValue
   const v = pick.verification;
   const mine = yourSystem(v, form);
   const offline = guide?.verification.works_offline;
+  const offlineLine =
+    offline === true
+      ? ' Its checks passed again with the network off.'
+      : offline === false
+        ? ' Its checks failed with the network off: it needed the network in pickfit’s run.'
+        : form.offline
+          ? ' pickfit hasn’t checked it with the network off.'
+          : '';
   const q = pick.scores.quality === null ? 'not scored' : `${Math.round(pick.scores.quality)}/100`;
   const p = pick.scores.popularity === null ? 'not scored' : `${Math.round(pick.scores.popularity)}/100`;
   return (
     `<section class="record" aria-label="Test record" data-ui>` +
     `<p class="level">${CHECK}${esc(LEVEL_LABEL[v.level] ?? v.level)}</p>` +
-    `<p>${esc(ranSentence(v))}${offline === true ? ' Its checks passed again with the network off.' : ''}</p>` +
+    `<p>${esc(ranSentence(v) + offlineLine)}</p>` +
     `<p class="mine mine-${mine.state}">${esc(mine.text)}</p>` +
     `<p class="quiet">Quality ${q}, popularity ${p}, scored separately.</p>` +
     `<details class="how"><summary>How we know</summary><p>${esc(pick.how_we_know)}</p></details>` +
@@ -287,11 +298,27 @@ function pickHtml(pick: PickOut, first: boolean, result: SearchResult, form: For
   );
 }
 
-const DEGRADED: Record<string, { title: string; text: string }> = {
-  over_budget: {
-    title: 'Model matching is paused for today',
-    text: 'Today’s budget for Meta model calls from this page is used up, so these results are ranked by rules (words in your request, verification on your OS, treasure score) without Muse Spark. It resets at 00:00 UTC.',
+const BY_RULES = 'these results are ranked by rules (words in your request, verification on your OS, treasure score) without Muse Spark';
+const BUDGET: Record<BudgetStop | 'other', { title: string; text: string }> = {
+  web_daily: {
+    title: 'Model matching on this page is paused until 00:00 UTC',
+    text: `Today’s Meta spend, by this page and by agents together, has reached the share this page may use, so ${BY_RULES}.`,
   },
+  total: {
+    title: 'Model matching is paused',
+    text: `pickfit’s overall budget for Meta model calls is used up, so ${BY_RULES}.`,
+  },
+  unavailable: {
+    title: 'Ranked without the model this time',
+    text: `pickfit couldn’t check its model budget, so it didn’t call Muse Spark: ${BY_RULES}. Search again in a minute.`,
+  },
+  other: {
+    title: 'Model matching is paused for now',
+    text: `pickfit’s budget for Meta model calls is used up for now, so ${BY_RULES}.`,
+  },
+};
+
+const DEGRADED: Record<string, { title: string; text: string }> = {
   budget_unavailable: {
     title: 'Ranked without the model this time',
     text: 'pickfit couldn’t check its model budget, so it didn’t call Muse Spark and ranked these by rules. Search again in a minute.',
@@ -327,11 +354,16 @@ function matchLine(out: FindOutput): string {
 }
 
 /** The results area for one search. `catalog` names a best free option that is not among the picks. */
-export function renderResults(result: SearchResult, form: FormValues, catalog: Catalog, opts: { cached?: boolean } = {}): string {
+export function renderResults(
+  result: SearchResult,
+  form: FormValues,
+  catalog: Catalog,
+  opts: { cached?: boolean; budget?: BudgetStop | null } = {},
+): string {
   const { out } = result;
   const parts: string[] = [];
   if (out.degraded) {
-    const d = DEGRADED[out.degraded_reason ?? ''] ?? MODEL_FAILED;
+    const d = out.degraded_reason === 'over_budget' ? BUDGET[opts.budget ?? 'other'] : (DEGRADED[out.degraded_reason ?? ''] ?? MODEL_FAILED);
     parts.push(`<div class="notice busy" role="status"><h2>${esc(d.title)}</h2><p>${esc(d.text)}</p></div>`);
   }
   const head: string[] = [`<h2 class="results-title">${esc(resultsTitle(out))}</h2>`];
@@ -355,16 +387,30 @@ export function renderResults(result: SearchResult, form: FormValues, catalog: C
   }
   const free = out.best_free && !out.picks.some((p) => p.slug === out.best_free!.slug) ? catalog.bySlug.get(out.best_free.slug) : undefined;
   if (free && out.best_free) {
+    const guide = bestGuide(free, form.os || undefined);
+    const v: PickOut['verification'] = {
+      level: guide?.run.level ?? free.verification.level,
+      os: guide?.run.os ?? null,
+      arch: guide?.run.arch ?? null,
+      method: guide?.run.method ?? null,
+      replayed: guide?.run.replayed ?? false,
+      checked_at: guide?.run.checked_at ?? null,
+      verified_on_user_os: verifiedOnUserSystem(free, form.os || undefined, form.arch || undefined),
+    };
+    const mine = yourSystem(v, form);
     parts.push(
-      `<p class="aside"><span class="lead-in">Best free option among the verified tools:</span> ` +
-        `${link(free.repo_url, esc(free.name)) || esc(free.name)}. ${esc(out.best_free.reason)}</p>`,
+      `<div class="aside best-free"><p><span class="lead-in">Best free option:</span> ` +
+        `${link(free.repo_url, esc(free.name)) || esc(free.name)}. ${esc(out.best_free.reason)}</p>` +
+        `<p class="quiet">${esc(ranSentence(v))}</p><p class="mine mine-${mine.state}">${esc(mine.text)}</p></div>`,
     );
   }
   // Not verified: no slip, no badge, no steps, no link. The missing record is the label.
   const wk = out.well_known_option;
   const outside = wk
     ? `<aside class="outside" aria-label="Not verified by pickfit">` +
-      `<h3>Also consider ${esc(wk.name)}, not verified by pickfit</h3><p>${esc(wk.why)}</p><p class="quiet">${esc(wk.how_we_know)}</p></aside>`
+      `<h3>Also consider ${esc(wk.name)}, not verified by pickfit</h3>` +
+      `<p class="unchecked">pickfit has not installed or tested it. There is no run record and no install guide.</p>` +
+      `<p>${esc(wk.why)}</p><p class="quiet">${esc(wk.how_we_know)}</p></aside>`
     : '';
   if (outside && out.picks.length === 0) {
     // Nothing fits: the note on the left, the unverified option beside it.
@@ -587,7 +633,7 @@ export function renderPage(input: PageInput): string {
 ${heroRecord(showcase.featured)}
 </div>
 <p class="lede">Describe the job in one sentence. pickfit suggests lesser-known developer CLI tools and local AI tools that it has installed in a fresh sandbox, matched to you by Meta’s Muse Spark.</p>
-<form id="search" class="search" method="post" action="/search">
+<form id="search" class="search" method="post" action="/search#results">
 <div class="need">
 <label for="need">I need</label>
 <textarea id="need" name="need" rows="1" minlength="3" maxlength="500" required autocomplete="off" spellcheck="true" placeholder="a free way to transcribe meeting recordings offline…">${esc(form.need)}</textarea>
@@ -753,10 +799,11 @@ select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid 
 .copy:hover{background:var(--accent);color:var(--accent-ink)}
 .issues li{margin-bottom:10px}
 .links{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:12px}
-.outside{margin:72px 0 0;padding-top:0;color:var(--muted)}
+.outside{margin:72px 0 0;padding-top:0;color:var(--muted);max-width:62ch}
+.outside h3{font:600 var(--t-lead)/1.35 var(--sans);letter-spacing:0;color:var(--ink);margin-bottom:10px}
+.unchecked{background:var(--caution-soft);color:var(--caution);border-radius:var(--radius);padding:10px 14px;font-weight:500;max-width:none}
 .nofit{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:56px;align-items:end}
 .nofit .outside{margin:0}
-.outside h3{color:var(--ink);margin-bottom:10px}
 .notice,.loading{border-radius:var(--radius);padding:20px 24px;margin:var(--gap) 0 0;background:var(--surface)}
 .notice h2,.loading h2{font-size:var(--t-statement);margin-bottom:8px}
 .notice.busy{background:var(--caution-soft)}
@@ -834,9 +881,11 @@ select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.bar::after{width:100%}}
 
 @media (max-width:960px){
-.hero-row{grid-template-columns:minmax(0,1fr);gap:28px}
-.hero-row h1{grid-column:1;flex-direction:column;align-items:stretch;gap:0}
-.frame{grid-row:2;grid-column:1;max-width:520px}
+.hero{display:flex;flex-direction:column}
+.hero-row{display:contents}
+.hero-row h1{flex-direction:column;align-items:stretch;gap:0;margin-bottom:24px}
+.lede{order:1}.search{order:2}.examples{order:3}
+.frame{order:4;max-width:520px;margin-top:40px}
 .pick,.nofit{grid-template-columns:minmax(0,1fr);gap:28px}
 .claim{position:static}
 .recent-grid{grid-template-columns:minmax(0,1fr);margin-top:40px}
