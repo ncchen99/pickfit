@@ -255,7 +255,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         install_method=method if steps else None, replayed=replayed, steps=steps,
         smoke_tests=smoke,
         pitfalls=[Pitfall(readme_said=_clip(p["readme_said"], 300) or "-",
-                          actually_needed=_clip(p["actually_needed"], 300) or "-")
+                          actually_needed=_clip(p["actually_needed"], 300) or "-", kind=p.get("kind"))
                   for p in finish.get("pitfalls") or []],
         blocking_error=_clip(blocking, 500),
         judge=Judge(verdict=judge.verdict, observed=_clip(judge.observed, 300) or "", model=judge.model)

@@ -62,7 +62,8 @@ def agent_turns(level: str = "function") -> list[dict[str, Any]]:
             response("r5", finish(level=level, steps=[1], smoke=SMOKE, install_method="uv",
                                   tool_version="0.4.1",
                                   pitfalls=[{"readme_said": "pip install graphtty",
-                                             "actually_needed": "uv tool install graphtty"}]))]
+                                             "actually_needed": "uv tool install graphtty",
+                                             "kind": "readme_wrong"}]))]
 
 
 class Boxes:
@@ -100,7 +101,7 @@ def test_full_pass_is_replayed_offline_and_judged(tmp_path: Path):
     assert run.smoke_tests[0].setup == []
     assert [s.command for s in run.smoke_tests[1].setup] == [GRAPH]  # the input file it reads
     assert run.install_method == "uv" and run.tool_version == "0.4.1"
-    assert run.pitfalls[0].actually_needed == "uv tool install graphtty"
+    assert run.pitfalls[0].actually_needed == "uv tool install graphtty" and run.pitfalls[0].kind == "readme_wrong"
     assert run.runner == "fake" and (run.os, run.arch, run.method) == ("linux", "x86_64", "sandbox")
     assert run.cost_usd and run.cost_usd > 0
     # Two fresh boxes, both closed; the replay ran the checks with the network off.

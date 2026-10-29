@@ -37,7 +37,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 from pickfit.env import REPO_ROOT, get_env
 from pickfit.ledger import BudgetExceeded, taipei_now
 from pickfit.meta import MetaResult, ToolCall, call_meta, resolve_model
-from pickfit.schema import InstallMethod, UnverifiedReason, VerificationLevel, is_passed
+from pickfit.schema import InstallMethod, PitfallKind, UnverifiedReason, VerificationLevel, is_passed
 from pickfit.verify.box import Box, BoxError, ExecResult, background_script
 from pickfit.verify.plan import InstallPlan, plan_for
 from pickfit.verify.rules import RuleHit, error_signature, match_rules
@@ -123,8 +123,15 @@ FINISH_TOOL = _fn(
                              "observed_excerpt"],
                 "additionalProperties": False}},
         "pitfalls": {"type": "array", "description": "Where the README differs from what actually worked.",
-                     "items": {"type": "object", "properties": {"readme_said": _STR, "actually_needed": _STR},
-                               "required": ["readme_said", "actually_needed"], "additionalProperties": False}},
+                     "items": {"type": "object", "properties": {
+                         "readme_said": _STR, "actually_needed": _STR,
+                         "kind": {"type": "string", "enum": ["readme_wrong", "sandbox", "tool_handled", "note"],
+                                  "description": (
+                                      "readme_wrong: a user following the README would hit it too; sandbox: "
+                                      "only this box needed it (no root, GPU, Docker); tool_handled: the tool "
+                                      "did the step by itself; note: worth knowing, nothing to fix.")}},
+                               "required": ["readme_said", "actually_needed", "kind"],
+                               "additionalProperties": False}},
         "blocking_error": {"type": ["string", "null"], "description": "Required when level is failed."},
         "failing_command_id": {"type": ["integer", "null"], "description": (
             "Required when level is failed: the command_id of the install or check that failed. A fresh "
@@ -216,6 +223,12 @@ class FinishSmokeTest(BaseModel):
 class FinishPitfall(BaseModel):
     readme_said: str
     actually_needed: str
+    kind: PitfallKind | None = None
+
+    @field_validator("kind", mode="before")
+    @classmethod
+    def _null_strings(cls, value: Any) -> Any:
+        return _null_string(value)
 
 
 class FinishArgs(BaseModel):

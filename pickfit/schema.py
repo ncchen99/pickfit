@@ -88,6 +88,7 @@ type UnverifiedReason = Literal[
     "budget_exceeded",
     "other",
 ]
+type PitfallKind = Literal["readme_wrong", "sandbox", "tool_handled", "note"]
 type CapReason = Literal["archived", "verification_failed", "not_a_tool", "unverified"]
 type SourceKind = Literal[
     "github_api", "readme", "release", "manifest", "package_registry",
@@ -502,6 +503,14 @@ class Pitfall(_Model):
 
     readme_said: str = Field(min_length=1, max_length=300)
     actually_needed: str = Field(min_length=1, max_length=300)
+    kind: PitfallKind | None = Field(
+        default=None,
+        description=(
+            "readme_wrong: a user following the README would hit it; sandbox: only the box needed it; "
+            "tool_handled: the tool did the step by itself; note: worth knowing, nothing to fix. "
+            "null: not tagged (older runs)."
+        ),
+    )
 
 
 class Judge(_Model):
