@@ -276,7 +276,7 @@ class TartBox(Box):
                 f"then Homebrew (/opt/homebrew/bin; {MAC_USER} owns /opt/homebrew, so brew install works without "
                 f"sudo). Installed: Homebrew {m.get('brew', '')}, Xcode Command Line Tools (git, clang, make, "
                 f"python3 {m.get('python3', '')}), {tools}; curl, unzip, tar. npm -g installs under /opt/homebrew. "
-                "Network: on. No API keys, no accounts, no GUI session.")
+                "Network: on. No API keys, no accounts, no display (the VM is headless).")
 
     # -- lifecycle
 
@@ -534,6 +534,11 @@ if ! id {MAC_USER} >/dev/null 2>&1; then
   createhomedir -c -u {MAC_USER} >/dev/null
 fi
 if dseditgroup -o checkmember -m {MAC_USER} admin >/dev/null 2>&1; then echo "{MAC_USER} is an admin"; exit 3; fi
+# Pin the guest agent now, before {MAC_USER} owns Homebrew or runs brew: copy the image's binary so a
+# later networked `brew` cannot swap the binary launchd restarts as root (HARDEN_ROOT points launchd here).
+mkdir -p {AGENT_DIR}
+install -o root -g wheel -m 755 "$(/usr/bin/readlink -f /opt/homebrew/bin/tart-guest-agent)" \
+{AGENT_DIR}/tart-guest-agent
 chown -R {MAC_USER} {BREW_PREFIX}
 mdutil -a -i off >/dev/null 2>&1 || true
 softwareupdate --schedule off >/dev/null 2>&1 || true
@@ -542,13 +547,14 @@ softwareupdate --schedule off >/dev/null 2>&1 || true
 # command it runs to a world-readable file, so the password is made, used and dropped inside the guest.
 HARDEN_ROOT = rf"""
 set -e
-# 1. The guest agent runs from a root-owned copy: the image starts it from /opt/homebrew, which the box user
-#    owns, so the box user could swap the binary that launchd restarts as root.
-src=$(/usr/bin/readlink -f /opt/homebrew/bin/tart-guest-agent)
-mkdir -p {AGENT_DIR}
-install -o root -g wheel -m 755 "$src" {AGENT_DIR}/tart-guest-agent
+# 1. The guest agent must run from the root-owned copy taken in PREPARE_ROOT (before any box-user code),
+#    not from /opt/homebrew, which the box user owns and could swap. Point launchd at that copy and drop
+#    the box-user-owned Homebrew prefix from the agent/daemon launch PATH.
+test -x {AGENT_DIR}/tart-guest-agent || {{ echo "pinned guest agent {AGENT_DIR}/tart-guest-agent missing"; exit 1; }}
 for plist in {' '.join(AGENT_PLISTS)}; do
   /usr/libexec/PlistBuddy -c "Set :ProgramArguments:0 {AGENT_DIR}/tart-guest-agent" "$plist"
+  /usr/libexec/PlistBuddy -c "Set :EnvironmentVariables:PATH /usr/bin:/bin:/usr/sbin:/sbin" "$plist" 2>/dev/null \
+    || /usr/libexec/PlistBuddy -c "Add :EnvironmentVariables:PATH string /usr/bin:/bin:/usr/sbin:/sbin" "$plist"
 done
 # 2. admin/admin -> a random password; /etc/kcpassword (root only) keeps the auto-login that starts the agent.
 umask 077
