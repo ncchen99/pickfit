@@ -380,3 +380,6 @@ def test_select_candidates_orders_tools_first_and_interleaves_categories(tmp_pat
     assert [c["full_name"] for c in picked] == ["a/cli-new", "a/ai", "a/cli-old", "a/unsure"]
     assert [c["full_name"] for c in select_candidates(db, model="m", limit=2)] == ["a/cli-new", "a/ai"]
     assert [c["repo_id"] for c in select_candidates(db, model="m", limit=5, repo_ids=["a/lib"])] == ["gh:5"]
+    add_candidate(db, 7, "a/notes-mcp", category="mcp_server")
+    assert [c["full_name"] for c in select_candidates(db, model="m", limit=10, categories=["mcp_server"])] == [
+        "a/notes-mcp"]

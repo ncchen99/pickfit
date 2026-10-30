@@ -245,8 +245,11 @@ def call_one(candidate: dict[str, Any], *, role: str, run_id: str, client: Any =
 
 
 def select_candidates(db: PipelineDB, *, limit: int, repo_ids: list[str] | None = None,
-                      force: bool = False) -> list[dict[str, Any]]:
-    """Rule-passed candidates without a screen of their current sources, most recently pushed first."""
+                      force: bool = False, categories: list[str] | None = None) -> list[dict[str, Any]]:
+    """Rule-passed candidates without a screen of their current sources, most recently pushed first.
+
+    categories: only candidates whose discovery category is one of these.
+    """
     if repo_ids:
         wanted = set(repo_ids)
         pool = [c for c in db.candidates() if c["repo_id"] in wanted or c["full_name"] in wanted
@@ -256,6 +259,8 @@ def select_candidates(db: PipelineDB, *, limit: int, repo_ids: list[str] | None 
     decisions = db.prescreen_decisions()
     todo = []
     for c in pool:
+        if categories and c["category"] not in categories:
+            continue
         done = decisions.get(c["repo_id"])
         if not force and done and done["screen"] and done["sources_sha"] == sources_sha(build_sources(c)):
             continue
@@ -282,6 +287,7 @@ def screen_and_review(candidate: dict[str, Any], *, run_id: str, screen_client: 
 
 
 def run_prescreen(*, limit: int, repo_ids: list[str] | None = None, force: bool = False,
+                  categories: list[str] | None = None,
                   concurrency: int = DEFAULT_CONCURRENCY, review: bool = True,
                   db_path: Path | None = None, screen_client: Any = None, review_client: Any = None,
                   screen_ledger: Ledger | None = None, review_ledger: Ledger | None = None,
@@ -297,7 +303,7 @@ def run_prescreen(*, limit: int, repo_ids: list[str] | None = None, force: bool 
         raise ValueError("limit and concurrency must be positive")
     db = PipelineDB(db_path or pipeline_db_path())
     run_id = f"{STAGE}-" + taipei_now().strftime("%Y%m%d-%H%M%S")
-    todo = select_candidates(db, limit=limit, repo_ids=repo_ids, force=force)
+    todo = select_candidates(db, limit=limit, repo_ids=repo_ids, force=force, categories=categories)
     log(f"prescreen {run_id}: {len(todo)} candidates with {SCREEN_MODEL} on Baseten "
         f"(effort {REASONING_EFFORT}, {concurrency} at a time), review with {REVIEW_MODEL}"
         + ("" if review else " off"))
