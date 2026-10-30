@@ -60,21 +60,18 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "other",
+      "basis": "replayed",
+      "run_id": "verify-hilbertraum-20261031-014326-7ea4",
+      "method": "binary",
       "steps": [
         {
-          "command": "chmod +x HilbertRaum-<version>.AppImage",
-          "purpose": null
+          "command": "mkdir -p ~/apps && curl -fL -o ~/apps/HilbertRaum.AppImage https://github.com/HilbertraumAI/HilbertRaum/releases/download/v0.1.64/HilbertRaum-0.1.64.AppImage && chmod +x ~/apps/HilbertRaum.AppImage && ls -lh ~/apps/HilbertRaum.AppImage",
+          "purpose": "Download Linux AppImage release build and make executable"
         }
       ],
-      "manual_steps": [
-        "On Windows SmartScreen click More info Run anyway for unsigned build",
-        "On macOS allow unsigned app under System Settings Privacy and Security Open Anyway"
-      ],
+      "manual_steps": [],
       "check": null,
-      "first_task": "npm run dev"
+      "first_task": "~/apps/HilbertRaum.AppImage --appimage-extract-and-run"
     },
     "windows": null
   },
@@ -91,22 +88,84 @@
     "url": "https://github.com/HilbertraumAI/HilbertRaum/releases/tag/v0.1.63"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:45:47.960698+08:00",
+    "runs": [
+      {
+        "id": "verify-hilbertraum-20261031-014326-7ea4",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-vm",
+        "image": "pickfit-sbx-vm-gui:d217e76065c9",
+        "checked_at": "2026-10-31T01:45:47.960698+08:00",
+        "tool_version": "0.1.64",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/apps && curl -fL -o ~/apps/HilbertRaum.AppImage https://github.com/HilbertraumAI/HilbertRaum/releases/download/v0.1.64/HilbertRaum-0.1.64.AppImage && chmod +x ~/apps/HilbertRaum.AppImage && ls -lh ~/apps/HilbertRaum.AppImage",
+            "purpose": "Download Linux AppImage release build and make executable"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "~/apps/HilbertRaum.AppImage --appimage-extract-and-run",
+            "expected_signal": "HilbertRaum",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "window: \"HilbertRaum\" 1100x760 (pid 825)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "AppImage runs after chmod +x",
+            "actually_needed": "Headless --version/--help exits after Missing X server or $DISPLAY; the app must be started on the virtual display via launch_gui",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The app shows a centered welcome onboarding card for HilbertRaum Lite with a Get started button.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-hilbertraum-20261031-014326-7ea4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-hilbertraum-20261031-014326-7ea4/replay-10-1.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.09461,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "~/apps/HilbertRaum.AppImage --appimage-extract-and-run",
+          "window_title": "HilbertRaum",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        }
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:40:05+08:00",
+    "computed_at": "2026-10-31T01:47:38+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 65.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.51,
           "weight": 40.0
         },
         "install_docs": {
@@ -147,7 +206,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 18.22
+      "value": 17.34
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -462,5 +521,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:24+08:00",
-  "updated_at": "2026-10-29T14:40:05+08:00"
+  "updated_at": "2026-10-31T01:47:38.303160+08:00"
 }

@@ -75,7 +75,27 @@
       "check": null,
       "first_task": "lokalbot-cli search \"database decision\""
     },
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-lokalbot-20261031-014326-4062",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fL -o /tmp/LokalBot-linux-x86_64.tar.gz https://github.com/stevyhacker/LokalBot/releases/download/v0.11.6/LokalBot-0.11.6-linux-x86_64.tar.gz && ls -lh /tmp/LokalBot-linux-x86_64.tar.gz && sha256sum /tmp/LokalBot-linux-x86_64.tar.gz",
+          "purpose": "Download Linux tarball release"
+        },
+        {
+          "command": "mkdir -p /tmp/lokalbot-extract && tar xzf /tmp/LokalBot-linux-x86_64.tar.gz -C /tmp/lokalbot-extract && cd /tmp/lokalbot-extract/LokalBot-0.11.6-linux-x86_64 && ./install.sh",
+          "purpose": "Extract tarball and run install.sh user install"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "lokalbot --version",
+        "expected_signal": "LokalBot 0.11.6"
+      },
+      "first_task": "/home/sbx/.local/bin/lokalbot"
+    },
     "windows": null
   },
   "pricing": {
@@ -91,22 +111,92 @@
     "url": "https://github.com/stevyhacker/LokalBot/releases/tag/v0.11.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:45:03.853754+08:00",
+    "runs": [
+      {
+        "id": "verify-lokalbot-20261031-014326-4062",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-vm",
+        "image": "pickfit-sbx-vm-gui:d217e76065c9",
+        "checked_at": "2026-10-31T01:45:03.853754+08:00",
+        "tool_version": "0.11.6",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fL -o /tmp/LokalBot-linux-x86_64.tar.gz https://github.com/stevyhacker/LokalBot/releases/download/v0.11.6/LokalBot-0.11.6-linux-x86_64.tar.gz && ls -lh /tmp/LokalBot-linux-x86_64.tar.gz && sha256sum /tmp/LokalBot-linux-x86_64.tar.gz",
+            "purpose": "Download Linux tarball release"
+          },
+          {
+            "command": "mkdir -p /tmp/lokalbot-extract && tar xzf /tmp/LokalBot-linux-x86_64.tar.gz -C /tmp/lokalbot-extract && cd /tmp/lokalbot-extract/LokalBot-0.11.6-linux-x86_64 && ./install.sh",
+            "purpose": "Extract tarball and run install.sh user install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lokalbot --version",
+            "expected_signal": "LokalBot 0.11.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "LokalBot 0.11.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "/home/sbx/.local/bin/lokalbot",
+            "expected_signal": "Welcome to LokalBot",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "window: \"Welcome to LokalBot\" 650x640 (pid 829)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows lokalbot --version outputting LokalBot 0.11.6. / The display shows LokalBot with a 'Welcome to LokalBot - Choose What to Remember, Step 1 of 4' onboarding dialog over the main interface.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lokalbot-20261031-014326-4062/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lokalbot-20261031-014326-4062/check-1-cmd9.judged.png",
+            "runs/verify/verify-lokalbot-20261031-014326-4062/replay-10-1.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.087718,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "/home/sbx/.local/bin/lokalbot",
+          "window_title": "LokalBot",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        }
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:40:05+08:00",
+    "computed_at": "2026-10-31T01:47:38+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 73.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.51,
           "weight": 40.0
         },
         "install_docs": {
@@ -147,7 +237,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 21.18
+      "value": 22.41
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -454,5 +544,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-10-29T14:40:05+08:00"
+  "updated_at": "2026-10-31T01:47:38.297966+08:00"
 }
