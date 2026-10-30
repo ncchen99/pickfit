@@ -555,7 +555,7 @@
           "description": "A tool tools/call ran without an error (level service)."
         },
         "launch": {
-          "description": "argv the probe started over stdio, as the replay ran it.",
+          "description": "argv that started the server, as the replay ran it: the probe's own over stdio, the background setup's over HTTP.",
           "items": {
             "type": "string"
           },
@@ -627,6 +627,19 @@
         },
         "transport": {
           "$ref": "#/$defs/McpTransport"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "pattern": "^http://(127\\.0\\.0\\.1|localhost)(:\\d{1,5})?(/[A-Za-z0-9_./-]*)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "streamable_http: the local URL the probe posted to."
         }
       },
       "required": [

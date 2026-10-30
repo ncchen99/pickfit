@@ -21,8 +21,10 @@ export interface RunSummary {
 /** What a fresh sandbox saw when pickfit's MCP probe started the server (verification.runs[].mcp). */
 export interface McpHandshake {
   transport: 'stdio' | 'streamable_http' | 'sse';
-  /** argv the probe started, as the replay ran it. */
+  /** argv that started the server, as the replay ran it. */
   launch: string[];
+  /** streamable_http: the local URL the probe posted to. */
+  url?: string | null;
   protocol_version: string | null;
   server_name: string | null;
   server_version: string | null;

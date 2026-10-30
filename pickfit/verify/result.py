@@ -330,7 +330,9 @@ def _mcp_handshake(replay: ReplayResult | None) -> tuple[McpHandshake | None, li
     probes = [c for c in (replay.checks if replay else []) if c.passed and c.run and c.kind in MCP_KINDS]
     probes.sort(key=lambda c: (c.kind != "mcp_call", not c.offline))
     for check in probes:
-        found = mcp_handshake(check.run.stdout, check.command, offline=any(c.offline for c in probes))
+        background = [s.command for s in check.setup if s.tool == "run_background"]
+        found = mcp_handshake(check.run.stdout, check.command, offline=any(c.offline for c in probes),
+                              background=background)
         if found is not None:
             return found, mcp_pitfalls(check.run.stdout)
     return None, []

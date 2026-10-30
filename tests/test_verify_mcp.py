@@ -303,12 +303,17 @@ def test_the_agent_gets_the_probe_the_guide_and_its_level_from_the_probe(tmp_pat
     assert "Tiny models for the inference check" not in first
 
 
-def test_http_only_mcp_servers_are_set_aside() -> None:
+def test_http_only_mcp_servers_are_verified_too() -> None:
     from pickfit.schema import ExtractionResult
     from pickfit.verify.batch import not_in_box
     from tests.test_profiles import mcp_extraction
 
     http = ExtractionResult.model_validate(mcp_extraction(transports={"value": ["streamable_http"],
                                                                       "quote": "Transport: stdio."}))
-    assert not_in_box(http) == "MCP over HTTP only (the probe speaks stdio)"
-    assert not_in_box(ExtractionResult.model_validate(mcp_extraction())) is None
+    assert not_in_box(http) is None
+    url = "http://127.0.0.1:8765/mcp"
+    out = summary(transport="streamable_http", url=url)
+    seen = handshake(out, f"{PROBE_COMMAND} --url {url}", offline=True, background=["notes-mcp --http --port 8765"])
+    assert seen.transport == "streamable_http" and seen.url == url and seen.launch == ["notes-mcp", "--http", "--port", "8765"]
+    assert handshake(out, f"{PROBE_COMMAND} --url {url}", offline=True, background=[]) is None
+    assert probe_kind(f"{PROBE_COMMAND} --call x --args '{{}}' --url {url}") == "mcp_call"

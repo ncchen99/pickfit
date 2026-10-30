@@ -47,3 +47,17 @@ test('shell quoting keeps plain words and ~/ paths, and quotes the rest', () => 
   assert.equal(shellQuote("it's"), `'it'"'"'s'`);
   assert.equal(shellQuote('$(rm -rf /)'), "'$(rm -rf /)'");
 });
+
+test('an HTTP-only server gets the URL to add and the command to start first', () => {
+  const entry = catalog.bySlug.get('fixture-notes-mcp')!;
+  const guide = {
+    ...entry.install.linux!,
+    mcp: { ...entry.install.linux!.mcp!, transport: 'streamable_http' as const, launch: ['notes-mcp', '--http', '--port', '8765'], url: 'http://127.0.0.1:8765/mcp' },
+  };
+  const config = clientConfig(entry, guide)!;
+  assert.equal(config.claude_code, 'claude mcp add --transport http fixture-notes-mcp http://127.0.0.1:8765/mcp');
+  assert.deepEqual(JSON.parse(config.json), { mcpServers: { 'fixture-notes-mcp': { type: 'http', url: 'http://127.0.0.1:8765/mcp' } } });
+  assert.deepEqual([config.transport, config.url, config.command], ['streamable_http', 'http://127.0.0.1:8765/mcp', 'notes-mcp']);
+  assert.match(config.note ?? '', /start it first and keep it running \(notes-mcp --http --port 8765, with NOTES_SYNC_TOKEN set\)/);
+  assert.equal(clientConfig(entry, { ...guide, mcp: { ...guide.mcp, url: null } }), null);
+});

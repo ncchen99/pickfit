@@ -207,9 +207,10 @@ const installOutput = z.object({
   ),
   mcp_client_config: z
     .object({
-      transport: z.literal('stdio'),
-      command: z.string(),
+      transport: z.enum(['stdio', 'streamable_http']),
+      command: z.string().describe('stdio: what the client starts; streamable_http: what to start first and keep running'),
       args: z.array(z.string()),
+      url: z.string().nullable().describe('streamable_http: where the client connects once the server runs'),
       claude_code: z.string().describe('A `claude mcp add` line for Claude Code'),
       json: z.string().describe('An mcpServers entry (JSON text) for Claude Desktop, Cursor and other clients'),
       env: z.array(

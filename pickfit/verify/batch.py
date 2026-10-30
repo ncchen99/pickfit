@@ -99,9 +99,6 @@ def not_in_box(ex: ExtractionResult, *, gpu: bool = False, os: str = "linux") ->
         return "needs a GPU"
     if pre.apple_silicon_only.value and os != "macos":
         return "Apple Silicon only"
-    transports = ex.mcp.transports.value or []
-    if ex.category.value == "mcp_server" and transports and "stdio" not in transports:
-        return "MCP over HTTP only (the probe speaks stdio)"
     platforms = ex.platforms.value
     if platforms and os not in platforms:
         return f"platforms {'/'.join(platforms)} only"

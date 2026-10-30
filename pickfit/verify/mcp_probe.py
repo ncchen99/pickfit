@@ -4,6 +4,10 @@
 Written into each verification box (stdlib only, Python 3.8+) and run there:
 
     python3 ~/.pickfit/mcp_probe.py [--timeout S] [--call TOOL --args JSON] -- COMMAND [ARG ...]
+    python3 ~/.pickfit/mcp_probe.py [--timeout S] [--call TOOL --args JSON] --url http://127.0.0.1:PORT/mcp
+
+The second form talks streamable HTTP to a server already started (pickfit's agent starts it
+with run_background); the first starts the server itself over stdio.
 
 It speaks both eras of the protocol: the legacy `initialize` handshake first (most servers),
 and, when a server rejects that with a JSON-RPC error, the stateless 2026-07-28 revision
@@ -31,6 +35,8 @@ import subprocess
 import sys
 import threading
 import time
+import urllib.error
+import urllib.request
 
 PROTOCOL_VERSION = "2025-11-25"  # the newest legacy revision; a server answers with the one it speaks
 MODERN_VERSION = "2026-07-28"
@@ -147,11 +153,7 @@ class Probe:
     def request(self, method: str, params: dict, timeout: float | None = None) -> dict:
         self.next_id += 1
         rid = self.next_id
-        if self.modern:
-            params = {**params, "_meta": {"io.modelcontextprotocol/protocolVersion": self.modern,
-                                          "io.modelcontextprotocol/clientInfo": CLIENT_INFO,
-                                          "io.modelcontextprotocol/clientCapabilities": {}}}
-        self.send({"jsonrpc": "2.0", "id": rid, "method": method, "params": params})
+        self.send({"jsonrpc": "2.0", "id": rid, "method": method, "params": with_meta(params, self.modern)})
         deadline = time.monotonic() + (timeout or self.timeout)
         while True:
             left = deadline - time.monotonic()
@@ -176,13 +178,7 @@ class Probe:
                 continue
             if message.get("id") != rid:
                 continue  # a notification, or a stale answer
-            if "error" in message:
-                error = message["error"] if isinstance(message["error"], dict) else {}
-                raise ProbeError(4, f"{method} returned error {error.get('code')}", error)
-            result = message.get("result")
-            if not isinstance(result, dict):
-                raise ProbeError(4, f"{method} returned no result object")
-            return result
+            return answer_of(message, method)
 
     def _answer(self, message: dict) -> None:
         method = message.get("method")
@@ -211,6 +207,124 @@ class Probe:
                 break
             except subprocess.TimeoutExpired:
                 continue
+
+
+def with_meta(params: dict, modern: str | None) -> dict:
+    """The modern revision carries version, client info and capabilities on every request."""
+    if not modern:
+        return params
+    return {**params, "_meta": {"io.modelcontextprotocol/protocolVersion": modern,
+                                "io.modelcontextprotocol/clientInfo": CLIENT_INFO,
+                                "io.modelcontextprotocol/clientCapabilities": {}}}
+
+
+def answer_of(message: dict, method: str) -> dict:
+    if "error" in message:
+        error = message["error"] if isinstance(message["error"], dict) else {}
+        raise ProbeError(4, f"{method} returned error {error.get('code')}", error)
+    result = message.get("result")
+    if not isinstance(result, dict):
+        raise ProbeError(4, f"{method} returned no result object")
+    return result
+
+
+class HttpProbe:
+    """Streamable HTTP: every message is a POST; an answer comes as a JSON body or an SSE stream."""
+
+    def __init__(self, url: str, timeout: float) -> None:
+        self.url = url
+        self.timeout = timeout
+        self.noise = 0
+        self.stderr_tail = b""
+        self.next_id = 0
+        self.modern: str | None = None
+        self.session: str | None = None
+        self.protocol: str | None = None  # the legacy version initialize agreed on
+
+    def _post(self, message: dict, method: str, timeout: float):
+        headers = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}
+        if self.session:
+            headers["Mcp-Session-Id"] = self.session
+        if self.modern or self.protocol:
+            headers["MCP-Protocol-Version"] = self.modern or self.protocol
+        if self.modern:
+            headers["Mcp-Method"] = method
+        request = urllib.request.Request(self.url, data=json.dumps(message).encode(), headers=headers,
+                                         method="POST")
+        try:
+            response = urllib.request.urlopen(request, timeout=timeout)
+        except urllib.error.HTTPError as err:
+            try:
+                body = json.loads(err.read(65536) or b"null")
+            except ValueError:
+                body = None
+            if isinstance(body, dict) and "error" in body:
+                return None, body
+            raise ProbeError(4, f"{method} got HTTP {err.code}")
+        except TimeoutError:
+            raise ProbeError(3, f"no answer to {method} within {timeout:.0f}s")
+        except (urllib.error.URLError, OSError) as err:
+            reason = getattr(err, "reason", err)
+            if isinstance(reason, TimeoutError):
+                raise ProbeError(3, f"no answer to {method} within {timeout:.0f}s")
+            raise ProbeError(2, f"cannot reach the server: {type(reason).__name__}")
+        self.session = response.headers.get("Mcp-Session-Id") or self.session
+        return response, None
+
+    def send(self, message: dict) -> None:
+        response, _ = self._post(message, str(message.get("method")), self.timeout)
+        if response is not None:
+            response.close()
+
+    def request(self, method: str, params: dict, timeout: float | None = None) -> dict:
+        self.next_id += 1
+        rid = self.next_id
+        wait = timeout or self.timeout
+        message = {"jsonrpc": "2.0", "id": rid, "method": method, "params": with_meta(params, self.modern)}
+        response, error_body = self._post(message, method, wait)
+        if error_body is not None:
+            return answer_of(error_body, method)
+        with response:
+            for reply in self._messages(response):
+                if isinstance(reply, dict) and reply.get("id") == rid:
+                    result = answer_of(reply, method)
+                    if method == "initialize" and isinstance(result.get("protocolVersion"), str):
+                        self.protocol = result["protocolVersion"]
+                    return result
+        raise ProbeError(4, f"no answer to {method} in the HTTP response")
+
+    def _messages(self, response):
+        kind = response.headers.get("Content-Type", "")
+        if "text/event-stream" in kind:
+            data: list[str] = []
+            for raw in iter(response.readline, b""):
+                line = raw.decode("utf-8", errors="replace").rstrip("\r\n")
+                if line.startswith("data:"):
+                    data.append(line[5:].lstrip())
+                elif not line and data:
+                    yield from self._parse("\n".join(data))
+                    data = []
+            if data:
+                yield from self._parse("\n".join(data))
+        else:
+            yield from self._parse(response.read(4_000_000).decode("utf-8", errors="replace"))
+
+    def _parse(self, text: str):
+        try:
+            value = json.loads(text)
+        except ValueError:
+            self.noise += 1
+            return
+        yield from value if isinstance(value, list) else [value]
+
+    def stop(self) -> None:
+        if not self.session:
+            return
+        request = urllib.request.Request(self.url, headers={"Mcp-Session-Id": self.session}, method="DELETE")
+        try:
+            urllib.request.urlopen(request, timeout=5).close()
+        except (urllib.error.URLError, OSError):
+            pass
 
 
 class ProbeError(Exception):
@@ -268,10 +382,11 @@ def _summary_line(summary: dict) -> str:
     return MARKER + json.dumps(summary, sort_keys=True)
 
 
-def run(argv: list[str], *, timeout: float, call: str | None, call_args: dict) -> int:
-    summary: dict = {"probe": 1, "launch": argv, "ok": False}
+def run(argv: list[str], *, timeout: float, call: str | None, call_args: dict, url: str | None = None) -> int:
+    summary: dict = {"probe": 1, "launch": argv, "ok": False,
+                     "transport": "streamable_http" if url else "stdio", "url": url}
     try:
-        probe = Probe(argv, timeout)
+        probe = HttpProbe(url, timeout) if url else Probe(argv, timeout)
     except OSError as err:
         print(f"error: cannot start {argv[0]!r}: {err.strerror or err}")
         summary["error"] = "start"
@@ -340,17 +455,17 @@ def run(argv: list[str], *, timeout: float, call: str | None, call_args: dict) -
             print("\n".join(tail.splitlines()[-25:]), file=sys.stderr)
     finally:
         probe.stop()
-    summary["exit"] = probe.proc.returncode
+    summary["exit"] = probe.proc.returncode if isinstance(probe, Probe) else None
     print(_summary_line(summary))
     return code
 
 
 def main(args: list[str]) -> int:
-    timeout, call, call_args = 60.0, None, {}
-    if "--" not in args:
+    timeout, call, call_args, url = 60.0, None, {}, None
+    if "--" not in args and "--url" not in args:
         print(__doc__.strip().splitlines()[2].strip())
         return 1
-    split = args.index("--")
+    split = args.index("--") if "--" in args else len(args)
     options, command = args[:split], args[split + 1:]
     i = 0
     while i < len(options):
@@ -358,6 +473,11 @@ def main(args: list[str]) -> int:
             timeout = float(options[i + 1])
         elif options[i] == "--call" and i + 1 < len(options):
             call = options[i + 1]
+        elif options[i] == "--url" and i + 1 < len(options):
+            url = options[i + 1]
+            if not re.match(r"^https?://(127\.0\.0\.1|localhost|\[::1\])(:\d{1,5})?(/[A-Za-z0-9_./-]*)?$", url):
+                print("usage: --url takes a local http://127.0.0.1:PORT/path the box started")
+                return 1
         elif options[i] == "--args" and i + 1 < len(options):
             try:
                 call_args = json.loads(options[i + 1])
@@ -371,10 +491,13 @@ def main(args: list[str]) -> int:
             print(f"usage: unknown option {options[i]!r}")
             return 1
         i += 2
-    if not command:
-        print("usage: give the server's launch command after --")
+    if not command and not url:
+        print("usage: give the server's launch command after --, or --url")
         return 1
-    return run(command, timeout=timeout, call=call, call_args=call_args)
+    if command and url:
+        print("usage: give either a launch command after -- or --url, not both")
+        return 1
+    return run(command, timeout=timeout, call=call, call_args=call_args, url=url)
 
 
 if __name__ == "__main__":

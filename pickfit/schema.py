@@ -618,7 +618,13 @@ class McpHandshake(_Model):
 
     transport: McpTransport
     launch: list[str] = Field(
-        min_length=1, max_length=40, description="argv the probe started over stdio, as the replay ran it."
+        min_length=1, max_length=40,
+        description="argv that started the server, as the replay ran it: the probe's own over stdio, the "
+                    "background setup's over HTTP.",
+    )
+    url: str | None = Field(
+        default=None, pattern=r"^http://(127\.0\.0\.1|localhost)(:\d{1,5})?(/[A-Za-z0-9_./-]*)?$",
+        description="streamable_http: the local URL the probe posted to.",
     )
     protocol_version: str | None = Field(default=None, max_length=40)
     server_name: str | None = Field(default=None, max_length=80)

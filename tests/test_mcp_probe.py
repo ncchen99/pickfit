@@ -164,3 +164,81 @@ def test_a_modern_server_without_initialize(tmp_path: Path) -> None:
     assert summary["era"] == "modern" and summary["called"] == "get_time" and summary["tools"] == ["get_time"]
     assert summary["flags"] == {"(server instructions)": ["conceal_from_user"]}
     assert parse_summary(probe(tmp_path).stdout)["era"] == "legacy"
+
+
+class _HttpMcp:
+    """A streamable HTTP MCP server in a thread: legacy initialize with a session, JSON or SSE answers."""
+
+    def __init__(self, sse: bool) -> None:
+        import http.server
+        import threading
+
+        outer = self
+        self.sessions_seen: list[str | None] = []
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def log_message(self, *args: object) -> None:
+                pass
+
+            def do_DELETE(self) -> None:
+                self.send_response(204)
+                self.end_headers()
+
+            def do_POST(self) -> None:
+                msg = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                outer.sessions_seen.append(self.headers.get("Mcp-Session-Id"))
+                if "id" not in msg:
+                    self.send_response(202)
+                    self.end_headers()
+                    return
+                method = msg["method"]
+                if method == "initialize":
+                    result = {"protocolVersion": "2025-11-25", "capabilities": {"tools": {}},
+                              "serverInfo": {"name": "http-notes", "version": "0.1"}}
+                elif method == "tools/list":
+                    result = {"tools": [TIME_TOOL]}
+                else:
+                    result = {"content": [{"type": "text", "text": "noon"}], "isError": False}
+                body = json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": result})
+                self.send_response(200)
+                if method == "initialize":
+                    self.send_header("Mcp-Session-Id", "s-1")
+                if sse:
+                    self.send_header("Content-Type", "text/event-stream")
+                    payload = f"event: message\ndata: {body}\n\n".encode()
+                else:
+                    self.send_header("Content-Type", "application/json")
+                    payload = body.encode()
+                self.send_header("Content-Length", str(len(payload)))
+                self.end_headers()
+                self.wfile.write(payload)
+
+        self.server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.url = f"http://127.0.0.1:{self.server.server_address[1]}/mcp"
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+
+    def close(self) -> None:
+        self.server.shutdown()
+
+
+@pytest.mark.parametrize("sse", [False, True])
+def test_streamable_http_server(sse: bool) -> None:
+    server = _HttpMcp(sse)
+    try:
+        out = subprocess.run([sys.executable, str(PROBE), "--call", "get_time", "--args", "{}", "--url", server.url],
+                             capture_output=True, text=True, timeout=60)
+    finally:
+        server.close()
+    assert out.returncode == 0, out.stdout + out.stderr
+    summary = parse_summary(out.stdout)
+    assert summary["transport"] == "streamable_http" and summary["url"] == server.url
+    assert summary["server"] == "http-notes" and summary["called"] == "get_time" and summary["exit"] is None
+    assert server.sessions_seen[0] is None and set(server.sessions_seen[1:]) == {"s-1"}
+
+
+def test_url_must_be_local_and_alone() -> None:
+    run = lambda *a: subprocess.run([sys.executable, str(PROBE), *a], capture_output=True, text=True)  # noqa: E731
+    assert run("--url", "https://example.com/mcp").returncode == 1
+    assert run("--url", "http://127.0.0.1:9/mcp", "--", "x").returncode == 1
+    out = run("--timeout", "3", "--url", "http://127.0.0.1:9/mcp")
+    assert out.returncode == 2 and "cannot reach the server" in out.stdout

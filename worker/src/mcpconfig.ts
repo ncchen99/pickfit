@@ -7,9 +7,12 @@
 import type { Entry, InstallGuide } from './catalog.ts';
 
 export interface McpClientConfig {
-  transport: 'stdio';
+  transport: 'stdio' | 'streamable_http';
+  /** stdio: what the client starts. streamable_http: what to start first and keep running. */
   command: string;
   args: string[];
+  /** streamable_http: where the client connects once the server runs; null over stdio. */
+  url: string | null;
   /** One line for Claude Code. */
   claude_code: string;
   /** An mcpServers entry for Claude Desktop, Cursor and other clients that read that JSON. */
@@ -44,17 +47,26 @@ function pathLike(arg: string): boolean {
 
 export function clientConfig(entry: Entry, guide: InstallGuide | null): McpClientConfig | null {
   const handshake = guide?.mcp;
-  if (!handshake || handshake.transport !== 'stdio' || handshake.launch.length === 0) return null;
+  if (!handshake || handshake.launch.length === 0) return null;
+  const http = handshake.transport === 'streamable_http';
+  if (http ? !handshake.url : handshake.transport !== 'stdio') return null;
   const [command, ...args] = handshake.launch;
   const name = entry.slug.slice(0, SERVER_NAME_MAX);
   const env = (entry.mcp?.env_vars ?? [])
     .filter((v) => v.required === true && ENV_NAME.test(v.name))
     .map((v) => ({ name: v.name, required: v.required, purpose: v.purpose, placeholder: `<${v.name}>` }));
   const envFlags = env.map((v) => `-e ${v.name}=${shellQuote(v.placeholder)}`);
-  const claude = ['claude mcp add', name, ...envFlags, '--', ...handshake.launch.map(shellQuote)].join(' ');
-  const server: Record<string, unknown> = { command, args };
-  if (env.length) server.env = Object.fromEntries(env.map((v) => [v.name, v.placeholder]));
+  const claude = http
+    ? ['claude mcp add --transport http', name, shellQuote(handshake.url!)].join(' ')
+    : ['claude mcp add', name, ...envFlags, '--', ...handshake.launch.map(shellQuote)].join(' ');
+  const server: Record<string, unknown> = http ? { type: 'http', url: handshake.url } : { command, args };
+  if (env.length && !http) server.env = Object.fromEntries(env.map((v) => [v.name, v.placeholder]));
   const notes: string[] = [];
+  if (http) {
+    notes.push(
+      `This server speaks HTTP: start it first and keep it running (${handshake.launch.map(shellQuote).join(' ')}${env.length ? ', with ' + env.map((v) => v.name).join(', ') + ' set' : ''}), then add the URL.`,
+    );
+  }
   if (args.some(pathLike) || pathLike(command)) {
     notes.push("The sandbox run started it with paths inside pickfit's sandbox; point them at the user's own files or install location.");
   }
@@ -62,9 +74,10 @@ export function clientConfig(entry: Entry, guide: InstallGuide | null): McpClien
     notes.push(`Ask the user for ${env.map((v) => v.name).join(', ')}; pickfit never had a value, so these are placeholders.`);
   }
   return {
-    transport: 'stdio',
+    transport: http ? 'streamable_http' : 'stdio',
     command,
     args,
+    url: http ? handshake.url! : null,
     claude_code: claude,
     json: JSON.stringify({ mcpServers: { [name]: server } }, null, 2),
     env,
