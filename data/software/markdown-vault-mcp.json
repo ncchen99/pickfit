@@ -1,0 +1,769 @@
+{
+  "schema_version": "software.v1",
+  "slug": "markdown-vault-mcp",
+  "repo_id": "gh:1175222959",
+  "name": "Markdown Vault MCP",
+  "summary": "MCP server to search, read, and write a folder of Markdown notes with hybrid search.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "embeddings",
+    "fastmcp",
+    "fts5",
+    "knowledge-base",
+    "markdown",
+    "markdown-vault-mcp",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "obsidian"
+  ],
+  "use_cases": [
+    "search a folder of Markdown notes",
+    "read Markdown notes",
+    "write back into Markdown notes",
+    "follow backlinks and outlinks between notes",
+    "sync notes with git history"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://pvliesdonk.github.io/markdown-vault-mcp/",
+  "repo": {
+    "url": "https://github.com/pvliesdonk/markdown-vault-mcp",
+    "full_name": "pvliesdonk/markdown-vault-mcp",
+    "created_at": "2026-03-07T12:08:22Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-markdown-vault-mcp-20261031-012543-65ee",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install \"markdown-vault-mcp\" && markdown-vault-mcp --help",
+          "purpose": "Install markdown-vault-mcp with uv tool install"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "markdown-vault-mcp --help",
+        "expected_signal": "serve"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v5.1.0",
+    "published_at": "2026-10-07T19:10:50Z",
+    "url": "https://github.com/pvliesdonk/markdown-vault-mcp/releases/tag/v5.1.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:27:23.998770+08:00",
+    "runs": [
+      {
+        "id": "verify-markdown-vault-mcp-20261031-012543-65ee",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:27:23.998770+08:00",
+        "tool_version": "5.1.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install \"markdown-vault-mcp\" && markdown-vault-mcp --help",
+            "purpose": "Install markdown-vault-mcp with uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "markdown-vault-mcp --help",
+            "expected_signal": "serve",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ serve Run the MCP server. │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "MARKDOWN_VAULT_MCP_SOURCE_DIR=/tmp/vault python3 ~/.pickfit/mcp_probe.py --timeout 120 -- markdown-vault-mcp serve",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "ls ~/.pickfit/mcp_probe.py && mkdir -p /tmp/vault && printf '# Hello\\n\\nThis is a test note about pickfit verification.\\n\\nSee [[Other]] for more.\\n' > /tmp/vault/hello.md && printf '# Other\\n\\nSecond note linking back to [[Hello]].\\n' > /tmp/vault/other.md && ls -la /tmp/vault && cat /tmp/vault/hello.md",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "MARKDOWN_VAULT_MCP_SOURCE_DIR=/tmp/vault python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get_server_info --args '{}' -- markdown-vault-mcp serve",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_server_info content=text text_chars=261",
+            "setup": [
+              {
+                "command": "ls ~/.pickfit/mcp_probe.py && mkdir -p /tmp/vault && printf '# Hello\\n\\nThis is a test note about pickfit verification.\\n\\nSee [[Other]] for more.\\n' > /tmp/vault/hello.md && printf '# Other\\n\\nSecond note linking back to [[Hello]].\\n' > /tmp/vault/other.md && ls -la /tmp/vault && cat /tmp/vault/hello.md",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "MARKDOWN_VAULT_MCP_SOURCE_DIR=/tmp/vault python3 ~/.pickfit/mcp_probe.py --timeout 120 --call vault_list --args '{}' -- markdown-vault-mcp serve",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=vault_list content=text text_chars=124",
+            "setup": [
+              {
+                "command": "ls ~/.pickfit/mcp_probe.py && mkdir -p /tmp/vault && printf '# Hello\\n\\nThis is a test note about pickfit verification.\\n\\nSee [[Other]] for more.\\n' > /tmp/vault/hello.md && printf '# Other\\n\\nSecond note linking back to [[Hello]].\\n' > /tmp/vault/other.md && ls -la /tmp/vault && cat /tmp/vault/hello.md",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "README gives launch command markdown-vault-mcp serve without documenting --version/--help flags.",
+            "actually_needed": "No --version option exists; use markdown-vault-mcp --help (shows serve/index/search/reindex commands) to confirm the binary is on PATH.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "MARKDOWN_VAULT_MCP_SOURCE_DIR defaults to /data/vault.",
+            "actually_needed": "Set MARKDOWN_VAULT_MCP_SOURCE_DIR to an existing vault directory containing .md files (here /tmp/vault with hello.md and other.md); with the default /data/vault every tool reports the vault is missing.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show successful MCP handshake listing 44 tools, successful get_server_info tool call, and help listing the serve command.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-markdown-vault-mcp-20261031-012543-65ee/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-markdown-vault-mcp-20261031-012543-65ee/check-1-cmd4.judged.png",
+            "runs/verify/verify-markdown-vault-mcp-20261031-012543-65ee/check-2-cmd5.judged.png",
+            "runs/verify/verify-markdown-vault-mcp-20261031-012543-65ee/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.055137,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "markdown-vault-mcp",
+            "serve"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "markdown-vault-mcp",
+          "server_version": "4.1.4",
+          "tools": [
+            "search",
+            "read",
+            "list_documents",
+            "list_folders",
+            "list_tags",
+            "stats",
+            "get_similar",
+            "get_toc",
+            "get_recent",
+            "get_context",
+            "get_conventions",
+            "okf_validate",
+            "get_backlinks",
+            "get_outlinks",
+            "get_broken_links",
+            "get_orphan_notes",
+            "get_most_linked",
+            "get_connection_path",
+            "embeddings_status",
+            "get_index_status",
+            "write",
+            "edit",
+            "append",
+            "delete",
+            "rename",
+            "move_folder",
+            "fetch",
+            "okf_convert_links",
+            "okf_generate_index",
+            "okf_seed_log",
+            "get_history",
+            "get_diff",
+            "browse_vault",
+            "vault_context",
+            "show_context",
+            "vault_graph_neighborhood",
+            "vault_graph_hubs",
+            "vault_list",
+            "vault_read",
+            "vault_search",
+            "get_server_info",
+            "reindex",
+            "build_embeddings",
+            "get_job_result"
+          ],
+          "tool_count": 44,
+          "called_tool": "get_server_info",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "markdown-vault-mcp serve",
+    "client_configs": [],
+    "env_vars": [
+      {
+        "name": "MARKDOWN_VAULT_MCP_SOURCE_DIR",
+        "required": false,
+        "purpose": "Path to the markdown vault directory"
+      },
+      {
+        "name": "MARKDOWN_VAULT_MCP_READ_ONLY",
+        "required": false,
+        "purpose": "serve a search-only vault"
+      },
+      {
+        "name": "MARKDOWN_VAULT_MCP_EMBEDDING_PROVIDER",
+        "required": false,
+        "purpose": "Embedding provider for search by meaning"
+      },
+      {
+        "name": "MARKDOWN_VAULT_MCP_GIT_REPO_URL",
+        "required": false,
+        "purpose": "HTTPS remote URL for managed git mode"
+      },
+      {
+        "name": "MARKDOWN_VAULT_MCP_FILE_WATCHER",
+        "required": false,
+        "purpose": "Watch the vault for external changes"
+      },
+      {
+        "name": "MARKDOWN_VAULT_MCP_DEFAULT_SEARCH_MODE",
+        "required": false,
+        "purpose": "Mode used when search omits mode"
+      }
+    ],
+    "tools": [
+      "write",
+      "edit",
+      "append",
+      "delete",
+      "rename",
+      "move_folder",
+      "fetch",
+      "git_sync",
+      "read",
+      "get_server_info",
+      "summarize",
+      "create_upload_link"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:03:51+08:00",
+    "quality": {
+      "total": 80.8,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 62.5,
+      "signals": {
+        "stars": 36,
+        "monthly_downloads": 1927,
+        "forks": 16,
+        "dependents": null,
+        "release_downloads": 80,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 237,
+      "packages": [
+        "pypi:markdown-vault-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 30.3
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "71bd9db0682e7e5661db3227ab2329c6377a4e0351628b7af789b015553192fd",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Give Claude, or any MCP client, a folder of Markdown notes to search, read and write."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "It suits one person or a small team who keep notes as Markdown files"
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "uv tool install \"markdown-vault-mcp\""
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "markdown-vault-mcp serve"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "`MARKDOWN_VAULT_MCP_SOURCE_DIR` | `/data/vault` | No | Path to the markdown vault directory."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "docker run --rm -p 8000:8000 --env-file .env ghcr.io/pvliesdonk/markdown-vault-mcp:latest"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/pvliesdonk/markdown-vault-mcp",
+      "fetched_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/pvliesdonk/markdown-vault-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:03:39+08:00"
+    },
+    {
+      "id": "release:v5.1.0",
+      "kind": "release",
+      "url": "https://github.com/pvliesdonk/markdown-vault-mcp/releases/tag/v5.1.0",
+      "fetched_at": "2026-10-31T01:03:39+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Generic markdown vault MCP with hybrid search",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Give Claude, or any MCP client, a folder of Markdown notes to search, read and write.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Generic markdown vault MCP with hybrid search",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Give Claude, or any MCP client, a folder of Markdown notes to search, read and write.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Markdown Vault MCP",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v5.1.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:03:39+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "a folder of Markdown notes to search, read and write.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "a folder of Markdown notes to search, read and write.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "a folder of Markdown notes to search, read and write.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Backlinks, outlinks, broken links and the path between two notes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Optional commit per write with a delayed push, pull or webhook sync, and history and diffs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "It reaches the vault folder, plus only what you configure: a git remote, an embedding or summarizing model",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "A client that runs a command** (stdio).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "markdown-vault-mcp serve",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "MARKDOWN_VAULT_MCP_SOURCE_DIR",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "MARKDOWN_VAULT_MCP_READ_ONLY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "MARKDOWN_VAULT_MCP_EMBEDDING_PROVIDER",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "MARKDOWN_VAULT_MCP_GIT_REPO_URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "MARKDOWN_VAULT_MCP_FILE_WATCHER",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/5",
+      "source_id": "readme",
+      "quote": "MARKDOWN_VAULT_MCP_DEFAULT_SEARCH_MODE",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "The write tools (`write`, `edit`, `append`, `delete`, `rename`, `move_folder`, `fetch`, `git_sync`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "The write tools (`write`, `edit`, `append`, `delete`, `rename`, `move_folder`, `fetch`, `git_sync`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "The write tools (`write`, `edit`, `append`, `delete`, `rename`, `move_folder`, `fetch`, `git_sync`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "The write tools (`write`, `edit`, `append`, `delete`, `rename`, `move_folder`, `fetch`, `git_sync`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "The write tools (`write`, `edit`, `append`, `delete`, `rename`, `move_folder`, `fetch`, `git_sync`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "The write tools (`write`, `edit`, `append`, `delete`, `rename`, `move_folder`, `fetch`, `git_sync`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "The write tools (`write`, `edit`, `append`, `delete`, `rename`, `move_folder`, `fetch`, `git_sync`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "The write tools (`write`, `edit`, `append`, `delete`, `rename`, `move_folder`, `fetch`, `git_sync`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "Results are short snippets; `read` fetches the whole section.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "its `get_server_info` tool reports the running version.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "Search by meaning, the file watcher, the `summarize` tool and keeping embeddings in PostgreSQL need extras",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`create_upload_link`) are on by default and hidden when `MARKDOWN_VAULT_MCP_READ_ONLY=true`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:11+08:00",
+  "updated_at": "2026-10-31T02:03:51+08:00"
+}

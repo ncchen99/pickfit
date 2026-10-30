@@ -2,7 +2,7 @@
 import { verifiedOn, type Arch, type Entry, type OS } from './catalog.ts';
 
 export interface Conditions {
-  category?: 'dev_cli' | 'local_ai' | 'any';
+  category?: 'dev_cli' | 'local_ai' | 'mcp_server' | 'any';
   os?: OS;
   arch?: Arch;
   budget?: 'free_only' | 'free_or_paid';

@@ -18,7 +18,7 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--repo", action="append", help="batch: only this repo id (gh:<id>) or owner/name")
     v.add_argument("--records", action="store_true",
                    help="batch: only candidates that have a record in --data-dir (the profiles)")
-    v.add_argument("--category", action="append", choices=["dev_cli", "local_ai"],
+    v.add_argument("--category", action="append", choices=["dev_cli", "local_ai", "mcp_server"],
                    help="batch: only this category (repeatable)")
     v.add_argument("--force", action="store_true", help="batch: also tools that already have a run")
     v.add_argument("--since", metavar="YYYYmmdd-HHMMSS",
@@ -116,7 +116,14 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
     from pickfit.discover.run import pipeline_db_path
     from pickfit.meta import resolve_model
     from pickfit.verify.agent import DEFAULT_MODE, _runs_dir
-    from pickfit.verify.batch import load_candidates, recheck_slugs, record_slugs, run_batch, verified_slugs
+    from pickfit.verify.batch import (
+        load_candidates,
+        recheck_slugs,
+        record_categories,
+        record_slugs,
+        run_batch,
+        verified_slugs,
+    )
     from pickfit.verify.pipeline import verify_task
     from pickfit.verify.result import DATA_DIR
 
@@ -136,7 +143,8 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
         print(f"pickfit verify: no records in {data_dir}")
         return 2
     items, skipped = load_candidates(db, limit=args.batch, repos=repos, categories=args.category,
-                                     skip_slugs=skip, known_slugs=known, gpu=bool(args.gpu),
+                                     skip_slugs=skip, known_slugs=known,
+                                     known_categories=record_categories(data_dir), gpu=bool(args.gpu),
                                      os="macos" if args.runner == "tart" else "linux")
     print(f"batch · {len(items)} to verify · {len(skipped)} set aside · {args.runner}"
           f"{' + ' + args.gpu if args.gpu else ''} · "

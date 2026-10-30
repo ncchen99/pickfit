@@ -12,7 +12,10 @@ the log and decides from what actually ran:
 - the level is the weaker of the claim and what the passing checks support:
   install needs a passing check, function a README example (not only
   --version/--help), service a background server, inference a generation
-  request against it.
+  request against it;
+- for an MCP server (mcp.py), only pickfit's probe counts: function needs its
+  completed handshake, service a tool call; nothing else passes, and a check
+  or step that sets a credential variable never counts.
 """
 
 from __future__ import annotations
@@ -23,6 +26,7 @@ from dataclasses import asdict, dataclass, field
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from pickfit.schema import COMMAND_MAX, PASSED_LEVELS, is_passed
+from pickfit.verify.mcp import credentials, parse_summary, probe_kind
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import CommandRecord, FinishArgs
@@ -369,8 +373,15 @@ def _excerpt(record: CommandRecord, signal: str) -> str:
     return lines[-1].strip()[:EXCERPT_CHARS] if lines else ""
 
 
+MCP_KINDS = ("mcp", "mcp_call")
+
+
 def check_kind(command: str) -> str:
-    """version (--version/--help only), generation (asks a model for text), or example."""
+    """mcp or mcp_call (pickfit's MCP probe), version (--version/--help only), generation (asks a model for
+    text), or example."""
+    probe = probe_kind(last_command(command))
+    if probe:
+        return probe
     if _GENERATION.search(command):
         return "generation"
     if _VERSION_HELP.search(last_command(command)):
@@ -438,11 +449,30 @@ def evaluate_check(record: CommandRecord, expected_exit_code: int, expected_sign
     return not problems, problems
 
 
-def supported_level(steps_ok: bool, checks: list[ResolvedCheck], has_service: bool) -> str | None:
-    """The strongest passed level the passing checks support, or None."""
+def mcp_problems(kind: str, stdout: str) -> list[str]:
+    """Why a probe check's output does not show what its kind claims; [] when it does."""
+    summary = parse_summary(stdout)
+    if summary is None:
+        return ["no summary line from pickfit's MCP probe in the output"]
+    if not summary.get("ok"):
+        return [f"the MCP probe did not complete: {str(summary.get('error') or 'not ok')[:120]}"]
+    if kind == "mcp_call" and not summary.get("called"):
+        return ["the MCP probe's tool call did not return a result"]
+    return []
+
+
+def supported_level(steps_ok: bool, checks: list[ResolvedCheck], has_service: bool, *,
+                    mcp: bool = False) -> str | None:
+    """The strongest passed level the passing checks support, or None.
+
+    An MCP server passes only on pickfit's probe: function for the handshake, service for a tool call.
+    """
     passing = [c for c in checks if c.passed]
     if not steps_ok or not passing:
         return None
+    if mcp:
+        kinds = {c.kind for c in passing}
+        return "service" if "mcp_call" in kinds else "function" if "mcp" in kinds else None
     if any(c.kind == "generation" for c in passing) and has_service:
         return "inference"
     if has_service and any(c.kind != "version" for c in passing):
@@ -456,8 +486,11 @@ def weaker(a: str, b: str) -> str:
     return a if PASSED_LEVELS.index(a) > PASSED_LEVELS.index(b) else b
 
 
-def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict:
-    """Decide the level from the command log; the claim is only an upper bound."""
+def log_verdict(finish: FinishArgs, commands: list[CommandRecord], *, mcp: bool = False) -> LogVerdict:
+    """Decide the level from the command log; the claim is only an upper bound.
+
+    mcp: the software is an MCP server, so only pickfit's probe can make it pass.
+    """
     by_id = {c.command_id: c for c in commands if c.command_id is not None}
     problems: list[str] = []
 
@@ -480,6 +513,10 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict
             steps_ok = False
             problems.append(f"step {step.command_id} is {len(record.command)} characters; an install step "
                             f"must fit in {COMMAND_MAX} (split it into shorter commands)")
+        elif mcp and credentials(record.command):
+            steps_ok = False
+            problems.append(f"step {step.command_id} sets {', '.join(credentials(record.command))}: pickfit "
+                            "never uses placeholder credentials")
 
     # A step that runs a file only an uncited command wrote cannot be replayed (a fresh box lacks it).
     cited = set(step_ids)
@@ -521,6 +558,14 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict
                 setup_ok = False
                 check.problems.append(f"setup {setup_id} exited {setup.exit_code}")
         ok, why = evaluate_check(record, check.expected_exit_code, check.expected_signal)
+        if check.kind in MCP_KINDS:
+            why += mcp_problems(check.kind, record.stdout)
+        if mcp:
+            fake = sorted({name for cid in (test.command_id, *test.setup_ids) if cid in by_id
+                           for name in credentials(by_id[cid].command)})
+            if fake:
+                why.append(f"sets {', '.join(fake)}: pickfit never uses placeholder credentials")
+        ok = ok and not why
         check.problems += why
         check.passed = ok and setup_ok
         check.observed_excerpt = _excerpt(record, check.expected_signal)
@@ -533,9 +578,11 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict
 
     level, reason = finish.level, finish.unverified_reason
     if is_passed(level):
-        supported = supported_level(steps_ok, checks, has_service)
+        supported = supported_level(steps_ok, checks, has_service, mcp=mcp)
         if supported is None:
             level, reason = "unverified", "other"
+            if mcp and steps_ok and any(c.passed for c in checks):
+                problems.append("an MCP server passes only when pickfit's probe completes the handshake")
             if not problems:
                 problems.append("no passing check in the log")
         else:

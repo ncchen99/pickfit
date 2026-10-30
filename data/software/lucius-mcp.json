@@ -1,0 +1,824 @@
+{
+  "schema_version": "software.v1",
+  "slug": "lucius-mcp",
+  "repo_id": "gh:1144489782",
+  "name": "Allure TestOps MCP Server",
+  "summary": "MCP server and CLI for managing Allure TestOps test cases, launches, plans and defects.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "allure",
+    "allure-testops",
+    "cli",
+    "fastmcp",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "test-management",
+    "testops",
+    "tms"
+  ],
+  "use_cases": [
+    "manage test case documentation lifecycle",
+    "manage launches and upload test results",
+    "manage test plans and run them"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://ivanostanin.github.io/lucius-mcp/",
+  "repo": {
+    "url": "https://github.com/ivanostanin/lucius-mcp",
+    "full_name": "ivanostanin/lucius-mcp",
+    "created_at": "2026-01-28T18:25:48Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.10 through 3.14"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "Allure API token"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uvx --from lucius-mcp --refresh start",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "uv run lucius test_case"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-lucius-mcp-20261031-015013-ba7b",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install lucius-mcp 2>&1",
+          "purpose": "install lucius-mcp with uv tool so start/lucius are on PATH"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "lucius --help 2>&1",
+        "expected_signal": "test_case (tc)"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uvx --from lucius-mcp --refresh start",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "uv run lucius test_case"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v0.16.6",
+    "published_at": "2026-10-21T15:29:24Z",
+    "url": "https://github.com/ivanostanin/lucius-mcp/releases/tag/v0.16.6"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:51:50.271371+08:00",
+    "runs": [
+      {
+        "id": "verify-lucius-mcp-20261031-015013-ba7b",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:51:50.271371+08:00",
+        "tool_version": "0.16.6",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install lucius-mcp 2>&1",
+            "purpose": "install lucius-mcp with uv tool so start/lucius are on PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- start 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lucius --help 2>&1",
+            "expected_signal": "test_case (tc)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ test_case (tc) │ create, delete, delete_archived, │ lucius test_case │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lucius test_case get --help 2>&1",
+            "expected_signal": "Mapped tool: get_test_case_details",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Mapped tool: get_test_case_details",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "uv run start / uvx --from lucius-mcp --refresh start",
+            "actually_needed": "uv tool install lucius-mcp provides PATH-stable `start` and `lucius` executables that work with network off; uvx --from lucius-mcp --refresh would refetch on each launch",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "start launch command supports --help/--version",
+            "actually_needed": "`start --help` ignores help flag and starts the stdio MCP server (had to be killed after 30s); use `lucius --help` or `lucius test_case get --help` for CLI help",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "ALLURE_ENDPOINT (required), ALLURE_API_TOKEN (required)",
+            "actually_needed": "server starts and completes MCP initialize/tools-list with no env set; ALLURE_ENDPOINT/ALLURE_API_TOKEN are only needed when actually calling Allure tools",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show success: MCP probe handshake ok with 70 tools, lucius help listing test_case (tc), and test_case get help mapping to get_test_case_details.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lucius-mcp-20261031-015013-ba7b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lucius-mcp-20261031-015013-ba7b/check-1-cmd4.judged.png",
+            "runs/verify/verify-lucius-mcp-20261031-015013-ba7b/check-2-cmd5.judged.png",
+            "runs/verify/verify-lucius-mcp-20261031-015013-ba7b/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.047533,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "start"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "lucius-mcp",
+          "server_version": "0.16.6",
+          "tools": [
+            "create_test_case",
+            "get_test_case_details",
+            "update_test_case",
+            "delete_test_case",
+            "delete_archived_test_cases",
+            "list_test_cases",
+            "get_custom_fields",
+            "delete_unused_custom_fields",
+            "list_custom_field_values",
+            "create_custom_field_value",
+            "update_custom_field_value",
+            "delete_custom_field_value",
+            "get_test_case_custom_fields",
+            "search_test_cases",
+            "generate_test_code",
+            "create_launch",
+            "get_launch",
+            "get_test_result",
+            "prepare_attachment_download",
+            "get_project",
+            "list_launches",
+            "list_launch_test_results",
+            "rerun_test_results_manually",
+            "start_manual_test_session",
+            "submit_manual_test_results",
+            "upload_test_results",
+            "attach_file_to_launch",
+            "add_test_result_attachment",
+            "delete_launch",
+            "close_launch",
+            "reopen_launch",
+            "list_integrations",
+            "create_shared_step",
+            "list_shared_steps",
+            "update_shared_step",
+            "delete_shared_step",
+            "delete_archived_shared_steps",
+            "link_shared_step",
+            "unlink_shared_step",
+            "list_test_layers",
+            "create_test_layer",
+            "update_test_layer",
+            "delete_test_layer",
+            "list_test_layer_schemas",
+            "create_test_layer_schema",
+            "update_test_layer_schema",
+            "delete_test_layer_schema",
+            "create_test_suite",
+            "list_test_suites",
+            "get_test_suite_contents",
+            "assign_test_cases_to_suite",
+            "delete_test_suite",
+            "create_test_plan",
+            "update_test_plan",
+            "manage_test_plan_content",
+            "list_test_plans",
+            "run_test_plan",
+            "delete_test_plan",
+            "create_defect",
+            "get_defect",
+            "link_defect_to_test_case",
+            "list_defect_test_cases",
+            "unlink_issue_from_test_case",
+            "update_defect",
+            "delete_defect",
+            "list_defects",
+            "create_defect_matcher",
+            "update_defect_matcher",
+            "delete_defect_matcher",
+            "list_defect_matchers"
+          ],
+          "tool_count": 70,
+          "called_tool": null,
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "uvx --from lucius-mcp --refresh start",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add --transport stdio --scope project \\\n  --env ALLURE_ENDPOINT=https://example.testops.cloud \\\n  --env ALLURE_PROJECT_ID=123 \\\n  --env ALLURE_API_TOKEN=<your_api_token> \\\n  --env MCP_MODE=stdio \\\n  testops-mcp -- uvx --from lucius-mcp --refresh start"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"testops-mcp\": {\n      \"type\": \"stdio\",\n      \"command\": \"uvx\",\n      \"args\": [\n        \"--from\",\n        \"lucius-mcp\",\n        \"--refresh\",\n        \"start\"\n      ],"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "ALLURE_ENDPOINT",
+        "required": true,
+        "purpose": "Allure TestOps base URL"
+      },
+      {
+        "name": "ALLURE_API_TOKEN",
+        "required": true,
+        "purpose": "Allure API token"
+      },
+      {
+        "name": "ALLURE_PROJECT_ID",
+        "required": null,
+        "purpose": "Default Allure project ID"
+      },
+      {
+        "name": "MCP_MODE",
+        "required": null,
+        "purpose": "MCP transport mode for Lucius runtime"
+      }
+    ],
+    "tools": [
+      "create_test_case",
+      "update_test_case",
+      "list_test_cases",
+      "search_test_cases",
+      "generate_test_code",
+      "create_shared_step",
+      "create_launch",
+      "list_launches",
+      "get_test_result",
+      "create_test_plan"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:03:51+08:00",
+    "quality": {
+      "total": 70.8,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.578,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 43.3,
+      "signals": {
+        "stars": 7,
+        "monthly_downloads": 1756,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": 411,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 274,
+      "packages": [
+        "pypi:lucius-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 40.14
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "9412753ed558dea19ddc035a8ee57496abd1808de8d392bca3709260cdc7208b",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Lucius is a specialized Model Context Protocol (MCP) server for Allure TestOps, built with `FastMCP` and `Starlette`."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "When you're using an AI agent to manage your tests, it can easily get"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Lucius supports Python 3.10 through 3.14 for runtime use."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "1. **Install uv**: `curl -LsSf https://astral.sh/uv/install.sh | sh`"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "3. **Run Server**: `uv run start`"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `ALLURE_API_TOKEN` | Allure API token | `<your_api_token>` |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "📦 Standalone binaries for Linux, macOS, and Windows"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ivanostanin/lucius-mcp",
+      "fetched_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ivanostanin/lucius-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:06:09+08:00"
+    },
+    {
+      "id": "release:v0.16.6",
+      "kind": "release",
+      "url": "https://github.com/ivanostanin/lucius-mcp/releases/tag/v0.16.6",
+      "fetched_at": "2026-10-31T01:06:09+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Lucius is a specialized Model Context Protocol (MCP) server for Allure TestOps",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Run Server**: `uv run start`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Lucius is a specialized Model Context Protocol (MCP) server for Allure TestOps",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Lucius is a specialized Model Context Protocol (MCP) server for Allure TestOps, built with `FastMCP`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Allure TestOps MCP Server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "📦 Standalone binaries for Linux, macOS, and Windows",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Lucius supports Python 3.10 through 3.14 for runtime use.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "`ALLURE_ENDPOINT` | Allure TestOps base URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "`ALLURE_API_TOKEN` | Allure API token",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.16.6",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:06:09+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Full lifecycle for test documentation.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Manage launches, result uploads, manual execution, reruns, and attachments.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Manage test plans and their content.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "uvx --from lucius-mcp --refresh start",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "uvx --from lucius-mcp --refresh start",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "uvx --from lucius-mcp --refresh start",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "`ALLURE_ENDPOINT` | Allure TestOps base URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "claude mcp add --transport stdio --scope project",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "testops-mcp -- uvx --from lucius-mcp --refresh start",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add --transport stdio --scope project \\\n  --env ALLURE_ENDPOINT=https://example.testops.cloud \\\n  --env ALLURE_PROJECT_ID=123 \\\n  --env ALLURE_API_TOKEN=<your_api_token> \\\n  --env MCP_MODE=stdio \\\n  testops-mcp -- uvx --from lucius-mcp --refresh start",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"testops-mcp\": {\n      \"type\": \"stdio\",\n      \"command\": \"uvx\",\n      \"args\": [\n        \"--from\",\n        \"lucius-mcp\",\n        \"--refresh\",\n        \"start\"\n      ],",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "ALLURE_ENDPOINT",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "ALLURE_API_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "ALLURE_PROJECT_ID",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "MCP_MODE",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`create_test_case`, `update_test_case`, `delete_test_case`, `delete_archived_test_cases`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`create_test_case`, `update_test_case`, `delete_test_case`, `delete_archived_test_cases`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`list_test_cases`, `search_test_cases`, `get_custom_fields`, `list_integrations`, `get_project`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`list_test_cases`, `search_test_cases`, `get_custom_fields`, `list_integrations`, `get_project`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`generate_test_code`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`create_shared_step`, `list_shared_steps`, `update_shared_step`, `delete_shared_step`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`create_launch`, `list_launches`, `get_launch`, `list_launch_test_results`, `upload_test_results`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`create_launch`, `list_launches`, `get_launch`, `list_launch_test_results`, `upload_test_results`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`get_test_result`, `prepare_attachment_download`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`create_test_plan`, `update_test_plan`, `delete_test_plan`, `list_test_plans`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:20+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:50+08:00",
+  "updated_at": "2026-10-31T02:03:51+08:00"
+}

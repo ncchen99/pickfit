@@ -80,6 +80,10 @@ TOPICS: dict[str, tuple[str, ...]] = {
         # server, and the Apple Silicon runner format.
         "on-device-ai", "edge-ai", "mlx", "llm-serving", "self-hosted-ai", "local-first+llm",
     ),
+    # Added 2026-10-31: MCP servers, the programs AI clients start or connect to over the
+    # Model Context Protocol. Category-wide topics only, written from that definition; not
+    # shaped around any particular need.
+    "mcp_server": ("mcp-server", "model-context-protocol", "mcp", "mcp-servers", "mcp-tools", "fastmcp"),
 }
 STARS = "5..300"
 PUSHED_DAYS = 14

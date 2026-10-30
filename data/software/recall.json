@@ -1,49 +1,50 @@
 {
   "schema_version": "software.v1",
   "slug": "recall",
-  "repo_id": "gh:1205804983",
-  "name": "Recall",
-  "summary": "Search and resume local AI coding sessions across many CLIs from one index.",
+  "repo_id": "gh:1367117865",
+  "name": "Polign Recall",
+  "summary": "Agent memory and state that survive restarts, with corrections and history.",
   "aliases": [],
   "status": "listed",
   "status_reason": null,
-  "category": "dev_cli",
-  "kind": "cli_tool",
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
   "audience": "end_user",
   "maturity": null,
   "tags": [
-    "ai-coding",
-    "claude-code",
-    "cli",
-    "cline",
-    "codex",
-    "cursor",
-    "dsh-plugins",
-    "gemini",
-    "local-first",
-    "opencode"
+    "agent-memory",
+    "agent-sandbox",
+    "ai-agents",
+    "event-sourcing",
+    "golang",
+    "kubernetes",
+    "langgraph",
+    "llm-memory",
+    "mcp",
+    "mcp-server"
   ],
   "use_cases": [
-    "incrementally sync the current project",
-    "view usage dashboard",
-    "export all sessions"
+    "read correction history for a fact",
+    "read what was believed at a past date",
+    "resume a crashed agent from records"
   ],
-  "alternatives_to": [],
+  "alternatives_to": [
+    "mem0",
+    "Zep"
+  ],
   "why_worth_it": null,
-  "homepage": "https://samzong.github.io/Recall/",
+  "homepage": "https://polign.com/recall",
   "repo": {
-    "url": "https://github.com/samzong/Recall",
-    "full_name": "samzong/Recall",
-    "created_at": "2026-04-09T09:43:56Z",
+    "url": "https://github.com/Polign/recall",
+    "full_name": "Polign/recall",
+    "created_at": "2026-09-12T08:45:18Z",
     "archived": false
   },
-  "platforms": [
-    "linux",
-    "macos",
-    "windows"
-  ],
+  "platforms": [],
   "prerequisites": {
-    "runtimes": [],
+    "runtimes": [
+      "Python 3.10 or later"
+    ],
     "system_packages": [],
     "gpu": null,
     "apple_silicon_only": null,
@@ -52,33 +53,20 @@
     "api_keys": []
   },
   "install": {
-    "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "brew",
-      "steps": [
-        {
-          "command": "brew install samzong/tap/recall",
-          "purpose": null
-        }
-      ],
-      "manual_steps": [],
-      "check": null,
-      "first_task": "recall info"
-    },
+    "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "brew",
+      "basis": "replayed",
+      "run_id": "verify-recall-20261031-012049-ce5f",
+      "method": "uv",
       "steps": [
         {
-          "command": "brew install samzong/tap/recall",
-          "purpose": null
+          "command": "uv tool install polign-recall 2>&1",
+          "purpose": "Install polign-recall via uv tool"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "recall info"
+      "first_task": null
     },
     "windows": null
   },
@@ -87,20 +75,238 @@
     "note": null
   },
   "open_source": true,
-  "license": "MIT",
+  "license": "Apache-2.0",
   "processing": "local",
   "last_release": {
-    "tag": "v0.6.6",
-    "published_at": "2026-10-30T11:44:50Z",
-    "url": "https://github.com/samzong/Recall/releases/tag/v0.6.6"
+    "tag": "v0.24.0",
+    "published_at": "2026-10-30T01:21:56Z",
+    "url": "https://github.com/Polign/recall/releases/tag/v0.24.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:21:24.814842+08:00",
+    "runs": [
+      {
+        "id": "verify-recall-20261031-012049-ce5f",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:21:24.814842+08:00",
+        "tool_version": "0.24.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install polign-recall 2>&1",
+            "purpose": "Install polign-recall via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- recall mcp -write",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call history --args '{\"question\": \"which editor do I use\"}' -- recall mcp -write",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=history content=text text_chars=14",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show successful MCP handshake with 5 tools listed and a successful history tool call returning empty history.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-recall-20261031-012049-ce5f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-recall-20261031-012049-ce5f/check-1-cmd5.judged.png",
+            "runs/verify/verify-recall-20261031-012049-ce5f/check-2-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.036108,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "recall",
+            "mcp",
+            "-write"
+          ],
+          "url": null,
+          "protocol_version": "2025-06-18",
+          "server_name": "recall",
+          "server_version": "0.24.0",
+          "tools": [
+            "remember",
+            "recall",
+            "forget",
+            "history",
+            "diff"
+          ],
+          "tool_count": 5,
+          "called_tool": "history",
+          "offline": true
+        }
+      }
+    ]
   },
-  "scores": null,
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "recall mcp -write",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add recall -- recall mcp -write"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "RECALL_BACKEND",
+        "required": null,
+        "purpose": "select database backend"
+      },
+      {
+        "name": "RECALL_BACKEND_URL",
+        "required": null,
+        "purpose": "database location"
+      },
+      {
+        "name": "RECALL_URL",
+        "required": null,
+        "purpose": "server URL for recall connect"
+      },
+      {
+        "name": "RECALL_API_KEY",
+        "required": null,
+        "purpose": "server API key"
+      }
+    ],
+    "tools": [
+      "agent_resume",
+      "update_working_state",
+      "record_turn",
+      "begin_action",
+      "remember"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:03:51+08:00",
+    "quality": {
+      "total": 92.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 48.8,
+      "signals": {
+        "stars": 6,
+        "monthly_downloads": 1094,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 400,
+        "hn_top_score": 1,
+        "registries_count": 1
+      },
+      "age_days": 48,
+      "packages": [
+        "pypi:polign-recall"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 47.21
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "87fd50ef9fcee0a3aa4499ee69096e0285f954dc4d79b320ae953d63a5dd38be",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Recall gives an agent memory and state that survive the conversation and the"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Recall gives an agent memory and state that survive the conversation"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Python 3.10 or later."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install polign-recall          # the Python client, the recall binary, and the database it runs"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ recall history \"which editor do I use\"\nuser preferred editor"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "No model and no API key are needed to start."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "[Apache 2.0](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -146,70 +352,70 @@
     {
       "id": "github_api",
       "kind": "github_api",
-      "url": "https://api.github.com/repos/samzong/Recall",
-      "fetched_at": "2026-10-30T23:41:48+08:00"
+      "url": "https://api.github.com/repos/Polign/recall",
+      "fetched_at": "2026-10-31T00:50:29+08:00"
     },
     {
       "id": "readme",
       "kind": "readme",
-      "url": "https://github.com/samzong/Recall/blob/main/README.md",
-      "fetched_at": "2026-10-30T23:57:22+08:00"
+      "url": "https://github.com/Polign/recall/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:06:45+08:00"
     },
     {
-      "id": "release:v0.6.6",
+      "id": "release:v0.24.0",
       "kind": "release",
-      "url": "https://github.com/samzong/Recall/releases/tag/v0.6.6",
-      "fetched_at": "2026-10-30T23:57:22+08:00"
+      "url": "https://github.com/Polign/recall/releases/tag/v0.24.0",
+      "fetched_at": "2026-10-31T01:06:45+08:00"
     }
   ],
   "evidence": [
     {
       "field": "/kind",
       "source_id": "readme",
-      "quote": "recall sync          # incremental sync of the current project (safe to run anytime)",
+      "quote": "a `recall` binary that serves the same operations as\nMCP tools and as HTTP",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-10-31T00:04:03+08:00"
+      "checked_at": "2026-10-31T01:14:32+08:00"
     },
     {
       "field": "/audience",
       "source_id": "readme",
-      "quote": "recall               # launch TUI",
+      "quote": "pip install polign-recall          # the Python client, the recall binary, and the database it runs",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-10-31T00:04:03+08:00"
+      "checked_at": "2026-10-31T01:14:32+08:00"
     },
     {
       "field": "/category",
       "source_id": "readme",
-      "quote": "One index across every AI coding CLI.",
+      "quote": "a `recall` binary that serves the same operations as\nMCP tools and as HTTP",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-10-31T00:04:03+08:00"
+      "checked_at": "2026-10-31T01:14:32+08:00"
     },
     {
       "field": "/summary",
       "source_id": "readme",
-      "quote": "Local-first search across every AI coding session on your machine.",
+      "quote": "Recall gives an agent memory and state that survive the conversation and the\nprocess.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-10-31T00:04:03+08:00"
+      "checked_at": "2026-10-31T01:14:32+08:00"
     },
     {
       "field": "/name",
       "source_id": "readme",
-      "quote": "# Recall",
+      "quote": "# Polign Recall",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-10-31T00:04:03+08:00"
+      "checked_at": "2026-10-31T01:14:32+08:00"
     },
     {
-      "field": "/platforms",
-      "source_id": "release:v0.6.6",
-      "quote": "recall-linux-x86_64.tar.gz, recall-macos-aarch64.tar.gz, recall-macos-x86_64.tar.gz, recall-windows-x86_64.zip",
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.10 or later.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-10-31T00:04:03+08:00"
+      "checked_at": "2026-10-31T01:14:32+08:00"
     },
     {
       "field": "/repo",
@@ -217,7 +423,7 @@
       "quote": null,
       "method": "api",
       "model": null,
-      "checked_at": "2026-10-30T23:41:48+08:00"
+      "checked_at": "2026-10-31T00:50:29+08:00"
     },
     {
       "field": "/license",
@@ -225,7 +431,7 @@
       "quote": null,
       "method": "api",
       "model": null,
-      "checked_at": "2026-10-30T23:41:48+08:00"
+      "checked_at": "2026-10-31T00:50:29+08:00"
     },
     {
       "field": "/open_source",
@@ -233,7 +439,7 @@
       "quote": null,
       "method": "rule",
       "model": null,
-      "checked_at": "2026-10-30T23:41:48+08:00"
+      "checked_at": "2026-10-31T00:50:29+08:00"
     },
     {
       "field": "/homepage",
@@ -241,7 +447,7 @@
       "quote": null,
       "method": "api",
       "model": null,
-      "checked_at": "2026-10-30T23:41:48+08:00"
+      "checked_at": "2026-10-31T00:50:29+08:00"
     },
     {
       "field": "/tags",
@@ -249,65 +455,161 @@
       "quote": null,
       "method": "api",
       "model": null,
-      "checked_at": "2026-10-30T23:41:48+08:00"
+      "checked_at": "2026-10-31T00:50:29+08:00"
     },
     {
       "field": "/last_release",
-      "source_id": "release:v0.6.6",
+      "source_id": "release:v0.24.0",
       "quote": null,
       "method": "api",
       "model": null,
-      "checked_at": "2026-10-30T23:57:22+08:00"
+      "checked_at": "2026-10-31T01:06:45+08:00"
     },
     {
       "field": "/use_cases/0",
       "source_id": "readme",
-      "quote": "incremental sync of the current project (safe to run anytime)",
+      "quote": "Three commands read the record:",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-10-31T00:04:03+08:00"
+      "checked_at": "2026-10-31T01:14:32+08:00"
     },
     {
       "field": "/use_cases/1",
       "source_id": "readme",
-      "quote": "usage dashboard",
+      "quote": "`as_of`, `history` and `diff` say what the agent\nbelieved then and when that changed.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-10-31T00:04:03+08:00"
+      "checked_at": "2026-10-31T01:14:32+08:00"
     },
     {
       "field": "/use_cases/2",
       "source_id": "readme",
-      "quote": "export all sessions",
+      "quote": "A crashed or moved agent gets its working\nstate, recent turns and unfinished tool calls back",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-10-31T00:04:03+08:00"
+      "checked_at": "2026-10-31T01:14:32+08:00"
     },
     {
-      "field": "/install/macos/steps/0",
+      "field": "/alternatives_to/0",
       "source_id": "readme",
-      "quote": "brew install samzong/tap/recall",
+      "quote": "Recall 18/18, mem0 18/18, Zep 12/18.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-10-31T00:04:03+08:00"
+      "checked_at": "2026-10-31T01:14:32+08:00"
     },
     {
-      "field": "/install/linux/steps/0",
+      "field": "/alternatives_to/1",
       "source_id": "readme",
-      "quote": "brew install samzong/tap/recall",
+      "quote": "Recall 18/18, mem0 18/18, Zep 12/18.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-10-31T00:04:03+08:00"
+      "checked_at": "2026-10-31T01:14:32+08:00"
     },
     {
       "field": "/processing",
       "source_id": "readme",
-      "quote": "Local-first search across every AI coding session on your machine.",
+      "quote": "With nothing configured, memory lives in a local database in\n`~/.local/share/recall`, started on first use",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-10-31T00:04:03+08:00"
+      "checked_at": "2026-10-31T01:14:32+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Any stdio MCP client reaches the\nserver through `recall connect` with `RECALL_URL` and `RECALL_API_KEY` set.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:32+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add recall -- recall mcp -write",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:32+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add recall -- recall mcp -write",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:32+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "RECALL_BACKEND",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:32+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "RECALL_BACKEND_URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:32+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "RECALL_URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:32+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "RECALL_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "release:v0.24.0",
+      "quote": "(`agent_resume`, `update_working_state`,\n`record_turn`, `begin_action`, ... ; nothing is renamed)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "release:v0.24.0",
+      "quote": "(`agent_resume`, `update_working_state`,\n`record_turn`, `begin_action`, ... ; nothing is renamed)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "release:v0.24.0",
+      "quote": "(`agent_resume`, `update_working_state`,\n`record_turn`, `begin_action`, ... ; nothing is renamed)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "release:v0.24.0",
+      "quote": "(`agent_resume`, `update_working_state`,\n`record_turn`, `begin_action`, ... ; nothing is renamed)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`recall mcp -typed` serves the typed tools\n(`remember(subject, predicate, value)`) instead.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:32+08:00"
     }
   ],
-  "first_seen_at": "2026-10-30T23:40:20+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "first_seen_at": "2026-10-31T00:50:13+08:00",
+  "updated_at": "2026-10-31T02:03:51+08:00"
 }
