@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import io
 import json
 import re
@@ -41,17 +42,24 @@ def isolated(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(meta, "sleep", lambda s: None)
 
 
+PNG = None
+
+
 def png() -> bytes:
-    out = io.BytesIO()
-    Image.new("RGB", (1280, 800), (240, 240, 230)).save(out, "PNG")
-    return out.getvalue()
+    global PNG
+    if PNG is None:
+        out = io.BytesIO()
+        Image.new("RGB", (1280, 800), (240, 240, 230)).save(out, "PNG")
+        PNG = out.getvalue()
+    return PNG
 
 
 def watcher_output(windows: list[dict[str, Any]] | None = None, alive: list[int] | None = None,
                    exit_code: str = "", shot: bool = True, log: str = "app started") -> str:
     data = {"seconds_to_window": 1.1 if windows else None, "alive": [41, 42] if alive is None else alive,
             "processes": ["bash", "demo"], "windows": windows or [], "other_windows": [], "screenshot": shot,
-            "watched_s": 7.2}
+            "watched_s": 7.2, "shot_bytes": len(png()) if shot else 0,
+            "shot_sha256": hashlib.sha256(png() if shot else b"").hexdigest()}
     return f"{gui.MARK}{json.dumps(data)}\nexit_code {exit_code}\n--- app log tail ---\n{log}\n"
 
 
@@ -111,6 +119,26 @@ def test_launch_passes_only_with_a_window_and_returns_the_screenshot():
     assert shot and shot.startswith(b"\x89PNG")
     result, shown, shot = gui.launch(GuiBox(launch_out=watcher_output()), LAUNCH, 2, 20)
     assert result.exit_code == 1 and shown.tier == "process_alive"
+
+
+def test_a_short_copy_of_the_screenshot_is_read_again_then_refused():
+    class ShortReads(GuiBox):
+        def __init__(self, short: int) -> None:
+            super().__init__()
+            self.short, self.reads = short, 0
+
+        def read_file(self, path: str, max_bytes: int = 64_000) -> bytes:
+            self.reads += 1
+            data = super().read_file(path, max_bytes)
+            return data[:172_032 % len(data)] if self.reads <= self.short else data
+
+    box = ShortReads(short=1)
+    result, shown, shot = gui.launch(box, LAUNCH, 2, 20)
+    assert shot == png() and box.reads == 2 and shown.error is None
+    box = ShortReads(short=gui.SHOT_READS)
+    result, shown, shot = gui.launch(box, LAUNCH, 2, 20)
+    assert shot is None and "copy incomplete after 3 reads" in shown.error
+    assert result.exit_code == 0  # the window was there; the judge just has nothing to read, so it cannot pass
 
 
 # ---------------------------------------------------------------- verdict and replay

@@ -25,6 +25,7 @@ a GUI app is never labelled function unless one action changed checkable state.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shlex
 from dataclasses import asdict, dataclass, field
@@ -48,6 +49,7 @@ WAIT_MAX_S = 60
 SETTLE_S = 6  # after the first window, so a page that loads after the window shows still renders
 MIN_WINDOW_PX = 2500  # 50x50: Electron and GTK make 1x1 and 10x10 helper windows
 SHOT_MAX_BYTES = 4_000_000
+SHOT_READS = 3  # a long read can come back short when the box's output stream is slow (2026-10-31)
 GUI_DIR = "/tmp/pickfit-gui"
 MARK = "PICKFIT_GUI_JSON "
 
@@ -63,7 +65,7 @@ def xvfb_script(detach: str = "setsid nohup") -> str:
 # Runs in the box with the image's own python (-I: nothing imported from the work dir). argv: the app's
 # session leader pid, seconds to wait for a window, seconds to settle, the screenshot path.
 _WATCH = r"""
-import json, os, re, subprocess, sys, time
+import hashlib, json, os, re, subprocess, sys, time
 pid, wait_s, settle_s, shot = int(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3]), sys.argv[4]
 def run(cmd):
     try:
@@ -147,7 +149,9 @@ while True:
 pids, names, own, other = look()
 shot_ok = subprocess.run(f"xwd -root -silent | convert xwd:- png:{shot}", shell=True,
                          capture_output=True, timeout=30).returncode == 0
+data = open(shot, "rb").read() if shot_ok else b""
 print("PICKFIT_GUI_JSON " + json.dumps({
+    "shot_bytes": len(data), "shot_sha256": hashlib.sha256(data).hexdigest(),
     "seconds_to_window": None if first is None else round(first, 1), "alive": sorted(pids),
     "processes": sorted(set(names.values()))[:12], "windows": own, "other_windows": other,
     "screenshot": shot_ok, "watched_s": round(time.time() - began, 1)}))
@@ -202,6 +206,8 @@ class GuiLaunch:
     exit_code: int | None = None  # when the app exited before the watch ended
     seconds_to_window: float | None = None
     screenshot: str | None = None  # where pickfit saved the PNG (on the host)
+    shot_bytes: int | None = None  # the PNG's size and hash in the box, to check the copy
+    shot_sha256: str | None = None
     log_tail: str = ""
     error: str | None = None
 
@@ -240,6 +246,7 @@ def parse_launch(stdout: str) -> GuiLaunch:
     return GuiLaunch(tier=tier, windows=own, other_windows=other, processes=list(data.get("processes") or []),
                      alive=alive, exit_code=None if alive else exit_code,
                      seconds_to_window=data.get("seconds_to_window"), log_tail=tail,
+                     shot_bytes=data.get("shot_bytes"), shot_sha256=data.get("shot_sha256"),
                      error=None if data.get("screenshot") else "the screenshot failed")
 
 
@@ -267,6 +274,22 @@ def observation(launch: GuiLaunch) -> str:
     return "\n".join(lines)
 
 
+def read_shot(box: Box, path: str, shown: GuiLaunch) -> tuple[bytes | None, str | None]:
+    """The screenshot, checked against the size and hash the watcher printed; (None, why) if no read matches."""
+    if not shown.shot_bytes or shown.shot_bytes > SHOT_MAX_BYTES:
+        return None, f"no usable screenshot ({shown.shot_bytes} bytes)"
+    got = 0
+    for _ in range(SHOT_READS):
+        try:
+            data = box.read_file(path, SHOT_MAX_BYTES)
+        except Exception as err:  # BoxError: the box or the file is gone
+            return None, f"screenshot unreadable: {err}"
+        got = len(data)
+        if got == shown.shot_bytes and hashlib.sha256(data).hexdigest() == shown.shot_sha256:
+            return data, None
+    return None, f"screenshot copy incomplete after {SHOT_READS} reads ({got} of {shown.shot_bytes} bytes)"
+
+
 def launch(box: Box, command: str, tag: str | int, wait_s: int, *, timeout_s: int | None = None
            ) -> tuple[ExecResult, GuiLaunch, bytes | None]:
     """Launch on the box's display; (the record to keep, what it showed, the screenshot PNG)."""
@@ -276,10 +299,7 @@ def launch(box: Box, command: str, tag: str | int, wait_s: int, *, timeout_s: in
     shown = parse_launch(raw.stdout)
     png: bytes | None = None
     if raw.exit_code == 0 and not shown.error:
-        try:
-            png = box.read_file(f"{GUI_DIR}/{tag}.png", SHOT_MAX_BYTES)
-        except Exception as err:  # BoxError: the box or the file is gone
-            shown.error = f"screenshot unreadable: {err}"
+        png, shown.error = read_shot(box, f"{GUI_DIR}/{tag}.png", shown)
     if raw.timed_out:
         shown.error = "the launch watcher timed out"
     text = observation(shown)
