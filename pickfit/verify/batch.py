@@ -182,14 +182,19 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
     for row in sorted(best.values(), key=lambda r: r["full_name"].lower()):
         if wanted and row["repo_id"].lower() not in wanted and row["full_name"].lower() not in wanted:
             continue
-        if categories and row["category"] not in categories:
-            continue
-        slug = known_slugs.get(row["repo_id"]) or slug_for(row["full_name"], taken)
-        note = {"repo_id": row["repo_id"], "full_name": row["full_name"], "slug": slug}
         try:
             ex = ExtractionResult.model_validate_json(row["result"])
         except ValidationError as err:
-            skipped.append({**note, "reason": f"extraction does not validate: {str(err)[:120]}"})
+            ex = None
+            invalid = f"extraction does not validate: {str(err)[:120]}"
+        # The record's category: the extraction's, else the discovery query's (as profiles.py decides).
+        category = (ex.category.value if ex else None) or row["category"]
+        if categories and row["category"] not in categories and category not in categories:
+            continue
+        slug = known_slugs.get(row["repo_id"]) or slug_for(row["full_name"], taken)
+        note = {"repo_id": row["repo_id"], "full_name": row["full_name"], "slug": slug}
+        if ex is None:
+            skipped.append({**note, "reason": invalid})
             continue
         why = not_in_box(ex, gpu=gpu, os=os)
         if why:
@@ -203,8 +208,8 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
             continue
         repo = json.loads(row["repo"] or "{}")
         url = repo.get("html_url") or f"https://github.com/{row['full_name']}"
-        task = VerifyTask(slug=slug, repo_url=url, readme=row["readme"], extraction=ex)
-        items.append(BatchItem(task, row["repo_id"], row["full_name"], row["category"], ex.kind.value,
+        task = VerifyTask(slug=slug, repo_url=url, readme=row["readme"], extraction=ex, category=category)
+        items.append(BatchItem(task, row["repo_id"], row["full_name"], category, ex.kind.value,
                                demo_priority(ex), row["model"]))
     items.sort(key=lambda i: (-i.priority, i.full_name.lower()))
     return items[:limit], skipped

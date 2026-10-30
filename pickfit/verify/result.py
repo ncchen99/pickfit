@@ -15,6 +15,10 @@ with what the log, a fresh box and the structure probe found (failure.py) as
 evidence in blocking_error and a failed smoke test.
 A step that only works around the box (a shim) keeps a run from passing.
 
+An MCP server's run also carries the handshake the replay's probe check saw (tool
+names, server name, whether it ran offline) and the probe's notes; a passed MCP
+run without one is unverified, never install.
+
 write_back() updates data/software/<slug>.json for a passed, replayed run, or an
 unverified run whose reason describes the software; never for a failed run. The
 run replaces the earlier run on the same OS, arch and method, except that a run
@@ -43,6 +47,7 @@ from pickfit.schema import (
     InstallGuide,
     InstallStep,
     Judge,
+    McpHandshake,
     Pitfall,
     RunEvidence,
     SetupStep,
@@ -63,7 +68,10 @@ from pickfit.verify.failure import (
     structural_defect,
     tool_command,
 )
-from pickfit.verify.verdict import split_last, unread_scripts, weaker
+from pickfit.verify.mcp import handshake as mcp_handshake
+from pickfit.verify.mcp import pitfalls as mcp_pitfalls
+from pickfit.verify.mcp import probe_kind
+from pickfit.verify.verdict import MCP_KINDS, split_last, unread_scripts, weaker
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import CommandRecord, VerifyReport
@@ -140,10 +148,11 @@ def _record_check(command: str) -> tuple[str, list[SetupStep]] | None:
 def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeResult | None, *,
               evidence_dir: Path, screenshots: list[Path] | None = None,
               judge_cost_usd: float = 0.0, confirm: FailureCheck | None = None,
-              checked_at: datetime | None = None) -> tuple[VerificationRun, list[str]]:
+              checked_at: datetime | None = None, mcp: bool = False) -> tuple[VerificationRun, list[str]]:
     """The VerificationRun for one verification, plus notes on why the level was lowered.
 
     checked_at is when its last box ran; it defaults to now, right after the boxes ran.
+    mcp: the software is an MCP server; its run needs the handshake from the replay.
     """
     notes: list[str] = []
     verdict = report.verdict or {}
@@ -261,8 +270,17 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
                                observed_excerpt=_clip(error_tail(failing.stdout, failing.stderr, 4), 300),
                                setup=fitted[1]))
     if is_passed(level) and level != "install" and not any(t.passed for t in smoke):
-        level = "install"
+        level = "unverified" if mcp else "install"
+        reason = "other" if mcp else reason
         notes.append("no passing smoke test fits the record")
+    handshake, probe_notes = _mcp_handshake(replay) if mcp else (None, [])
+    if mcp and is_passed(level):
+        if handshake is None:
+            notes.append("no completed MCP handshake in the replay")
+            level, reason = "unverified", "other"
+        elif level == "service" and handshake.called_tool is None:
+            level = "function"
+            notes.append("no tool call passed in the replay; the handshake supports function")
     if level == "unverified" and notes and not blocking:
         blocking = "; ".join(notes)
 
@@ -288,6 +306,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         notes.append(f"{said}: unread")
         pitfalls.append(Pitfall(readme_said=_clip(said, 300) or "-", kind="note",
                                 actually_needed=f"nothing to change; a note: {needed}, so pickfit did not inspect it"))
+    pitfalls += probe_notes
     run = VerificationRun(
         id=report.run_id, level=level, unverified_reason=reason, os=report.box.get("os", "linux"),
         arch=report.box.get("arch", "x86_64"), method="sandbox", runner=report.box.get("runner"),
@@ -301,8 +320,20 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         if judge else None,
         evidence=RunEvidence(trace_path=_rel(evidence_dir / "report.json"),
                              screenshot_paths=[p for p in map(_rel, screenshots or []) if p]),
-        actor_model=report.model, cost_usd=round(report.cost_usd + judge_cost_usd, 6))
+        actor_model=report.model, cost_usd=round(report.cost_usd + judge_cost_usd, 6),
+        mcp=handshake if is_passed(level) else None)
     return run, notes
+
+
+def _mcp_handshake(replay: ReplayResult | None) -> tuple[McpHandshake | None, list[Pitfall]]:
+    """The handshake the replay's best passing probe check shows (a tool call first), and the probe's notes."""
+    probes = [c for c in (replay.checks if replay else []) if c.passed and c.run and c.kind in MCP_KINDS]
+    probes.sort(key=lambda c: (c.kind != "mcp_call", not c.offline))
+    for check in probes:
+        found = mcp_handshake(check.run.stdout, check.command, offline=any(c.offline for c in probes))
+        if found is not None:
+            return found, mcp_pitfalls(check.run.stdout)
+    return None, []
 
 
 def _excerpt(stdout: str, stderr: str, signal: str) -> str:
@@ -324,10 +355,15 @@ def save_run(run: VerificationRun, evidence_dir: Path) -> Path:
 
 
 def install_guide(run: VerificationRun) -> InstallGuide:
-    """The Linux install guide a passed, replayed run supports."""
-    passing = [t for t in run.smoke_tests if t.passed and t.expected_signal]
+    """The Linux install guide a passed, replayed run supports.
+
+    pickfit's MCP probe exists only in its boxes, so a probe check is never the guide's check or first
+    task; an MCP server's guide points to the client config instead (the index builds it from run.mcp).
+    """
+    users = [t for t in run.smoke_tests if probe_kind(t.command) is None]
+    passing = [t for t in users if t.passed and t.expected_signal]
     check = next((t for t in passing if t.exit_code == 0), passing[0] if passing else None)
-    examples = [t for t in run.smoke_tests
+    examples = [t for t in users
                 if t.passed and not re.search(r"--?(?:version|help)\b|^\S+\s+-[Vh]$", t.command)]
     # The first task shown to users: one that also worked with the network off, if any did.
     example = next((t for t in examples if t.offline), examples[0] if examples else None)
