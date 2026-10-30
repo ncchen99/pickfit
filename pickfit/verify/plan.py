@@ -13,7 +13,9 @@ An MCP server's README often gives only the command a client runs (`npx -y pkg`,
 
 from __future__ import annotations
 
+import json
 import re
+import shlex
 from dataclasses import asdict, dataclass
 from typing import Any, Literal
 
@@ -115,6 +117,30 @@ def _derived_from_mcp_launch(launch: str | None) -> list[tuple[str, str, str]]:
     return []
 
 
+def mcp_launches(extraction: ExtractionResult) -> list[str]:
+    """Launch commands the README gives for an MCP server: its launch command, then each client config's
+    (a JSON entry's command and args, or what follows `--` in a `claude mcp add` line)."""
+    mcp = extraction.mcp
+    found = [mcp.launch_command.value] if mcp.launch_command.value else []
+    for config in mcp.client_configs:
+        text = config.snippet.strip()
+        if text.startswith("{"):
+            try:
+                data = json.loads(text)
+            except ValueError:
+                continue
+            stack = [data]
+            while stack:
+                node = stack.pop()
+                if isinstance(node, dict):
+                    if isinstance(node.get("command"), str) and isinstance(node.get("args", []), list):
+                        found.append(" ".join([node["command"], *map(str, node.get("args", []))]))
+                    stack += list(node.values())
+        elif " -- " in text:
+            found.append(text.split(" -- ", 1)[1])
+    return found
+
+
 def _normalize(command: str) -> str:
     return " ".join(command.split())
 
@@ -156,7 +182,10 @@ def rank_install_methods(claims: list[InstallClaim], os: str = "linux",
 
 
 def plan_for(extraction: ExtractionResult, os: str = "linux") -> InstallPlan:
-    derived = _derived_from_mcp_launch(extraction.mcp.launch_command.value)
     readme = {_normalize(c.command) for c in extraction.install_methods}
-    return rank_install_methods(extraction.install_methods, os,
-                                [d for d in derived if _normalize(d[1]) not in readme])
+    derived: list[tuple[str, str, str]] = []
+    for launch in mcp_launches(extraction):
+        for entry in _derived_from_mcp_launch(launch):
+            if _normalize(entry[1]) not in readme and all(entry[1] != d[1] for d in derived):
+                derived.append(entry)
+    return rank_install_methods(extraction.install_methods, os, derived)
