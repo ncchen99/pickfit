@@ -73,18 +73,25 @@
       "first_task": "./nanopi --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-nanopi-20261031-004336-8a12",
       "method": "binary",
       "steps": [
         {
-          "command": "chmod +x nanopi",
-          "purpose": null
+          "command": "curl -L -o nanopi \"https://github.com/ChrisZhangJin/nanopi/releases/download/v0.14.0/nanopi-v0.14.0-linux-x86_64-musl\" && ls -lh nanopi",
+          "purpose": "Download nanopi static binary"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && cp nanopi ~/.local/bin/nanopi && chmod +x ~/.local/bin/nanopi && nanopi --version",
+          "purpose": "Install nanopi on PATH"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "./nanopi --version"
+      "check": {
+        "command": "nanopi --version",
+        "expected_signal": "nanopi 0.14.0"
+      },
+      "first_task": null
     },
     "windows": null
   },
@@ -101,10 +108,78 @@
     "url": "https://github.com/ChrisZhangJin/nanopi/releases/tag/v0.14.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:45:13.739618+08:00",
+    "runs": [
+      {
+        "id": "verify-nanopi-20261031-004336-8a12",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:45:13.739618+08:00",
+        "tool_version": "0.14.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -L -o nanopi \"https://github.com/ChrisZhangJin/nanopi/releases/download/v0.14.0/nanopi-v0.14.0-linux-x86_64-musl\" && ls -lh nanopi",
+            "purpose": "Download nanopi static binary"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && cp nanopi ~/.local/bin/nanopi && chmod +x ~/.local/bin/nanopi && nanopi --version",
+            "purpose": "Install nanopi on PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nanopi --version",
+            "expected_signal": "nanopi 0.14.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "nanopi 0.14.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "./nanopi --help",
+            "expected_signal": "Print version",
+            "exit_code": 126,
+            "passed": false,
+            "observed_excerpt": "bash: line 1: ./nanopi: Permission denied",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "nanopi -p \"read /etc/hostname and tell me what you see\"",
+            "actually_needed": "nanopi -p without config launches an interactive first-run wizard (Select a provider, Choice [1]:) and waits on stdin, so it cannot be used as a non-interactive offline smoke test; only --version/--help work without an API key",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows nanopi --version printing nanopi 0.14.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nanopi-20261031-004336-8a12/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nanopi-20261031-004336-8a12/check-1-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.066939
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -347,5 +422,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:45:13.740981+08:00"
 }

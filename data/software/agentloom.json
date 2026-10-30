@@ -88,9 +88,48 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_root",
+    "checked_at": "2026-10-31T00:43:36.036410+08:00",
+    "runs": [
+      {
+        "id": "verify-agentloom-20261031-004250-4927",
+        "level": "unverified",
+        "unverified_reason": "needs_root",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:43:36.036410+08:00",
+        "tool_version": null,
+        "install_method": null,
+        "replayed": false,
+        "steps": [],
+        "smoke_tests": [],
+        "pitfalls": [
+          {
+            "readme_said": "bash linux/scripts/bootstrap_toolchain.sh builds Core/SDK Release toolchain",
+            "actually_needed": "script exits immediately with '[linux-build] error: required command not found: sudo' (command_id 2); box user sbx has no sudo and cmake is not installed (cmake --version -> 127 command not found), so apt-based toolchain setup cannot proceed here",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "same bootstrap script continues to rustup/cargo and python venv setup",
+            "actually_needed": "even with sudo, the script would apt-install build toolchain and then pipe https://sh.rustup.rs into sh to install Rust stable/cargo plus create a python venv; Rust/Go toolchains must not be installed in this box and a piped remote installer cannot be pre-read, so the ranked method cannot be comple…",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-agentloom-20261031-004250-4927/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.044039
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -301,5 +340,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:03+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:43:36.040250+08:00"
 }

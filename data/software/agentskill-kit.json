@@ -57,7 +57,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-agentskill-kit-20261031-004121-f94a",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install agentskill-toolkit",
+          "purpose": "Install via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "askit --version && which askit",
+        "expected_signal": "agentskill-kit 0.1.0"
+      },
+      "first_task": "askit lint skills/my-skill"
+    },
     "windows": null
   },
   "pricing": {
@@ -73,10 +89,115 @@
     "url": "https://github.com/Lethe044/agentskill-kit/releases/tag/v0.1.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:42:03.718723+08:00",
+    "runs": [
+      {
+        "id": "verify-agentskill-kit-20261031-004121-f94a",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:42:03.718723+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install agentskill-toolkit",
+            "purpose": "Install via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "askit --version && which askit",
+            "expected_signal": "agentskill-kit 0.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "agentskill-kit 0.1.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "askit --help",
+            "expected_signal": "usage: askit",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: askit [-h] [--version] [--lang {en,tr}] [--no-color] COMMAND ...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "askit lint skills/my-skill",
+            "expected_signal": "1 skill(s) checked: 0 error(s), 2 warning(s)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1 skill(s) checked: 0 error(s), 2 warning(s)",
+            "setup": [
+              {
+                "command": "askit init my-skill --script && find skills/my-skill -type f && cat skills/my-skill/SKILL.md",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "askit scan skills/my-skill",
+            "expected_signal": "1 skill(s) scanned: 0 high, 0 medium, 0 low",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1 skill(s) scanned: 0 high, 0 medium, 0 low",
+            "setup": [
+              {
+                "command": "askit init my-skill --script && find skills/my-skill -type f && cat skills/my-skill/SKILL.md",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "askit test skills/my-skill",
+            "expected_signal": "3/3 test case(s) passed across 1 skill(s)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "3/3 test case(s) passed across 1 skill(s)",
+            "setup": [
+              {
+                "command": "askit init my-skill --script && find skills/my-skill -type f && cat skills/my-skill/SKILL.md",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.1.0 printed, lint reporting 0 error(s) 2 warning(s) with score 88/100, and help starting with usage: askit.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-agentskill-kit-20261031-004121-f94a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-agentskill-kit-20261031-004121-f94a/check-1-cmd2.judged.png",
+            "runs/verify/verify-agentskill-kit-20261031-004121-f94a/check-2-cmd6.judged.png",
+            "runs/verify/verify-agentskill-kit-20261031-004121-f94a/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.032198
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -303,5 +424,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:42:03.719246+08:00"
 }

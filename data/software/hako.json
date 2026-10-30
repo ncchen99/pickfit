@@ -69,18 +69,25 @@
       "first_task": "./hakm --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-hako-20261031-003835-13de",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://mithraeums.github.io/hakm.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/mithraeums/hako/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -l /tmp/install.sh",
+          "purpose": "Download actual install.sh"
+        },
+        {
+          "command": "sh /tmp/install.sh",
+          "purpose": "Run hakm installer script"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "./hakm --version"
+      "check": {
+        "command": "hakm --version",
+        "expected_signal": "hakm v0.0.4"
+      },
+      "first_task": "hakm ~/models/smollm2b.mlf2 --raw -t 0 -n 16 \"def fibonacci(n):\""
     },
     "windows": null
   },
@@ -97,10 +104,114 @@
     "url": "https://github.com/mithraeums/hako/releases/tag/v0.0.4"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:40:17.171705+08:00",
+    "runs": [
+      {
+        "id": "verify-hako-20261031-003835-13de",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:40:17.171705+08:00",
+        "tool_version": "v0.0.4",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/mithraeums/hako/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -l /tmp/install.sh",
+            "purpose": "Download actual install.sh"
+          },
+          {
+            "command": "sh /tmp/install.sh",
+            "purpose": "Run hakm installer script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "hakm --version",
+            "expected_signal": "hakm v0.0.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hakm v0.0.4 (build Oct 15 2026 14:36:38)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "hakm --help",
+            "expected_signal": "hakm list",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hakm list models in ~/.hako/models",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "hakm ~/models/smollm2b.mlf2 --raw -t 0 -n 16 \"def fibonacci(n):\"",
+            "expected_signal": "def fibonacci(n):",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "def fibonacci(n):",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/SmolLM2-135M-Instruct-Q8_0.gguf https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf && ls -lh ~/models/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "curl -fL -o /tmp/gguf2mlf.py https://raw.githubusercontent.com/mithraeums/hako/main/tools/gguf2mlf.py && wc -c /tmp/gguf2mlf.py",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /tmp/gguf2mlf.py ~/models/SmolLM2-135M-Instruct-Q8_0.gguf ~/models/smollm2b.mlf2 && ls -lh ~/models/smollm2b.mlf2",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "hakm pull hako-sho and ./hakm hako-sho --raw examples",
+            "actually_needed": "Used 138 MB SmolLM2-135M-Instruct Q8_0 GGUF converted with tools/gguf2mlf.py to .mlf2; stock hako-sho is ~1.9 GB",
+            "kind": "note"
+          },
+          {
+            "readme_said": "./hakm M --info arch banner then exit",
+            "actually_needed": "hakm ~/models/smollm2b.mlf2 --info prints arch banner to stderr with empty stdout, exit 0",
+            "kind": "note"
+          },
+          {
+            "readme_said": "make builds ./hakm and make test runs ASan gates",
+            "actually_needed": "Release binary via install.sh works; make test needs make/cc which this box lacks (make: command not found)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot 1 shows fibonacci code generation with engine stats, screenshot 2 shows hakm v0.0.4 version string.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-hako-20261031-003835-13de/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-hako-20261031-003835-13de/check-1-cmd14.judged.png",
+            "runs/verify/verify-hako-20261031-003835-13de/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.134667
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -327,5 +438,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:40:17.172899+08:00"
 }

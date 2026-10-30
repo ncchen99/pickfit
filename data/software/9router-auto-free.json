@@ -69,17 +69,20 @@
       "first_task": "npx 9router-auto-free --dry-run"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-9router-auto-free-20261031-004048-609e",
       "method": "npm",
       "steps": [
         {
-          "command": "npx 9router-auto-free",
-          "purpose": null
+          "command": "npm install -g 9router-auto-free 2>&1",
+          "purpose": "install globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "npx 9router-auto-free --dry-run",
+        "expected_signal": "[*] Dry run mode enabled. No changes written."
+      },
       "first_task": "npx 9router-auto-free --dry-run"
     },
     "windows": {
@@ -110,10 +113,80 @@
     "url": "https://github.com/herliansyah/9router-auto-free/releases/tag/v1.4.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:42:50.547209+08:00",
+    "runs": [
+      {
+        "id": "verify-9router-auto-free-20261031-004048-609e",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:42:50.547209+08:00",
+        "tool_version": "1.4.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g 9router-auto-free 2>&1",
+            "purpose": "install globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "npx 9router-auto-free --dry-run",
+            "expected_signal": "[*] Dry run mode enabled. No changes written.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[*] Dry run mode enabled. No changes written.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "9router-auto-free --dry-run",
+            "expected_signal": "[*] Dry run mode enabled. No changes written.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[*] Dry run mode enabled. No changes written.",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "README documents CLI flags but no --help/--version; standard expectation is they print help",
+            "actually_needed": "sync.js only handles --dry-run, --refresh/--watchdog, --setup-cron, --live-benchmarks and --verbose; --help/--version fall through to DAILY FULL SYNC (tried --help: got full sync header and exit 1 without 9router DB instead of help text)",
+            "kind": "note"
+          },
+          {
+            "readme_said": "npx 9router-auto-free --dry-run simulates sync without modifying SQLite database",
+            "actually_needed": "--dry-run exits 0 without a 9router SQLite DB (warns 'Could not read 9router DB' and 'skipping live test', still ranks public Kilo/OpenRouter lists); bare full sync without DB exits 1 with 'unable to open database file'",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show the sync completing with Super-combo results and the line '[*] Dry run mode enabled. No changes written.'",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-9router-auto-free-20261031-004048-609e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-9router-auto-free-20261031-004048-609e/check-1-cmd9.judged.png",
+            "runs/verify/verify-9router-auto-free-20261031-004048-609e/check-2-cmd12.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.102941
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -340,5 +413,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:42:50.548282+08:00"
 }

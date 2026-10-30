@@ -77,19 +77,20 @@
       "first_task": "npx model-orchestrator --list"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-model-orchestrator-20261031-004025-476a",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g model-orchestrator",
-          "purpose": null
+          "purpose": "Install via npm global"
         }
       ],
-      "manual_steps": [
-        "Follow the remaining sign-in or setup steps printed after install"
-      ],
-      "check": null,
+      "manual_steps": [],
+      "check": {
+        "command": "model-orchestrator --help",
+        "expected_signal": "--level 1|2|3"
+      },
       "first_task": "npx model-orchestrator --list"
     },
     "windows": null
@@ -107,10 +108,97 @@
     "url": "https://github.com/aunysillyme/model-orchestrator/releases/tag/v1.1.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:41:21.001824+08:00",
+    "runs": [
+      {
+        "id": "verify-model-orchestrator-20261031-004025-476a",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:41:21.001824+08:00",
+        "tool_version": "1.1.2",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g model-orchestrator",
+            "purpose": "Install via npm global"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "model-orchestrator --help",
+            "expected_signal": "--level 1|2|3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "--level 1|2|3 1 beginner (one agent), 2 intermediate (many CLIs), 3 advanced (plus a VM)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "model-orchestrator --version",
+            "expected_signal": "1.1.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.1.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "npx model-orchestrator --list",
+            "expected_signal": "metered API providers (--apis a,b, level 3 gateway only):",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "metered API providers (--apis a,b, level 3 gateway only):",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "aunx --help",
+            "expected_signal": "aunx: model router tools for AI coding agents",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "aunx: model router tools for AI coding agents",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "aunx cli-run --doctor",
+            "expected_signal": "doctor: 6 enabled lane(s): grok, codex, agy, hermes, qwen, claude",
+            "exit_code": 10,
+            "passed": true,
+            "observed_excerpt": "doctor: 6 enabled lane(s): grok, codex, agy, hermes, qwen, claude",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exit as expected and show the catalog with metered APIs, the doctor lane list, and the help usage.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-model-orchestrator-20261031-004025-476a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-model-orchestrator-20261031-004025-476a/check-1-cmd4.judged.png",
+            "runs/verify/verify-model-orchestrator-20261031-004025-476a/check-2-cmd6.judged.png",
+            "runs/verify/verify-model-orchestrator-20261031-004025-476a/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.04519
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -377,5 +465,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:41:21.002476+08:00"
 }

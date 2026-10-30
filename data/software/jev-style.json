@@ -51,7 +51,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-jev-style-20261031-003740-0887",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install -U \"jev-style[torch]\"",
+          "purpose": "Install jev-style torch backend via pip"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "jev-style --help",
+        "expected_signal": "Small, calibrated, local decision models."
+      },
+      "first_task": "curl -s http://127.0.0.1:8765/v1/models && echo && curl -s http://127.0.0.1:8765/v1/systemone -H 'content-type: application/json' -d '{\"state\": \"I was charged twice\", \"questions\": {\"team\": {\"type\": \"choice\", \"instructions\": \"Which team?\", \"criteria\": {\"billing\": \"charges\", \"shipping\": \"delivery\", \"r"
+    },
     "windows": null
   },
   "pricing": {
@@ -67,10 +83,111 @@
     "url": "https://github.com/lawrence3699/jev-style/releases/tag/v0.6.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:42:03.713586+08:00",
+    "runs": [
+      {
+        "id": "verify-jev-style-20261031-003740-0887",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:42:03.713586+08:00",
+        "tool_version": "0.6.2",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pip install -U \"jev-style[torch]\"",
+            "purpose": "Install jev-style torch backend via pip"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "jev-style --help",
+            "expected_signal": "Small, calibrated, local decision models.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Small, calibrated, local decision models.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "jev-style --version",
+            "expected_signal": "0.6.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.6.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8765/v1/models && echo && curl -s http://127.0.0.1:8765/v1/systemone -H 'content-type: application/json' -d '{\"state\": \"I was charged twice\", \"questions\": {\"team\": {\"type\": \"choice\", \"instructions\": \"Which team?\", \"criteria\": {\"billing\": \"charges\", \"shipping\": \"delivery\", \"returns\": \"returns\"}}}}'",
+            "expected_signal": "jev-style-fake",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"object\":\"list\",\"data\":[{\"id\":\"jev-style-fake\",\"context_tokens\":25600,\"head_max_tokens\":2048,\"backend\":\"fake\",\"images\":false,\"box\":false}],\"models\":[{\"name\":\"jev-style-fake\",\"release_date\":\"\",\"description\":\"Fake engine: deterministic hash-based probabilities, no model\"}]}",
+            "setup": [
+              {
+                "command": "jev-style serve --fake --port 8765",
+                "background": true,
+                "port": 8765
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "jev-style decide \"I was charged twice\" --url http://127.0.0.1:8765 --choice \"Which team?::billing,shipping,returns\"",
+            "expected_signal": "\"choice\": \"billing\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"choice\": \"billing\",",
+            "setup": [
+              {
+                "command": "jev-style serve --fake --port 8765",
+                "background": true,
+                "port": 8765
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install -U \"jev-style[mlx]\" for Apple silicon",
+            "actually_needed": "Skipped candidate 1 (jev-style[mlx]): MLX backend is Apple-silicon only and cannot run on this Linux x86_64 box; installed candidate 2 (jev-style[torch]) directly.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "jev-style serve downloads the 0.8B weights (about 1.5 GB)",
+            "actually_needed": "Started server with `jev-style serve --fake` (deterministic fake engine, no model download) instead of plain `jev-style serve`, which downloads ~1.5 GB of 0.8B weights on first start and needs more RAM/time than this 2 GB box allows.",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show server listing jev-style-fake and returning billing choice, CLI deciding billing, and help showing the expected tagline.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-jev-style-20261031-003740-0887/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-jev-style-20261031-003740-0887/check-1-cmd7.judged.png",
+            "runs/verify/verify-jev-style-20261031-003740-0887/check-2-cmd8.judged.png",
+            "runs/verify/verify-jev-style-20261031-003740-0887/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.061374
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -289,5 +406,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:42:03.714407+08:00"
 }

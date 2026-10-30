@@ -53,7 +53,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-context-guardian-20261031-004254-d5bd",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g context-guardian-mcp",
+          "purpose": "install via npm global"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "context-guardian --version",
+        "expected_signal": "0.3.0"
+      },
+      "first_task": "context-guardian check"
+    },
     "windows": null
   },
   "pricing": {
@@ -69,10 +85,120 @@
     "url": "https://github.com/Ar5en1c/context-guardian/releases/tag/v0.3.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:44:03.240197+08:00",
+    "runs": [
+      {
+        "id": "verify-context-guardian-20261031-004254-d5bd",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:44:03.240197+08:00",
+        "tool_version": "0.3.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g context-guardian-mcp",
+            "purpose": "install via npm global"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "context-guardian --version",
+            "expected_signal": "0.3.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.3.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "context-guardian --help",
+            "expected_signal": "Start the Context Guardian proxy",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "start [options] Start the Context Guardian proxy",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "context-guardian check",
+            "expected_signal": "Ollama: NOT FOUND",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "Ollama: NOT FOUND at http://localhost:11434",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 -c \"import json,urllib.request; d=json.dumps({'jsonrpc':'2.0','id':1,'method':'tools/list','params':{}}).encode(); r=urllib.request.urlopen(urllib.request.Request('http://localhost:9120/mcp',data=d,headers={'Content-Type':'application/json','Accept':'application/json, text/event-stream'})); b=r.read().decode(); print('LEN',len(b)); print('HAS_index_content', 'index_content' in b); print(b[:1500])\"",
+            "expected_signal": "index_content",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "HAS_index_content True",
+            "setup": [
+              {
+                "command": "context-guardian mcp",
+                "background": true,
+                "port": 9120
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 /tmp/mcptest.py",
+            "expected_signal": "Indexed 1 chunks",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Indexed 1 chunks from \\\"test.log\\\". Labels: other(1). Store now has 1 total chunks. Use log_search, grep, file_read, or summary to query.\"}]}}",
+            "setup": [
+              {
+                "command": "context-guardian mcp",
+                "background": true,
+                "port": 9120
+              },
+              {
+                "command": "cat > /tmp/mcptest.py <<'PY'\nimport json, urllib.request\ndef call(method, params):\n    d = json.dumps({\"jsonrpc\":\"2.0\",\"id\":1,\"method\":method,\"params\":params}).encode()\n    req = urllib.request.Request('http://localhost:9120/mcp', data=d, headers={'Content-Type':'application/json','Accept':'application/json, text/event-stream'})\n    return urllib.request.urlopen(req).read().decode()\nprint(call(\"tools/call\", {\"name\":\"index_content\",\"arguments\":{\"content\":\"line1 hello world\\nline2 test error foo\",\"source\":\"test.log\"}})[:3000])\nprint(\"---SECOND---\")\nprint(call(\"tools/call\", {\"name\":\"grep\",\"arguments\":{\"pattern\":\"hello\"}})[:3000])\nPY",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Create .context-guardian.json with context-guardian init",
+            "actually_needed": "init creates guardian.config.json (message: Created guardian.config.json)",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show Ollama NOT FOUND warning, MCP tools list containing index_content, and version 0.3.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-context-guardian-20261031-004254-d5bd/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-context-guardian-20261031-004254-d5bd/check-1-cmd5.judged.png",
+            "runs/verify/verify-context-guardian-20261031-004254-d5bd/check-2-cmd8.judged.png",
+            "runs/verify/verify-context-guardian-20261031-004254-d5bd/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.040697
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -283,5 +409,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:44:03.241350+08:00"
 }

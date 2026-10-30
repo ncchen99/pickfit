@@ -45,7 +45,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-arxiv-digest-20261031-004250-416b",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone https://github.com/saeedrafsharx/arxiv-digest /home/sbx/arxiv-digest",
+          "purpose": "clone upstream repo to get source"
+        },
+        {
+          "command": "uv tool install /home/sbx/arxiv-digest",
+          "purpose": "install via uv"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "arxd --help",
+        "expected_signal": "Get arxiv papers in a gist"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -61,10 +81,92 @@
     "url": "https://github.com/saeedrafsharx/arxiv-digest/releases/tag/v0.1.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:44:49.061453+08:00",
+    "runs": [
+      {
+        "id": "verify-arxiv-digest-20261031-004250-416b",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:44:49.061453+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/saeedrafsharx/arxiv-digest /home/sbx/arxiv-digest",
+            "purpose": "clone upstream repo to get source"
+          },
+          {
+            "command": "uv tool install /home/sbx/arxiv-digest",
+            "purpose": "install via uv"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "arxd --help",
+            "expected_signal": "Get arxiv papers in a gist",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Get arxiv papers in a gist",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "arxd search --help",
+            "expected_signal": "Topic to search",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "query Topic to search",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "~/.local/share/uv/tools/arxiv-digest/bin/python -c \"from pathlib import Path; from arxiv_digest.parse import parse_xml; from arxiv_digest.render import render_markdown; xml=Path('/tmp/arxiv-digest/tests/fixtures/arxiv_response.xml').read_text(); papers=parse_xml(xml); print(f'Parsed {len(papers)} papers'); render_markdown(papers, '/tmp/offline_digest.md'); print(Path('/tmp/offline_digest.md').read_text()[:2500])\"",
+            "expected_signal": "Found **10 papers**",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "FileNotFoundError: [Errno 2] No such file or directory: '/tmp/arxiv-digest/tests/fixtures/arxiv_response.xml'",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "uv tool install .",
+            "actually_needed": "git clone repo first; work dir contained only README.md, then run uv tool install from the cloned repo root",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "uv tool install . with system Python",
+            "actually_needed": "uv automatically provisioned Python 3.15 for the tool despite box python3.12 and requires-python >=3.13",
+            "kind": "tool_handled"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows arxd help output with usage and the tagline Get arxiv papers in a gist.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-arxiv-digest-20261031-004250-416b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-arxiv-digest-20261031-004250-416b/check-1-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.125892
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -211,5 +313,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:44:49.062343+08:00"
 }

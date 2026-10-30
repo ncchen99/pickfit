@@ -71,17 +71,24 @@
       "first_task": "mlxtop --once"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-mlxtop-20261031-003758-3d11",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/maximpri/mlxtop/main/scripts/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/maximpri/mlxtop/main/scripts/install.sh -o /tmp/install_mlxtop.sh && ls -l /tmp/install_mlxtop.sh && wc -c /tmp/install_mlxtop.sh",
+          "purpose": "Download install script for reading"
+        },
+        {
+          "command": "sh /tmp/install_mlxtop.sh",
+          "purpose": "Install mlxtop via install script"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "mlxtop --version",
+        "expected_signal": "mlxtop 3.1.2"
+      },
       "first_task": "mlxtop --once"
     },
     "windows": {
@@ -112,10 +119,98 @@
     "url": "https://github.com/maximpri/mlxtop/releases/tag/v3.1.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:38:45.111458+08:00",
+    "runs": [
+      {
+        "id": "verify-mlxtop-20261031-003758-3d11",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:38:45.111458+08:00",
+        "tool_version": "3.1.2",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/maximpri/mlxtop/main/scripts/install.sh -o /tmp/install_mlxtop.sh && ls -l /tmp/install_mlxtop.sh && wc -c /tmp/install_mlxtop.sh",
+            "purpose": "Download install script for reading"
+          },
+          {
+            "command": "sh /tmp/install_mlxtop.sh",
+            "purpose": "Install mlxtop via install script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mlxtop --version",
+            "expected_signal": "mlxtop 3.1.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mlxtop 3.1.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mlxtop --help",
+            "expected_signal": "Usage: mlxtop",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: mlxtop [refresh-seconds] [options]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mlxtop --once",
+            "expected_signal": "DIAGNOSIS Healthy",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "DIAGNOSIS Healthy · no bottleneck",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mlxtop doctor",
+            "expected_signal": "Host counters: available",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Host counters: available",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL .../install.sh | sh installs to ~/.local/bin without sudo",
+            "actually_needed": "install script downloads and verifies a prebuilt release tarball (mlxtop-3.1.2-x86_64-unknown-linux-musl.tar.gz) whose binary cannot be read before running",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show a healthy static report, doctor with available host counters, and version 3.1.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mlxtop-20261031-003758-3d11/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mlxtop-20261031-003758-3d11/check-1-cmd5.judged.png",
+            "runs/verify/verify-mlxtop-20261031-003758-3d11/check-2-cmd6.judged.png",
+            "runs/verify/verify-mlxtop-20261031-003758-3d11/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.030625
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -358,5 +453,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:37+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:38:45.112298+08:00"
 }

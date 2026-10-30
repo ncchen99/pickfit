@@ -85,9 +85,53 @@
   "last_release": null,
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_root",
+    "checked_at": "2026-10-31T00:40:44.276062+08:00",
+    "runs": [
+      {
+        "id": "verify-whisper-install-20261031-003956-6e6c",
+        "level": "unverified",
+        "unverified_reason": "needs_root",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:40:44.276062+08:00",
+        "tool_version": null,
+        "install_method": null,
+        "replayed": false,
+        "steps": [],
+        "smoke_tests": [],
+        "pitfalls": [
+          {
+            "readme_said": "wget -O whisper.sh https://github.com/hwdsl2/whisper-install/raw/main/whisper-install.sh",
+            "actually_needed": "used curl -fL -o whisper.sh <url> because wget is not on PATH in this box",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "sudo bash whisper.sh --help / --listmodels / --showinfo management examples",
+            "actually_needed": "check_root runs before parse_args, so even read-only actions --help and --listmodels exit 1 with 'This installer must be run as root' when not root; sudo is not available (uid 1000, no sudo binary)",
+            "kind": "note"
+          },
+          {
+            "readme_said": "sudo bash whisper.sh --auto installs system packages, venv, config and systemd service",
+            "actually_needed": "installer fetches whisper_api_server.py from https://github.com/hwdsl2/ai-stack-extras/releases/download/v1.0.0/whisper_api_server.py at install time with SHA256 verification; writes to /opt/whisper, /etc/whisper, /var/lib/whisper and uses apt/yum plus systemctl, all requiring root",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-whisper-install-20261031-003956-6e6c/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.079405
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -332,5 +376,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:18+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:40:44.277862+08:00"
 }

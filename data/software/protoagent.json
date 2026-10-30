@@ -53,7 +53,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-protoagent-20261031-004449-46d2",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "rm -rf protoagent-src && git clone --depth 1 https://github.com/nMaroulis/protoagent.git protoagent-src",
+          "purpose": "clone source for pip install"
+        },
+        {
+          "command": "python3 -m pip install -e ./protoagent-src/core --no-deps && python3 -m pip install protolink[http,mcp,openai,anthropic,gemini,huggingface,deepseek,grok,ollama,openai-compatible,lmstudio,vllm,llama-cpp-server]>=0.8.2",
+          "purpose": "install protoagent-core without llama build plus protolink deps"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "python3 -c \"import protoagent_core; print(protoagent_core.__version__)\"",
+        "expected_signal": "0.3.1"
+      },
+      "first_task": "python3 -c \"import protoagent_core; print(protoagent_core.__version__)\""
+    },
     "windows": null
   },
   "pricing": {
@@ -69,10 +89,94 @@
     "url": "https://github.com/nMaroulis/protoagent/releases/tag/v.0.3.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:47:22.882905+08:00",
+    "runs": [
+      {
+        "id": "verify-protoagent-20261031-004449-46d2",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:47:22.882905+08:00",
+        "tool_version": "0.3.1",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf protoagent-src && git clone --depth 1 https://github.com/nMaroulis/protoagent.git protoagent-src",
+            "purpose": "clone source for pip install"
+          },
+          {
+            "command": "python3 -m pip install -e ./protoagent-src/core --no-deps && python3 -m pip install protolink[http,mcp,openai,anthropic,gemini,huggingface,deepseek,grok,ollama,openai-compatible,lmstudio,vllm,llama-cpp-server]>=0.8.2",
+            "purpose": "install protoagent-core without llama build plus protolink deps"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 -c \"import protoagent_core; print(protoagent_core.__version__)\"",
+            "expected_signal": "0.3.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.3.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 -c \"import json; from protoagent_core.agent_engine import get_agent_settings; d=json.loads(get_agent_settings()); print(sorted([a['name'] for a in d['agents']]))\"",
+            "expected_signal": "architect",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "['architect', 'coder', 'explorer', 'mcp', 'scout', 'tester', 'verifier']",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 -c \"import json; from protoagent_core.agent_engine import doctor; d=json.loads(doctor(workspace='/tmp')); print(d['python']); print(d['active_provider']); print(d['component_versions'][1]['version'])\"",
+            "expected_signal": "ollama",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ollama",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "python -m pip install -e core (pulls protolink[http,llms,mcp] including llama-cpp-python)",
+            "actually_needed": "install core with --no-deps then install protolink without llama-cpp-local: python3 -m pip install protolink[http,mcp,openai,anthropic,gemini,huggingface,deepseek,grok,ollama,openai-compatible,lmstudio,vllm,llama-cpp-server]>=0.8.2",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "cargo run --locked --manifest-path cli/Cargo.toml -- version/check/agents",
+            "actually_needed": "called the same logic via Python: component_versions() for version, get_agent_settings() for agents, doctor() for check",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.3.1, agent list containing architect, and doctor reporting python 3.12.16 with active provider ollama.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-protoagent-20261031-004449-46d2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-protoagent-20261031-004449-46d2/check-1-cmd11.judged.png",
+            "runs/verify/verify-protoagent-20261031-004449-46d2/check-2-cmd12.judged.png",
+            "runs/verify/verify-protoagent-20261031-004449-46d2/check-3-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.180842
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -283,5 +387,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:47:22.883860+08:00"
 }

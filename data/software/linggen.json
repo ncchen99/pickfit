@@ -68,20 +68,25 @@
       "first_task": "ling"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-linggen-20261031-004203-b5cc",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://linggen.dev/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL -o /tmp/install.sh https://linggen.dev/install.sh && wc -c /tmp/install.sh && head -c 2000 /tmp/install.sh",
+          "purpose": "download install script for reading before running"
+        },
+        {
+          "command": "bash /tmp/install.sh",
+          "purpose": "run install script to install ling"
         }
       ],
-      "manual_steps": [
-        "sign in to link machine for remote access"
-      ],
-      "check": null,
-      "first_task": "ling"
+      "manual_steps": [],
+      "check": {
+        "command": "ling --version",
+        "expected_signal": "ling 1.9.0"
+      },
+      "first_task": "curl -fsS http://127.0.0.1:9527/api/health"
     },
     "windows": null
   },
@@ -98,10 +103,105 @@
     "url": "https://github.com/linggen/linggen/releases/tag/1.9.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:44:22.151046+08:00",
+    "runs": [
+      {
+        "id": "verify-linggen-20261031-004203-b5cc",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:44:22.151046+08:00",
+        "tool_version": "1.9.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/install.sh https://linggen.dev/install.sh && wc -c /tmp/install.sh && head -c 2000 /tmp/install.sh",
+            "purpose": "download install script for reading before running"
+          },
+          {
+            "command": "bash /tmp/install.sh",
+            "purpose": "run install script to install ling"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ling --version",
+            "expected_signal": "ling 1.9.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ling 1.9.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS http://127.0.0.1:9527/api/health",
+            "expected_signal": "\"ok\":true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"ok\":true,\"version\":\"1.9.0\"}",
+            "setup": [
+              {
+                "command": "ling init && ls -la ~/.linggen/ && cat ~/.linggen/linggen.toml 2>/dev/null; cat ~/.linggen/config* 2>/dev/null; ls ~/.linggen/agents/ 2>/dev/null",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "ling --port 9527",
+                "background": true,
+                "port": 9527
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://linggen.dev/install.sh | bash",
+            "actually_needed": "ran `bash /tmp/install.sh` after downloading; it installed `ling` to $HOME/.local/bin (fallback, no root) and verified SHA-256; bundled bun 1.4.4",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "single install.sh one-liner with SHA-256 verification",
+            "actually_needed": "pre-downloaded and read install-bin.sh (/tmp/install-bin.sh); install.sh still pipes a remotely-fetched install-bin.sh into bash at runtime, plus fetches opaque ling tarball and bun zip which cannot be read before running",
+            "kind": "note"
+          },
+          {
+            "readme_said": "install.sh installs ling plus pinned ling-mem memory backend",
+            "actually_needed": "ling-mem install soft-failed with `tar: ling-mem: Not found in archive` then warning `couldn't install ling-mem`; install continued and `ling status` reports ling-mem not on PATH",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "ling / ling --web starts server on http://localhost:9527",
+            "actually_needed": "start server with `ling --port 9527` (bare `ling` also starts server); there is no `--web` flag in `ling --help` despite post-install text `ling --web # Start server (foreground)` and README implying `ling` opens web UI",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show expected outputs: health API returns ok true and CLI prints ling 1.9.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-linggen-20261031-004203-b5cc/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-linggen-20261031-004203-b5cc/check-1-cmd9.judged.png",
+            "runs/verify/verify-linggen-20261031-004203-b5cc/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.136714
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -312,5 +412,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:44:22.152400+08:00"
 }

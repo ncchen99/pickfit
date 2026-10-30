@@ -58,18 +58,25 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "script",
+      "basis": "replayed",
+      "run_id": "verify-homebotbuild-20261031-004044-6103",
+      "method": "source",
       "steps": [
         {
-          "command": "bash install.sh --with-dashboard",
-          "purpose": null
+          "command": "git clone https://github.com/CypherSisters/HomeBotBuild.git && ls -la HomeBotBuild/ | head -n 100; echo \"---\"; cat HomeBotBuild/install.sh | wc -l; python3 --version; node --version",
+          "purpose": "clone HomeBotBuild repo"
+        },
+        {
+          "command": "cd HomeBotBuild && bash install.sh --with-dashboard",
+          "purpose": "run installer bash install.sh --with-dashboard"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "puffpai setup"
+      "check": {
+        "command": "source HomeBotBuild/venv/bin/activate && puffpai --help",
+        "expected_signal": "First-run setup wizard"
+      },
+      "first_task": "source HomeBotBuild/venv/bin/activate && puffpai version"
     },
     "windows": {
       "basis": "readme_claim",
@@ -95,10 +102,94 @@
   "processing": "local",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:46:42.940714+08:00",
+    "runs": [
+      {
+        "id": "verify-homebotbuild-20261031-004044-6103",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:46:42.940714+08:00",
+        "tool_version": "v1.0.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/CypherSisters/HomeBotBuild.git && ls -la HomeBotBuild/ | head -n 100; echo \"---\"; cat HomeBotBuild/install.sh | wc -l; python3 --version; node --version",
+            "purpose": "clone HomeBotBuild repo"
+          },
+          {
+            "command": "cd HomeBotBuild && bash install.sh --with-dashboard",
+            "purpose": "run installer bash install.sh --with-dashboard"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "source HomeBotBuild/venv/bin/activate && puffpai --help",
+            "expected_signal": "First-run setup wizard",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "setup First-run setup wizard (hardware, brain, the three zones, household,",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "source HomeBotBuild/venv/bin/activate && puffpai version",
+            "expected_signal": "PuffPAI v1.0.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PuffPAI v1.0.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS http://127.0.0.1:8000/health",
+            "expected_signal": "\"status\":\"ok\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"service\":\"PuffPAI API\",\"status\":\"ok\"}",
+            "setup": [
+              {
+                "command": "source HomeBotBuild/venv/bin/activate && python HomeBotBuild/start_api.py",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "no version flag documented; generic check expects --version or --help",
+            "actually_needed": "use `puffpai version` (subcommand); `puffpai --version` exits 2 with 'unrecognized arguments'",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Health endpoint returned status ok and puffpai --help displayed its full command list.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-homebotbuild-20261031-004044-6103/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-homebotbuild-20261031-004044-6103/check-1-cmd8.judged.png",
+            "runs/verify/verify-homebotbuild-20261031-004044-6103/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.104712
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -359,5 +450,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:59+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:46:42.941458+08:00"
 }

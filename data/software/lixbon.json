@@ -71,18 +71,33 @@
       "first_task": "lixbon --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "script",
+      "basis": "replayed",
+      "run_id": "verify-lixbon-20261031-004013-8ddb",
+      "method": "pip",
       "steps": [
         {
-          "command": "curl -fsSL https://lixbon.com/install.sh | bash",
-          "purpose": null
+          "command": "rm -rf /home/sbx/work/Lixbon && git clone https://github.com/LIXBON-FOUNDER/Lixbon.git /home/sbx/work/Lixbon",
+          "purpose": "Clean clone for replayable step"
+        },
+        {
+          "command": "pip install -r /home/sbx/work/Lixbon/requirements.txt",
+          "purpose": "First candidate pip install clean"
+        },
+        {
+          "command": "curl -fSL -o /tmp/install.sh https://lixbon.com/install.sh",
+          "purpose": "Download install script clean"
+        },
+        {
+          "command": "bash /tmp/install.sh",
+          "purpose": "Run CLI install script clean"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "lixbon --version"
+      "check": {
+        "command": "lixbon --version",
+        "expected_signal": "lixbon v2.14.0 linux/amd64"
+      },
+      "first_task": "lixbon status"
     },
     "windows": {
       "basis": "readme_claim",
@@ -112,10 +127,106 @@
     "url": "https://github.com/LIXBON-FOUNDER/Lixbon/releases/tag/cli-v2.14.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:42:50.288750+08:00",
+    "runs": [
+      {
+        "id": "verify-lixbon-20261031-004013-8ddb",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:42:50.288750+08:00",
+        "tool_version": "2.14.0",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf /home/sbx/work/Lixbon && git clone https://github.com/LIXBON-FOUNDER/Lixbon.git /home/sbx/work/Lixbon",
+            "purpose": "Clean clone for replayable step"
+          },
+          {
+            "command": "pip install -r /home/sbx/work/Lixbon/requirements.txt",
+            "purpose": "First candidate pip install clean"
+          },
+          {
+            "command": "curl -fSL -o /tmp/install.sh https://lixbon.com/install.sh",
+            "purpose": "Download install script clean"
+          },
+          {
+            "command": "bash /tmp/install.sh",
+            "purpose": "Run CLI install script clean"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lixbon --version",
+            "expected_signal": "lixbon v2.14.0 linux/amd64",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lixbon v2.14.0 linux/amd64",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lixbon --help",
+            "expected_signal": "asistente de código en tu terminal",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lixbon — asistente de código en tu terminal",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lixbon status",
+            "expected_signal": "https://lixbon.com/v1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "- Base URL: https://lixbon.com/v1",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "python -m uvicorn core.gateway.app:app --port 8000 --reload starts the gateway with health at /health",
+            "actually_needed": "Gateway needs a reachable Postgres DATABASE_URL and Ollama for inference; with no DATABASE_URL the uvicorn lifespan raises during startup, so in this box only the CLI was verified and the gateway health check was not reachable.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "curl -fsSL https://lixbon.com/install.sh | bash installs the CLI",
+            "actually_needed": "install.sh automatically ran `lixbon init --base-url https://lixbon.com/v1` at the end and created /home/sbx/.lixbon/config.json, so `lixbon status` works offline right after install.",
+            "kind": "tool_handled"
+          },
+          {
+            "readme_said": "install step 4 runs install.sh",
+            "actually_needed": "nothing to change; a note: the box ran install.sh, downloaded, without reading it first, so pickfit did not inspect it",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show lixbon printing status with Base URL https://lixbon.com/v1 and version lixbon v2.14.0 linux/amd64.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lixbon-20261031-004013-8ddb/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lixbon-20261031-004013-8ddb/check-1-cmd7.judged.png",
+            "runs/verify/verify-lixbon-20261031-004013-8ddb/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.174267
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -358,5 +469,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:42:50.289424+08:00"
 }

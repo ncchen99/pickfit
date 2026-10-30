@@ -61,20 +61,29 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-puffpaibuildbot-20261031-004325-1559",
       "method": "script",
       "steps": [
         {
-          "command": "bash install.sh",
-          "purpose": null
+          "command": "rm -rf PuffPAIBuildBot && git clone https://github.com/CypherSisters/PuffPAIBuildBot.git",
+          "purpose": "Clone BuildBot repo"
+        },
+        {
+          "command": "bash PuffPAIBuildBot/install.sh --no-dashboard --no-questions --no-apt",
+          "purpose": "Run installer non-interactive without dashboard"
+        },
+        {
+          "command": "ln -sf /home/sbx/work/PuffPAIBuildBot/puffpai /home/sbx/.local/bin/puffpai",
+          "purpose": "Put puffpai launcher on PATH"
         }
       ],
-      "manual_steps": [
-        "If Windows blocks install, click More info then Run anyway"
-      ],
-      "check": null,
-      "first_task": "puffpai setup"
+      "manual_steps": [],
+      "check": {
+        "command": "puffpai version",
+        "expected_signal": "PuffPAI v0.1.0-alpha"
+      },
+      "first_task": "puffpai version"
     },
     "windows": {
       "basis": "readme_claim",
@@ -102,10 +111,103 @@
   "processing": "hybrid",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:47:10.881922+08:00",
+    "runs": [
+      {
+        "id": "verify-puffpaibuildbot-20261031-004325-1559",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:47:10.881922+08:00",
+        "tool_version": "v0.1.0-alpha",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf PuffPAIBuildBot && git clone https://github.com/CypherSisters/PuffPAIBuildBot.git",
+            "purpose": "Clone BuildBot repo"
+          },
+          {
+            "command": "bash PuffPAIBuildBot/install.sh --no-dashboard --no-questions --no-apt",
+            "purpose": "Run installer non-interactive without dashboard"
+          },
+          {
+            "command": "ln -sf /home/sbx/work/PuffPAIBuildBot/puffpai /home/sbx/.local/bin/puffpai",
+            "purpose": "Put puffpai launcher on PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "puffpai version",
+            "expected_signal": "PuffPAI v0.1.0-alpha",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PuffPAI v0.1.0-alpha",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "puffpai outside",
+            "expected_signal": "To see every request from the last day: puffpai outside log",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "To see every request from the last day: puffpai outside log",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "puffpai knowledge status",
+            "expected_signal": "No books yet. Add one with: puffpai sources search",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No books yet. Add one with: puffpai sources search <words>",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "bash install.sh",
+            "actually_needed": "Run non-interactive as: bash install.sh --no-dashboard --no-questions --no-apt; installer then skips dashboard build and leaves Ollama uninstalled with message to install via curl -fsSL https://ollama.com/install.sh | sh (needs password/root). Bot CLI works but cannot answer without Ollama.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "puffpai setup / puffpai start imply puffpai is on PATH after install",
+            "actually_needed": "Link the generated launcher onto PATH: ln -sf /home/sbx/work/PuffPAIBuildBot/puffpai /home/sbx/.local/bin/puffpai. Without this, bare puffpai is command-not-found; only ./puffpai in the checkout exists.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "--version or --help works",
+            "actually_needed": "Use puffpai version (subcommand) and puffpai --help; puffpai --version exits 2 with error unrecognized arguments: --version.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three commands succeeded with expected outputs for outside transparency, empty knowledge status, and version.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-puffpaibuildbot-20261031-004325-1559/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-puffpaibuildbot-20261031-004325-1559/check-1-cmd14.judged.png",
+            "runs/verify/verify-puffpaibuildbot-20261031-004325-1559/check-2-cmd15.judged.png",
+            "runs/verify/verify-puffpaibuildbot-20261031-004325-1559/check-3-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.210397
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -366,5 +468,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:59+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:47:10.883041+08:00"
 }

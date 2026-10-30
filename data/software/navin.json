@@ -79,20 +79,25 @@
       "first_task": "navin-cli"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-navin-20261031-004422-bc8c",
       "method": "script",
       "steps": [
         {
-          "command": "curl https://navin.live/install -fsS | bash",
-          "purpose": null
+          "command": "curl https://navin.live/install -fsS -o /tmp/navin-install.sh && wc -c /tmp/navin-install.sh && head -c 2000 /tmp/navin-install.sh",
+          "purpose": "Download installer script for inspection"
+        },
+        {
+          "command": "bash /tmp/navin-install.sh",
+          "purpose": "Run inspected Navin installer script"
         }
       ],
-      "manual_steps": [
-        "Configure a provider with API key or local model endpoint"
-      ],
-      "check": null,
-      "first_task": "navin-cli"
+      "manual_steps": [],
+      "check": {
+        "command": "export PATH=\"$HOME/.local/bin:$PATH\" && navin --version",
+        "expected_signal": "navin v2.4.1"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -124,10 +129,97 @@
     "url": "https://github.com/Navinspire-ia/navin/releases/tag/v2.4.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:46:34.369597+08:00",
+    "runs": [
+      {
+        "id": "verify-navin-20261031-004422-bc8c",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:46:34.369597+08:00",
+        "tool_version": "2.4.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl https://navin.live/install -fsS -o /tmp/navin-install.sh && wc -c /tmp/navin-install.sh && head -c 2000 /tmp/navin-install.sh",
+            "purpose": "Download installer script for inspection"
+          },
+          {
+            "command": "bash /tmp/navin-install.sh",
+            "purpose": "Run inspected Navin installer script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && navin --version",
+            "expected_signal": "navin v2.4.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "navin v2.4.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && navin --help",
+            "expected_signal": "doctor",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ doctor Report what this installation can do and what is missing. │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && navin-cli --help",
+            "expected_signal": "Usage: navin tui",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: navin tui [OPTIONS] [path]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl https://navin.live/install -fsS | bash",
+            "actually_needed": "installer downloaded and installed a prebuilt binary package (~size shown during install, verified against SHA256SUMS.txt) which cannot be read as text before running; inspected the shell installer itself with read_file instead",
+            "kind": "note"
+          },
+          {
+            "readme_said": "example commands navin-cli / .venv/bin/navin-cli imply navin-cli entrypoint",
+            "actually_needed": "use `navin --version` (prints `navin v2.4.1`); `navin-cli --version` exits 2 with `No such option: --version`, use `navin-cli --help` which proxies to `navin tui --help`",
+            "kind": "note"
+          },
+          {
+            "readme_said": "cd your-project && navin-cli",
+            "actually_needed": "bare `navin-cli` launches an interactive TUI that requires configuring a provider API key or local model endpoint (Ctrl+G Settings), so it cannot be smoke-tested headless without keys",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows navin --version printing navin v2.4.1 with exit code 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-navin-20261031-004422-bc8c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-navin-20261031-004422-bc8c/check-1-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.05376
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -418,5 +510,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:52+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:46:34.370592+08:00"
 }

@@ -54,7 +54,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-npiac-20261031-003740-b340",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone https://github.com/dRafaleD/NPIAC.git /tmp/NPIAC",
+          "purpose": "Clone NPIAC source for install"
+        },
+        {
+          "command": "python3 -m pip install /tmp/NPIAC",
+          "purpose": "Install NPIAC via pip from source"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "npiac --help",
+        "expected_signal": "Generate deterministic repository context for coding agents."
+      },
+      "first_task": "cd /tmp/NPIAC && npiac . --stdout"
+    },
     "windows": null
   },
   "pricing": {
@@ -66,10 +86,89 @@
   "processing": "local",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:38:48.263106+08:00",
+    "runs": [
+      {
+        "id": "verify-npiac-20261031-003740-b340",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:38:48.263106+08:00",
+        "tool_version": "0.6.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/dRafaleD/NPIAC.git /tmp/NPIAC",
+            "purpose": "Clone NPIAC source for install"
+          },
+          {
+            "command": "python3 -m pip install /tmp/NPIAC",
+            "purpose": "Install NPIAC via pip from source"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "npiac --help",
+            "expected_signal": "Generate deterministic repository context for coding agents.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Generate deterministic repository context for coding agents.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/NPIAC && npiac . --stdout",
+            "expected_signal": "CLI `npiac`: `src/npiac/cli.py`",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "- CLI `npiac`: `src/npiac/cli.py`",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/npiac-demo && rm -f CONTEXT.md && npiac . --budget 20000",
+            "expected_signal": "Generated /tmp/npiac-demo/CONTEXT.md",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Generated /tmp/npiac-demo/CONTEXT.md",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/npiac-demo/src/sample && cat > /tmp/npiac-demo/pyproject.toml <<'EOF'\n[project]\nname = \"sample-api\"\nversion = \"0.1.0\"\nrequires-python = \">=3.11\"\ndependencies = [\"fastapi\"]\n\n[project.scripts]\nsample-api = \"sample.main:main\"\nEOF\ncat > /tmp/npiac-demo/src/sample/main.py <<'EOF'\ndef main():\n    print(\"hello\")\nEOF\ncd /tmp/npiac-demo && npiac . && echo \"---CONTEXT.md head---\" && cat CONTEXT.md",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show npiac printing repository context to stdout, generating CONTEXT.md, and displaying its help description.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-npiac-20261031-003740-b340/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-npiac-20261031-003740-b340/check-1-cmd5.judged.png",
+            "runs/verify/verify-npiac-20261031-003740-b340/check-2-cmd8.judged.png",
+            "runs/verify/verify-npiac-20261031-003740-b340/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.053705
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -280,5 +379,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:38:48.263862+08:00"
 }
