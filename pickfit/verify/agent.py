@@ -41,6 +41,7 @@ from pickfit.env import REPO_ROOT, get_env
 from pickfit.ledger import BudgetExceeded, taipei_now
 from pickfit.meta import MetaResult, ToolCall, call_meta, resolve_model
 from pickfit.schema import InstallMethod, PitfallKind, UnverifiedReason, VerificationLevel, is_passed
+from pickfit.verify import gui
 from pickfit.verify.box import Box, BoxError, ExecResult, background_script
 from pickfit.verify import features as feature_checks
 from pickfit.verify.features import FINISH_FEATURES, FinishFeature, resolve_features
@@ -175,6 +176,16 @@ TOOLS: list[dict[str, Any]] = [
     FINISH_TOOL,
 ]
 
+LAUNCH_GUI_TOOL = _fn(
+    "launch_gui", "Start a GUI app on the box's virtual display and wait for a window of its own; pickfit then "
+    "takes a screenshot and stops every process of the box user (servers started with run_background too). "
+    "Returns its command_id, pickfit's own lines (tier, window sizes) and, apart, what the app set (window "
+    "titles, process names, its output). Uses one unit of the command budget.",
+    {"command": {"type": "string", "description": "The command that starts the app, as a user would run it."},
+     "wait_s": {"type": "integer", "description": f"Seconds to wait for a window (max {gui.WAIT_MAX_S})."}},
+    ["command", "wait_s"])
+GUI_TOOLS: list[dict[str, Any]] = [*TOOLS[:-1], LAUNCH_GUI_TOOL, FINISH_TOOL]
+
 
 class _ListDirArgs(BaseModel):
     path: str = "."
@@ -189,6 +200,11 @@ class _RunCommandArgs(BaseModel):
     command: str = Field(min_length=1)
     timeout_s: int = Field(default=DEFAULT_COMMAND_TIMEOUT_S, ge=1)
     purpose: str | None = None
+
+
+class _LaunchGuiArgs(BaseModel):
+    command: str = Field(min_length=1)
+    wait_s: int = Field(default=30, ge=1)
 
 
 class _RunBackgroundArgs(BaseModel):
@@ -320,6 +336,22 @@ with the reason instead.
 - After a failed command, hints from pickfit's rule table may follow. They can be wrong.
 """
 
+GUI_RULES = """\
+
+GUI apps: this box has a virtual display. For a desktop (GUI) app, install it as a user would without root \
+(an AppImage: chmod +x, then run it with --appimage-extract-and-run, or extract it once with --appimage-extract \
+and run squashfs-root/AppRun; a .deb: dpkg-deb -x into ~/apps; npm or pip as usual), then start it with \
+launch_gui, never with run_command or run_background. Cite that launch_gui as a smoke test with \
+expected_signal `gui tier: window` (pickfit's own line; window titles and process names are the app's and do \
+not count). A launch stops every process of the box user, so start servers again after it. A GUI launch \
+supports level install at most, whatever the window shows: pickfit's judge reads the screenshot itself, and a \
+GUI app is never function from a launch. Launch it even if it will ask for an account: the screenshot records \
+the sign-in screen. This box has no user namespaces, so Chromium and Electron apps usually need --no-sandbox \
+here: add it only if the app fails without it, and record it as a pitfall of kind sandbox (this box's need, \
+not the app's). A Tkinter \
+app needs /usr/bin/python3 (it has tkinter; python3.12 on PATH does not): make its venv with \
+/usr/bin/python3 -m venv."""
+
 # Public models small enough for an inference check, licenses and URLs checked 2026-10-29.
 # stories260K: karpathy/tinyllamas weights (MIT), GGUF by ggml-org. SmolLM2-135M-Instruct:
 # HuggingFaceTB (Apache-2.0), GGUF by bartowski; Ollama's smollm2:135m is the same model.
@@ -377,6 +409,10 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
     if box.gpu:
         lines.insert(3, f"GPU: one NVIDIA {box.gpu} (driver and nvidia-smi present, no CUDA toolkit), so GPU "
                         "examples can run here; use the smallest model the tool supports.")
+    if box.display and ex.kind.value == "desktop_app":
+        lines.insert(3, "This is a desktop (GUI) app: install the app itself (a release build if there is one for "
+                        "Linux; an AppImage runs with --appimage-extract-and-run, no FUSE needed), then start it "
+                        "with launch_gui and cite that launch. A test suite or a helper tool is not the app.")
     if task.files:
         names = ", ".join(sorted(task.files))
         lines.append(f"The work dir is also a sample project to try the tool on, with these files: {names}. "
@@ -447,7 +483,9 @@ class CommandRecord:
     purpose: str | None = None
     command_id: int | None = None  # n-th budgeted command, as the model sees it; None for free tools
     port: int | None = None  # run_background: the port it waited for
-    wait_s: int | None = None  # run_background: how long it waited
+    wait_s: int | None = None  # run_background, launch_gui: how long it waited
+    screenshot: str | None = None  # launch_gui: the PNG of the display
+    gui: dict[str, Any] | None = None  # launch_gui: what the launch showed (gui.GuiLaunch)
 
 
 @dataclass
@@ -534,7 +572,8 @@ class VerifyAgent:
         self.instructions = INSTRUCTIONS.format(max_commands=limits.max_commands, max_turns=limits.max_turns,
                                                 minutes=round(limits.max_seconds / 60),
                                                 stdout_chars=f"{STDOUT_CHARS:,}", box_kind=box.kind,
-                                                box_rule=box.user_rule)
+                                                box_rule=box.user_rule) + (GUI_RULES if box.display else "")
+        self.tools = GUI_TOOLS if box.display else TOOLS
         self.commands_used = 0
         self.finish_retries = 0
         self.verdict: LogVerdict | None = None
@@ -598,7 +637,7 @@ class VerifyAgent:
             turn += 1
             # prompt_cache_key keeps one run's growing history on the same prefix cache (a hint).
             body: dict[str, Any] = {"instructions": self.instructions,
-                                    "tools": TOOLS,
+                                    "tools": self.tools,
                                     "reasoning": {"summary": "auto"}, "prompt_cache_key": self.run_id}
             if self.mode == "chain":
                 body["input"] = pending
@@ -786,6 +825,8 @@ class VerifyAgent:
                 return self._run_command(_RunCommandArgs.model_validate(raw), turn)
             if call.name == "run_background":
                 return self._run_background(_RunBackgroundArgs.model_validate(raw), turn)
+            if call.name == "launch_gui" and self.box.display:
+                return self._launch_gui(_LaunchGuiArgs.model_validate(raw), turn)
         except (ValueError, ValidationError) as err:
             self._say(f"  {call.name}: bad arguments")
             return f"error: invalid arguments for {call.name}: {_one_line(str(err), 600)}"
@@ -859,15 +900,38 @@ class VerifyAgent:
         self._note_error(result)
         return self._format_exec(n, result, hints, wait + 15)
 
+    def _launch_gui(self, args: _LaunchGuiArgs, turn: int) -> str:
+        refused = self._budget_left()
+        if refused:
+            self._say(f"  ▣ {_one_line(args.command, 200)} → refused (budget)")
+            return refused
+        self.commands_used += 1
+        n = self.commands_used
+        wait = max(1, min(args.wait_s, gui.WAIT_MAX_S))
+        self._say(f"  ▣ {_one_line(args.command, 200)}   [cmd {n}/{self.limits.max_commands}]")
+        result, shown, png = gui.launch(self.box, args.command, n, wait,
+                                        timeout_s=self._timeout(wait + gui.SETTLE_S + 90))
+        shot = None
+        if png:
+            path = self.runs_dir / "verify" / self.run_id / f"gui-{n}.png"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(png)
+            shot = str(path)
+        self._record(turn, "launch_gui", args.command, result, wait_s=wait, screenshot=shot, gui=shown.to_dict())
+        self._say(f"    gui tier {shown.tier}{' · ' + repr(shown.title) if shown.windows else ''}")
+        return self._format_exec(n, result, [], wait)
+
     def _record(self, turn: int, tool: str, command: str, result: ExecResult,
                 hints: list[RuleHit] | None = None, purpose: str | None = None,
-                port: int | None = None, wait_s: int | None = None) -> None:
-        budgeted = tool in ("run_command", "run_background")
+                port: int | None = None, wait_s: int | None = None, screenshot: str | None = None,
+                gui: dict[str, Any] | None = None) -> None:
+        budgeted = tool in ("run_command", "run_background", "launch_gui")
         self.report.commands.append(CommandRecord(
             turn=turn, tool=tool, command=command, exit_code=result.exit_code, seconds=result.seconds,
             timed_out=result.timed_out, stdout=result.stdout, stderr=result.stderr,
             hints=[asdict(h) for h in hints or []], purpose=purpose,
-            command_id=self.commands_used if budgeted else None, port=port, wait_s=wait_s))
+            command_id=self.commands_used if budgeted else None, port=port, wait_s=wait_s,
+            screenshot=screenshot, gui=gui))
         if not budgeted:
             return
         status = "timed out" if result.timed_out else f"exit {result.exit_code}"

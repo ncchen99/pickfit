@@ -27,6 +27,12 @@ function index(): unknown {
   // An index from before feature coverage: no features on the entry or its guide.
   delete entry('fixture-chat-tui').features;
   for (const guide of Object.values(entry('fixture-chat-tui').install) as any[]) delete guide.features;
+  // A GUI app's launch on its Linux run.
+  const chat = entry('fixture-chat-tui');
+  const gui = { tier: 'ui_rendered', screen: 'main_ui', display: 'Xvfb 1280x800x24, no window manager, no GPU', launch_offline: true };
+  chat.kind = 'desktop_app';
+  chat.install.linux.run.gui = gui;
+  for (const run of chat.verification.passed_runs) if (run.os === 'linux') run.gui = gui;
   return data;
 }
 
@@ -179,6 +185,11 @@ test('get_install_guide conforms: pitfalls, setup, no pitfalls, another OS or ar
   const never = await call('never run', { slug: 'fixture-cloud-summarize', os: 'linux' });
   assert.deepEqual([never.verification.status, never.steps, never.verify], ['unverified', [], null]);
 
+  const gui = await call('a GUI app with its launch evidence', { slug: 'fixture-chat-tui', os: 'linux' });
+  assert.deepEqual([gui.verification.level, gui.verification.gui.tier, gui.verification.gui.screen], ['install', 'ui_rendered', 'main_ui']);
+  assert.match(gui.how_we_know, /judged that its main screen rendered/);
+  assert.equal(tagged.verification.gui, null);
+
   const mcp = await call('an MCP server with a client config', { slug: 'fixture-notes-mcp', os: 'linux' });
   assert.ok(mcp.mcp_client_config.claude_code.startsWith('claude mcp add fixture-notes-mcp'));
   assert.equal(plain.mcp_client_config, null);
@@ -194,6 +205,19 @@ test('find_software conforms for the mcp_server category', async () => {
     os: 'linux',
   });
   assert.deepEqual(out.picks.map((p: any) => p.slug), ['fixture-notes-mcp']);
+});
+
+test('find_software conforms with a GUI app among the picks; its verification carries the launch', async () => {
+  const off = server({ MATCH_MODE: 'off' });
+  const out = await conforming(off, await validators(off), 'rules, a GUI app', 'find_software', {
+    need: 'chat with a local language model',
+    os: 'linux',
+  });
+  const chat = out.picks.find((p: any) => p.slug === 'fixture-chat-tui');
+  assert.ok(chat, `picks: ${out.picks.map((p: any) => p.slug)}`);
+  assert.deepEqual([chat.verification.level, chat.verification.gui.tier], ['install', 'ui_rendered']);
+  assert.match(chat.how_we_know, /opened a window of its own on a virtual display/);
+  assert.ok(out.picks.filter((p: any) => p !== chat).every((p: any) => p.verification.gui === null));
 });
 
 test('report_outcome conforms: counted with a reverify, deduplicated, not counted, replaced', async () => {

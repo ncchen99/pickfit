@@ -1,0 +1,508 @@
+{
+  "schema_version": "software.v1",
+  "slug": "hydra",
+  "repo_id": "gh:1251948189",
+  "name": "Hydra",
+  "summary": "Control plane that discovers local AI models, routes tasks by capability and cost, enforces PII policy, tracks spend.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "ai-agents",
+    "claude",
+    "control-plane",
+    "cost-optimization",
+    "developer-tools",
+    "go",
+    "llm",
+    "ollama",
+    "openai"
+  ],
+  "use_cases": [
+    "route tasks by capability and cost",
+    "log dispatches with token counts and cost",
+    "block secret files from leaving the machine"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://hydra.uvansa.com/",
+  "repo": {
+    "url": "https://github.com/ankit373/hydra",
+    "full_name": "ankit373/hydra",
+    "created_at": "2026-05-28T03:46:31Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install ankit373/hydra/hyctl",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "hyctl probe"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-hydra-20261031-023219-8f33",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install hyctl",
+          "purpose": "Install hyctl via pip (README pip method)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "hyctl version",
+        "expected_signal": "hydra 1.5.0"
+      },
+      "first_task": "hyctl version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "hyctl init",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "hyctl probe"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.5.0",
+    "published_at": "2026-09-28T19:27:41Z",
+    "url": "https://github.com/ankit373/hydra/releases/tag/v1.5.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:37:14.961849+08:00",
+    "runs": [
+      {
+        "id": "verify-hydra-20261031-023219-8f33",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:37:14.961849+08:00",
+        "tool_version": "1.5.0",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pip install hyctl",
+            "purpose": "Install hyctl via pip (README pip method)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "hyctl version",
+            "expected_signal": "hydra 1.5.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hydra 1.5.0",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "hyctl --help",
+            "expected_signal": "Available Commands:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Available Commands:",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "hyctl probe",
+            "expected_signal": "Head",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Multi-model AI orchestration, one Cortex, many Heads",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "hyctl trust benchmark",
+            "expected_signal": "blended",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "blended (71/29) 3.41 97.9% 32%",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "every method installs the same prebuilt binary and verifies its checksum",
+            "actually_needed": "pip installs a small shim; the prebuilt hydra binary (hydra_1.5.0_linux_amd64.tar.gz) is downloaded automatically on first hyctl invocation",
+            "kind": "tool_handled"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show probe listing 7 Heads, trust benchmark with blended results, and hydra 1.5.0 version output, all exiting 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-hydra-20261031-023219-8f33/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-hydra-20261031-023219-8f33/check-1-cmd3.judged.png",
+            "runs/verify/verify-hydra-20261031-023219-8f33/check-2-cmd4.judged.png",
+            "runs/verify/verify-hydra-20261031-023219-8f33/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.086279
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:43:57+08:00",
+    "quality": {
+      "total": 86.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 50.5,
+      "signals": {
+        "stars": 11,
+        "monthly_downloads": 331,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": 414,
+        "hn_top_score": 2,
+        "registries_count": 1
+      },
+      "age_days": 155,
+      "packages": [
+        "pypi:hyctl"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 42.72
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:43:57.550284+08:00",
+      "sources_sha": "8a4998ea7f6fea2b58e186738b0f65d6b1c7f27879fde43c4955ca3e8e1d30ac",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Hydra is the control plane that sits in front of all of it."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "The AI control plane for software development."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "brew install ankit373/hydra/hyctl && hyctl init"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ hyctl probe\n\n  Heads discovered (6)                           2.1s"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Relocate one with `OLLAMA_HOST`, `HYDRA_LMSTUDIO_HOST`, `LITELLM_PROXY_URL`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey)]"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ankit373/hydra",
+      "fetched_at": "2026-10-30T23:48:08+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ankit373/hydra/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:10:04+08:00"
+    },
+    {
+      "id": "release:v1.5.0",
+      "kind": "release",
+      "url": "https://github.com/ankit373/hydra/releases/tag/v1.5.0",
+      "fetched_at": "2026-10-31T00:10:04+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Hydra is one `hyctl` CLI.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:53+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "brew install ankit373/hydra/hyctl && hyctl init",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:53+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "The AI control plane for software development.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:53+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Discovers every model on your machine, routes by capability and cost, enforces PII policy, tracks spend.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:53+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "**Hydra is the control plane that sits in front of all of it.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:53+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey)]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:53+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:08+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:08+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:08+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:08+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:08+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.5.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:10:04+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "github_api",
+      "quote": "routes by capability and cost",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:53+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "logging every dispatch with token counts and cost",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:53+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "a file like `.env` or `~/.aws/credentials` is refused to any model that leaves your machine",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:53+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install ankit373/hydra/hyctl",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:53+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "brew install ankit373/hydra/hyctl",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:53+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "hyctl init",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:53+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:42:53+08:00",
+  "updated_at": "2026-10-31T02:43:57+08:00"
+}

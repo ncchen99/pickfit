@@ -44,9 +44,11 @@ from pickfit.env import REPO_ROOT
 from pickfit.ledger import taipei_now
 from pickfit.schema import (
     COMMAND_MAX,
+    GUI_PASSED_TIERS,
     PASSED_LEVELS,
     SETUP_MAX,
     Check,
+    GuiCheck,
     InstallGuide,
     InstallStep,
     Judge,
@@ -72,9 +74,11 @@ from pickfit.verify.failure import (
     tool_command,
 )
 from pickfit.verify.features import coverage
+from pickfit.verify.gui import DISPLAY_NOTE as GUI_DISPLAY
 from pickfit.verify.mcp import handshake as mcp_handshake
 from pickfit.verify.mcp import pitfalls as mcp_pitfalls
 from pickfit.verify.mcp import probe_kind
+from pickfit.verify.replay import judged_launch
 from pickfit.verify.verdict import MCP_KINDS, split_last, unread_scripts, weaker
 
 if TYPE_CHECKING:
@@ -152,11 +156,13 @@ def _record_check(command: str) -> tuple[str, list[SetupStep]] | None:
 def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeResult | None, *,
               evidence_dir: Path, screenshots: list[Path] | None = None,
               judge_cost_usd: float = 0.0, confirm: FailureCheck | None = None,
-              checked_at: datetime | None = None, mcp: bool = False,
+              checked_at: datetime | None = None, gui_app: bool = False, mcp: bool = False,
               feature_verdicts: dict[str, tuple[str, str]] | None = None) -> tuple[VerificationRun, list[str]]:
     """The VerificationRun for one verification, plus notes on why the level was lowered.
 
-    checked_at is when its last box ran; it defaults to now, right after the boxes ran.
+    checked_at is when its last box ran; it defaults to now, right after the boxes ran. A GUI app
+    (gui_app) stays at install whatever else passed: function needs an action that changed checkable
+    state, which nothing checks yet.
     mcp: the software is an MCP server; its run needs the handshake from the replay.
     """
     notes: list[str] = []
@@ -280,6 +286,14 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         level = "unverified" if mcp else "install"
         reason = "other" if mcp else reason
         notes.append("no passing smoke test fits the record")
+    gui = gui_check(report, replay, judge)
+    if is_passed(level) and level != "install" and (gui_app or gui):
+        notes.append(f"a GUI app's {level} needs an action shown to change checkable state, which pickfit does "
+                     "not check yet; recorded as install")
+        level = "install"
+    if is_passed(level) and gui and gui.tier not in GUI_PASSED_TIERS:
+        notes.append(f"the GUI launch reached only {gui.tier}")
+        level, reason = "unverified", "other"
     handshake, probe_notes = _mcp_handshake(replay) if mcp else (None, [])
     if mcp and is_passed(level):
         if handshake is None:
@@ -301,7 +315,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
                                            feature_verdicts)
         notes += feature_notes
     pitfalls = [Pitfall(readme_said=_clip(p["readme_said"], 300) or "-",
-                        actually_needed=_clip(p["actually_needed"], 300) or "-", kind=p.get("kind"))
+                        actually_needed=_clip(p["actually_needed"], 300) or "-", kind=_pitfall_kind(p))
                 for p in finish.get("pitfalls") or []]
     # A downloaded script the install ran, or brought in, before anything read it: a note, not a block,
     # whatever the agent's own pitfalls say. Steps are numbered as the install guide lists them.
@@ -332,9 +346,40 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         if judge else None,
         evidence=RunEvidence(trace_path=_rel(evidence_dir / "report.json"),
                              screenshot_paths=[p for p in map(_rel, screenshots or []) if p]),
-        actor_model=report.model, cost_usd=round(report.cost_usd + judge_cost_usd, 6), features=features,
+        actor_model=report.model, cost_usd=round(report.cost_usd + judge_cost_usd, 6), features=features, gui=gui,
         mcp=handshake if is_passed(level) else None)
     return run, notes
+
+
+def _pitfall_kind(pitfall: dict[str, Any]) -> str | None:
+    """Needing --no-sandbox is this box's doing (no user namespaces, no setuid helper), never the README's: such
+    a pitfall the agent filed as readme_wrong (or left unfiled) is kind sandbox. tool_handled and note stand."""
+    kind = pitfall.get("kind")
+    if "--no-sandbox" in f"{pitfall.get('actually_needed') or ''}" and kind in (None, "readme_wrong"):
+        return "sandbox"
+    return kind
+
+
+def gui_check(report: VerifyReport, replay: ReplayResult | None, judge: JudgeResult | None) -> GuiCheck | None:
+    """The GUI launch's tier, recorded only when the judge read that launch's checked screenshot (the replay's
+    judged_launch); a launch nothing judged leaves no GUI record (its outcome is in the notes and smoke tests)."""
+    chosen = judged_launch(replay.checks) if replay else None
+    if chosen is None or not chosen.passed or chosen.run is None or chosen.run.gui is None:
+        return None
+    screen = judge.screen if judge is not None else None
+    if screen is None:
+        return None
+    launch, command = chosen.run.gui, chosen.command
+    tier = launch.get("tier") or "none"
+    if tier != "window":
+        return None
+    if screen in ("main_ui", "first_run"):
+        tier = "ui_rendered"
+    windows = launch.get("windows") or []
+    title = max(windows, key=lambda w: w.get("width", 0) * w.get("height", 0)).get("title") if windows else None
+    fitted = _clip(command, COMMAND_MAX)
+    return GuiCheck(tier=tier, screen=screen, command=fitted or "-", window_title=_clip(title, 200),
+                    display=GUI_DISPLAY)
 
 
 def _mcp_handshake(replay: ReplayResult | None) -> tuple[McpHandshake | None, list[Pitfall]]:
@@ -373,14 +418,17 @@ def install_guide(run: VerificationRun) -> InstallGuide:
 
     pickfit's MCP probe exists only in its boxes, so a probe check is never the guide's check or first
     task; an MCP server's guide points to the client config instead (the index builds it from run.mcp).
+    A GUI launch shows a window, not text in the terminal: it is a first task, never the check.
     """
     users = [t for t in run.smoke_tests if probe_kind(t.command) is None]
-    passing = [t for t in users if t.passed and t.expected_signal]
+    launch = run.gui.command if run.gui else None
+    passing = [t for t in users if t.passed and t.expected_signal and t.command != launch]
     check = next((t for t in passing if t.exit_code == 0), passing[0] if passing else None)
     examples = [t for t in users
                 if t.passed and not re.search(r"--?(?:version|help)\b|^\S+\s+-[Vh]$", t.command)]
-    # The first task shown to users: one that also worked with the network off, if any did.
-    example = next((t for t in examples if t.offline), examples[0] if examples else None)
+    # The first task shown to users: a GUI app's own launch, else one that also worked with the network off.
+    launched = next((t for t in examples if t.command == launch), None)
+    example = launched or next((t for t in examples if t.offline), examples[0] if examples else None)
     return InstallGuide(
         basis="replayed", run_id=run.id, method=run.install_method or "other", steps=run.steps,
         check=Check(command=check.command, expected_signal=check.expected_signal) if check else None,

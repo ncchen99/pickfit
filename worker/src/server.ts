@@ -58,6 +58,21 @@ const features = z
   })
   .describe("The main features the README advertises, as pickfit's verification run covered them");
 
+/** A GUI app's launch as pickfit saw it; the level stays install (a launch is not a feature test). */
+const gui = z
+  .object({
+    tier: z
+      .enum(['window', 'ui_rendered'])
+      .describe("window = a window of the app's own process opened; ui_rendered = a separate model saw the app's own UI drawn"),
+    screen: z
+      .enum(['main_ui', 'first_run', 'sign_in_wall', 'crash_or_error', 'blank_or_loading', 'other'])
+      .describe("What that model saw in a screenshot of the app's own windows"),
+    display: z.string().describe('The virtual display it ran on'),
+    launch_offline: z.boolean().nullable().describe('The launch passed again with the network off in a fresh sandbox'),
+  })
+  .nullable()
+  .describe('A GUI app: what pickfit saw when it launched it. null for other software');
+
 const pick = z.object({
   slug: z.string(),
   name: z.string(),
@@ -82,6 +97,7 @@ const pick = z.object({
       .boolean()
       .nullable()
       .describe('true = pickfit ran the install steps on your OS, and on your CPU architecture when arch was given; null = no os given'),
+    gui: gui,
   }),
   features,
   how_we_know: z.string(),
@@ -196,6 +212,7 @@ const installOutput = z.object({
       .boolean()
       .nullable()
       .describe('true = its checks passed again with the network off after install; false = they needed the network; null = not checked'),
+    gui: gui,
   }),
   applies_to_user_system: z.object({
     match: z.enum(['exact', 'same_os_other_arch', 'other_os', 'none']),

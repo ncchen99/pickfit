@@ -44,7 +44,8 @@ def _discover(args: argparse.Namespace) -> int:
         print(f"pickfit discover: {err}", file=sys.stderr)
         return 2
     funnel = run_discover(token=token, per_query=args.per_query, pushed_days=args.pushed_days,
-                          categories=args.category, skip_details=args.skip_details)
+                          categories=args.category, skip_details=args.skip_details,
+                          max_rate_wait_s=args.max_rate_wait)
     print(json.dumps(funnel, ensure_ascii=False, indent=2))
     return 0
 
@@ -104,7 +105,7 @@ def _funnel(args: argparse.Namespace) -> int:
 
 
 def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
-    from pickfit.discover.github import PUSHED_DAYS, TOPICS
+    from pickfit.discover.github import PUSHED_DAYS, RATE_LIMIT_MAX_WAIT_S, TOPICS
     from pickfit.discover.run import DEFAULT_PER_QUERY
     from pickfit.schema import LISTED_CATEGORIES
 
@@ -117,6 +118,9 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
                    help="limit to one category (repeatable; default all)")
     d.add_argument("--skip-details", action="store_true",
                    help="only search; do not fetch README, releases or files")
+    d.add_argument("--max-rate-wait", type=float, default=RATE_LIMIT_MAX_WAIT_S,
+                   help=f"seconds to wait for a GitHub rate-limit reset before failing (default "
+                        f"{RATE_LIMIT_MAX_WAIT_S:.0f}; the REST limit resets hourly, so a bulk run needs ~3700)")
     d.set_defaults(func=_discover)
 
     from pickfit.prescreen import DEFAULT_CONCURRENCY as PRESCREEN_CONCURRENCY

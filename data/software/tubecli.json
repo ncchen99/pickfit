@@ -1,0 +1,648 @@
+{
+  "schema_version": "software.v1",
+  "slug": "tubecli",
+  "repo_id": "gh:1184839874",
+  "name": "TubeCLI",
+  "summary": "Self-hosted open-source AI agent team that makes videos, drives browsers, deploys sites and runs tasks.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "prototype",
+  "tags": [
+    "3d-studio",
+    "ai-agents",
+    "browser-agent",
+    "cli",
+    "fastapi",
+    "multi-agent",
+    "ollama",
+    "python",
+    "threejs",
+    "workflow-engine"
+  ],
+  "use_cases": [
+    "deploy a website to Cloudflare Workers from one sentence",
+    "extract and translate video subtitles to SRT/VTT/ASS",
+    "automate real browsers with profiles and live view",
+    "approve AI-created tasks before irreversible actions"
+  ],
+  "alternatives_to": [
+    "n8n",
+    "Dify",
+    "CrewAI",
+    "LangGraph",
+    "OpenHands"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://tubecli.app",
+  "repo": {
+    "url": "https://github.com/tubecreate/tubecli",
+    "full_name": "tubecreate/tubecli",
+    "created_at": "2026-03-18T01:31:14Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.10+",
+      "Node.js 18+"
+    ],
+    "system_packages": [
+      "ffmpeg",
+      "Git"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/tubecreate/tubecli/main/install.sh | bash",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "tubecli info"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-tubecli-20261030-234730-f6de",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone --depth=1 https://github.com/tubecreate/tubecli.git ~/tubecli && ls ~/tubecli/pyproject.toml",
+          "purpose": "Clone TubeCLI repo for pip install"
+        },
+        {
+          "command": "cd ~/tubecli && pip install -e . --break-system-packages",
+          "purpose": "Install tubecli editable via pip"
+        },
+        {
+          "command": "tubecli --version",
+          "purpose": "First run warming browser deps and workspace"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "tubecli --version",
+        "expected_signal": "tubecli, version 2026.08.09.223"
+      },
+      "first_task": "tubecli info"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "tubecli init --lang en --port 5295",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "tubecli info"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": null,
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:49:43.832184+08:00",
+    "runs": [
+      {
+        "id": "verify-tubecli-20261030-234730-f6de",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:49:43.832184+08:00",
+        "tool_version": "2026.08.09.223",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --depth=1 https://github.com/tubecreate/tubecli.git ~/tubecli && ls ~/tubecli/pyproject.toml",
+            "purpose": "Clone TubeCLI repo for pip install"
+          },
+          {
+            "command": "cd ~/tubecli && pip install -e . --break-system-packages",
+            "purpose": "Install tubecli editable via pip"
+          },
+          {
+            "command": "tubecli --version",
+            "purpose": "First run warming browser deps and workspace"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "tubecli --version",
+            "expected_signal": "tubecli, version 2026.08.09.223",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tubecli, version 2026.08.09.223",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tubecli --help",
+            "expected_signal": "Manage agents, skills, and workflows",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Manage agents, skills, and workflows from the command line. AI agents can",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tubecli info",
+            "expected_signal": "TubeCLI is installed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "TubeCLI is installed",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tubecli agent list",
+            "expected_signal": "Orchestrator",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ 06ae4bc8-bd… │ Orchestrator │ Main coordination agent — analyzes requests │ default │ 14 │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tubecli skill list",
+            "expected_signal": "Content Video",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ 9cb4d71c-a6… │ 🎬 Content Video │ Extension Skill │ Turn what this agent has │ 0 │",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install -e .",
+            "actually_needed": "pip install -e . --break-system-packages on this Debian box (externally-managed Python 3.12)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "tubecli init --lang en --port 5295 initializes workspace before use",
+            "actually_needed": "first tubecli invocation auto-created the workspace/agents and npm-installed browser automation dependencies with no explicit init; agent/skill/info examples then worked directly",
+            "kind": "tool_handled"
+          },
+          {
+            "readme_said": "Prerequisites: Python 3.10+, Node.js 18+, ffmpeg, Git",
+            "actually_needed": "ffmpeg/ffprobe absent and no sudo to install them; pip install plus info/agent/skill examples still succeeded",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show tubecli info confirming installation, agent list containing Orchestrator and other agents, and version 2026.08.09.223.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tubecli-20261030-234730-f6de/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tubecli-20261030-234730-f6de/check-1-cmd8.judged.png",
+            "runs/verify/verify-tubecli-20261030-234730-f6de/check-2-cmd9.judged.png",
+            "runs/verify/verify-tubecli-20261030-234730-f6de/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.103992
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-30T23:55:13+08:00",
+    "quality": {
+      "total": 75.5,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.8,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.6,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 69.3,
+      "signals": {
+        "stars": 174,
+        "monthly_downloads": null,
+        "forks": 6,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 224,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 23.18
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:55:13.257428+08:00",
+      "sources_sha": "899c54d5a0031e6c716ecfd116a0f470bcfec8140c6eaec6a1f11b65543fbee7",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "TubeCLI is a self-hosted, open-source AI agent team that executes real operational work end to end."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "on your machine, with your keys, for your clients."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "#### Prerequisites\n- Python 3.10+\n- Git\n- Node.js 18+ and ffmpeg"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/tubecreate/tubecli/main/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "tubecli init --lang en --port 5295"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "No. Point it at local [Ollama](https://ollama.com) and it runs with no API key and no per-token cost."
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "To remove it: tray icon → Quit, then delete `~/TubeCLI` (Windows) or `~/tubecli` and the config folder."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "TubeCLI is MIT: multi-tenant deployment, white-labelling and reselling are all permitted."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/tubecreate/tubecli",
+      "fetched_at": "2026-10-30T23:41:04+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/tubecreate/tubecli/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:33:58+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Manage the entire system directly from the terminal if you prefer a headless approach:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "You describe the job in plain language — from the CLI, the web dashboard, Telegram",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:04+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "TubeCLI is a self-hosted, open-source AI agent team that executes operational work end to end",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "**TubeCLI is a self-hosted, open-source AI agent team that executes real operational work end to end.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Windows, macOS and Linux — including machines in mainland China",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.10+",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/1",
+      "source_id": "readme",
+      "quote": "Node.js 18+ and ffmpeg (the installers add them",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Node.js 18+ and ffmpeg (the installers add them",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "- Git",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "with local Ollama the system needs no external API at all.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:04+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:04+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:04+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:04+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:04+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "It is early software.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "create a website called coffee-shop using the coffee-machine template",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "tubecli skill run \"Extract Subtitle\" --input \"<video-url-or-path>\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Anti-detect browser profiles (ShardX engine on Linux/macOS, BAS on Windows)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "approve a task from your phone",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "| | **TubeCLI** | n8n | Dify | CrewAI | LangGraph | OpenHands |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "| | **TubeCLI** | n8n | Dify | CrewAI | LangGraph | OpenHands |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "| | **TubeCLI** | n8n | Dify | CrewAI | LangGraph | OpenHands |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "| | **TubeCLI** | n8n | Dify | CrewAI | LangGraph | OpenHands |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/alternatives_to/4",
+      "source_id": "readme",
+      "quote": "| | **TubeCLI** | n8n | Dify | CrewAI | LangGraph | OpenHands |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/tubecreate/tubecli/main/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/tubecreate/tubecli/main/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "tubecli init --lang en --port 5295",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Yes. MIT licensed, no paid tier, no seat limits, no credit meter.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "every LLM call runs on local [Ollama](https://ollama.com) — no API key, no per-token cost — or on Gemini, OpenAI, Claude",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:15+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-30T23:55:13+08:00"
+}

@@ -4,9 +4,9 @@ Candidates come from the pipeline database (runs/pipeline.db, or --db), opened
 read-only: a candidate that passed the rules and has a finished extraction
 (muse-spark-1.3 preferred over the contributor model), with the features of a
 newer features-only extraction merged in. Before any box starts,
-the program sets aside what the box cannot verify (GUI apps, browser
-extensions, GPU only, another OS only, Apple Silicon only in a Linux box, no
-install path the box can run) with the reason, and skips slugs that already
+the program sets aside what the box cannot verify (GUI apps unless the boxes
+have a display, browser extensions, GPU only, another OS only, Apple Silicon
+only in a Linux box, no install path the box can run) with the reason, and skips slugs that already
 have a run on the same runner unless --force.
 
 The rest are ranked demo-first: tools a user runs (CLI, TUI, local server)
@@ -89,10 +89,13 @@ def demo_priority(ex: ExtractionResult) -> int:
     return score
 
 
-def not_in_box(ex: ExtractionResult, *, gpu: bool = False, os: str = "linux") -> str | None:
-    """Why a box running `os` (with an NVIDIA GPU when `gpu`) cannot verify this at all, or None."""
+def not_in_box(ex: ExtractionResult, *, gpu: bool = False, os: str = "linux", display: bool = False) -> str | None:
+    """Why a box running `os` (with an NVIDIA GPU when `gpu`, a virtual display when `display`) cannot verify
+    this at all, or None."""
     kind = ex.kind.value
-    if kind in NOT_IN_BOX_KINDS:
+    if kind == "desktop_app" and display and os == "linux":
+        pass
+    elif kind in NOT_IN_BOX_KINDS:
         return NOT_IN_BOX_KINDS[kind]
     if kind is not None and kind not in TOOL_KINDS:
         return f"not a tool ({kind})"
@@ -169,14 +172,15 @@ def recheck_slugs(data_dir: Path, runs_dir: Path) -> set[str]:
 def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
                     categories: list[str] | None = None, skip_slugs: set[str] | None = None,
                     known_slugs: dict[str, str] | None = None, known_categories: dict[str, str] | None = None,
-                    gpu: bool = False,
-                    os: str = "linux") -> tuple[list[BatchItem], list[dict[str, Any]]]:
+                    gpu: bool = False, os: str = "linux", display: bool = False
+                    ) -> tuple[list[BatchItem], list[dict[str, Any]]]:
     """Ranked batch items (at most `limit`) and the candidates set aside, with reasons.
 
     known_slugs (repo_id -> slug, from record_slugs) wins over a slug made from the name, and
     known_categories (from record_categories) over the extraction's category.
     gpu: the boxes have an NVIDIA GPU, so tools that require one are not set aside.
     os: what the boxes run (linux, or macos for TartBox).
+    display: the boxes have a virtual display, so GUI apps are not set aside (Linux).
     """
     skip_slugs = skip_slugs or set()
     known_slugs = known_slugs or {}
@@ -226,7 +230,7 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
         if ex is None:
             skipped.append({**note, "reason": invalid})
             continue
-        why = not_in_box(ex, gpu=gpu, os=os)
+        why = not_in_box(ex, gpu=gpu, os=os, display=display)
         if why:
             skipped.append({**note, "reason": why})
             continue

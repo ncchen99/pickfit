@@ -4,8 +4,9 @@
 2. The command log decides the claimed level (verdict.py).
 3. If that level passed, a fresh box replays the steps online and the smoke
    tests offline, then reruns failed feature checks once (replay.py).
-4. If the replay passed, the screen judge reads its outputs (judge.py); when it
-   sees the tool working, the feature judge reads whether each checked
+4. If the replay passed, the screen judge reads its outputs (judge.py); a GUI
+   launch's real screenshot goes to the GUI judge, and the worse verdict wins.
+   When the tool is seen working, the feature judge reads whether each checked
    feature's output shows that feature working (feature_judge.py).
    A failed claim whose failing command is the tool's own, run after every
    install step succeeded, gets a fresh box that reruns the steps and that
@@ -27,6 +28,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from pickfit.meta import resolve_model
 from pickfit.schema import VerificationRun, is_passed
 from pickfit.verify.agent import DEFAULT_MODE, AgentLimits, HistoryMode, VerifyAgent, VerifyReport, new_run_id
 from pickfit.verify.box import Box, BoxError
@@ -40,9 +42,9 @@ from pickfit.verify.failure import (
     output_limit,
     tool_command,
 )
-from pickfit.verify.judge import JudgeResult, judge_checks
+from pickfit.verify.judge import JudgeResult, judge_checks, judge_gui, merge
 from pickfit.verify.mcp import is_mcp
-from pickfit.verify.replay import Replayer, ReplayResult, plan_from
+from pickfit.verify.replay import Replayer, ReplayResult, judged_launch, plan_from
 from pickfit.verify.result import DATA_DIR, build_run, save_run, write_back
 from pickfit.verify.task import VerifyTask
 
@@ -84,6 +86,10 @@ def _dump(path: Path, data: Any) -> None:
 def _display_name(task: VerifyTask) -> str:
     name = task.extraction.name.value if task.extraction is not None else None
     return str(name) if name else task.slug
+
+
+def _kind(task: VerifyTask) -> str | None:
+    return task.extraction.kind.value if task.extraction is not None else None
 
 
 def _start(box: Box) -> float:
@@ -181,7 +187,7 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
         box_began = time.monotonic()
         try:
             phases["replay_box_start"] = _start(replay_box)
-            replay = Replayer(replay_box, log=log).run(plan, task)
+            replay = Replayer(replay_box, log=log, evidence_dir=evidence_dir).run(plan, task)
         except BoxError as err:
             replay = ReplayResult(passed=False, level=None, offline=False, error=f"box error: {err}")
             log(f"replay box failed: {err}")
@@ -192,10 +198,16 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
         box_usd += replay_box.usd_per_second() * phases["replay_box_s"]
         _dump(evidence_dir / "replay.json", {"plan": plan.to_dict(), "result": replay.to_dict()})
         if replay.passed:
+            judge_args = dict(model=model, run_id=run_id, scope=f"verify:{task.slug}",
+                              scope_cap_usd=limits.scope_cap_usd, log=log, **call_kwargs)
             try:
-                judge = judge_checks(_display_name(task), replay.checks, evidence_dir, model=model,
-                                     run_id=run_id, scope=f"verify:{task.slug}",
-                                     scope_cap_usd=limits.scope_cap_usd, log=log, **call_kwargs)
+                parts = [judge_checks(_display_name(task), replay.checks, evidence_dir, **judge_args)]
+                launched = judged_launch(replay.checks)
+                if launched is not None and launched.passed:  # a window without a readable screenshot cannot pass
+                    parts.append(judge_gui(_display_name(task), launched, evidence_dir, **judge_args) or JudgeResult(
+                        verdict="inconclusive", observed="the GUI launch left no screenshot to judge",
+                        error_text=None, matches_expected_signal=False, model=resolve_model(model)))
+                judge = merge([p for p in parts if p is not None])
             except Exception as err:  # budget or API failure: no verdict, so nothing passes on it
                 notes.append(f"judge failed: {type(err).__name__}: {err}")
                 log(f"  judge failed: {err}")
@@ -210,7 +222,8 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
     judge_cost = (judge.cost_usd if judge else 0.0) + feature_cost
     run, build_notes = build_run(report, replay, judge, evidence_dir=evidence_dir,
                                  screenshots=[Path(p) for p in (judge.annotated or judge.screenshots)] if judge else [],
-                                 judge_cost_usd=judge_cost, confirm=confirm, mcp=is_mcp(task),
+                                 judge_cost_usd=judge_cost, confirm=confirm,
+                                 gui_app=_kind(task) == "desktop_app", mcp=is_mcp(task),
                                  feature_verdicts=verdicts)
     notes += build_notes
     save_run(run, evidence_dir)

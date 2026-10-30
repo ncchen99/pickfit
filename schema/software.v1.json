@@ -343,6 +343,69 @@
       "title": "FieldEvidence",
       "type": "object"
     },
+    "GuiCheck": {
+      "additionalProperties": false,
+      "description": "How far a GUI app got on the box's virtual display (Linux, Xvfb, no window manager).\n\nRecorded only for a launch whose checked screenshot the judge read. window: a mapped window whose X\nclient is one of the app's processes (per the X server), showing something other than the app's UI\n(`screen`: a sign-in wall, a crash, a blank or loading screen); ui_rendered: the judge saw the app's own\ninterface in a crop of its windows (its main screen or its first-run screen). A GUI launch supports\ninstall only; checking controls or that an action changed checkable state is not built.",
+      "properties": {
+        "command": {
+          "description": "How the app was started.",
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "display": {
+          "description": "e.g. Xvfb 1280x800x24, no window manager, no GPU.",
+          "maxLength": 120,
+          "type": "string"
+        },
+        "screen": {
+          "$ref": "#/$defs/GuiScreen",
+          "description": "What the screen judge saw in the crop of the app's windows."
+        },
+        "tier": {
+          "$ref": "#/$defs/GuiTier"
+        },
+        "window_title": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Set by the app; data only."
+        }
+      },
+      "required": [
+        "tier",
+        "screen",
+        "command",
+        "display"
+      ],
+      "title": "GuiCheck",
+      "type": "object"
+    },
+    "GuiScreen": {
+      "enum": [
+        "main_ui",
+        "first_run",
+        "sign_in_wall",
+        "crash_or_error",
+        "blank_or_loading",
+        "other"
+      ],
+      "type": "string"
+    },
+    "GuiTier": {
+      "enum": [
+        "window",
+        "ui_rendered"
+      ],
+      "type": "string"
+    },
     "HttpsUrl": {
       "maxLength": 2048,
       "pattern": "^https://[^\\s/?#]+[^\\s]*$",
@@ -1891,6 +1954,18 @@
           },
           "maxItems": 4,
           "type": "array"
+        },
+        "gui": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GuiCheck"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "A GUI app's launch on a virtual display: the strongest evidence tier it reached."
         },
         "id": {
           "$ref": "#/$defs/RunId"
