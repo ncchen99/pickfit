@@ -76,6 +76,9 @@ def test_probe_commands_and_launch_argv() -> None:
     assert launch_argv(PROBE) == ["notes-mcp", "--root", "~/work"]
     assert launch_argv(CALL) == ["notes-mcp", "--root", "~/work"]
     assert launch_argv(f"{PROBE_COMMAND} --timeout 5") is None
+    assert launch_argv(f"{PROBE_COMMAND} --timeout 120 -- longhand mcp-server 2>&1") == ["longhand", "mcp-server"]
+    assert launch_argv(f"{PROBE_COMMAND} -- srv --root ~/w > out.log 2> err.log") == ["srv", "--root", "~/w"]
+    assert launch_argv(f"{PROBE_COMMAND} -- srv -v | tee x") == ["srv", "-v"]
 
 
 @pytest.mark.parametrize(("command", "names"), [

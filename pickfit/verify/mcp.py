@@ -128,8 +128,29 @@ def launch_argv(command: str) -> list[str] | None:
         return None
     if "--" not in words:
         return None
-    argv = words[words.index("--") + 1:]
-    return argv or None
+    return shell_words(words[words.index("--") + 1:]) or None
+
+
+_OPERATOR = {"|", "||", "&&", ";", "&", "|&"}
+_REDIRECT = re.compile(r"^(?:\d*>>?|\d*<|&>>?|\d*>&|\d*<&)(?P<target>.*)$")
+
+
+def shell_words(words: list[str]) -> list[str]:
+    """The words of the first simple command: no redirection (2>&1, >log) and nothing after |, ;, &&."""
+    out: list[str] = []
+    skip_next = False
+    for word in words:
+        if skip_next:
+            skip_next = False
+            continue
+        if word in _OPERATOR:
+            break
+        m = _REDIRECT.match(word)
+        if m:
+            skip_next = not m.group("target")  # `> file` names its target in the next word
+            continue
+        out.append(word)
+    return out
 
 
 def credentials(command: str) -> list[str]:
@@ -147,7 +168,7 @@ def handshake(check_stdout: str, command: str, *, offline: bool | None,
     http = bool(summary) and summary.get("transport") == "streamable_http"
     if http:
         try:
-            argv = shlex.split(background[-1]) if background else None
+            argv = shell_words(shlex.split(background[-1])) if background else None
         except ValueError:
             argv = None
     else:
