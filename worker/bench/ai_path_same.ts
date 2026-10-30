@@ -9,6 +9,8 @@
  *
  * --control answers every keyword call with no keywords (the call failed), where
  * the rules scorer chooses the cards, so the requests are expected to differ.
+ * Each request also runs once with the match call answered (the model picks the
+ * first two cards), and the whole response is compared, rec_id aside.
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -28,14 +30,42 @@ async function version(dir: string) {
     import(join(dir, 'test', 'helpers.ts')),
   ]);
   const catalog = loadCatalog(JSON.parse(readFileSync(indexPath, 'utf8')));
-  return async (args: Record<string, unknown>, kw: string[]): Promise<{ match: string | null; keywordCall: boolean }> => {
-    const h = helpers.harness((body: any) =>
-      body.text.format.name === 'pickfit_keywords' ? helpers.metaResponse({ keywords: kw }) : new Response('{}', { status: 400 }),
+  const picked = (body: any) => {
+    const cards = new Map(
+      String(body.input[1].content)
+        .split('\n')
+        .filter((line) => line.startsWith('{"slug"'))
+        .map((line) => JSON.parse(line))
+        .map((card: any) => [card.slug, card]),
     );
-    h.deps.catalog = catalog;
-    await find.findSoftware(args, h.deps);
-    const match = h.requests.find((r: any) => r.body.text.format.name === 'pickfit_match');
-    return { match: match ? String(match.init.body) : null, keywordCall: h.requests.some((r: any) => r.body.text.format.name === 'pickfit_keywords') };
+    return helpers.metaResponse(
+      helpers.answer({
+        picks: body.text.format.schema.properties.picks.items.properties.slug.enum.slice(0, 2).map((slug: string) => ({
+          slug,
+          fit: 'Fits.',
+          reasons: [{ claim: 'It is this tool', field: 'name', value: (cards.get(slug) as any).name }],
+          tradeoffs: [],
+          vs_well_known: null,
+        })),
+        best_free_slug: null,
+      }),
+    );
+  };
+  return async (args: Record<string, unknown>, kw: string[]) => {
+    const run = async (match: (body: any) => Response) => {
+      const h = helpers.harness((body: any) => (body.text.format.name === 'pickfit_keywords' ? helpers.metaResponse({ keywords: kw }) : match(body)));
+      h.deps.catalog = catalog;
+      const out = await find.findSoftware(args, h.deps);
+      return { h, out };
+    };
+    const failed = await run(() => new Response('{}', { status: 400 }));
+    const answered = await run(picked);
+    const match = failed.h.requests.find((r: any) => r.body.text.format.name === 'pickfit_match');
+    return {
+      match: match ? String(match.init.body) : null,
+      keywordCall: failed.h.requests.some((r: any) => r.body.text.format.name === 'pickfit_keywords'),
+      response: answered.out.matched_by === 'muse-spark-1.3' ? JSON.stringify({ ...answered.out, rec_id: '' }) : null,
+    };
   };
 }
 
@@ -43,6 +73,8 @@ const [current, proposed] = [await version(otherDir), await version(join(import.
 let compared = 0;
 let withKeywords = 0;
 let different = 0;
+let responses = 0;
+let responsesDifferent = 0;
 for (const need of needs) {
   for (const lang of ['en', 'zh'] as const) {
     const saved = keywords[lang][need.slug];
@@ -56,7 +88,15 @@ for (const need of needs) {
         different++;
         if (different <= 5) console.log(`DIFFERENT ${need.slug} ${lang} ${JSON.stringify(args).slice(0, 80)}`);
       }
+      if (a.response !== null) {
+        responses++;
+        if (a.response !== b.response) {
+          responsesDifferent++;
+          if (responsesDifferent <= 3) console.log(`RESPONSE DIFFERS ${need.slug} ${lang}`);
+        }
+      }
     }
   }
 }
 console.log(`${compared} requests (${withKeywords} with a keyword call): ${different} match requests differ`);
+console.log(`${responses} answered by the model: ${responsesDifferent} responses differ`);
