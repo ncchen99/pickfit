@@ -63,18 +63,25 @@
       "first_task": "wcode --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-wcode-20261031-012049-3a94",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/francis-du/wcode/main/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/francis-du/wcode/main/install.sh -o /tmp/wcode-install.sh && ls -l /tmp/wcode-install.sh && wc -c /tmp/wcode-install.sh",
+          "purpose": "Download install script for reading"
+        },
+        {
+          "command": "sh /tmp/wcode-install.sh",
+          "purpose": "Install wcode via install script"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "wcode --version"
+      "check": {
+        "command": "wcode --version",
+        "expected_signal": "wcode 0.9.1"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -104,10 +111,184 @@
     "url": "https://github.com/francis-du/wcode/releases/tag/v0.9.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:21:37.025757+08:00",
+    "runs": [
+      {
+        "id": "verify-wcode-20261031-012049-3a94",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:21:37.025757+08:00",
+        "tool_version": "0.9.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/francis-du/wcode/main/install.sh -o /tmp/wcode-install.sh && ls -l /tmp/wcode-install.sh && wc -c /tmp/wcode-install.sh",
+            "purpose": "Download install script for reading"
+          },
+          {
+            "command": "sh /tmp/wcode-install.sh",
+            "purpose": "Install wcode via install script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "wcode --version",
+            "expected_signal": "wcode 0.9.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "wcode 0.9.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- wcode mcp-stdio",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call workspace_info --args '{}' -- wcode mcp-stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=workspace_info content=text text_chars=16660",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 85 tools, successful workspace_info tool call, and wcode 0.9.1 version output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-wcode-20261031-012049-3a94/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-wcode-20261031-012049-3a94/check-1-cmd4.judged.png",
+            "runs/verify/verify-wcode-20261031-012049-3a94/check-2-cmd5.judged.png",
+            "runs/verify/verify-wcode-20261031-012049-3a94/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.043742,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "wcode",
+            "mcp-stdio"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "wcode",
+          "server_version": "0.9.1",
+          "tools": [
+            "workspace_info",
+            "design_status",
+            "acceptance_policy",
+            "convention_status",
+            "scope_status",
+            "design_init",
+            "software_graph",
+            "graph_provider_import",
+            "graph_provider_status",
+            "semantic_provider_status",
+            "semantic_provider_install",
+            "language_quality_status",
+            "language_quality_run",
+            "semantic_provider_refresh",
+            "semantic_navigation",
+            "graph_history",
+            "graph_query",
+            "graph_diff",
+            "traceability_status",
+            "drift_status",
+            "risk_status",
+            "impact_analysis",
+            "software_context",
+            "agent_context",
+            "execution_status",
+            "execution_policy_status",
+            "execution_propose",
+            "execution_steer",
+            "execution_handoff",
+            "worklist_status",
+            "worklist_update",
+            "worklist_claim",
+            "worklist_submit",
+            "semantic_status",
+            "semantic_query",
+            "semantic_record",
+            "semantic_confirm",
+            "semantic_retire",
+            "verification_plan",
+            "verification_claim",
+            "verification_submit",
+            "verification_executor_status",
+            "verification_execute_stages",
+            "verification_stage_submit",
+            "verification_approve",
+            "change_acceptance",
+            "verification_status",
+            "verification_history",
+            "evidence_status",
+            "reconciliation_plan",
+            "reconciliation_status",
+            "reconciliation_history",
+            "reconciliation_approve",
+            "reconciliation_execution_status",
+            "reconciliation_claim",
+            "reconciliation_submit",
+            "reconciliation_retry",
+            "project_context",
+            "review_changes",
+            "parallel_tools",
+            "verify_project",
+            "list_files",
+            "search_code",
+            "search_many",
+            "scan_patterns",
+            "search_syntax",
+            "file_outline",
+            "find_symbol",
+            "symbol_context",
+            "read_file",
+            "read_files",
+            "read_media",
+            "path_info",
+            "replace_text",
+            "apply_edits",
+            "write_file",
+            "create_directory",
+            "create_file",
+            "create_files",
+            "apply_file_edits",
+            "move_path",
+            "move_paths",
+            "delete_path",
+            "run_command",
+            "command_task"
+          ],
+          "tool_count": 85,
+          "called_tool": "workspace_info",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -353,5 +534,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:42+08:00",
-  "updated_at": "2026-10-31T01:15:49+08:00"
+  "updated_at": "2026-10-31T01:21:37.026477+08:00"
 }
