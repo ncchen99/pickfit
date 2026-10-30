@@ -60,24 +60,17 @@
       "first_task": "hive ctl"
     },
     "linux": {
-      "basis": "replayed",
-      "run_id": "verify-hivemind-20261031-014326-9c06",
+      "basis": "readme_claim",
+      "run_id": null,
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://hivemind.griiken.com/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -c 2000 /tmp/install.sh",
-          "purpose": "Download install script for inspection"
-        },
-        {
-          "command": "bash /tmp/install.sh",
-          "purpose": "Install hivemind via official script"
+          "command": "bash <(curl -fsSL https://hivemind.griiken.com/install.sh)",
+          "purpose": null
         }
       ],
       "manual_steps": [],
-      "check": {
-        "command": "hive --version",
-        "expected_signal": "2026.10.8"
-      },
+      "check": null,
       "first_task": "hive ctl"
     },
     "windows": {
@@ -108,111 +101,22 @@
     "url": "https://github.com/dip497/hivemind/releases/tag/v2026.10.6"
   },
   "verification": {
-    "level": "install",
-    "unverified_reason": null,
-    "checked_at": "2026-10-31T01:45:50.889220+08:00",
-    "runs": [
-      {
-        "id": "verify-hivemind-20261031-014326-9c06",
-        "level": "install",
-        "unverified_reason": null,
-        "os": "linux",
-        "arch": "x86_64",
-        "method": "sandbox",
-        "runner": "modal-vm",
-        "image": "pickfit-sbx-vm-gui:d217e76065c9",
-        "checked_at": "2026-10-31T01:45:50.889220+08:00",
-        "tool_version": "2026.10.8",
-        "install_method": "script",
-        "replayed": true,
-        "steps": [
-          {
-            "command": "curl -fsSL https://hivemind.griiken.com/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -c 2000 /tmp/install.sh",
-            "purpose": "Download install script for inspection"
-          },
-          {
-            "command": "bash /tmp/install.sh",
-            "purpose": "Install hivemind via official script"
-          }
-        ],
-        "smoke_tests": [
-          {
-            "command": "hive --version",
-            "expected_signal": "2026.10.8",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "2026.10.8",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "hive --help",
-            "expected_signal": "Use hive <command> --help for more information about a command.",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Use hive <command> --help for more information about a command.",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "hive ctl",
-            "expected_signal": "say which: hive ctl <command>; --help lists them",
-            "exit_code": 2,
-            "passed": true,
-            "observed_excerpt": "error [USAGE] say which: hive ctl <command>; --help lists them",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "hivemind",
-            "expected_signal": "hivemind",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "window: \"hivemind\" 1279x799 (pid 1037)",
-            "setup": [],
-            "offline": true
-          }
-        ],
-        "pitfalls": [],
-        "blocking_error": null,
-        "judge": {
-          "verdict": "working",
-          "observed": "Screenshots show hive ctl printing usage guidance and hive --version printing 2026.10.8. / Hivemind workspace is fully drawn with sidebar, canvas toolbar, and central empty-state prompt to start with an agent.",
-          "model": "muse-spark-1.3"
-        },
-        "evidence": {
-          "trace_path": "runs/verify/verify-hivemind-20261031-014326-9c06/report.json",
-          "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-hivemind-20261031-014326-9c06/check-1-cmd6.judged.png",
-            "runs/verify/verify-hivemind-20261031-014326-9c06/check-2-cmd4.judged.png",
-            "runs/verify/verify-hivemind-20261031-014326-9c06/replay-7-1.judged.png"
-          ],
-          "evidence_url": null
-        },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.085641,
-        "gui": {
-          "tier": "ui_rendered",
-          "screen": "main_ui",
-          "command": "hivemind",
-          "window_title": "hivemind",
-          "display": "Xvfb 1280x800x24, no window manager, no GPU"
-        }
-      }
-    ]
+    "level": "unverified",
+    "unverified_reason": "not_run",
+    "checked_at": null,
+    "runs": []
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T01:47:38+08:00",
+    "computed_at": "2026-10-29T14:40:05+08:00",
     "quality": {
-      "total": 60.5,
-      "confidence": 0.8,
-      "cap": null,
-      "cap_reason": null,
+      "total": 60.9,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
+          "score": null,
           "weight": 40.0
         },
         "install_docs": {
@@ -253,7 +157,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 35.39
+      "value": 35.63
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -480,5 +384,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:15+08:00",
-  "updated_at": "2026-10-31T01:47:38.304160+08:00"
+  "updated_at": "2026-10-29T14:40:05+08:00"
 }

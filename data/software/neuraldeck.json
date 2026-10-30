@@ -56,28 +56,7 @@
   },
   "install": {
     "macos": null,
-    "linux": {
-      "basis": "replayed",
-      "run_id": "verify-neuraldeck-20261031-014326-f453",
-      "method": "pip",
-      "steps": [
-        {
-          "command": "rm -rf /tmp/NeuralDeck && git clone --depth 1 https://github.com/AegeanWorks/NeuralDeck.git /tmp/NeuralDeck",
-          "purpose": "Clone NeuralDeck source (app, no Linux release build)"
-        },
-        {
-          "command": "/usr/bin/python3 -m venv ~/neuraldeck-venv",
-          "purpose": "Create tkinter-capable venv"
-        },
-        {
-          "command": "~/neuraldeck-venv/bin/pip install -r /tmp/NeuralDeck/requirements.txt",
-          "purpose": "Pip-install app requirements into venv"
-        }
-      ],
-      "manual_steps": [],
-      "check": null,
-      "first_task": "~/neuraldeck-venv/bin/python /tmp/NeuralDeck/main.py"
-    },
+    "linux": null,
     "windows": null
   },
   "pricing": {
@@ -93,97 +72,22 @@
     "url": "https://github.com/AegeanWorks/NeuralDeck/releases/tag/0.2"
   },
   "verification": {
-    "level": "install",
-    "unverified_reason": null,
-    "checked_at": "2026-10-31T01:45:09.332490+08:00",
-    "runs": [
-      {
-        "id": "verify-neuraldeck-20261031-014326-f453",
-        "level": "install",
-        "unverified_reason": null,
-        "os": "linux",
-        "arch": "x86_64",
-        "method": "sandbox",
-        "runner": "modal-vm",
-        "image": "pickfit-sbx-vm-gui:d217e76065c9",
-        "checked_at": "2026-10-31T01:45:09.332490+08:00",
-        "tool_version": null,
-        "install_method": "pip",
-        "replayed": true,
-        "steps": [
-          {
-            "command": "rm -rf /tmp/NeuralDeck && git clone --depth 1 https://github.com/AegeanWorks/NeuralDeck.git /tmp/NeuralDeck",
-            "purpose": "Clone NeuralDeck source (app, no Linux release build)"
-          },
-          {
-            "command": "/usr/bin/python3 -m venv ~/neuraldeck-venv",
-            "purpose": "Create tkinter-capable venv"
-          },
-          {
-            "command": "~/neuraldeck-venv/bin/pip install -r /tmp/NeuralDeck/requirements.txt",
-            "purpose": "Pip-install app requirements into venv"
-          }
-        ],
-        "smoke_tests": [
-          {
-            "command": "~/neuraldeck-venv/bin/python /tmp/NeuralDeck/main.py",
-            "expected_signal": "NeuralDeck",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "window: \"NeuralDeck\" 1200x800 (pid 824)",
-            "setup": [],
-            "offline": true
-          }
-        ],
-        "pitfalls": [
-          {
-            "readme_said": "pip install -r requirements.txt",
-            "actually_needed": "Create the venv with /usr/bin/python3 (which has tkinter) and install there: /usr/bin/python3 -m venv ~/neuraldeck-venv && ~/neuraldeck-venv/bin/pip install -r requirements.txt; python3.12 on PATH has no tkinter so the Tkinter/ttkbootstrap UI cannot start with it.",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "Download the latest release portable executable and run NeuralDeck.exe",
-            "actually_needed": "The only release asset (NeuralDeck-0.2.zip) contains the Windows portable build (NeuralDeck.exe); there is no Linux release build/AppImage, so on Linux the app must be run from source with python main.py.",
-            "kind": "note"
-          }
-        ],
-        "blocking_error": null,
-        "judge": {
-          "verdict": "working",
-          "observed": "The screenshot shows NeuralDeck's Generator workspace with Review panel, Input Configuration, Available Decks, and Generate Cards controls fully drawn.",
-          "model": "muse-spark-1.3"
-        },
-        "evidence": {
-          "trace_path": "runs/verify/verify-neuraldeck-20261031-014326-f453/report.json",
-          "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-neuraldeck-20261031-014326-f453/replay-10-1.judged.png"
-          ],
-          "evidence_url": null
-        },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.078747,
-        "gui": {
-          "tier": "ui_rendered",
-          "screen": "main_ui",
-          "command": "~/neuraldeck-venv/bin/python /tmp/NeuralDeck/main.py",
-          "window_title": "NeuralDeck",
-          "display": "Xvfb 1280x800x24, no window manager, no GPU"
-        }
-      }
-    ]
+    "level": "unverified",
+    "unverified_reason": "not_run",
+    "checked_at": null,
+    "runs": []
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T01:47:38+08:00",
+    "computed_at": "2026-10-29T14:40:05+08:00",
     "quality": {
-      "total": 58.5,
-      "confidence": 0.8,
-      "cap": null,
-      "cap_reason": null,
+      "total": 69.0,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
       "components": {
         "sandbox_verification": {
-          "score": 0.4335,
+          "score": null,
           "weight": 40.0
         },
         "install_docs": {
@@ -224,7 +128,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 42.0
+      "value": 49.54
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -491,5 +395,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-31T01:47:38.299513+08:00"
+  "updated_at": "2026-10-29T14:40:05+08:00"
 }
