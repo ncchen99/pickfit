@@ -53,7 +53,31 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-tyloquant-20261031-001723-b726",
+      "method": "source",
+      "steps": [
+        {
+          "command": "rm -rf MFQ && git clone https://github.com/Tylogi/MFQ.git MFQ",
+          "purpose": "Clone MFQ source per README"
+        },
+        {
+          "command": "cd MFQ && uv sync",
+          "purpose": "Install Python dependencies with uv sync"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && ln -sf /home/sbx/work/MFQ/.venv/bin/mfq ~/.local/bin/mfq && test -x ~/.local/bin/mfq",
+          "purpose": "Put built mfq entry point on PATH"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mfq --version",
+        "expected_signal": "mfq 0.1.0"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -69,10 +93,82 @@
     "url": "https://github.com/Tylogi/TyloQuant/releases/tag/v0.4.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:19:36.756011+08:00",
+    "runs": [
+      {
+        "id": "verify-tyloquant-20261031-001723-b726",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:19:36.756011+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf MFQ && git clone https://github.com/Tylogi/MFQ.git MFQ",
+            "purpose": "Clone MFQ source per README"
+          },
+          {
+            "command": "cd MFQ && uv sync",
+            "purpose": "Install Python dependencies with uv sync"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && ln -sf /home/sbx/work/MFQ/.venv/bin/mfq ~/.local/bin/mfq && test -x ~/.local/bin/mfq",
+            "purpose": "Put built mfq entry point on PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mfq --version",
+            "expected_signal": "mfq 0.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mfq 0.1.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd MFQ && uv run mfq --help",
+            "expected_signal": "Mixed Format Quantization",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Mixed Format Quantization toolchain.",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "uv run mfq build --backend auto",
+            "actually_needed": "NVIDIA CUDA Toolkit 12+ with nvcc (Linux/Windows) or Apple silicon Metal on macOS; this Linux x86_64 box has neither, so 'uv run mfq build --backend auto' exits 1 with BuildError: no supported inference accelerator was detected",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows `mfq --version` printing `mfq 0.1.0`.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tyloquant-20261031-001723-b726/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tyloquant-20261031-001723-b726/check-1-cmd12.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.142294
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -275,5 +371,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:11+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:19:36.757132+08:00"
 }

@@ -49,7 +49,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-eschaton-code-20261031-002052-22e5",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g eschaton-code",
+          "purpose": "Install eschaton-code via npm global"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "eschaton --help",
+        "expected_signal": "Usage: eschaton [command] [options]"
+      },
+      "first_task": "eschaton doctor"
+    },
     "windows": null
   },
   "pricing": {
@@ -61,10 +77,78 @@
   "processing": "hybrid",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:21:32.259652+08:00",
+    "runs": [
+      {
+        "id": "verify-eschaton-code-20261031-002052-22e5",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:21:32.259652+08:00",
+        "tool_version": "3.6.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g eschaton-code",
+            "purpose": "Install eschaton-code via npm global"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "eschaton --help",
+            "expected_signal": "Usage: eschaton [command] [options]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: eschaton [command] [options]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "eschaton --version",
+            "expected_signal": "eschaton 3.6.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "eschaton 3.6.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "eschaton doctor",
+            "expected_signal": "no hosted provider configured",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no hosted provider configured",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show doctor reporting no hosted provider configured and help showing Usage with commands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-eschaton-code-20261031-002052-22e5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-eschaton-code-20261031-002052-22e5/check-1-cmd4.judged.png",
+            "runs/verify/verify-eschaton-code-20261031-002052-22e5/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.021665
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -253,5 +337,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:56+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:21:32.260205+08:00"
 }

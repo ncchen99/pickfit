@@ -67,17 +67,24 @@
       "first_task": "uteke remember \"Deploy v2.1 to staging at 3pm\""
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-uteke-20261031-001540-99f4",
       "method": "script",
       "steps": [
         {
-          "command": "curl -sSL codecora.dev/uteke/install | sh",
-          "purpose": null
+          "command": "curl -sSL codecora.dev/uteke/install -o /tmp/uteke-install.sh && ls -l /tmp/uteke-install.sh && wc -c /tmp/uteke-install.sh",
+          "purpose": "Download install script for review"
+        },
+        {
+          "command": "sh /tmp/uteke-install.sh",
+          "purpose": "Install uteke via reviewed script"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "uteke --version",
+        "expected_signal": "uteke 0.22.1"
+      },
       "first_task": "uteke remember \"Deploy v2.1 to staging at 3pm\""
     },
     "windows": {
@@ -108,10 +115,104 @@
     "url": "https://github.com/codecoradev/uteke/releases/tag/v0.22.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:19:07.137473+08:00",
+    "runs": [
+      {
+        "id": "verify-uteke-20261031-001540-99f4",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:19:07.137473+08:00",
+        "tool_version": "0.22.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sSL codecora.dev/uteke/install -o /tmp/uteke-install.sh && ls -l /tmp/uteke-install.sh && wc -c /tmp/uteke-install.sh",
+            "purpose": "Download install script for review"
+          },
+          {
+            "command": "sh /tmp/uteke-install.sh",
+            "purpose": "Install uteke via reviewed script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "uteke --version",
+            "expected_signal": "uteke 0.22.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "uteke 0.22.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "uteke --help",
+            "expected_signal": "Options:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Options:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "uteke remember \"Deploy v2.1 to staging at 3pm\"",
+            "expected_signal": "Memory stored",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ Memory stored",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "uteke recall \"when do we deploy?\"",
+            "expected_signal": "Deploy v2.1 to staging at 3pm",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1. [mem] (score: 0.169) Deploy v2.1 to staging at 3pm",
+            "setup": [
+              {
+                "command": "uteke remember \"Deploy v2.1 to staging at 3pm\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -sSL codecora.dev/uteke/install | sh",
+            "actually_needed": "installer downloads prebuilt binary tarball uteke-x86_64-unknown-linux-gnu-v0.22.1.tar.gz plus checksums from GitHub releases, which cannot be read/audited as text",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show memory stored with ID, successful recall of the deploy fact, and version 0.22.1 output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-uteke-20261031-001540-99f4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-uteke-20261031-001540-99f4/check-1-cmd5.judged.png",
+            "runs/verify/verify-uteke-20261031-001540-99f4/check-2-cmd6.judged.png",
+            "runs/verify/verify-uteke-20261031-001540-99f4/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.060588
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -346,5 +447,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:46+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:19:07.138090+08:00"
 }

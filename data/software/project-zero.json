@@ -59,18 +59,25 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-project-zero-20261031-001641-6764",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/shifulegend/project-zero/master/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL -o /tmp/install.sh https://raw.githubusercontent.com/shifulegend/project-zero/master/install.sh && wc -c /tmp/install.sh && head -c 2000 /tmp/install.sh",
+          "purpose": "download install.sh for inspection"
+        },
+        {
+          "command": "sh /tmp/install.sh --yes --no-wizard",
+          "purpose": "install pz with script --yes --no-wizard"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "pz --model SmolLM2-135M-Instruct-f16.gguf --prompt \"What is the capital of France?\""
+      "check": {
+        "command": "pz --version",
+        "expected_signal": "Project Zero v0.2.0"
+      },
+      "first_task": "pz --model ~/models/stories260K.gguf --prompt \"What is the capital of France?\" --threads 2"
     },
     "windows": null
   },
@@ -83,10 +90,136 @@
   "processing": "local",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "inference",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:18:59.855886+08:00",
+    "runs": [
+      {
+        "id": "verify-project-zero-20261031-001641-6764",
+        "level": "inference",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:18:59.855886+08:00",
+        "tool_version": "v0.2.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/install.sh https://raw.githubusercontent.com/shifulegend/project-zero/master/install.sh && wc -c /tmp/install.sh && head -c 2000 /tmp/install.sh",
+            "purpose": "download install.sh for inspection"
+          },
+          {
+            "command": "sh /tmp/install.sh --yes --no-wizard",
+            "purpose": "install pz with script --yes --no-wizard"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "pz --version",
+            "expected_signal": "Project Zero v0.2.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Project Zero v0.2.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "pz --model ~/models/stories260K.gguf --prompt \"What is the capital of France?\" --threads 2",
+            "expected_signal": "Model format: GGUF",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Model format: GGUF",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/stories260K.gguf",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsSL http://127.0.0.1:8080/v1/models",
+            "expected_signal": "stories260K.gguf",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"object\":\"list\",\"data\":[{\"id\":\"stories260K.gguf\",\"object\":\"model\",\"owned_by\":\"project-zero\",\"vision\":false,\"context_length\":512,\"vocab_size\":512,\"n_layers\":5,\"dim\":64,\"n_heads\":8,\"n_kv_heads\":4,\"moe\":false,\"mla\":false,\"chat_template\":false,\"chat_format\":\"plain\",\"recurrent\":false}]}",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/stories260K.gguf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "pz --model ~/models/stories260K.gguf --server --port 8080",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsSL http://127.0.0.1:8080/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"stories260K.gguf\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"temperature\":0,\"max_tokens\":16}'",
+            "expected_signal": "completion_tokens",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":\"chatcmpl-6ae4c36b-1\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"▁Jack,▁who▁can't▁play▁with▁it.\"},\"finish_reason\":\"length\"}],\"usage\":{\"prompt_tokens\":19,\"completion_tokens\":16,\"total_tokens\":35,\"prompt_tokens_details\":{\"cached_tokens\":0}}}",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/stories260K.gguf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "pz --model ~/models/stories260K.gguf --server --port 8080",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pz --help lists every flag (implies normal zero exit)",
+            "actually_needed": "pz --help prints the full help text but exits 1; pz --version exits 0 and confirms install",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/shifulegend/project-zero/master/install.sh | sh",
+            "actually_needed": "installer downloads a checksum-verified prebuilt binary tarball project-zero-0.2.0-x86_64-unknown-linux-gnu.tar.gz which cannot be read as text before running; checksum was verified during install",
+            "kind": "note"
+          },
+          {
+            "readme_said": "pz --model <file.gguf> --server --port 8080",
+            "actually_needed": "first server start auto-calibrates SIMD backends for ~35s before listening; subsequent starts and CLI runs are fast",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show GGUF model loading and text generation, model server listing stories260K.gguf, and version output v0.2.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-project-zero-20261031-001641-6764/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-project-zero-20261031-001641-6764/check-1-cmd10.judged.png",
+            "runs/verify/verify-project-zero-20261031-001641-6764/check-2-cmd7.judged.png",
+            "runs/verify/verify-project-zero-20261031-001641-6764/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.068728
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -329,5 +462,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:11+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:18:59.856454+08:00"
 }

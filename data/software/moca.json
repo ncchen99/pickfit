@@ -77,17 +77,24 @@
       "first_task": "moca config sample"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-moca-20261031-002420-24fc",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/adeotek/moca/main/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/adeotek/moca/main/install.sh -o /tmp/moca-install.sh",
+          "purpose": "Download moca install script"
+        },
+        {
+          "command": "bash /tmp/moca-install.sh",
+          "purpose": "Install moca via install script"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "moca --version",
+        "expected_signal": "moca v0.7.12"
+      },
       "first_task": "moca config sample"
     },
     "windows": {
@@ -118,10 +125,101 @@
     "url": "https://github.com/adeotek/moca/releases/tag/v0.7.12"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:25:42.960087+08:00",
+    "runs": [
+      {
+        "id": "verify-moca-20261031-002420-24fc",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:25:42.960087+08:00",
+        "tool_version": "v0.7.12",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/adeotek/moca/main/install.sh -o /tmp/moca-install.sh",
+            "purpose": "Download moca install script"
+          },
+          {
+            "command": "bash /tmp/moca-install.sh",
+            "purpose": "Install moca via install script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "moca --version",
+            "expected_signal": "moca v0.7.12",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "moca v0.7.12",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "moca --help",
+            "expected_signal": "moca — a coding agent for the terminal",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "moca — a coding agent for the terminal",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "moca config sample",
+            "expected_signal": "\"log\": { \"level\": \"info\" }",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"log\": { \"level\": \"info\" } // \"info\" | \"debug\" | \"off\"",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "moca config check",
+            "expected_signal": "no issues",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no issues",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "moca update --check",
+            "expected_signal": "is up to date",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "moca v0.7.12 is up to date (latest release v0.7.12).",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show expected outputs: sample config with log level info, config check reporting no issues, and version v0.7.12.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-moca-20261031-002420-24fc/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-moca-20261031-002420-24fc/check-1-cmd5.judged.png",
+            "runs/verify/verify-moca-20261031-002420-24fc/check-2-cmd6.judged.png",
+            "runs/verify/verify-moca-20261031-002420-24fc/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.045159
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -396,5 +494,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:20+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:25:42.960858+08:00"
 }

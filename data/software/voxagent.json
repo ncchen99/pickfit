@@ -74,20 +74,21 @@
       "first_task": "voxagent --help"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-voxagent-20261031-001540-cadc",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g voxagent",
-          "purpose": null
+          "purpose": "Install voxagent via npm global"
         }
       ],
-      "manual_steps": [
-        "Connect a microphone for voice input"
-      ],
-      "check": null,
-      "first_task": "voxagent --help"
+      "manual_steps": [],
+      "check": {
+        "command": "voxagent --help",
+        "expected_signal": "Voice-powered terminal agent."
+      },
+      "first_task": "voxagent --file question.wav --device default"
     },
     "windows": {
       "basis": "readme_claim",
@@ -119,10 +120,84 @@
     "url": "https://github.com/analyticsinmotion/voxagent/releases/tag/v0.3.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:16:41.607747+08:00",
+    "runs": [
+      {
+        "id": "verify-voxagent-20261031-001540-cadc",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:16:41.607747+08:00",
+        "tool_version": "0.3.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g voxagent",
+            "purpose": "Install voxagent via npm global"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "voxagent --help",
+            "expected_signal": "Voice-powered terminal agent.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Voice-powered terminal agent.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "voxagent --version",
+            "expected_signal": "0.3.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.3.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "voxagent --file question.wav --device default",
+            "expected_signal": "cannot be combined",
+            "exit_code": 2,
+            "passed": true,
+            "observed_excerpt": "\u001b[31mError: Options '--file' and '--device' cannot be combined.\u001b[0m",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "On Debian and Ubuntu, `sudo apt install libvulkan1 libgomp1 libasound2t64`",
+            "actually_needed": "In this box (no root, no apt) libasound.so.2 is missing, so `voxagent --file /tmp/does-not-exist.wav` exits 1 with 'A native module could not load because a library it needs is missing ... install it with: sudo apt install libasound2t64' instead of a file-read error; --help and --file/--device vali…",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show the --file/--device cannot-be-combined error and help containing Voice-powered terminal agent.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-voxagent-20261031-001540-cadc/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-voxagent-20261031-001540-cadc/check-1-cmd4.judged.png",
+            "runs/verify/verify-voxagent-20261031-001540-cadc/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.032405
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -373,5 +448,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:16:41.608716+08:00"
 }

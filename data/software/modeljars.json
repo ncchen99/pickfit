@@ -70,18 +70,25 @@
       "first_task": "modeljars search gemma"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-modeljars-20261031-002132-ef7c",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/ModelJars/modeljars/main/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL -o /tmp/install.sh https://raw.githubusercontent.com/ModelJars/modeljars/main/install.sh && wc -c /tmp/install.sh && echo OK",
+          "purpose": "download install.sh for reading before running"
+        },
+        {
+          "command": "MODELJARS_CLI_VERSION=0.1.57 sh /tmp/install.sh",
+          "purpose": "install modeljars 0.1.57 via script"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "modeljars search gemma"
+      "check": {
+        "command": "modeljars version",
+        "expected_signal": "0.1.57"
+      },
+      "first_task": "modeljars version"
     },
     "windows": {
       "basis": "readme_claim",
@@ -111,10 +118,98 @@
     "url": "https://github.com/ModelJars/modeljars/releases/tag/v0.1.70"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:22:57.348602+08:00",
+    "runs": [
+      {
+        "id": "verify-modeljars-20261031-002132-ef7c",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:22:57.348602+08:00",
+        "tool_version": "0.1.57",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/install.sh https://raw.githubusercontent.com/ModelJars/modeljars/main/install.sh && wc -c /tmp/install.sh && echo OK",
+            "purpose": "download install.sh for reading before running"
+          },
+          {
+            "command": "MODELJARS_CLI_VERSION=0.1.57 sh /tmp/install.sh",
+            "purpose": "install modeljars 0.1.57 via script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "modeljars version",
+            "expected_signal": "0.1.57",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.1.57",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "modeljars help",
+            "expected_signal": "Search and filter the qualified model catalog",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "search, available, models Search and filter the qualified model catalog.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "modeljars search gemma",
+            "expected_signal": "12 qualified models",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "12 qualified models",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "modeljars info",
+            "expected_signal": "Qualified models",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Qualified models 117",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/ModelJars/modeljars/main/install.sh | sh installs latest",
+            "actually_needed": "pin an older release with binaries, e.g. MODELJARS_CLI_VERSION=0.1.57 sh /tmp/install.sh (v0.1.57 is the newest release whose assets include modeljars-linux-x86_64; v0.1.58 through v0.1.70 publish zero assets so the default latest URL 404s)",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show search listing 12 gemma models, info listing 117 qualified models, and version printing 0.1.57.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-modeljars-20261031-002132-ef7c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-modeljars-20261031-002132-ef7c/check-1-cmd11.judged.png",
+            "runs/verify/verify-modeljars-20261031-002132-ef7c/check-2-cmd12.judged.png",
+            "runs/verify/verify-modeljars-20261031-002132-ef7c/check-3-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.069229
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -373,5 +468,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:11+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:22:57.349184+08:00"
 }

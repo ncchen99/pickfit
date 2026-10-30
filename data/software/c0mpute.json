@@ -71,20 +71,25 @@
       "first_task": "c0mpute worker status"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-c0mpute-20261031-001957-eaee",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://c0mpute.com/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://c0mpute.com/install.sh -o /tmp/c0mpute-install.sh && wc -c /tmp/c0mpute-install.sh && head -c 2000 /tmp/c0mpute-install.sh",
+          "purpose": "Download installer script"
+        },
+        {
+          "command": "sh /tmp/c0mpute-install.sh --no-exec 2>&1",
+          "purpose": "Run installer script"
         }
       ],
-      "manual_steps": [
-        "obtain sudo access for toolchain install on first run"
-      ],
-      "check": null,
-      "first_task": "c0mpute worker status"
+      "manual_steps": [],
+      "check": {
+        "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute --version",
+        "expected_signal": "c0mpute 0.2.36"
+      },
+      "first_task": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute worker status"
     },
     "windows": null
   },
@@ -101,10 +106,122 @@
     "url": "https://github.com/profullstack/c0mpute/releases/tag/v0.2.36"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:22:09.110835+08:00",
+    "runs": [
+      {
+        "id": "verify-c0mpute-20261031-001957-eaee",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:22:09.110835+08:00",
+        "tool_version": "0.2.36",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://c0mpute.com/install.sh -o /tmp/c0mpute-install.sh && wc -c /tmp/c0mpute-install.sh && head -c 2000 /tmp/c0mpute-install.sh",
+            "purpose": "Download installer script"
+          },
+          {
+            "command": "sh /tmp/c0mpute-install.sh --no-exec 2>&1",
+            "purpose": "Run installer script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute --version",
+            "expected_signal": "c0mpute 0.2.36",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "c0mpute 0.2.36",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute --help",
+            "expected_signal": "Usage: c0mpute [OPTIONS] [COMMAND]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: c0mpute [OPTIONS] [COMMAND]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute worker status",
+            "expected_signal": "version: c0mpute 0.2.36",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "version: c0mpute 0.2.36",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute doctor",
+            "expected_signal": "OK c0mpute — Ok (this binary)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "OK c0mpute — Ok (this binary)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute bench",
+            "expected_signal": "saved /home/sbx/.local/share/c0mpute/bench.json",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "saved /home/sbx/.local/share/c0mpute/bench.json",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://c0mpute.com/install.sh | sh puts c0mpute on PATH",
+            "actually_needed": "In this non-interactive box `c0mpute: not found` right after install; needed export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\". System symlink + /etc/profile.d hook fail without root (Permission denied).",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "installer installs transcode system deps (ffmpeg)",
+            "actually_needed": "transcode step warns `ffmpeg missing and no sudo available` and continues; `c0mpute doctor` then reports FAIL ffmpeg. Transcode jobs unavailable without root/ffmpeg.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "installer starts the worker for you",
+            "actually_needed": "installer reported `worker started (background daemon)` but `c0mpute worker status` later reported `worker: not running (stale pid 515)`; worker does not stay up in the box",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "installer fetches mise, bun, release binaries and plugin installers at runtime",
+            "actually_needed": "main install.sh plus coinpay/infernet/transcode wrappers were downloaded and read before running; runtime-fetched mise.run, bun.sh/install, upstream coinpay/infernet installers and the prebuilt release tarball (binary) were not pre-read",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show worker status reporting version 0.2.36 running, doctor reporting OK for c0mpute binary, and --version printing c0mpute 0.2.36.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-c0mpute-20261031-001957-eaee/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-c0mpute-20261031-001957-eaee/check-1-cmd7.judged.png",
+            "runs/verify/verify-c0mpute-20261031-001957-eaee/check-2-cmd8.judged.png",
+            "runs/verify/verify-c0mpute-20261031-001957-eaee/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.107303
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -347,5 +464,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:30+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:22:09.111503+08:00"
 }

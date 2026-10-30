@@ -67,18 +67,29 @@
       "first_task": "flash"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "script",
+      "basis": "replayed",
+      "run_id": "verify-flash-20261031-001936-2917",
+      "method": "source",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/Natuworkguy/Flash/main/install.sh | bash",
-          "purpose": null
+          "command": "git clone --depth 1 https://github.com/Natuworkguy/Flash Flash",
+          "purpose": "Clone repo (manual step 1, prerequisite for pip)"
+        },
+        {
+          "command": "pip install -r Flash/requirements.txt --break-system-packages",
+          "purpose": "Install dependencies via pip requirements"
+        },
+        {
+          "command": "pip install ./Flash --break-system-packages",
+          "purpose": "Install flash package entry point"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "flash"
+      "check": {
+        "command": "flash --version",
+        "expected_signal": "Flash CLI v0.5.12"
+      },
+      "first_task": "flash --extension-list"
     },
     "windows": null
   },
@@ -95,10 +106,106 @@
     "url": "https://github.com/Natuworkguy/Flash/releases/tag/v0.5.12"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:21:38.683851+08:00",
+    "runs": [
+      {
+        "id": "verify-flash-20261031-001936-2917",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:21:38.683851+08:00",
+        "tool_version": "0.5.12",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/Natuworkguy/Flash Flash",
+            "purpose": "Clone repo (manual step 1, prerequisite for pip)"
+          },
+          {
+            "command": "pip install -r Flash/requirements.txt --break-system-packages",
+            "purpose": "Install dependencies via pip requirements"
+          },
+          {
+            "command": "pip install ./Flash --break-system-packages",
+            "purpose": "Install flash package entry point"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flash --version",
+            "expected_signal": "Flash CLI v0.5.12",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Flash CLI v0.5.12",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "flash --help",
+            "expected_signal": "FLASH (Fast Local Agent SHell) CLI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "FLASH (Fast Local Agent SHell) CLI",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "flash --extension-list",
+            "expected_signal": "No extensions installed.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No extensions installed. /extension install github@owner/repo adds one.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 Flash/run.py --help",
+            "expected_signal": "usage: flash",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: flash [-h] [-V] [--register-url-scheme] [--unregister-url-scheme] [--update] [--force]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install -r requirements.txt",
+            "actually_needed": "add --break-system-packages to pip invocations on this Debian box (externally-managed-environment)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "pip install -r requirements.txt then python3 run.py",
+            "actually_needed": "also run pip install ./Flash to provide the flash entry point on PATH; pip install -r requirements.txt alone only installs dependencies and the manual path documents python3 run.py",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show the extension list reporting no extensions installed and the version command reporting Flash CLI v0.5.12.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-flash-20261031-001936-2917/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-flash-20261031-001936-2917/check-1-cmd11.judged.png",
+            "runs/verify/verify-flash-20261031-001936-2917/check-2-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.100042
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -325,5 +432,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:21:38.685260+08:00"
 }

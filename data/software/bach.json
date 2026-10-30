@@ -53,7 +53,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-bach-20261031-001540-9285",
+      "method": "source",
+      "steps": [
+        {
+          "command": "rm -rf /tmp/bach-check && git clone --depth 1 https://github.com/ellmos-ai/bach.git bach && ls bach/bach.py bach/system/bach.py",
+          "purpose": "Clone BACH source into work dir"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "python3 bach/bach.py --version",
+        "expected_signal": "BACH v3.15.0"
+      },
+      "first_task": "python3 bach/bach.py --startup"
+    },
     "windows": null
   },
   "pricing": {
@@ -69,10 +85,84 @@
     "url": "https://github.com/ellmos-ai/bach/releases/tag/v3.14.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:17:23.722978+08:00",
+    "runs": [
+      {
+        "id": "verify-bach-20261031-001540-9285",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:17:23.722978+08:00",
+        "tool_version": "v3.15.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf /tmp/bach-check && git clone --depth 1 https://github.com/ellmos-ai/bach.git bach && ls bach/bach.py bach/system/bach.py",
+            "purpose": "Clone BACH source into work dir"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 bach/bach.py --version",
+            "expected_signal": "BACH v3.15.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "BACH v3.15.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 bach/bach.py --help",
+            "expected_signal": "Registry-Based CLI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "BACH v3.15.0 - Registry-Based CLI",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 bach/bach.py --startup",
+            "expected_signal": "READY - Session gestartet",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "READY - Session gestartet",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install -e . (and optionally pip install -e \".[console]\" / npm install -g ellmos-codecommander-mcp ellmos-filecommander-mcp)",
+            "actually_needed": "Skipped npm candidate (it installs only optional companion MCP servers ellmos-codecommander-mcp/ellmos-filecommander-mcp, not the BACH CLI) and pip candidates failed: pip install -e ./bach tries to clone private git dependencies like assistant-core (fatal: could not read Username) so it cannot work…",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show startup completing with READY - Session gestartet and version printing BACH v3.15.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-bach-20261031-001540-9285/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-bach-20261031-001540-9285/check-1-cmd11.judged.png",
+            "runs/verify/verify-bach-20261031-001540-9285/check-2-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.07602
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -291,5 +381,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:55+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:17:23.723664+08:00"
 }

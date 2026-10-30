@@ -49,7 +49,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-gliner2-ultrafast-20261031-002825-dd66",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "rm -rf gliner2-ultrafast && git clone https://github.com/sahibzada-allahyar/gliner2-ultrafast.git gliner2-ultrafast",
+          "purpose": "Clone repo"
+        },
+        {
+          "command": "cd gliner2-ultrafast && uv sync --frozen",
+          "purpose": "Install with uv sync --frozen"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "cd gliner2-ultrafast && uv run browser-harness --help",
+        "expected_signal": "Browser Harness"
+      },
+      "first_task": "cd gliner2-ultrafast && uv run browser-harness --doctor"
+    },
     "windows": null
   },
   "pricing": {
@@ -61,10 +81,128 @@
   "processing": "hybrid",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:32:35.680714+08:00",
+    "runs": [
+      {
+        "id": "verify-gliner2-ultrafast-20261031-002825-dd66",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:32:35.680714+08:00",
+        "tool_version": "0.1.13",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf gliner2-ultrafast && git clone https://github.com/sahibzada-allahyar/gliner2-ultrafast.git gliner2-ultrafast",
+            "purpose": "Clone repo"
+          },
+          {
+            "command": "cd gliner2-ultrafast && uv sync --frozen",
+            "purpose": "Install with uv sync --frozen"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd gliner2-ultrafast && uv run browser-harness --help",
+            "expected_signal": "Browser Harness",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Browser Harness",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd gliner2-ultrafast && uv run browser-harness --version",
+            "expected_signal": "0.1.13",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.1.13",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd gliner2-ultrafast && uv run browser-harness --doctor",
+            "expected_signal": "[FAIL] chrome running",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "[FAIL] chrome running — start chrome/edge",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd gliner2-ultrafast && uv run pytest -q",
+            "expected_signal": "57 passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "57 passed in 5.60s",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s -f http://127.0.0.1:8767/api/state",
+            "expected_signal": "\"status\": \"idle\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"page\": null, \"status\": \"idle\", \"history\": [], \"decision\": null, \"text_model\": \"inception/mercury-2.5\", \"max_steps\": 60}",
+            "setup": [
+              {
+                "command": "cd gliner2-ultrafast && cp .env.example .env",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /home/sbx/work/gliner2-ultrafast && GLINER_DEMO_PORT=8767 uv run --env-file .env gliner",
+                "background": true,
+                "port": 8767
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "uv run browser-harness --doctor to check the connection",
+            "actually_needed": "Without Chrome/daemon it prints [FAIL] chrome running, [FAIL] daemon alive, [FAIL] active browser connections and exits 1; README anticipates this case ('follow connection instructions if doctor does not report active connection')",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Add your text-model key to .env, then start Chrome and run gliner inspector",
+            "actually_needed": "Inspector answers GET /api/state with {\"status\": \"idle\"} without a valid OpenRouter key or browser; running real goals still needs Chrome plus TEXT_MODEL_API_KEY and network to google.com",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Model weights download on first use for agent runs",
+            "actually_needed": "Offline pytest suite (57 tests) mocks the GLiNER classifier/extractor and browser, so it passes with no model download, no Chrome and no API key",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show doctor reporting missing Chrome, pytest reporting 57 passed, and help displaying Browser Harness usage.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-gliner2-ultrafast-20261031-002825-dd66/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-gliner2-ultrafast-20261031-002825-dd66/check-1-cmd4.judged.png",
+            "runs/verify/verify-gliner2-ultrafast-20261031-002825-dd66/check-2-cmd6.judged.png",
+            "runs/verify/verify-gliner2-ultrafast-20261031-002825-dd66/check-3-cmd15.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.220982
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -269,5 +407,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:22+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:32:35.681474+08:00"
 }

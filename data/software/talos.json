@@ -70,18 +70,33 @@
       "first_task": "python -m talos status"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "script",
+      "basis": "replayed",
+      "run_id": "verify-talos-20261031-002041-b4f8",
+      "method": "source",
       "steps": [
         {
-          "command": "curl -fsSL https://talos-agent.ch/install.sh | bash",
-          "purpose": null
+          "command": "rm -rf ~/talos && git clone https://github.com/talos-kernel/talos.git ~/talos && ls ~/talos/requirements.lock ~/talos/requirements-dev.lock",
+          "purpose": "clone source for lock files and code"
+        },
+        {
+          "command": "python3 -m venv ~/talos/.venv && ~/talos/.venv/bin/python -m pip install --require-hashes -r ~/talos/requirements.lock -r ~/talos/requirements-dev.lock",
+          "purpose": "create venv and install hashed requirements"
+        },
+        {
+          "command": "chmod 755 ~/talos/bin/talos && mkdir -p ~/.local/bin && ln -sf ~/talos/bin/talos ~/.local/bin/talos && export PATH=\"$HOME/.local/bin:$PATH\" && which talos && talos --help",
+          "purpose": "expose talos on PATH via symlink"
+        },
+        {
+          "command": "mkdir -p ~/talos/data ~/talos/workspace && chmod 700 ~/talos/data && ls -ld ~/talos/data ~/talos/workspace",
+          "purpose": "create data and workspace dirs for event log"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "python -m talos status"
+      "check": {
+        "command": "cd ~/talos && ./bin/talos version",
+        "expected_signal": "0.20.0-rc.1"
+      },
+      "first_task": "cd ~/talos && ./bin/talos version"
     },
     "windows": null
   },
@@ -94,10 +109,121 @@
   "processing": "hybrid",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:25:23.652368+08:00",
+    "runs": [
+      {
+        "id": "verify-talos-20261031-002041-b4f8",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:25:23.652368+08:00",
+        "tool_version": "0.20.0-rc.1",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf ~/talos && git clone https://github.com/talos-kernel/talos.git ~/talos && ls ~/talos/requirements.lock ~/talos/requirements-dev.lock",
+            "purpose": "clone source for lock files and code"
+          },
+          {
+            "command": "python3 -m venv ~/talos/.venv && ~/talos/.venv/bin/python -m pip install --require-hashes -r ~/talos/requirements.lock -r ~/talos/requirements-dev.lock",
+            "purpose": "create venv and install hashed requirements"
+          },
+          {
+            "command": "chmod 755 ~/talos/bin/talos && mkdir -p ~/.local/bin && ln -sf ~/talos/bin/talos ~/.local/bin/talos && export PATH=\"$HOME/.local/bin:$PATH\" && which talos && talos --help",
+            "purpose": "expose talos on PATH via symlink"
+          },
+          {
+            "command": "mkdir -p ~/talos/data ~/talos/workspace && chmod 700 ~/talos/data && ls -ld ~/talos/data ~/talos/workspace",
+            "purpose": "create data and workspace dirs for event log"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd ~/talos && ./bin/talos version",
+            "expected_signal": "0.20.0-rc.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.20.0-rc.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd ~/talos && . .venv/bin/activate && python -m talos status",
+            "expected_signal": "no event log yet",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no event log yet at /home/sbx/talos/data/eventlog.db — it has not run.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd ~/talos && . .venv/bin/activate && python -m talos events --tool run_shell",
+            "expected_signal": "nothing matched",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "nothing matched",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd ~/talos && . .venv/bin/activate && python -m talos why 4831",
+            "expected_signal": "no event 4831",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "no event 4831 in this log",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install --require-hashes -r requirements.lock -r requirements-dev.lock",
+            "actually_needed": "git clone https://github.com/talos-kernel/talos.git ~/talos first; the lock files only exist inside the checkout",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "curl -fsSL https://talos-agent.ch/install.sh | bash runs the full suite and finishes",
+            "actually_needed": "installer aborts after 64 test failures in this box (missing bubblewrap so run_shell refuses, /tmp ancestor-writable skill checks); kept no symlink/config. Fell back to source install and skipped the proof suites.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "python -m talos events --tool run_shell works after install",
+            "actually_needed": "mkdir -p ~/talos/data ~/talos/workspace && chmod 700 ~/talos/data before querying events; without data/ events crashes with sqlite3.OperationalError: unable to open database file while status handles the missing log gracefully",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "read install.sh before running it",
+            "actually_needed": "script downloads extra files at run time (tarball, checksum, signature, verifier wheels) that cannot all be read in advance",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show status reporting no event log yet, events filter returning nothing matched, and version printing 0.20.0-rc.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-talos-20261031-002041-b4f8/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-talos-20261031-002041-b4f8/check-1-cmd10.judged.png",
+            "runs/verify/verify-talos-20261031-002041-b4f8/check-2-cmd14.judged.png",
+            "runs/verify/verify-talos-20261031-002041-b4f8/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.180339
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -340,5 +466,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:25:23.653441+08:00"
 }

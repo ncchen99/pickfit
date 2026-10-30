@@ -53,7 +53,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-admina-20261031-001858-0c6d",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install \"admina[proxy]\"",
+          "purpose": "Install admina with proxy extra via pip"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "admina --version",
+        "expected_signal": "admina, version 0.15.3"
+      },
+      "first_task": "admina plugin list"
+    },
     "windows": null
   },
   "pricing": {
@@ -69,10 +85,130 @@
     "url": "https://github.com/admina-org/admina/releases/tag/v0.15.3"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:21:15.853048+08:00",
+    "runs": [
+      {
+        "id": "verify-admina-20261031-001858-0c6d",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:21:15.853048+08:00",
+        "tool_version": "0.15.3",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pip install \"admina[proxy]\"",
+            "purpose": "Install admina with proxy extra via pip"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "admina --version",
+            "expected_signal": "admina, version 0.15.3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "admina, version 0.15.3",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "admina --help",
+            "expected_signal": "Usage: admina [OPTIONS]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: admina [OPTIONS] [COMMAND] [ARGS]...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "admina plugin list",
+            "expected_signal": "Total: 19 plugin(s)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Total: 19 plugin(s)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "FORENSIC_BASE_DIR=/tmp/forensic-empty admina forensic verify",
+            "expected_signal": "\"valid\": true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"valid\": true,",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/forensic-empty",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:3000/health",
+            "expected_signal": "\"status\":\"healthy\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"healthy\",\"service\":\"admina-proxy\",\"version\":\"0.15.3\",\"mode\":\"enforce\",\"surfaces\":[\"gateway\",\"mcp\",\"integration\",\"compliance\",\"dashboard\"],\"ruleset_sha256\":\"f6150503c2da9ca561743563d9ac53cf33b084ba1655e96bf07a4afb0538974b\",\"forensic_writable\":null,\"forensic_chain\":null,\"engine\":{\"engine\":…",
+            "setup": [
+              {
+                "command": "admina init /tmp/admina-test-proj",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/admina-test-proj && admina dev --no-browser --port 3000",
+                "background": true,
+                "port": 3000
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "uv add \"admina[proxy]\" as first install line",
+            "actually_needed": "pip install works directly with no project; uv add needs a pyproject.toml (uv init first)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "admina forensic verify with no arguments",
+            "actually_needed": "pass --dir DIR or set FORENSIC_BASE_DIR; an empty dir verifies as valid with 0 records",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "admina dev",
+            "actually_needed": "run admina init PROJECT first to create admina.yaml, then cd into it before admina dev",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show plugin list totaling 19 plugins, forensic verification reporting valid true, and version 0.15.3.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-admina-20261031-001858-0c6d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-admina-20261031-001858-0c6d/check-1-cmd4.judged.png",
+            "runs/verify/verify-admina-20261031-001858-0c6d/check-2-cmd9.judged.png",
+            "runs/verify/verify-admina-20261031-001858-0c6d/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.108789
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -275,5 +411,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:21:15.853902+08:00"
 }

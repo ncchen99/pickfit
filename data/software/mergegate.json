@@ -71,17 +71,32 @@
       "first_task": "mg doctor"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-mergegate-20261031-001859-a848",
+      "method": "other",
       "steps": [
         {
-          "command": "MG_REQUIRE_UI=1 cargo install --locked --git https://github.com/damian-kolasinski/mergegate mg",
-          "purpose": null
+          "command": "curl -fsSL https://mise.run -o /tmp/mise-install.sh && ls -l /tmp/mise-install.sh && wc -l /tmp/mise-install.sh",
+          "purpose": "Download mise install script"
+        },
+        {
+          "command": "sh /tmp/mise-install.sh 2>&1 && ~/.local/bin/mise --version",
+          "purpose": "Install mise to ~/.local/bin"
+        },
+        {
+          "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mise use -g packslip:damian-kolasinski/mergegate",
+          "purpose": "Install mergegate via mise packslip"
+        },
+        {
+          "command": "ln -sf \"$HOME/.local/share/mise/installs/packslip-damian-kolasinski-mergegate/0.11.0/mg\" \"$HOME/.local/bin/mg\" && ln -sf \"$HOME/.local/bin/mg\" \"$HOME/.local/bin/mergegate\" && ls -l ~/.local/bin/mg ~/.local/bin/mergegate && mg --version && mergegate --version",
+          "purpose": "Link mg onto default PATH and verify"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "ln -sf \"$HOME/.local/share/mise/installs/packslip-damian-kolasinski-mergegate/0.11.0/mg\" \"$HOME/.local/bin/mg\" && ln -sf \"$HOME/.local/bin/mg\" \"$HOME/.local/bin/mergegate\" && ls -l ~/.local/bin/mg ~/.local/bin/mergegate && mg --version && mergegate --version",
+        "expected_signal": "mg 0.11.0"
+      },
       "first_task": "mg doctor"
     },
     "windows": null
@@ -99,10 +114,121 @@
     "url": "https://github.com/damian-kolasinski/mergegate/releases/tag/v0.11.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:20:41.509410+08:00",
+    "runs": [
+      {
+        "id": "verify-mergegate-20261031-001859-a848",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:20:41.509410+08:00",
+        "tool_version": "0.11.0",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://mise.run -o /tmp/mise-install.sh && ls -l /tmp/mise-install.sh && wc -l /tmp/mise-install.sh",
+            "purpose": "Download mise install script"
+          },
+          {
+            "command": "sh /tmp/mise-install.sh 2>&1 && ~/.local/bin/mise --version",
+            "purpose": "Install mise to ~/.local/bin"
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mise use -g packslip:damian-kolasinski/mergegate",
+            "purpose": "Install mergegate via mise packslip"
+          },
+          {
+            "command": "ln -sf \"$HOME/.local/share/mise/installs/packslip-damian-kolasinski-mergegate/0.11.0/mg\" \"$HOME/.local/bin/mg\" && ln -sf \"$HOME/.local/bin/mg\" \"$HOME/.local/bin/mergegate\" && ls -l ~/.local/bin/mg ~/.local/bin/mergegate && mg --version && mergegate --version",
+            "purpose": "Link mg onto default PATH and verify"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ln -sf \"$HOME/.local/share/mise/installs/packslip-damian-kolasinski-mergegate/0.11.0/mg\" \"$HOME/.local/bin/mg\" && ln -sf \"$HOME/.local/bin/mg\" \"$HOME/.local/bin/mergegate\" && ls -l ~/.local/bin/mg ~/.local/bin/mergegate && mg --version && mergegate --version",
+            "expected_signal": "mg 0.11.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mg 0.11.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mg --help",
+            "expected_signal": "Usage: mg [OPTIONS] <COMMAND>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: mg [OPTIONS] <COMMAND>",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mg doctor",
+            "expected_signal": "the hub is not running",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "FAIL hub the hub is not running",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mg hub status",
+            "expected_signal": "hub not running",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hub not running",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "mise use -g packslip:damian-kolasinski/mergegate",
+            "actually_needed": "Installed mise first with the script from https://mise.run to ~/.local/bin/mise, then ran the README's mise command",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "mise install puts mg on your PATH",
+            "actually_needed": "Symlinked the mise-installed mg binary into ~/.local/bin (plus a mergegate alias) because mise's shims dir is not on this box's default PATH",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "mg skill status shows what's installed (and mg skill setup / mg skill remove exist)",
+            "actually_needed": "mg skill has only the 'install' subcommand; 'status', 'setup' and 'remove' from the README are rejected as unrecognized (exit 64)",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "Install script contents as read before running",
+            "actually_needed": "The mise installer downloads a prebuilt mise binary at run time; integrity is enforced by the script's embedded checksum check",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show doctor reporting hub not running, hub status as not running, and both mg binaries printing version 0.11.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mergegate-20261031-001859-a848/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mergegate-20261031-001859-a848/check-1-cmd8.judged.png",
+            "runs/verify/verify-mergegate-20261031-001859-a848/check-2-cmd9.judged.png",
+            "runs/verify/verify-mergegate-20261031-001859-a848/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.089998
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -345,5 +471,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:31+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:20:41.510263+08:00"
 }

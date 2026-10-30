@@ -68,18 +68,21 @@
       "first_task": "lcode setup"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-lcode-20261031-001540-3a4d",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install lcode-cli",
-          "purpose": null
+          "command": "uv tool install lcode-cli 2>&1",
+          "purpose": "Install lcode via uv tool install lcode-cli"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "lcode setup"
+      "check": {
+        "command": "lcode --version 2>&1",
+        "expected_signal": "lcode 0.52.0"
+      },
+      "first_task": "lcode doctor 2>&1"
     },
     "windows": null
   },
@@ -96,10 +99,88 @@
     "url": "https://github.com/nasser1941/lcode/releases/tag/v0.52.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:16:27.739106+08:00",
+    "runs": [
+      {
+        "id": "verify-lcode-20261031-001540-3a4d",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:16:27.739106+08:00",
+        "tool_version": "0.52.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install lcode-cli 2>&1",
+            "purpose": "Install lcode via uv tool install lcode-cli"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lcode --version 2>&1",
+            "expected_signal": "lcode 0.52.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lcode 0.52.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lcode --help 2>&1",
+            "expected_signal": "A local-first terminal coding agent",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "A local-first terminal coding agent powered by open-weight models via Ollama.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lcode doctor 2>&1",
+            "expected_signal": "cannot reach Ollama at http://localhost:11434",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "✗ Ollama cannot reach Ollama at http://localhost:11434: HTTPConnectionPool(host='localhost',",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lcode models 2>&1",
+            "expected_signal": "qwen3.5-4b",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ qwen3.5-4b │ 3.4 GB │ 256K │ no │ too large │ tested │",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.52.0, help with local-first agent tagline, and doctor correctly reporting Ollama unreachable.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lcode-20261031-001540-3a4d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lcode-20261031-001540-3a4d/check-1-cmd2.judged.png",
+            "runs/verify/verify-lcode-20261031-001540-3a4d/check-2-cmd3.judged.png",
+            "runs/verify/verify-lcode-20261031-001540-3a4d/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.032259
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -342,5 +423,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:16:27.740106+08:00"
 }

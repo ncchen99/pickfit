@@ -76,19 +76,20 @@
       "first_task": "omk doctor"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "script",
+      "basis": "replayed",
+      "run_id": "verify-omk-20261031-002536-a5d9",
+      "method": "npm",
       "steps": [
         {
-          "command": "curl -fsSL https://github.com/dmae97/omk/releases/latest/download/install.sh | sh",
-          "purpose": null
+          "command": "node --version && npm --version && which bwrap; bwrap --version; echo \"---\"; npm install -g open-multi-agent-kit --ignore-scripts",
+          "purpose": "Install OMK via npm global per README"
         }
       ],
-      "manual_steps": [
-        "Sign in with a subscription or an API key on first run"
-      ],
-      "check": null,
+      "manual_steps": [],
+      "check": {
+        "command": "omk --version",
+        "expected_signal": "1.5.10"
+      },
       "first_task": "omk doctor"
     },
     "windows": null
@@ -106,10 +107,84 @@
     "url": "https://github.com/dmae97/omk/releases/tag/v1.5.10"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:26:46.822422+08:00",
+    "runs": [
+      {
+        "id": "verify-omk-20261031-002536-a5d9",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:26:46.822422+08:00",
+        "tool_version": "1.5.10",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "node --version && npm --version && which bwrap; bwrap --version; echo \"---\"; npm install -g open-multi-agent-kit --ignore-scripts",
+            "purpose": "Install OMK via npm global per README"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "omk --version",
+            "expected_signal": "1.5.10",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.5.10",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "omk --help",
+            "expected_signal": "Built-in Tool Names:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Built-in Tool Names:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "omk doctor",
+            "expected_signal": "✓ runtime",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "✓ runtime OMK 1.5.10 · node 22.23.4 · linux-x64",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "omk doctor checks the runtime, credentials, model and sandbox and prints the fix",
+            "actually_needed": "omk doctor exits 1 when checks fail (no credentials, no bwrap) while still printing all check results and fixes; this is its intended validator behavior, not an install failure",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show omk doctor passing the runtime check with OMK 1.5.10 details and omk --version printing 1.5.10.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-omk-20261031-002536-a5d9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-omk-20261031-002536-a5d9/check-1-cmd4.judged.png",
+            "runs/verify/verify-omk-20261031-002536-a5d9/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.025837
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -352,5 +427,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:55+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:26:46.823366+08:00"
 }

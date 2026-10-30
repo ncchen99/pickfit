@@ -54,20 +54,33 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "script",
+      "basis": "replayed",
+      "run_id": "verify-bittune-20261031-002115-e22b",
+      "method": "source",
       "steps": [
         {
-          "command": "sudo ./install.sh",
-          "purpose": null
+          "command": "git clone --depth 1 https://github.com/bitcloud-ai/Bittune bittune-src",
+          "purpose": "clone Bittune source"
+        },
+        {
+          "command": "cd bittune-src && npm ci && python3 -m venv .venv && .venv/bin/python -m pip install -e ./packages/bittune-core && .venv/bin/python -c \"import bittune_core; print('core ok')\"",
+          "purpose": "npm ci plus venv Python Core install"
+        },
+        {
+          "command": "cd bittune-src && npm run build:shell",
+          "purpose": "build portable dist bundle"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && printf '%s\\n' '#!/bin/sh' 'export BITTUNE_CORE_PYTHON=\"/home/sbx/work/bittune-src/.venv/bin/python\"' 'export BITTUNE_TEST_PYTHON=\"/home/sbx/work/bittune-src/.venv/bin/python\"' 'exec node \"/home/sbx/work/bittune-src/dist/bittune.js\" \"$@\"' > ~/.local/bin/bittune && chmod +x ~/.local/bin/bittune",
+          "purpose": "install bittune shim on PATH"
         }
       ],
-      "manual_steps": [
-        "Add regular user to docker group to run without root"
-      ],
-      "check": null,
-      "first_task": "bittune doctor"
+      "manual_steps": [],
+      "check": {
+        "command": "bittune --help",
+        "expected_signal": "Usage:"
+      },
+      "first_task": "bittune version"
     },
     "windows": null
   },
@@ -84,10 +97,112 @@
     "url": "https://github.com/bitcloud-ai/Bittune/releases/tag/v0.1.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:24:20.752181+08:00",
+    "runs": [
+      {
+        "id": "verify-bittune-20261031-002115-e22b",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:24:20.752181+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/bitcloud-ai/Bittune bittune-src",
+            "purpose": "clone Bittune source"
+          },
+          {
+            "command": "cd bittune-src && npm ci && python3 -m venv .venv && .venv/bin/python -m pip install -e ./packages/bittune-core && .venv/bin/python -c \"import bittune_core; print('core ok')\"",
+            "purpose": "npm ci plus venv Python Core install"
+          },
+          {
+            "command": "cd bittune-src && npm run build:shell",
+            "purpose": "build portable dist bundle"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && printf '%s\\n' '#!/bin/sh' 'export BITTUNE_CORE_PYTHON=\"/home/sbx/work/bittune-src/.venv/bin/python\"' 'export BITTUNE_TEST_PYTHON=\"/home/sbx/work/bittune-src/.venv/bin/python\"' 'exec node \"/home/sbx/work/bittune-src/dist/bittune.js\" \"$@\"' > ~/.local/bin/bittune && chmod +x ~/.local/bin/bittune",
+            "purpose": "install bittune shim on PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "bittune --help",
+            "expected_signal": "Usage:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "bittune version",
+            "expected_signal": "Bittune 0.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Bittune 0.1.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "BITTUNE_AGENT_LLM_API_KEY=dummy bittune doctor",
+            "expected_signal": "Runtime assembled: 15 tools",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Runtime assembled: 15 tools (read, bash, edit, write, inspect_environment, inspect_service, plan_deployment, deploy_service, benchmark_service, benchmark_suite, export_deliverable, compare_results, write_report, inspect_records, investigate)",
+            "setup": [
+              {
+                "command": "bittune configure --base-url https://endpoint.example.com/v1 --model-id test-model",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "tar -xzf bittune-<version>-linux-x86_64.tar.gz; cd bundle; sudo ./install.sh",
+            "actually_needed": "Skipped ranked sudo ./install.sh and installed from source because the box has no root/sudo and install.sh installs to /usr/local/bin and /opt/bittune",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "npm ci; python3 -m venv .venv; pip install -e ./packages/bittune-core; npm run bittune",
+            "actually_needed": "After npm ci plus venv pip install, also ran npm run build:shell and installed a ~/.local/bin/bittune shim that sets BITTUNE_CORE_PYTHON/BITTUNE_TEST_PYTHON to the venv python and execs node dist/bittune.js; direct tsx entry fails outside the repo with Cannot find package 'tsx'",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "export BITTUNE_AGENT_LLM_API_KEY='your-api-key'; bittune configure --base-url https://endpoint.example.com/v1 --model-id your-tool-capable-model; bittune doctor",
+            "actually_needed": "bittune doctor exits 0 with a dummy OpenAI-compatible base-url and BITTUNE_AGENT_LLM_API_KEY=dummy, reporting Python Core and Runtime assembled without any real endpoint, Docker, GPU, or EvalScope",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show doctor reporting Runtime assembled: 15 tools and --help showing Usage with commands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-bittune-20261031-002115-e22b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-bittune-20261031-002115-e22b/check-1-cmd11.judged.png",
+            "runs/verify/verify-bittune-20261031-002115-e22b/check-2-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.175177
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -322,5 +437,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:30+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:24:20.752735+08:00"
 }

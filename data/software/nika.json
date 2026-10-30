@@ -71,18 +71,21 @@
       "first_task": "nika --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-nika-20261031-002735-aa21",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install @supernovae-st/nika",
-          "purpose": null
+          "command": "npm install -g @supernovae-st/nika",
+          "purpose": "install nika via npm global"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "nika --version"
+      "check": {
+        "command": "nika --version",
+        "expected_signal": "nika 0.124.1"
+      },
+      "first_task": "cd /tmp/nika-smoke && nika check hello.nika"
     },
     "windows": null
   },
@@ -99,10 +102,120 @@
     "url": "https://github.com/supernovae-st/nika/releases/tag/v0.124.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:28:39.368610+08:00",
+    "runs": [
+      {
+        "id": "verify-nika-20261031-002735-aa21",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:28:39.368610+08:00",
+        "tool_version": "0.124.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @supernovae-st/nika",
+            "purpose": "install nika via npm global"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nika --version",
+            "expected_signal": "nika 0.124.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "nika 0.124.1 (bec4f5271)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nika --help",
+            "expected_signal": "nika run",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "nika run run a file",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/nika-smoke && nika check hello.nika",
+            "expected_signal": "run ready",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "layers · valid ✔ · access ready ✔ · capacity fit ✔ · run ready ✔",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/nika-smoke && cp /tmp/nika-smoke /tmp/nika-smoke-tmp 2>/dev/null; rm -rf /tmp/nika-smoke; mkdir -p /tmp/nika-smoke && cd /tmp/nika-smoke && nika compile hello hello.nika",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/nika-smoke && nika run hello.nika",
+            "expected_signal": "wrote .nika/traces",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "wrote .nika/traces",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/nika-smoke && cp /tmp/nika-smoke /tmp/nika-smoke-tmp 2>/dev/null; rm -rf /tmp/nika-smoke; mkdir -p /tmp/nika-smoke && cd /tmp/nika-smoke && nika compile hello hello.nika",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/nika-smoke && nika trace verify",
+            "expected_signal": "chain intact",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "OK — 5 events · chain intact · head 276db57e1a82aadb1c994d7f7cfe884e34b0739e067a295e9c6d52c1166b143c",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/nika-smoke && cp /tmp/nika-smoke /tmp/nika-smoke-tmp 2>/dev/null; rm -rf /tmp/nika-smoke; mkdir -p /tmp/nika-smoke && cd /tmp/nika-smoke && nika compile hello hello.nika",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/nika-smoke && nika run hello.nika",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show nika check reporting run ready, nika run writing traces, and version 0.124.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nika-20261031-002735-aa21/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nika-20261031-002735-aa21/check-1-cmd5.judged.png",
+            "runs/verify/verify-nika-20261031-002735-aa21/check-2-cmd6.judged.png",
+            "runs/verify/verify-nika-20261031-002735-aa21/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.05504
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -345,5 +458,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:28:39.369423+08:00"
 }

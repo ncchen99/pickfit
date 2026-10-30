@@ -70,18 +70,29 @@
       "first_task": "yottacode setup"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-yottacode-20261031-002738-e636",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://yottacode.ai/cli/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://yottacode.ai/cli/install.sh -o /tmp/yottacode-install.sh && wc -c /tmp/yottacode-install.sh && head -c 2000 /tmp/yottacode-install.sh",
+          "purpose": "Download installer script for reading"
+        },
+        {
+          "command": "bash /tmp/yottacode-install.sh --no-modify-rc && ls -l \"$HOME/.yottacode/bin/yottacode\"",
+          "purpose": "Run installer script after reading"
+        },
+        {
+          "command": "mkdir -p \"$HOME/.local/bin\" && ln -sf \"$HOME/.yottacode/bin/yottacode\" \"$HOME/.local/bin/yottacode\" && yottacode --version",
+          "purpose": "Link binary onto PATH and check version"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "yottacode setup"
+      "check": {
+        "command": "yottacode version",
+        "expected_signal": "yottacode version 0.5.0"
+      },
+      "first_task": "yottacode version"
     },
     "windows": null
   },
@@ -98,10 +109,102 @@
     "url": "https://github.com/yottadynamics/yottacode/releases/tag/v0.5.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:28:51.124412+08:00",
+    "runs": [
+      {
+        "id": "verify-yottacode-20261031-002738-e636",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:28:51.124412+08:00",
+        "tool_version": "0.5.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://yottacode.ai/cli/install.sh -o /tmp/yottacode-install.sh && wc -c /tmp/yottacode-install.sh && head -c 2000 /tmp/yottacode-install.sh",
+            "purpose": "Download installer script for reading"
+          },
+          {
+            "command": "bash /tmp/yottacode-install.sh --no-modify-rc && ls -l \"$HOME/.yottacode/bin/yottacode\"",
+            "purpose": "Run installer script after reading"
+          },
+          {
+            "command": "mkdir -p \"$HOME/.local/bin\" && ln -sf \"$HOME/.yottacode/bin/yottacode\" \"$HOME/.local/bin/yottacode\" && yottacode --version",
+            "purpose": "Link binary onto PATH and check version"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "yottacode version",
+            "expected_signal": "yottacode version 0.5.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "yottacode version 0.5.0 (b4c91bd, dirty)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "yottacode --help",
+            "expected_signal": "Available Commands:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Available Commands:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "yottacode provider list",
+            "expected_signal": "no providers configured",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no providers configured — try `yottacode provider add`",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://yottacode.ai/cli/install.sh | bash",
+            "actually_needed": "Download to /tmp/yottacode-install.sh with curl, read it with read_file, then run `bash /tmp/yottacode-install.sh --no-modify-rc`; do not pipe the URL straight into bash.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Installer finishes with `Then run yottacode` implying it is immediately on PATH.",
+            "actually_needed": "Symlink $HOME/.yottacode/bin/yottacode to $HOME/.local/bin/yottacode (or export PATH=\"$HOME/.yottacode/bin:$PATH\") because the installer default $HOME/.yottacode/bin is not on the box PATH which starts with ~/.local/bin.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Install script installs the yottacode binary from GitHub releases.",
+            "actually_needed": "Installer fetches prebuilt tarball yottacode_0.5.0_linux_amd64.tar.gz plus SHA256SUMS and verifies checksum before installing; the binary payload cannot be read as text before execution.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show expected outputs: no providers configured message and yottacode version 0.5.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-yottacode-20261031-002738-e636/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-yottacode-20261031-002738-e636/check-1-cmd8.judged.png",
+            "runs/verify/verify-yottacode-20261031-002738-e636/check-2-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.064474
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -344,5 +447,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:13+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:28:51.125768+08:00"
 }

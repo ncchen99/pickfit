@@ -53,7 +53,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-llm-router-20261031-001754-7c18",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install llm-routing 2>&1",
+          "purpose": "install via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "llm-router --version 2>&1",
+        "expected_signal": "llm_router v15.4.0"
+      },
+      "first_task": "llm-router install 2>&1"
+    },
     "windows": null
   },
   "pricing": {
@@ -69,10 +85,103 @@
     "url": "https://github.com/ypollak2/llm-router/releases/tag/v15.4.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:18:58.417308+08:00",
+    "runs": [
+      {
+        "id": "verify-llm-router-20261031-001754-7c18",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:18:58.417308+08:00",
+        "tool_version": "15.4.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install llm-routing 2>&1",
+            "purpose": "install via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "llm-router --version 2>&1",
+            "expected_signal": "llm_router v15.4.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "llm_router v15.4.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "llm-router --help 2>&1",
+            "expected_signal": "Every command above is dispatchable",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Every command above is dispatchable; `tests/test_f38_every_command_is_documented.py`",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "llm-router install 2>&1",
+            "expected_signal": "LLM Router installed globally.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ LLM Router installed globally.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "llm-router doctor 2>&1",
+            "expected_signal": "All doctor checks passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[32m\u001b[1m ✓ All doctor checks passed (see NOT CHECKED above).\u001b[0m\u001b[0m",
+            "setup": [
+              {
+                "command": "llm-router install 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "llm-router status 2>&1",
+            "expected_signal": "LLM_ROUTER Status",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ ⚡ LLM_ROUTER Status · Health: Optimal │",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 15.4.0 printed, full help with dispatchable line, and successful global install with hooks registered.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-llm-router-20261031-001754-7c18/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-llm-router-20261031-001754-7c18/check-1-cmd2.judged.png",
+            "runs/verify/verify-llm-router-20261031-001754-7c18/check-2-cmd3.judged.png",
+            "runs/verify/verify-llm-router-20261031-001754-7c18/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.049528
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -267,5 +376,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:18:58.418040+08:00"
 }

@@ -58,7 +58,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-llm-visuals-20261031-001540-6f10",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/llm-visuals.tar.gz https://github.com/DingoOz/llm-visuals/releases/download/v0.14.0/llm-visuals-0.14.0-linux-x86_64.tar.gz && tar xzf /tmp/llm-visuals.tar.gz -C /tmp && mkdir -p ~/.local/bin && cp /tmp/llm-visuals ~/.local/bin/llm-visuals && chmod +x ~/.local/bin/llm-visuals",
+          "purpose": "Download prebuilt binary tarball and install to local bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "llm-visuals --version",
+        "expected_signal": "llm-visuals 0.14.0"
+      },
+      "first_task": "TERM=xterm-256color script -qec \"stty rows 44 cols 140; timeout 3 llm-visuals --demo --log-db off\" /dev/null"
+    },
     "windows": null
   },
   "pricing": {
@@ -74,10 +90,89 @@
     "url": "https://github.com/DingoOz/llm-visuals/releases/tag/v0.14.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:18:09.762010+08:00",
+    "runs": [
+      {
+        "id": "verify-llm-visuals-20261031-001540-6f10",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:18:09.762010+08:00",
+        "tool_version": "0.14.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/llm-visuals.tar.gz https://github.com/DingoOz/llm-visuals/releases/download/v0.14.0/llm-visuals-0.14.0-linux-x86_64.tar.gz && tar xzf /tmp/llm-visuals.tar.gz -C /tmp && mkdir -p ~/.local/bin && cp /tmp/llm-visuals ~/.local/bin/llm-visuals && chmod +x ~/.local/bin/llm-visuals",
+            "purpose": "Download prebuilt binary tarball and install to local bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "llm-visuals --version",
+            "expected_signal": "llm-visuals 0.14.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "llm-visuals 0.14.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "llm-visuals --help",
+            "expected_signal": "--bench-report",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "--bench-report [<TAG>...]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "TERM=xterm-256color script -qec \"stty rows 44 cols 140; timeout 3 llm-visuals --demo --log-db off\" /dev/null",
+            "expected_signal": "Llama-Demo-8B-Instruct",
+            "exit_code": 124,
+            "passed": true,
+            "observed_excerpt": "\u001b[?1049h\u001b[1;1H\u001b[38;5;60;48;5;232m╭\u001b[1m\u001b[38;5;45;48;5;232m ◆ LLM VISUALS \u001b[22m\u001b[38;5;60;48;5;232m─────────────────────────────────────────────────────────────────────────────────\u001b[1m\u001b[38;5;141;48;5;232m model 1/2 \u001b[38;5;109;48;5;59m ● IDLE \u001b[22m\u001b[38;5;109;48;5;232m up 00:00:00 16:17:58 \u001b[38;5;60;48;…",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install --path . with Rust toolchain 1.75+",
+            "actually_needed": "Downloaded prebuilt linux-x86_64 tarball from GitHub releases (v0.14.0) and copied single binary to ~/.local/bin instead of building",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "cargo run --release -- --demo / llm-visuals --demo",
+            "actually_needed": "Run demo under a pty with terminal size set: TERM=xterm-256color script -qec \"stty rows 44 cols 140; timeout 3 llm-visuals --demo --log-db off\" /dev/null; direct run fails with 'No such device or address' and tiny pty renders only escape init",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show the demo TUI with Llama-Demo-8B-Instruct listed and --version printing llm-visuals 0.14.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-llm-visuals-20261031-001540-6f10/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-llm-visuals-20261031-001540-6f10/check-1-cmd12.judged.png",
+            "runs/verify/verify-llm-visuals-20261031-001540-6f10/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.139542
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -312,5 +407,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:56+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:18:09.762612+08:00"
 }

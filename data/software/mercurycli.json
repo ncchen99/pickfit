@@ -69,18 +69,25 @@
       "first_task": "mercury --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-mercurycli-20261031-002056-5079",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g mercury-tech-cli",
-          "purpose": null
+          "command": "npm install -g mercury-tech-cli 2>&1",
+          "purpose": "npm global install of mercury-tech-cli shim"
+        },
+        {
+          "command": "MERCURY_INSTALL_ARGS=--force mercury --version 2>&1",
+          "purpose": "forced first-run payload install plus version check"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "mercury --version"
+      "check": {
+        "command": "mercury --version 2>&1",
+        "expected_signal": "Mercury 1.0.1"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -106,10 +113,89 @@
   "processing": "hybrid",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:25:01.186278+08:00",
+    "runs": [
+      {
+        "id": "verify-mercurycli-20261031-002056-5079",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:25:01.186278+08:00",
+        "tool_version": "1.0.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g mercury-tech-cli 2>&1",
+            "purpose": "npm global install of mercury-tech-cli shim"
+          },
+          {
+            "command": "MERCURY_INSTALL_ARGS=--force mercury --version 2>&1",
+            "purpose": "forced first-run payload install plus version check"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mercury --version 2>&1",
+            "expected_signal": "Mercury 1.0.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Mercury 1.0.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mercury --help 2>&1",
+            "expected_signal": "Print the version",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "-v, --version Print the version",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm install -g mercury-tech-cli then check mercury --version",
+            "actually_needed": "Prefix the first run with MERCURY_INSTALL_ARGS=--force (i.e. MERCURY_INSTALL_ARGS=--force mercury --version) so the product installer overwrites the npm shim at ~/.local/bin/mercury; without it the installer refuses ('stable command NOT written: an existing non-Mercury-managed command is already at…",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "check mercury --version after opening a new terminal",
+            "actually_needed": "First invocation of mercury downloads the ~27MB linux-x64 release archive (v1.0.1), verifies checksum, and stages ~/.mercury/versions/1.0.1 before printing the version; allow ~20s. Direct versioned launcher ~/.mercury/versions/1.0.1/mercury --version answers instantly.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "run `mercury` inside a repository; headless via mercury run",
+            "actually_needed": "Interactive `mercury` needs a TTY/repository and `mercury run \"<prompt>\"` needs a signed-in model provider, so neither was runnable with no API keys; verified function with `mercury --help` and `mercury update --check` (no sign-in needed) instead.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show --version printing Mercury 1.0.1 and --help listing commands including version Print the version.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mercurycli-20261031-002056-5079/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mercurycli-20261031-002056-5079/check-1-cmd8.judged.png",
+            "runs/verify/verify-mercurycli-20261031-002056-5079/check-2-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.079126
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -336,5 +422,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:25:01.186816+08:00"
 }

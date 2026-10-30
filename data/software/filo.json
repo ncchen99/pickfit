@@ -68,17 +68,24 @@
       "first_task": "filo doctor"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "script",
+      "basis": "replayed",
+      "run_id": "verify-filo-20261031-002612-a16e",
+      "method": "binary",
       "steps": [
         {
-          "command": "curl -LsSf https://raw.githubusercontent.com/matteodante/filo/main/install.sh | sh",
-          "purpose": null
+          "command": "curl -LsSf https://github.com/matteodante/filo/archive/refs/tags/v0.4.0.tar.gz -o /tmp/filo-0.4.0.tar.gz && ls -lh /tmp/filo-0.4.0.tar.gz && mkdir -p /tmp/filo-src && tar -xzf /tmp/filo-0.4.0.tar.gz -C /tmp/filo-src --strip-components=1 && ls /tmp/filo-src && cat /tmp/filo-src/pyproject.toml",
+          "purpose": "Download pinned v0.4.0 source tarball and extract it"
+        },
+        {
+          "command": "uv export --project /tmp/filo-src --frozen --no-dev --no-emit-project --no-hashes --quiet --output-file /tmp/filo-locked.txt && grep -v \"^torch==.*sys_platform != 'linux'\" /tmp/filo-locked.txt > /tmp/filo-constraints.txt && cat /tmp/filo-constraints.txt && uv tool install --force --python 3.12 --constraints /tmp/filo-constraints.txt /tmp/filo-src",
+          "purpose": "Install Filo with locked CPU constraints via uv tool install"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "filo --help",
+        "expected_signal": "Experimental AI conversation CLI"
+      },
       "first_task": "filo doctor"
     },
     "windows": {
@@ -105,10 +112,98 @@
   "processing": null,
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:28:25.281830+08:00",
+    "runs": [
+      {
+        "id": "verify-filo-20261031-002612-a16e",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:28:25.281830+08:00",
+        "tool_version": "0.4.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -LsSf https://github.com/matteodante/filo/archive/refs/tags/v0.4.0.tar.gz -o /tmp/filo-0.4.0.tar.gz && ls -lh /tmp/filo-0.4.0.tar.gz && mkdir -p /tmp/filo-src && tar -xzf /tmp/filo-0.4.0.tar.gz -C /tmp/filo-src --strip-components=1 && ls /tmp/filo-src && cat /tmp/filo-src/pyproject.toml",
+            "purpose": "Download pinned v0.4.0 source tarball and extract it"
+          },
+          {
+            "command": "uv export --project /tmp/filo-src --frozen --no-dev --no-emit-project --no-hashes --quiet --output-file /tmp/filo-locked.txt && grep -v \"^torch==.*sys_platform != 'linux'\" /tmp/filo-locked.txt > /tmp/filo-constraints.txt && cat /tmp/filo-constraints.txt && uv tool install --force --python 3.12 --constraints /tmp/filo-constraints.txt /tmp/filo-src",
+            "purpose": "Install Filo with locked CPU constraints via uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "filo --help",
+            "expected_signal": "Experimental AI conversation CLI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Experimental AI conversation CLI",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "filo doctor",
+            "expected_signal": "Protocol: filo.transdiagnostic (experimental)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Protocol: filo.transdiagnostic (experimental)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "filo protocol validate",
+            "expected_signal": "Hash validation: OK",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Hash validation: OK",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "filo privacy show",
+            "expected_signal": "Default memory mode: standard",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Default memory mode: standard",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -LsSf https://raw.githubusercontent.com/matteodante/filo/main/install.sh | sh installs and finishes with `filo doctor`",
+            "actually_needed": "Manual replicate of install.sh steps without its interactive guard: download v0.4.0 tarball, `uv export` to constraints, `uv tool install --force --python 3.12 --constraints <file> <src>`; `filo doctor`, `filo protocol validate` and `filo privacy show` then work with no setup.",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show filo doctor, protocol validate, and --help all succeeding with their expected signals.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-filo-20261031-002612-a16e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-filo-20261031-002612-a16e/check-1-cmd9.judged.png",
+            "runs/verify/verify-filo-20261031-002612-a16e/check-2-cmd10.judged.png",
+            "runs/verify/verify-filo-20261031-002612-a16e/check-3-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.07263
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -327,5 +422,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:28:25.282713+08:00"
 }

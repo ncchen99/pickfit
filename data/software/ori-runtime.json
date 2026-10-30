@@ -71,18 +71,29 @@
       "first_task": "pytest tests/ -v"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-ori-runtime-20261031-002138-743f",
       "method": "pip",
       "steps": [
         {
-          "command": "python -m pip install \"ori-runtime[eval] @ git+https://github.com/ori-platform/ori-runtime.git@<commit-or-tag>\"",
-          "purpose": null
+          "command": "rm -rf ori-src && git clone https://github.com/ori-platform/ori-runtime.git ori-src",
+          "purpose": "clone ori-runtime source"
+        },
+        {
+          "command": "cd ori-src && python3 -m pip install -e \".[runtime,dev]\"",
+          "purpose": "pip install editable with runtime and dev extras"
+        },
+        {
+          "command": "python3 -m pip install aiomqtt",
+          "purpose": "install missing aiomqtt needed by tests"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "pytest tests/ -v"
+      "check": {
+        "command": "python -m ori.runtime --help",
+        "expected_signal": "Ori Runtime"
+      },
+      "first_task": "cd ori-src && python -m pytest tests/test_rule_engine.py -v"
     },
     "windows": null
   },
@@ -99,10 +110,107 @@
     "url": "https://github.com/ori-platform/ori-runtime/releases/tag/v2.5.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:34:22.816947+08:00",
+    "runs": [
+      {
+        "id": "verify-ori-runtime-20261031-002138-743f",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:34:22.816947+08:00",
+        "tool_version": "2.5.0",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf ori-src && git clone https://github.com/ori-platform/ori-runtime.git ori-src",
+            "purpose": "clone ori-runtime source"
+          },
+          {
+            "command": "cd ori-src && python3 -m pip install -e \".[runtime,dev]\"",
+            "purpose": "pip install editable with runtime and dev extras"
+          },
+          {
+            "command": "python3 -m pip install aiomqtt",
+            "purpose": "install missing aiomqtt needed by tests"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python -m ori.runtime --help",
+            "expected_signal": "Ori Runtime",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Ori Runtime",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd ori-src && python -m pytest tests/test_rule_engine.py -v",
+            "expected_signal": "143 passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "======================================= 143 passed in 0.75s ========================================",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd ori-src && python scripts/pc_health_report.py",
+            "expected_signal": "Skill loaded: pc-system-health",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ Skill loaded: pc-system-health v0.1.0 (8 triggers)\u001b[0m",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "python -m pip install \"ori-runtime[eval] @ git+https://github.com/ori-platform/ori-runtime.git@<commit-or-tag>\" with literal <commit-or-tag> placeholder",
+            "actually_needed": "use concrete tag/checkout or clone then pip install -e \".[runtime,dev]\"; candidate 2 was used",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "python -m pip install -e \".[runtime,dev]\" then pytest tests/ -v works",
+            "actually_needed": "python3 -m pip install aiomqtt before pytest",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "pytest tests/ -v as full-suite smoke test",
+            "actually_needed": "run pytest tests/test_rule_engine.py -v (143 passed) or scripts/pc_health_report.py; full suite did not finish in 600s (killed at ~77%)",
+            "kind": "note"
+          },
+          {
+            "readme_said": "bash scripts/smoke-runtime-local.sh",
+            "actually_needed": "scripts/smoke-runtime-local.sh requires a .venv directory and a local-SLM config; verified with system python via scripts/pc_health_report.py instead",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show PC health report loading pc-system-health skill and runtime help displaying Ori Runtime usage.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ori-runtime-20261031-002138-743f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ori-runtime-20261031-002138-743f/check-1-cmd13.judged.png",
+            "runs/verify/verify-ori-runtime-20261031-002138-743f/check-2-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.119757
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -361,5 +469,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:59+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:34:22.817682+08:00"
 }

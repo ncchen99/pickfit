@@ -49,7 +49,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-graphiti-local-20261031-001639-0d57",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uvx --from git+https://github.com/renezander030/graphiti-local kg-demo 2>&1",
+          "purpose": "Install and run demo via uvx from git"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "uvx --from git+https://github.com/renezander030/graphiti-local kg --version 2>&1",
+        "expected_signal": "kg 0.10.0"
+      },
+      "first_task": "uvx --from git+https://github.com/renezander030/graphiti-local kg-demo 2>&1"
+    },
     "windows": null
   },
   "pricing": {
@@ -65,10 +81,79 @@
     "url": "https://github.com/renezander030/graphiti-local/releases/tag/v0.10.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:20:56.330504+08:00",
+    "runs": [
+      {
+        "id": "verify-graphiti-local-20261031-001639-0d57",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:20:56.330504+08:00",
+        "tool_version": "kg 0.10.0 (graphiti-core 0.30.2)",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uvx --from git+https://github.com/renezander030/graphiti-local kg-demo 2>&1",
+            "purpose": "Install and run demo via uvx from git"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "uvx --from git+https://github.com/renezander030/graphiti-local kg --version 2>&1",
+            "expected_signal": "kg 0.10.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "kg 0.10.0 (graphiti-core 0.30.2)",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "uvx --from git+https://github.com/renezander030/graphiti-local kg --help 2>&1",
+            "expected_signal": "Read-first command-line interface for Graphiti Local",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Read-first command-line interface for Graphiti Local. Output is JSON on stdout by default so an",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "uvx --from git+https://github.com/renezander030/graphiti-local kg-demo 2>&1",
+            "expected_signal": "Aurora Analytics uses PostgreSQL",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "fact Aurora Analytics uses PostgreSQL as its database.",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show version, help text, and demo facts with expected signals.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-graphiti-local-20261031-001639-0d57/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-graphiti-local-20261031-001639-0d57/check-1-cmd3.judged.png",
+            "runs/verify/verify-graphiti-local-20261031-001639-0d57/check-2-cmd2.judged.png",
+            "runs/verify/verify-graphiti-local-20261031-001639-0d57/check-3-cmd1.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.026912
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -255,5 +340,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:20:56.331175+08:00"
 }

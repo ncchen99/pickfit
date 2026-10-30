@@ -53,7 +53,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-llm-wiki-v2-20261031-002523-d33a",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install llmwiki2",
+          "purpose": "Install llmwiki2 with uv tool install"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "llmwiki2 --help",
+        "expected_signal": "LLM wiki on the Open Knowledge Format"
+      },
+      "first_task": "llmwiki2 --bundle ./wiki check"
+    },
     "windows": null
   },
   "pricing": {
@@ -69,10 +85,117 @@
     "url": "https://github.com/crow-hq/llm-wiki-v2/releases/tag/v0.7.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:26:43.132832+08:00",
+    "runs": [
+      {
+        "id": "verify-llm-wiki-v2-20261031-002523-d33a",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:26:43.132832+08:00",
+        "tool_version": "0.7.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install llmwiki2",
+            "purpose": "Install llmwiki2 with uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "llmwiki2 --help",
+            "expected_signal": "LLM wiki on the Open Knowledge Format",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "LLM wiki on the Open Knowledge Format",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "llmwiki2 --bundle ./wiki check",
+            "expected_signal": "0 problem(s)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0 problem(s)",
+            "setup": [
+              {
+                "command": "llmwiki2 --bundle ./wiki init && llmwiki2 --bundle ./wiki check",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8001/health",
+            "expected_signal": "\"status\":\"ok\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"ok\",\"mode\":\"crow\",\"llm\":\"google/gemini-3.8-flash\",\"classifier\":\"typesafe/jev-1.13\",\"concurrency\":4}",
+            "setup": [
+              {
+                "command": "llmwiki2 --bundle ./wiki init && llmwiki2 --bundle ./wiki check",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "llmwiki2 --bundle ./wiki serve --port 8001",
+                "background": true,
+                "port": 8001
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8002/health",
+            "expected_signal": "\"status\":\"ok\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"ok\",\"mode\":\"crow\",\"llm\":\"google/gemini-3.8-flash\",\"classifier\":\"typesafe/jev-1.13\",\"concurrency\":4}",
+            "setup": [
+              {
+                "command": "llmwiki2 demo --port 8002",
+                "background": true,
+                "port": 8002
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Generic --version check pattern",
+            "actually_needed": "Use llmwiki2 --help; --version exits 2 with unrecognized arguments",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show check reporting 0 problems, health returning status ok, and help displaying the LLM wiki description.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-llm-wiki-v2-20261031-002523-d33a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-llm-wiki-v2-20261031-002523-d33a/check-1-cmd10.judged.png",
+            "runs/verify/verify-llm-wiki-v2-20261031-002523-d33a/check-2-cmd11.judged.png",
+            "runs/verify/verify-llm-wiki-v2-20261031-002523-d33a/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.08332
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -283,5 +406,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:26:43.133662+08:00"
 }
