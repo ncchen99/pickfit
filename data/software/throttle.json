@@ -57,18 +57,18 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-throttle-20261029-025809-461e",
+      "run_id": "verify-throttle-20261031-020348-e0f5",
       "method": "pip",
       "steps": [
         {
           "command": "pip install git+https://github.com/KushagraKanaujia/throttle@own/mvp",
-          "purpose": "pip install throttle from own/mvp branch"
+          "purpose": "Install throttle from own/mvp branch via pip"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "throttle --version",
-        "expected_signal": "throttle 0.7.0"
+        "command": "throttle --help",
+        "expected_signal": "throttle demo"
       },
       "first_task": "throttle demo"
     },
@@ -89,10 +89,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:59:06.492822+08:00",
+    "checked_at": "2026-10-31T02:05:09.308524+08:00",
     "runs": [
       {
-        "id": "verify-throttle-20261029-025809-461e",
+        "id": "verify-throttle-20261031-020348-e0f5",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -100,26 +100,17 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T02:59:06.492822+08:00",
+        "checked_at": "2026-10-31T02:05:09.308524+08:00",
         "tool_version": "0.7.0",
         "install_method": "pip",
         "replayed": true,
         "steps": [
           {
             "command": "pip install git+https://github.com/KushagraKanaujia/throttle@own/mvp",
-            "purpose": "pip install throttle from own/mvp branch"
+            "purpose": "Install throttle from own/mvp branch via pip"
           }
         ],
         "smoke_tests": [
-          {
-            "command": "throttle --version",
-            "expected_signal": "throttle 0.7.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "throttle 0.7.0",
-            "setup": [],
-            "offline": true
-          },
           {
             "command": "throttle --help",
             "expected_signal": "throttle demo",
@@ -131,10 +122,28 @@
           },
           {
             "command": "throttle demo",
-            "expected_signal": "Saved throttle-demo/report.html",
+            "expected_signal": "Share movable now:",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "│ Saved throttle-demo/report.html │",
+            "observed_excerpt": "│ Share movable now: 46% ($12,518/mo) │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "throttle route list",
+            "expected_signal": "No approved routes",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No approved routes in /home/sbx/.throttle/own/routes.json. Everything goes to the API.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "throttle autotune --dry-run",
+            "expected_signal": "95% CI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "$2.82/M 95% CI $2.78 to $2.86 [SIMULATED]",
             "setup": [],
             "offline": true
           }
@@ -143,20 +152,61 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Demo completed offline with savings report saved, and version printed as 0.7.0.",
+          "observed": "All three checks show expected output: demo report with movable share, no approved routes notice, and help listing throttle demo.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-throttle-20261029-025809-461e/report.json",
+          "trace_path": "runs/verify/verify-throttle-20261031-020348-e0f5/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-throttle-20261029-025809-461e/check-1-cmd5.judged.png",
-            "runs/verify/verify-throttle-20261029-025809-461e/check-2-cmd4.judged.png"
+            "runs/verify/verify-throttle-20261031-020348-e0f5/check-1-cmd4.judged.png",
+            "runs/verify/verify-throttle-20261031-020348-e0f5/check-2-cmd5.judged.png",
+            "runs/verify/verify-throttle-20261031-020348-e0f5/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.031141
+        "cost_usd": 0.093286,
+        "features": [
+          {
+            "feature": "Prove which traffic can move without losing quality",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Route API traffic to self-hosted models",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Retest workloads when new models release",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs live candidate servers and LLM judge with API key"
+          },
+          {
+            "feature": "Measure $/M tokens with 95% CIs",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -472,5 +522,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:30+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T02:05:09.309369+08:00"
 }

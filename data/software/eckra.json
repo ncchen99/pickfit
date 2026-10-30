@@ -74,12 +74,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-eckra-20261029-025912-ecf4",
+      "run_id": "verify-eckra-20261031-020842-456b",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g eckra",
-          "purpose": "Install eckra via npm candidate 1"
+          "command": "node --version && npm install -g eckra",
+          "purpose": "Install eckra via npm global"
         }
       ],
       "manual_steps": [],
@@ -87,7 +87,7 @@
         "command": "eckra --version",
         "expected_signal": "1.6.1"
       },
-      "first_task": "eckra doctor"
+      "first_task": "cd /tmp/eckra-test && eckra doctor --no-provider"
     },
     "windows": {
       "basis": "readme_claim",
@@ -119,10 +119,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T03:01:45.260279+08:00",
+    "checked_at": "2026-10-31T02:13:29.901746+08:00",
     "runs": [
       {
-        "id": "verify-eckra-20261029-025912-ecf4",
+        "id": "verify-eckra-20261031-020842-456b",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -130,14 +130,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T03:01:45.260279+08:00",
+        "checked_at": "2026-10-31T02:13:29.901746+08:00",
         "tool_version": "1.6.1",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g eckra",
-            "purpose": "Install eckra via npm candidate 1"
+            "command": "node --version && npm install -g eckra",
+            "purpose": "Install eckra via npm global"
           }
         ],
         "smoke_tests": [
@@ -151,48 +151,96 @@
             "offline": true
           },
           {
-            "command": "eckra --help",
-            "expected_signal": "Usage: eckra [options] [command]",
+            "command": "cd /tmp/eckra-test && eckra doctor --no-provider",
+            "expected_signal": "Summary: 6 passed",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Usage: eckra [options] [command]",
-            "setup": [],
+            "observed_excerpt": "Summary: 6 passed, 2 warnings",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/eckra-test && cd /tmp/eckra-test && git init -q 2>&1; git config user.email \"test@test.com\" && git config user.name \"Test\" && echo \"hello\" > hello.txt && git add hello.txt && git commit -qm \"initial commit\" && echo \"world\" >> hello.txt && git log --oneline | head -n 5 && pwd",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           },
           {
-            "command": "eckra doctor",
-            "expected_signal": "Summary: 4 passed, 1 failed",
-            "exit_code": 1,
-            "passed": true,
-            "observed_excerpt": "Summary: 4 passed, 1 failed",
-            "setup": [],
-            "offline": true
+            "command": "cd /tmp/eckra-test && eckra status",
+            "expected_signal": "",
+            "exit_code": 137,
+            "passed": false,
+            "observed_excerpt": "Google Gemini\u001b[7A\u001b[60G",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/eckra-test && cd /tmp/eckra-test && git init -q 2>&1; git config user.email \"test@test.com\" && git config user.name \"Test\" && echo \"hello\" > hello.txt && git add hello.txt && git commit -qm \"initial commit\" && echo \"world\" >> hello.txt && git log --oneline | head -n 5 && pwd",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "`eckra status` shows status and staged files",
-            "actually_needed": "first run has no config so `eckra status` launches the interactive onboarding wizard; seeding ~/.eckra/config.json with {\"onboarded\":true} skips it, but `eckra status` still ends with an interactive `Press Enter...` prompt and hangs when stdin is closed",
-            "kind": null
+            "readme_said": "No config required to get started; eckra status shows status",
+            "actually_needed": "eckra status first launches interactive setup wizard (Which AI provider...) and hangs without a TTY; eckra doctor --no-provider works offline without onboarding",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "eckra doctor shows Summary: 4 passed, 1 failed with expected provider failure, and --version prints 1.6.1.",
+          "observed": "Doctor check reports Summary: 6 passed, 2 warnings and version command prints 1.6.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-eckra-20261029-025912-ecf4/report.json",
+          "trace_path": "runs/verify/verify-eckra-20261031-020842-456b/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-eckra-20261029-025912-ecf4/check-1-cmd5.judged.png",
-            "runs/verify/verify-eckra-20261029-025912-ecf4/check-2-cmd3.judged.png"
+            "runs/verify/verify-eckra-20261031-020842-456b/check-1-cmd4.judged.png",
+            "runs/verify/verify-eckra-20261031-020842-456b/check-2-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.136055
+        "cost_usd": 0.09679,
+        "features": [
+          {
+            "feature": "generate AI commit messages from diffs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs Ollama server/model or cloud API key, none in box"
+          },
+          {
+            "feature": "manage staging, branches, stashes and remotes",
+            "status": "test_failed",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "eckra status waits on interactive onboarding wizard, killed after 60s"
+          },
+          {
+            "feature": "generate AI timeline of commit history",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs AI provider to generate timeline, none in box"
+          },
+          {
+            "feature": "view interactive commit graph across branches",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "interactive TUI graph, no check attempted before budget ran out"
+          }
+        ]
       }
     ]
   },
@@ -556,5 +604,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T02:13:29.902688+08:00"
 }

@@ -61,16 +61,16 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-rimz-20261029-013109-ca84",
+      "run_id": "verify-rimz-20261031-020723-36d2",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/rimio-ai/rimz/main/scripts/install.sh -o /tmp/rimz-install.sh && wc -c /tmp/rimz-install.sh && head -c 3000 /tmp/rimz-install.sh",
-          "purpose": "download install script for inspection"
+          "command": "curl -fsSL https://raw.githubusercontent.com/rimio-ai/rimz/main/scripts/install.sh -o /tmp/rimz-install.sh && ls -l /tmp/rimz-install.sh && wc -l /tmp/rimz-install.sh",
+          "purpose": "Download install script for inspection"
         },
         {
           "command": "sh /tmp/rimz-install.sh",
-          "purpose": "install rimz via release script"
+          "purpose": "Install RimZ via release script to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -97,10 +97,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:32:04.322485+08:00",
+    "checked_at": "2026-10-31T02:08:54.064013+08:00",
     "runs": [
       {
-        "id": "verify-rimz-20261029-013109-ca84",
+        "id": "verify-rimz-20261031-020723-36d2",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -108,18 +108,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T01:32:04.322485+08:00",
+        "checked_at": "2026-10-31T02:08:54.064013+08:00",
         "tool_version": "0.4.3",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/rimio-ai/rimz/main/scripts/install.sh -o /tmp/rimz-install.sh && wc -c /tmp/rimz-install.sh && head -c 3000 /tmp/rimz-install.sh",
-            "purpose": "download install script for inspection"
+            "command": "curl -fsSL https://raw.githubusercontent.com/rimio-ai/rimz/main/scripts/install.sh -o /tmp/rimz-install.sh && ls -l /tmp/rimz-install.sh && wc -l /tmp/rimz-install.sh",
+            "purpose": "Download install script for inspection"
           },
           {
             "command": "sh /tmp/rimz-install.sh",
-            "purpose": "install rimz via release script"
+            "purpose": "Install RimZ via release script to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -129,15 +129,6 @@
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "rimz 0.4.3",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "rimz --help",
-            "expected_signal": "Launch agent tabs",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "agents Launch agent tabs, optionally in RimZ-owned worktrees",
             "setup": [],
             "offline": true
           },
@@ -160,39 +151,81 @@
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "rimz hooks install --dry-run shows per-agent summary plus unified diff and writes nothing",
+            "actually_needed": "with no agent CLIs on PATH it exits 1 with 'no supported coding agents detected on PATH ... or name one: rimz hooks install <agent>'",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show rimz doctor report, the expected no-agents error on hooks install, and version 0.4.3, all with expected exit codes.",
+          "observed": "All three screenshots show expected outputs: doctor report, expected no-agents error, and version 0.4.3.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-rimz-20261029-013109-ca84/report.json",
+          "trace_path": "runs/verify/verify-rimz-20261031-020723-36d2/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-rimz-20261029-013109-ca84/check-1-cmd5.judged.png",
-            "runs/verify/verify-rimz-20261029-013109-ca84/check-2-cmd7.judged.png",
-            "runs/verify/verify-rimz-20261029-013109-ca84/check-3-cmd3.judged.png"
+            "runs/verify/verify-rimz-20261031-020723-36d2/check-1-cmd4.judged.png",
+            "runs/verify/verify-rimz-20261031-020723-36d2/check-2-cmd6.judged.png",
+            "runs/verify/verify-rimz-20261031-020723-36d2/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.06475
+        "cost_usd": 0.087815,
+        "features": [
+          {
+            "feature": "monitor coding agents in one room",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "launch agents side by side",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "needs agent CLIs (claude/codex) and tmux/zellij; none installed in box, loop/hooks checks confirm agent requirement"
+          },
+          {
+            "feature": "message agents with durable messages",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "needs a running agent to message; rimz asks exits 0 empty (no prompts) but no durable message exercised"
+          },
+          {
+            "feature": "schedule supervised agent runs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "rimz loop add requires installed agent hooks (tried claude loop, refused without hooks); no agents in box"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:40:05+08:00",
+    "computed_at": "2026-10-31T02:08:54+08:00",
     "quality": {
-      "total": 90.2,
+      "total": 82.7,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -233,7 +266,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 44.83
+      "value": 41.1
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -524,5 +557,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T02:08:54.064725+08:00"
 }

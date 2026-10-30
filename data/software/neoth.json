@@ -119,9 +119,48 @@
   "last_release": null,
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_toolchain",
+    "checked_at": "2026-10-31T02:10:54.380279+08:00",
+    "runs": [
+      {
+        "id": "verify-neoth-20261031-021016-808a",
+        "level": "unverified",
+        "unverified_reason": "needs_toolchain",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:10:54.380279+08:00",
+        "tool_version": null,
+        "install_method": null,
+        "replayed": false,
+        "steps": [],
+        "smoke_tests": [],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL .../SRC/install.sh | bash as one-command install",
+            "actually_needed": "No published release exists (GitHub API /releases/latest returns 404); binary installer exits 1 'could not download the latest GitHub release metadata'. README itself says no v1.0.0 release exists yet.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "NEOTH_SRC_DIR=\"$PWD\" bash scripts/install.sh with Rust 1.91 prerequisite",
+            "actually_needed": "Source installer requires Rust toolchain (rustup/cargo, MSRV 1.90) and cargo build --release; box has no rustc/cargo and must not install a toolchain, so source path cannot be exercised here.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-neoth-20261031-021016-808a/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.076417
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v4",
@@ -529,5 +568,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T02:10:54.384069+08:00"
 }

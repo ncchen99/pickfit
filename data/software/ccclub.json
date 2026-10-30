@@ -56,20 +56,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-ccclub-20261029-012321-7160",
+      "run_id": "verify-ccclub-20261031-020509-38d3",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g ccclub",
+          "command": "npm install -g ccclub && ccclub --version",
           "purpose": "Install ccclub globally via npm"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "ccclub --version",
+        "command": "npm install -g ccclub && ccclub --version",
         "expected_signal": "0.9.8"
       },
-      "first_task": "ccclub show-data"
+      "first_task": "ccclub sources"
     },
     "windows": null
   },
@@ -84,10 +84,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:24:23.670228+08:00",
+    "checked_at": "2026-10-31T02:07:23.843427+08:00",
     "runs": [
       {
-        "id": "verify-ccclub-20261029-012321-7160",
+        "id": "verify-ccclub-20261031-020509-38d3",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -95,19 +95,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T01:24:23.670228+08:00",
+        "checked_at": "2026-10-31T02:07:23.843427+08:00",
         "tool_version": "0.9.8",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g ccclub",
+            "command": "npm install -g ccclub && ccclub --version",
             "purpose": "Install ccclub globally via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "ccclub --version",
+            "command": "npm install -g ccclub && ccclub --version",
             "expected_signal": "0.9.8",
             "exit_code": 0,
             "passed": true,
@@ -116,67 +116,173 @@
             "offline": true
           },
           {
-            "command": "ccclub --help",
-            "expected_signal": "Usage: ccclub [options] [command]",
+            "command": "printf \"sbxtest\\n\" | ccclub init",
+            "expected_signal": "ccclub initialized!",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Usage: ccclub [options] [command]",
+            "observed_excerpt": "✔ ccclub initialized!",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "ccclub",
+            "expected_signal": "Dashboard: https://ccclub.dev/g/",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Dashboard: https://ccclub.dev/g/7J3475",
+            "setup": [
+              {
+                "command": "printf \"sbxtest\\n\" | ccclub init",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "ccclub --json",
+            "expected_signal": "\"rankings\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"rankings\": [",
+            "setup": [
+              {
+                "command": "printf \"sbxtest\\n\" | ccclub init",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "ccclub sources",
+            "expected_signal": "Claude on",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Claude on default",
             "setup": [],
             "offline": true
           },
           {
-            "command": "ccclub show-data",
-            "expected_signal": "No usage data found for supported coding agents.",
+            "command": "ccclub sync && ccclub show-data",
+            "expected_signal": "48,210",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "No usage data found for supported coding agents.",
-            "setup": [],
+            "observed_excerpt": "input: 48,210 output: 12,050 cache_create: 0 cache_create_1h: 0 cache_read: 31,200",
+            "setup": [
+              {
+                "command": "printf \"sbxtest\\n\" | ccclub init",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p ~/.claude/projects/demo-test && cat > ~/.claude/projects/demo-test/session-1.jsonl <<'EOF'\n{\"type\":\"assistant\",\"timestamp\":\"2026-10-30T18:00:00.000Z\",\"sessionId\":\"test-session-1\",\"message\":{\"id\":\"msg-1\",\"model\":\"claude-sonnet-4-5-20250929\",\"usage\":{\"input_tokens\":48210,\"output_tokens\":12050,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":31200}}}\nEOF\ncat ~/.claude/projects/demo-test/session-1.jsonl",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "ccclub statusline off",
+            "expected_signal": "Statusline removed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ Statusline removed — run \"ccclub statusline on\" to bring it back.",
+            "setup": [
+              {
+                "command": "printf \"sbxtest\\n\" | ccclub init",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
             "readme_said": "npx ccclub init",
-            "actually_needed": "npm install -g ccclub installs the same npm package non-interactively and puts ccclub on PATH; npx ccclub init is interactive first-time setup (asks name, creates group), not just an install",
-            "kind": null
-          },
-          {
-            "readme_said": "ccclub shows the leaderboard / ccclub --json gives raw JSON",
-            "actually_needed": "Leaderboard commands (ccclub, ccclub --json) exit 1 with 'Not initialized. Run \"ccclub init\" or \"ccclub join <code>\" first.' until init/join is done; ccclub show-data is the README example that works with no account and prints privacy notice plus 'No usage data found for supported coding agents.' w…",
-            "kind": null
+            "actually_needed": "installed with npm install -g ccclub (same package as npx ccclub) so ccclub is on PATH; npx ccclub init runs the same code",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show show-data reporting no usage data and --version printing 0.9.8.",
+          "observed": "Screenshots show init succeeding with synced blocks, leaderboard with dashboard link, and version 0.9.8 printed.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-ccclub-20261029-012321-7160/report.json",
+          "trace_path": "runs/verify/verify-ccclub-20261031-020509-38d3/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-ccclub-20261029-012321-7160/check-1-cmd4.judged.png",
-            "runs/verify/verify-ccclub-20261029-012321-7160/check-2-cmd2.judged.png"
+            "runs/verify/verify-ccclub-20261031-020509-38d3/check-1-cmd5.judged.png",
+            "runs/verify/verify-ccclub-20261031-020509-38d3/check-2-cmd6.judged.png",
+            "runs/verify/verify-ccclub-20261031-020509-38d3/check-3-cmd1.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.036169
+        "cost_usd": 0.088772,
+        "features": [
+          {
+            "feature": "create a group and compare usage",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "track coding agent token usage and costs",
+            "status": "checked",
+            "smoke_tests": [
+              4,
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "view live group dashboard page",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "show Claude Code usage statusline with rank",
+            "status": "checked",
+            "smoke_tests": [
+              6
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:40:05+08:00",
+    "computed_at": "2026-10-31T02:07:23+08:00",
     "quality": {
-      "total": 74.5,
+      "total": 67.9,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -219,7 +325,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 23.24
+      "value": 21.18
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -480,5 +586,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:07:48+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T02:07:23.844333+08:00"
 }

@@ -74,20 +74,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-brainstorm-mcp-20261029-024720-d6b5",
+      "run_id": "verify-brainstorm-mcp-20261031-021151-7b58",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g brainstorm-mcp",
-          "purpose": "Global npm install of brainstorm-mcp"
+          "purpose": "Install brainstorm-mcp via npm global"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "which brainstorm-mcp && npm list -g brainstorm-mcp",
+        "command": "npm ls -g brainstorm-mcp && node -p \"require('/home/sbx/.local/lib/node_modules/brainstorm-mcp/package.json').version\"",
         "expected_signal": "brainstorm-mcp@1.8.0"
       },
-      "first_task": "which brainstorm-mcp && npm list -g brainstorm-mcp"
+      "first_task": "npm ls -g brainstorm-mcp && node -p \"require('/home/sbx/.local/lib/node_modules/brainstorm-mcp/package.json').version\""
     },
     "windows": {
       "basis": "readme_claim",
@@ -119,10 +119,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:48:59.531533+08:00",
+    "checked_at": "2026-10-31T02:13:55.736529+08:00",
     "runs": [
       {
-        "id": "verify-brainstorm-mcp-20261029-024720-d6b5",
+        "id": "verify-brainstorm-mcp-20261031-021151-7b58",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -130,19 +130,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T02:48:59.531533+08:00",
+        "checked_at": "2026-10-31T02:13:55.736529+08:00",
         "tool_version": "1.8.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g brainstorm-mcp",
-            "purpose": "Global npm install of brainstorm-mcp"
+            "purpose": "Install brainstorm-mcp via npm global"
           }
         ],
         "smoke_tests": [
           {
-            "command": "which brainstorm-mcp && npm list -g brainstorm-mcp",
+            "command": "npm ls -g brainstorm-mcp && node -p \"require('/home/sbx/.local/lib/node_modules/brainstorm-mcp/package.json').version\"",
             "expected_signal": "brainstorm-mcp@1.8.0",
             "exit_code": 0,
             "passed": true,
@@ -151,14 +151,29 @@
             "offline": true
           },
           {
-            "command": "node /tmp/probe.mjs",
-            "expected_signal": "TOOLS:brainstorm",
+            "command": "node /home/sbx/work/mcp_client.mjs all",
+            "expected_signal": "HOSTED_RESULT:# Brainstorm: GraphQL vs REST",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "TOOLS:brainstorm,brainstorm_respond,brainstorm_collect,brainstorm_quick,brainstorm_review,list_providers,add_provider",
+            "observed_excerpt": "HOSTED_RESULT:# Brainstorm: GraphQL vs REST for our public API",
             "setup": [
               {
-                "command": "cat > /tmp/probe.mjs <<'EOF'\nimport { spawn } from 'node:child_process';\nconst child = spawn('brainstorm-mcp', [], { stdio: ['pipe','pipe','pipe'] });\nlet buf = '';\nconst responses = [];\nchild.stdout.on('data', d => { buf += d.toString(); });\nchild.stderr.on('data', d => { process.stderr.write(d); });\nfunction send(obj){ child.stdin.write(JSON.stringify(obj)+'\\n'); }\nfunction waitFor(id, timeoutMs=10000){\n  return new Promise((resolve,reject)=>{\n    const start=Date.now();\n    const t=setInterval(()=>{\n      const lines=buf.split('\\n');\n      for(const line of lines){\n        const s=line.trim();\n        if(!s.startsWith('{')) continue;\n        try{\n          const o=JSON.parse(s);\n          if(o.id===id){ clearInterval(t); resolve(o); return; }\n        }catch{}\n      }\n      if(Date.now()-start>timeoutMs){ clearInterval(t); reject(new Error('timeout waiting id '+id+' buf:'+buf.slice(0,2000))); }\n    },100);\n  });\n}\nawait new Promise(r=>setTimeout(r,1500));\nsend({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'probe',version:'1.0'}}});\nconst init = await waitFor(1);\nconsole.log('INITIALIZE_OK:'+JSON.stringify(init.result?.serverInfo||init.result||init).slice(0,500));\nsend({jsonrpc:'2.0',method:'notifications/initialized'});\nawait new Promise(r=>setTimeout(r,500));\nsend({jsonrpc:'2.0',id:2,method:'tools/list',params:{}});\nconst tools = await waitFor(2);\nconst names=(tools.result?.tools||[]).map(t=>t.name);\nconsole.log('TOOLS:'+names.join(','));\nfor(const n of ['brainstorm','brainstorm_quick','brainstorm_review','list_providers']){ if(!names.includes(n)) throw new Error('missing tool '+n); }\nconsole.log('PROBE_PASS');\n// also try list_providers via tools/call without keys\nsend({jsonrpc:'2.0',id:3,method:'tools/call',params:{name:'list_providers',arguments:{}}});\nconst lp = await waitFor(3);\nconsole.log('LIST_PROVIDERS_OK:'+JSON.stringify(lp.result||lp.error).slice(0,2000));\nchild.kill();\nsetTimeout(()=>process.exit(0),500);\nEOF\necho written && wc -l /tmp/probe.mjs",
+                "command": "cat > /home/sbx/work/mcp_client.mjs <<'EOF'\nimport { Client } from \"/home/sbx/.local/lib/node_modules/brainstorm-mcp/node_modules/@modelcontextprotocol/sdk/dist/esm/client/index.js\";\nimport { StdioClientTransport } from \"/home/sbx/.local/lib/node_modules/brainstorm-mcp/node_modules/@modelcontextprotocol/sdk/dist/esm/client/stdio.js\";\nconst transport = new StdioClientTransport({ command: \"brainstorm-mcp\", args: [] });\nconst client = new Client({ name: \"test\", version: \"1.0\" });\nawait client.connect(transport);\nconst mode = process.argv[2] || \"all\";\nif (mode === \"tools\" || mode === \"all\") {\n  const t = await client.listTools();\n  console.log(\"TOOLS:\" + t.tools.map(x=>x.name).join(\",\"));\n}\nif (mode === \"providers\" || mode === \"all\") {\n  const r = await client.callTool({ name: \"list_providers\", arguments: {} });\n  console.log(\"PROVIDERS_RESULT:\" + r.content[0].text.slice(0,500));\n}\nif (mode === \"hosted\" || mode === \"all\") {\n  const r = await client.callTool({ name: \"brainstorm\", arguments: { topic: \"GraphQL vs REST for our public API\", models: [\"opus\",\"sonnet\",\"haiku\"], mode: \"hosted\", rounds: 1, style: \"freeform\" } });\n  console.log(\"HOSTED_RESULT:\" + r.content[0].text.slice(0,2000));\n}\nawait client.close();\nEOF\necho done",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "node /home/sbx/work/mcp_full.mjs flow",
+            "expected_signal": "Strongest Disagreement",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "## Strongest Disagreement",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/mcp_full.mjs <<'EOF'\nimport { Client } from \"/home/sbx/.local/lib/node_modules/brainstorm-mcp/node_modules/@modelcontextprotocol/sdk/dist/esm/client/index.js\";\nimport { StdioClientTransport } from \"/home/sbx/.local/lib/node_modules/brainstorm-mcp/node_modules/@modelcontextprotocol/sdk/dist/esm/client/stdio.js\";\nconst transport = new StdioClientTransport({ command: \"brainstorm-mcp\", args: [] });\nconst client = new Client({ name: \"test\", version: \"1.0\" });\nawait client.connect(transport);\nconst mode = process.argv[2] || \"flow\";\n// hosted debate rounds=1\nconst r1 = await client.callTool({ name: \"brainstorm\", arguments: { topic: \"GraphQL vs REST for our public API\", models: [\"opus\",\"sonnet\",\"haiku\"], mode: \"hosted\", rounds: 1, style: \"freeform\" } });\nconst text1 = r1.content[0].text;\nconsole.log(\"STEP1_BRAINSTORM:\\n\" + text1.slice(0,1200));\nconst m = text1.match(/session_id: \"([^\"]+)\"/);\nconst sid = m[1];\nconsole.log(\"SESSION:\" + sid);\nconst r2 = await client.callTool({ name: \"brainstorm_collect\", arguments: { session_id: sid, responses: [{model:\"opus\",content:\"GraphQL offers flexible queries, good for evolving clients.\"},{model:\"sonnet\",content:\"REST is simpler to cache and easier to operate.\"},{model:\"haiku\",content:\"REST has better tooling; GraphQL adds gateway complexity.\"}] } });\nconsole.log(\"STEP2_COLLECT:\\n\" + r2.content[0].text.slice(0,2500));\n// synthesis step: submit fake synthesis containing 3 bullets\nconst r3 = await client.callTool({ name: \"brainstorm_collect\", arguments: { session_id: sid, responses: [{model:\"opus\",content:\"**Recommendation:** Use REST for public API. **Key Tradeoffs:** flexibility vs caching simplicity. **Strongest Disagreement:** whether client flexibility outweighs ops cost.\"}] } });\nconsole.log(\"STEP3_SYNTHESIS:\\n\" + r3.content[0].text.slice(0,2500));\nawait client.close();\nEOF\necho done",
                 "background": false,
                 "port": null
               }
@@ -168,28 +183,73 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "Manual Install shows `brainstorm-mcp` with no documented flags, implying standard --help/--version checks.",
-            "actually_needed": "Binary takes no --help/--version flags: any args are ignored and it starts the MCP server on stdio printing 'Brainstorm MCP server running on stdio' to stderr and blocks; version is only reported via package.json (1.8.0) and MCP initialize serverInfo.",
-            "kind": null
+            "readme_said": "brainstorm-mcp runs as a command with --help/--version style checks",
+            "actually_needed": "binary ignores --help/--version and starts MCP server on stdio ('Brainstorm MCP server running on stdio'), waiting on stdin; verify via MCP initialize/tools/list handshake instead",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "Hosted mode needs zero API keys",
+            "actually_needed": "hosted brainstorm + brainstorm_collect full loop works with no keys; brainstorm_quick and brainstorm_review return 'Need at least 1 model configured' unless an API key or CLI provider is set",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show brainstorm-mcp 1.8.0 installed and MCP probe initializing with brainstorm tools and passing.",
+          "observed": "Screenshots show brainstorm-mcp 1.8.0 installed, MCP tools listing with hosted brainstorm result, and full debate flow ending in synthesis with Strongest Disagreement.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-brainstorm-mcp-20261029-024720-d6b5/report.json",
+          "trace_path": "runs/verify/verify-brainstorm-mcp-20261031-021151-7b58/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-brainstorm-mcp-20261029-024720-d6b5/check-1-cmd5.judged.png",
-            "runs/verify/verify-brainstorm-mcp-20261029-024720-d6b5/check-2-cmd7.judged.png"
+            "runs/verify/verify-brainstorm-mcp-20261031-021151-7b58/check-1-cmd9.judged.png",
+            "runs/verify/verify-brainstorm-mcp-20261031-021151-7b58/check-2-cmd4.judged.png",
+            "runs/verify/verify-brainstorm-mcp-20261031-021151-7b58/check-3-cmd6.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.049218
+        "cost_usd": 0.107168,
+        "features": [
+          {
+            "feature": "run multi-round debates between AI models",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "return 3-bullet synthesis verdicts",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "get instant multi-model perspectives quickly",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "brainstorm_quick requires a configured provider; empty box returns 'Need at least 1 model configured'"
+          },
+          {
+            "feature": "perform multi-model code review with verdicts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "brainstorm_review requires a configured provider; empty box returns 'Need at least 1 model configured for review'"
+          }
+        ]
       }
     ]
   },
@@ -545,5 +605,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:54+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T02:13:55.737427+08:00"
 }

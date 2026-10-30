@@ -61,16 +61,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-lucinate-20261029-025810-c0fa",
+      "run_id": "verify-lucinate-20261031-020413-a151",
       "method": "binary",
       "steps": [
         {
-          "command": "TAG=$(curl -fsSL https://api.github.com/repos/lucinate-ai/lucinate/releases/latest | grep tag_name | cut -d\\\" -f4) && echo $TAG | tee /tmp/ltag && curl -fsSL -o /tmp/luc.tgz https://github.com/lucinate-ai/lucinate/releases/download/$TAG/lucinate_${TAG#v}_linux_amd64.tar.gz",
-          "purpose": "Download lucinate release tarball"
-        },
-        {
-          "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/luc.tgz -C /tmp && install -m 755 /tmp/lucinate ~/.local/bin/lucinate",
-          "purpose": "Extract and install lucinate binary"
+          "command": "mkdir -p ~/.local/bin && curl -fsSL -o /tmp/lucinate.tar.gz https://github.com/lucinate-ai/lucinate/releases/download/v1.25.0/lucinate_1.25.0_linux_amd64.tar.gz && tar -xzf /tmp/lucinate.tar.gz -C /tmp && install -m 755 /tmp/lucinate ~/.local/bin/lucinate",
+          "purpose": "Download linux amd64 release tarball and install binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -78,7 +74,7 @@
         "command": "lucinate --version",
         "expected_signal": "lucinate 1.25.0"
       },
-      "first_task": null
+      "first_task": "LUCINATE_DISABLE_UPDATE_CHECK=1 lucinate send --connection doesnotexist --agent main \"hello\""
     },
     "windows": {
       "basis": "readme_claim",
@@ -112,10 +108,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:59:12.872634+08:00",
+    "checked_at": "2026-10-31T02:05:35.127486+08:00",
     "runs": [
       {
-        "id": "verify-lucinate-20261029-025810-c0fa",
+        "id": "verify-lucinate-20261031-020413-a151",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -123,18 +119,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T02:59:12.872634+08:00",
+        "checked_at": "2026-10-31T02:05:35.127486+08:00",
         "tool_version": "1.25.0",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "TAG=$(curl -fsSL https://api.github.com/repos/lucinate-ai/lucinate/releases/latest | grep tag_name | cut -d\\\" -f4) && echo $TAG | tee /tmp/ltag && curl -fsSL -o /tmp/luc.tgz https://github.com/lucinate-ai/lucinate/releases/download/$TAG/lucinate_${TAG#v}_linux_amd64.tar.gz",
-            "purpose": "Download lucinate release tarball"
-          },
-          {
-            "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/luc.tgz -C /tmp && install -m 755 /tmp/lucinate ~/.local/bin/lucinate",
-            "purpose": "Extract and install lucinate binary"
+            "command": "mkdir -p ~/.local/bin && curl -fsSL -o /tmp/lucinate.tar.gz https://github.com/lucinate-ai/lucinate/releases/download/v1.25.0/lucinate_1.25.0_linux_amd64.tar.gz && tar -xzf /tmp/lucinate.tar.gz -C /tmp && install -m 755 /tmp/lucinate ~/.local/bin/lucinate",
+            "purpose": "Download linux amd64 release tarball and install binary to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -148,38 +140,73 @@
             "offline": true
           },
           {
-            "command": "lucinate --help",
-            "expected_signal": "Usage: lucinate",
-            "exit_code": 0,
+            "command": "LUCINATE_DISABLE_UPDATE_CHECK=1 lucinate send --connection doesnotexist --agent main \"hello\"",
+            "expected_signal": "connection \"doesnotexist\" not found",
+            "exit_code": 1,
             "passed": true,
-            "observed_excerpt": "Usage: lucinate [--version|-v] [<command> [args...]]",
+            "observed_excerpt": "lucinate: send: connection \"doesnotexist\" not found",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -fsSL https://raw.githubusercontent.com/lucinate-ai/lucinate/main/install/lucinate.sh | sh",
-            "actually_needed": "Install to ~/.local/bin manually (fetch latest tag, download linux_amd64 tarball, extract, install to ~/.local/bin) because /usr/local/bin is not writable and sudo is unavailable",
-            "kind": null
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/lucinate-ai/lucinate/main/install/lucinate.sh | sh installs lucinate",
+            "actually_needed": "Fetched release asset lucinate_1.25.0_linux_amd64.tar.gz and installed binary to ~/.local/bin/lucinate",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The terminal shows lucinate 1.25.0 printed after --version.",
+          "observed": "Both screenshots show expected outputs: connection not found error and version 1.25.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-lucinate-20261029-025810-c0fa/report.json",
+          "trace_path": "runs/verify/verify-lucinate-20261031-020413-a151/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-lucinate-20261029-025810-c0fa/check-1-cmd10.judged.png"
+            "runs/verify/verify-lucinate-20261031-020413-a151/check-1-cmd8.judged.png",
+            "runs/verify/verify-lucinate-20261031-020413-a151/check-2-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.071641
+        "cost_usd": 0.074256,
+        "features": [
+          {
+            "feature": "chat with AI agents from terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Needs OpenClaw gateway pairing or Ollama/OpenAI-compatible backend; none available in box"
+          },
+          {
+            "feature": "stream responses with markdown rendering",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Streaming markdown requires active agent session on a backend"
+          },
+          {
+            "feature": "create and delete agents in TUI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Agent create/delete happens in TUI after connecting to a backend"
+          },
+          {
+            "feature": "run local and remote shell commands",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Shell ! / !! run inside an active chat session connected to a backend/gateway"
+          }
+        ]
       }
     ]
   },
@@ -533,5 +560,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T02:05:35.129192+08:00"
 }

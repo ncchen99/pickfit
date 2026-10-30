@@ -77,16 +77,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-grob-20261029-030326-fcb5",
+      "run_id": "verify-grob-20261031-021724-edb0",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/azerozero/grob/main/scripts/install.sh -o /tmp/grob-install.sh",
-          "purpose": "Download install script for inspection"
+          "command": "curl -fsSL https://raw.githubusercontent.com/azerozero/grob/main/scripts/install.sh -o /tmp/install-grob.sh && ls -l /tmp/install-grob.sh && wc -c /tmp/install-grob.sh",
+          "purpose": "Download install script"
         },
         {
-          "command": "sh /tmp/grob-install.sh",
-          "purpose": "Install grob via script to ~/.local/bin"
+          "command": "sh /tmp/install-grob.sh",
+          "purpose": "Install grob via script"
         }
       ],
       "manual_steps": [],
@@ -113,10 +113,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T03:04:42.668707+08:00",
+    "checked_at": "2026-10-31T02:18:07.438193+08:00",
     "runs": [
       {
-        "id": "verify-grob-20261029-030326-fcb5",
+        "id": "verify-grob-20261031-021724-edb0",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -124,18 +124,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T03:04:42.668707+08:00",
+        "checked_at": "2026-10-31T02:18:07.438193+08:00",
         "tool_version": "0.36.129",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/azerozero/grob/main/scripts/install.sh -o /tmp/grob-install.sh",
-            "purpose": "Download install script for inspection"
+            "command": "curl -fsSL https://raw.githubusercontent.com/azerozero/grob/main/scripts/install.sh -o /tmp/install-grob.sh && ls -l /tmp/install-grob.sh && wc -c /tmp/install-grob.sh",
+            "purpose": "Download install script"
           },
           {
-            "command": "sh /tmp/grob-install.sh",
-            "purpose": "Install grob via script to ~/.local/bin"
+            "command": "sh /tmp/install-grob.sh",
+            "purpose": "Install grob via script"
           }
         ],
         "smoke_tests": [
@@ -149,15 +149,6 @@
             "offline": true
           },
           {
-            "command": "grob --help",
-            "expected_signal": "Usage: grob [OPTIONS] [COMMAND]",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Usage: grob [OPTIONS] [COMMAND]",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "grob status",
             "expected_signal": "Service:",
             "exit_code": 0,
@@ -165,42 +156,60 @@
             "observed_excerpt": "Service: ❌ stopped",
             "setup": [],
             "offline": true
-          },
-          {
-            "command": "grob doctor",
-            "expected_signal": "Grob Doctor",
-            "exit_code": 2,
-            "passed": true,
-            "observed_excerpt": "🩺 Grob Doctor — Diagnostic Checks",
-            "setup": [],
-            "offline": true
           }
         ],
-        "pitfalls": [
-          {
-            "readme_said": "grob setup writes ~/.grob/config.toml",
-            "actually_needed": "grob status auto-creates a default ~/.grob/config.toml on first run (stderr: Created default config file) without running grob setup",
-            "kind": null
-          }
-        ],
+        "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three checks show expected output: status reports Service, doctor runs diagnostics, and version prints grob 0.36.129.",
+          "observed": "Screenshots show grob status reporting Service stopped with config guidance and grob --version printing 0.36.129.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-grob-20261029-030326-fcb5/report.json",
+          "trace_path": "runs/verify/verify-grob-20261031-021724-edb0/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-grob-20261029-030326-fcb5/check-1-cmd5.judged.png",
-            "runs/verify/verify-grob-20261029-030326-fcb5/check-2-cmd6.judged.png",
-            "runs/verify/verify-grob-20261029-030326-fcb5/check-3-cmd3.judged.png"
+            "runs/verify/verify-grob-20261031-021724-edb0/check-1-cmd4.judged.png",
+            "runs/verify/verify-grob-20261031-021724-edb0/check-2-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.067722
+        "cost_usd": 0.043055,
+        "features": [
+          {
+            "feature": "screen requests for secrets",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs a configured provider account to screen live requests"
+          },
+          {
+            "feature": "switch providers after a failure",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs a configured provider account to test failover"
+          },
+          {
+            "feature": "enforce spending budgets",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs a configured provider account to enforce spend"
+          },
+          {
+            "feature": "record signed audit logs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs a configured provider account to generate audit traffic"
+          }
+        ]
       }
     ]
   },
@@ -546,5 +555,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:54+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T02:18:07.439614+08:00"
 }

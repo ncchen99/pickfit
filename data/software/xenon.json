@@ -81,12 +81,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-xenon-20261029-012548-8a33",
+      "run_id": "verify-xenon-20261031-021619-169c",
       "method": "pip",
       "steps": [
         {
           "command": "pip install https://github.com/xianyu-sheng/Xenon/releases/download/v0.9.4/xenon_harness-0.9.4-py3-none-any.whl",
-          "purpose": "Install Xenon wheel via pip"
+          "purpose": "Install Xenon from release wheel via pip"
         }
       ],
       "manual_steps": [],
@@ -94,7 +94,7 @@
         "command": "xenon --version",
         "expected_signal": "xenon 0.9.4"
       },
-      "first_task": "xenon --resume"
+      "first_task": "xenon < /dev/null"
     },
     "windows": {
       "basis": "readme_claim",
@@ -128,10 +128,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:26:55.734986+08:00",
+    "checked_at": "2026-10-31T02:17:37.497574+08:00",
     "runs": [
       {
-        "id": "verify-xenon-20261029-012548-8a33",
+        "id": "verify-xenon-20261031-021619-169c",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -139,14 +139,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T01:26:55.734986+08:00",
+        "checked_at": "2026-10-31T02:17:37.497574+08:00",
         "tool_version": "0.9.4",
         "install_method": "pip",
         "replayed": true,
         "steps": [
           {
             "command": "pip install https://github.com/xianyu-sheng/Xenon/releases/download/v0.9.4/xenon_harness-0.9.4-py3-none-any.whl",
-            "purpose": "Install Xenon wheel via pip"
+            "purpose": "Install Xenon from release wheel via pip"
           }
         ],
         "smoke_tests": [
@@ -160,52 +160,73 @@
             "offline": true
           },
           {
-            "command": "xenon --help",
-            "expected_signal": "usage: xenon",
+            "command": "xenon < /dev/null",
+            "expected_signal": "尚未配置 API Key",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "usage: xenon [-h] [-m PROVIDER/MODEL [PROVIDER/MODEL ...]]",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "xenon --resume",
-            "expected_signal": "没有已保存的会话",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "没有已保存的会话。",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "python3 -c \"import xenon; print(xenon.list_engines())\"",
-            "expected_signal": "react",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "('direct', 'react', 'plan-execute', 'reflection', 'plan-react', 'plan-reflection', 'react-reflection')",
+            "observed_excerpt": "· 尚未配置 API Key，输入 /setup 进入配置向导",
             "setup": [],
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "`xenon` starts the session directly.",
+            "actually_needed": "Pipe EOF via `xenon < /dev/null` so the REPL sees end-of-input and exits 0 with banner plus API-key hint; a plain interactive `xenon` waits for input and had to be killed after 20s.",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show no-saved-session message, engine tuple including react, and xenon 0.9.4 version.",
+          "observed": "Screenshots show Xenon startup banner prompting to configure API Key and version output xenon 0.9.4.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-xenon-20261029-012548-8a33/report.json",
+          "trace_path": "runs/verify/verify-xenon-20261031-021619-169c/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-xenon-20261029-012548-8a33/check-1-cmd6.judged.png",
-            "runs/verify/verify-xenon-20261029-012548-8a33/check-2-cmd7.judged.png",
-            "runs/verify/verify-xenon-20261029-012548-8a33/check-3-cmd2.judged.png"
+            "runs/verify/verify-xenon-20261031-021619-169c/check-1-cmd5.judged.png",
+            "runs/verify/verify-xenon-20261031-021619-169c/check-2-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.065418
+        "cost_usd": 0.048213,
+        "features": [
+          {
+            "feature": "track tool executions in evidence hash-chain",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Needs configured LLM API key, model and reasoning engine; box has none."
+          },
+          {
+            "feature": "retry hollow answers and list manual checks",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Hollow-answer retry/Manual checklist needs a live model turn; no API key."
+          },
+          {
+            "feature": "rewind and fork conversation session tree",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Rewind/fork session tree needs a live session with API key."
+          },
+          {
+            "feature": "require approval for out-of-workspace actions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Approval panel for out-of-workspace actions needs a live agentic run."
+          }
+        ]
       }
     ]
   },
@@ -583,5 +604,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T02:17:37.498500+08:00"
 }

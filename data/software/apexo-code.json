@@ -76,12 +76,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-apexo-code-20261029-012236-8aa1",
+      "run_id": "verify-apexo-code-20261031-020238-cbf6",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g apexo-code",
-          "purpose": "Install Apexo via npm global"
+          "purpose": "Install apexo via npm candidate 1"
         }
       ],
       "manual_steps": [],
@@ -121,10 +121,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:23:30.206876+08:00",
+    "checked_at": "2026-10-31T02:03:58.006073+08:00",
     "runs": [
       {
-        "id": "verify-apexo-code-20261029-012236-8aa1",
+        "id": "verify-apexo-code-20261031-020238-cbf6",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -132,14 +132,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T01:23:30.206876+08:00",
+        "checked_at": "2026-10-31T02:03:58.006073+08:00",
         "tool_version": "1.1.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g apexo-code",
-            "purpose": "Install Apexo via npm global"
+            "purpose": "Install apexo via npm candidate 1"
           }
         ],
         "smoke_tests": [
@@ -160,26 +160,76 @@
             "observed_excerpt": "\u001b[90m└\u001b[39m 0 credentials",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "apexo models",
+            "expected_signal": "custom/MiniMax-M2.7",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "custom/MiniMax-M2.7",
+            "setup": [
+              {
+                "command": "cat > ./apexo.json <<'JSON'\n{\n  \"$schema\": \"https://raw.githubusercontent.com/cluster1900/apexo-code/main/schemas/config.json\",\n  \"model\": \"custom/MiniMax-M2.7\",\n  \"provider\": {\n    \"custom\": {\n      \"npm\": \"@ai-sdk/openai-compatible\",\n      \"name\": \"Custom OpenAI-Compatible\",\n      \"options\": {\n        \"baseURL\": \"https://api.minimax.cn/v1\",\n        \"apiKey\": \"{env:CUSTOM_API_KEY}\"\n      },\n      \"models\": {\n        \"MiniMax-M2.7\": {\n          \"name\": \"MiniMax M2.7\"\n        }\n      }\n    }\n  }\n}\nJSON",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show auth list reporting 0 credentials and --version reporting 1.1.0.",
+          "observed": "Screenshots show auth list reporting 0 credentials, models listing custom/MiniMax-M2.7, and version reporting 1.1.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-apexo-code-20261029-012236-8aa1/report.json",
+          "trace_path": "runs/verify/verify-apexo-code-20261031-020238-cbf6/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-apexo-code-20261029-012236-8aa1/check-1-cmd5.judged.png",
-            "runs/verify/verify-apexo-code-20261029-012236-8aa1/check-2-cmd2.judged.png"
+            "runs/verify/verify-apexo-code-20261031-020238-cbf6/check-1-cmd4.judged.png",
+            "runs/verify/verify-apexo-code-20261031-020238-cbf6/check-2-cmd6.judged.png",
+            "runs/verify/verify-apexo-code-20261031-020238-cbf6/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.026012
+        "cost_usd": 0.05503,
+        "features": [
+          {
+            "feature": "Define autonomous goals with verification",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Autonomous /goal needs an authenticated model provider and interactive TUI session"
+          },
+          {
+            "feature": "Run multi-session structured workflows",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Multi-session /workflow needs an authenticated model provider and interactive session"
+          },
+          {
+            "feature": "Manage background tasks and subagents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Background /tasks and subagents need an authenticated model provider session"
+          },
+          {
+            "feature": "Curate persistent project memory",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Persistent /memory curation needs an authenticated agent session"
+          }
+        ]
       }
     ]
   },
@@ -551,5 +601,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T02:03:58.007267+08:00"
 }

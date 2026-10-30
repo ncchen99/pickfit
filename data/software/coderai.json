@@ -57,7 +57,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-coderai-20261031-021116-8bba",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone --depth 1 https://github.com/nextime/coderai.git coderai-src && ls coderai-src | head -n 50 && du -sh coderai-src",
+          "purpose": "Clone source via HTTPS mirror"
+        },
+        {
+          "command": "pip install --quiet requests fastapi \"uvicorn[standard]\" pydantic python-multipart psutil setproctitle \"huggingface-hub>=0.19\" numpy Pillow pyyaml jinja2 zeroconf litellm 2>&1 | tail -n 15\npython3 -c \"import fastapi, uvicorn, pydantic, requests; print('core ok')\"",
+          "purpose": "Install torch-free core deps"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "cd coderai-src && python3 coderai --help",
+        "expected_signal": "--download-model"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -73,56 +93,130 @@
     "url": "https://github.com/nextime/coderai/releases/tag/v0.2.21"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "needs_container",
-    "checked_at": "2026-10-29T01:26:13.147452+08:00",
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:15:08.673716+08:00",
     "runs": [
       {
-        "id": "verify-coderai-20261029-012423-7a9b",
-        "level": "unverified",
-        "unverified_reason": "needs_container",
+        "id": "verify-coderai-20261031-021116-8bba",
+        "level": "install",
+        "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T01:26:13.147452+08:00",
+        "checked_at": "2026-10-31T02:15:08.673716+08:00",
         "tool_version": null,
-        "install_method": null,
-        "replayed": false,
-        "steps": [],
-        "smoke_tests": [],
-        "pitfalls": [
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
           {
-            "readme_said": "curl run_oci.sh && ./run_oci.sh --nvidia -d starts server",
-            "actually_needed": "container engine (docker or podman) installed; box has neither, so script only prints usage and cannot run server",
-            "kind": null
+            "command": "git clone --depth 1 https://github.com/nextime/coderai.git coderai-src && ls coderai-src | head -n 50 && du -sh coderai-src",
+            "purpose": "Clone source via HTTPS mirror"
+          },
+          {
+            "command": "pip install --quiet requests fastapi \"uvicorn[standard]\" pydantic python-multipart psutil setproctitle \"huggingface-hub>=0.19\" numpy Pillow pyyaml jinja2 zeroconf litellm 2>&1 | tail -n 15\npython3 -c \"import fastapi, uvicorn, pydantic, requests; print('core ok')\"",
+            "purpose": "Install torch-free core deps"
           }
         ],
-        "blocking_error": "No container engine in box (neither docker nor podman) so packaging/linux/run_oci.sh cannot run; from-source clone succeeded but `python coderai --help` fails immediately (ModuleNotFoundError: requests) and full requirements.txt needs torch/transformers/diffusers GPU stack not installable within budget.",
-        "judge": null,
+        "smoke_tests": [
+          {
+            "command": "cd coderai-src && python3 coderai --help",
+            "expected_signal": "--download-model",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[--remove-model REMOVE_MODEL] [--download-model DOWNLOAD_MODEL]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl run_oci.sh && ./run_oci.sh --nvidia -d",
+            "actually_needed": "script only wraps docker/podman, both absent (which docker/podman not found), so candidate cannot run here",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "git clone git@git.nexlab.net:nexlab/coderai.git",
+            "actually_needed": "cloned https://github.com/nextime/coderai.git with --depth 1; SSH URL needs a key/account",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "./build.sh all plus full requirements.txt",
+            "actually_needed": "python3 coderai --help works after only requests/fastapi/uvicorn/pydantic/python-multipart/psutil/setproctitle/huggingface-hub/numpy/Pillow/pyyaml/jinja2/zeroconf/litellm; full requirements.txt plus torch/llama builds not needed for --help",
+            "kind": "note"
+          },
+          {
+            "readme_said": "llama-cpp-python with Vulkan/CUDA for GGUF models",
+            "actually_needed": "no prebuilt llama-cpp-python wheel and no gcc/cmake, so GGUF engine cannot be built here",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows coderai --help usage output listing the --download-model option.",
+          "model": "muse-spark-1.3"
+        },
         "evidence": {
-          "trace_path": "runs/verify/verify-coderai-20261029-012423-7a9b/report.json",
+          "trace_path": "runs/verify/verify-coderai-20261031-021116-8bba/report.json",
           "log_path": null,
-          "screenshot_paths": [],
+          "screenshot_paths": [
+            "runs/verify/verify-coderai-20261031-021116-8bba/check-1-cmd10.judged.png"
+          ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.22958
+        "cost_usd": 0.239817,
+        "features": [
+          {
+            "feature": "Serve models via OpenAI-compatible API",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "server not started, budget ran out"
+          },
+          {
+            "feature": "Generate text, images, video and audio",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "no generation attempted, budget ran out"
+          },
+          {
+            "feature": "Route requests across runtimes and machines",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "needs several machines/cards"
+          },
+          {
+            "feature": "Burst to rented cloud GPUs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs rented cloud GPU account"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:40:05+08:00",
+    "computed_at": "2026-10-31T02:15:08+08:00",
     "quality": {
-      "total": 63.8,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 61.9,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.6,
           "weight": 40.0
         },
         "install_docs": {
@@ -163,7 +257,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 39.11
+      "value": 37.94
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -438,5 +532,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T02:15:08.675391+08:00"
 }
