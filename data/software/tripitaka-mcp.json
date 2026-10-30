@@ -60,20 +60,23 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-tripitaka-mcp-20261031-012513-09f2",
+      "run_id": "verify-tripitaka-mcp-20261031-013829-5bd3",
       "method": "pipx",
       "steps": [
         {
-          "command": "pipx install tripitaka-mcp 2>&1",
+          "command": "pipx install tripitaka-mcp && which tripitaka-mcp && tripitaka-mcp --help",
           "purpose": "pipx install tripitaka-mcp"
         },
         {
-          "command": "tripitaka-mcp init 2>&1",
-          "purpose": "download SQLite database via tripitaka-mcp init"
+          "command": "tripitaka-mcp init",
+          "purpose": "tripitaka-mcp init downloads SQLite database"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "tripitaka-mcp --help",
+        "expected_signal": "Local MCP server for the Pāli Tipiṭaka"
+      },
       "first_task": null
     },
     "windows": null
@@ -93,10 +96,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:26:21.804032+08:00",
+    "checked_at": "2026-10-31T01:39:36.461316+08:00",
     "runs": [
       {
-        "id": "verify-tripitaka-mcp-20261031-012513-09f2",
+        "id": "verify-tripitaka-mcp-20261031-013829-5bd3",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -104,23 +107,32 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:26:21.804032+08:00",
+        "checked_at": "2026-10-31T01:39:36.461316+08:00",
         "tool_version": "1.1.0",
         "install_method": "pipx",
         "replayed": true,
         "steps": [
           {
-            "command": "pipx install tripitaka-mcp 2>&1",
+            "command": "pipx install tripitaka-mcp && which tripitaka-mcp && tripitaka-mcp --help",
             "purpose": "pipx install tripitaka-mcp"
           },
           {
-            "command": "tripitaka-mcp init 2>&1",
-            "purpose": "download SQLite database via tripitaka-mcp init"
+            "command": "tripitaka-mcp init",
+            "purpose": "tripitaka-mcp init downloads SQLite database"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- tripitaka-mcp serve 2>&1",
+            "command": "tripitaka-mcp --help",
+            "expected_signal": "Local MCP server for the Pāli Tipiṭaka",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Local MCP server for the Pāli Tipiṭaka (offline, SQLite).",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- tripitaka-mcp serve",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -129,7 +141,7 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call list_structure --args '{}' -- tripitaka-mcp serve 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call list_structure --args '{}' -- tripitaka-mcp serve",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
@@ -138,30 +150,25 @@
             "offline": true
           }
         ],
-        "pitfalls": [
-          {
-            "readme_said": "The server sends its own instructions to the calling agent when a client connects",
-            "actually_needed": "The server's instructions have instruction-like text aimed at the agent (text about how to use other tools). pickfit neither kept nor followed it; read what the server sends before enabling it.",
-            "kind": "note"
-          }
-        ],
+        "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP initialize handshake with 11 tools and a successful list_structure call returning corpus data.",
+          "observed": "Screenshots show MCP handshake with 11 tools, successful list_structure call returning Tipitaka structure, and help describing offline Pali server.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-tripitaka-mcp-20261031-012513-09f2/report.json",
+          "trace_path": "runs/verify/verify-tripitaka-mcp-20261031-013829-5bd3/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-tripitaka-mcp-20261031-012513-09f2/check-1-cmd4.judged.png",
-            "runs/verify/verify-tripitaka-mcp-20261031-012513-09f2/check-2-cmd5.judged.png"
+            "runs/verify/verify-tripitaka-mcp-20261031-013829-5bd3/check-1-cmd3.judged.png",
+            "runs/verify/verify-tripitaka-mcp-20261031-013829-5bd3/check-2-cmd4.judged.png",
+            "runs/verify/verify-tripitaka-mcp-20261031-013829-5bd3/check-3-cmd5.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.041287,
+        "cost_usd": 0.039268,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -707,5 +714,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:50:13+08:00",
-  "updated_at": "2026-10-31T01:26:21.804749+08:00"
+  "updated_at": "2026-10-31T01:39:36.462209+08:00"
 }

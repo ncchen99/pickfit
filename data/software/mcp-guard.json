@@ -49,7 +49,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mcp-guard-20261031-013432-092b",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @permission-protocol/mcp-guard",
+          "purpose": "Install mcp-guard globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mcp-guard --help",
+        "expected_signal": "mcp-guard — MCP policy proxy"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -65,10 +81,128 @@
     "url": "https://github.com/permission-protocol/mcp-guard/releases/tag/v0.3.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:35:43.806380+08:00",
+    "runs": [
+      {
+        "id": "verify-mcp-guard-20261031-013432-092b",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:35:43.806380+08:00",
+        "tool_version": "0.3.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @permission-protocol/mcp-guard",
+            "purpose": "Install mcp-guard globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mcp-guard --help",
+            "expected_signal": "mcp-guard — MCP policy proxy",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mcp-guard — MCP policy proxy",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- mcp-guard --config pp.config.yaml -- node dummy-server.js",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "mcp-guard keys init && cat ~/.config/mcp-guard/keys/keys.json; echo \"---KEYS DONE---\"\ncat > pp.config.yaml << 'EOF'\ndefault_action: allow\nrules: []\nEOF\ncat pp.config.yaml\ncat > dummy-server.js << 'EOF'\nconst readline = require('readline');\nconst rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: false });\nrl.on('line', (line) => {\n  if (!line.trim()) return;\n  let msg;\n  try { msg = JSON.parse(line); } catch { return; }\n  if (msg.method === 'initialize' && msg.id !== undefined) {\n    const resp = { jsonrpc: '2.0', id: msg.id, result: { protocolVersion: '2025-11-25', capabilities: { tools: {} }, serverInfo: { name: 'dummy', version: '1.0.0' } } };\n    console.log(JSON.stringify(resp));\n  } else if (msg.method === 'tools/list' && msg.id !== undefined) {\n    const resp = { jsonrpc: '2.0', id: msg.id, result: { tools: [{ name: 'hello', description: 'Say hello', inputSchema: { type: 'object', properties: {} } }] } };\n    console.log(JSON.stringify(resp));\n  } else if (msg.method === 'tools/call' && msg.id !== undefined) {\n    const resp = { jsonrpc: '2.0', id: msg.id, result: { content: [{ type: 'text', text: 'hello world' }] } };\n    console.log(JSON.stringify(resp));\n  } else if (msg.method === 'ping' && msg.id !== undefined) {\n    console.log(JSON.stringify({ jsonrpc: '2.0', id: msg.id, result: {} }));\n  } else if (msg.id !== undefined && msg.method && msg.method.startsWith('notifications/')) {\n    // notification, no reply\n  } else if (msg.id !== undefined) {\n    // generic: if has method, reply empty or handle resources/prompts lists\n    if (msg.method === 'resources/list' || msg.method === 'prompts/list' || msg.method === 'resources/templates/list') {\n      const key = msg.method === 'resources/list' ? 'resources' : msg.method === 'prompts/list' ? 'prompts' : 'resourceTemplates';\n      console.log(JSON.stringify({ jsonrpc: '2.0', id: msg.id, result: { [key]: [] } }));\n    } else if (msg.method === 'logging/setLevel' || msg.method === 'completion/complete') {\n      console.log(JSON.stringify({ jsonrpc: '2.0', id: msg.id, result: {} }));\n    } else {\n      console.log(JSON.stringify({ jsonrpc: '2.0', id: msg.id, result: {} }));\n    }\n  }\n});\nEOF\ncat dummy-server.js",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 --call hello --args '{}' -- mcp-guard --config pp.config.yaml -- node dummy-server.js",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=hello content=text text_chars=11",
+            "setup": [
+              {
+                "command": "mcp-guard keys init && cat ~/.config/mcp-guard/keys/keys.json; echo \"---KEYS DONE---\"\ncat > pp.config.yaml << 'EOF'\ndefault_action: allow\nrules: []\nEOF\ncat pp.config.yaml\ncat > dummy-server.js << 'EOF'\nconst readline = require('readline');\nconst rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: false });\nrl.on('line', (line) => {\n  if (!line.trim()) return;\n  let msg;\n  try { msg = JSON.parse(line); } catch { return; }\n  if (msg.method === 'initialize' && msg.id !== undefined) {\n    const resp = { jsonrpc: '2.0', id: msg.id, result: { protocolVersion: '2025-11-25', capabilities: { tools: {} }, serverInfo: { name: 'dummy', version: '1.0.0' } } };\n    console.log(JSON.stringify(resp));\n  } else if (msg.method === 'tools/list' && msg.id !== undefined) {\n    const resp = { jsonrpc: '2.0', id: msg.id, result: { tools: [{ name: 'hello', description: 'Say hello', inputSchema: { type: 'object', properties: {} } }] } };\n    console.log(JSON.stringify(resp));\n  } else if (msg.method === 'tools/call' && msg.id !== undefined) {\n    const resp = { jsonrpc: '2.0', id: msg.id, result: { content: [{ type: 'text', text: 'hello world' }] } };\n    console.log(JSON.stringify(resp));\n  } else if (msg.method === 'ping' && msg.id !== undefined) {\n    console.log(JSON.stringify({ jsonrpc: '2.0', id: msg.id, result: {} }));\n  } else if (msg.id !== undefined && msg.method && msg.method.startsWith('notifications/')) {\n    // notification, no reply\n  } else if (msg.id !== undefined) {\n    // generic: if has method, reply empty or handle resources/prompts lists\n    if (msg.method === 'resources/list' || msg.method === 'prompts/list' || msg.method === 'resources/templates/list') {\n      const key = msg.method === 'resources/list' ? 'resources' : msg.method === 'prompts/list' ? 'prompts' : 'resourceTemplates';\n      console.log(JSON.stringify({ jsonrpc: '2.0', id: msg.id, result: { [key]: [] } }));\n    } else if (msg.method === 'logging/setLevel' || msg.method === 'completion/complete') {\n      console.log(JSON.stringify({ jsonrpc: '2.0', id: msg.id, result: {} }));\n    } else {\n      console.log(JSON.stringify({ jsonrpc: '2.0', id: msg.id, result: {} }));\n    }\n  }\n});\nEOF\ncat dummy-server.js",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm install @permission-protocol/mcp-guard",
+            "actually_needed": "Used `npm install -g @permission-protocol/mcp-guard` so `mcp-guard` is on PATH (~/.local/bin) for offline stdio probe; README shows local `npm install` which does not put it on PATH",
+            "kind": "note"
+          },
+          {
+            "readme_said": "mcp-guard --config pp.config.yaml -- node my-mcp-server.js",
+            "actually_needed": "Ran `mcp-guard keys init` once plus created `pp.config.yaml` (default_action: allow) and a minimal downstream `dummy-server.js` answering initialize/tools/list/tools/call; without a signing key the guard refuses to start and without a downstream server there is nothing to proxy",
+            "kind": "note"
+          },
+          {
+            "readme_said": "--version or --help works",
+            "actually_needed": "`mcp-guard --help` works but `mcp-guard --version` errors with `No server command`",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show mcp-guard proxying the dummy server with successful handshake, tool call returning hello world, and help text.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mcp-guard-20261031-013432-092b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mcp-guard-20261031-013432-092b/check-1-cmd4.judged.png",
+            "runs/verify/verify-mcp-guard-20261031-013432-092b/check-2-cmd5.judged.png",
+            "runs/verify/verify-mcp-guard-20261031-013432-092b/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.080896,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "mcp-guard",
+            "--config",
+            "pp.config.yaml",
+            "--",
+            "node",
+            "dummy-server.js"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "dummy",
+          "server_version": "1.0.0",
+          "tools": [
+            "hello"
+          ],
+          "tool_count": 1,
+          "called_tool": "hello",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -323,5 +457,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:50:21+08:00",
-  "updated_at": "2026-10-31T01:25:33+08:00"
+  "updated_at": "2026-10-31T01:35:43.807147+08:00"
 }
