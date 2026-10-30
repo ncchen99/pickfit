@@ -5,7 +5,8 @@ the checks that passed, each as the exact command the agent ran. In a new box:
 
 1. write the README and the sample files, as the agent had them;
 2. run the steps in order with the network on; stop at the first failure;
-3. run the checks' setup commands (input files, background servers) online;
+3. run the checks' setup commands (input files, background servers) online; a
+   setup that fails fails the checks that need it, not the others;
 4. cut the network and run every check: install online, smoke test offline;
 5. turn the network back on and rerun any check that failed offline; one that
    passes then is marked as needing the network.
@@ -234,21 +235,28 @@ class Replayer:
             if not ran.ok:
                 result.error = f"step {step.command_id} exited {ran.exit_code}: {_one_line(step.command)}"
                 return
+        broken: dict[int, str] = {}  # setup id -> why it failed
         for setup in plan.setups:
             ran = self.rerun(setup)
             result.setups.append(ran)
             if not ran.ok:
-                result.error = f"setup {setup.command_id} exited {ran.exit_code}: {_one_line(setup.command)}"
-                return
+                broken[setup.command_id] = f"setup {setup.command_id} exited {ran.exit_code}: {_one_line(setup.command)}"
         box.set_network(False)
         known = {c.command_id: c for c in (*plan.setups, *(k.run for k in plan.checks))}
         for check in plan.checks:
+            failed_setup = [broken[i] for i in check.setup_ids if i in broken]
+            if failed_setup:  # it cannot run as recorded: failed, without running it
+                result.checks.append(CheckResult(
+                    check.run.command_id, check.run.command, check.kind, check.expected_exit_code,
+                    check.expected_signal, passed=False, offline=False, problems=failed_setup,
+                    setup=[known[i] for i in check.setup_ids if i in known]))
+                continue
             ran, ok, problems = self._check(check)
             result.checks.append(CheckResult(
                 check.run.command_id, check.run.command, check.kind, check.expected_exit_code,
                 check.expected_signal, passed=ok, offline=ok, run=ran, problems=problems,
                 setup=[known[i] for i in check.setup_ids if i in known]))
-        failed = [c for c in result.checks if not c.passed]
+        failed = [c for c in result.checks if not c.passed and c.run is not None]
         if failed:
             box.set_network(True)
             by_id = {c.run.command_id: c for c in plan.checks}
@@ -269,7 +277,7 @@ class Replayer:
         passing = [c for c in result.checks if c.passed]
         result.offline = bool(passing) and all(c.offline for c in passing)
         if not result.passed:
-            result.error = "no check passed in the replay"
+            result.error = "no check passed in the replay" + (f" ({'; '.join(broken.values())})" if broken else "")
             return
         self._rerun_failed(plan, result)
 

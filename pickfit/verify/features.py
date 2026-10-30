@@ -68,9 +68,13 @@ FINISH_FEATURES = {
 
 GUIDE = """\
 Feature checks: the task lists the tool's main advertised features (F1, F2, ...). After the install \
-check, exercise each one with at least one run_command that uses it: its README example, or the smallest \
-input that uses it (a heredoc file, a local server you start). Cite every such check as a smoke test, \
-also one that failed (with the expected_signal the feature should have printed). In finish, report each \
+check, exercise each one with one run_command that uses it: its README example as written, or the smallest \
+input that uses it. Plan these from the README, which is free to read, not from --help runs. Let each \
+check print its result to stdout (it is shown to you); do not send it to a file to read back. Write an \
+input file in a run_command of its own (a heredoc that exits 0) and cite it in setup_ids of every check \
+and server that reads it: a fresh box runs only the cited commands. Checks that do not depend on each \
+other can go in one turn as several run_command calls. Cite every feature check as a smoke test, also \
+one that failed (with the expected_signal the feature should have printed). In finish, report each \
 listed feature: checked, not_checked with the reason when this box cannot exercise it, or test_failed \
 when its check failed after a working install. Never invent an account, an API key or an outside \
 service's answer to get a feature through; that is not_checked. If commands run short, keep the install \
