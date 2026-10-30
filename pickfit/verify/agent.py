@@ -9,6 +9,8 @@ error three times. Near a limit the model gets one last turn with only
 the Box holds no keys, and every model call goes through call_meta. Every
 budgeted command gets a command_id; `finish` cites ids, and verdict.py
 decides the level from the recorded commands, not from the model's claims.
+When the extraction lists the tool's main features, the task asks for a check
+of each, and features.py decides from the same log which ones were exercised.
 
 Two ways to carry the conversation, picked by `mode`:
 - chain: `previous_response_id`; each turn sends only the new tool outputs.
@@ -39,6 +41,8 @@ from pickfit.ledger import BudgetExceeded, taipei_now
 from pickfit.meta import MetaResult, ToolCall, call_meta, resolve_model
 from pickfit.schema import InstallMethod, PitfallKind, UnverifiedReason, VerificationLevel, is_passed
 from pickfit.verify.box import Box, BoxError, ExecResult, background_script
+from pickfit.verify import features as feature_checks
+from pickfit.verify.features import FINISH_FEATURES, FinishFeature, resolve_features
 from pickfit.verify.plan import InstallPlan, plan_for
 from pickfit.verify.rules import RuleHit, error_signature, match_rules
 from pickfit.verify.task import VerifyTask
@@ -137,9 +141,10 @@ FINISH_TOOL = _fn(
             "Required when level is failed: the command_id of the tool's own command that failed after the "
             "install. A fresh box reruns your steps, then this command; the failure must repeat.")},
         "summary": {"type": "string", "description": "Two sentences: what you did and what the output showed."},
+        "features": FINISH_FEATURES,
     },
     ["level", "unverified_reason", "tool_version", "install_method", "steps", "smoke_tests",
-     "pitfalls", "blocking_error", "failing_command_id", "summary"],
+     "pitfalls", "blocking_error", "failing_command_id", "summary", "features"],
 )
 
 TOOLS: list[dict[str, Any]] = [
@@ -244,6 +249,7 @@ class FinishArgs(BaseModel):
     blocking_error: str | None = None
     failing_command_id: int | None = None
     summary: str = ""
+    features: list[FinishFeature] = []
 
     @field_validator("unverified_reason", "tool_version", "install_method", "blocking_error",
                      "failing_command_id", mode="before")
@@ -389,6 +395,9 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
         for t in ex.smoke_test_candidates:
             shown = f" (README shows: {t.expected_output})" if t.expected_output else ""
             lines.append(f"- {t.command}{shown}")
+    listed = feature_checks.render(ex.features)
+    if listed:
+        lines += ["", "Main features the README advertises:", *listed, feature_checks.GUIDE]
     if ex.category.value == "local_ai":
         lines += ["", TINY_MODELS]
     pre = ex.prerequisites
@@ -462,6 +471,7 @@ class VerifyReport:
     commands: list[CommandRecord] = field(default_factory=list)
     finish: dict[str, Any] | None = None
     verdict: dict[str, Any] | None = None  # LogVerdict: what the command log supports
+    features: list[dict[str, Any]] = field(default_factory=list)  # ResolvedFeature: what the log supports
     stop_reason: str = ""
     error: str | None = None
     cost_usd: float = 0.0
@@ -698,25 +708,44 @@ class VerifyAgent:
         self.verdict = verdict
         self.report.finish = args.model_dump()
         self.report.verdict = verdict.to_dict()
+        names = feature_checks.labels(self.task.extraction.features)
+        resolved = resolve_features(names, args.features, verdict, self.report.commands)
+        self.report.features = [f.to_dict() for f in resolved]
         said = "agrees" if verdict.agrees else f"lowered to {verdict.level}" if \
             verdict.level != args.level else "with problems"
         self._say(f"  finish: level {args.level} · {len(args.steps)} steps · {len(args.smoke_tests)} smoke "
                   f"tests · {len(args.pitfalls)} pitfalls · log {said}")
         for problem in verdict.problems:
             self._say(f"    ! {problem}")
+        if resolved:
+            counts = Counter(f.status for f in resolved)
+            self._say("  features: " + " · ".join(f"{n} {status}" for status, n in counts.items()))
+            for f in resolved:
+                for problem in f.problems:
+                    self._say(f"    ! F{f.number} {f.feature}: {problem}")
         if args.summary:
             self._say(f"    {_one_line(args.summary, 300)}")
         left = self.limits.max_commands - self.commands_used
-        if (verdict.level != args.level and verdict.problems and can_retry and left > 0
-                and self.finish_retries < MAX_FINISH_RETRIES):
-            self.finish_retries += 1
-            self._say(f"  finish sent back once: {left} commands left to fix it")
-            problems = "\n".join(f"- {p}" for p in verdict.problems)
-            return (f"Not accepted yet: pickfit's command record supports level {verdict.level}, not "
-                    f"{args.level}:\n{problems}\nYou have {left} commands left. Rerun what is needed as its own "
-                    "run_command (an install step with no exploration chained after it; a check with no "
-                    "`; echo`, `| head` or `|| true`), then call finish again citing the new command_ids. "
-                    "If it cannot be fixed, call finish again as it is."), False
+        unreported = bool(names) and not args.features
+        if can_retry and self.finish_retries < MAX_FINISH_RETRIES:
+            if verdict.level != args.level and verdict.problems and left > 0:
+                self.finish_retries += 1
+                self._say(f"  finish sent back once: {left} commands left to fix it")
+                problems = "\n".join(f"- {p}" for p in verdict.problems)
+                return (f"Not accepted yet: pickfit's command record supports level {verdict.level}, not "
+                        f"{args.level}:\n{problems}\nYou have {left} commands left. Rerun what is needed as its own "
+                        "run_command (an install step with no exploration chained after it; a check with no "
+                        "`; echo`, `| head` or `|| true`), then call finish again citing the new command_ids. "
+                        "If it cannot be fixed, call finish again as it is."
+                        + (" Also report every listed feature (F1, F2, ...) in features." if unreported else "")), False
+            if unreported:
+                self.finish_retries += 1
+                self._say("  finish sent back once: no features reported")
+                return ("Not recorded yet: finish must report every feature the task lists (F1 to "
+                        f"F{len(names)}) in features: checked with the command_ids of the smoke tests that "
+                        "exercise it, not_checked with the reason, or test_failed. "
+                        + (f"You have {left} commands left to check one. " if left > 0 else "")
+                        + "Then call finish again with the rest unchanged."), False
         return "Recorded.", True
 
     def _dispatch(self, call: ToolCall, turn: int) -> str:

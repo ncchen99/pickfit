@@ -3,7 +3,7 @@
 1. The agent installs and smoke-tests the tool in one box (network on).
 2. The command log decides the claimed level (verdict.py).
 3. If that level passed, a fresh box replays the steps online and the smoke
-   tests offline (replay.py).
+   tests offline, then reruns failed feature checks once (replay.py).
 4. If the replay passed, the screen judge reads its outputs (judge.py).
    A failed claim whose failing command is the tool's own, run after every
    install step succeeded, gets a fresh box that reruns the steps and that
@@ -28,6 +28,7 @@ from typing import Any
 from pickfit.schema import VerificationRun, is_passed
 from pickfit.verify.agent import DEFAULT_MODE, AgentLimits, HistoryMode, VerifyAgent, VerifyReport, new_run_id
 from pickfit.verify.box import Box, BoxError
+from pickfit.verify.features import failed_ids
 from pickfit.verify.failure import (
     FailureCheck,
     cited_workarounds,
@@ -150,7 +151,7 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
         box_usd += confirm_box.usd_per_second() * phases["confirm_box_s"]
         _dump(evidence_dir / "confirm.json", {"plan": plan_failure.to_dict(), "result": confirm.to_dict()})
     if agent.verdict is not None and is_passed(agent.verdict.level):
-        plan = plan_from(agent.verdict, report.commands)
+        plan = plan_from(agent.verdict, report.commands, rerun_failed=failed_ids(report.features))
         replay_box = make_box(run_id, "replay")
         box_began = time.monotonic()
         try:

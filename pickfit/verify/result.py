@@ -14,6 +14,9 @@ unverified: with the box limit its error shows, else "suspected_tool_fault",
 with what the log, a fresh box and the structure probe found (failure.py) as
 evidence in blocking_error and a failed smoke test.
 A step that only works around the box (a shim) keeps a run from passing.
+A passed run also records which advertised features its smoke tests exercised
+(features.coverage): checked only when one of the replay's passing checks covers
+it, a failed feature check only when it failed again in the fresh box.
 
 write_back() updates data/software/<slug>.json for a passed, replayed run, or an
 unverified run whose reason describes the software; never for a failed run. The
@@ -63,6 +66,7 @@ from pickfit.verify.failure import (
     structural_defect,
     tool_command,
 )
+from pickfit.verify.features import coverage
 from pickfit.verify.verdict import split_last, unread_scripts, weaker
 
 if TYPE_CHECKING:
@@ -224,6 +228,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         in_guide.append(cid)
 
     smoke: list[SmokeTest] = []
+    smoke_index: dict[int, int] = {}  # command_id -> its smoke test, for feature coverage
     if replay and replay.checks:
         for c in replay.checks:
             if c.run is None:
@@ -236,6 +241,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
                 notes.append(f"smoke test {c.command_id} is too long for the record")
                 continue
             command, before = fitted
+            smoke_index[c.command_id] = len(smoke)
             smoke.append(SmokeTest(
                 command=command, expected_signal=_clip(c.expected_signal, 300) or "",
                 exit_code=c.run.exit_code, passed=c.passed,
@@ -270,6 +276,10 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         reason = "other"
     outputs = [f"{c.stdout}\n{c.stderr}" for c in report.commands]
     method = infer_install_method([s.command for s in steps], finish.get("install_method"))
+    features = []
+    if is_passed(level) and replay and report.features:
+        features, feature_notes = coverage(report.features, smoke_index, smoke, replay.failed, _record_check)
+        notes += feature_notes
     pitfalls = [Pitfall(readme_said=_clip(p["readme_said"], 300) or "-",
                         actually_needed=_clip(p["actually_needed"], 300) or "-", kind=p.get("kind"))
                 for p in finish.get("pitfalls") or []]
@@ -301,7 +311,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         if judge else None,
         evidence=RunEvidence(trace_path=_rel(evidence_dir / "report.json"),
                              screenshot_paths=[p for p in map(_rel, screenshots or []) if p]),
-        actor_model=report.model, cost_usd=round(report.cost_usd + judge_cost_usd, 6))
+        actor_model=report.model, cost_usd=round(report.cost_usd + judge_cost_usd, 6), features=features)
     return run, notes
 
 
