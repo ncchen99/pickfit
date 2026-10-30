@@ -82,24 +82,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-xyntetik-runner-20261029-115008-040e",
+      "run_id": "verify-xyntetik-runner-20261031-013940-4634",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fL -o runner https://github.com/Joakimpalm-Zen/xyntetik-runner/releases/latest/download/runner-linux-x86_64 && chmod +x runner && ./runner --version",
-          "purpose": "Download Linux binary and make executable"
+          "command": "curl -fL -o runner-linux-x86_64 https://github.com/Joakimpalm-Zen/xyntetik-runner/releases/latest/download/runner-linux-x86_64 && curl -fL -o SHA256SUMS https://github.com/Joakimpalm-Zen/xyntetik-runner/releases/latest/download/SHA256SUMS && ls -lh runner-linux-x86_64 SHA256SUMS && sha256sum -c --ignore-missing SHA256SUMS 2>&1",
+          "purpose": "download Linux binary and checksums with verification"
         },
         {
-          "command": "mkdir -p ~/.local/bin && cp runner ~/.local/bin/runner && chmod +x ~/.local/bin/runner && export PATH=\"$HOME/.local/bin:$PATH\" && runner --version",
-          "purpose": "Install binary on PATH via ~/.local/bin"
+          "command": "chmod +x runner-linux-x86_64 && mv runner-linux-x86_64 runner && ./runner --version 2>&1",
+          "purpose": "make executable, rename to runner"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "runner --help",
-        "expected_signal": "adapters:"
+        "command": "./runner --info caps 2>&1",
+        "expected_signal": "architectures"
       },
-      "first_task": "runner --info caps"
+      "first_task": "./runner --info caps 2>&1"
     },
     "windows": null
   },
@@ -118,10 +118,10 @@
   "verification": {
     "level": "inference",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T11:51:10.018426+08:00",
+    "checked_at": "2026-10-31T01:41:22.036969+08:00",
     "runs": [
       {
-        "id": "verify-xyntetik-runner-20261029-115008-040e",
+        "id": "verify-xyntetik-runner-20261031-013940-4634",
         "level": "inference",
         "unverified_reason": null,
         "os": "linux",
@@ -129,62 +129,53 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T11:51:10.018426+08:00",
-        "tool_version": "1.7.0",
+        "checked_at": "2026-10-31T01:41:22.036969+08:00",
+        "tool_version": "runner 1.8.0",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fL -o runner https://github.com/Joakimpalm-Zen/xyntetik-runner/releases/latest/download/runner-linux-x86_64 && chmod +x runner && ./runner --version",
-            "purpose": "Download Linux binary and make executable"
+            "command": "curl -fL -o runner-linux-x86_64 https://github.com/Joakimpalm-Zen/xyntetik-runner/releases/latest/download/runner-linux-x86_64 && curl -fL -o SHA256SUMS https://github.com/Joakimpalm-Zen/xyntetik-runner/releases/latest/download/SHA256SUMS && ls -lh runner-linux-x86_64 SHA256SUMS && sha256sum -c --ignore-missing SHA256SUMS 2>&1",
+            "purpose": "download Linux binary and checksums with verification"
           },
           {
-            "command": "mkdir -p ~/.local/bin && cp runner ~/.local/bin/runner && chmod +x ~/.local/bin/runner && export PATH=\"$HOME/.local/bin:$PATH\" && runner --version",
-            "purpose": "Install binary on PATH via ~/.local/bin"
+            "command": "chmod +x runner-linux-x86_64 && mv runner-linux-x86_64 runner && ./runner --version 2>&1",
+            "purpose": "make executable, rename to runner"
           }
         ],
         "smoke_tests": [
           {
-            "command": "mkdir -p ~/.local/bin && cp runner ~/.local/bin/runner && chmod +x ~/.local/bin/runner && export PATH=\"$HOME/.local/bin:$PATH\" && runner --version",
-            "expected_signal": "runner 1.7.0",
+            "command": "chmod +x runner-linux-x86_64 && mv runner-linux-x86_64 runner && ./runner --version 2>&1",
+            "expected_signal": "runner 1.8.0",
             "exit_code": 1,
             "passed": false,
-            "observed_excerpt": "cp: cannot create regular file '/home/sbx/.local/bin/runner': Text file busy",
+            "observed_excerpt": "chmod: cannot access 'runner-linux-x86_64': No such file or directory",
             "setup": [],
             "offline": null
           },
           {
-            "command": "runner --help",
-            "expected_signal": "adapters:",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "adapters:",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "runner --info caps",
+            "command": "./runner --info caps 2>&1",
             "expected_signal": "architectures",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "{\"version\":\"1.7.0\",\"os\":\"linux\",\"arch\":\"x86_64\",\"cpu_cores\":1,\"ram_bytes\":2147483648,\"ram_available_bytes\":2145882112,\"host\":{\"cpu_cores\":2,\"ram_bytes\":2147483648,\"ram_available_bytes\":2145882112},\"limits\":{\"source\":\"cgroup1\",\"cpu_quota\":1,\"memory_max_bytes\":2147483648},\"code_page\":null,\"gpu\":null,…",
+            "observed_excerpt": "{\"version\":\"1.8.0\",\"os\":\"linux\",\"arch\":\"x86_64\",\"cpu_cores\":1,\"ram_bytes\":2147483648,\"ram_available_bytes\":2145894400,\"host\":{\"cpu_cores\":2,\"ram_bytes\":2147483648,\"ram_available_bytes\":2145894400},\"limits\":{\"source\":\"cgroup1\",\"cpu_quota\":1,\"memory_max_bytes\":2147483648},\"code_page\":null,\"gpu\":null,…",
             "setup": [],
             "offline": true
           },
           {
-            "command": "curl -s http://127.0.0.1:8080/v1/models",
-            "expected_signal": "\"object\":\"list\"",
+            "command": "curl -s http://127.0.0.1:8080/v1/models 2>&1",
+            "expected_signal": "stories260K.gguf",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "{\"object\":\"list\",\"data\":[{\"id\":\"stories260K.gguf\",\"object\":\"model\",\"owned_by\":\"runner\"}]}",
             "setup": [
               {
-                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/stories260K.gguf",
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf 2>&1 && ls -lh ~/models/stories260K.gguf",
                 "background": false,
                 "port": null
               },
               {
-                "command": "runner -m /home/sbx/models/stories260K.gguf --serve --port 8080",
+                "command": "./runner -m /home/sbx/models/stories260K.gguf --serve --port 8080",
                 "background": true,
                 "port": 8080
               }
@@ -192,21 +183,56 @@
             "offline": true
           },
           {
-            "command": "curl -s http://127.0.0.1:8080/v1/chat/completions -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"Say hello in one sentence.\"}],\"temperature\":0,\"max_tokens\":16}'",
+            "command": "curl -s http://127.0.0.1:8080/v1/chat/completions -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"Say hello in one sentence.\"}],\"temperature\":0,\"max_tokens\":16}' 2>&1",
             "expected_signal": "completion_tokens",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "{\"id\":\"chatcmpl-0\",\"object\":\"chat.completion\",\"created\":1793245863,\"model\":\"stories260K.gguf\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\" are toys, but it was too big. \\nO\"},\"finish_reason\":\"length\"}],\"usage\":{\"prompt_tokens\":29,\"prompt_tokens_details\":{\"cached_tokens\":0},\"compl…",
+            "observed_excerpt": "{\"id\":\"chatcmpl-0\",\"object\":\"chat.completion\",\"created\":1793382074,\"model\":\"stories260K.gguf\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\" are toys, but it was too big. \\nO\"},\"finish_reason\":\"length\"}],\"usage\":{\"prompt_tokens\":29,\"prompt_tokens_details\":{\"cached_tokens\":0},\"compl…",
             "setup": [
               {
-                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/stories260K.gguf",
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf 2>&1 && ls -lh ~/models/stories260K.gguf",
                 "background": false,
                 "port": null
               },
               {
-                "command": "runner -m /home/sbx/models/stories260K.gguf --serve --port 8080",
+                "command": "./runner -m /home/sbx/models/stories260K.gguf --serve --port 8080",
                 "background": true,
                 "port": 8080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "./runner -m /home/sbx/models/stories260K.gguf -p \"Say hello in one sentence.\" -s 42 --record /tmp/run.json 2>&1 && ./runner -m /home/sbx/models/stories260K.gguf --verify /tmp/run.json 2>&1",
+            "expected_signal": "VERIFIED",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "VERIFIED (T1 same-binary): 256 output tokens replayed identically",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf 2>&1 && ls -lh ~/models/stories260K.gguf",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "./runner train /tmp/data.jsonl -m /home/sbx/models/stories260K.gguf --steps 2 --lora-rank 4 --out /tmp/adapter.gguf 2>&1",
+            "expected_signal": "adapter -> /tmp/adapter.gguf",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "train: done — first-step loss 6.6572, last-step 3.0393, adapter -> /tmp/adapter.gguf",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf 2>&1 && ls -lh ~/models/stories260K.gguf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > /tmp/data.jsonl <<'EOF'\n{\"prompt\": \"Say hello.\", \"completion\": \" Hello there.\"}\n{\"prompt\": \"Say bye.\", \"completion\": \" Goodbye.\"}\nEOF\ncat /tmp/data.jsonl",
+                "background": false,
+                "port": null
               }
             ],
             "offline": true
@@ -214,29 +240,74 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "git clone + make and macOS-only curl for runner-macos-arm64",
-            "actually_needed": "curl -fL -o runner https://github.com/Joakimpalm-Zen/xyntetik-runner/releases/latest/download/runner-linux-x86_64 (latest is 1.7.0) then copy to ~/.local/bin; source build impossible in box",
-            "kind": null
+            "readme_said": "git clone + make; quick-start shows runner-macos-arm64",
+            "actually_needed": "used MANUAL Linux asset runner-linux-x86_64 + SHA256SUMS with sha256sum -c; no compiler or make in box so source build impossible and macOS asset cannot run on Linux",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "./runner --version -> runner 1.6.1",
+            "actually_needed": "binary printed runner 1.8.0",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show caps JSON with architectures, models endpoint returning object list, and help text containing adapters section.",
+          "observed": "Screenshots show caps with architectures list, models list containing stories260K.gguf, and a chat completion with completion_tokens usage.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-xyntetik-runner-20261029-115008-040e/report.json",
+          "trace_path": "runs/verify/verify-xyntetik-runner-20261031-013940-4634/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-xyntetik-runner-20261029-115008-040e/check-1-cmd7.judged.png",
-            "runs/verify/verify-xyntetik-runner-20261029-115008-040e/check-2-cmd11.judged.png",
-            "runs/verify/verify-xyntetik-runner-20261029-115008-040e/check-3-cmd6.judged.png"
+            "runs/verify/verify-xyntetik-runner-20261031-013940-4634/check-1-cmd7.judged.png",
+            "runs/verify/verify-xyntetik-runner-20261031-013940-4634/check-2-cmd10.judged.png",
+            "runs/verify/verify-xyntetik-runner-20261031-013940-4634/check-3-cmd11.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.076797
+        "cost_usd": 0.135429,
+        "features": [
+          {
+            "feature": "serve models via OpenAI-compatible API",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "train LoRA through quantized weights",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "complete tool calls past token limit",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but not again in a fresh box"
+          },
+          {
+            "feature": "replay runs as signed receipts",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -630,5 +701,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T01:41:22.037715+08:00"
 }

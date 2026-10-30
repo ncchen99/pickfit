@@ -75,18 +75,18 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-mafdet-20261029-024510-24d3",
+      "run_id": "verify-mafdet-20261031-014750-2876",
       "method": "pipx",
       "steps": [
         {
           "command": "pipx install mafdet 2>&1",
-          "purpose": "Install mafdet via pipx (first-ranked candidate)"
+          "purpose": "install mafdet via pipx"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "mafdet --version 2>&1",
-        "expected_signal": "mafdet 0.4.1"
+        "command": "mafdet --help 2>&1",
+        "expected_signal": "strike (the strike)"
       },
       "first_task": "mafdet doctor 2>&1"
     },
@@ -120,10 +120,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:46:03.756649+08:00",
+    "checked_at": "2026-10-31T01:49:29.455693+08:00",
     "runs": [
       {
-        "id": "verify-mafdet-20261029-024510-24d3",
+        "id": "verify-mafdet-20261031-014750-2876",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -131,50 +131,41 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T02:46:03.756649+08:00",
+        "checked_at": "2026-10-31T01:49:29.455693+08:00",
         "tool_version": "0.4.1",
         "install_method": "pipx",
         "replayed": true,
         "steps": [
           {
             "command": "pipx install mafdet 2>&1",
-            "purpose": "Install mafdet via pipx (first-ranked candidate)"
+            "purpose": "install mafdet via pipx"
           }
         ],
         "smoke_tests": [
           {
-            "command": "mafdet --version 2>&1",
-            "expected_signal": "mafdet 0.4.1",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "mafdet 0.4.1",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "mafdet --help 2>&1",
-            "expected_signal": "mafdet models",
+            "expected_signal": "strike (the strike)",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "mafdet models",
+            "observed_excerpt": "strike (the strike)",
             "setup": [],
             "offline": true
           },
           {
             "command": "mafdet doctor 2>&1",
-            "expected_signal": "MAFDET doctor",
+            "expected_signal": "no GPU found",
             "exit_code": 1,
             "passed": true,
-            "observed_excerpt": "MAFDET doctor /home/sbx/.mafdet",
+            "observed_excerpt": "! GPU no GPU found (NVIDIA, AMD Radeon or Apple Silicon): models run on the CPU",
             "setup": [],
             "offline": true
           },
           {
             "command": "mafdet models 2>&1",
-            "expected_signal": "qwen3-0.6b",
+            "expected_signal": "qwen3-0.6b:Q8_0",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "qwen3-0.6b:Q8_0 too large 57 tok/s ≈ 7.7 s (19 s) ≈ 5.2 s 0.6 …",
+            "observed_excerpt": "qwen3-0.6b:Q8_0 too large 23 tok/s ≈ 19 s (48 s) ≈ 13 s 0.6 …",
             "setup": [],
             "offline": true
           }
@@ -183,21 +174,49 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show version 0.4.1, help listing mafdet models, and doctor diagnostics with expected exit 1.",
+          "observed": "Screenshots show help with usage and commands, doctor reporting no GPU found, and models table listing qwen3-0.6b:Q8_0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-mafdet-20261029-024510-24d3/report.json",
+          "trace_path": "runs/verify/verify-mafdet-20261031-014750-2876/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-mafdet-20261029-024510-24d3/check-1-cmd5.judged.png",
-            "runs/verify/verify-mafdet-20261029-024510-24d3/check-2-cmd2.judged.png",
-            "runs/verify/verify-mafdet-20261029-024510-24d3/check-3-cmd3.judged.png"
+            "runs/verify/verify-mafdet-20261031-014750-2876/check-1-cmd2.judged.png",
+            "runs/verify/verify-mafdet-20261031-014750-2876/check-2-cmd3.judged.png",
+            "runs/verify/verify-mafdet-20261031-014750-2876/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.040521
+        "cost_usd": 0.109193,
+        "features": [
+          {
+            "feature": "read message while you type",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "needs interactive typing in gui/tui chat with a downloaded model; box has no display and 2GB RAM, models listed as too large"
+          },
+          {
+            "feature": "reason while you type",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "needs interactive strike/watch session with Qwen3 thinking model; cannot run headless without display and model"
+          },
+          {
+            "feature": "find and download GGUF models",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -569,5 +588,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:30+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T01:49:29.456356+08:00"
 }

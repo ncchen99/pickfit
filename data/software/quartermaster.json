@@ -77,20 +77,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-quartermaster-20261029-024440-0dd7",
+      "run_id": "verify-quartermaster-20261031-014717-c93b",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -sL -o /tmp/qm-SHA256SUMS https://github.com/Quartermaster-Labs/Quartermaster/releases/download/v1.7.2/SHA256SUMS && cat /tmp/qm-SHA256SUMS && mkdir -p ~/.local/bin && curl -sL -o ~/.local/bin/quartermaster https://github.com/Quartermaster-Labs/Quartermaster/releases/download/v1.7.2/quartermaster-linux-amd64 && chmod +x ~/.local/bin/quartermaster && ls -lh ~/.local/bin/quartermaster && sha256sum ~/.local/bin/quartermaster",
-          "purpose": "download verified linux-amd64 binary to ~/.local/bin"
+          "command": "rm -f /home/sbx/.local/bin/quartermaster && curl -fL -o /home/sbx/.local/bin/quartermaster https://github.com/Quartermaster-Labs/Quartermaster/releases/download/v1.7.2/quartermaster-linux-amd64 && chmod +x /home/sbx/.local/bin/quartermaster",
+          "purpose": "download prebuilt quartermaster-linux-amd64 v1.7.2 and install to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "quartermaster --version",
-        "expected_signal": "version: v1.7.2"
+        "command": "quartermaster -version",
+        "expected_signal": "v1.7.2"
       },
-      "first_task": "curl -s http://127.0.0.1:12501/logs"
+      "first_task": "curl -s http://127.0.0.1:18080/logs"
     },
     "windows": {
       "basis": "readme_claim",
@@ -122,10 +122,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:45:41.398964+08:00",
+    "checked_at": "2026-10-31T01:49:15.647951+08:00",
     "runs": [
       {
-        "id": "verify-quartermaster-20261029-024440-0dd7",
+        "id": "verify-quartermaster-20261031-014717-c93b",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -133,20 +133,20 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T02:45:41.398964+08:00",
+        "checked_at": "2026-10-31T01:49:15.647951+08:00",
         "tool_version": "v1.7.2",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -sL -o /tmp/qm-SHA256SUMS https://github.com/Quartermaster-Labs/Quartermaster/releases/download/v1.7.2/SHA256SUMS && cat /tmp/qm-SHA256SUMS && mkdir -p ~/.local/bin && curl -sL -o ~/.local/bin/quartermaster https://github.com/Quartermaster-Labs/Quartermaster/releases/download/v1.7.2/quartermaster-linux-amd64 && chmod +x ~/.local/bin/quartermaster && ls -lh ~/.local/bin/quartermaster && sha256sum ~/.local/bin/quartermaster",
-            "purpose": "download verified linux-amd64 binary to ~/.local/bin"
+            "command": "rm -f /home/sbx/.local/bin/quartermaster && curl -fL -o /home/sbx/.local/bin/quartermaster https://github.com/Quartermaster-Labs/Quartermaster/releases/download/v1.7.2/quartermaster-linux-amd64 && chmod +x /home/sbx/.local/bin/quartermaster",
+            "purpose": "download prebuilt quartermaster-linux-amd64 v1.7.2 and install to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "quartermaster --version",
-            "expected_signal": "version: v1.7.2",
+            "command": "quartermaster -version",
+            "expected_signal": "v1.7.2",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "version: v1.7.2 (d3668e9), built at 2026-10-15T09:18:43Z",
@@ -154,30 +154,61 @@
             "offline": true
           },
           {
-            "command": "quartermaster --help",
-            "expected_signal": "-config string",
+            "command": "curl -s http://127.0.0.1:18080/logs",
+            "expected_signal": "Quartermaster listening",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "-config string",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "curl -s http://127.0.0.1:12501/logs",
-            "expected_signal": "Quartermaster listening on http://127.0.0.1:12501",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "18:45:33 [INFO] Quartermaster listening on http://127.0.0.1:12501",
+            "observed_excerpt": "17:49:07 [INFO] Quartermaster listening on http://127.0.0.1:18080",
             "setup": [
               {
-                "command": "cat > /tmp/qm-test.yaml <<'EOF'\nmodels:\n  model1:\n    cmd: llama-server --port ${PORT} --model /tmp/dummy.gguf\nEOF\ncat /tmp/qm-test.yaml",
+                "command": "cat > /tmp/qm-test.yaml <<'YAML'\nmodels:\n  dummy:\n    cmd: python3 -m http.server ${PORT}\nYAML\ncat /tmp/qm-test.yaml",
                 "background": false,
                 "port": null
               },
               {
-                "command": "quartermaster -config /tmp/qm-test.yaml -listen 127.0.0.1:12501",
+                "command": "quartermaster -config /tmp/qm-test.yaml -no-generate -listen 127.0.0.1:18080",
                 "background": true,
-                "port": 12501
+                "port": 18080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:18080/health",
+            "expected_signal": "OK",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "OK",
+            "setup": [
+              {
+                "command": "cat > /tmp/qm-test.yaml <<'YAML'\nmodels:\n  dummy:\n    cmd: python3 -m http.server ${PORT}\nYAML\ncat /tmp/qm-test.yaml",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "quartermaster -config /tmp/qm-test.yaml -no-generate -listen 127.0.0.1:18080",
+                "background": true,
+                "port": 18080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:18080/v1/models",
+            "expected_signal": "\"id\":\"dummy\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"data\":[{\"id\":\"dummy\",\"object\":\"model\",\"created\":1793382550,\"owned_by\":\"quartermaster\"}],\"object\":\"list\"}",
+            "setup": [
+              {
+                "command": "cat > /tmp/qm-test.yaml <<'YAML'\nmodels:\n  dummy:\n    cmd: python3 -m http.server ${PORT}\nYAML\ncat /tmp/qm-test.yaml",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "quartermaster -config /tmp/qm-test.yaml -no-generate -listen 127.0.0.1:18080",
+                "background": true,
+                "port": 18080
               }
             ],
             "offline": true
@@ -185,42 +216,76 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "-help says -log-file: pass an empty string to disable",
-            "actually_needed": "omit -log-file entirely (use default log file); passing -log-file \"\" panics with nil-pointer dereference in fileLog.Write",
-            "kind": null
+            "readme_said": "building from source requires Go 1.26+ and Node.js 24",
+            "actually_needed": "used README-documented prebuilt quartermaster-linux-amd64 v1.7.2 verified against SHA256SUMS, no toolchain needed",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "smallest config shows cmd with ${PORT}",
+            "actually_needed": "cmd must literally contain ${PORT}, e.g. python3 -m http.server ${PORT}, otherwise config load fails",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show Quartermaster starting and listening on 127.0.0.1:12501 and reporting version v1.7.2.",
+          "observed": "Screenshots show version v1.7.2, listening log line, and OK health response.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-quartermaster-20261029-024440-0dd7/report.json",
+          "trace_path": "runs/verify/verify-quartermaster-20261031-014717-c93b/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-quartermaster-20261029-024440-0dd7/check-1-cmd12.judged.png",
-            "runs/verify/verify-quartermaster-20261029-024440-0dd7/check-2-cmd5.judged.png"
+            "runs/verify/verify-quartermaster-20261031-014717-c93b/check-1-cmd5.judged.png",
+            "runs/verify/verify-quartermaster-20261031-014717-c93b/check-2-cmd10.judged.png",
+            "runs/verify/verify-quartermaster-20261031-014717-c93b/check-3-cmd11.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.073053
+        "cost_usd": 0.124804,
+        "features": [
+          {
+            "feature": "Chat, images and voice locally",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "needs GPU backends and no GPU in box"
+          },
+          {
+            "feature": "Auto-configure models to fit VRAM",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "VRAM sizing needs GPU monitoring; log says no GPU monitoring tool available"
+          },
+          {
+            "feature": "Hot-swap models behind unified API",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:40:05+08:00",
+    "computed_at": "2026-10-31T01:49:15+08:00",
     "quality": {
-      "total": 78.8,
+      "total": 83.9,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6502,
+          "score": 0.765,
           "weight": 40.0
         },
         "install_docs": {
@@ -261,7 +326,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 39.16
+      "value": 41.7
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -576,5 +641,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:17+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T01:49:15.648961+08:00"
 }

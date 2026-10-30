@@ -64,20 +64,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-pondok-ai-20261029-024251-7f7b",
+      "run_id": "verify-pondok-ai-20261031-014345-1c94",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g pondok-ai && pondok-ai --version",
-          "purpose": "global install pondok-ai via npm"
+          "command": "node --version && npm --version && (docker --version; docker compose version) 2>&1; echo \"---\"; npx -y pondok-ai --version 2>&1",
+          "purpose": "fetch pondok-ai via npx and show version"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "npx -y pondok-ai --version",
-        "expected_signal": "0.5.2"
+        "command": "npx -y pondok-ai model recommend --lang id 2>&1",
+        "expected_signal": "Recommended Default Model"
       },
-      "first_task": "npx pondok-ai model recommend"
+      "first_task": "npx -y pondok-ai model recommend --lang id 2>&1"
     },
     "windows": null
   },
@@ -96,10 +96,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:44:00.187974+08:00",
+    "checked_at": "2026-10-31T01:45:58.669960+08:00",
     "runs": [
       {
-        "id": "verify-pondok-ai-20261029-024251-7f7b",
+        "id": "verify-pondok-ai-20261031-014345-1c94",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -107,88 +107,105 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T02:44:00.187974+08:00",
+        "checked_at": "2026-10-31T01:45:58.669960+08:00",
         "tool_version": "0.5.2",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g pondok-ai && pondok-ai --version",
-            "purpose": "global install pondok-ai via npm"
+            "command": "node --version && npm --version && (docker --version; docker compose version) 2>&1; echo \"---\"; npx -y pondok-ai --version 2>&1",
+            "purpose": "fetch pondok-ai via npx and show version"
           }
         ],
         "smoke_tests": [
           {
-            "command": "npx -y pondok-ai --version",
-            "expected_signal": "0.5.2",
+            "command": "npx -y pondok-ai model recommend --lang id 2>&1",
+            "expected_signal": "Recommended Default Model",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "0.5.2",
+            "observed_excerpt": "Recommended Default Model:",
             "setup": [],
-            "offline": true
-          },
-          {
-            "command": "npx -y pondok-ai --help",
-            "expected_signal": "Usage: pondok-ai [options] [command]",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Usage: pondok-ai [options] [command]",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "npx pondok-ai model recommend",
-            "expected_signal": "Hardware Profile:",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Hardware Profile:",
-            "setup": [],
-            "offline": true
+            "offline": false
           }
         ],
         "pitfalls": [
           {
             "readme_said": "npx pondok-ai init --preset standard --yes",
-            "actually_needed": "run non-interactive init with --force in an empty dir: mkdir -p /tmp/pondok-test && npx -y pondok-ai init --preset standard --yes --force (fails requirements check without --force when Docker is missing or RAM <4GB)",
-            "kind": null
+            "actually_needed": "append --force: npx pondok-ai init --preset standard --yes --force",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "npx pondok-ai ...",
-            "actually_needed": "use npx -y pondok-ai ... or npm install -g pondok-ai first so npx does not prompt to install the package",
-            "kind": null
+            "readme_said": "doctor/init hardware detection",
+            "actually_needed": "free disk reported as 8589934592GB; RAM 2GB fails 4GB minimum so --force required",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show model recommend output with Hardware Profile and version 0.5.2 printed.",
+          "observed": "Screenshot shows hardware profile and Bahasa Indonesia recommendations with Recommended Default Model qwen2.5:1.5b.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-pondok-ai-20261029-024251-7f7b/report.json",
+          "trace_path": "runs/verify/verify-pondok-ai-20261031-014345-1c94/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-pondok-ai-20261029-024251-7f7b/check-1-cmd6.judged.png",
-            "runs/verify/verify-pondok-ai-20261029-024251-7f7b/check-2-cmd2.judged.png"
+            "runs/verify/verify-pondok-ai-20261031-014345-1c94/check-1-cmd5.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.049247
+        "cost_usd": 0.057452,
+        "features": [
+          {
+            "feature": "run private AI stack locally",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "init --force generates Compose stack but up needs Docker which box lacks"
+          },
+          {
+            "feature": "share chat UI over local network",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "share needs running Open WebUI container on Docker"
+          },
+          {
+            "feature": "use OpenAI-compatible API gateway",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "gateway needs Docker stack up with a model"
+          },
+          {
+            "feature": "manage local models with safety checks",
+            "status": "checked",
+            "smoke_tests": [
+              0
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:40:05+08:00",
+    "computed_at": "2026-10-31T01:45:58+08:00",
     "quality": {
-      "total": 88.0,
+      "total": 82.0,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.8,
+          "score": 0.68,
           "weight": 40.0
         },
         "install_docs": {
@@ -231,7 +248,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 34.14
+      "value": 31.82
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -538,5 +555,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T01:45:58.670599+08:00"
 }

@@ -63,18 +63,21 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "pip",
+      "basis": "replayed",
+      "run_id": "verify-sunnynet-20261031-014353-112b",
+      "method": "uv",
       "steps": [
         {
-          "command": "pip install sunnynet-cx",
-          "purpose": null
+          "command": "uv tool install sunnynet-cx 2>&1",
+          "purpose": "install via uv tool candidate 1"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "sunnynet-serve --ckpt <checkpoint.pt> --host 127.0.0.1 --port 8080"
+      "check": {
+        "command": "sunnynet --help 2>&1",
+        "expected_signal": "--ckpt"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -104,22 +107,124 @@
     "url": "https://github.com/SunnyClaw-cx/SunnyNet/releases/tag/v0.3.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:47:10.679063+08:00",
+    "runs": [
+      {
+        "id": "verify-sunnynet-20261031-014353-112b",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:47:10.679063+08:00",
+        "tool_version": "0.3.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install sunnynet-cx 2>&1",
+            "purpose": "install via uv tool candidate 1"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "sunnynet --help 2>&1",
+            "expected_signal": "--ckpt",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: sunnynet-cli [-h] [--ckpt CKPT] [--gguf GGUF] [--prompt PROMPT] [--max-new MAX_NEW]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sunnynet --ckpt /tmp/mini/mini.pt --tokenizer /tmp/mini/tokenizer.json --prompt \"hello\" --max-new 20 --temperature 0 2>&1",
+            "expected_signal": "fufufufufufufufufufu",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "inowacecfibonaccitededededededededededededed",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/mini && ~/.local/share/uv/tools/sunnynet-cx/bin/python 2>&1 <<'PY'\nfrom sunnynet.tokenizer import BPETokenizer\nfrom sunnynet.model import SunnyConfig, SunnyNet\nimport torch\ntexts=[\"hello world once upon a time\",\"The Eiffel Tower is located in Paris\",\"def fibonacci(n): return n if n<2 else fibonacci(n-1)+fibonacci(n-2)\",\"sub曰学而时习之不亦说乎\"]\ntk=BPETokenizer.train(texts*50, vocab_size=64, min_char_freq=1)\ntk.save(\"/tmp/mini/tokenizer.json\")\ncfg=SunnyConfig(vocab_size=tk.vocab_size, dim=16, inner=24, rank=8, layers=2)\nm=SunnyNet(cfg)\nm.eval()\ntorch.save({\"model\": m.state_dict(), \"config\": cfg.__dict__, \"arch\": \"sunnynet\"}, \"/tmp/mini/mini.pt\")\nprint(f\"saved vocab={tk.vocab_size} params={m.num_params()}\")\nPY",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "hf download SunnyClaw-cx/SunnyNet --local-dir sunnynet-small-zh (~21 MB)",
+            "actually_needed": "create tiny local ckpt/tokenizer with installed sunnynet package (/tmp/mini) and use it for CLI and serve checks",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "sunnynet-serve --ckpt <checkpoint.pt> --host 127.0.0.1 --port 8080",
+            "actually_needed": "pass --tokenizer /tmp/mini/tokenizer.json explicitly; default data/proc/tokenizer.json does not exist",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Help shows --ckpt and related inference flags, and Python test lists MODELS and confirms gated_scan O(N) recurrence.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-sunnynet-20261031-014353-112b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-sunnynet-20261031-014353-112b/check-1-cmd2.judged.png",
+            "runs/verify/verify-sunnynet-20261031-014353-112b/check-2-cmd10.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.224451,
+        "features": [
+          {
+            "feature": "run linear-recurrence inference on CPU",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but not again in a fresh box"
+          },
+          {
+            "feature": "support SunnyNet, RWKV-7, Mamba-2 and others",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but not again in a fresh box"
+          },
+          {
+            "feature": "serve OpenAI-compatible HTTP API",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "server started but no health/models/generation query ran before turn limit"
+          }
+        ]
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:42:07+08:00",
+    "computed_at": "2026-10-31T01:47:10+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 68.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.578,
           "weight": 40.0
         },
         "install_docs": {
@@ -162,7 +267,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 37.47
+      "value": 37.03
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -477,5 +582,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:30+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T01:47:10.680073+08:00"
 }

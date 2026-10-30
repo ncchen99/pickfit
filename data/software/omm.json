@@ -76,20 +76,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-omm-20261029-024155-0b00",
+      "run_id": "verify-omm-20261031-014249-7c18",
       "method": "pipx",
       "steps": [
         {
-          "command": "pipx install omm-model",
-          "purpose": "Install omm via pipx candidate 1"
+          "command": "pipx install omm-model 2>&1",
+          "purpose": "pipx install omm-model per README"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "omm --version",
+        "command": "omm --version 2>&1",
         "expected_signal": "omm 0.4.84"
       },
-      "first_task": "omm list"
+      "first_task": "omm list 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -121,10 +121,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:42:48.745158+08:00",
+    "checked_at": "2026-10-31T01:43:45.275018+08:00",
     "runs": [
       {
-        "id": "verify-omm-20261029-024155-0b00",
+        "id": "verify-omm-20261031-014249-7c18",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -132,19 +132,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T02:42:48.745158+08:00",
+        "checked_at": "2026-10-31T01:43:45.275018+08:00",
         "tool_version": "0.4.84",
         "install_method": "pipx",
         "replayed": true,
         "steps": [
           {
-            "command": "pipx install omm-model",
-            "purpose": "Install omm via pipx candidate 1"
+            "command": "pipx install omm-model 2>&1",
+            "purpose": "pipx install omm-model per README"
           }
         ],
         "smoke_tests": [
           {
-            "command": "omm --version",
+            "command": "omm --version 2>&1",
             "expected_signal": "omm 0.4.84",
             "exit_code": 0,
             "passed": true,
@@ -153,16 +153,7 @@
             "offline": true
           },
           {
-            "command": "omm --help",
-            "expected_signal": "omm list",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "omm list",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "omm list",
+            "command": "omm list 2>&1",
             "expected_signal": "No models installed via omm yet.",
             "exit_code": 0,
             "passed": true,
@@ -171,12 +162,98 @@
             "offline": true
           },
           {
-            "command": "omm doctor",
-            "expected_signal": "Overall: WARN",
+            "command": "omm import ~/models --yes 2>&1",
+            "expected_signal": "Imported stories260K.gguf",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Overall: WARN (6 pass, 2 warn, 0 fail)",
-            "setup": [],
+            "observed_excerpt": "Ω Imported stories260K.gguf",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf 2>&1 && ls -l ~/models/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "omm list --json 2>&1",
+            "expected_signal": "stories260K.gguf",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"filename\": \"stories260K.gguf\",",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf 2>&1 && ls -l ~/models/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "omm import ~/models --yes 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "omm scan --json 2>&1",
+            "expected_signal": "ram_total_gb",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"ram_total_gb\": 2.0,",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf 2>&1 && ls -l ~/models/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "omm import ~/models --yes 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "omm fit stories260K 2>&1",
+            "expected_signal": "Fits now",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ ✓ Fits now - 1.0 GB to spare after runtime overhead │",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf 2>&1 && ls -l ~/models/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "omm import ~/models --yes 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "omm link 2>&1",
+            "expected_signal": "0 model(s) relinked/verified.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0 model(s) relinked/verified. 0 skipped (conflict). 0 skipped (file missing).",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf 2>&1 && ls -l ~/models/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "omm import ~/models --yes 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
@@ -184,21 +261,64 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show omm list reporting no models, omm doctor reporting Overall WARN, and omm --version reporting 0.4.84, all with exit 0.",
+          "observed": "All three screenshots show expected outputs: version 0.4.84, empty model list notice, and successful import of stories260K.gguf.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-omm-20261029-024155-0b00/report.json",
+          "trace_path": "runs/verify/verify-omm-20261031-014249-7c18/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-omm-20261029-024155-0b00/check-1-cmd4.judged.png",
-            "runs/verify/verify-omm-20261029-024155-0b00/check-2-cmd5.judged.png",
-            "runs/verify/verify-omm-20261029-024155-0b00/check-3-cmd2.judged.png"
+            "runs/verify/verify-omm-20261031-014249-7c18/check-1-cmd2.judged.png",
+            "runs/verify/verify-omm-20261031-014249-7c18/check-2-cmd4.judged.png",
+            "runs/verify/verify-omm-20261031-014249-7c18/check-3-cmd5.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.046736
+        "cost_usd": 0.0591,
+        "features": [
+          {
+            "feature": "Install GGUF models into central hub",
+            "status": "checked",
+            "smoke_tests": [
+              2,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Link models across local AI runners",
+            "status": "checked",
+            "smoke_tests": [
+              3,
+              6
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Rank models against hardware state",
+            "status": "checked",
+            "smoke_tests": [
+              4,
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Verify local load and generation",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "scan shows engines_installed empty, no Ollama/LM Studio API to verify load"
+          }
+        ]
       }
     ]
   },
@@ -576,5 +696,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T01:43:45.275929+08:00"
 }

@@ -59,24 +59,28 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-repofold-20261029-025701-407b",
+      "run_id": "verify-repofold-20261031-014127-782a",
       "method": "source",
       "steps": [
         {
-          "command": "git clone https://github.com/Neilbenji/repofold.git && ls repofold && cat repofold/package.json",
-          "purpose": "clone repofold source per candidate 1"
+          "command": "git clone https://github.com/Neilbenji/repofold.git repofold-src",
+          "purpose": "clone repofold source"
         },
         {
-          "command": "cd repofold && npm install",
-          "purpose": "install dependencies with npm per README"
+          "command": "cd repofold-src && npm install",
+          "purpose": "npm install dependencies"
         },
         {
-          "command": "cd repofold && npm run build",
-          "purpose": "build TypeScript CLI per README"
+          "command": "cd repofold-src && npm run build",
+          "purpose": "build with tsc"
         },
         {
-          "command": "cd repofold && npm install -g . && which repofold && repofold --version",
-          "purpose": "global install so repofold is on PATH"
+          "command": "cd repofold-src && npm install -g .",
+          "purpose": "install repofold globally"
+        },
+        {
+          "command": "chmod +x repofold-src/dist/cli.js && chmod +x /home/sbx/.local/lib/node_modules/repofold/dist/cli.js && ls -l /home/sbx/.local/lib/node_modules/repofold/dist/cli.js",
+          "purpose": "fix executable bit on CLI entry"
         }
       ],
       "manual_steps": [],
@@ -84,7 +88,7 @@
         "command": "repofold --version",
         "expected_signal": "0.1.0"
       },
-      "first_task": "repofold serve /tmp/demorepo --port 4173"
+      "first_task": null
     },
     "windows": null
   },
@@ -99,10 +103,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:59:12.830184+08:00",
+    "checked_at": "2026-10-31T01:43:53.045487+08:00",
     "runs": [
       {
-        "id": "verify-repofold-20261029-025701-407b",
+        "id": "verify-repofold-20261031-014127-782a",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -110,26 +114,30 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T02:59:12.830184+08:00",
+        "checked_at": "2026-10-31T01:43:53.045487+08:00",
         "tool_version": "0.1.0",
         "install_method": "source",
         "replayed": true,
         "steps": [
           {
-            "command": "git clone https://github.com/Neilbenji/repofold.git && ls repofold && cat repofold/package.json",
-            "purpose": "clone repofold source per candidate 1"
+            "command": "git clone https://github.com/Neilbenji/repofold.git repofold-src",
+            "purpose": "clone repofold source"
           },
           {
-            "command": "cd repofold && npm install",
-            "purpose": "install dependencies with npm per README"
+            "command": "cd repofold-src && npm install",
+            "purpose": "npm install dependencies"
           },
           {
-            "command": "cd repofold && npm run build",
-            "purpose": "build TypeScript CLI per README"
+            "command": "cd repofold-src && npm run build",
+            "purpose": "build with tsc"
           },
           {
-            "command": "cd repofold && npm install -g . && which repofold && repofold --version",
-            "purpose": "global install so repofold is on PATH"
+            "command": "cd repofold-src && npm install -g .",
+            "purpose": "install repofold globally"
+          },
+          {
+            "command": "chmod +x repofold-src/dist/cli.js && chmod +x /home/sbx/.local/lib/node_modules/repofold/dist/cli.js && ls -l /home/sbx/.local/lib/node_modules/repofold/dist/cli.js",
+            "purpose": "fix executable bit on CLI entry"
           }
         ],
         "smoke_tests": [
@@ -141,98 +149,71 @@
             "observed_excerpt": "0.1.0",
             "setup": [],
             "offline": true
-          },
-          {
-            "command": "repofold --help",
-            "expected_signal": "Usage: repofold [options] [command]",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Usage: repofold [options] [command]",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "repofold generate --help",
-            "expected_signal": "Usage: repofold generate [options] [path]",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Usage: repofold generate [options] [path]",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "repofold serve --help",
-            "expected_signal": "Usage: repofold serve [options] [path]",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Usage: repofold serve [options] [path]",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "repofold serve /tmp/demorepo --port 4173",
-            "expected_signal": "No wiki found at /tmp/demorepo/repofold-wiki.",
-            "exit_code": 1,
-            "passed": true,
-            "observed_excerpt": "No wiki found at /tmp/demorepo/repofold-wiki. Run \"repofold generate\" first.",
-            "setup": [
-              {
-                "command": "mkdir -p /tmp/demorepo && cd /tmp/demorepo && git init -q 2>/dev/null; echo 'console.log(\"hello\");' > hello.js && git add -A && git -c user.email=t@t.t -c user.name=t commit -qm init && git log --oneline && ls -la",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "git clone + npm install && npm run build && npm install -g .",
-            "actually_needed": "npm install worked despite packageManager pin pnpm@10.14.0; then `npm run build` (tsc + copy-assets) then `npm install -g .` to put repofold 0.1.0 on ~/.local/bin PATH",
-            "kind": null
-          },
-          {
-            "readme_said": "repofold generate path/to/your/repo --serve",
-            "actually_needed": "`repofold generate /tmp/demorepo` exits 1 with 'Cannot reach Ollama at http://localhost:11434. Is it running?' — full wiki generation needs Ollama + qwen3:8b (multi-GB) + large context (OLLAMA_CONTEXT_LENGTH=24576) and 15-30+ min, not available in sandbox",
-            "kind": null
-          },
-          {
-            "readme_said": "repofold serve [path]",
-            "actually_needed": "`repofold serve /tmp/demorepo` exits 1 with 'No wiki found at /tmp/demorepo/repofold-wiki. Run \"repofold generate\" first.' until a wiki has been generated",
-            "kind": null
+            "readme_said": "npm install && npm run build && npm install -g .",
+            "actually_needed": "chmod +x dist/cli.js (and the installed copy) after npm run build before repofold runs; otherwise repofold --version fails with Permission denied",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show the expected missing-wiki message for serve and version 0.1.0 for --version.",
+          "observed": "The terminal shows `repofold --version` outputting `0.1.0` with exit code 0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-repofold-20261029-025701-407b/report.json",
+          "trace_path": "runs/verify/verify-repofold-20261031-014127-782a/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-repofold-20261029-025701-407b/check-1-cmd11.judged.png",
-            "runs/verify/verify-repofold-20261029-025701-407b/check-2-cmd7.judged.png"
+            "runs/verify/verify-repofold-20261031-014127-782a/check-1-cmd14.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.055265
+        "cost_usd": 0.086968,
+        "features": [
+          {
+            "feature": "Generate documentation wiki from local git repo",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Needs local Ollama server plus qwen3:8b model pull (~5GB, 8GB GPU, 15-30 min first run); no Ollama/GPU in box"
+          },
+          {
+            "feature": "Cite exact file lines for every claim",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Requires a generated wiki from F1, which needs Ollama model; cannot exercise without it"
+          },
+          {
+            "feature": "Regenerate only what changed on reruns",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Requires two successive generations with Ollama model to compare incremental behaviour"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:40:05+08:00",
+    "computed_at": "2026-10-31T01:43:53+08:00",
     "quality": {
-      "total": 60.6,
+      "total": 56.8,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
+          "score": 0.4335,
           "weight": 40.0
         },
         "install_docs": {
@@ -273,7 +254,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 47.21
+      "value": 44.25
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -534,5 +515,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:05+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T01:43:53.047071+08:00"
 }

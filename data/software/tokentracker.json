@@ -61,20 +61,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-tokentracker-20261029-025701-e772",
+      "run_id": "verify-tokentracker-20261031-013843-7d94",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install toktally",
-          "purpose": "Install toktally via uv tool"
+          "command": "uv tool install toktally 2>&1",
+          "purpose": "install toktally via uv tool"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "tokentracker --version",
-        "expected_signal": "tokentracker, version 0.2.1"
+        "command": "tokentracker --help 2>&1",
+        "expected_signal": "dashboard"
       },
-      "first_task": "tokentracker dashboard"
+      "first_task": "rm -f /tmp/tt_usage.db && TOKENTRACKER_DB=/tmp/tt_usage.db uv tool run --from toktally python /tmp/tt_track.py 2>&1"
     },
     "windows": null
   },
@@ -89,10 +89,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:58:09.119085+08:00",
+    "checked_at": "2026-10-31T01:39:55.984722+08:00",
     "runs": [
       {
-        "id": "verify-tokentracker-20261029-025701-e772",
+        "id": "verify-tokentracker-20261031-013843-7d94",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -100,44 +100,65 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T02:58:09.119085+08:00",
+        "checked_at": "2026-10-31T01:39:55.984722+08:00",
         "tool_version": "0.2.1",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install toktally",
-            "purpose": "Install toktally via uv tool"
+            "command": "uv tool install toktally 2>&1",
+            "purpose": "install toktally via uv tool"
           }
         ],
         "smoke_tests": [
           {
-            "command": "tokentracker --version",
-            "expected_signal": "tokentracker, version 0.2.1",
+            "command": "tokentracker --help 2>&1",
+            "expected_signal": "dashboard",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tokentracker, version 0.2.1",
+            "observed_excerpt": "dashboard Show a summary dashboard of your LLM spending.",
             "setup": [],
             "offline": true
           },
           {
-            "command": "tokentracker --help",
-            "expected_signal": "Usage: tokentracker [OPTIONS] COMMAND",
+            "command": "rm -f /tmp/tt_usage.db && TOKENTRACKER_DB=/tmp/tt_usage.db uv tool run --from toktally python /tmp/tt_track.py 2>&1",
+            "expected_signal": "TRACKED calls=1",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Usage: tokentracker [OPTIONS] COMMAND [ARGS]...",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "tokentracker dashboard",
-            "expected_signal": "TokenTracker — Last 30 days",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "╭────────────────────────────────── TokenTracker — Last 30 days ───────────────────────────────────╮",
+            "observed_excerpt": "TRACKED calls=1 cost=0.0",
             "setup": [
               {
-                "command": "~/.local/share/uv/tools/toktally/bin/python -c \"from tokentracker.db import log_call; from tokentracker.pricing import estimate_cost; print(estimate_cost('gpt-4o', 1000, 500)); log_call(model='gpt-4o', input_tokens=1000, output_tokens=500, total_tokens=1500, cost_usd=estimate_cost('gpt-4o',1000,500), latency_ms=1200, endpoint='chat.completions'); log_call(model='gpt-4o-mini', input_tokens=2000, output_tokens=500, total_tokens=2500, cost_usd=estimate_cost('gpt-4o-mini',2000,500), latency_ms=400, endpoint='chat.completions'); log_call(model='text-embedding-3-small', input_tokens=1000, output_tokens=0, total_tokens=1000, cost_usd=estimate_cost('text-embedding-3-small',1000,0), latency_ms=200, endpoint='embeddings'); print('seeded')\"",
+                "command": "cat > /tmp/tt_stub.py <<'PY'\nimport json\nfrom http.server import BaseHTTPRequestHandler, HTTPServer\nclass H(BaseHTTPRequestHandler):\n    def do_POST(self):\n        n = int(self.headers.get('Content-Length', 0))\n        body = self.rfile.read(n) if n else b''\n        try:\n            data = json.loads(body or b'{}')\n        except Exception:\n            data = {}\n        model = data.get('model', 'gpt-4o-mini')\n        resp = {\"id\":\"chatcmpl-test\",\"object\":\"chat.completion\",\"created\":1700000000,\"model\":model,\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello!\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":5,\"total_tokens\":15}}\n        out = json.dumps(resp).encode()\n        self.send_response(200)\n        self.send_header('Content-Type','application/json')\n        self.send_header('Content-Length',str(len(out)))\n        self.end_headers()\n        self.wfile.write(out)\n    def log_message(self, *a): pass\nHTTPServer(('127.0.0.1',8765), H).serve_forever()\nPY\ncat > /tmp/tt_track.py <<'PY'\nfrom tokentracker import OpenAI, summary, recent\nclient = OpenAI(api_key=\"test-key\", base_url=\"http://127.0.0.1:8765/v1\")\nr = client.chat.completions.create(model=\"gpt-4o-mini\", messages=[{\"role\":\"user\",\"content\":\"Hello!\"}])\nprint(\"REPLY:\", r.choices[0].message.content)\ns = summary(days=30)\nprint(f\"TRACKED calls={s['total_calls']} cost={s['total_cost_usd']}\")\nfor c in recent(limit=1):\n    print(f\"RECENT model={c['model']} tokens={c['total_tokens']} cost={c['cost_usd']}\")\nPY\necho stub-and-track-written",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /tmp/tt_stub.py",
+                "background": true,
+                "port": 8765
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "TOKENTRACKER_DB=/tmp/tt_usage.db tokentracker dashboard 2>&1",
+            "expected_signal": "API calls: 1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ API calls: 1 │",
+            "setup": [
+              {
+                "command": "cat > /tmp/tt_stub.py <<'PY'\nimport json\nfrom http.server import BaseHTTPRequestHandler, HTTPServer\nclass H(BaseHTTPRequestHandler):\n    def do_POST(self):\n        n = int(self.headers.get('Content-Length', 0))\n        body = self.rfile.read(n) if n else b''\n        try:\n            data = json.loads(body or b'{}')\n        except Exception:\n            data = {}\n        model = data.get('model', 'gpt-4o-mini')\n        resp = {\"id\":\"chatcmpl-test\",\"object\":\"chat.completion\",\"created\":1700000000,\"model\":model,\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello!\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":5,\"total_tokens\":15}}\n        out = json.dumps(resp).encode()\n        self.send_response(200)\n        self.send_header('Content-Type','application/json')\n        self.send_header('Content-Length',str(len(out)))\n        self.end_headers()\n        self.wfile.write(out)\n    def log_message(self, *a): pass\nHTTPServer(('127.0.0.1',8765), H).serve_forever()\nPY\ncat > /tmp/tt_track.py <<'PY'\nfrom tokentracker import OpenAI, summary, recent\nclient = OpenAI(api_key=\"test-key\", base_url=\"http://127.0.0.1:8765/v1\")\nr = client.chat.completions.create(model=\"gpt-4o-mini\", messages=[{\"role\":\"user\",\"content\":\"Hello!\"}])\nprint(\"REPLY:\", r.choices[0].message.content)\ns = summary(days=30)\nprint(f\"TRACKED calls={s['total_calls']} cost={s['total_cost_usd']}\")\nfor c in recent(limit=1):\n    print(f\"RECENT model={c['model']} tokens={c['total_tokens']} cost={c['cost_usd']}\")\nPY\necho stub-and-track-written",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /tmp/tt_stub.py",
+                "background": true,
+                "port": 8765
+              },
+              {
+                "command": "rm -f /tmp/tt_usage.db && TOKENTRACKER_DB=/tmp/tt_usage.db uv tool run --from toktally python /tmp/tt_track.py 2>&1",
                 "background": false,
                 "port": null
               }
@@ -145,14 +166,24 @@
             "offline": true
           },
           {
-            "command": "tokentracker recent",
-            "expected_signal": "Last 20 API Calls",
+            "command": "TOKENTRACKER_DB=/tmp/tt_usage.db tokentracker recent 2>&1",
+            "expected_signal": "gpt-4o-mini",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Last 20 API Calls",
+            "observed_excerpt": "│ 10-30 17:39 │ gpt-4o-mini │ 15 │ $0.0000 │ 13ms │ ok │",
             "setup": [
               {
-                "command": "~/.local/share/uv/tools/toktally/bin/python -c \"from tokentracker.db import log_call; from tokentracker.pricing import estimate_cost; print(estimate_cost('gpt-4o', 1000, 500)); log_call(model='gpt-4o', input_tokens=1000, output_tokens=500, total_tokens=1500, cost_usd=estimate_cost('gpt-4o',1000,500), latency_ms=1200, endpoint='chat.completions'); log_call(model='gpt-4o-mini', input_tokens=2000, output_tokens=500, total_tokens=2500, cost_usd=estimate_cost('gpt-4o-mini',2000,500), latency_ms=400, endpoint='chat.completions'); log_call(model='text-embedding-3-small', input_tokens=1000, output_tokens=0, total_tokens=1000, cost_usd=estimate_cost('text-embedding-3-small',1000,0), latency_ms=200, endpoint='embeddings'); print('seeded')\"",
+                "command": "cat > /tmp/tt_stub.py <<'PY'\nimport json\nfrom http.server import BaseHTTPRequestHandler, HTTPServer\nclass H(BaseHTTPRequestHandler):\n    def do_POST(self):\n        n = int(self.headers.get('Content-Length', 0))\n        body = self.rfile.read(n) if n else b''\n        try:\n            data = json.loads(body or b'{}')\n        except Exception:\n            data = {}\n        model = data.get('model', 'gpt-4o-mini')\n        resp = {\"id\":\"chatcmpl-test\",\"object\":\"chat.completion\",\"created\":1700000000,\"model\":model,\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello!\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":5,\"total_tokens\":15}}\n        out = json.dumps(resp).encode()\n        self.send_response(200)\n        self.send_header('Content-Type','application/json')\n        self.send_header('Content-Length',str(len(out)))\n        self.end_headers()\n        self.wfile.write(out)\n    def log_message(self, *a): pass\nHTTPServer(('127.0.0.1',8765), H).serve_forever()\nPY\ncat > /tmp/tt_track.py <<'PY'\nfrom tokentracker import OpenAI, summary, recent\nclient = OpenAI(api_key=\"test-key\", base_url=\"http://127.0.0.1:8765/v1\")\nr = client.chat.completions.create(model=\"gpt-4o-mini\", messages=[{\"role\":\"user\",\"content\":\"Hello!\"}])\nprint(\"REPLY:\", r.choices[0].message.content)\ns = summary(days=30)\nprint(f\"TRACKED calls={s['total_calls']} cost={s['total_cost_usd']}\")\nfor c in recent(limit=1):\n    print(f\"RECENT model={c['model']} tokens={c['total_tokens']} cost={c['cost_usd']}\")\nPY\necho stub-and-track-written",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /tmp/tt_stub.py",
+                "background": true,
+                "port": 8765
+              },
+              {
+                "command": "rm -f /tmp/tt_usage.db && TOKENTRACKER_DB=/tmp/tt_usage.db uv tool run --from toktally python /tmp/tt_track.py 2>&1",
                 "background": false,
                 "port": null
               }
@@ -160,14 +191,49 @@
             "offline": true
           },
           {
-            "command": "tokentracker insights",
-            "expected_signal": "TokenTracker insights — last 30 days",
+            "command": "TOKENTRACKER_DB=/tmp/tt_usage.db tokentracker insights 2>&1",
+            "expected_signal": "insights",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "╭────────────────────────────── TokenTracker insights — last 30 days ──────────────────────────────╮",
             "setup": [
               {
-                "command": "~/.local/share/uv/tools/toktally/bin/python -c \"from tokentracker.db import log_call; from tokentracker.pricing import estimate_cost; print(estimate_cost('gpt-4o', 1000, 500)); log_call(model='gpt-4o', input_tokens=1000, output_tokens=500, total_tokens=1500, cost_usd=estimate_cost('gpt-4o',1000,500), latency_ms=1200, endpoint='chat.completions'); log_call(model='gpt-4o-mini', input_tokens=2000, output_tokens=500, total_tokens=2500, cost_usd=estimate_cost('gpt-4o-mini',2000,500), latency_ms=400, endpoint='chat.completions'); log_call(model='text-embedding-3-small', input_tokens=1000, output_tokens=0, total_tokens=1000, cost_usd=estimate_cost('text-embedding-3-small',1000,0), latency_ms=200, endpoint='embeddings'); print('seeded')\"",
+                "command": "cat > /tmp/tt_stub.py <<'PY'\nimport json\nfrom http.server import BaseHTTPRequestHandler, HTTPServer\nclass H(BaseHTTPRequestHandler):\n    def do_POST(self):\n        n = int(self.headers.get('Content-Length', 0))\n        body = self.rfile.read(n) if n else b''\n        try:\n            data = json.loads(body or b'{}')\n        except Exception:\n            data = {}\n        model = data.get('model', 'gpt-4o-mini')\n        resp = {\"id\":\"chatcmpl-test\",\"object\":\"chat.completion\",\"created\":1700000000,\"model\":model,\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello!\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":5,\"total_tokens\":15}}\n        out = json.dumps(resp).encode()\n        self.send_response(200)\n        self.send_header('Content-Type','application/json')\n        self.send_header('Content-Length',str(len(out)))\n        self.end_headers()\n        self.wfile.write(out)\n    def log_message(self, *a): pass\nHTTPServer(('127.0.0.1',8765), H).serve_forever()\nPY\ncat > /tmp/tt_track.py <<'PY'\nfrom tokentracker import OpenAI, summary, recent\nclient = OpenAI(api_key=\"test-key\", base_url=\"http://127.0.0.1:8765/v1\")\nr = client.chat.completions.create(model=\"gpt-4o-mini\", messages=[{\"role\":\"user\",\"content\":\"Hello!\"}])\nprint(\"REPLY:\", r.choices[0].message.content)\ns = summary(days=30)\nprint(f\"TRACKED calls={s['total_calls']} cost={s['total_cost_usd']}\")\nfor c in recent(limit=1):\n    print(f\"RECENT model={c['model']} tokens={c['total_tokens']} cost={c['cost_usd']}\")\nPY\necho stub-and-track-written",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /tmp/tt_stub.py",
+                "background": true,
+                "port": 8765
+              },
+              {
+                "command": "rm -f /tmp/tt_usage.db && TOKENTRACKER_DB=/tmp/tt_usage.db uv tool run --from toktally python /tmp/tt_track.py 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "TOKENTRACKER_DB=/tmp/tt_usage.db tokentracker budgets set monthly --limit 500 2>&1 && TOKENTRACKER_DB=/tmp/tt_usage.db tokentracker budgets check 2>&1",
+            "expected_signal": "OK monthly",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "OK monthly $0.0000/$500.00 (0.0%) · on track",
+            "setup": [
+              {
+                "command": "cat > /tmp/tt_stub.py <<'PY'\nimport json\nfrom http.server import BaseHTTPRequestHandler, HTTPServer\nclass H(BaseHTTPRequestHandler):\n    def do_POST(self):\n        n = int(self.headers.get('Content-Length', 0))\n        body = self.rfile.read(n) if n else b''\n        try:\n            data = json.loads(body or b'{}')\n        except Exception:\n            data = {}\n        model = data.get('model', 'gpt-4o-mini')\n        resp = {\"id\":\"chatcmpl-test\",\"object\":\"chat.completion\",\"created\":1700000000,\"model\":model,\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello!\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":5,\"total_tokens\":15}}\n        out = json.dumps(resp).encode()\n        self.send_response(200)\n        self.send_header('Content-Type','application/json')\n        self.send_header('Content-Length',str(len(out)))\n        self.end_headers()\n        self.wfile.write(out)\n    def log_message(self, *a): pass\nHTTPServer(('127.0.0.1',8765), H).serve_forever()\nPY\ncat > /tmp/tt_track.py <<'PY'\nfrom tokentracker import OpenAI, summary, recent\nclient = OpenAI(api_key=\"test-key\", base_url=\"http://127.0.0.1:8765/v1\")\nr = client.chat.completions.create(model=\"gpt-4o-mini\", messages=[{\"role\":\"user\",\"content\":\"Hello!\"}])\nprint(\"REPLY:\", r.choices[0].message.content)\ns = summary(days=30)\nprint(f\"TRACKED calls={s['total_calls']} cost={s['total_cost_usd']}\")\nfor c in recent(limit=1):\n    print(f\"RECENT model={c['model']} tokens={c['total_tokens']} cost={c['cost_usd']}\")\nPY\necho stub-and-track-written",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /tmp/tt_stub.py",
+                "background": true,
+                "port": 8765
+              },
+              {
+                "command": "rm -f /tmp/tt_usage.db && TOKENTRACKER_DB=/tmp/tt_usage.db uv tool run --from toktally python /tmp/tt_track.py 2>&1",
                 "background": false,
                 "port": null
               }
@@ -175,39 +241,82 @@
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "pip install toktally",
+            "actually_needed": "uv tool install toktally for isolated env",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "drop-in OpenAI client calling real API",
+            "actually_needed": "used local stub OpenAI server at 127.0.0.1:8765 and TOKENTRACKER_DB=/tmp/tt_usage.db so no API key or network needed",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three screenshots show TokenTracker dashboard, recent calls table, and version 0.2.1 output as expected.",
+          "observed": "Help lists the dashboard command, the tracking script records one call with 15 tokens, and the dashboard displays that 1 API call with cost breakdowns.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-tokentracker-20261029-025701-e772/report.json",
+          "trace_path": "runs/verify/verify-tokentracker-20261031-013843-7d94/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-tokentracker-20261029-025701-e772/check-1-cmd10.judged.png",
-            "runs/verify/verify-tokentracker-20261029-025701-e772/check-2-cmd11.judged.png",
-            "runs/verify/verify-tokentracker-20261029-025701-e772/check-3-cmd3.judged.png"
+            "runs/verify/verify-tokentracker-20261031-013843-7d94/check-1-cmd2.judged.png",
+            "runs/verify/verify-tokentracker-20261031-013843-7d94/check-2-cmd6.judged.png",
+            "runs/verify/verify-tokentracker-20261031-013843-7d94/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.055485
+        "cost_usd": 0.066696,
+        "features": [
+          {
+            "feature": "automatically track LLM API costs",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "view spending in CLI dashboard",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "set spending budgets and check them",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:42:07+08:00",
+    "computed_at": "2026-10-31T01:39:55+08:00",
     "quality": {
-      "total": 75.6,
+      "total": 69.0,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -250,7 +359,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 51.33
+      "value": 46.85
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -519,5 +628,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T01:39:55.985757+08:00"
 }

@@ -79,20 +79,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-babelscribe-20261029-024248-40a6",
+      "run_id": "verify-babelscribe-20261031-014309-34f6",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install babelscribe && ~/.local/bin/babelscribe --help",
-          "purpose": "install babelscribe with uv tool"
+          "command": "uv tool install babelscribe 2>&1",
+          "purpose": "Install babelscribe via uv tool"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "babelscribe --version",
+        "command": "babelscribe --version 2>&1",
         "expected_signal": "0.3.2"
       },
-      "first_task": "babelscribe models"
+      "first_task": "babelscribe models 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -124,10 +124,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:44:16.955558+08:00",
+    "checked_at": "2026-10-31T01:45:18.636290+08:00",
     "runs": [
       {
-        "id": "verify-babelscribe-20261029-024248-40a6",
+        "id": "verify-babelscribe-20261031-014309-34f6",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -135,19 +135,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T02:44:16.955558+08:00",
+        "checked_at": "2026-10-31T01:45:18.636290+08:00",
         "tool_version": "0.3.2",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install babelscribe && ~/.local/bin/babelscribe --help",
-            "purpose": "install babelscribe with uv tool"
+            "command": "uv tool install babelscribe 2>&1",
+            "purpose": "Install babelscribe via uv tool"
           }
         ],
         "smoke_tests": [
           {
-            "command": "babelscribe --version",
+            "command": "babelscribe --version 2>&1",
             "expected_signal": "0.3.2",
             "exit_code": 0,
             "passed": true,
@@ -156,58 +156,133 @@
             "offline": true
           },
           {
-            "command": "babelscribe models",
-            "expected_signal": "large-v3-turbo",
+            "command": "babelscribe models 2>&1",
+            "expected_signal": "tiny",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "large-v3-turbo 1.6 GB",
+            "observed_excerpt": "tiny 75 MB",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "babelscribe devices -m tiny --flavor cpu 2>&1",
+            "expected_signal": "auto picks device 0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "auto picks device 0",
+            "setup": [
+              {
+                "command": "mkdir -p ~/.babelscribe/models ~/.babelscribe/bin/whisper-cli-linux-x64-cpu && curl -fL -o /tmp/cpu.zip https://github.com/phonology024/babelscribe/releases/latest/download/whisper-cli-linux-x64-cpu.zip 2>&1 && unzip -o -q /tmp/cpu.zip -d ~/.babelscribe/bin/whisper-cli-linux-x64-cpu && chmod +x ~/.babelscribe/bin/whisper-cli-linux-x64-cpu/whisper-cli && curl -fL -o ~/.babelscribe/models/ggml-tiny.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin 2>&1 && ls -l ~/.babelscribe/models/ggml-tiny.bin ~/.babelscribe/bin/whisper-cli-linux-x64-cpu/whisper-cli 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "rm -f hello.srt hello.txt hello.json && babelscribe hello.wav -l en -m tiny --flavor cpu -f srt,txt 2>&1 && echo \"---OUTPUTS---\" && cat hello.srt 2>&1 && cat hello.txt 2>&1",
+            "expected_signal": "1 segments in",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1 segments in 1.9s -> hello.srt, hello.txt",
+            "setup": [
+              {
+                "command": "python3 -c \"import wave, struct, math; p='hello.wav'; w=wave.open(p,'wb'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000); import math; dur=3; data=b''.join(struct.pack('<h', int(16000*math.sin(2*math.pi*440*i/16000))) for i in range(16000*dur)); w.writeframes(data); w.close(); print('wrote', p)\" 2>&1 && ls -l hello.wav 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p ~/.babelscribe/models ~/.babelscribe/bin/whisper-cli-linux-x64-cpu && curl -fL -o /tmp/cpu.zip https://github.com/phonology024/babelscribe/releases/latest/download/whisper-cli-linux-x64-cpu.zip 2>&1 && unzip -o -q /tmp/cpu.zip -d ~/.babelscribe/bin/whisper-cli-linux-x64-cpu && chmod +x ~/.babelscribe/bin/whisper-cli-linux-x64-cpu/whisper-cli && curl -fL -o ~/.babelscribe/models/ggml-tiny.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin 2>&1 && ls -l ~/.babelscribe/models/ggml-tiny.bin ~/.babelscribe/bin/whisper-cli-linux-x64-cpu/whisper-cli 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "~/.local/share/uv/tools/babelscribe/bin/python -c \"import asyncio; from mcp.client.stdio import StdioServerParameters, stdio_client; from mcp.client.session import ClientSession; \nasync def m():\n    p=StdioServerParameters(command='babelscribe', args=['mcp'])\n    async with stdio_client(p) as (r,w):\n        async with ClientSession(r,w) as s:\n            await s.initialize()\n            t=await s.list_tools()\n            print('TOOLS:', [x.name for x in t.tools])\nasyncio.run(m())\" 2>&1",
+            "expected_signal": "transcribe",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "TOOLS: ['transcribe', 'find_media', 'list_devices', 'list_languages_and_models']",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "pip install babelscribe",
-            "actually_needed": "uv tool install babelscribe (isolated install avoids PEP 668 read-only system error)",
-            "kind": null
+            "readme_said": "auto-detects GPU backend (Vulkan on Linux) with no extra flags",
+            "actually_needed": "removed cached Vulkan build and retried with --flavor cpu -m tiny; CPU build ran and transcribed",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "babelscribe devices",
-            "actually_needed": "babelscribe devices -m tiny --flavor cpu: default `babelscribe devices` downloads 1.6 GB large-v3-turbo which exceeds this box's 1.5 GiB file-size limit (OSError: File too large) and the default vulkan binary fails without libvulkan.so.1; the cpu flavour plus a small model works",
-            "kind": null
+            "readme_said": "--translate writes the transcript translated to English",
+            "actually_needed": "installed babelscribe 0.3.2 CLI has no --translate option (error: unrecognized arguments)",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show model list containing large-v3-turbo and version output 0.3.2.",
+          "observed": "Screenshots show version 0.3.2, models list including tiny, and devices output with auto picks device 0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-babelscribe-20261029-024248-40a6/report.json",
+          "trace_path": "runs/verify/verify-babelscribe-20261031-014309-34f6/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-babelscribe-20261029-024248-40a6/check-1-cmd3.judged.png",
-            "runs/verify/verify-babelscribe-20261029-024248-40a6/check-2-cmd2.judged.png"
+            "runs/verify/verify-babelscribe-20261031-014309-34f6/check-1-cmd2.judged.png",
+            "runs/verify/verify-babelscribe-20261031-014309-34f6/check-2-cmd4.judged.png",
+            "runs/verify/verify-babelscribe-20261031-014309-34f6/check-3-cmd12.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.078713
+        "cost_usd": 0.146318,
+        "features": [
+          {
+            "feature": "turn audio or video into subtitles",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "transcribe files from AI apps via MCP",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "translate transcripts to English",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; installed 0.3.2 has no --translate flag; errors unrecognized arguments"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:42:07+08:00",
+    "computed_at": "2026-10-31T01:45:18+08:00",
     "quality": {
-      "total": 81.2,
+      "total": 75.2,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.8,
+          "score": 0.68,
           "weight": 40.0
         },
         "install_docs": {
@@ -250,7 +325,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 42.14
+      "value": 39.03
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -589,5 +664,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:11+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T01:45:18.637590+08:00"
 }

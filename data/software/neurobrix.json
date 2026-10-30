@@ -64,12 +64,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-neurobrix-20261029-024155-d8ca",
+      "run_id": "verify-neurobrix-20261031-014155-7565",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install neurobrix 2>&1",
-          "purpose": "uv tool install neurobrix (first-ranked candidate)"
+          "purpose": "uv tool install neurobrix"
         }
       ],
       "manual_steps": [],
@@ -96,10 +96,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:44:02.917929+08:00",
+    "checked_at": "2026-10-31T01:45:57.011678+08:00",
     "runs": [
       {
-        "id": "verify-neurobrix-20261029-024155-d8ca",
+        "id": "verify-neurobrix-20261031-014155-7565",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -107,14 +107,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T02:44:02.917929+08:00",
+        "checked_at": "2026-10-31T01:45:57.011678+08:00",
         "tool_version": "0.5.4",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install neurobrix 2>&1",
-            "purpose": "uv tool install neurobrix (first-ranked candidate)"
+            "purpose": "uv tool install neurobrix"
           }
         ],
         "smoke_tests": [
@@ -124,15 +124,6 @@
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "NeuroBrix v0.5.4",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "neurobrix --help",
-            "expected_signal": "NeuroBrix - Universal Deep Learning Inference Engine",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "NeuroBrix - Universal Deep Learning Inference Engine",
             "setup": [],
             "offline": true
           },
@@ -147,38 +138,122 @@
           },
           {
             "command": "neurobrix run --help",
-            "expected_signal": "--max-tokens MAX_TOKENS",
+            "expected_signal": "--max-tokens",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "[--triton] [--triton-sequential] [--max-tokens MAX_TOKENS]",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "neurobrix upscale --model Real-ESRGAN-RealESRGAN_x4plus --input photo.png --output photo_x4.png 2>&1",
+            "expected_signal": "SAVED: photo_x4.png",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "SAVED: photo_x4.png",
+            "setup": [
+              {
+                "command": "neurobrix import xinntao/Real-ESRGAN-RealESRGAN_x4plus --accept-license 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "/home/sbx/.local/share/uv/tools/neurobrix/bin/python - <<'PY'\nfrom PIL import Image\nimg = Image.new('RGB', (64, 64), color=(30, 120, 200))\nfor x in range(64):\n    for y in range(64):\n        img.putpixel((x, y), ((x*4) % 256, (y*4) % 256, 128))\nimg.save('photo.png')\nprint('wrote photo.png', img.size)\nPY",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "neurobrix run --model Kokoro-82M --prompt \"Hello from NeuroBrix.\" --speaker af_sky --output speech.wav 2>&1",
+            "expected_signal": "SAVED: speech.wav",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "SAVED: speech.wav",
+            "setup": [
+              {
+                "command": "neurobrix import hexgrad/Kokoro-82M --accept-license 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "CPU only: pip install torch --index-url https://download.pytorch.org/whl/cpu then pip install neurobrix",
-            "actually_needed": "uv tool install neurobrix pulled the default CUDA PyTorch wheel (torch 2.15.0+cu132 with ~GBs of NVIDIA wheels); doctor still exits 0 on this GPU-less box via CPU execution and only suggests the CPU-only torch index to save space",
-            "kind": null
+            "readme_said": "pip install torch matching hardware then pip install neurobrix",
+            "actually_needed": "uv tool install neurobrix pulled torch 2.15.0+cu132 plus ~2.4 GB of NVIDIA CUDA wheels on a CPU-only box; doctor flags the waste and points to the cpu index build",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "neurobrix import <org>/<name> asks to accept the license",
+            "actually_needed": "re-run with --accept-license (or NBX_ACCEPT_LICENSE=1) for non-interactive import",
+            "kind": "note"
+          },
+          {
+            "readme_said": "neurobrix run --model Kokoro-82M --prompt \"Hello from NeuroBrix.\" --output speech.wav",
+            "actually_needed": "add --speaker <voice> e.g. --speaker af_sky; without it Kokoro-82M aborts with ZERO FALLBACK listing 54 voices",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Doctor reports no blocking problem and --version prints NeuroBrix v0.5.4.",
+          "observed": "Screenshots show doctor reporting no blocking problem, upscale completing with SAVED file, and version v0.5.4 printed.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-neurobrix-20261029-024155-d8ca/report.json",
+          "trace_path": "runs/verify/verify-neurobrix-20261031-014155-7565/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-neurobrix-20261029-024155-d8ca/check-1-cmd5.judged.png",
-            "runs/verify/verify-neurobrix-20261029-024155-d8ca/check-2-cmd3.judged.png"
+            "runs/verify/verify-neurobrix-20261031-014155-7565/check-1-cmd4.judged.png",
+            "runs/verify/verify-neurobrix-20261031-014155-7565/check-2-cmd11.judged.png",
+            "runs/verify/verify-neurobrix-20261031-014155-7565/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.041719
+        "cost_usd": 0.110188,
+        "features": [
+          {
+            "feature": "run language, vision, speech, video models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "smallest LLM container is 2.1 GB (TinyLlama), needs GPU for practical use"
+          },
+          {
+            "feature": "transcribe speech to text",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "smallest STT container is 1.5 GB (whisper-large-v3-turbo)"
+          },
+          {
+            "feature": "synthesize speech from text",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "generate images, videos and upscaled images",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -566,5 +641,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:22+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T01:45:57.012463+08:00"
 }

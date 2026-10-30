@@ -84,28 +84,28 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-mi-lsp-20261029-013109-7303",
+      "run_id": "verify-mi-lsp-20261031-013827-45c9",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && cat /tmp/install.sh",
-          "purpose": "Download install.sh"
+          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh",
+          "purpose": "download install.sh to read before running"
         },
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/validate-worker-manifest.js && ls -l /tmp/install.sh /tmp/validate-worker-manifest.js",
-          "purpose": "Download worker-manifest validator beside installer"
+          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/validate-worker-manifest.js && ls -l /tmp/validate-worker-manifest.js && wc -c /tmp/validate-worker-manifest.js",
+          "purpose": "download sibling validator required beside install.sh"
         },
         {
           "command": "sh /tmp/install.sh --skip-worker-install 2>&1",
-          "purpose": "Install CLI with --skip-worker-install"
+          "purpose": "install CLI with --skip-worker-install"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "mi-lsp version --format toon",
-        "expected_signal": "version: 0.16.2"
+        "command": "mi-lsp init . --name myapp --format toon 2>&1",
+        "expected_signal": "ok: true"
       },
-      "first_task": "mi-lsp version --format toon"
+      "first_task": "mi-lsp init . --name myapp --format toon 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -137,141 +137,8 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-30T00:58:37.941641+08:00",
+    "checked_at": "2026-10-31T01:42:30.351727+08:00",
     "runs": [
-      {
-        "id": "verify-mi-lsp-20261029-013109-7303",
-        "level": "function",
-        "unverified_reason": null,
-        "os": "linux",
-        "arch": "x86_64",
-        "method": "sandbox",
-        "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T01:36:01.717392+08:00",
-        "tool_version": "0.16.2",
-        "install_method": "script",
-        "replayed": true,
-        "steps": [
-          {
-            "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && cat /tmp/install.sh",
-            "purpose": "Download install.sh"
-          },
-          {
-            "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/validate-worker-manifest.js && ls -l /tmp/install.sh /tmp/validate-worker-manifest.js",
-            "purpose": "Download worker-manifest validator beside installer"
-          },
-          {
-            "command": "sh /tmp/install.sh --skip-worker-install 2>&1",
-            "purpose": "Install CLI with --skip-worker-install"
-          }
-        ],
-        "smoke_tests": [
-          {
-            "command": "mi-lsp version --format toon",
-            "expected_signal": "version: 0.16.2",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "version: 0.16.2",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "mi-lsp --help",
-            "expected_signal": "Manage workspace aliases and warm state",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "workspace Manage workspace aliases and warm state",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "mi-lsp init ./myapp --name myapp --format toon",
-            "expected_signal": "backend: init",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "backend: init",
-            "setup": [
-              {
-                "command": "mkdir -p myapp/src && printf '# myapp\\n\\nDemo workspace for mi-lsp smoke test.\\n' > myapp/README.md && printf 'def start_daemon():\\n    \"\"\"Start the background daemon.\"\"\"\\n    print(\"daemon starting\")\\n' > myapp/src/daemon.py && printf 'def billing_retry():\\n    pass\\n' > myapp/src/billing.py && ls -R myapp",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "mi-lsp workspace which --format toon",
-            "expected_signal": "workspace: myapp",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "workspace: myapp",
-            "setup": [
-              {
-                "command": "mkdir -p myapp/src && printf '# myapp\\n\\nDemo workspace for mi-lsp smoke test.\\n' > myapp/README.md && printf 'def start_daemon():\\n    \"\"\"Start the background daemon.\"\"\"\\n    print(\"daemon starting\")\\n' > myapp/src/daemon.py && printf 'def billing_retry():\\n    pass\\n' > myapp/src/billing.py && ls -R myapp",
-                "background": false,
-                "port": null
-              },
-              {
-                "command": "mi-lsp init ./myapp --name myapp --format toon",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "mi-lsp nav intent \"how does the daemon start\" --workspace myapp --format toon",
-            "expected_signal": "backend: intent",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "backend: intent",
-            "setup": [
-              {
-                "command": "mkdir -p myapp/src && printf '# myapp\\n\\nDemo workspace for mi-lsp smoke test.\\n' > myapp/README.md && printf 'def start_daemon():\\n    \"\"\"Start the background daemon.\"\"\"\\n    print(\"daemon starting\")\\n' > myapp/src/daemon.py && printf 'def billing_retry():\\n    pass\\n' > myapp/src/billing.py && ls -R myapp",
-                "background": false,
-                "port": null
-              },
-              {
-                "command": "mi-lsp init ./myapp --name myapp --format toon",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          }
-        ],
-        "pitfalls": [
-          {
-            "readme_said": "curl -fsSL .../install-agent.sh | sh",
-            "actually_needed": "Also download validate-worker-manifest.js next to install.sh; install-agent.sh fetched alone fails with 'Cannot find module /tmp/validate-worker-manifest.js'",
-            "kind": null
-          },
-          {
-            "readme_said": "curl -fsSL .../install.sh | sh",
-            "actually_needed": "Run as 'sh /tmp/install.sh --skip-worker-install'; default run fails at 'mi-lsp worker install' with 'staged worker did not pass protocol verification' and rolls back, and 'worker status' reports bundled worker 'permission denied' and 'dotnet is not available'",
-            "kind": null
-          }
-        ],
-        "blocking_error": null,
-        "judge": {
-          "verdict": "working",
-          "observed": "Screenshots show version 0.16.2 with ok:true, init creating workspace myapp with ok:true, and help listing workspace management.",
-          "model": "muse-spark-1.3"
-        },
-        "evidence": {
-          "trace_path": "runs/verify/verify-mi-lsp-20261029-013109-7303/report.json",
-          "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-mi-lsp-20261029-013109-7303/check-1-cmd8.judged.png",
-            "runs/verify/verify-mi-lsp-20261029-013109-7303/check-2-cmd12.judged.png",
-            "runs/verify/verify-mi-lsp-20261029-013109-7303/check-3-cmd9.judged.png"
-          ],
-          "evidence_url": null
-        },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.101623
-      },
       {
         "id": "verify-mi-lsp-20261030-004205-93c9",
         "level": "function",
@@ -379,20 +246,227 @@
         },
         "actor_model": "muse-spark-1.3",
         "cost_usd": 0.104168
+      },
+      {
+        "id": "verify-mi-lsp-20261031-013827-45c9",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:42:30.351727+08:00",
+        "tool_version": "v0.16.7",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh",
+            "purpose": "download install.sh to read before running"
+          },
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/validate-worker-manifest.js && ls -l /tmp/validate-worker-manifest.js && wc -c /tmp/validate-worker-manifest.js",
+            "purpose": "download sibling validator required beside install.sh"
+          },
+          {
+            "command": "sh /tmp/install.sh --skip-worker-install 2>&1",
+            "purpose": "install CLI with --skip-worker-install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mi-lsp init . --name myapp --format toon 2>&1",
+            "expected_signal": "ok: true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ok: true",
+            "setup": [
+              {
+                "command": "mkdir -p src .docs/wiki/05_requirements && cat > src/app.py <<'PY'\ndef hello_world(name):\n    \"\"\"Greet by name.\"\"\"\n    return f\"hello {name}\"\n\ndef billing_retry(attempt):\n    \"\"\"Retry billing.\"\"\"\n    return attempt + 1\nPY\ncat src/app.py && mkdir -p myapp 2>/dev/null; echo setup-done",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mi-lsp nav find hello_world --workspace myapp --format toon 2>&1",
+            "expected_signal": "hello_world",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "src/app.py,\"\",function,1,hello_world,catalog,module,\"def hello_world(name):\"",
+            "setup": [
+              {
+                "command": "mkdir -p src .docs/wiki/05_requirements && cat > src/app.py <<'PY'\ndef hello_world(name):\n    \"\"\"Greet by name.\"\"\"\n    return f\"hello {name}\"\n\ndef billing_retry(attempt):\n    \"\"\"Retry billing.\"\"\"\n    return attempt + 1\nPY\ncat src/app.py && mkdir -p myapp 2>/dev/null; echo setup-done",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mi-lsp init . --name myapp --format toon 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mi-lsp nav search \"billing_retry\" --workspace myapp --repo src --include-content --format toon 2>&1",
+            "expected_signal": "def billing_retry(attempt):",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "5,\"def billing_retry(attempt):\",5,1,symbol,5,src/app.py,5,text,src,function,billing_retry,\"def billing_retry(attempt):\"",
+            "setup": [
+              {
+                "command": "mkdir -p src .docs/wiki/05_requirements && cat > src/app.py <<'PY'\ndef hello_world(name):\n    \"\"\"Greet by name.\"\"\"\n    return f\"hello {name}\"\n\ndef billing_retry(attempt):\n    \"\"\"Retry billing.\"\"\"\n    return attempt + 1\nPY\ncat src/app.py && mkdir -p myapp 2>/dev/null; echo setup-done",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mi-lsp init . --name myapp --format toon 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mi-lsp nav multi-read src/app.py:1-8 --workspace myapp --format toon 2>&1",
+            "expected_signal": "def hello_world(name):",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"def hello_world(name):\\n \\\"\\\"\\\"Greet by name.\\\"\\\"\\\"\\n return f\\\"hello {name}\\\"\\n\\ndef billing_retry(attempt):\\n \\\"\\\"\\\"Retry billing.\\\"\\\"\\\"\\n return attempt + 1\",8,src/app.py,7,\"\",1",
+            "setup": [
+              {
+                "command": "mkdir -p src .docs/wiki/05_requirements && cat > src/app.py <<'PY'\ndef hello_world(name):\n    \"\"\"Greet by name.\"\"\"\n    return f\"hello {name}\"\n\ndef billing_retry(attempt):\n    \"\"\"Retry billing.\"\"\"\n    return attempt + 1\nPY\ncat src/app.py && mkdir -p myapp 2>/dev/null; echo setup-done",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mi-lsp init . --name myapp --format toon 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mi-lsp nav wiki search \"billing\" --workspace myapp --format toon 2>&1",
+            "expected_signal": "Governance is blocked",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "summary: Governance is blocked because the human governance document is missing.",
+            "setup": [
+              {
+                "command": "mkdir -p src .docs/wiki/05_requirements && cat > src/app.py <<'PY'\ndef hello_world(name):\n    \"\"\"Greet by name.\"\"\"\n    return f\"hello {name}\"\n\ndef billing_retry(attempt):\n    \"\"\"Retry billing.\"\"\"\n    return attempt + 1\nPY\ncat src/app.py && mkdir -p myapp 2>/dev/null; echo setup-done",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mi-lsp init . --name myapp --format toon 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL .../install-agent.sh | sh (which fetches install.sh alone)",
+            "actually_needed": "download https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js beside install.sh before running it; install.sh calls node <script_dir>/validate-worker-manifest.js",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "curl -fsSL .../install-agent.sh | sh installs CLI",
+            "actually_needed": "sh /tmp/install.sh --skip-worker-install; plain install fails at worker install stage with 'staged worker did not pass protocol verification'",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "installer verifies SHA256 checksum",
+            "actually_needed": "release tarball (~270MB) downloaded and verified by installer at install time; binary content cannot be read beforehand",
+            "kind": "note"
+          },
+          {
+            "readme_said": "mi-lsp nav search \"billing retry\" --include-content --workspace myapp",
+            "actually_needed": "on a container workspace add --repo src: mi-lsp nav search ... --workspace myapp --repo src --include-content",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show mi-lsp init succeeded and nav find/search returned expected symbols with ok: true.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mi-lsp-20261031-013827-45c9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mi-lsp-20261031-013827-45c9/check-1-cmd10.judged.png",
+            "runs/verify/verify-mi-lsp-20261031-013827-45c9/check-2-cmd11.judged.png",
+            "runs/verify/verify-mi-lsp-20261031-013827-45c9/check-3-cmd15.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.106461,
+        "features": [
+          {
+            "feature": "Find symbols by name",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Search text with matching code inline",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Read exact file ranges",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Navigate canonical wiki and governance docs",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:40:05+08:00",
+    "computed_at": "2026-10-31T01:42:30+08:00",
     "quality": {
-      "total": 78.7,
+      "total": 73.3,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.7225,
+          "score": 0.6141,
           "weight": 40.0
         },
         "install_docs": {
@@ -433,7 +507,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 54.46
+      "value": 50.72
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -732,5 +806,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T01:42:30.352713+08:00"
 }
