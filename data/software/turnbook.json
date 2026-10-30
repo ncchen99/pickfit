@@ -71,18 +71,21 @@
       "first_task": "turnbook model"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "pip",
+      "basis": "replayed",
+      "run_id": "verify-turnbook-20261031-023306-1250",
+      "method": "uv",
       "steps": [
         {
-          "command": "python -m pip install --upgrade turnbook",
-          "purpose": null
+          "command": "uv tool install turnbook 2>&1",
+          "purpose": "install turnbook isolated via uv tool"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "turnbook model"
+      "check": {
+        "command": "turnbook --help 2>&1",
+        "expected_signal": "turnbook folder [PATH | local | share | CODE]"
+      },
+      "first_task": "turnbook model 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -112,10 +115,85 @@
     "url": "https://github.com/goyohan0611-png/turnbook/releases/tag/v0.10.4"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:34:04.619281+08:00",
+    "runs": [
+      {
+        "id": "verify-turnbook-20261031-023306-1250",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:34:04.619281+08:00",
+        "tool_version": "0.10.4",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install turnbook 2>&1",
+            "purpose": "install turnbook isolated via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "turnbook --help 2>&1",
+            "expected_signal": "turnbook folder [PATH | local | share | CODE]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "turnbook folder [PATH | local | share | CODE] [--share-existing]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "turnbook model 2>&1",
+            "expected_signal": "Search model: gemma",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Search model: gemma (onnx-community/embeddinggemma-300m-ONNX@onnx/model_q4.onnx)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/sampledocs && printf '# hello\\nThis is a test doc for turnbook memory.\\n' > /tmp/sampledocs/hello.md && turnbook docs add /tmp/sampledocs 2>&1",
+            "expected_signal": "Added /tmp/sampledocs",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Added /tmp/sampledocs. Its Markdown and text files are stored within a minute and kept up to date while automatic capture runs.",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "See your memory in 3D (turnbook-view)",
+            "actually_needed": "turnbook-view crashes with sqlite3.OperationalError: unable to open database file until the capture service has created the memory DB; on a fresh install with no conversations use --help or add content first",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show expected outputs: help with folder syntax, search model gemma, and docs add confirmation.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-turnbook-20261031-023306-1250/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-turnbook-20261031-023306-1250/check-1-cmd2.judged.png",
+            "runs/verify/verify-turnbook-20261031-023306-1250/check-2-cmd4.judged.png",
+            "runs/verify/verify-turnbook-20261031-023306-1250/check-3-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.065965
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -374,5 +452,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:51:37+08:00",
-  "updated_at": "2026-10-31T02:17:52+08:00"
+  "updated_at": "2026-10-31T02:34:04.620179+08:00"
 }

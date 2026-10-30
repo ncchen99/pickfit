@@ -63,18 +63,25 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-ogcode-20261031-023713-61ea",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://ogcode.in/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://ogcode.in/install.sh -o /tmp/ogcode-install.sh && wc -c /tmp/ogcode-install.sh && head -c 2000 /tmp/ogcode-install.sh",
+          "purpose": "Download install script for inspection"
+        },
+        {
+          "command": "INSTALL_DIR=\"$HOME/.local/bin\" sh /tmp/ogcode-install.sh",
+          "purpose": "Install ogcode to user bin dir"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "ogcode"
+      "check": {
+        "command": "ogcode version",
+        "expected_signal": "ogcode v0.54.0"
+      },
+      "first_task": "ogcode version"
     },
     "windows": {
       "basis": "readme_claim",
@@ -104,10 +111,104 @@
     "url": "https://github.com/prasenjeet-symon/ogcode/releases/tag/v0.54.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:38:21.670787+08:00",
+    "runs": [
+      {
+        "id": "verify-ogcode-20261031-023713-61ea",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:38:21.670787+08:00",
+        "tool_version": "v0.54.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://ogcode.in/install.sh -o /tmp/ogcode-install.sh && wc -c /tmp/ogcode-install.sh && head -c 2000 /tmp/ogcode-install.sh",
+            "purpose": "Download install script for inspection"
+          },
+          {
+            "command": "INSTALL_DIR=\"$HOME/.local/bin\" sh /tmp/ogcode-install.sh",
+            "purpose": "Install ogcode to user bin dir"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ogcode version",
+            "expected_signal": "ogcode v0.54.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ogcode v0.54.0 (linux/amd64)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ogcode --help",
+            "expected_signal": "Agentic coding assistant with web UI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Agentic coding assistant with web UI",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -fsSL http://localhost:9595/v1/models",
+            "expected_signal": "<title>ogcode</title>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "<title>ogcode</title>",
+            "setup": [
+              {
+                "command": "ogcode serve -p 9595",
+                "background": true,
+                "port": 9595
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://ogcode.in/install.sh | sh",
+            "actually_needed": "INSTALL_DIR=\"$HOME/.local/bin\" sh /tmp/ogcode-install.sh; default /usr/local/bin is not writable without sudo in this box",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "--version works to check version",
+            "actually_needed": "ogcode version prints version; ogcode --version exits 1 with unknown flag",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "ogcode index builds the semantic project index",
+            "actually_needed": "ogcode index exits 1 requiring ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY or OLLAMA_API_KEY; server UI works without a key",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show the server returning HTML containing <title>ogcode</title> and the CLI printing ogcode v0.54.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ogcode-20261031-023713-61ea/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ogcode-20261031-023713-61ea/check-1-cmd11.judged.png",
+            "runs/verify/verify-ogcode-20261031-023713-61ea/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.062903
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -390,5 +491,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:51:37+08:00",
-  "updated_at": "2026-10-31T02:17:52+08:00"
+  "updated_at": "2026-10-31T02:38:21.671588+08:00"
 }

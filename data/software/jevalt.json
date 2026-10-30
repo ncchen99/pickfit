@@ -54,7 +54,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-jevalt-20261031-023118-6d36",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install \"jevalt[serve] @ git+https://github.com/mertkayacs/jevalt\"",
+          "purpose": "Install jevalt with serve extras (fell back from serve,gguf which needs compiler)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "jevalt --help",
+        "expected_signal": "Local decision models with the Jev contract."
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -70,10 +86,79 @@
     "url": "https://github.com/mertkayacs/jevalt/releases/tag/v0.1.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:32:58.544215+08:00",
+    "runs": [
+      {
+        "id": "verify-jevalt-20261031-023118-6d36",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:32:58.544215+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pip install \"jevalt[serve] @ git+https://github.com/mertkayacs/jevalt\"",
+            "purpose": "Install jevalt with serve extras (fell back from serve,gguf which needs compiler)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "jevalt --help",
+            "expected_signal": "Local decision models with the Jev contract.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Local decision models with the Jev contract.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "jevalt serve --help",
+            "expected_signal": "--backend {gguf,hf}",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: jevalt serve [-h] [--backend {gguf,hf}] [--model MODEL] [--file FILE] [--ctx CTX]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install \"jevalt[serve,gguf] @ git+https://github.com/mertkayacs/jevalt\"",
+            "actually_needed": "Install without gguf extra: pip install \"jevalt[serve] @ git+https://github.com/mertkayacs/jevalt\" (fastapi+uvicorn only); gguf extra pulls llama-cpp-python which on PyPI is sdist-only (e.g. 0.3.36, 0.3.8, 0.2.90 all only tar.gz) and its scikit-build-core/CMake build fails here with no gcc/cmake an…",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Q4_K_M GGUF builds run on CPU in about 3 GB RAM; jevalt serve downloads Deem-4B by default",
+            "actually_needed": "Both backends require a decision checkpoint with a single <decision> token (LlamaCppBackend._single('<decision>') and HFBackend check for <decision> token); generic tiny models under 300 MB (stories260K GGUF, SmolLM2-135M-Instruct GGUF/safetensors) lack it so no tiny-model inference check is possib…",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows jevalt --help printing usage and the expected tagline with exit code 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-jevalt-20261031-023118-6d36/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-jevalt-20261031-023118-6d36/check-1-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.12405
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -308,5 +393,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:46:57+08:00",
-  "updated_at": "2026-10-31T02:17:52+08:00"
+  "updated_at": "2026-10-31T02:32:58.545084+08:00"
 }

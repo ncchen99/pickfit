@@ -73,20 +73,21 @@
       "first_task": "mcc-server --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-my-claude-code-20261031-023451-c6fc",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install my-claude-code",
-          "purpose": null
+          "purpose": "Install via first-ranked candidate uv tool install my-claude-code"
         }
       ],
-      "manual_steps": [
-        "On Windows SmartScreen click More info then Run anyway"
-      ],
-      "check": null,
-      "first_task": "mcc-server --version"
+      "manual_steps": [],
+      "check": {
+        "command": "mcc-server --help",
+        "expected_signal": "mcc-server"
+      },
+      "first_task": "curl -s http://127.0.0.1:8082/health"
     },
     "windows": {
       "basis": "readme_claim",
@@ -118,10 +119,90 @@
     "url": "https://github.com/FiredMosquito831/my-claude-code/releases/tag/v7.120.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:35:48.415106+08:00",
+    "runs": [
+      {
+        "id": "verify-my-claude-code-20261031-023451-c6fc",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:35:48.415106+08:00",
+        "tool_version": "7.120.2",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install my-claude-code",
+            "purpose": "Install via first-ranked candidate uv tool install my-claude-code"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mcc-server --version",
+            "expected_signal": "my-claude-code 7.120.2",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "my-claude-code 7.121.0",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "mcc-server --help",
+            "expected_signal": "mcc-server",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mcc-server Start the local proxy and admin dashboard",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8082/health",
+            "expected_signal": "{\"status\":\"healthy\"}",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"healthy\"}",
+            "setup": [
+              {
+                "command": "mcc-server",
+                "background": true,
+                "port": 8082
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "MCC requires Python 3.14 and the PyPI route does not provision anything",
+            "actually_needed": "uv tool install succeeded on system Python 3.12.16 and mcc-server runs; uv resolved a suitable interpreter automatically",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Health endpoint returned healthy JSON and help output lists mcc-server proxy commands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-my-claude-code-20261031-023451-c6fc/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-my-claude-code-20261031-023451-c6fc/check-1-cmd6.judged.png",
+            "runs/verify/verify-my-claude-code-20261031-023451-c6fc/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.05318
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -372,5 +453,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:47:12+08:00",
-  "updated_at": "2026-10-31T02:17:52+08:00"
+  "updated_at": "2026-10-31T02:35:48.421432+08:00"
 }

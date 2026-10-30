@@ -97,9 +97,81 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "suspected_tool_fault",
+    "checked_at": "2026-10-31T02:32:14.613581+08:00",
+    "runs": [
+      {
+        "id": "verify-watcher-20261031-023118-db37",
+        "level": "unverified",
+        "unverified_reason": "suspected_tool_fault",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:32:14.613581+08:00",
+        "tool_version": null,
+        "install_method": "script",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/shaheeranser/watcher/releases/latest/download/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && head -c 2000 /tmp/install.sh; echo \"---HEAD DONE---\"; wc -c /tmp/install.sh",
+            "purpose": "Download install script only"
+          },
+          {
+            "command": "WATCHER_INSTALL_DIR=\"$HOME/.local/bin\" sh /tmp/install.sh && ls -l \"$HOME/.local/bin/watcher\"",
+            "purpose": "Install watcher per-user via script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "watcher --help",
+            "expected_signal": "Results go to stdout as text on a terminal or JSON Lines otherwise.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Results go to stdout as text on a terminal or JSON Lines otherwise. All",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "watcher --version",
+            "expected_signal": "",
+            "exit_code": 2,
+            "passed": false,
+            "observed_excerpt": "time=2026-10-30T18:31:36.614Z level=ERROR msg=\"invalid configuration\" error=\"parse flags: flag provided but not defined: -version\"",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://github.com/shaheeranser/watcher/releases/latest/download/install.sh | sudo sh",
+            "actually_needed": "WATCHER_INSTALL_DIR=\"$HOME/.local/bin\" sh /tmp/install.sh with no sudo; ~/.local/bin is already on PATH so no profile change was needed",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Use `watcher --version` to report the binary's build version",
+            "actually_needed": "binary rejects --version with 'flag provided but not defined: -version' (exit 2); only verbs attach, eval, onboard, run are accepted and --help lists no --version flag",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "README implies standard --help output",
+            "actually_needed": "watcher --help exits 0 but writes the help text to stderr with empty stdout",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": "suspected tool fault, not proven: command 3 exits 2 (command 3 shows no error of the tool's own code); it failed again in a fresh box; watcher --version (README example) fails with exit 2: invalid configuration error=\"parse flags: flag provided but not defined: -version\" despite README stating it reports the binary's build version",
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-watcher-20261031-023118-db37/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.051123
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -334,5 +406,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:48:02+08:00",
-  "updated_at": "2026-10-31T02:17:52+08:00"
+  "updated_at": "2026-10-31T02:32:14.615451+08:00"
 }

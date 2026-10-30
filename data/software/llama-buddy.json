@@ -55,7 +55,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-llama-buddy-20261031-023118-3656",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install llama-buddy && llb --help",
+          "purpose": "Install llama-buddy via uv tool install"
+        },
+        {
+          "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/",
+          "purpose": "Download tiny stories260K GGUF test model"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "llb --version",
+        "expected_signal": "llb 0.1.16"
+      },
+      "first_task": "llb status"
+    },
     "windows": null
   },
   "pricing": {
@@ -67,10 +87,89 @@
   "processing": "local",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:33:06.552419+08:00",
+    "runs": [
+      {
+        "id": "verify-llama-buddy-20261031-023118-3656",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:33:06.552419+08:00",
+        "tool_version": "0.1.16",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install llama-buddy && llb --help",
+            "purpose": "Install llama-buddy via uv tool install"
+          },
+          {
+            "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/",
+            "purpose": "Download tiny stories260K GGUF test model"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "llb --version",
+            "expected_signal": "llb 0.1.16",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "llb 0.1.16",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "llb status",
+            "expected_signal": "llama-server is not running.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "llama-server is not running.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "llb info ~/models/stories260K.gguf",
+            "expected_signal": "Architecture",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ Architecture llama │",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "llb models lists all models",
+            "actually_needed": "llb status works without a server but llb models exits 1 with 'Could not connect to llama-server. Is it running?' when no server is running; a running llama-server (llama.cpp binary plus its *.so libs copied to ~/.local/bin) is required for models/props/chat.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show llb status reporting server not running, llb info displaying Architecture details, and llb --version printing 0.1.16.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-llama-buddy-20261031-023118-3656/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-llama-buddy-20261031-023118-3656/check-1-cmd11.judged.png",
+            "runs/verify/verify-llama-buddy-20261031-023118-3656/check-2-cmd15.judged.png",
+            "runs/verify/verify-llama-buddy-20261031-023118-3656/check-3-cmd10.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.186009
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -275,5 +374,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:47:04+08:00",
-  "updated_at": "2026-10-31T02:17:52+08:00"
+  "updated_at": "2026-10-31T02:33:06.554058+08:00"
 }

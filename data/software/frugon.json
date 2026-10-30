@@ -72,17 +72,20 @@
       "first_task": "frugon analyze --demo"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-frugon-20261031-023714-2aff",
       "method": "uv",
       "steps": [
         {
-          "command": "uvx frugon analyze ./logs.jsonl",
-          "purpose": null
+          "command": "uv tool install frugon && frugon --version",
+          "purpose": "Permanent install via uv tool install frugon"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "frugon --version",
+        "expected_signal": "frugon 0.2.6"
+      },
       "first_task": "frugon analyze --demo"
     },
     "windows": {
@@ -113,10 +116,78 @@
     "url": "https://github.com/Rodiun/frugon/releases/tag/v0.2.6"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:38:18.955946+08:00",
+    "runs": [
+      {
+        "id": "verify-frugon-20261031-023714-2aff",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:38:18.955946+08:00",
+        "tool_version": "frugon 0.2.6",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install frugon && frugon --version",
+            "purpose": "Permanent install via uv tool install frugon"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "frugon --version",
+            "expected_signal": "frugon 0.2.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "frugon 0.2.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "frugon --help",
+            "expected_signal": "Usage: frugon [OPTIONS] COMMAND [ARGS]...",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: frugon [OPTIONS] COMMAND [ARGS]...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "frugon analyze --demo",
+            "expected_signal": "56,100 calls",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ Analyzed 56,100 calls · baseline gpt-5.5 (your current model) │",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show demo cost analysis of 56,100 calls with savings breakdown and version output frugon 0.2.6.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-frugon-20261031-023714-2aff/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-frugon-20261031-023714-2aff/check-1-cmd4.judged.png",
+            "runs/verify/verify-frugon-20261031-023714-2aff/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.033556
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -383,5 +454,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:52:01+08:00",
-  "updated_at": "2026-10-31T02:17:52+08:00"
+  "updated_at": "2026-10-31T02:38:18.956889+08:00"
 }

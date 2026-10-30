@@ -73,18 +73,29 @@
       "first_task": "pytest -v"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-illip-20261031-023619-2442",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/Yashwanth-pilli/ILLIP/main/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL -o /tmp/install.sh https://raw.githubusercontent.com/Yashwanth-pilli/ILLIP/main/install.sh && wc -c /tmp/install.sh && head -c 2000 /tmp/install.sh",
+          "purpose": "Download install.sh for reading before running"
+        },
+        {
+          "command": "bash /tmp/install.sh",
+          "purpose": "Run README script installer (clone, venv, pip install, .env)"
+        },
+        {
+          "command": "./illip_ai/.venv/bin/python -m pip install \"pytest>=9.0\" \"pytest-asyncio>=1.0\" && ./illip_ai/.venv/bin/python -m pytest --version",
+          "purpose": "Install pytest dev deps missing from installer"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "pytest -v"
+      "check": {
+        "command": "cd illip_ai && ./.venv/bin/python -m pytest -v",
+        "expected_signal": "249 passed"
+      },
+      "first_task": "cd illip_ai && ./.venv/bin/python -m pytest -v"
     },
     "windows": {
       "basis": "readme_claim",
@@ -114,10 +125,134 @@
     "url": "https://github.com/Yashwanth-pilli/ILLIP/releases/tag/v3.4.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:39:25.711634+08:00",
+    "runs": [
+      {
+        "id": "verify-illip-20261031-023619-2442",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:39:25.711634+08:00",
+        "tool_version": "3.1.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/install.sh https://raw.githubusercontent.com/Yashwanth-pilli/ILLIP/main/install.sh && wc -c /tmp/install.sh && head -c 2000 /tmp/install.sh",
+            "purpose": "Download install.sh for reading before running"
+          },
+          {
+            "command": "bash /tmp/install.sh",
+            "purpose": "Run README script installer (clone, venv, pip install, .env)"
+          },
+          {
+            "command": "./illip_ai/.venv/bin/python -m pip install \"pytest>=9.0\" \"pytest-asyncio>=1.0\" && ./illip_ai/.venv/bin/python -m pytest --version",
+            "purpose": "Install pytest dev deps missing from installer"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd illip_ai && ./.venv/bin/python -m pytest -v",
+            "expected_signal": "249 passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "================================= 249 passed, 2 warnings in 27.14s =================================",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS http://127.0.0.1:8000/api/health",
+            "expected_signal": "\"status\":\"ok\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"ok\",\"message\":\"System healthy. Provider: mock\",\"timestamp\":\"2026-10-30T18:39:19.165182Z\"}",
+            "setup": [
+              {
+                "command": "cd illip_ai && MODEL_PROVIDER=mock ./.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS http://127.0.0.1:8000/v1/models",
+            "expected_signal": "\"id\":\"illip\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"object\":\"list\",\"data\":[{\"id\":\"illip\",\"object\":\"model\",\"created\":1793385559,\"owned_by\":\"illip\"}]}",
+            "setup": [
+              {
+                "command": "cd illip_ai && MODEL_PROVIDER=mock ./.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS http://127.0.0.1:8000/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\":\"illip\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hi in five words\"}],\"temperature\":0,\"max_tokens\":16,\"stream\":false}'",
+            "expected_signal": "\"object\":\"chat.completion\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":\"chatcmpl-b08db922\",\"object\":\"chat.completion\",\"created\":1793385559,\"model\":\"illip\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"I can help you with tasks, planning, and more. What would you like to do?\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":0,\"completion_tokens…",
+            "setup": [
+              {
+                "command": "cd illip_ai && MODEL_PROVIDER=mock ./.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd illip_ai && ./.venv/bin/python -c \"from app import __version__; print(__version__)\" && ./.venv/bin/python app/cli.py version",
+            "expected_signal": "3.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "3.1.0",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Running Tests: pytest -v (and test_chat.py, test_agents.py)",
+            "actually_needed": "./illip_ai/.venv/bin/python -m pip install \"pytest>=9.0\" \"pytest-asyncio>=1.0\" before pytest works",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "Default provider auto (Ollama -> llamafile -> OpenRouter -> Groq -> Mock); Troubleshooting says set MODEL_PROVIDER=mock to test without a model",
+            "actually_needed": "Started server with MODEL_PROVIDER=mock so /api/health reports mock provider with no Ollama, API key, GPU or model download",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show healthy status ok, models list containing illip, and 249 tests passed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-illip-20261031-023619-2442/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-illip-20261031-023619-2442/check-1-cmd7.judged.png",
+            "runs/verify/verify-illip-20261031-023619-2442/check-2-cmd8.judged.png",
+            "runs/verify/verify-illip-20261031-023619-2442/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.130504
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -360,5 +495,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:46:33+08:00",
-  "updated_at": "2026-10-31T02:17:52+08:00"
+  "updated_at": "2026-10-31T02:39:25.713468+08:00"
 }

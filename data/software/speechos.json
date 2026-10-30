@@ -74,18 +74,33 @@
       "first_task": null
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "docker",
+      "basis": "replayed",
+      "run_id": "verify-speechos-20261031-023821-4566",
+      "method": "npm",
       "steps": [
         {
-          "command": "docker compose -f docker/docker-compose.gpu.yml up --build",
-          "purpose": null
+          "command": "npm install -g pnpm",
+          "purpose": "Install pnpm prerequisite via npm"
+        },
+        {
+          "command": "rm -rf speechos && git clone --depth 1 https://github.com/miikkij/Speechos speechos",
+          "purpose": "Clone Speechos repo"
+        },
+        {
+          "command": "cd speechos/web && pnpm install",
+          "purpose": "Install web via pnpm (candidate 1)"
+        },
+        {
+          "command": "cd speechos/api && uv venv --python 3.12 && uv pip install -r requirements-ci.txt",
+          "purpose": "Install API lightweight CPU env via requirements-ci"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": null
+      "check": {
+        "command": "pnpm --version",
+        "expected_signal": "12.16.1"
+      },
+      "first_task": "cd speechos/api && uv run --no-sync pytest -q"
     },
     "windows": {
       "basis": "readme_claim",
@@ -115,10 +130,132 @@
     "url": "https://github.com/miikkij/Speechos/releases/tag/v0.1.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:43:36.591954+08:00",
+    "runs": [
+      {
+        "id": "verify-speechos-20261031-023821-4566",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:43:36.591954+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g pnpm",
+            "purpose": "Install pnpm prerequisite via npm"
+          },
+          {
+            "command": "rm -rf speechos && git clone --depth 1 https://github.com/miikkij/Speechos speechos",
+            "purpose": "Clone Speechos repo"
+          },
+          {
+            "command": "cd speechos/web && pnpm install",
+            "purpose": "Install web via pnpm (candidate 1)"
+          },
+          {
+            "command": "cd speechos/api && uv venv --python 3.12 && uv pip install -r requirements-ci.txt",
+            "purpose": "Install API lightweight CPU env via requirements-ci"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "pnpm --version",
+            "expected_signal": "12.16.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "12.16.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd speechos/web && pnpm build",
+            "expected_signal": "Compiled successfully",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ Compiled successfully in 815ms",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "cd speechos/api && uv run --no-sync pytest -q",
+            "expected_signal": "149 passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "149 passed, 1 skipped, 6 deselected in 24.62s",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS http://127.0.0.1:36300/health",
+            "expected_signal": "{\"status\":\"ok\"}",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"ok\"}",
+            "setup": [
+              {
+                "command": "cd speechos/api && uv run --no-sync python -m src",
+                "background": true,
+                "port": 36300
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS http://127.0.0.1:36300/api/system/info",
+            "expected_signal": "\"tier\":\"cpu-2gb\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"hardware\":{\"mode\":\"cpu\",\"tier\":\"cpu-2gb\",\"cpu_cores\":2,\"ram_gb\":2.0,\"gpu_available\":false,\"gpu_name\":null,\"vram_gb\":0.0},\"models\":{\"configured\":{\"stt\":{\"engine\":\"faster-whisper\",\"model\":\"tiny\",\"device\":\"cpu\"},\"tts\":{\"engine\":\"piper\",\"model\":\"fi_FI-harri-medium\",\"device\":\"cpu\"},\"vad\":{\"engine\":\"si…",
+            "setup": [
+              {
+                "command": "cd speechos/api && uv run --no-sync python -m src",
+                "background": true,
+                "port": 36300
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cd api && uv sync --extra gpu (omit on CPU-only machines)",
+            "actually_needed": "On this CPU-only 2 GB box used the CI lightweight env instead: `uv venv --python 3.12 && uv pip install -r requirements-ci.txt`; unit tests and /health run without torch via lazy model loading",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Prereq Node.js 22+ and pnpm; cd web && pnpm install",
+            "actually_needed": "Ran `npm install -g pnpm` first; box had node 22/npm/uv but pnpm was missing",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show Next.js build compiled successfully, pytest reporting 149 passed, and pnpm version 12.16.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-speechos-20261031-023821-4566/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-speechos-20261031-023821-4566/check-1-cmd6.judged.png",
+            "runs/verify/verify-speechos-20261031-023821-4566/check-2-cmd8.judged.png",
+            "runs/verify/verify-speechos-20261031-023821-4566/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.237907
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -393,5 +530,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:50:00+08:00",
-  "updated_at": "2026-10-31T02:17:52+08:00"
+  "updated_at": "2026-10-31T02:43:36.593658+08:00"
 }

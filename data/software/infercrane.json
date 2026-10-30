@@ -69,18 +69,25 @@
       "first_task": "infercrane workload plan"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "npm",
+      "basis": "replayed",
+      "run_id": "verify-infercrane-20261031-023354-b485",
+      "method": "binary",
       "steps": [
         {
-          "command": "npm install '@infercrane/sdk@1.0.0-rc.1'",
-          "purpose": null
+          "command": "curl -sL -o /tmp/infercrane.tar.gz 'https://github.com/infercrane/infercrane/releases/download/v1.0.0-rc.1/infercrane_1.0.0-rc.1_linux_amd64.tar.gz' && tar tzf /tmp/infercrane.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/infercrane.tar.gz -C /tmp/ && ls -la /tmp/*.tar.gz /tmp/infercrane* 2>&1; echo \"===\"; find /tmp -maxdepth 2 -type f -name \"infercrane*\" -exec ls -la {} \\;",
+          "purpose": "Download Linux CLI archive and extract binary"
+        },
+        {
+          "command": "cp /tmp/infercrane ~/.local/bin/infercrane && chmod +x ~/.local/bin/infercrane && infercrane --version && infercrane --help",
+          "purpose": "Install infercrane binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "infercrane workload plan"
+      "check": {
+        "command": "infercrane --version",
+        "expected_signal": "infercrane version 1.0.0-rc.1"
+      },
+      "first_task": "rm -rf /tmp/support ./support && infercrane workload init ./support --recipe qwen3-8b"
     },
     "windows": null
   },
@@ -93,10 +100,93 @@
   "processing": null,
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:35:05.335659+08:00",
+    "runs": [
+      {
+        "id": "verify-infercrane-20261031-023354-b485",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:35:05.335659+08:00",
+        "tool_version": "1.0.0-rc.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sL -o /tmp/infercrane.tar.gz 'https://github.com/infercrane/infercrane/releases/download/v1.0.0-rc.1/infercrane_1.0.0-rc.1_linux_amd64.tar.gz' && tar tzf /tmp/infercrane.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/infercrane.tar.gz -C /tmp/ && ls -la /tmp/*.tar.gz /tmp/infercrane* 2>&1; echo \"===\"; find /tmp -maxdepth 2 -type f -name \"infercrane*\" -exec ls -la {} \\;",
+            "purpose": "Download Linux CLI archive and extract binary"
+          },
+          {
+            "command": "cp /tmp/infercrane ~/.local/bin/infercrane && chmod +x ~/.local/bin/infercrane && infercrane --version && infercrane --help",
+            "purpose": "Install infercrane binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "infercrane --version",
+            "expected_signal": "infercrane version 1.0.0-rc.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "infercrane version 1.0.0-rc.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "infercrane --help",
+            "expected_signal": "Use \"infercrane [command] --help\" for more information about a command.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Use \"infercrane [command] --help\" for more information about a command.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rm -rf /tmp/support ./support && infercrane workload init ./support --recipe qwen3-8b",
+            "expected_signal": "Inference project created",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Inference project created",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm install '@infercrane/sdk@1.0.0-rc.1' and python -m pip install '.../infercrane-1.0.0rc1-py3-none-any.whl' install the CLI",
+            "actually_needed": "Downloaded and installed the Linux CLI archive infercrane_1.0.0-rc.1_linux_amd64.tar.gz from the v1.0.0-rc.1 release and copied the 'infercrane' binary to ~/.local/bin; neither artifact provides an 'infercrane' executable",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "infercrane workload plan runs after 'infercrane workload init ./support --recipe qwen3-8b' with no mention of an API key",
+            "actually_needed": "INFERCRANE_API_KEY is required (error: 'INFERCRANE_API_KEY is required; run infercrane init or set the environment variable'), so 'infercrane workload plan' cannot run without an account/key in this box",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show workload init creating the inference project with details and next steps, and --version printing 1.0.0-rc.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-infercrane-20261031-023354-b485/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-infercrane-20261031-023354-b485/check-1-cmd12.judged.png",
+            "runs/verify/verify-infercrane-20261031-023354-b485/check-2-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.085363
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -323,5 +413,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:49:14+08:00",
-  "updated_at": "2026-10-31T02:17:52+08:00"
+  "updated_at": "2026-10-31T02:35:05.336398+08:00"
 }
