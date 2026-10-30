@@ -15,7 +15,9 @@ first_seen_at, and its features when the extraction lists none (they came from
 a features-only extraction).
 
 Only tools for end users are written (TOOL_KINDS, not import_only), by default
-only in the dev_cli and local_ai categories.
+only in the listed categories (dev_cli, local_ai, mcp_server). An MCP server also
+gets `mcp`: transports, launch command, client config snippets, environment
+variables and tool names, each kept only when its text is in the sources.
 """
 
 from __future__ import annotations
@@ -35,12 +37,20 @@ from pickfit.discover.store import PipelineDB
 from pickfit.extract import Source as ExtractSource
 from pickfit.extract import build_sources, feature_rows, normalize_for_match
 from pickfit.ledger import taipei_now
-from pickfit.schema import TOOL_KINDS, ExtractedFeatures, ExtractionResult, InstallClaim, SoftwareRecord
+from pickfit.schema import (
+    COMMAND_MAX,
+    LISTED_CATEGORIES,
+    TOOL_KINDS,
+    ExtractedFeatures,
+    ExtractionResult,
+    InstallClaim,
+    SoftwareRecord,
+)
 from pickfit.score import refresh_scores
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUT = REPO_ROOT / "data" / "software"
-DEFAULT_CATEGORIES = ("dev_cli", "local_ai")
+DEFAULT_CATEGORIES = LISTED_CATEGORIES
 DONE = ("ok", "quotes_dropped")
 SUMMARY_MAX = 200
 MAX_TAGS = 10
@@ -223,6 +233,35 @@ def _readme_guides(result: ExtractionResult, platforms: list[str], names: list[s
     return guides
 
 
+def _mcp_section(result: ExtractionResult, ev: _Evidence) -> dict[str, Any]:
+    """The record's mcp facts: only what a quote (or the verbatim snippet itself) shows in the sources."""
+    mcp = result.mcp
+    transports = mcp.transports.value or []
+    if transports and not ev.model_value("/mcp/transports", mcp.transports.quote or ""):
+        transports = []
+    launch = mcp.launch_command.value
+    if launch and (len(launch) > COMMAND_MAX or not ev.model_value("/mcp/launch_command", mcp.launch_command.quote or "")):
+        launch = None
+    configs = []
+    for claim in mcp.client_configs[:3]:
+        if ev.model_value(f"/mcp/client_configs/{len(configs)}", claim.snippet):
+            configs.append({"client": claim.client, "snippet": claim.snippet})
+    env_vars: list[dict[str, Any]] = []
+    for claim in mcp.env_vars:
+        if len(env_vars) < 10 and claim.name not in {e["name"] for e in env_vars} \
+                and ev.model_value(f"/mcp/env_vars/{len(env_vars)}", claim.name):
+            purpose = " ".join((claim.purpose or "").split())[:120] or None
+            env_vars.append({"name": claim.name, "required": claim.required, "purpose": purpose})
+    tools: list[str] = []
+    for item in mcp.tools:
+        name = (item.value or "").strip()
+        if name and len(tools) < 30 and len(name) <= 80 and name not in tools \
+                and ev.model_value(f"/mcp/tools/{len(tools)}", item.quote or ""):
+            tools.append(name)
+    return {"transports": sorted(set(transports)), "launch_command": launch, "client_configs": configs,
+            "env_vars": env_vars, "tools": tools}
+
+
 def _summary(text: str) -> str:
     text = " ".join(text.split())
     if len(text) <= SUMMARY_MAX:
@@ -361,6 +400,7 @@ def build_record(candidate: dict[str, Any], extraction: dict[str, Any], *, slug:
         "last_release": last_release,
         "verification": {"level": "unverified", "unverified_reason": "not_run", "checked_at": None,
                          "runs": []},
+        "mcp": _mcp_section(result, ev) if category == "mcp_server" else None,
         "sources": record_sources,
         "evidence": ev.items,
         "first_seen_at": candidate["first_seen_at"],

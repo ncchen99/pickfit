@@ -77,6 +77,19 @@ def test_shortlist_skips_extracted_and_known_repos(tmp_path: Path) -> None:
     assert [r.full_name for r in ranked] == ["a/cli", "a/app"]
     assert shortlist(db, category="dev_cli") == []
 
+    def screen(repo_id: str, category: str, keep: bool = True) -> None:
+        db.save_prescreen(repo_id=repo_id, run_id="p", role="screen", provider="baseten", model="m",
+                          reasoning_effort="low", status="ok", sources_sha="x", keep=keep, review_reason=None,
+                          result={"usable_software": keep, "kind": "cli_tool", "category": category,
+                                  "confidence": 0.9, "reason": "r"}, error=None, usage=None, cost_usd=0.0,
+                          latency_s=1.0)
+
+    screen("gh:1", "dev_cli")
+    screen("gh:2", "local_ai", keep=False)
+    assert [r.full_name for r in shortlist(db, category="local_ai", skip_repo_ids={"gh:4"})] == ["a/cli"]
+    assert shortlist(db, category="local_ai", screened_as="local_ai") == []  # gh:1 screened dev_cli; gh:4 unscreened
+    assert [r.full_name for r in shortlist(db, category="local_ai", screened_as="dev_cli")] == ["a/cli"]
+
 
 def test_description_about_local_models_counts_for_and_coding_agents_against() -> None:
     runner = candidate()
@@ -86,3 +99,21 @@ def test_description_about_local_models_counts_for_and_coding_agents_against() -
     assert "local_focus" in names(box_fit(runner)[1])
     assert "coding_agent" in names(box_fit(agent)[1])
     assert box_fit(runner)[0] > box_fit(agent)[0]
+
+
+def test_mcp_servers_rank_by_whether_a_box_can_start_them() -> None:
+    def mcp(readme: str) -> tuple[int, set[str]]:
+        c = {**candidate(readme=readme), "category": "mcp_server"}
+        score, signals = box_fit(c)
+        return score, names(signals)
+
+    local, local_signals = mcp('# notes\n\n```json\n{"mcpServers": {"notes": {"command": "npx", "args": ["-y", "notes"]}}}\n```'
+                               "\n\nWorks with Claude Code and Cursor.")
+    keyed, keyed_signals = mcp('Run `npx -y saas-mcp`. Set `SAAS_API_KEY` first.')
+    docker, docker_signals = mcp("Run `docker run -i --rm org/server`.")
+    remote, remote_signals = mcp("Connect to https://example.com/mcp from your client.")
+    assert local_signals == {"mcp_stdio_launch"}  # naming clients is not the coding-agent penalty
+    keyless, _ = mcp("Run `npx -y saas-mcp`.")
+    assert {"mcp_stdio_launch", "mcp_needs_key"} <= keyed_signals and keyless > keyed
+    assert "mcp_docker_only" in docker_signals and "mcp_remote_only" in remote_signals
+    assert local > docker and local > remote

@@ -3,8 +3,10 @@
  * Values are flat (string, number, boolean, string list) so the guard can
  * check every reason against the field it cites.
  */
-import { bestGuide, verifiedOn, verifiedOnUserSystem, type Arch, type Entry, type OS } from './catalog.ts';
+import { bestGuide, OSES, verifiedOn, verifiedOnUserSystem, type Arch, type Entry, type InstallGuide, type OS } from './catalog.ts';
 import { featuresOut } from './features.ts';
+
+const MCP_TOOLS_SHOWN = 40;
 
 export type CardValue = string | number | boolean | string[] | null;
 export type Card = Record<CardField, CardValue> & { slug: string };
@@ -42,6 +44,8 @@ export const CARD_FIELDS = [
   'last_release',
   'quality',
   'popularity',
+  'mcp_tools',
+  'mcp_env_vars',
 ] as const;
 export type CardField = (typeof CARD_FIELDS)[number];
 
@@ -88,5 +92,13 @@ export function toCard(entry: Entry, os?: OS, arch?: Arch): Card {
     last_release: entry.last_release,
     quality: entry.scores?.quality ?? null,
     popularity: entry.scores?.popularity ?? null,
+    mcp_tools: mcpTools(entry, userGuide),
+    mcp_env_vars: (entry.mcp?.env_vars ?? []).map((v) => v.name),
   };
+}
+
+/** Tool names a sandbox handshake listed (the user's OS first), else none: README tool lists are not shown. */
+function mcpTools(entry: Entry, userGuide: InstallGuide | undefined): string[] {
+  const guide = userGuide?.mcp ? userGuide : OSES.map((os) => entry.install[os]).find((g) => g?.mcp);
+  return (guide?.mcp?.tools ?? []).slice(0, MCP_TOOLS_SHOWN);
 }

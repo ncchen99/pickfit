@@ -46,7 +46,9 @@ from pickfit.verify import features as feature_checks
 from pickfit.verify.features import FINISH_FEATURES, FinishFeature, resolve_features
 from pickfit.verify.plan import InstallPlan, plan_for
 from pickfit.verify.rules import RuleHit, error_signature, match_rules
-from pickfit.verify.task import VerifyTask
+from pickfit.verify.mcp import GUIDE as MCP_GUIDE
+from pickfit.verify.mcp import is_mcp
+from pickfit.verify.task import VerifyTask, prepare_box
 from pickfit.verify.verdict import LogVerdict, log_verdict
 
 HistoryMode = Literal["chain", "replay"]
@@ -398,8 +400,16 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
             lines.append(f"- {t.command}{shown}")
     listed = feature_checks.render(ex.features)
     if listed:
-        lines += ["", "Main features the README advertises:", *listed, feature_checks.GUIDE]
-    if ex.category.value == "local_ai":
+        lines += ["", "Main features the README advertises:", *listed, feature_checks.guide(is_mcp(task))]
+    if is_mcp(task):
+        lines += ["", MCP_GUIDE]
+        mcp = ex.mcp
+        if mcp.launch_command.value:
+            lines.append(f"Launch command the README gives: {mcp.launch_command.value}")
+        if mcp.env_vars:
+            named = ", ".join(f"{e.name}{' (required)' if e.required else ''}" for e in mcp.env_vars)
+            lines.append(f"Environment variables the README names: {named}")
+    elif ex.category.value == "local_ai":
         lines += ["", TINY_MODELS]
     pre = ex.prerequisites
     stated = [*(r.value for r in pre.runtimes), *(s.value for s in pre.system_packages)]
@@ -554,9 +564,7 @@ class VerifyAgent:
         self._say(f"verify {self.task.slug} · run {self.run_id} · {self.model} · mode {self.mode} · "
                   f"{box.runner} {box.os}/{box.arch}")
         try:
-            box.write_file("README.md", self.task.readme)
-            for name, content in self.task.files.items():
-                box.write_file(name, content)
+            prepare_box(box, self.task)
             self._loop()
         except BoxError as err:
             self.report.stop_reason, self.report.error = "box_error", str(err)
@@ -720,12 +728,13 @@ class VerifyAgent:
             args.unverified_reason = "other"
         if args.level == "failed" and not args.blocking_error:
             args.blocking_error = args.summary.strip() or "not given"
-        verdict = log_verdict(args, self.report.commands)
+        verdict = log_verdict(args, self.report.commands, mcp=is_mcp(self.task))
         self.verdict = verdict
         self.report.finish = args.model_dump()
         self.report.verdict = verdict.to_dict()
         names = feature_checks.labels(self.task.extraction.features)
-        resolved = resolve_features(names, args.features, verdict, self.report.commands)
+        resolved = resolve_features(names, args.features, verdict, self.report.commands,
+                                    mcp=is_mcp(self.task))
         self.report.features = [f.to_dict() for f in resolved]
         said = "agrees" if verdict.agrees else f"lowered to {verdict.level}" if \
             verdict.level != args.level else "with problems"

@@ -402,7 +402,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   const notes: string[] = [];
   if (candidates.length === 0) {
     notes.push(
-      `No verified ${what} in pickfit meets these conditions. Coverage today: developer CLI tools and local AI/LLM tools. ` +
+      `No verified ${what} in pickfit meets these conditions. Coverage today: developer CLI tools, local AI/LLM tools and MCP servers. ` +
         'pickfit lists only lesser-known tools, so a well-known one may still fit.',
     );
   } else if (choice.emptyByModel) {

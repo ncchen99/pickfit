@@ -29,6 +29,33 @@ export interface FeatureCoverage {
   checks: { command: string; passed: boolean }[];
 }
 
+/** What a fresh sandbox saw when pickfit's MCP probe started the server (verification.runs[].mcp). */
+export interface McpHandshake {
+  transport: 'stdio' | 'streamable_http' | 'sse';
+  /** argv that started the server, as the replay ran it. */
+  launch: string[];
+  /** streamable_http: the local URL the probe posted to. */
+  url?: string | null;
+  protocol_version: string | null;
+  server_name: string | null;
+  server_version: string | null;
+  /** Tool names from tools/list, reduced to safe characters by the probe. */
+  tools: string[];
+  tool_count: number;
+  /** A tool tools/call ran without an error (level service). */
+  called_tool: string | null;
+  offline: boolean | null;
+}
+
+/** The README's MCP facts (record.mcp): claims, not run. */
+export interface McpFacts {
+  transports: string[];
+  launch_command: string | null;
+  client_configs: { client: string; snippet: string }[];
+  env_vars: { name: string; required: boolean | null; purpose: string | null }[];
+  tools: string[];
+}
+
 export interface InstallGuide {
   basis: 'replayed' | 'human';
   method: string;
@@ -45,6 +72,8 @@ export interface InstallGuide {
   /** Empty for runs from before features were checked; older indexes lack it. */
   features?: FeatureCoverage[];
   run: RunSummary;
+  /** MCP servers: the handshake of this run; null or absent for other software. */
+  mcp?: McpHandshake | null;
 }
 
 export interface Entry {
@@ -52,7 +81,7 @@ export interface Entry {
   name: string;
   summary: string;
   why_worth_it: string | null;
-  category: 'dev_cli' | 'local_ai' | 'other';
+  category: 'dev_cli' | 'local_ai' | 'mcp_server' | 'other';
   kind: string;
   maturity: string | null;
   tags: string[];
@@ -84,6 +113,8 @@ export interface Entry {
     passed_runs: RunSummary[];
   };
   install: Partial<Record<OS, InstallGuide>>;
+  /** MCP servers only: what the README says about using it from an MCP client. */
+  mcp?: McpFacts | null;
   scores: {
     quality: number | null;
     popularity: number | null;

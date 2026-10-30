@@ -8,7 +8,11 @@ package-manager install command, Linux release binaries, a local server or
 model runner in the README, and a name or description about local models
 count for; a desktop, mobile or browser-extension project, a GPU or Apple
 Silicon requirement, and a coding-agent description (those are usually
-dev_cli) count against. It only orders the
+dev_cli) count against. MCP servers are ranked by whether a box can start one:
+a stdio launch command (npx, uvx, a JSON mcpServers entry) counts for; a
+required API key or token, a Docker-only or remote-only server counts against
+(the local-model and coding-agent signals do not apply: every MCP README names
+its clients). It only orders the
 queue: nothing is rejected, and the model still decides kind and category.
 
     uv run python -m pickfit.discover.shortlist --category local_ai --limit 40
@@ -63,6 +67,10 @@ GUI_README = re.compile(r"desktop app|menu ?bar app|\bmenubar\b|system tray|tray
                         re.I)
 GPU_REQUIRED = re.compile(r"(requires?|needs?|must have)\s+(an?\s+)?(nvidia|cuda|gpu)\b|"
                           r"\b(cuda|nvidia gpu|gpu) (is )?required", re.I)
+MCP_STDIO = re.compile(r"\bnpx\s+(-y\s+)?[@\w]|\buvx\s+\w|\bpipx run\b|\"command\"\s*:|\bstdio\b|claude mcp add", re.I)
+MCP_KEY = re.compile(r"\b[A-Z][A-Z0-9_]*(API_?KEY|_TOKEN|SECRET|ACCESS_KEY)\b")
+MCP_DOCKER = re.compile(r"\bdocker run\b|\"command\"\s*:\s*\"docker\"")
+MCP_REMOTE = re.compile(r"remote mcp|hosted mcp|https://[^\s)\"']+/(mcp|sse)\b", re.I)
 APPLE_ONLY = re.compile(r"apple silicon (only|required)|requires? (an? )?apple silicon|macos only|"
                         r"only (runs|works) on (macos|apple silicon)", re.I)
 
@@ -94,15 +102,26 @@ def box_fit(candidate: dict[str, Any]) -> tuple[int, list[str]]:
         signals.append(("tool_install_command", 2))
     if any(LINUX_ASSET.search(a) and not GUI_ASSET.search(a) for a in assets):
         signals.append(("linux_binaries", 2))
-    if LOCAL_SERVER.search(readme):
-        signals.append(("local_server", 1))
-    if LOCAL_RUNNER.search(readme):
-        signals.append(("local_runner", 1))
-    about = " ".join(filter(None, [candidate["repo"].get("name"), candidate["repo"].get("description")]))
-    if LOCAL_FOCUS.search(about):
-        signals.append(("local_focus", 2))
-    if CODING_AGENT.search(about):
-        signals.append(("coding_agent", -2))
+    if candidate.get("category") == "mcp_server":
+        stdio = bool(MCP_STDIO.search(readme))
+        if stdio:
+            signals.append(("mcp_stdio_launch", 2))
+        if MCP_KEY.search(readme):
+            signals.append(("mcp_needs_key", -2))
+        if MCP_DOCKER.search(readme) and not stdio and not TOOL_INSTALL.search(readme):
+            signals.append(("mcp_docker_only", -2))
+        if MCP_REMOTE.search(readme) and not stdio:
+            signals.append(("mcp_remote_only", -2))
+    else:
+        if LOCAL_SERVER.search(readme):
+            signals.append(("local_server", 1))
+        if LOCAL_RUNNER.search(readme):
+            signals.append(("local_runner", 1))
+        about = " ".join(filter(None, [candidate["repo"].get("name"), candidate["repo"].get("description")]))
+        if LOCAL_FOCUS.search(about):
+            signals.append(("local_focus", 2))
+        if CODING_AGENT.search(about):
+            signals.append(("coding_agent", -2))
     if candidate.get("rule_label") == "uncertain":
         signals.append(("rules_uncertain", -1))
     package_json = manifests.get("package.json") or ""
@@ -125,14 +144,30 @@ def box_fit(candidate: dict[str, Any]) -> tuple[int, list[str]]:
     return sum(w for _, w in signals), [f"{'+' if w > 0 else ''}{w}:{name}" for name, w in signals]
 
 
+def _screened_category(decision: dict[str, Any]) -> str | None:
+    final = decision.get("review") or decision.get("screen") or {}
+    result = final.get("result") or {}
+    return result.get("category") if isinstance(result, dict) else None
+
+
 def shortlist(db: PipelineDB, *, category: str, model: str = "muse-spark-1.3",
-              skip_repo_ids: set[str] | None = None) -> list[Ranked]:
-    """Rule-passed candidates of `category` with no finished extraction by `model`, best first."""
+              skip_repo_ids: set[str] | None = None, screened_as: str | None = None) -> list[Ranked]:
+    """Rule-passed candidates of `category` with no finished extraction by `model`, best first.
+
+    screened_as: only candidates the prescreen put in that category (a CLI tool found by an MCP
+    query, say, is left to its own category's queue).
+    """
     skip = set(skip_repo_ids or ())
     done = {e["repo_id"] for e in db.extractions() if e["model"] == model and e["status"] in DONE}
     ranked = []
+    decisions = db.prescreen_decisions()
+    dropped = {repo_id for repo_id, d in decisions.items() if d.get("keep") is False}
+    if screened_as:
+        skip |= {c["repo_id"] for c in db.candidates("WHERE rule_passed = 1 AND category = ?", (category,))
+                 if c["repo_id"] not in decisions or _screened_category(decisions[c["repo_id"]]) != screened_as}
     for c in db.candidates("WHERE rule_passed = 1 AND category = ?", (category,)):
-        if c["repo_id"] in done or c["repo_id"] in skip or not (c.get("readme") or "").strip():
+        if c["repo_id"] in done or c["repo_id"] in skip or c["repo_id"] in dropped \
+                or not (c.get("readme") or "").strip():
             continue
         score, signals = box_fit(c)
         ranked.append(Ranked(c["repo_id"], c["full_name"], score, signals, c["repo"].get("pushed_at") or ""))
@@ -156,14 +191,17 @@ def main(argv: list[str] | None = None) -> int:
     from pickfit.profiles import DEFAULT_OUT
 
     parser = argparse.ArgumentParser(prog="python -m pickfit.discover.shortlist", description=__doc__.split("\n")[0])
-    parser.add_argument("--category", required=True, choices=["dev_cli", "local_ai"])
+    parser.add_argument("--category", required=True, choices=["dev_cli", "local_ai", "mcp_server"])
     parser.add_argument("--limit", type=int, default=40)
     parser.add_argument("--min-score", type=int, default=None, help="leave out candidates below this score")
     parser.add_argument("--db", type=Path, default=None, help="pipeline database (default runs/pipeline.db)")
     parser.add_argument("--ids-only", action="store_true", help="print only the repo ids")
+    parser.add_argument("--screened-as", choices=["dev_cli", "local_ai", "mcp_server", "other"], default=None,
+                        help="only candidates the prescreen put in this category")
     args = parser.parse_args(argv)
     db = PipelineDB(args.db or pipeline_db_path())
-    ranked = shortlist(db, category=args.category, skip_repo_ids=record_repo_ids(DEFAULT_OUT))
+    ranked = shortlist(db, category=args.category, skip_repo_ids=record_repo_ids(DEFAULT_OUT),
+                       screened_as=args.screened_as)
     if args.min_score is not None:
         ranked = [r for r in ranked if r.score >= args.min_score]
     for r in ranked[:args.limit]:

@@ -11,6 +11,7 @@
       "enum": [
         "dev_cli",
         "local_ai",
+        "mcp_server",
         "other"
       ],
       "type": "string"
@@ -321,6 +322,43 @@
       "title": "Cited[float]",
       "type": "object"
     },
+    "Cited_list_McpTransport__": {
+      "additionalProperties": false,
+      "properties": {
+        "quote": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Snippet (<=200 chars) copied verbatim from a source that supports value; null when value is null."
+        },
+        "value": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/McpTransport"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Null when the sources do not say. Never guess."
+        }
+      },
+      "required": [
+        "value",
+        "quote"
+      ],
+      "title": "Cited[list[McpTransport]]",
+      "type": "object"
+    },
     "Cited_list_OS__": {
       "additionalProperties": false,
       "properties": {
@@ -390,6 +428,50 @@
         "quote"
       ],
       "title": "Cited[str]",
+      "type": "object"
+    },
+    "ExtractedMcp": {
+      "additionalProperties": false,
+      "description": "What an AI client needs to use an MCP server. Empty for software that is not one.",
+      "properties": {
+        "client_configs": {
+          "description": "Up to 3 config snippets, best documented first.",
+          "items": {
+            "$ref": "#/$defs/McpConfigClaim"
+          },
+          "type": "array"
+        },
+        "env_vars": {
+          "description": "Environment variables the server reads; up to 10.",
+          "items": {
+            "$ref": "#/$defs/McpEnvClaim"
+          },
+          "type": "array"
+        },
+        "launch_command": {
+          "$ref": "#/$defs/Cited_str_",
+          "description": "The command a client runs to start it over stdio, e.g. 'npx -y some-mcp' or 'uvx some-mcp'."
+        },
+        "tools": {
+          "description": "Names of the tools it offers, as the sources list them; up to 30.",
+          "items": {
+            "$ref": "#/$defs/Cited_str_"
+          },
+          "type": "array"
+        },
+        "transports": {
+          "$ref": "#/$defs/Cited_list_McpTransport__",
+          "description": "stdio: the client starts it as a subprocess; streamable_http or sse: the client connects to a URL."
+        }
+      },
+      "required": [
+        "transports",
+        "launch_command",
+        "client_configs",
+        "env_vars",
+        "tools"
+      ],
+      "title": "ExtractedMcp",
       "type": "object"
     },
     "ExtractedPrerequisites": {
@@ -519,6 +601,84 @@
       ],
       "type": "string"
     },
+    "McpClient": {
+      "enum": [
+        "claude_code",
+        "claude_desktop",
+        "cursor",
+        "vscode",
+        "generic_json",
+        "other"
+      ],
+      "type": "string"
+    },
+    "McpConfigClaim": {
+      "additionalProperties": false,
+      "description": "An MCP client config snippet as a source writes it; not run yet.",
+      "properties": {
+        "client": {
+          "$ref": "#/$defs/McpClient",
+          "description": "claude_code: a `claude mcp add` command; claude_desktop, cursor, vscode: that client's config file; generic_json: an mcpServers JSON entry for any client."
+        },
+        "snippet": {
+          "description": "Copied verbatim (a command or a JSON block); it is its own quote.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "client",
+        "snippet"
+      ],
+      "title": "McpConfigClaim",
+      "type": "object"
+    },
+    "McpEnvClaim": {
+      "additionalProperties": false,
+      "description": "An environment variable an MCP server reads, as the sources name it.",
+      "properties": {
+        "name": {
+          "description": "The variable name copied verbatim, e.g. GITHUB_TOKEN.",
+          "type": "string"
+        },
+        "purpose": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What it holds, in a few English words; null when unclear."
+        },
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "true only when the sources say the server needs it to start or to work; null when unclear."
+        }
+      },
+      "required": [
+        "name",
+        "required",
+        "purpose"
+      ],
+      "title": "McpEnvClaim",
+      "type": "object"
+    },
+    "McpTransport": {
+      "enum": [
+        "stdio",
+        "streamable_http",
+        "sse"
+      ],
+      "type": "string"
+    },
     "Need": {
       "enum": [
         "required",
@@ -597,7 +757,7 @@
     },
     "category": {
       "$ref": "#/$defs/Cited_Category_",
-      "description": "dev_cli: tools developers use in a terminal; local_ai: runs AI models on the user's machine (local LLMs, inference servers, offline AI tools)."
+      "description": "dev_cli: tools developers use in a terminal; local_ai: runs AI models on the user's machine (local LLMs, inference servers, offline AI tools); mcp_server: a Model Context Protocol server that AI clients start or connect to."
     },
     "features": {
       "default": [],
@@ -627,6 +787,10 @@
     "maturity": {
       "$ref": "#/$defs/Cited_Maturity_",
       "description": "As the sources describe it; prototype covers WIP, PoC, experimental and hackathon projects."
+    },
+    "mcp": {
+      "$ref": "#/$defs/ExtractedMcp",
+      "description": "Only for an MCP server; leave every value null and every list empty otherwise."
     },
     "name": {
       "$ref": "#/$defs/Cited_str_",

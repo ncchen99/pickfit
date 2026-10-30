@@ -26,7 +26,7 @@ def edit(path: Path, change) -> None:
 def test_fixtures_build(data_dir: Path) -> None:
     index = build_index(data_dir).index
     assert index["index_version"] == INDEX_VERSION
-    assert index["count"] == 5
+    assert index["count"] == 6
     slugs = [e["slug"] for e in index["entries"]]
     assert slugs == sorted(slugs)
     assert all(e["repo_url"].startswith("https://example.invalid/") for e in index["entries"])
@@ -119,7 +119,7 @@ def test_script_writes_nothing_on_failure(data_dir: Path, tmp_path: Path, capsys
 def test_script_writes_index(data_dir: Path, tmp_path: Path) -> None:
     out = tmp_path / "gen" / "index.json"
     assert build_index_main(["--data", str(data_dir), "--out", str(out)]) == 0
-    assert json.loads(out.read_text(encoding="utf-8"))["count"] == 5
+    assert json.loads(out.read_text(encoding="utf-8"))["count"] == 6
 
 
 def test_write_index_round_trips(data_dir: Path, tmp_path: Path) -> None:
@@ -141,3 +141,14 @@ def test_works_offline_follows_the_first_task():
     assert works_offline(mixed, "tool scan --offline") is True
     assert works_offline(mixed, "npx tool@latest") is False
     assert works_offline(mixed) is False  # no first task: every passing check must pass offline
+
+
+def test_mcp_server_entries_carry_the_runs_handshake(data_dir: Path) -> None:
+    entries = {e["slug"]: e for e in build_index(data_dir).index["entries"]}
+    mcp = entries["fixture-notes-mcp"]
+    assert mcp["category"] == "mcp_server"
+    assert mcp["install"]["linux"]["mcp"]["launch"] == ["notes-mcp", "--root", "~/work"]
+    assert mcp["install"]["linux"]["mcp"]["tools"] == ["search_notes", "read_note"]
+    assert [v["name"] for v in mcp["mcp"]["env_vars"]] == ["NOTES_ROOT", "NOTES_SYNC_TOKEN"]
+    other = entries["fixture-json-query"]
+    assert other["mcp"] is None and all(g["mcp"] is None for g in other["install"].values())

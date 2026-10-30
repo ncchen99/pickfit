@@ -1,0 +1,666 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mcp-india-stack",
+  "repo_id": "gh:1187914767",
+  "name": "MCP India Stack",
+  "summary": "Offline-first MCP server giving AI agents Indian tax, identity, and banking validation tools.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": null,
+  "maturity": null,
+  "tags": [
+    "fastmcp",
+    "gst",
+    "gstin",
+    "hsn",
+    "ifsc",
+    "india",
+    "indian-mcp",
+    "mcp",
+    "model-context-protocol",
+    "offline-first"
+  ],
+  "use_cases": [
+    "validate GSTIN structure and checksum",
+    "look up bank branch details from IFSC code",
+    "compare old vs new regime income tax",
+    "calculate GST breakdown with HSN lookup",
+    "look up pincode details and post offices"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://pypi.org/project/mcp-india-stack/",
+  "repo": {
+    "url": "https://github.com/rehan1020/MCP-India-Stack",
+    "full_name": "rehan1020/MCP-India-Stack",
+    "created_at": "2026-03-21T11:09:39Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Python"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mcp-india-stack-20261031-012443-1cbb",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install mcp-india-stack 2>&1",
+          "purpose": "install mcp-india-stack with uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.7.0",
+    "published_at": "2026-10-30T13:54:02Z",
+    "url": "https://github.com/rehan1020/MCP-India-Stack/releases/tag/v0.7.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:25:43.232477+08:00",
+    "runs": [
+      {
+        "id": "verify-mcp-india-stack-20261031-012443-1cbb",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:25:43.232477+08:00",
+        "tool_version": "0.7.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install mcp-india-stack 2>&1",
+            "purpose": "install mcp-india-stack with uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- mcp-india-stack 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call validate_pan --args '{\"pan\": \"ABCDE1234F\"}' -- mcp-india-stack 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=validate_pan content=text text_chars=769",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake listing 74 tools and successful validate_pan call returning valid true.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mcp-india-stack-20261031-012443-1cbb/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mcp-india-stack-20261031-012443-1cbb/check-1-cmd3.judged.png",
+            "runs/verify/verify-mcp-india-stack-20261031-012443-1cbb/check-2-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.044218,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "mcp-india-stack"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "mcp-india-stack",
+          "server_version": "1.30.0",
+          "tools": [
+            "lookup_ifsc",
+            "bulk_validate_ifsc",
+            "lookup_bbps_biller",
+            "calculate_epf_esic",
+            "calculate_neft_rtgs_imps_charges",
+            "lookup_bank",
+            "validate_aa_consent_artifact",
+            "decode_aa_fi_type",
+            "calculate_emi",
+            "calculate_gratuity",
+            "calculate_ppf_maturity",
+            "calculate_fd_maturity",
+            "calculate_rd_maturity",
+            "calculate_sip_returns",
+            "calculate_step_up_sip",
+            "calculate_nps_projection",
+            "calculate_sukanya_samriddhi",
+            "calculate_home_vs_rent",
+            "validate_gstin",
+            "bulk_validate_gstin",
+            "validate_pan",
+            "bulk_validate_pan",
+            "decode_pan_type",
+            "validate_upi_vpa",
+            "validate_aadhaar",
+            "bulk_validate_aadhaar",
+            "validate_voter_id",
+            "validate_driving_license",
+            "validate_passport",
+            "validate_cin",
+            "validate_din",
+            "validate_fssai",
+            "validate_tan",
+            "validate_mobile_number",
+            "validate_pran",
+            "validate_llpin",
+            "validate_epf_code",
+            "validate_esic_code",
+            "decode_digilocker_uri",
+            "decode_cnr_number",
+            "lookup_court_establishment_code",
+            "lookup_ipc_section",
+            "lookup_bns_section",
+            "lookup_crpc_section",
+            "lookup_bnss_section",
+            "lookup_evidence_act_section",
+            "lookup_bsa_section",
+            "decode_ipc_bns_crosswalk",
+            "calculate_limitation_deadline",
+            "calculate_court_fee",
+            "calculate_stamp_duty",
+            "calculate_rti_fee",
+            "calculate_rti_deadline",
+            "calculate_rti_penalty_estimate",
+            "get_regulatory_deadlines",
+            "lookup_pincode",
+            "lookup_hsn_code",
+            "decode_state_code",
+            "decode_isin",
+            "get_stock_quote",
+            "get_stock_history",
+            "calculate_income_tax",
+            "calculate_tds",
+            "calculate_gst",
+            "calculate_surcharge",
+            "calculate_hra_exemption",
+            "calculate_capital_gains",
+            "calculate_advance_tax",
+            "calculate_gst_late_fee",
+            "calculate_income_tax_interest",
+            "calculate_presumptive_tax",
+            "calculate_professional_tax",
+            "calculate_leave_encashment_tax",
+            "calculate_salary_restructuring"
+          ],
+          "tool_count": 74,
+          "called_tool": "validate_pan",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": null,
+    "client_configs": [
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"mcp-india-stack\": {\n      \"command\": \"python\",\n      \"args\": [\"-m\", \"mcp_india_stack\"]\n    }\n  }\n}"
+      },
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"mcp-india-stack\": {\n      \"command\": \"python3\",\n      \"args\": [\"-m\", \"mcp_india_stack\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "lookup_ifsc",
+      "lookup_pincode",
+      "validate_gstin",
+      "validate_pan",
+      "validate_upi_vpa",
+      "validate_aadhaar",
+      "calculate_income_tax",
+      "calculate_gst",
+      "get_stock_quote",
+      "decode_cnr_number"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:03:51+08:00",
+    "quality": {
+      "total": 92.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 70.4,
+      "signals": {
+        "stars": 67,
+        "monthly_downloads": 1191,
+        "forks": 12,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 223,
+      "packages": [
+        "pypi:mcp-india-stack"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 27.29
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "7567f89ebdec85a070bbf28560c963959bfbf19fc87ac373343ecef665d28503",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A high-performance, offline-first Model Context Protocol (MCP) server equipping AI agents with Indian financial, tax, and government APIs."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "For AI agents."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "| **Runtime** | Python |"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install mcp-india-stack"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "**Zero Authentication**: No API keys, secrets, or subscriptions required. All logic runs locally."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "To receive updated datasets, upgrade `mcp-india-stack`."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/rehan1020/MCP-India-Stack",
+      "fetched_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/rehan1020/MCP-India-Stack/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:06:15+08:00"
+    },
+    {
+      "id": "release:v0.7.0",
+      "kind": "release",
+      "url": "https://github.com/rehan1020/MCP-India-Stack/releases/tag/v0.7.0",
+      "fetched_at": "2026-10-31T01:06:15+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A high-performance, offline-first Model Context Protocol (MCP) server equipping AI agents with Indian financial",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Model Context Protocol (MCP) server equipping AI agents with Indian financial",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "MCP server for Indian APIs — GSTIN, IFSC, PAN, UPI, pincode, HSN/SAC. Zero auth. Offline-first. For AI agents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# 🇮🇳 MCP India Stack",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "| **Runtime** | Python |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "All tools in this package work without an internet connection.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.7.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:06:15+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "[`validate_gstin`](docs/lookup_and_validation.md) — GSTIN structure and checksum",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "[`lookup_ifsc`](docs/lookup_and_validation.md) — Bank branch details from IFSC code",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "[`calculate_income_tax`](docs/tax_and_finance.md) — Old vs new regime comparison with surcharge, rebate, cess",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "[`calculate_gst`](docs/tax_and_finance.md) — GST breakdown (CGST/SGST/IGST/cess) with HSN lookup",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "[`lookup_pincode`](docs/lookup_and_validation.md) — India pincode details and post offices",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "All logic runs locally.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"mcp-india-stack\": {\n      \"command\": \"python\",\n      \"args\": [\"-m\", \"mcp_india_stack\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"mcp-india-stack\": {\n      \"command\": \"python3\",\n      \"args\": [\"-m\", \"mcp_india_stack\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "[`lookup_ifsc`](docs/lookup_and_validation.md) — Bank branch details from IFSC code",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "[`lookup_pincode`](docs/lookup_and_validation.md) — India pincode details and post offices",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "[`validate_gstin`](docs/lookup_and_validation.md) — GSTIN structure and checksum",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "[`validate_pan`](docs/lookup_and_validation.md) — PAN format and entity type decode",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "[`validate_upi_vpa`](docs/lookup_and_validation.md) — UPI VPA structure and provider decode",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "[`validate_aadhaar`](docs/lookup_and_validation.md) — Aadhaar number with Verhoeff checksum (masked output)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "[`calculate_income_tax`](docs/tax_and_finance.md) — Old vs new regime comparison with surcharge, rebate, cess",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "[`calculate_gst`](docs/tax_and_finance.md) — GST breakdown (CGST/SGST/IGST/cess) with HSN lookup",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`get_stock_quote` — Fetch live/delayed Indian stock quotes and summaries (NSE/BSE) using yfinance.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "[`decode_cnr_number`](docs/legal_reference.md) — CNR (Case Number Record) decoder and validator",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:27+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:50+08:00",
+  "updated_at": "2026-10-31T02:03:51+08:00"
+}

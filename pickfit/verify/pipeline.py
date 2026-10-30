@@ -38,6 +38,7 @@ from pickfit.verify.failure import (
     tool_command,
 )
 from pickfit.verify.judge import JudgeResult, judge_checks
+from pickfit.verify.mcp import is_mcp
 from pickfit.verify.replay import Replayer, ReplayResult, plan_from
 from pickfit.verify.result import DATA_DIR, build_run, save_run, write_back
 from pickfit.verify.task import VerifyTask
@@ -180,7 +181,8 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
 
     run, build_notes = build_run(report, replay, judge, evidence_dir=evidence_dir,
                                  screenshots=[Path(p) for p in (judge.annotated or judge.screenshots)] if judge else [],
-                                 judge_cost_usd=judge.cost_usd if judge else 0.0, confirm=confirm)
+                                 judge_cost_usd=judge.cost_usd if judge else 0.0, confirm=confirm,
+                                 mcp=is_mcp(task))
     notes += build_notes
     save_run(run, evidence_dir)
     outcome = Outcome(slug=task.slug, run_id=run_id, run=run, notes=notes, evidence_dir=evidence_dir,

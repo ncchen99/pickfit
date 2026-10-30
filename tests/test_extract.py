@@ -17,6 +17,7 @@ from pickfit.discover.github import normalize_repo
 from pickfit.discover.store import PipelineDB
 from pickfit.extract import (
     INSTRUCTIONS,
+    PROMPT_CACHE_KEY,
     QuoteChecker,
     Source,
     build_body,
@@ -385,7 +386,7 @@ def test_concurrent_batch_extracts_every_candidate_once(tmp_path: Path, ledger: 
                           ledger=ledger, runs_dir=tmp_path / "runs", cache=False, log=lambda line: None)
     assert summary["by_status"] == {"ok": 6} and summary["calls"] == 6
     assert sorted(r["repo_id"] for r in db.extractions()) == [f"gh:{i}" for i in range(1, 7)]
-    assert all(r["prompt_cache_key"] == "pickfit-extract-v1" for r in server.requests)
+    assert all(r["prompt_cache_key"] == PROMPT_CACHE_KEY for r in server.requests)
     assert ledger.spend_summary()["calls"] == 6
 
 
@@ -424,3 +425,6 @@ def test_select_candidates_orders_tools_first_and_interleaves_categories(tmp_pat
     assert [c["full_name"] for c in picked] == ["a/cli-new", "a/ai", "a/cli-old", "a/unsure"]
     assert [c["full_name"] for c in select_candidates(db, model="m", limit=2)] == ["a/cli-new", "a/ai"]
     assert [c["repo_id"] for c in select_candidates(db, model="m", limit=5, repo_ids=["a/lib"])] == ["gh:5"]
+    add_candidate(db, 7, "a/notes-mcp", category="mcp_server")
+    assert [c["full_name"] for c in select_candidates(db, model="m", limit=10, categories=["mcp_server"])] == [
+        "a/notes-mcp"]

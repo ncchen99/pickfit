@@ -178,6 +178,22 @@ test('get_install_guide conforms: pitfalls, setup, no pitfalls, another OS or ar
   );
   const never = await call('never run', { slug: 'fixture-cloud-summarize', os: 'linux' });
   assert.deepEqual([never.verification.status, never.steps, never.verify], ['unverified', [], null]);
+
+  const mcp = await call('an MCP server with a client config', { slug: 'fixture-notes-mcp', os: 'linux' });
+  assert.ok(mcp.mcp_client_config.claude_code.startsWith('claude mcp add fixture-notes-mcp'));
+  assert.equal(plain.mcp_client_config, null);
+  const elsewhere = await call('an MCP server checked on another OS', { slug: 'fixture-notes-mcp', os: 'macos' });
+  assert.equal(elsewhere.applies_to_user_system.match, 'other_os');
+});
+
+test('find_software conforms for the mcp_server category', async () => {
+  const off = server({ MATCH_MODE: 'off' });
+  const out = await conforming(off, await validators(off), 'rules, mcp_server', 'find_software', {
+    need: 'search my Markdown notes from Claude Code',
+    category: 'mcp_server',
+    os: 'linux',
+  });
+  assert.deepEqual(out.picks.map((p: any) => p.slug), ['fixture-notes-mcp']);
 });
 
 test('report_outcome conforms: counted with a reverify, deduplicated, not counted, replaced', async () => {

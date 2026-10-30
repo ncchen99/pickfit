@@ -60,7 +60,7 @@ def _extract(args: argparse.Namespace) -> int:
         repo_ids = [*(repo_ids or []), *record_slugs(DATA_DIR)]
     summary = run_extract(limit=args.limit, model=args.model, reasoning_effort=args.effort,
                           repo_ids=repo_ids, force=args.force, features_only=args.features_only,
-                          concurrency=args.concurrency, max_attempts=args.attempts)
+                          concurrency=args.concurrency, max_attempts=args.attempts, categories=args.category)
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     return 0 if summary["errors"] == 0 else 1
 
@@ -69,7 +69,7 @@ def _prescreen(args: argparse.Namespace) -> int:
     from pickfit.prescreen import run_prescreen
 
     summary = run_prescreen(limit=args.limit, repo_ids=args.repo, force=args.force,
-                            concurrency=args.concurrency, review=not args.no_review)
+                            concurrency=args.concurrency, review=not args.no_review, categories=args.category)
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     return 0 if summary["failed"] == 0 else 1
 
@@ -106,6 +106,7 @@ def _funnel(args: argparse.Namespace) -> int:
 def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     from pickfit.discover.github import PUSHED_DAYS, TOPICS
     from pickfit.discover.run import DEFAULT_PER_QUERY
+    from pickfit.schema import LISTED_CATEGORIES
 
     d = sub.add_parser("discover", help="search GitHub for candidates, fetch details, apply rules ($0)")
     d.add_argument("--per-query", type=int, default=DEFAULT_PER_QUERY,
@@ -128,6 +129,8 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     s.add_argument("--concurrency", type=int, default=PRESCREEN_CONCURRENCY,
                    help=f"candidates in flight at once (default {PRESCREEN_CONCURRENCY}; Baseten allows 100 RPM)")
     s.add_argument("--no-review", action="store_true", help="screen only; skip muse-spark-1.3 reviews")
+    s.add_argument("--category", action="append", choices=sorted(TOPICS),
+                   help="only candidates of this discovery category (repeatable; default all)")
     s.set_defaults(func=_prescreen)
 
     e = sub.add_parser("extract", help="read candidates with a Meta model into ExtractionResult (paid)")
@@ -142,12 +145,14 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     e.add_argument("--concurrency", type=int, default=1, help="calls in flight at once (default 1)")
     e.add_argument("--attempts", type=int, default=2,
                    help="tries per candidate for transient failures (default 2)")
+    e.add_argument("--category", action="append", choices=sorted(TOPICS),
+                   help="only candidates of this discovery category (repeatable; default all)")
     e.set_defaults(func=_extract)
 
     p = sub.add_parser("profiles", help="write data/software/<slug>.json from stored extractions ($0)")
     p.add_argument("--model", default="prod", help='extractions by this model: "prod" (default), "dev" or an id')
-    p.add_argument("--category", action="append", choices=["dev_cli", "local_ai", "other"],
-                   help="categories to write (repeatable; default dev_cli and local_ai)")
+    p.add_argument("--category", action="append", choices=[*LISTED_CATEGORIES, "other"],
+                   help="categories to write (repeatable; default " + ", ".join(LISTED_CATEGORIES) + ")")
     p.add_argument("--out", type=Path, default=None, help="output directory (default data/software)")
     p.add_argument("--dry-run", action="store_true", help="build and validate, write nothing")
     p.add_argument("--features-only", action="store_true",

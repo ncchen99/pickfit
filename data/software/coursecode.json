@@ -1,0 +1,522 @@
+{
+  "schema_version": "software.v1",
+  "slug": "coursecode",
+  "repo_id": "gh:1155834909",
+  "name": "CourseCode Framework",
+  "summary": "Open-source framework to build, preview, and package LMS courses with AI tools.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "claude-code",
+    "claude-code-plugin",
+    "cmi5",
+    "codex",
+    "course-authoring",
+    "coursecode",
+    "elearning",
+    "instructional-design",
+    "lms"
+  ],
+  "use_cases": [
+    "Export courses as SCORM, cmi5, or LTI packages",
+    "Preview courses locally with live reload",
+    "Convert PDFs, Word, and PowerPoint to markdown",
+    "Generate audio narration from text",
+    "Let AI preview and screenshot slides to verify layout"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://coursecodeframework.com",
+  "repo": {
+    "url": "https://github.com/course-code-framework/coursecode",
+    "full_name": "course-code-framework/coursecode",
+    "created_at": "2026-02-12T00:37:12Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js 22.15 or later"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-coursecode-20261031-013958-a822",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g coursecode",
+          "purpose": "install coursecode globally"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "coursecode --help",
+        "expected_signal": "Start MCP server for AI agent integration"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "freemium",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.2.0",
+    "published_at": "2026-10-28T14:01:37Z",
+    "url": "https://github.com/course-code-framework/coursecode/releases/tag/v0.2.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:41:50.164436+08:00",
+    "runs": [
+      {
+        "id": "verify-coursecode-20261031-013958-a822",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:41:50.164436+08:00",
+        "tool_version": "0.4.4",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g coursecode",
+            "purpose": "install coursecode globally"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "coursecode --help",
+            "expected_signal": "Start MCP server for AI agent integration",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mcp [options] Start MCP server for AI agent integration",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- coursecode mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call coursecode_workflow_status --args '{}' -- coursecode mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=coursecode_workflow_status content=text text_chars=1038",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 16 tools, successful workflow_status tool call, and help listing the MCP server command.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-coursecode-20261031-013958-a822/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-coursecode-20261031-013958-a822/check-1-cmd8.judged.png",
+            "runs/verify/verify-coursecode-20261031-013958-a822/check-2-cmd9.judged.png",
+            "runs/verify/verify-coursecode-20261031-013958-a822/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.054678,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "coursecode",
+            "mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "coursecode",
+          "server_version": "0.4.4",
+          "tools": [
+            "coursecode_state",
+            "coursecode_errors",
+            "coursecode_navigate",
+            "coursecode_interact",
+            "coursecode_assessment",
+            "coursecode_reset",
+            "coursecode_screenshot",
+            "coursecode_viewport",
+            "coursecode_workflow_status",
+            "coursecode_build",
+            "coursecode_css_catalog",
+            "coursecode_component_catalog",
+            "coursecode_interaction_catalog",
+            "coursecode_lint",
+            "coursecode_narration",
+            "coursecode_icon_catalog"
+          ],
+          "tool_count": 16,
+          "called_tool": "coursecode_workflow_status",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": "coursecode mcp",
+    "client_configs": [],
+    "env_vars": [],
+    "tools": []
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:03:51+08:00",
+    "quality": {
+      "total": 92.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 40.0,
+      "signals": {
+        "stars": 7,
+        "monthly_downloads": 1262,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 260,
+      "packages": [
+        "npm:coursecode"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 55.32
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "e2b7c8ba44f63d0f1d2d0ffdc8fe71f662b1f56d0ef4c486791fac1ab7cb2345",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Open-source course authoring framework for Claude Code, Codex, and MCP-capable AI tools. Build, preview, and test SCORM 1.2, SCORM 2004, cmi5, and LTI 1.3 courses."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "No coding is required to start, and you have full control of the code when you want it."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "[Node.js](https://nodejs.org/) 22.15 or later."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npm install -g coursecode"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "npx coursecode preview\n```\n\nOpen `http://localhost:4173` to view and edit your course."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "(Deepgram, ElevenLabs, OpenAI, Google Cloud, or Azure, using your own API key)"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Learner courses support Chrome 111+, Edge 111+, Firefox 114+, and Safari 16.4+."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/course-code-framework/coursecode",
+      "fetched_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/course-code-framework/coursecode/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:04:15+08:00"
+    },
+    {
+      "id": "release:v0.2.0",
+      "kind": "release",
+      "url": "https://github.com/course-code-framework/coursecode/releases/tag/v0.2.0",
+      "fetched_at": "2026-10-31T01:04:15+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "install the CLI globally for the shorter `coursecode` command",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:11+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "CourseCode Framework is open source and runs on your computer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:11+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Any other MCP client can run `coursecode mcp`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:11+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Build, preview, and test SCORM 1.2, SCORM 2004, cmi5, and LTI 1.3 courses.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:11+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# CourseCode Framework",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:11+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "[Node.js](https://nodejs.org/) 22.15 or later.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:11+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.2.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:04:15+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Export SCORM 1.2, SCORM 2004, cmi5, or LTI 1.3.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:11+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Preview your course locally",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:11+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Convert PDFs, Word, PowerPoint to markdown",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:11+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Generate audio narration from text",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:11+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Preview and screenshot",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:11+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "[CourseCode Cloud](https://coursecodecloud.com) is an optional paid hosting service for deploying and delivering courses.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:11+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "CourseCode Framework is open source and runs on your computer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:11+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "Any other MCP client can run `coursecode mcp`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:11+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:19+08:00",
+  "updated_at": "2026-10-31T02:03:51+08:00"
+}
