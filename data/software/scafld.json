@@ -46,7 +46,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-scafld-20261031-001928-3dac",
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install scafld 2>&1",
+          "purpose": "pipx install scafld"
+        },
+        {
+          "command": "scafld --version 2>&1",
+          "purpose": "fetch cached native binary via first run"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "scafld --help 2>&1",
+        "expected_signal": "scafld - deterministic protocol for multi-phase agent work"
+      },
+      "first_task": "mkdir -p /tmp/scafld-demo && cd /tmp/scafld-demo && scafld init 2>&1"
+    },
     "windows": null
   },
   "pricing": {
@@ -62,10 +82,115 @@
     "url": "https://github.com/auscaster/scafld/releases/tag/v2.5.10"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:20:43.853641+08:00",
+    "runs": [
+      {
+        "id": "verify-scafld-20261031-001928-3dac",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:20:43.853641+08:00",
+        "tool_version": "2.5.10",
+        "install_method": "pipx",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pipx install scafld 2>&1",
+            "purpose": "pipx install scafld"
+          },
+          {
+            "command": "scafld --version 2>&1",
+            "purpose": "fetch cached native binary via first run"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "scafld --help 2>&1",
+            "expected_signal": "scafld - deterministic protocol for multi-phase agent work",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "scafld - deterministic protocol for multi-phase agent work",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/scafld-demo && cd /tmp/scafld-demo && scafld init 2>&1",
+            "expected_signal": "initialized scafld workspace: /tmp/scafld-demo",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "initialized scafld workspace: /tmp/scafld-demo",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/scafld-demo && scafld plan add-cache 2>&1",
+            "expected_signal": "created draft spec:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "created draft spec: /tmp/scafld-demo/.scafld/specs/drafts/add-cache.md",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/scafld-demo && cd /tmp/scafld-demo && scafld init 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/scafld-demo && scafld list 2>&1",
+            "expected_signal": "add-cache draft add-cache",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "add-cache draft add-cache",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/scafld-demo && cd /tmp/scafld-demo && scafld init 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/scafld-demo && scafld plan add-cache 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pipx install scafld",
+            "actually_needed": "first scafld invocation downloads the version-pinned native Go binary from GitHub Releases into ~/.cache/scafld/bin/<version>/ and verifies checksums.txt, so the first run needs network even though pipx install succeeds offline of that asset",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show help text, successful workspace init, and draft spec creation with no errors.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-scafld-20261031-001928-3dac/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-scafld-20261031-001928-3dac/check-1-cmd3.judged.png",
+            "runs/verify/verify-scafld-20261031-001928-3dac/check-2-cmd5.judged.png",
+            "runs/verify/verify-scafld-20261031-001928-3dac/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.05976
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -260,5 +385,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:31+08:00",
-  "updated_at": "2026-10-31T00:17:14+08:00"
+  "updated_at": "2026-10-31T00:20:43.854304+08:00"
 }

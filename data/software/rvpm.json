@@ -69,17 +69,24 @@
       "first_task": "rvpm init --write"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-rvpm-20261031-001842-d490",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo install rvpm",
-          "purpose": null
+          "command": "curl -L -o /tmp/rvpm.tar.gz https://github.com/yukimemi/rvpm/releases/download/v3.52.0/rvpm-x86_64-unknown-linux-musl.tar.gz",
+          "purpose": "Download prebuilt musl binary tarball"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && tar xzf /tmp/rvpm.tar.gz -C /tmp && cp /tmp/rvpm ~/.local/bin/rvpm && chmod +x ~/.local/bin/rvpm",
+          "purpose": "Extract and install rvpm binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "rvpm --version",
+        "expected_signal": "rvpm 3.52.0"
+      },
       "first_task": "rvpm init --write"
     },
     "windows": {
@@ -110,10 +117,124 @@
     "url": "https://github.com/yukimemi/rvpm/releases/tag/v3.52.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:20:11.874478+08:00",
+    "runs": [
+      {
+        "id": "verify-rvpm-20261031-001842-d490",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:20:11.874478+08:00",
+        "tool_version": "3.52.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -L -o /tmp/rvpm.tar.gz https://github.com/yukimemi/rvpm/releases/download/v3.52.0/rvpm-x86_64-unknown-linux-musl.tar.gz",
+            "purpose": "Download prebuilt musl binary tarball"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && tar xzf /tmp/rvpm.tar.gz -C /tmp && cp /tmp/rvpm ~/.local/bin/rvpm && chmod +x ~/.local/bin/rvpm",
+            "purpose": "Extract and install rvpm binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "rvpm --version",
+            "expected_signal": "rvpm 3.52.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "rvpm 3.52.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rvpm --help",
+            "expected_signal": "Usage: rvpm [COMMAND]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: rvpm [COMMAND]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rvpm init --write",
+            "expected_signal": "Created /home/sbx/.config/rvpm/nvim/config.toml",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Created /home/sbx/.config/rvpm/nvim/config.toml",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rvpm doctor",
+            "expected_signal": "Summary: 14 ok",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "Summary: 14 ok · 1 warn · 2 error (exit 1)",
+            "setup": [
+              {
+                "command": "rvpm init --write",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "rvpm list --no-tui",
+            "expected_signal": "Checking plugin status...",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Checking plugin status...",
+            "setup": [
+              {
+                "command": "rvpm init --write",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install rvpm",
+            "actually_needed": "Downloaded rvpm-x86_64-unknown-linux-musl.tar.gz from GitHub releases v3.52.0 and copied the rvpm binary to ~/.local/bin (cargo method needs a Rust toolchain, which the box does not have and must not install)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "rvpm list",
+            "actually_needed": "Use rvpm list --no-tui for pipe-friendly plain-text output; plain rvpm list opens a TUI and fails with 'No such device or address (os error 6)' with no TTY",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show init creating config.toml, doctor reporting Summary 14 ok with exit 1, and version 3.52.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-rvpm-20261031-001842-d490/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-rvpm-20261031-001842-d490/check-1-cmd5.judged.png",
+            "runs/verify/verify-rvpm-20261031-001842-d490/check-2-cmd6.judged.png",
+            "runs/verify/verify-rvpm-20261031-001842-d490/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.073691
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -348,5 +469,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:13+08:00",
-  "updated_at": "2026-10-31T00:17:14+08:00"
+  "updated_at": "2026-10-31T00:20:11.875098+08:00"
 }

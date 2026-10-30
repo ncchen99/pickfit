@@ -53,7 +53,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-stakk-20261031-002433-4f9f",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/stakk-clean && curl -fsSL -o /tmp/stakk-clean/stakk.tar.xz https://github.com/glennib/stakk/releases/download/v3.0.6/stakk-x86_64-unknown-linux-gnu.tar.xz && tar -xJf /tmp/stakk-clean/stakk.tar.xz -C /tmp/stakk-clean && cp /tmp/stakk-clean/stakk-x86_64-unknown-linux-gnu/stakk /home/sbx/.local/bin/stakk && chmod +x /home/sbx/.local/bin/stakk",
+          "purpose": "Download and install stakk binary"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "stakk --version",
+        "expected_signal": "stakk 3.0.6"
+      },
+      "first_task": "stakk docs"
+    },
     "windows": null
   },
   "pricing": {
@@ -69,10 +85,89 @@
     "url": "https://github.com/glennib/stakk/releases/tag/v3.0.6"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:25:49.701134+08:00",
+    "runs": [
+      {
+        "id": "verify-stakk-20261031-002433-4f9f",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:25:49.701134+08:00",
+        "tool_version": "3.0.6",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/stakk-clean && curl -fsSL -o /tmp/stakk-clean/stakk.tar.xz https://github.com/glennib/stakk/releases/download/v3.0.6/stakk-x86_64-unknown-linux-gnu.tar.xz && tar -xJf /tmp/stakk-clean/stakk.tar.xz -C /tmp/stakk-clean && cp /tmp/stakk-clean/stakk-x86_64-unknown-linux-gnu/stakk /home/sbx/.local/bin/stakk && chmod +x /home/sbx/.local/bin/stakk",
+            "purpose": "Download and install stakk binary"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "stakk --version",
+            "expected_signal": "stakk 3.0.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "stakk 3.0.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "stakk --help",
+            "expected_signal": "A CLI tool that bridges Jujutsu (jj) bookmarks to GitHub or Forgejo stacked pull requests",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "A CLI tool that bridges Jujutsu (jj) bookmarks to GitHub or Forgejo stacked pull requests",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "stakk docs",
+            "expected_signal": "stakk documentation topics:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "stakk documentation topics:",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "mise use -g 'github:glennib/stakk', cargo binstall/install stakk, nix run/profile install",
+            "actually_needed": "Installed prebuilt stakk-x86_64-unknown-linux-gnu.tar.xz from GitHub releases v3.0.6 to ~/.local/bin; mise and nix are not on PATH and cargo toolchain must not be installed here",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Requires the jj CLI on your PATH, version 0.39.0 or newer",
+            "actually_needed": "Installed jj 0.46.0 binary separately; `stakk graph` in a fresh jj repo without a trunk bookmark tracked from a remote exits 1 with stakk::jj::no_default_branch",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show stakk listing documentation topics and printing version 3.0.6 with exit code 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-stakk-20261031-002433-4f9f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-stakk-20261031-002433-4f9f/check-1-cmd5.judged.png",
+            "runs/verify/verify-stakk-20261031-002433-4f9f/check-2-cmd14.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.069791
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -283,5 +378,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:13+08:00",
-  "updated_at": "2026-10-31T00:17:14+08:00"
+  "updated_at": "2026-10-31T00:25:49.701694+08:00"
 }

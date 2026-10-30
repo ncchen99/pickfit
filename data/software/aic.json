@@ -65,19 +65,24 @@
       "first_task": "aic list"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-aic-20261031-001936-dc8a",
       "method": "script",
       "steps": [
         {
-          "command": "curl --proto '=https' --tlsv1.2 -sSfL https://github.com/CaicoLeung/aic/releases/latest/download/aic-installer.sh | sh",
-          "purpose": null
+          "command": "curl --proto '=https' --tlsv1.2 -sSfL https://github.com/CaicoLeung/aic/releases/latest/download/aic-installer.sh -o /tmp/aic-installer.sh && ls -l /tmp/aic-installer.sh",
+          "purpose": "download installer script"
+        },
+        {
+          "command": "sh /tmp/aic-installer.sh",
+          "purpose": "run installer script"
         }
       ],
-      "manual_steps": [
-        "install and log in to a CLI agent separately"
-      ],
-      "check": null,
+      "manual_steps": [],
+      "check": {
+        "command": "aic --version",
+        "expected_signal": "aic 0.5.8"
+      },
       "first_task": "aic list"
     },
     "windows": null
@@ -95,10 +100,94 @@
     "url": "https://github.com/CaicoLeung/aic/releases/tag/v0.5.8"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:20:54.606822+08:00",
+    "runs": [
+      {
+        "id": "verify-aic-20261031-001936-dc8a",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:20:54.606822+08:00",
+        "tool_version": "0.5.8",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl --proto '=https' --tlsv1.2 -sSfL https://github.com/CaicoLeung/aic/releases/latest/download/aic-installer.sh -o /tmp/aic-installer.sh && ls -l /tmp/aic-installer.sh",
+            "purpose": "download installer script"
+          },
+          {
+            "command": "sh /tmp/aic-installer.sh",
+            "purpose": "run installer script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "aic --version",
+            "expected_signal": "aic 0.5.8",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "aic 0.5.8",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "aic list",
+            "expected_signal": "Provider: openai (source: default)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Provider: openai (source: default)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "SHELL=/bin/bash aic completion",
+            "expected_signal": "Installed bash completion to:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Installed bash completion to: /home/sbx/.local/share/bash-completion/completions/aic",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl --proto '=https' --tlsv1.2 -sSfL https://github.com/CaicoLeung/aic/releases/latest/download/aic-installer.sh | sh",
+            "actually_needed": "download installer to /tmp/aic-installer.sh, read it, then run `sh /tmp/aic-installer.sh`; it fetches a precompiled binary tarball (e.g. aic-x86_64-unknown-linux-gnu.tar.gz) which cannot be read as a script beforehand",
+            "kind": "note"
+          },
+          {
+            "readme_said": "aic completion",
+            "actually_needed": "SHELL=/bin/bash aic completion",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshots show aic listing default provider config, installing bash completion, and printing version 0.5.8.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-aic-20261031-001936-dc8a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-aic-20261031-001936-dc8a/check-1-cmd7.judged.png",
+            "runs/verify/verify-aic-20261031-001936-dc8a/check-2-cmd11.judged.png",
+            "runs/verify/verify-aic-20261031-001936-dc8a/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.078552
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -301,5 +390,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:31+08:00",
-  "updated_at": "2026-10-31T00:17:14+08:00"
+  "updated_at": "2026-10-31T00:20:54.607872+08:00"
 }

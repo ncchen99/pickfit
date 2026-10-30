@@ -75,17 +75,24 @@
       "first_task": "wtfi"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-wtfi2-20261031-001734-9733",
       "method": "script",
       "steps": [
         {
-          "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/kanywst/wtfi2/releases/latest/download/wtfi2-installer.sh | sh",
-          "purpose": null
+          "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/kanywst/wtfi2/releases/latest/download/wtfi2-installer.sh -o /tmp/wtfi2-installer2.sh",
+          "purpose": "Download installer script for reading before running"
+        },
+        {
+          "command": "sh /tmp/wtfi2-installer2.sh",
+          "purpose": "Install prebuilt wtfi binary via script"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "wtfi --version",
+        "expected_signal": "wtfi 0.8.0"
+      },
       "first_task": "wtfi"
     },
     "windows": null
@@ -103,10 +110,117 @@
     "url": "https://github.com/kanywst/wtfi2/releases/tag/v0.8.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:19:13.485138+08:00",
+    "runs": [
+      {
+        "id": "verify-wtfi2-20261031-001734-9733",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:19:13.485138+08:00",
+        "tool_version": "0.8.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/kanywst/wtfi2/releases/latest/download/wtfi2-installer.sh -o /tmp/wtfi2-installer2.sh",
+            "purpose": "Download installer script for reading before running"
+          },
+          {
+            "command": "sh /tmp/wtfi2-installer2.sh",
+            "purpose": "Install prebuilt wtfi binary via script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "wtfi --version",
+            "expected_signal": "wtfi 0.8.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "wtfi 0.8.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "wtfi --help",
+            "expected_signal": "Usage: wtfi [OPTIONS]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: wtfi [OPTIONS]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "wtfi",
+            "expected_signal": "wtfi · what the f*ck internet",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "wtfi · what the f*ck internet",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "wtfi -v",
+            "expected_signal": "Resolving fast",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "Resolving fast (2 ms)",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl installer script installs prebuilt binary",
+            "actually_needed": "Installer downloaded and verified prebuilt x86_64-unknown-linux-gnu binary (wtfi 0.8.0) at runtime; that fetched archive cannot be read before running, only the shell script can",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Prerequisites: Rust 1.88+, ip, iw, ping, traceroute",
+            "actually_needed": "No Rust toolchain needed for script install; binary installed to $HOME/.cargo/bin which was already on PATH, no PATH edit needed",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Prerequisites list ip, iw, ping, traceroute",
+            "actually_needed": "Run succeeded with only `ip` present (no ping, iw, traceroute in box); Internet/DNS/Portal hops still measured, Wi-Fi/Gateway reported unmeasured and overall exit was 1 Degraded per README exit-code table",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "wtfi -w example",
+            "actually_needed": "`wtfi -w` live dashboard not smoke-tested: it is an interactive TUI requiring q to quit",
+            "kind": "note"
+          },
+          {
+            "readme_said": "install step 2 runs wtfi2-installer2.sh",
+            "actually_needed": "nothing to change; a note: the box ran wtfi2-installer2.sh, downloaded, without reading it first, so pickfit did not inspect it",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show wtfi running with full path diagnosis and printing version 0.8.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-wtfi2-20261031-001734-9733/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-wtfi2-20261031-001734-9733/check-1-cmd8.judged.png",
+            "runs/verify/verify-wtfi2-20261031-001734-9733/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.087347
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -381,5 +495,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:22+08:00",
-  "updated_at": "2026-10-31T00:17:14+08:00"
+  "updated_at": "2026-10-31T00:19:13.485861+08:00"
 }

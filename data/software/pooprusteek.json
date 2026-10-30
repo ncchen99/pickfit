@@ -73,20 +73,25 @@
       "first_task": "pooprusteek --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-pooprusteek-20261031-002319-ed55",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://github.com/Aver005/pooprusteek/releases/latest/download/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://github.com/Aver005/pooprusteek/releases/latest/download/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && head -c 2000 /tmp/install.sh",
+          "purpose": "Download install script for inspection"
+        },
+        {
+          "command": "sh /tmp/install.sh",
+          "purpose": "Install pooprusteek via release script"
         }
       ],
-      "manual_steps": [
-        "Log in to chat.deepseek.com and copy DeepSeek session token on first launch"
-      ],
-      "check": null,
-      "first_task": "pooprusteek --version"
+      "manual_steps": [],
+      "check": {
+        "command": "pooprusteek --version",
+        "expected_signal": "pooprusteek 0.1.1"
+      },
+      "first_task": "curl -s http://127.0.0.1:8123/v1/models; echo \"---\"; curl -s -X POST http://127.0.0.1:8123/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"mock\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}'"
     },
     "windows": null
   },
@@ -103,10 +108,115 @@
     "url": "https://github.com/Aver005/PoopRusteek/releases/tag/v0.1.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:24:44.813835+08:00",
+    "runs": [
+      {
+        "id": "verify-pooprusteek-20261031-002319-ed55",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:24:44.813835+08:00",
+        "tool_version": "0.1.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/Aver005/pooprusteek/releases/latest/download/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && head -c 2000 /tmp/install.sh",
+            "purpose": "Download install script for inspection"
+          },
+          {
+            "command": "sh /tmp/install.sh",
+            "purpose": "Install pooprusteek via release script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "pooprusteek --version",
+            "expected_signal": "pooprusteek 0.1.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "pooprusteek 0.1.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "pooprusteek --help",
+            "expected_signal": "A fast TUI coding agent",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "A fast TUI coding agent powered by DeepSeek",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8123/v1/models; echo \"---\"; curl -s -X POST http://127.0.0.1:8123/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"mock\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}'",
+            "expected_signal": "\"id\":\"mock\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"data\":[{\"context_length\":32768,\"id\":\"mock\",\"object\":\"model\",\"owned_by\":\"harness\"}],\"object\":\"list\"}---",
+            "setup": [
+              {
+                "command": "pooprusteek mock-provider --port 8123",
+                "background": true,
+                "port": 8123
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "pooprusteek --config /tmp/pr-config.toml --data-dir /tmp/pr-data exec \"say hi\" --provider mock --model mock --semantic off --timeout 30 --trace /tmp/pr-trace.jsonl --json",
+            "expected_signal": "Mock provider: no script loaded.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"final_text\": \"Mock provider: no script loaded.\",",
+            "setup": [
+              {
+                "command": "cat > /tmp/pr-config.toml <<'EOF'\n[provider]\nkind = \"openai\"\nmodel = \"mock\"\n\n[[providers]]\nname = \"mock\"\nprotocol = \"openai\"\nbase_url = \"http://127.0.0.1:8123/v1\"\nmodel = \"mock\"\napi_key = \"test\"\nEOF\ncat /tmp/pr-config.toml && mkdir -p /tmp/pr-data /tmp/pr-work && ls -l /tmp/pr-config.toml",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "pooprusteek mock-provider --port 8123",
+                "background": true,
+                "port": 8123
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://github.com/Aver005/pooprusteek/releases/latest/download/install.sh | sh",
+            "actually_needed": "installer fetches a prebuilt linux-x86_64 binary and verifies it against manifest.json sha256, then smoke-tests it with --version before swapping it in; the binary itself cannot be read as text before running",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show model list with mock id, exec JSON completed with mock text, and version 0.1.1 printed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-pooprusteek-20261031-002319-ed55/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-pooprusteek-20261031-002319-ed55/check-1-cmd9.judged.png",
+            "runs/verify/verify-pooprusteek-20261031-002319-ed55/check-2-cmd12.judged.png",
+            "runs/verify/verify-pooprusteek-20261031-002319-ed55/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.080142
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -349,5 +459,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:46+08:00",
-  "updated_at": "2026-10-31T00:17:14+08:00"
+  "updated_at": "2026-10-31T00:24:44.814705+08:00"
 }

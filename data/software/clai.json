@@ -56,18 +56,21 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-clai-20261031-002154-624d",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g @pentoshi/clai",
-          "purpose": null
+          "command": "node --version && npm --version && npm install -g @pentoshi/clai",
+          "purpose": "Install clai via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "clai"
+      "check": {
+        "command": "clai --version",
+        "expected_signal": "5.1.4"
+      },
+      "first_task": "clai doctor"
     },
     "windows": {
       "basis": "readme_claim",
@@ -97,10 +100,78 @@
     "url": "https://github.com/pentoshi007/clai/releases/tag/v5.1.4"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:23:36.532968+08:00",
+    "runs": [
+      {
+        "id": "verify-clai-20261031-002154-624d",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:23:36.532968+08:00",
+        "tool_version": "5.1.4",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "node --version && npm --version && npm install -g @pentoshi/clai",
+            "purpose": "Install clai via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "clai --version",
+            "expected_signal": "5.1.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "5.1.4",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "clai --help",
+            "expected_signal": "display help for command",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "-h, --help display help for command",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "clai doctor",
+            "expected_signal": "Search Providers:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Search Providers:",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Doctor report shows Search Providers table and version command prints 5.1.4.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-clai-20261031-002154-624d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-clai-20261031-002154-624d/check-1-cmd4.judged.png",
+            "runs/verify/verify-clai-20261031-002154-624d/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.032062
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -327,5 +398,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:22+08:00",
-  "updated_at": "2026-10-31T00:17:14+08:00"
+  "updated_at": "2026-10-31T00:23:36.533488+08:00"
 }

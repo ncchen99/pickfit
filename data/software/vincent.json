@@ -68,17 +68,24 @@
       "first_task": "vincent version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "go",
+      "basis": "replayed",
+      "run_id": "verify-vincent-20261031-001734-d2bf",
+      "method": "binary",
       "steps": [
         {
-          "command": "go install github.com/lezli01/vincent/cmd/vincent@latest",
-          "purpose": null
+          "command": "mkdir -p ~/.local/bin && curl -fsSL -o /tmp/vincent.tar.gz https://github.com/lezli01/vincent/releases/download/v0.11.0/vincent_0.11.0_linux_amd64.tar.gz",
+          "purpose": "Download linux_amd64 release archive"
+        },
+        {
+          "command": "tar -xzf /tmp/vincent.tar.gz -C /tmp && mkdir -p ~/.local/bin && mv /tmp/vincent ~/.local/bin/vincent && chmod +x ~/.local/bin/vincent",
+          "purpose": "Extract and install vincent binary"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "vincent version",
+        "expected_signal": "vincent version 0.11.0"
+      },
       "first_task": "vincent version"
     },
     "windows": {
@@ -109,10 +116,120 @@
     "url": "https://github.com/lezli01/vincent/releases/tag/v0.11.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:19:09.167273+08:00",
+    "runs": [
+      {
+        "id": "verify-vincent-20261031-001734-d2bf",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:19:09.167273+08:00",
+        "tool_version": "0.11.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin && curl -fsSL -o /tmp/vincent.tar.gz https://github.com/lezli01/vincent/releases/download/v0.11.0/vincent_0.11.0_linux_amd64.tar.gz",
+            "purpose": "Download linux_amd64 release archive"
+          },
+          {
+            "command": "tar -xzf /tmp/vincent.tar.gz -C /tmp && mkdir -p ~/.local/bin && mv /tmp/vincent ~/.local/bin/vincent && chmod +x ~/.local/bin/vincent",
+            "purpose": "Extract and install vincent binary"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "vincent version",
+            "expected_signal": "vincent version 0.11.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "vincent version 0.11.0 (commit babc995, built 2026-10-02T06:26:41Z)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "vincent daemon status",
+            "expected_signal": "daemon is running",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "daemon is running (pid 28, port 22315, version 0.11.0, started 2026-10-30T16:19:01Z)",
+            "setup": [
+              {
+                "command": "vincent daemon start",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "vincent config get",
+            "expected_signal": "max_parallel_tasks = 3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "max_parallel_tasks = 3",
+            "setup": [
+              {
+                "command": "vincent daemon start",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "ls /tmp/examples/ && vincent workflow validate /tmp/examples/feature-pr.yaml",
+            "expected_signal": "ok — feature-pr",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "/tmp/examples/feature-pr.yaml: ok — feature-pr, 4 step(s), 0 warning(s)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "tar -xzf vincent_*_darwin_arm64.tar.gz then sudo mv vincent /usr/local/bin/",
+            "actually_needed": "Use the Linux asset vincent_0.11.0_linux_amd64.tar.gz and move vincent to ~/.local/bin (on PATH, no sudo) instead of the macOS asset and /usr/local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "go install github.com/lezli01/vincent/cmd/vincent@latest",
+            "actually_needed": "Skipped go install candidate: box has no Go toolchain and installing one is forbidden; used the README Archive binary instead",
+            "kind": "note"
+          },
+          {
+            "readme_said": "mise use -g github:lezli01/vincent",
+            "actually_needed": "Skipped mise candidate: mise is not installed in the box; the release archive yields the same self-contained binary without an extra manager",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show expected outputs: daemon running, config containing max_parallel_tasks = 3, and version 0.11.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-vincent-20261031-001734-d2bf/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-vincent-20261031-001734-d2bf/check-1-cmd9.judged.png",
+            "runs/verify/verify-vincent-20261031-001734-d2bf/check-2-cmd10.judged.png",
+            "runs/verify/verify-vincent-20261031-001734-d2bf/check-3-cmd14.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.08684
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -355,5 +472,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:48+08:00",
-  "updated_at": "2026-10-31T00:17:14+08:00"
+  "updated_at": "2026-10-31T00:19:09.168071+08:00"
 }

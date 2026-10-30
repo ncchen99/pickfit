@@ -64,18 +64,21 @@
       "first_task": "sqlmux ./app.db"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-sqlmux-20261031-002044-f725",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g sqlmux",
-          "purpose": null
+          "purpose": "Install sqlmux via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "sqlmux ./app.db"
+      "check": {
+        "command": "sqlmux --version",
+        "expected_signal": "sqlmux v0.7.0"
+      },
+      "first_task": "sqlmux keys"
     },
     "windows": {
       "basis": "readme_claim",
@@ -105,10 +108,90 @@
     "url": "https://github.com/kackerx/sqlmux/releases/tag/v0.7.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:21:43.961314+08:00",
+    "runs": [
+      {
+        "id": "verify-sqlmux-20261031-002044-f725",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:21:43.961314+08:00",
+        "tool_version": "v0.7.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g sqlmux",
+            "purpose": "Install sqlmux via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "sqlmux --version",
+            "expected_signal": "sqlmux v0.7.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "sqlmux v0.7.0 (dbfed2b, 2026-10-26T15:17:31Z)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sqlmux keys",
+            "expected_signal": "grid.transpose",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "| grid | `T` | grid.transpose |",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sqlmux keys --format toml",
+            "expected_signal": "[keys.global]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[keys.global]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "sqlmux ./app.db, sqlmux postgres://..., sqlmux",
+            "actually_needed": "Use documented non-interactive subcommand `sqlmux keys` (or `sqlmux keys --format toml`) for verification; the three listed open commands launch an interactive tmux-style TUI requiring a TTY and cannot run in this non-interactive box.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "--version or --help works",
+            "actually_needed": "Use `sqlmux --version` (exit 0); `sqlmux --help` prints usage to stderr and exits 1 with `flag: help requested`.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "sqlmux lists keybindings as table and TOML and prints version v0.7.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-sqlmux-20261031-002044-f725/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-sqlmux-20261031-002044-f725/check-1-cmd4.judged.png",
+            "runs/verify/verify-sqlmux-20261031-002044-f725/check-2-cmd6.judged.png",
+            "runs/verify/verify-sqlmux-20261031-002044-f725/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.046056
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -327,5 +410,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:22+08:00",
-  "updated_at": "2026-10-31T00:17:14+08:00"
+  "updated_at": "2026-10-31T00:21:43.961885+08:00"
 }

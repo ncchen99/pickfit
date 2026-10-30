@@ -57,7 +57,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-kicadai-20261031-002405-4b79",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/kicadai-dl && curl -L -o /tmp/kicadai-dl/kicadai https://github.com/dshills/KiCadAI/releases/download/v1.0.1/kicadai_v1.0.1_linux_amd64 && curl -L -o /tmp/kicadai-dl/SHA256SUMS https://github.com/dshills/KiCadAI/releases/download/v1.0.1/SHA256SUMS && cat /tmp/kicadai-dl/SHA256SUMS && sha256sum /tmp/kicadai-dl/kicadai && install -m 0755 /tmp/kicadai-dl/kicadai ~/.local/bin/kicadai && ls -l ~/.local/bin/kicadai",
+          "purpose": "download and install release binary"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "kicadai --help",
+        "expected_signal": "--pretty Pretty-print JSON output"
+      },
+      "first_task": "kicadai version"
+    },
     "windows": null
   },
   "pricing": {
@@ -73,10 +89,100 @@
     "url": "https://github.com/dshills/KiCadAI/releases/tag/v1.0.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:26:03.518020+08:00",
+    "runs": [
+      {
+        "id": "verify-kicadai-20261031-002405-4b79",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:26:03.518020+08:00",
+        "tool_version": "1.0.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/kicadai-dl && curl -L -o /tmp/kicadai-dl/kicadai https://github.com/dshills/KiCadAI/releases/download/v1.0.1/kicadai_v1.0.1_linux_amd64 && curl -L -o /tmp/kicadai-dl/SHA256SUMS https://github.com/dshills/KiCadAI/releases/download/v1.0.1/SHA256SUMS && cat /tmp/kicadai-dl/SHA256SUMS && sha256sum /tmp/kicadai-dl/kicadai && install -m 0755 /tmp/kicadai-dl/kicadai ~/.local/bin/kicadai && ls -l ~/.local/bin/kicadai",
+            "purpose": "download and install release binary"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "kicadai --help",
+            "expected_signal": "--pretty Pretty-print JSON output",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "--pretty Pretty-print JSON output",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "kicadai version",
+            "expected_signal": "\"version\": \"1.0.1\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"version\": \"1.0.1\",",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "kicadai --request ./led_indicator.json schematic-ir validate",
+            "expected_signal": "\"ok\": true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"ok\": true,",
+            "setup": [
+              {
+                "command": "cat > ./led_indicator.json <<'EOF'\n{\n  \"schema\": \"kicadai.schematic.ir.v1\",\n  \"version\": 1,\n  \"metadata\": {\n    \"name\": \"led_indicator\",\n    \"title\": \"LED Indicator\",\n    \"description\": \"Minimal current-limited LED indicator.\",\n    \"paper\": \"A4\"\n  },\n  \"circuit\": {\n    \"components\": [\n      {\n        \"id\": \"vin\",\n        \"ref\": \"J1\",\n        \"role\": \"input_connector\",\n        \"symbol\": \"Connector_Generic:Conn_01x02\",\n        \"footprint\": \"Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical\",\n        \"pins\": [{\"number\": \"1\"}, {\"number\": \"2\"}]\n      },\n      {\n        \"id\": \"r_limit\",\n        \"ref\": \"R1\",\n        \"role\": \"current_limiter\",\n        \"symbol\": \"Device:R\",\n        \"value\": \"1k\",\n        \"footprint\": \"Resistor_SMD:R_0805_2012Metric\",\n        \"pins\": [{\"number\": \"1\"}, {\"number\": \"2\"}]\n      },\n      {\n        \"id\": \"led\",\n        \"ref\": \"D1\",\n        \"role\": \"indicator_led\",\n        \"symbol\": \"Device:LED\",\n        \"value\": \"green\",\n        \"footprint\": \"LED_SMD:LED_0805_2012Metric\",\n        \"pins\": [{\"number\": \"1\"}, {\"number\": \"2\"}]\n      }\n    ],\n    \"nets\": [\n      {\"name\": \"VIN\", \"role\": \"power\", \"connect\": [\"vin.1\", \"r_limit.1\"], \"label\": \"VIN\"},\n      {\"name\": \"LED_A\", \"role\": \"signal\", \"connect\": [\"r_limit.2\", \"led.1\"], \"label\": \"LED_A\"},\n      {\"name\": \"GND\", \"role\": \"ground\", \"connect\": [\"led.2\", \"vin.2\"], \"label\": \"GND\"}\n    ]\n  },\n  \"layout\": {\n    \"flow\": \"left_to_right\",\n    \"origin\": \"centered\",\n    \"lanes\": {\"power\": \"top\", \"ground\": \"bottom\", \"signals\": \"middle\"},\n    \"rules\": {\n      \"positive_power_top\": true,\n      \"ground_bottom\": true,\n      \"center_on_page\": true,\n      \"prefer_labels_for_long_nets\": true,\n      \"avoid_wire_crossings\": true,\n      \"min_group_spacing_mm\": 20,\n      \"min_component_spacing_mm\": 10\n    }\n  },\n  \"policy\": {\n    \"repair\": {\n      \"allow_ref_assignment\": true,\n      \"allow_label_insertion\": true,\n      \"allow_group_spacing_adjustment\": true,\n      \"allow_symbol_substitution\": false,\n      \"allow_pin_guessing\": false\n    },\n    \"acceptance\": \"readable\"\n  }\n}\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "git clone + make build requiring Go 1.26.8",
+            "actually_needed": "used release binary kicadai_v1.0.1_linux_amd64 installed to ~/.local/bin/kicadai with checksum verified (df262f...); no Go installation per README 'Released binaries require no Go installation'",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "bin/kicadai --output ./out/divider schematic example divider",
+            "actually_needed": "use schematic-ir validate/write (e.g. kicadai --request ./led_indicator.json schematic-ir validate); v1.0.1 binary has no 'schematic' command",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "kicadai --request examples/schematic-ir/led_indicator.json --output ./out/ir_led --overwrite schematic-ir write",
+            "actually_needed": "schematic-ir write succeeded only with a fresh absolute --output path (/tmp/ir_led --overwrite); pre-created relative ./out/ir_led failed with doubled path 'out/ir_led/out/ir_led'",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show schematic-ir validation returning ok true and help listing the pretty flag.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-kicadai-20261031-002405-4b79/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-kicadai-20261031-002405-4b79/check-1-cmd14.judged.png",
+            "runs/verify/verify-kicadai-20261031-002405-4b79/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.126989
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -295,5 +401,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:22+08:00",
-  "updated_at": "2026-10-31T00:17:14+08:00"
+  "updated_at": "2026-10-31T00:26:03.518546+08:00"
 }

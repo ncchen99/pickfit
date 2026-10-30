@@ -71,17 +71,24 @@
       "first_task": "openshield models"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-openshield-20261031-002336-68d0",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/Blackshield-Company/openshield/main/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/Blackshield-Company/openshield/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
+          "purpose": "Download install script for reading"
+        },
+        {
+          "command": "bash /tmp/install.sh",
+          "purpose": "Run installer script (candidate 1)"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "openshield --version",
+        "expected_signal": "openshield 1.2.2"
+      },
       "first_task": "openshield models"
     },
     "windows": null
@@ -99,10 +106,101 @@
     "url": "https://github.com/Blackshield-Company/openshield/releases/tag/v1.2.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:24:33.923000+08:00",
+    "runs": [
+      {
+        "id": "verify-openshield-20261031-002336-68d0",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:24:33.923000+08:00",
+        "tool_version": "1.2.2",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/Blackshield-Company/openshield/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
+            "purpose": "Download install script for reading"
+          },
+          {
+            "command": "bash /tmp/install.sh",
+            "purpose": "Run installer script (candidate 1)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "openshield --version",
+            "expected_signal": "openshield 1.2.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "openshield 1.2.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "openshield --help",
+            "expected_signal": "Usage: openshield [COMMAND]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: openshield [COMMAND]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "openshield models",
+            "expected_signal": "Available Models",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "🛡 Available Models",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "openshield config",
+            "expected_signal": "providers.local",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[providers.local]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "openshield stats",
+            "expected_signal": "OpenShield Stats",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "🛡 OpenShield Stats",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exit 0 showing models list, config dump, and version 1.2.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-openshield-20261031-002336-68d0/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-openshield-20261031-002336-68d0/check-1-cmd5.judged.png",
+            "runs/verify/verify-openshield-20261031-002336-68d0/check-2-cmd6.judged.png",
+            "runs/verify/verify-openshield-20261031-002336-68d0/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.047562
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -361,5 +459,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:22+08:00",
-  "updated_at": "2026-10-31T00:17:14+08:00"
+  "updated_at": "2026-10-31T00:24:33.923566+08:00"
 }
