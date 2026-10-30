@@ -77,20 +77,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-lokalbot-20261031-023423-2491",
+      "run_id": "verify-lokalbot-20261031-025639-13da",
       "method": "binary",
       "steps": [
         {
-          "command": "cd ~/work && curl -fL -o LokalBot-linux.tar.gz https://github.com/stevyhacker/LokalBot/releases/download/v0.11.6/LokalBot-0.11.6-linux-x86_64.tar.gz && ls -lh LokalBot-linux.tar.gz",
-          "purpose": "Download Linux tarball from latest release"
+          "command": "mkdir -p /tmp/lokalbot-dl ~/apps && curl -fL -o /tmp/lokalbot-dl/LokalBot.tar.gz https://github.com/stevyhacker/LokalBot/releases/download/v0.11.6/LokalBot-0.11.6-linux-x86_64.tar.gz && ls -lh /tmp/lokalbot-dl/",
+          "purpose": "Download Linux tarball"
         },
         {
-          "command": "mkdir -p ~/work/lokalbot-extract && tar -xzf ~/work/LokalBot-linux.tar.gz -C ~/work/lokalbot-extract",
-          "purpose": "Extract tarball with install.sh and binaries"
+          "command": "tar xzf /tmp/lokalbot-dl/LokalBot.tar.gz -C /tmp/lokalbot-dl && ls -la /tmp/lokalbot-dl/LokalBot-0.11.6-linux-x86_64/",
+          "purpose": "Extract Linux tarball"
         },
         {
-          "command": "cd ~/work/lokalbot-extract/LokalBot-0.11.6-linux-x86_64 && ./install.sh",
-          "purpose": "Run install.sh to install app and CLI"
+          "command": "bash /tmp/lokalbot-dl/LokalBot-0.11.6-linux-x86_64/install.sh",
+          "purpose": "Run install.sh user install"
         }
       ],
       "manual_steps": [],
@@ -117,10 +117,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:35:53.613556+08:00",
+    "checked_at": "2026-10-31T02:58:39.831285+08:00",
     "runs": [
       {
-        "id": "verify-lokalbot-20261031-023423-2491",
+        "id": "verify-lokalbot-20261031-025639-13da",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -128,22 +128,22 @@
         "method": "sandbox",
         "runner": "modal-vm",
         "image": "pickfit-sbx-vm-gui:d217e76065c9",
-        "checked_at": "2026-10-31T02:35:53.613556+08:00",
+        "checked_at": "2026-10-31T02:58:39.831285+08:00",
         "tool_version": "0.11.6",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "cd ~/work && curl -fL -o LokalBot-linux.tar.gz https://github.com/stevyhacker/LokalBot/releases/download/v0.11.6/LokalBot-0.11.6-linux-x86_64.tar.gz && ls -lh LokalBot-linux.tar.gz",
-            "purpose": "Download Linux tarball from latest release"
+            "command": "mkdir -p /tmp/lokalbot-dl ~/apps && curl -fL -o /tmp/lokalbot-dl/LokalBot.tar.gz https://github.com/stevyhacker/LokalBot/releases/download/v0.11.6/LokalBot-0.11.6-linux-x86_64.tar.gz && ls -lh /tmp/lokalbot-dl/",
+            "purpose": "Download Linux tarball"
           },
           {
-            "command": "mkdir -p ~/work/lokalbot-extract && tar -xzf ~/work/LokalBot-linux.tar.gz -C ~/work/lokalbot-extract",
-            "purpose": "Extract tarball with install.sh and binaries"
+            "command": "tar xzf /tmp/lokalbot-dl/LokalBot.tar.gz -C /tmp/lokalbot-dl && ls -la /tmp/lokalbot-dl/LokalBot-0.11.6-linux-x86_64/",
+            "purpose": "Extract Linux tarball"
           },
           {
-            "command": "cd ~/work/lokalbot-extract/LokalBot-0.11.6-linux-x86_64 && ./install.sh",
-            "purpose": "Run install.sh to install app and CLI"
+            "command": "bash /tmp/lokalbot-dl/LokalBot-0.11.6-linux-x86_64/install.sh",
+            "purpose": "Run install.sh user install"
           }
         ],
         "smoke_tests": [
@@ -157,20 +157,11 @@
             "offline": true
           },
           {
-            "command": "lokalbot-cli --help",
-            "expected_signal": "Read-only access to your local LokalBot meeting library.",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Read-only access to your local LokalBot meeting library.",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "lokalbot",
-            "expected_signal": "Welcome to LokalBot",
+            "expected_signal": "gui tier: window",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "window: \"Welcome to LokalBot\" 650x640 at 317,80 (pid 836)",
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
           }
@@ -179,20 +170,20 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows `lokalbot-cli --version` printing `lokalbot-cli 0.11.6`. / The LokalBot window shows a 'Welcome to LokalBot' onboarding wizard asking to 'Choose What to Remember' with Step 1 of 4 and Continue controls.",
+          "observed": "The screenshot shows lokalbot-cli --version outputting lokalbot-cli 0.11.6. / The app shows its main interface behind a Welcome onboarding dialog asking to Choose What to Remember on Step 1 of 4.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-lokalbot-20261031-023423-2491/report.json",
+          "trace_path": "runs/verify/verify-lokalbot-20261031-025639-13da/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-lokalbot-20261031-023423-2491/check-1-cmd5.judged.png",
-            "runs/verify/verify-lokalbot-20261031-023423-2491/replay-7-1.app.judged.png"
+            "runs/verify/verify-lokalbot-20261031-025639-13da/check-1-cmd8.judged.png",
+            "runs/verify/verify-lokalbot-20261031-025639-13da/replay-9-1.app.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.08347,
+        "cost_usd": 0.07187,
         "gui": {
           "tier": "ui_rendered",
           "screen": "first_run",
@@ -561,5 +552,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-10-31T02:37:14.563080+08:00"
+  "updated_at": "2026-10-31T03:00:54.595160+08:00"
 }

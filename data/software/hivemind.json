@@ -61,21 +61,21 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-hivemind-20261031-023423-d9bc",
+      "run_id": "verify-hivemind-20261031-025639-abf3",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://hivemind.griiken.com/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -c 2000 /tmp/install.sh",
-          "purpose": "download installer script for reading first"
+          "command": "curl -fsSL https://hivemind.griiken.com/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
+          "purpose": "download install script to read before running"
         },
         {
           "command": "bash /tmp/install.sh 2>&1",
-          "purpose": "install Hivemind desktop app and hive CLI"
+          "purpose": "run install script to install app and CLIs"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "hive --version",
+        "command": "hive --version 2>&1",
         "expected_signal": "2026.10.8"
       },
       "first_task": "hivemind"
@@ -110,10 +110,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:36:48.947277+08:00",
+    "checked_at": "2026-10-31T02:58:52.106569+08:00",
     "runs": [
       {
-        "id": "verify-hivemind-20261031-023423-d9bc",
+        "id": "verify-hivemind-20261031-025639-abf3",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -121,23 +121,23 @@
         "method": "sandbox",
         "runner": "modal-vm",
         "image": "pickfit-sbx-vm-gui:d217e76065c9",
-        "checked_at": "2026-10-31T02:36:48.947277+08:00",
+        "checked_at": "2026-10-31T02:58:52.106569+08:00",
         "tool_version": "2026.10.8",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://hivemind.griiken.com/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -c 2000 /tmp/install.sh",
-            "purpose": "download installer script for reading first"
+            "command": "curl -fsSL https://hivemind.griiken.com/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
+            "purpose": "download install script to read before running"
           },
           {
             "command": "bash /tmp/install.sh 2>&1",
-            "purpose": "install Hivemind desktop app and hive CLI"
+            "purpose": "run install script to install app and CLIs"
           }
         ],
         "smoke_tests": [
           {
-            "command": "hive --version",
+            "command": "hive --version 2>&1",
             "expected_signal": "2026.10.8",
             "exit_code": 0,
             "passed": true,
@@ -146,8 +146,8 @@
             "offline": true
           },
           {
-            "command": "hive ctl",
-            "expected_signal": "hive ctl <command>",
+            "command": "hive ctl 2>&1",
+            "expected_signal": "say which: hive ctl <command>; --help lists them",
             "exit_code": 2,
             "passed": true,
             "observed_excerpt": "error [USAGE] say which: hive ctl <command>; --help lists them",
@@ -156,10 +156,10 @@
           },
           {
             "command": "hivemind",
-            "expected_signal": "hivemind",
+            "expected_signal": "gui tier: window",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "window: \"hivemind\" 1279x799 at 0,0 (pid 1040)",
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
           }
@@ -167,33 +167,28 @@
         "pitfalls": [
           {
             "readme_said": "bash <(curl -fsSL https://hivemind.griiken.com/install.sh)",
-            "actually_needed": "launcher at ~/.local/bin/hivemind already passes --no-sandbox and runs the extracted AppRun; no FUSE or sudo needed",
-            "kind": "tool_handled"
-          },
-          {
-            "readme_said": "hivemind launcher supports --help",
-            "actually_needed": "hivemind binary is an Electron app and needs a display: `hivemind --help` under run_command without DISPLAY exits 133 with Missing X server; start it via launch_gui instead",
+            "actually_needed": "installer fetches prebuilt AppImage (hivemind-linux-x86_64) and hive/hive-net binaries plus API SDK tarballs from GitHub releases, which cannot be read as scripts before running",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show usage guidance for 'hive ctl <command>' and version '2026.10.8' printed. / The app shows its main workspace with a sidebar and central canvas prompting to start with an agent.",
+          "observed": "Screenshots show hive printing version 2026.10.8 and hive ctl returning a usage error asking for a subcommand. / The Hivemind app shows its main empty workspace with sidebar actions and a central 'Start with an agent' prompt.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-hivemind-20261031-023423-d9bc/report.json",
+          "trace_path": "runs/verify/verify-hivemind-20261031-025639-abf3/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-hivemind-20261031-023423-d9bc/check-1-cmd7.judged.png",
-            "runs/verify/verify-hivemind-20261031-023423-d9bc/check-2-cmd5.judged.png",
-            "runs/verify/verify-hivemind-20261031-023423-d9bc/replay-8-1.app.judged.png"
+            "runs/verify/verify-hivemind-20261031-025639-abf3/check-1-cmd5.judged.png",
+            "runs/verify/verify-hivemind-20261031-025639-abf3/check-2-cmd7.judged.png",
+            "runs/verify/verify-hivemind-20261031-025639-abf3/replay-8-1.app.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.077304,
+        "cost_usd": 0.074698,
         "gui": {
           "tier": "ui_rendered",
           "screen": "main_ui",
@@ -206,15 +201,15 @@
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:37:14+08:00",
+    "computed_at": "2026-10-31T03:00:54+08:00",
     "quality": {
-      "total": 60.5,
+      "total": 56.0,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
+          "score": 0.51,
           "weight": 40.0
         },
         "install_docs": {
@@ -255,7 +250,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 35.39
+      "value": 32.76
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -482,5 +477,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:15+08:00",
-  "updated_at": "2026-10-31T02:55:01.251833+08:00"
+  "updated_at": "2026-10-31T03:00:54.596469+08:00"
 }
