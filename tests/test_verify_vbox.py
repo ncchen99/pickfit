@@ -52,7 +52,12 @@ def mapped(code):
 cmd = args[0]
 if cmd == "showvminfo":
     v = vm(args[1]); save()
-    print(f'VMState="{v["VMState"]}"\nnic1="{v["nic1"]}"')
+    nics = {"1": v["nic1"], "2": "nat" if args[1] == "pickfit-router" else "none"}
+    nics.update(json.loads(env("FAKE_NICS_" + args[1].replace("-", "_").upper(), "{}")))
+    print(f'VMState="{v["VMState"]}"')
+    for slot in range(1, 9):
+        print(f'nic{slot}="{nics.get(str(slot), "none")}"')
+    print(f'intnet1="{env("FAKE_INTNET", "pickfit-net")}"')
 elif cmd == "controlvm":
     v = vm(args[1]); what = args[2]
     if what == "poweroff":
@@ -278,6 +283,22 @@ def test_router_must_carry_the_hosts_public_addresses(fake, monkeypatch) -> None
 def test_a_reached_host_or_lan_port_fails_closed(fake, monkeypatch, leak: str, value: str) -> None:
     monkeypatch.setenv(f"FAKE_REACH_{leak}", value)
     with pytest.raises(BoxError, match="containment check \\(online\\) failed"):
+        fake.box().start()
+
+
+@pytest.mark.parametrize("vm,nics", [("PICKFIT_WIN11", {"2": "bridged"}), ("PICKFIT_WIN11", {"1": "hostonly"}),
+                                     ("PICKFIT_WIN11", {"1": "nat"}), ("PICKFIT_ROUTER", {"3": "bridged"}),
+                                     ("PICKFIT_ROUTER", {"2": "hostonly"})])
+def test_a_bridged_hostonly_or_extra_adapter_is_refused_before_boot(fake, monkeypatch, vm: str, nics: dict) -> None:
+    monkeypatch.setenv(f"FAKE_NICS_{vm}", json.dumps(nics))
+    with pytest.raises(BoxError, match="unexpected network adapters"):
+        fake.box().start()
+    assert not any(c[:2] == ["startvm", "pickfit-win11"] for c in fake.calls())
+
+
+def test_an_internal_network_other_than_pickfits_is_refused(fake, monkeypatch) -> None:
+    monkeypatch.setenv("FAKE_INTNET", "intnet")
+    with pytest.raises(BoxError, match="intnet1=intnet"):
         fake.box().start()
 
 

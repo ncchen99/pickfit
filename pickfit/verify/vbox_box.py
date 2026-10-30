@@ -370,6 +370,10 @@ umount /mnt
 echo pickfit router installed
 """
 
+# The only network adapters each VM may have ({slot: attachment types}); all other slots must be off.
+ROUTER_NICS = {1: {"intnet"}, 2: {"nat"}}
+GUEST_NICS = {True: {1: {"intnet"}}, False: {1: {"null", "none"}}}
+
 READY = re.compile(r"PICKFIT_ROUTER_READY rules=(\w+) extra=(\S+) forward=(\d) ipv6_off=(\d) dnsmasq=(\w+) "
                    r"uplink=(\d+)")
 
@@ -448,6 +452,22 @@ class VBox:
             time.sleep(1)
         raise BoxError(f"{vm} did not power off within {wait_s:.0f}s")
 
+    def check_nics(self, vm: str, allowed: dict[int, set[str]]) -> dict[str, str]:
+        """Refuse a VM whose NICs differ from `allowed` ({slot: attachment types}); every other slot must
+        be 'none'. An internal network must be pickfit's. Bridged or host-only anywhere is refused, so a
+        changed setting can never quietly put a guest on the home network or the host."""
+        info = self.info(vm)
+        bad = []
+        for slot in range(1, 9):
+            kind = info.get(f"nic{slot}", "none")
+            if kind not in allowed.get(slot, {"none"}):
+                bad.append(f"nic{slot}={kind}")
+            elif kind == "intnet" and info.get(f"intnet{slot}") != INTNET:
+                bad.append(f"intnet{slot}={info.get(f'intnet{slot}')}")
+        if bad:
+            raise BoxError(f"{vm} has unexpected network adapters ({', '.join(bad)}); refusing to run")
+        return {k: v for k, v in info.items() if k.startswith(("nic", "intnet"))}
+
     def restore(self, vm: str, snapshot: str = SNAPSHOT) -> None:
         self("snapshot", vm, "restore", snapshot, timeout_s=300)
 
@@ -493,6 +513,7 @@ class Router:
         self.vbox.restore(self.name)
         serial = "pf:" + ",".join(extra) if extra else "pf:"
         self.vbox("setextradata", self.name, "VBoxInternal/Devices/pcbios/0/Config/DmiSystemSerial", serial)
+        self.vbox.check_nics(self.name, ROUTER_NICS)
         self.serial_log.parent.mkdir(parents=True, exist_ok=True)
         start = self.serial_log.stat().st_size if self.serial_log.exists() else 0
         self.vbox("startvm", self.name, "--type", "headless", timeout_s=120)
@@ -642,6 +663,7 @@ class VBoxBox(Box):
                 ["--nic1", "null", "--cable-connected1", "off"]
             self.vbox("modifyvm", self.base, *args)
             self.vbox("setextradata", self.base, "pickfit/started", str(int(time.time())))
+        self.vbox.check_nics(self.base, GUEST_NICS[online])
 
     def _wait_additions(self) -> None:
         deadline = time.monotonic() + ADDITIONS_WAIT_S
