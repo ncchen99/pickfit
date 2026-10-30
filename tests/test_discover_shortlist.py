@@ -86,3 +86,20 @@ def test_description_about_local_models_counts_for_and_coding_agents_against() -
     assert "local_focus" in names(box_fit(runner)[1])
     assert "coding_agent" in names(box_fit(agent)[1])
     assert box_fit(runner)[0] > box_fit(agent)[0]
+
+
+def test_mcp_servers_rank_by_whether_a_box_can_start_them() -> None:
+    def mcp(readme: str) -> tuple[int, set[str]]:
+        c = {**candidate(readme=readme), "category": "mcp_server"}
+        score, signals = box_fit(c)
+        return score, names(signals)
+
+    local, local_signals = mcp('# notes\n\n```json\n{"mcpServers": {"notes": {"command": "npx", "args": ["-y", "notes"]}}}\n```'
+                               "\n\nWorks with Claude Code and Cursor.")
+    keyed, keyed_signals = mcp('Run `npx -y saas-mcp`. Set `SAAS_API_KEY` first.')
+    docker, docker_signals = mcp("Run `docker run -i --rm org/server`.")
+    remote, remote_signals = mcp("Connect to https://example.com/mcp from your client.")
+    assert local_signals == {"mcp_stdio_launch"}  # naming clients is not the coding-agent penalty
+    assert keyed_signals == {"mcp_stdio_launch", "mcp_needs_key"} and local > keyed
+    assert "mcp_docker_only" in docker_signals and "mcp_remote_only" in remote_signals
+    assert local > docker and local > remote
