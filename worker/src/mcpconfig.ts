@@ -31,6 +31,7 @@ export interface McpClientConfig {
 const SAFE_WORD = /^[A-Za-z0-9_@%+=:,./-]+$/;
 const ENV_NAME = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
 const SERVER_NAME_MAX = 40;
+const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=/;
 
 /** POSIX shell quoting: plain words stay as they are, anything else goes in single quotes. */
 export function shellQuote(word: string): string {
@@ -50,7 +51,11 @@ export function clientConfig(entry: Entry, guide: InstallGuide | null): McpClien
   if (!handshake || handshake.launch.length === 0) return null;
   const http = handshake.transport === 'streamable_http';
   if (http ? !handshake.url : handshake.transport !== 'stdio') return null;
-  const [command, ...args] = handshake.launch;
+  // An HTTP server's start command may set variables first (VAULT_PATH=... server); those are not the command.
+  const assignments = http ? handshake.launch.findIndex((w) => !ASSIGNMENT.test(w)) : 0;
+  const start = assignments < 0 ? handshake.launch.length : assignments;
+  const [command, ...args] = handshake.launch.slice(start);
+  if (!command) return null;
   const name = entry.slug.slice(0, SERVER_NAME_MAX);
   const env = (entry.mcp?.env_vars ?? [])
     .filter((v) => v.required === true && ENV_NAME.test(v.name))
@@ -67,7 +72,7 @@ export function clientConfig(entry: Entry, guide: InstallGuide | null): McpClien
       `This server speaks HTTP: start it first and keep it running (${handshake.launch.map(shellQuote).join(' ')}${env.length ? ', with ' + env.map((v) => v.name).join(', ') + ' set' : ''}), then add the URL.`,
     );
   }
-  if (args.some(pathLike) || pathLike(command)) {
+  if (handshake.launch.some(pathLike)) {
     notes.push("The sandbox run started it with paths inside pickfit's sandbox; point them at the user's own files or install location.");
   }
   if (env.length) {

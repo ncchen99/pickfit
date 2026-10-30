@@ -61,3 +61,15 @@ test('an HTTP-only server gets the URL to add and the command to start first', (
   assert.match(config.note ?? '', /start it first and keep it running \(notes-mcp --http --port 8765, with NOTES_SYNC_TOKEN set\)/);
   assert.equal(clientConfig(entry, { ...guide, mcp: { ...guide.mcp, url: null } }), null);
 });
+
+test('variables an HTTP server was started with stay in the start command, not in command', () => {
+  const entry = catalog.bySlug.get('fixture-notes-mcp')!;
+  const guide = {
+    ...entry.install.linux!,
+    mcp: { ...entry.install.linux!.mcp!, transport: 'streamable_http' as const, launch: ['VAULT_PATH=/tmp/v', 'PORT=3001', 'notes-mcp'], url: 'http://127.0.0.1:3001/sse' },
+  };
+  const config = clientConfig(entry, guide)!;
+  assert.deepEqual([config.command, config.args], ['notes-mcp', []]);
+  assert.match(config.note ?? '', /keep it running \(VAULT_PATH=\/tmp\/v PORT=3001 notes-mcp/);
+  assert.match(config.note ?? '', /paths inside pickfit's sandbox/);
+});

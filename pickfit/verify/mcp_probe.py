@@ -70,7 +70,7 @@ FLAGS = (
                                    r"(~/\.ssh|id_rsa|id_ed25519|\.aws/credentials|/etc/passwd|\.netrc|"
                                    r"mcp\.json|claude_desktop_config|\.cursor/|\.env\b)", re.I | re.S)),
     ("other_tools", re.compile(r"\b(before|after|instead of|when) (calling|using|you (call|use)) (any|another|"
-                               r"other|the \w+|every)\b.{0,15}\btools?\b", re.I)),
+                               r"other|every|all)\b.{0,15}\btools?\b", re.I)),
     ("hidden_unicode", re.compile("[​-‏‪-‮⁠-⁤﻿\U000e0000-\U000e007f]")),
 )
 
@@ -99,12 +99,23 @@ def _strings(node: object, depth: int = 0) -> list[str]:
     return []
 
 
-def flags_for(tool: dict) -> list[str]:
-    """Pattern names that match a tool's description, title, annotations or input schema text."""
+# "When using the send_email tool, ...": shadowing when that tool is not one of this server's own.
+_NAMED_TOOL = re.compile(r"\b(?:before|after|instead of|when)\s+(?:calling|using|you (?:call|use))\s+(?:the\s+)?"
+                         r"[`'\"]?(?P<name>[A-Za-z0-9_.:/-]+)[`'\"]?\s+tool\b", re.I)
+
+
+def flags_for(tool: dict, own_names: set[str] | None = None) -> list[str]:
+    """Pattern names that match a tool's description, title, annotations or input schema text.
+
+    own_names: the server's tool names; text about how to use a tool not among them is other_tools.
+    """
     texts = _strings({k: v for k, v in tool.items() if k != "name"})
     raw_name = tool.get("name") if isinstance(tool.get("name"), str) else ""
     text = "\n".join(texts)
     found = [label for label, pattern in FLAGS if pattern.search(text)]
+    if "other_tools" not in found and own_names is not None and any(
+            m.group("name") not in own_names for m in _NAMED_TOOL.finditer(text)):
+        found.append("other_tools")
     if "hidden_unicode" not in found and FLAGS[-1][1].search(raw_name):
         found.append("hidden_unicode")
     return found
@@ -371,11 +382,8 @@ def handshake(probe: Probe, summary: dict) -> None:
                        version=safe_version(info.get("version")))
         print(f"server/discover: ok protocol={summary['protocol']} server={summary['server']} "
               f"version={summary['version']}")
-    instructions = result.get("instructions")
-    if isinstance(instructions, str):
-        found = flags_for({"description": instructions})
-        if found:
-            summary.setdefault("flags", {})[INSTRUCTIONS_KEY] = found
+    if isinstance(result.get("instructions"), str):
+        probe.instructions = result["instructions"]  # checked once the tool names are known; never printed
 
 
 def _summary_line(summary: dict) -> str:
@@ -405,9 +413,15 @@ def run(argv: list[str], *, timeout: float, call: str | None, call_args: dict, u
                 break
         print(f"tools/list: ok count={len(tools)}")
         names = [safe_name(t.get("name")) for t in tools]
-        flags: dict[str, list[str]] = dict(summary.get("flags") or {})
+        own = {t.get("name") for t in tools if isinstance(t.get("name"), str)}
+        flags: dict[str, list[str]] = {}
+        instructions = getattr(probe, "instructions", None)
+        if instructions:
+            found = flags_for({"description": instructions}, own)
+            if found:
+                flags[INSTRUCTIONS_KEY] = found
         for tool, name in zip(tools, names):
-            found = flags_for(tool)
+            found = flags_for(tool, own)
             if found:
                 flags[name] = found
         for tool, name in list(zip(tools, names))[:MAX_TOOLS_SHOWN]:
