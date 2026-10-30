@@ -135,6 +135,15 @@
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "hello world"
+          },
+          {
+            "command": "fixture-transcribe sample.wav --format srt",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "error: unknown format 'srt'",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [
@@ -156,7 +165,31 @@
           "evidence_url": "https://example.invalid/runs/run-20261028-linux-2"
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.1
+        "cost_usd": 0.1,
+        "features": [
+          {
+            "feature": "transcribe audio files offline",
+            "status": "checked",
+            "smoke_tests": [
+              0
+            ]
+          },
+          {
+            "feature": "write SRT subtitles",
+            "status": "test_failed",
+            "smoke_tests": [
+              1
+            ],
+            "failure": "tool",
+            "note": "error: unknown format 'srt'"
+          },
+          {
+            "feature": "dictate from a microphone",
+            "status": "not_checked",
+            "reason": "needs_hardware",
+            "note": "the sandbox has no microphone"
+          }
+        ]
       }
     ]
   },
@@ -293,5 +326,10 @@
     }
   ],
   "first_seen_at": "2026-10-28T10:00:00Z",
-  "updated_at": "2026-10-28T12:00:00Z"
+  "updated_at": "2026-10-28T12:00:00Z",
+  "features": [
+    "transcribe audio files offline",
+    "write SRT subtitles",
+    "dictate from a microphone"
+  ]
 }

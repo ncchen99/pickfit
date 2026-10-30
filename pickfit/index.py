@@ -8,7 +8,9 @@ whole build, so bad data never reaches a deploy.
 
 Only listed records are indexed, and only install guides that were actually
 run (basis "replayed" or "human") are kept: README claims never reach users as
-install steps.
+install steps. Each guide carries its run's feature coverage with the smoke
+tests behind it (command, passed), so the Worker shows a feature as checked
+only when one of those passed.
 """
 
 from __future__ import annotations
@@ -117,6 +119,14 @@ def _first_task_setup(run: VerificationRun, first_task: str | None) -> list[dict
     return []
 
 
+def _feature_coverage(run: VerificationRun) -> list[dict[str, Any]]:
+    """The run's feature checks, each with the smoke tests it cites (command and whether it passed)."""
+    return [{"feature": f.feature, "status": f.status, "reason": f.reason, "failure": f.failure, "note": f.note,
+             "checks": [{"command": run.smoke_tests[i].command, "passed": run.smoke_tests[i].passed}
+                        for i in f.smoke_tests]}
+            for f in run.features]
+
+
 def _entry(record: SoftwareRecord) -> dict[str, Any]:
     runs = {run.id: run for run in record.verification.runs}
     install: dict[str, Any] = {}
@@ -134,6 +144,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
             "first_task_setup": _first_task_setup(run, guide.first_task),
             "works_offline": works_offline(run, guide.first_task),
             "pitfalls": [p.model_dump() for p in run.pitfalls],
+            "features": _feature_coverage(run),
             "run": _run_summary(run),
         }
     scores = record.scores
@@ -148,6 +159,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
         "tags": record.tags,
         "use_cases": record.use_cases,
         "alternatives_to": record.alternatives_to,
+        "features": record.features,
         "homepage": record.homepage,
         "repo_url": record.repo.url,
         "platforms": record.platforms,
