@@ -1,24 +1,28 @@
 /**
  * find_software and find_alternatives (architecture F.2): hard filters
- * (code) -> every candidate card in one muse-spark-1.3 call that parses the
- * request and chooses -> guard (code). Without the model (off, no key, over
+ * (code) -> at most MAX_CARDS candidate cards, the ones that best match the
+ * request's words when more pass (filter.ts; a request in another language
+ * first gets English keywords, expand.ts) -> one muse-spark-1.3 call that
+ * parses the request and chooses -> guard (code). Without the model (off, no key, over
  * budget, failure after one retry of a transient error, or every pick
  * rejected) it ranks by rules and says so:
  * matched_by "rules", degraded true. find_alternatives sends the current tool
  * and its pain points too, drops the current tool from the candidates, and
  * may advise keeping it.
  */
-import { bestGuide, verifiedOnUserSystem, type Arch, type Catalog, type Entry, type InstallGuide, type OS } from './catalog.ts';
+import { bestGuide, nameKey, verifiedOnUserSystem, type Arch, type Catalog, type Entry, type InstallGuide, type OS } from './catalog.ts';
 import { toCard, type Card } from './cards.ts';
 import { checkBudget, recordSpend } from './budget.ts';
 import { ranSentence } from './evidence.ts';
 import type { Settings } from './env.ts';
 import { logEvent, logFailure, newId, type Reporter } from './events.ts';
+import { englishKeywords, EXPAND_TIMEOUT_MS, needsEnglish, type Expansion } from './expand.ts';
 import { hardFilter, MAX_CARDS, type Conditions } from './filter.ts';
 import { clip, guardPicks, guardWellKnown, NO_WELL_KNOWN, parseAnswer, type GuardedPick, type GuardedWellKnown } from './guard.ts';
 import { callMeta, estimateCostUsd, MATCH_MODEL, MetaCallError, requestBody } from './meta.ts';
 import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer, type ModelReason } from './prompt.ts';
-import { nameKey, rankByRules, templateReasons } from './rules.ts';
+import { queryTerms, relevanceIndex } from './relevance.ts';
+import { rankByRules, templateReasons } from './rules.ts';
 
 export interface FindInput extends Conditions {
   need: string;
@@ -252,9 +256,15 @@ function fromModel(
   };
 }
 
-function fromRules(req: MatchRequest, candidates: Entry[], cards: Map<string, Card>, limit: number): Choice {
+function fromRules(
+  req: MatchRequest,
+  candidates: Entry[],
+  relevance: Map<string, number>,
+  cards: Map<string, Card>,
+  limit: number,
+): Choice {
   const os = req.conditions.os;
-  const ranked = rankByRules(candidates, req.rulesText, os, req.currentTool);
+  const ranked = rankByRules(candidates, relevance, os, req.currentTool);
   const top = ranked.slice(0, limit);
   const free = ranked.find((entry) => entry.pricing === 'free');
   const osSets = new Set(top.map((entry) => entry.platforms.slice().sort().join(',')));
@@ -291,6 +301,7 @@ async function askModel(
   limit: number,
   deps: Deps,
   now: Date,
+  timeoutMs: number,
 ): Promise<Attempt> {
   const { settings } = deps;
   if (!settings.modelEnabled) return notSent('model_off');
@@ -311,7 +322,7 @@ async function askModel(
   try {
     // A retry fits in the cap checked above: the failed try was not charged.
     const result = await callMeta(settings.apiKey, body, {
-      timeoutMs: settings.timeoutMs,
+      timeoutMs,
       fetch: deps.fetch,
       clock: () => deps.now().getTime(),
       sleep: deps.sleep,
@@ -360,7 +371,18 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   const now = deps.now();
   const cond = req.conditions;
   const limit = Math.min(Math.max(cond.limit ?? 3, 1), 3);
-  const { candidates, passed } = hardFilter(deps.catalog.entries, cond);
+  const corpus = deps.catalog.entries;
+  let filtered = hardFilter(corpus, cond, { terms: queryTerms(req.rulesText), current: req.currentTool });
+  // Only a shortlist that must cut needs the request in the profiles' language.
+  let expansion: Expansion | null = null;
+  if (filtered.passed > MAX_CARDS && needsEnglish(req.rulesText, relevanceIndex(corpus))) {
+    expansion = await englishKeywords(req.rulesText, deps, now, Math.min(EXPAND_TIMEOUT_MS, deps.settings.timeoutMs));
+    if (expansion.keywords) {
+      const terms = queryTerms(req.rulesText, ...expansion.keywords);
+      filtered = hardFilter(corpus, cond, { terms, current: req.currentTool });
+    }
+  }
+  const { candidates, passed, byRelevance, relevance } = filtered;
   const entries = new Map(candidates.map((entry) => [entry.slug, entry]));
   const cards = new Map(candidates.map((entry) => [entry.slug, toCard(entry, cond.os, cond.arch)]));
 
@@ -373,7 +395,9 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   if (candidates.length === 0) {
     choice = NO_CHOICE;
   } else {
-    const attempt = await askModel({ ...req.modelRequest, limit }, req.kind, cards, limit, deps, now);
+    // META_TIMEOUT_MS bounds every Meta request of this call: the match gets what the keywords left.
+    const timeoutMs = Math.max(0, deps.settings.timeoutMs - (expansion?.latencyMs ?? 0));
+    const attempt = await askModel({ ...req.modelRequest, limit }, req.kind, cards, limit, deps, now, timeoutMs);
     cost = attempt.cost;
     statuses = attempt.statuses;
     if ('answer' in attempt) {
@@ -383,7 +407,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     } else {
       degradedReason = attempt.failure;
       httpStatus = attempt.httpStatus;
-      choice = fromRules(req, candidates, cards, limit);
+      choice = fromRules(req, candidates, relevance, cards, limit);
       if (attempt.rejected) {
         // Not shown (the whole answer was rejected), but the log still says what the model named.
         const named = guardWellKnown(attempt.rejected, deps.catalog.entries, req.currentTool);
@@ -403,7 +427,11 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     notes.push(`None of the ${candidates.length} verified tools that meet the conditions fits this request.`);
   }
   if (passed > MAX_CARDS) {
-    notes.push(`${passed} tools met the conditions; the ${MAX_CARDS} with the highest treasure scores were compared.`);
+    notes.push(
+      byRelevance > 0
+        ? `${passed} tools met the conditions; the ${MAX_CARDS} compared were the ${byRelevance} whose profiles best match the request's words and the ${MAX_CARDS - byRelevance} other tools with the highest treasure scores.`
+        : `${passed} tools met the conditions; no profile matched the request's words, so the ${MAX_CARDS} with the highest treasure scores were compared.`,
+    );
   }
 
   const output: FindOutput = {
@@ -448,6 +476,9 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
           choice.wellKnown.name || choice.wellKnown.dropped
             ? { name: choice.wellKnown.name, dropped: choice.wellKnown.dropped }
             : null,
+        // How the cards were chosen when not all could be sent; counts and outcomes only.
+        shortlist:
+          passed > MAX_CARDS ? { by_relevance: byRelevance, keywords: expansion?.outcome ?? null } : null,
         ...req.logged,
       },
       results: output.picks.map((pick) => pick.slug),
@@ -457,7 +488,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
       degraded_reason: degradedReason,
       model_attempts: statuses.length,
       model_statuses: statuses,
-      meta_cost_usd: cost,
+      meta_cost_usd: cost + (expansion?.costUsd ?? 0),
       latency_ms: Date.now() - started,
     }).catch(logFailure(req.kind, output.rec_id)),
   );

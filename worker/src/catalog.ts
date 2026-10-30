@@ -129,6 +129,9 @@ export function loadCatalog(data: unknown): Catalog {
   return { ...raw, bySlug: new Map(raw.entries.map((entry) => [entry.slug, entry])) };
 }
 
+/** Tool names compared without case, spaces or punctuation ("LM Studio" = "lm-studio"). */
+export const nameKey = (text: string) => text.toLowerCase().replace(/[^a-z0-9]/g, '');
+
 const LEVEL_ORDER = ['inference', 'service', 'function', 'install'];
 
 /** The install guide to show: the given OS if verified there, else the strongest run's. */
