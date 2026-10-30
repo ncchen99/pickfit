@@ -18,8 +18,9 @@ the log and decides from what actually ran:
 from __future__ import annotations
 
 import re
+import shlex
 from dataclasses import asdict, dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from pickfit.schema import COMMAND_MAX, PASSED_LEVELS, is_passed
 
@@ -141,6 +142,153 @@ def _first_word(text: str) -> str:
 def written_paths(command: str) -> set[str]:
     """Files a command writes with -o/-O/--output or a redirect (not /dev/* or &N)."""
     return {p for p in _WRITES.findall(command) if not p.startswith("/dev/") and not p[:1].isdigit()}
+
+
+_SCRIPT = re.compile(r"\.(?:sh|bash|zsh|js|mjs|cjs|ts|py|ps1|rb|pl)$")
+_SHELLS = re.compile(r"(?:sh|bash|zsh|dash|ksh|node|deno|bun|python(?:3(?:\.\d+)?)?|ruby|perl|pwsh)")
+_READERS = {"cat", "head", "tail", "less", "more", "nl", "sed", "awk", "bat", "view"}
+_URL = re.compile(r"https?://[^\s'\"|)<>]+")
+# A shell fed straight from the network: bash <(curl ...), sh -c "$(wget -O- ...)", source <(curl ...).
+_SUBSTITUTED = re.compile(rf"^\s*(?:sudo\s+)?(?:{_SHELLS.pattern}|source|\.)\b[^|]*(?:<\(|\$\()\s*(?:curl|wget)\b"
+                          r"(?P<fetch>[^)]*)\)")
+
+
+class Unread(NamedTuple):
+    step_id: int
+    name: str  # the file, or the URL a shell ran straight from the network
+    how: str  # "piped": run without being saved; "ran": run after saving; "brought in": run by another script
+    via: str | None = None  # "brought in": the downloaded script that may run it
+
+
+def _words(part: str) -> list[str]:
+    """A simple command's words, without leading VAR=value, sudo, env or exec."""
+    try:
+        words = shlex.split(part, comments=False)
+    except ValueError:
+        words = part.split()
+    while words and (re.match(r"^\w+=", words[0]) or words[0] in ("sudo", "env", "exec", "command")):
+        words = words[1:]
+    return words
+
+
+def _base(path: str) -> str:
+    return path.rstrip("/").rsplit("/", 1)[-1]
+
+
+def _fetched(words: list[str]) -> list[str] | None:
+    """For curl or wget: the files it saves ([] when it writes to stdout); None for any other program."""
+    program = _base(words[0]) if words else ""
+    if program not in ("curl", "wget"):
+        return None
+    urls = [w for w in words if _URL.match(w)]
+    named: list[str] = []
+    remote = program == "wget"  # wget saves under the URL's name unless -O says otherwise
+    i = 1
+    while i < len(words):
+        word, value = words[i], words[i + 1] if i + 1 < len(words) else None
+        letter = "o" if program == "curl" else "O"
+        long = "--output" if program == "curl" else "--output-document"
+        if word == long or (re.fullmatch(rf"-[a-zA-Z]*{letter}", word) and value is not None):
+            named.append(value or "-")
+            remote, i = False, i + 2
+            continue
+        if word.startswith(long + "="):
+            named.append(word.split("=", 1)[1])
+            remote = False
+        elif m := re.fullmatch(rf"-[a-zA-Z]*{letter}(.+)", word):  # -o- or -ofile
+            named.append(m.group(1))
+            remote = False
+        elif program == "curl" and (word in ("--remote-name", "--remote-name-all") or
+                                    re.fullmatch(r"-[a-zA-Z]*O[a-zA-Z]*", word)):
+            remote = True
+        i += 1
+    saved = named + ([_base(u.split("?", 1)[0]) for u in urls] if remote else [])
+    return [s for s in saved if s and s != "-"]
+
+
+def _ran(words: list[str], part: str) -> list[str]:
+    """Files a simple command runs: an interpreter's script argument or stdin, source, or ./file."""
+    if not words:
+        return []
+    program = words[0]
+    if program in ("source", "."):
+        return words[1:2]
+    if "/" in program:
+        return [program]
+    if not _SHELLS.fullmatch(_base(program)):
+        return []
+    args = [w for w in words[1:] if not w.startswith("-")]
+    stdin = re.search(r"(?<![<\d])<\s*([^\s<>&|;]+)", part)
+    return args[:1] + ([stdin.group(1)] if stdin else [])
+
+
+def unread_scripts(step_ids: list[int], commands: list[CommandRecord]) -> list[Unread]:
+    """Downloaded scripts a cited step ran, or brought in, before anything read them.
+
+    - piped: a shell ran a URL without saving it (curl ... | bash, bash <(curl ...), sh -c "$(curl ...)").
+    - ran: a file curl or wget saved, run by an interpreter, source or ./file, with no read of it between
+      its download and the step that ran it.
+    - brought in: a script (by its extension) a cited step saved and no step ran directly, while a later
+      cited step ran another downloaded script that may run it (an installer's helper), unread before then.
+    A read is a successful read_file, or cat, head, tail, less, more, nl, sed, awk or bat taking the file.
+    """
+    cited = set(step_ids)
+    saved: dict[str, list[tuple[tuple[int, int], int]]] = {}  # name -> [(position, cited step id or 0)]
+    reads: dict[str, list[tuple[int, int]]] = {}
+    runs: list[tuple[tuple[int, int], int, str]] = []
+    found: list[Unread] = []
+    for i, record in enumerate(commands):
+        if record.tool == "read_file":
+            if record.exit_code == 0 and not record.stderr:
+                reads.setdefault(_base(record.command.split(" [", 1)[0]), []).append((i, 0))
+            continue
+        if record.tool != "run_command":
+            continue
+        step = record.command_id if record.command_id in cited else 0
+        parts = [(op, text) for op, text in _top_level(record.command) if text.strip()]
+        for j, (_, text) in enumerate(parts):
+            words = _words(text)
+            fetched = _fetched(words)
+            if step and (m := _SUBSTITUTED.match(text)):
+                url = _URL.search(m.group("fetch"))
+                found.append(Unread(step, url.group(0) if url else "a downloaded script", "piped"))
+            if fetched is not None:
+                if step and not fetched and j + 1 < len(parts) and parts[j + 1][0] == "|" and \
+                        _SHELLS.fullmatch(_base((_words(parts[j + 1][1]) or [""])[0])):
+                    url = next((w for w in words if _URL.match(w)), "a downloaded script")
+                    found.append(Unread(step, url, "piped"))
+                for name in fetched:
+                    saved.setdefault(_base(name), []).append(((i, j), step))
+            elif words and _base(words[0]) in _READERS:
+                for word in words[1:]:
+                    reads.setdefault(_base(word), []).append((i, j))
+            elif step:
+                runs += [((i, j), step, _base(path)) for path in _ran(words, text)]
+
+    def read_between(name: str, start: tuple[int, int], end: tuple[int, int]) -> bool:
+        return any(start < at < end for at in reads.get(name, []))
+
+    def last_save(name: str, before: tuple[int, int]) -> tuple[tuple[int, int], int] | None:
+        return max((s for s in saved.get(name, []) if s[0] < before), default=None)
+
+    ran_downloaded = []  # (position, step, name) of cited runs of a saved file
+    for at, step, name in runs:
+        save = last_save(name, at)
+        if save is None:
+            continue
+        ran_downloaded.append((at, step, name))
+        if not read_between(name, save[0], at) and all(u.name != name for u in found):
+            found.append(Unread(step, name, "ran"))
+    run_names = {name for _, _, name in runs}
+    for name, saves in saved.items():
+        for at, step in saves:
+            if not step or not _SCRIPT.search(name) or name in run_names:
+                continue
+            installer = next(((r_at, r_step, r_name) for r_at, r_step, r_name in ran_downloaded
+                              if r_at > at and r_name != name), None)
+            if installer and not read_between(name, at, installer[0]) and all(u.name != name for u in found):
+                found.append(Unread(installer[1], name, "brought in", installer[2]))
+    return sorted(found, key=lambda u: (u.step_id, u.name))
 
 
 def masked_exit(command: str) -> str | None:

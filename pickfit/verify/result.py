@@ -63,7 +63,7 @@ from pickfit.verify.failure import (
     structural_defect,
     tool_command,
 )
-from pickfit.verify.verdict import split_last, weaker
+from pickfit.verify.verdict import split_last, unread_scripts, weaker
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import CommandRecord, VerifyReport
@@ -213,6 +213,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
     else:
         step_commands = [by_id[i].command for i in step_ids if i in by_id]
     steps: list[InstallStep] = []
+    in_guide: list[int] = []  # the command ids of `steps`, in order
     for cid, command in zip(step_ids, step_commands):
         if len(command) > COMMAND_MAX:
             notes.append(f"step {cid} is longer than {COMMAND_MAX} characters")
@@ -220,6 +221,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
                 level, reason = "unverified", "other"
             continue
         steps.append(InstallStep(command=command, purpose=_clip(purposes.get(cid), 200)))
+        in_guide.append(cid)
 
     smoke: list[SmokeTest] = []
     if replay and replay.checks:
@@ -268,6 +270,24 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         reason = "other"
     outputs = [f"{c.stdout}\n{c.stderr}" for c in report.commands]
     method = infer_install_method([s.command for s in steps], finish.get("install_method"))
+    pitfalls = [Pitfall(readme_said=_clip(p["readme_said"], 300) or "-",
+                        actually_needed=_clip(p["actually_needed"], 300) or "-", kind=p.get("kind"))
+                for p in finish.get("pitfalls") or []]
+    # A downloaded script the install ran, or brought in, before anything read it: a note, not a block,
+    # whatever the agent's own pitfalls say. Steps are numbered as the install guide lists them.
+    for unread in unread_scripts(verdict.get("step_ids") or [], report.commands):
+        at = f"install step {in_guide.index(unread.step_id) + 1}" if unread.step_id in in_guide else "an install step"
+        if unread.how == "piped":
+            said = f"{at} runs {unread.name} straight from the network"
+            needed = "the box ran it without saving or reading it first"
+        elif unread.how == "ran":
+            said, needed = f"{at} runs {unread.name}", f"the box ran {unread.name}, downloaded, without reading it first"
+        else:
+            said = f"{at} runs {unread.via}, which may run {unread.name}"
+            needed = f"the box had {unread.name} downloaded beside it, and nothing read it first"
+        notes.append(f"{said}: unread")
+        pitfalls.append(Pitfall(readme_said=_clip(said, 300) or "-", kind="note",
+                                actually_needed=f"nothing to change; a note: {needed}, so pickfit did not inspect it"))
     run = VerificationRun(
         id=report.run_id, level=level, unverified_reason=reason, os=report.box.get("os", "linux"),
         arch=report.box.get("arch", "x86_64"), method="sandbox", runner=report.box.get("runner"),
@@ -275,9 +295,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         tool_version=_printed(finish.get("tool_version"), outputs),
         install_method=method if steps else None, replayed=replayed, steps=steps,
         smoke_tests=smoke,
-        pitfalls=[Pitfall(readme_said=_clip(p["readme_said"], 300) or "-",
-                          actually_needed=_clip(p["actually_needed"], 300) or "-", kind=p.get("kind"))
-                  for p in finish.get("pitfalls") or []],
+        pitfalls=pitfalls,
         blocking_error=_clip(blocking, 500),
         judge=Judge(verdict=judge.verdict, observed=_clip(judge.observed, 300) or "", model=judge.model)
         if judge else None,
