@@ -37,8 +37,10 @@ if TYPE_CHECKING:
     from pickfit.verify.verdict import LogVerdict
 
 GAPS: tuple[str, ...] = get_args(FeatureGap.__value__)
-# Checks that show the tool starts, not that a feature works.
-NOT_FEATURE_KINDS = frozenset({"version"})
+# Checks that show the tool starts, not that a feature works: --version/--help, an MCP handshake alone.
+NOT_FEATURE_KINDS = frozenset({"version", "mcp"})
+# For an MCP server only a tool call through pickfit's probe exercises a feature (mcp.py).
+MCP_FEATURE_KINDS = frozenset({"mcp_call"})
 _CRASH = re.compile(r"Traceback \(most recent call last\)|panicked at|Segmentation fault|"
                     r": command not found|No module named |Error: Cannot find module")
 NOTE_CHARS = 300
@@ -84,6 +86,19 @@ when its check failed after a working install. Never invent an account, an API k
 service's answer to get a feature through; that is not_checked. If commands run short, keep the install \
 check and one README example first, then cover as many features as the budget allows; report the rest \
 as not_attempted."""
+
+MCP_GUIDE = """\
+Feature checks for an MCP server go through pickfit's probe, never through ad-hoc commands: exercise each \
+listed feature with one probe tools/call of the tool that does it (--call <tool> --args '<JSON>'), when that \
+tool needs no account and changes nothing outside the box, and cite it as a smoke test with expected_signal \
+"tools/call: ok". The handshake alone checks no feature. A feature whose tools all need an account, a key \
+or an outside service is not_checked with that reason."""
+
+
+def guide(mcp: bool = False) -> str:
+    """The task's feature-check guide; an MCP server's adds how its probe exercises a feature."""
+    return f"{GUIDE}\n{MCP_GUIDE}" if mcp else GUIDE
+
 
 def _null_string(value: Any) -> Any:
     return None if isinstance(value, str) and value.strip().lower() in {"", "null", "none", "n/a"} else value
@@ -171,8 +186,11 @@ def _as_gap(limit: str | None) -> str | None:
 
 
 def resolve_features(names: list[str], claims: list[FinishFeature], verdict: LogVerdict,
-                     commands: list[CommandRecord]) -> list[ResolvedFeature]:
-    """Each listed feature as the command log supports it; the agent's claim is only an upper bound."""
+                     commands: list[CommandRecord], *, mcp: bool = False) -> list[ResolvedFeature]:
+    """Each listed feature as the command log supports it; the agent's claim is only an upper bound.
+
+    mcp: the software is an MCP server, so only a tool call through pickfit's probe covers a feature.
+    """
     by_id = {c.command_id: c for c in commands if c.command_id is not None}
     checks = {c.command_id: c for c in verdict.checks}
     after_install = max(verdict.step_ids, default=0)
@@ -190,12 +208,15 @@ def resolve_features(names: list[str], claims: list[FinishFeature], verdict: Log
         out.claimed, out.note = claim.status, _clip(claim.note)
         if claim.status == "checked":
             passing = [cid for cid in claim.command_ids if cid in checks and checks[cid].passed
-                       and checks[cid].kind not in NOT_FEATURE_KINDS]
+                       and checks[cid].kind not in NOT_FEATURE_KINDS
+                       and (not mcp or checks[cid].kind in MCP_FEATURE_KINDS)]
             if passing:
                 out.status, out.command_ids, out.reason = "checked", passing, None
             else:
                 out.reason = "other"
-                out.problems.append("no cited smoke test that passed exercises it (--version/--help do not)")
+                out.problems.append("no cited smoke test that passed exercises it ("
+                                    + ("only a tool call through pickfit's probe does)" if mcp else
+                                       "--version/--help and an MCP handshake do not)"))
                 out.note = _clip(f"its check did not pass in the log; {claim.note or ''}")
         elif claim.status == "test_failed":
             failing = [cid for cid in claim.command_ids if cid in by_id and by_id[cid].tool == "run_command"
