@@ -17,6 +17,7 @@ export const NOT_CHECKED_REASONS = [
   'needs_toolchain',
   'other_os',
   'not_attempted',
+  'not_shown',
   'test_failed_in_sandbox',
   'test_failed',
   'not_recorded',
@@ -36,6 +37,7 @@ const REASON_TEXT: Record<NotCheckedReason, string> = {
   needs_toolchain: 'needs a source build with a compiler toolchain the sandbox does not install',
   other_os: 'runs only on another OS than the sandbox',
   not_attempted: 'the run did not get to it',
+  not_shown: "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge)",
   test_failed_in_sandbox: "its test failed, but the sandbox's limits explain the failure",
   test_failed:
     "its test failed with the tool's own error, after a working install; a user following the README may hit it too (not confirmed on a real machine)",

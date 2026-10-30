@@ -152,7 +152,8 @@ def _record_check(command: str) -> tuple[str, list[SetupStep]] | None:
 def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeResult | None, *,
               evidence_dir: Path, screenshots: list[Path] | None = None,
               judge_cost_usd: float = 0.0, confirm: FailureCheck | None = None,
-              checked_at: datetime | None = None, mcp: bool = False) -> tuple[VerificationRun, list[str]]:
+              checked_at: datetime | None = None, mcp: bool = False,
+              feature_verdicts: dict[str, tuple[str, str]] | None = None) -> tuple[VerificationRun, list[str]]:
     """The VerificationRun for one verification, plus notes on why the level was lowered.
 
     checked_at is when its last box ran; it defaults to now, right after the boxes ran.
@@ -296,7 +297,8 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
     method = infer_install_method([s.command for s in steps], finish.get("install_method"))
     features = []
     if is_passed(level) and replay and report.features:
-        features, feature_notes = coverage(report.features, smoke_index, smoke, replay.failed, _record_check)
+        features, feature_notes = coverage(report.features, smoke_index, smoke, replay.failed, _record_check,
+                                           feature_verdicts)
         notes += feature_notes
     pitfalls = [Pitfall(readme_said=_clip(p["readme_said"], 300) or "-",
                         actually_needed=_clip(p["actually_needed"], 300) or "-", kind=p.get("kind"))

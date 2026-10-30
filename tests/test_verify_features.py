@@ -87,6 +87,20 @@ def judge_answer() -> dict[str, Any]:
                       "output_tokens_details": {"reasoning_tokens": 100}, "total_tokens": 2200}}
 
 
+def feature_answer(*verdicts: str) -> dict[str, Any]:
+    """The feature judge's reply: one verdict per judged feature, in the order they were sent."""
+    text = json.dumps({"features": [{"number": i, "verdict": v, "why": f"output {i} says so"}
+                                    for i, v in enumerate(verdicts, 1)]})
+    reply = judge_answer()
+    reply["output"][0]["content"][0]["text"] = text
+    return reply
+
+
+def judges(*verdicts: str) -> list[dict[str, Any]]:
+    """The screen judge's 'working', then the feature judge's verdicts (shows_it_working by default)."""
+    return [judge_answer(), feature_answer(*(verdicts or ("shows_it_working",)))]
+
+
 def turns(features: list[dict[str, Any]], fifth: str = NEON, smoke: list[dict[str, Any]] = SMOKE
           ) -> list[dict[str, Any]]:
     return [response("r1", run_cmd("uv tool install graphtty")),
@@ -160,7 +174,7 @@ def test_finish_feature_takes_null_strings_and_unknown_reasons():
 
 def test_each_feature_is_checked_failed_or_not_checked_with_a_reason(tmp_path: Path):
     boxes = Boxes(script(), script())
-    outcome, lines = verify(tmp_path, [*turns(REPORTED), judge_answer()], boxes)
+    outcome, lines = verify(tmp_path, [*turns(REPORTED), *judges()], boxes)
     run = outcome.run
     assert run.level == "function" and run.replayed
     features = by_name(run)
@@ -188,21 +202,21 @@ def test_each_feature_is_checked_failed_or_not_checked_with_a_reason(tmp_path: P
 
 def test_a_box_limit_in_the_output_makes_a_failure_the_sandboxes(tmp_path: Path):
     oom = {NEON: (137, "", "Killed: out of memory")}
-    outcome, _ = verify(tmp_path, [*turns(REPORTED), judge_answer()], Boxes(script(**oom), script(**oom)))
+    outcome, _ = verify(tmp_path, [*turns(REPORTED), *judges()], Boxes(script(**oom), script(**oom)))
     themes = by_name(outcome.run)["switch color themes"]
     assert (themes.status, themes.failure, themes.reason) == ("test_failed", "sandbox", "needs_more_resources")
 
 
 def test_the_tool_is_not_blamed_unless_the_agent_says_so(tmp_path: Path):
     said = [feature(2, "test_failed", [5], failure=None, reason="needs_service", note="registry offline")]
-    outcome, _ = verify(tmp_path, [*turns(said), judge_answer()], Boxes(script(), script()))
+    outcome, _ = verify(tmp_path, [*turns(said), *judges()], Boxes(script(), script()))
     themes = by_name(outcome.run)["switch color themes"]
     assert (themes.status, themes.failure, themes.reason) == ("test_failed", "sandbox", "needs_service")
 
 
 def test_a_failure_the_fresh_box_does_not_repeat_is_not_kept(tmp_path: Path):
     fixed = {NEON: (0, "a ──▶ b", "")}
-    outcome, lines = verify(tmp_path, [*turns(REPORTED), judge_answer()], Boxes(script(), script(**fixed)))
+    outcome, lines = verify(tmp_path, [*turns(REPORTED), *judges()], Boxes(script(), script(**fixed)))
     run = outcome.run
     themes = by_name(run)["switch color themes"]
     assert (themes.status, themes.reason, themes.smoke_tests) == ("not_checked", "other", [])
@@ -216,7 +230,7 @@ def test_a_check_that_does_not_pass_again_in_the_fresh_box_does_not_cover(tmp_pa
                           "expected_exit_code": 0, "observed_excerpt": "neon-dark"}]
     reported = [feature(1, "checked", [4]), feature(2, "checked", [5])]
     broken = {"graphtty --list-themes": (1, "", "Error: themes directory missing")}
-    outcome, _ = verify(tmp_path, [*turns(reported, fifth="graphtty --list-themes", smoke=smoke), judge_answer()],
+    outcome, _ = verify(tmp_path, [*turns(reported, fifth="graphtty --list-themes", smoke=smoke), *judges()],
                         Boxes(script(), script(**broken)))
     run = outcome.run
     assert run.level == "function"  # the README example still holds the level
@@ -227,7 +241,7 @@ def test_a_check_that_does_not_pass_again_in_the_fresh_box_does_not_cover(tmp_pa
 
 def test_a_version_check_or_a_failing_check_never_covers_a_feature(tmp_path: Path):
     reported = [feature(1, "checked", [2]), feature(2, "checked", [5]), feature(3, "test_failed", [4])]
-    outcome, lines = verify(tmp_path, [*turns(reported), judge_answer()], Boxes(script(), script()))
+    outcome, lines = verify(tmp_path, [*turns(reported), *judges()], Boxes(script(), script()))
     features = by_name(outcome.run)
     assert [(f.status, f.reason) for f in features.values()][:3] == [("not_checked", "other")] * 3
     assert any("F1 render a graph as ASCII art: no cited smoke test that passed" in line for line in lines)
@@ -239,7 +253,7 @@ def test_a_finish_without_features_goes_back_once(tmp_path: Path):
     first = turns([])
     again = response("r7", finish(level="function", steps=[1], smoke=SMOKE, install_method="uv",
                                   tool_version="0.4.1", features=REPORTED))
-    outcome, lines = verify(tmp_path, [*first, again, judge_answer()], Boxes(script(), script()))
+    outcome, lines = verify(tmp_path, [*first, again, *judges()], Boxes(script(), script()))
     assert "  finish sent back once: no features reported" in lines
     assert by_name(outcome.run)["render a graph as ASCII art"].status == "checked"
 
@@ -262,7 +276,7 @@ def test_write_back_keeps_the_coverage(tmp_path: Path):
     record = json.loads((FIXTURES / "software_example.json").read_text()) | {"slug": "graphtty"}
     record["features"] = [label for label, _ in FEATURES]
     (data_dir / "graphtty.json").write_text(json.dumps(record))
-    outcome, _ = verify(tmp_path, [*turns(REPORTED), judge_answer()], Boxes(script(), script()), write=True,
+    outcome, _ = verify(tmp_path, [*turns(REPORTED), *judges()], Boxes(script(), script()), write=True,
                         data_dir=data_dir)
     assert outcome.written
     saved = SoftwareRecord.model_validate_json((data_dir / "graphtty.json").read_text())
@@ -273,7 +287,7 @@ def test_write_back_keeps_the_coverage(tmp_path: Path):
 
 def test_a_container_engine_the_box_lacks_is_named_as_such(tmp_path: Path):
     docker = {NEON: (1, "", "Cannot connect to the Docker daemon at unix:///var/run/docker.sock")}
-    outcome, _ = verify(tmp_path, [*turns(REPORTED), judge_answer()], Boxes(script(**docker), script(**docker)))
+    outcome, _ = verify(tmp_path, [*turns(REPORTED), *judges()], Boxes(script(**docker), script(**docker)))
     themes = by_name(outcome.run)["switch color themes"]
     assert (themes.status, themes.failure, themes.reason) == ("test_failed", "sandbox", "needs_container")
 
@@ -314,3 +328,41 @@ def test_an_mcp_servers_feature_counts_only_through_a_probe_tool_call():
     mcp_task = dataclasses.replace(task, category="mcp_server")
     text = render_task(mcp_task, plan_for(task.extraction, "linux"), FakeBox(), AgentLimits())
     assert "Feature checks for an MCP server go through pickfit's probe" in text
+
+
+def test_the_feature_judge_keeps_only_features_their_output_shows_working(tmp_path: Path):
+    server_replies = [*turns(REPORTED), *judges("does_not_show")]
+    outcome, lines = verify(tmp_path, server_replies, Boxes(script(), script()))
+    render = by_name(outcome.run)["render a graph as ASCII art"]
+    assert (render.status, render.reason) == ("not_checked", "not_shown")
+    assert render.note == "its check passed, but the output does not show it: output 1 says so"
+    assert any(line.startswith("  feature judge · ") and "0 of 1 shown working" in line for line in lines)
+    assert (outcome.evidence_dir / "feature_judge.json").exists()
+    assert outcome.run.level == "function"  # the feature judge never touches the level
+
+
+def test_without_a_feature_judge_verdict_no_feature_stays_checked(tmp_path: Path):
+    outcome, _ = verify(tmp_path, [*turns(REPORTED), judge_answer()], Boxes(script(), script()))
+    render = by_name(outcome.run)["render a graph as ASCII art"]
+    assert (render.status, render.reason) == ("not_checked", "not_shown")
+    assert "feature judge gave no verdict" in render.note
+    assert any(n.startswith("feature judge failed:") for n in outcome.notes)
+
+
+def test_the_feature_judge_reads_the_readme_quote_and_the_fresh_box_output():
+    from types import SimpleNamespace
+
+    from pickfit.verify.feature_judge import INSTRUCTIONS, build_input
+    from pickfit.verify.features import judge_items
+
+    run = SimpleNamespace(stdout="a ──▶ b", stderr="", exit_code=0)
+    checks = [SimpleNamespace(command_id=4, command="graphtty graph.json", passed=True, run=run),
+              SimpleNamespace(command_id=5, command=NEON, passed=False, run=run)]
+    resolved = [{"feature": "render a graph", "status": "checked", "command_ids": [4, 5]},
+                {"feature": "switch themes", "status": "test_failed", "command_ids": [5]}]
+    items = judge_items(resolved, {"render a graph": "Turn any directed graph into ASCII art"}, checks)
+    assert [(label, [c.command_id for c in cited]) for label, _, cited in items] == [("render a graph", [4])]
+    text = build_input("graphtty", items)[0]["content"][0]["text"]
+    assert "F1. render a graph" in text and "Turn any directed graph into ASCII art" in text
+    assert "a ──▶ b" in text and NEON not in text
+    assert "When unsure, choose does_not_show" in INSTRUCTIONS

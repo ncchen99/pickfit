@@ -105,6 +105,7 @@ type FeatureGap = Literal[
     "needs_toolchain",
     "other_os",
     "not_attempted",
+    "not_shown",
     "other",
 ]
 # Who a failed feature test points at, as pitfall kinds do: only this box, or the tool itself.

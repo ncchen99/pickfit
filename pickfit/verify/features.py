@@ -33,7 +33,7 @@ from pickfit.schema import SETUP_MAX, FeatureCheck, FeatureFailure, FeatureGap, 
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import CommandRecord
-    from pickfit.verify.replay import FailedRerun
+    from pickfit.verify.replay import CheckResult, FailedRerun
     from pickfit.verify.verdict import LogVerdict
 
 GAPS: tuple[str, ...] = get_args(FeatureGap.__value__)
@@ -264,12 +264,15 @@ def _failed_smoke(again: FailedRerun, fit: Fit) -> SmokeTest | None:
 
 
 def coverage(resolved: list[dict[str, Any]], smoke_index: dict[int, int], smoke: list[SmokeTest],
-             reruns: list[FailedRerun], fit: Fit) -> tuple[list[FeatureCheck], list[str]]:
+             reruns: list[FailedRerun], fit: Fit, verdicts: dict[str, tuple[str, str]] | None = None
+             ) -> tuple[list[FeatureCheck], list[str]]:
     """The run's FeatureChecks from the agent's resolved features and what the fresh box showed.
 
     smoke_index maps a command_id to its index in `smoke` (the replay's checks, as the record keeps
     them). A failed feature check that failed again in the fresh box is appended to `smoke` as a
     failed smoke test; `fit` makes a command fit the record (or None when it cannot).
+    verdicts: the feature judge's (label -> (verdict, why)); when given, a feature stays checked only
+    when it says shows_it_working, and one it did not judge is not checked (not_shown).
     """
     again = {r.command_id: r for r in reruns}
     checks: list[FeatureCheck] = []
@@ -279,6 +282,12 @@ def coverage(resolved: list[dict[str, Any]], smoke_index: dict[int, int], smoke:
         if status == "checked":
             held = [smoke_index[cid] for cid in item["command_ids"] if cid in smoke_index
                     and smoke[smoke_index[cid]].passed]
+            if held and verdicts is not None and verdicts.get(name, ("", ""))[0] != "shows_it_working":
+                why = verdicts.get(name, ("", "the feature judge gave no verdict"))[1]
+                notes.append(f"feature {name!r}: the feature judge did not see it working ({why})")
+                checks.append(FeatureCheck(feature=name, status="not_checked", reason="not_shown",
+                                           note=_clip(f"its check passed, but the output does not show it: {why}")))
+                continue
             if held:
                 checks.append(FeatureCheck(feature=name, status="checked", smoke_tests=held))
                 continue
@@ -314,6 +323,19 @@ def coverage(resolved: list[dict[str, Any]], smoke_index: dict[int, int], smoke:
             checks.append(FeatureCheck(feature=name, status="not_checked", reason=item["reason"] or "other",
                                        note=_clip(item["note"])))
     return checks, notes
+
+
+def judge_items(resolved: list[dict[str, Any]], quotes: dict[str, str], checks: list[CheckResult]
+                ) -> list[tuple[str, str, list[CheckResult]]]:
+    """What the feature judge reads: each checked feature with its README quote and the replay's passing
+    checks cited for it. A feature with no such check is not judged (coverage leaves it unchecked)."""
+    passing = {c.command_id: c for c in checks if c.passed and c.run is not None}
+    items = []
+    for item in resolved:
+        cited = [passing[cid] for cid in item["command_ids"] if cid in passing]
+        if item["status"] == "checked" and cited:
+            items.append((item["feature"], quotes.get(item["feature"], ""), cited))
+    return items
 
 
 def failed_ids(resolved: list[dict[str, Any]]) -> list[int]:
