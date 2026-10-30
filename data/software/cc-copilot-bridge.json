@@ -86,7 +86,7 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-cc-copilot-bridge-20261031-004541-41d6",
+      "run_id": "verify-cc-copilot-bridge-20261031-040915-3b07",
       "method": "script",
       "steps": [
         {
@@ -94,18 +94,18 @@
           "purpose": "Download install.sh for reading before running"
         },
         {
-          "command": "mkdir -p \"$HOME/.claude\" \"$HOME/bin\" \"$HOME/.local/bin\" && printf '2\\nn\\n\\n' > /tmp/answers.txt && bash /tmp/install.sh < /tmp/answers.txt",
-          "purpose": "Create ~/.claude and run reviewed installer non-interactively"
+          "command": "mkdir -p ~/.claude ~/bin && printf '\\n\\n\\n' | bash /tmp/install.sh",
+          "purpose": "Create dirs and run install.sh non-interactively"
         },
         {
-          "command": "ln -sf \"$HOME/bin/claude-switch\" \"$HOME/.local/bin/claude-switch\" && command -v claude-switch && ls -l \"$HOME/.local/bin/claude-switch\"",
-          "purpose": "Link binary onto default PATH"
+          "command": "mkdir -p ~/.local/bin && ln -sf ~/bin/claude-switch ~/.local/bin/claude-switch && ls -l ~/bin/claude-switch ~/.local/bin/claude-switch && command -v claude-switch",
+          "purpose": "Put claude-switch on PATH via ~/.local/bin symlink"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "claude-switch --help",
-        "expected_signal": "Available Models (via Copilot):"
+        "expected_signal": "Claude Code Multi-Provider Switcher v1.7.0"
       },
       "first_task": "claude-switch status"
     },
@@ -126,10 +126,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:46:54.327728+08:00",
+    "checked_at": "2026-10-31T04:10:34.707863+08:00",
     "runs": [
       {
-        "id": "verify-cc-copilot-bridge-20261031-004541-41d6",
+        "id": "verify-cc-copilot-bridge-20261031-040915-3b07",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -137,7 +137,7 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:46:54.327728+08:00",
+        "checked_at": "2026-10-31T04:10:34.707863+08:00",
         "tool_version": "1.7.0",
         "install_method": "script",
         "replayed": true,
@@ -147,21 +147,21 @@
             "purpose": "Download install.sh for reading before running"
           },
           {
-            "command": "mkdir -p \"$HOME/.claude\" \"$HOME/bin\" \"$HOME/.local/bin\" && printf '2\\nn\\n\\n' > /tmp/answers.txt && bash /tmp/install.sh < /tmp/answers.txt",
-            "purpose": "Create ~/.claude and run reviewed installer non-interactively"
+            "command": "mkdir -p ~/.claude ~/bin && printf '\\n\\n\\n' | bash /tmp/install.sh",
+            "purpose": "Create dirs and run install.sh non-interactively"
           },
           {
-            "command": "ln -sf \"$HOME/bin/claude-switch\" \"$HOME/.local/bin/claude-switch\" && command -v claude-switch && ls -l \"$HOME/.local/bin/claude-switch\"",
-            "purpose": "Link binary onto default PATH"
+            "command": "mkdir -p ~/.local/bin && ln -sf ~/bin/claude-switch ~/.local/bin/claude-switch && ls -l ~/bin/claude-switch ~/.local/bin/claude-switch && command -v claude-switch",
+            "purpose": "Put claude-switch on PATH via ~/.local/bin symlink"
           }
         ],
         "smoke_tests": [
           {
             "command": "claude-switch --help",
-            "expected_signal": "Available Models (via Copilot):",
+            "expected_signal": "Claude Code Multi-Provider Switcher v1.7.0",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Available Models (via Copilot):",
+            "observed_excerpt": "Claude Code Multi-Provider Switcher v1.7.0",
             "setup": [],
             "offline": true
           },
@@ -173,47 +173,78 @@
             "observed_excerpt": "=== Claude Code Provider Status ===",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "bash -c 'source ~/.claude/aliases.sh; shopt -s expand_aliases; eval \"ccs\"'",
+            "expected_signal": "=== Claude Code Provider Status ===",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "=== Claude Code Provider Status ===",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "VERSION=1.5.3 wget ... sudo dpkg -i claude-switch_${VERSION}.deb / sudo rpm -i ...",
-            "actually_needed": "Skipped .deb/.rpm candidates because they require sudo/dpkg/rpm as root, unavailable to user sbx; used the ranked script candidate instead.",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "curl -fsSL .../install.sh | bash",
-            "actually_needed": "Pre-created ~/.claude (mkdir -p ~/.claude) because install.sh writes ~/.claude/aliases.sh before its mkdir -p ~/.claude line; and fed answers from a file for its interactive Choice prompts since stdin is closed.",
+            "readme_said": "curl -fsSL .../install.sh | bash works on fresh machine",
+            "actually_needed": "mkdir -p ~/.claude before running install.sh; reran with dir present",
             "kind": "readme_wrong"
           },
           {
-            "readme_said": "installer puts claude-switch on PATH and eval \"$(claude-switch --shell-config)\"",
-            "actually_needed": "Symlinked ~/bin/claude-switch to ~/.local/bin/claude-switch because the installer targets ~/bin, which is not on the box default PATH starting with ~/.local/bin.",
+            "readme_said": "installer puts claude-switch on PATH",
+            "actually_needed": "symlink ~/bin/claude-switch to ~/.local/bin/claude-switch (installer uses ~/bin, PATH starts with ~/.local/bin)",
             "kind": "sandbox"
           },
           {
-            "readme_said": "Prerequisites: jq, nc",
-            "actually_needed": "Installer warned netcat (nc) not found, yet claude-switch --help and claude-switch status still exited 0 with sensible health output.",
+            "readme_said": "ccs",
+            "actually_needed": "source ~/.claude/aliases.sh and eval ccs (ccs is a shell alias, not a binary; non-interactive bash needs eval/interactive shell)",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both commands succeeded and displayed the provider status header and the Copilot models list.",
+          "observed": "All three screenshots show the expected headers with provider status and switcher version v1.7.0 and no errors.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-cc-copilot-bridge-20261031-004541-41d6/report.json",
+          "trace_path": "runs/verify/verify-cc-copilot-bridge-20261031-040915-3b07/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-cc-copilot-bridge-20261031-004541-41d6/check-1-cmd7.judged.png",
-            "runs/verify/verify-cc-copilot-bridge-20261031-004541-41d6/check-2-cmd6.judged.png"
+            "runs/verify/verify-cc-copilot-bridge-20261031-040915-3b07/check-1-cmd7.judged.png",
+            "runs/verify/verify-cc-copilot-bridge-20261031-040915-3b07/check-2-cmd10.judged.png",
+            "runs/verify/verify-cc-copilot-bridge-20261031-040915-3b07/check-3-cmd6.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.09386
+        "cost_usd": 0.117974,
+        "features": [
+          {
+            "feature": "route Claude Code CLI through providers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only a status listing with all providers Unknown/Not running and no routing performed."
+          },
+          {
+            "feature": "switch between Anthropic, Copilot, Ollama",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only the same status listing with no switch between providers demonstrated."
+          },
+          {
+            "feature": "access Claude, GPT, Gemini models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs Copilot Pro subscription / model access to exercise"
+          }
+        ]
       }
     ]
   },
@@ -607,5 +638,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:59+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T04:10:34.710172+08:00"
 }

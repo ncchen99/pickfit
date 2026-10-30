@@ -76,16 +76,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-rvpm-20261031-001842-d490",
+      "run_id": "verify-rvpm-20261031-035227-d8bc",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -L -o /tmp/rvpm.tar.gz https://github.com/yukimemi/rvpm/releases/download/v3.52.0/rvpm-x86_64-unknown-linux-musl.tar.gz",
-          "purpose": "Download prebuilt musl binary tarball"
-        },
-        {
-          "command": "mkdir -p ~/.local/bin && tar xzf /tmp/rvpm.tar.gz -C /tmp && cp /tmp/rvpm ~/.local/bin/rvpm && chmod +x ~/.local/bin/rvpm",
-          "purpose": "Extract and install rvpm binary to ~/.local/bin"
+          "command": "mkdir -p ~/.local/bin /tmp/rvpm-clean && curl -fsSL -o /tmp/rvpm-clean/rvpm.tar.gz https://github.com/yukimemi/rvpm/releases/download/v3.52.0/rvpm-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/rvpm-clean/rvpm.tar.gz -C /tmp/rvpm-clean && cp /tmp/rvpm-clean/rvpm ~/.local/bin/rvpm && chmod +x ~/.local/bin/rvpm",
+          "purpose": "download prebuilt linux-musl tarball and install rvpm to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -93,7 +89,7 @@
         "command": "rvpm --version",
         "expected_signal": "rvpm 3.52.0"
       },
-      "first_task": "rvpm init --write"
+      "first_task": "RVPM_NO_AUTOUPDATE=1 rvpm init --write"
     },
     "windows": {
       "basis": "readme_claim",
@@ -125,10 +121,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:20:11.874478+08:00",
+    "checked_at": "2026-10-31T03:53:50.901265+08:00",
     "runs": [
       {
-        "id": "verify-rvpm-20261031-001842-d490",
+        "id": "verify-rvpm-20261031-035227-d8bc",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -136,18 +132,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:20:11.874478+08:00",
+        "checked_at": "2026-10-31T03:53:50.901265+08:00",
         "tool_version": "3.52.0",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -L -o /tmp/rvpm.tar.gz https://github.com/yukimemi/rvpm/releases/download/v3.52.0/rvpm-x86_64-unknown-linux-musl.tar.gz",
-            "purpose": "Download prebuilt musl binary tarball"
-          },
-          {
-            "command": "mkdir -p ~/.local/bin && tar xzf /tmp/rvpm.tar.gz -C /tmp && cp /tmp/rvpm ~/.local/bin/rvpm && chmod +x ~/.local/bin/rvpm",
-            "purpose": "Extract and install rvpm binary to ~/.local/bin"
+            "command": "mkdir -p ~/.local/bin /tmp/rvpm-clean && curl -fsSL -o /tmp/rvpm-clean/rvpm.tar.gz https://github.com/yukimemi/rvpm/releases/download/v3.52.0/rvpm-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/rvpm-clean/rvpm.tar.gz -C /tmp/rvpm-clean && cp /tmp/rvpm-clean/rvpm ~/.local/bin/rvpm && chmod +x ~/.local/bin/rvpm",
+            "purpose": "download prebuilt linux-musl tarball and install rvpm to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -161,16 +153,7 @@
             "offline": true
           },
           {
-            "command": "rvpm --help",
-            "expected_signal": "Usage: rvpm [COMMAND]",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Usage: rvpm [COMMAND]",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "rvpm init --write",
+            "command": "RVPM_NO_AUTOUPDATE=1 rvpm init --write",
             "expected_signal": "Created /home/sbx/.config/rvpm/nvim/config.toml",
             "exit_code": 0,
             "passed": true,
@@ -179,14 +162,14 @@
             "offline": true
           },
           {
-            "command": "rvpm doctor",
-            "expected_signal": "Summary: 14 ok",
+            "command": "RVPM_NO_AUTOUPDATE=1 rvpm doctor",
+            "expected_signal": "rvpm doctor",
             "exit_code": 1,
             "passed": true,
-            "observed_excerpt": "Summary: 14 ok · 1 warn · 2 error (exit 1)",
+            "observed_excerpt": " rvpm doctor — diagnostic report",
             "setup": [
               {
-                "command": "rvpm init --write",
+                "command": "RVPM_NO_AUTOUPDATE=1 rvpm init --write",
                 "background": false,
                 "port": null
               }
@@ -194,14 +177,44 @@
             "offline": true
           },
           {
-            "command": "rvpm list --no-tui",
+            "command": "RVPM_NO_AUTOUPDATE=1 rvpm list --no-tui",
             "expected_signal": "Checking plugin status...",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "Checking plugin status...",
             "setup": [
               {
-                "command": "rvpm init --write",
+                "command": "RVPM_NO_AUTOUPDATE=1 rvpm init --write",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "RVPM_NO_AUTOUPDATE=1 rvpm generate && ls -la ~/.cache/rvpm/nvim/plugins/loader.lua && grep -c \"dofile\\|source\\|lazy\\|on_cmd\" ~/.cache/rvpm/nvim/plugins/loader.lua",
+            "expected_signal": "Done! -> /home/sbx/.cache/rvpm/nvim/plugins/loader.lua",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Done! -> /home/sbx/.cache/rvpm/nvim/plugins/loader.lua",
+            "setup": [
+              {
+                "command": "RVPM_NO_AUTOUPDATE=1 rvpm init --write",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "RVPM_NO_AUTOUPDATE=1 RVPM_APPNAME=rvpmtest rvpm generate && grep -n \"DummyCmd\\|on_cmd\\|load_lazy\" ~/.cache/rvpm/rvpmtest/plugins/loader.lua",
+            "expected_signal": "DummyCmd",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "41:vim.api.nvim_create_user_command(\"DummyCmd\", function(event)",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/dummy-plugin/plugin /tmp/dummy-plugin/lua/dummy ~/.config/rvpm/rvpmtest && printf 'vim.api.nvim_create_user_command(\"DummyCmd\", function() print(\"dummy\") end, {})\\n' > /tmp/dummy-plugin/plugin/dummy.vim && printf 'return {}\\n' > /tmp/dummy-plugin/lua/dummy/init.lua && cat > ~/.config/rvpm/rvpmtest/config.toml <<'EOF'\n[options]\nauto_helptags = false\n\n[[plugins]]\nname = \"dummy\"\nurl = \"/tmp/dummy-plugin\"\ndev = true\non_cmd = [\"DummyCmd\"]\nEOF\ncat ~/.config/rvpm/rvpmtest/config.toml",
                 "background": false,
                 "port": null
               }
@@ -212,33 +225,71 @@
         "pitfalls": [
           {
             "readme_said": "cargo install rvpm",
-            "actually_needed": "Downloaded rvpm-x86_64-unknown-linux-musl.tar.gz from GitHub releases v3.52.0 and copied the rvpm binary to ~/.local/bin (cargo method needs a Rust toolchain, which the box does not have and must not install)",
+            "actually_needed": "downloaded prebuilt rvpm-x86_64-unknown-linux-musl.tar.gz v3.52.0 from Releases and extracted rvpm to ~/.local/bin (README also documents prebuilt binaries)",
             "kind": "sandbox"
           },
           {
             "readme_said": "rvpm list",
-            "actually_needed": "Use rvpm list --no-tui for pipe-friendly plain-text output; plain rvpm list opens a TUI and fails with 'No such device or address (os error 6)' with no TTY",
+            "actually_needed": "used `rvpm list --no-tui` for pipe-friendly plain text; plain `rvpm list` launches interactive TUI",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show init creating config.toml, doctor reporting Summary 14 ok with exit 1, and version 3.52.0.",
+          "observed": "Screenshots show init created the config, doctor produced its diagnostic report with exit 1, and --version printed rvpm 3.52.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-rvpm-20261031-001842-d490/report.json",
+          "trace_path": "runs/verify/verify-rvpm-20261031-035227-d8bc/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-rvpm-20261031-001842-d490/check-1-cmd5.judged.png",
-            "runs/verify/verify-rvpm-20261031-001842-d490/check-2-cmd6.judged.png",
-            "runs/verify/verify-rvpm-20261031-001842-d490/check-3-cmd9.judged.png"
+            "runs/verify/verify-rvpm-20261031-035227-d8bc/check-1-cmd5.judged.png",
+            "runs/verify/verify-rvpm-20261031-035227-d8bc/check-2-cmd6.judged.png",
+            "runs/verify/verify-rvpm-20261031-035227-d8bc/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.073691
+        "cost_usd": 0.125378,
+        "features": [
+          {
+            "feature": "Manage Neovim plugins from terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: init and doctor ran but show 0/0 plugins and list shows only checking with no plugin managed."
+          },
+          {
+            "feature": "Generate pre-compiled loader for startup",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Lazy-load plugins on triggers",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Browse and install plugins via TUI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "browse needs GitHub topic network plus interactive TUI; cannot run non-interactively or with network off on replay"
+          }
+        ]
       }
     ]
   },
@@ -602,5 +653,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:13+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:53:50.902458+08:00"
 }

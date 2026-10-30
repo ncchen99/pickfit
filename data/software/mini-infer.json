@@ -81,7 +81,7 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-mini-infer-20261031-023118-31d1",
+      "run_id": "verify-mini-infer-20261031-035325-da8c",
       "method": "uv",
       "steps": [
         {
@@ -92,7 +92,7 @@
       "manual_steps": [],
       "check": {
         "command": "mini-infer --help 2>&1",
-        "expected_signal": "Minimal continuous-batching LLM inference engine"
+        "expected_signal": "serve"
       },
       "first_task": "mini-infer info 2>&1"
     },
@@ -126,10 +126,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:33:54.612199+08:00",
+    "checked_at": "2026-10-31T03:57:15.693494+08:00",
     "runs": [
       {
-        "id": "verify-mini-infer-20261031-023118-31d1",
+        "id": "verify-mini-infer-20261031-035325-da8c",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -137,7 +137,7 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:33:54.612199+08:00",
+        "checked_at": "2026-10-31T03:57:15.693494+08:00",
         "tool_version": "0.2.7",
         "install_method": "uv",
         "replayed": true,
@@ -150,10 +150,10 @@
         "smoke_tests": [
           {
             "command": "mini-infer --help 2>&1",
-            "expected_signal": "Minimal continuous-batching LLM inference engine",
+            "expected_signal": "serve",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Minimal continuous-batching LLM inference engine with paged KV-cache.",
+            "observed_excerpt": "│ serve Launch the OpenAI-compatible streaming HTTP server. │",
             "setup": [],
             "offline": true
           },
@@ -167,40 +167,88 @@
             "offline": true
           },
           {
-            "command": "mkdir -p /tmp/repodemo/src && printf 'class Foo:\\n    def bar(self, x: int) -> int:\\n        return x + 1\\n' > /tmp/repodemo/src/demo.py && mini-infer repomap /tmp/repodemo/src --max-tokens 1000 2>&1",
-            "expected_signal": "class Foo",
+            "command": "~/.local/share/uv/tools/mini-infer/bin/python mini_check.py 2>&1",
+            "expected_signal": "F1_CONTINUOUS_BATCHING_OK",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "class Foo:",
-            "setup": [],
+            "observed_excerpt": "F1_CONTINUOUS_BATCHING_OK seq1=4 seq2=4 steps_outputs=8",
+            "setup": [
+              {
+                "command": "cat > mini_check.py <<'PY'\nimport torch\nfrom mini_infer.models.config import Qwen2Config\nfrom mini_infer.models.qwen2 import Qwen2ForCausalLM\nfrom mini_infer.engine import InferenceEngine\nfrom mini_infer.cache.prefix_cache import PrefixCache\nfrom mini_infer.cache.block_pool import BlockPool\nfrom mini_infer.speculative.verifier import speculative_step\ntorch.manual_seed(0)\ndevice = torch.device(\"cpu\")\ndef tiny_cfg(layers=2):\n    return Qwen2Config(vocab_size=256, hidden_size=64, intermediate_size=128, num_hidden_layers=layers, num_attention_heads=4, num_key_value_heads=2, head_dim=16, rms_norm_eps=1e-6, rope_theta=10000.0, max_position_embeddings=128, tie_word_embeddings=False)\nconfig = tiny_cfg(2)\nmodel = Qwen2ForCausalLM(config).to(device).eval()\nengine = InferenceEngine(model=model, config=config, num_blocks=64, block_size=16, device=device)\nfree_before = engine.block_pool.num_free\np1 = list(range(1, 21))\np2 = list(range(101, 121))\nseq1 = engine.add_request(prompt_token_ids=p1, max_tokens=4, temperature=0.0)\nseq2 = engine.add_request(prompt_token_ids=p2, max_tokens=4, temperature=0.0)\ntotal_out = 0\nfor _ in range(20):\n    outs = engine.step()\n    total_out += len(outs)\n    if len(seq1.output_token_ids) >= 4 and len(seq2.output_token_ids) >= 4:\n        break\nprint(f\"F1_CONTINUOUS_BATCHING_OK seq1={len(seq1.output_token_ids)} seq2={len(seq2.output_token_ids)} steps_outputs={total_out}\")\nfree_after = engine.block_pool.num_free\nprint(f\"F2_PAGED_KV_OK free_before={free_before} free_after={free_after} blocks1={seq1.block_table.physical_block_ids} blocks2={seq2.block_table.physical_block_ids}\")\npc = PrefixCache(block_size=16)\npool2 = BlockPool(num_blocks=16, block_size=16, num_layers=2, num_kv_heads=2, head_dim=16, device=device, dtype=torch.float32)\nb0 = pool2.allocate_block()\npc.insert_prefix_block(tuple(list(range(16))), b0, pool2)\nmatched, n_cached = pc.match_prefix(list(range(16)) + [99]*16, pool2)\nprint(f\"F3_PREFIX_CACHE_OK matched_blocks={len(matched)} cached_tokens={n_cached} engine_cache_entries={len(engine.prefix_cache.cache) if engine.prefix_cache else 0}\")\ndraft_model = Qwen2ForCausalLM(tiny_cfg(1)).to(device).eval()\nprefix = torch.tensor([[1,2,3,4]], dtype=torch.long)\nnew_tokens, n_acc = speculative_step(target_model=model, draft_model=draft_model, prefix_ids=prefix, k_draft=2, temperature=0.0)\nprint(f\"F4_SPECULATIVE_OK new_tokens={new_tokens} accepted={n_acc}\")\nPY",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "uv run mini-infer info and uv run mini-infer serve --port 8000",
-            "actually_needed": "With isolated `uv tool install mini-infer`, invoke as `mini-infer info` / `mini-infer repomap ...` directly; the `uv run mini-infer ...` prefix in the README assumes a cloned source checkout with `uv sync`.",
-            "kind": "note"
+            "readme_said": "InferenceEngine accepts num_blocks/block_size implying any block size works",
+            "actually_needed": "Sequence BlockTable is hardcoded to block_size 16, so InferenceEngine must be built with block_size=16 (default); custom block_size=4 crashes in write_sequence_kv",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three screenshots show help text, system diagnostics table, and AST repomap with class Foo succeeding with exit 0.",
+          "observed": "Screenshots show help listing serve command, system diagnostics table, and all four engine feature checks passing.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-mini-infer-20261031-023118-31d1/report.json",
+          "trace_path": "runs/verify/verify-mini-infer-20261031-035325-da8c/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-mini-infer-20261031-023118-31d1/check-1-cmd2.judged.png",
-            "runs/verify/verify-mini-infer-20261031-023118-31d1/check-2-cmd3.judged.png",
-            "runs/verify/verify-mini-infer-20261031-023118-31d1/check-3-cmd5.judged.png"
+            "runs/verify/verify-mini-infer-20261031-035325-da8c/check-1-cmd2.judged.png",
+            "runs/verify/verify-mini-infer-20261031-035325-da8c/check-2-cmd3.judged.png",
+            "runs/verify/verify-mini-infer-20261031-035325-da8c/check-3-cmd15.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.062617
+        "cost_usd": 0.183027,
+        "features": [
+          {
+            "feature": "run continuous-batching LLM inference",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "manage KV cache with paged blocks",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "reuse shared prompt prefixes via caching",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "generate tokens via speculative decoding",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -612,5 +660,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:49:06+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:57:15.695077+08:00"
 }

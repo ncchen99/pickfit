@@ -75,16 +75,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-filo-20261031-002612-a16e",
+      "run_id": "verify-filo-20261031-040550-0408",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -LsSf https://github.com/matteodante/filo/archive/refs/tags/v0.4.0.tar.gz -o /tmp/filo-0.4.0.tar.gz && ls -lh /tmp/filo-0.4.0.tar.gz && mkdir -p /tmp/filo-src && tar -xzf /tmp/filo-0.4.0.tar.gz -C /tmp/filo-src --strip-components=1 && ls /tmp/filo-src && cat /tmp/filo-src/pyproject.toml",
-          "purpose": "Download pinned v0.4.0 source tarball and extract it"
+          "command": "curl -LsSf https://raw.githubusercontent.com/matteodante/filo/main/install.sh -o /tmp/filo-install.sh && wc -c /tmp/filo-install.sh && head -c 2000 /tmp/filo-install.sh",
+          "purpose": "download installer script for reading"
         },
         {
-          "command": "uv export --project /tmp/filo-src --frozen --no-dev --no-emit-project --no-hashes --quiet --output-file /tmp/filo-locked.txt && grep -v \"^torch==.*sys_platform != 'linux'\" /tmp/filo-locked.txt > /tmp/filo-constraints.txt && cat /tmp/filo-constraints.txt && uv tool install --force --python 3.12 --constraints /tmp/filo-constraints.txt /tmp/filo-src",
-          "purpose": "Install Filo with locked CPU constraints via uv tool install"
+          "command": "mkdir -p /tmp/filo-src && curl -LsSf https://github.com/matteodante/filo/archive/refs/tags/v0.4.0.tar.gz -o /tmp/filo-v0.4.0.tar.gz && tar -xzf /tmp/filo-v0.4.0.tar.gz -C /tmp/filo-src --strip-components=1",
+          "purpose": "download and extract pinned Filo source"
+        },
+        {
+          "command": "uv export --project /tmp/filo-src --frozen --no-dev --no-emit-project --no-hashes --quiet --output-file /tmp/filo-locked.txt && grep -v \"^torch==.*sys_platform != 'linux'\" /tmp/filo-locked.txt > /tmp/filo-constraints.txt && wc -l /tmp/filo-locked.txt /tmp/filo-constraints.txt && head -n 30 /tmp/filo-constraints.txt",
+          "purpose": "generate version constraints like installer"
+        },
+        {
+          "command": "uv tool install --force --python 3.12 --constraints /tmp/filo-constraints.txt /tmp/filo-src",
+          "purpose": "install filo with uv tool like installer"
         }
       ],
       "manual_steps": [],
@@ -120,10 +128,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:28:25.281830+08:00",
+    "checked_at": "2026-10-31T04:08:05.670863+08:00",
     "runs": [
       {
-        "id": "verify-filo-20261031-002612-a16e",
+        "id": "verify-filo-20261031-040550-0408",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -131,18 +139,26 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:28:25.281830+08:00",
-        "tool_version": "0.4.0",
+        "checked_at": "2026-10-31T04:08:05.670863+08:00",
+        "tool_version": null,
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -LsSf https://github.com/matteodante/filo/archive/refs/tags/v0.4.0.tar.gz -o /tmp/filo-0.4.0.tar.gz && ls -lh /tmp/filo-0.4.0.tar.gz && mkdir -p /tmp/filo-src && tar -xzf /tmp/filo-0.4.0.tar.gz -C /tmp/filo-src --strip-components=1 && ls /tmp/filo-src && cat /tmp/filo-src/pyproject.toml",
-            "purpose": "Download pinned v0.4.0 source tarball and extract it"
+            "command": "curl -LsSf https://raw.githubusercontent.com/matteodante/filo/main/install.sh -o /tmp/filo-install.sh && wc -c /tmp/filo-install.sh && head -c 2000 /tmp/filo-install.sh",
+            "purpose": "download installer script for reading"
           },
           {
-            "command": "uv export --project /tmp/filo-src --frozen --no-dev --no-emit-project --no-hashes --quiet --output-file /tmp/filo-locked.txt && grep -v \"^torch==.*sys_platform != 'linux'\" /tmp/filo-locked.txt > /tmp/filo-constraints.txt && cat /tmp/filo-constraints.txt && uv tool install --force --python 3.12 --constraints /tmp/filo-constraints.txt /tmp/filo-src",
-            "purpose": "Install Filo with locked CPU constraints via uv tool install"
+            "command": "mkdir -p /tmp/filo-src && curl -LsSf https://github.com/matteodante/filo/archive/refs/tags/v0.4.0.tar.gz -o /tmp/filo-v0.4.0.tar.gz && tar -xzf /tmp/filo-v0.4.0.tar.gz -C /tmp/filo-src --strip-components=1",
+            "purpose": "download and extract pinned Filo source"
+          },
+          {
+            "command": "uv export --project /tmp/filo-src --frozen --no-dev --no-emit-project --no-hashes --quiet --output-file /tmp/filo-locked.txt && grep -v \"^torch==.*sys_platform != 'linux'\" /tmp/filo-locked.txt > /tmp/filo-constraints.txt && wc -l /tmp/filo-locked.txt /tmp/filo-constraints.txt && head -n 30 /tmp/filo-constraints.txt",
+            "purpose": "generate version constraints like installer"
+          },
+          {
+            "command": "uv tool install --force --python 3.12 --constraints /tmp/filo-constraints.txt /tmp/filo-src",
+            "purpose": "install filo with uv tool like installer"
           }
         ],
         "smoke_tests": [
@@ -181,47 +197,95 @@
             "observed_excerpt": "Default memory mode: standard",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "filo memory recap --weeks 4",
+            "expected_signal": "Nothing recorded in this period yet.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Nothing recorded in this period yet.",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -LsSf https://raw.githubusercontent.com/matteodante/filo/main/install.sh | sh installs and finishes with `filo doctor`",
-            "actually_needed": "Manual replicate of install.sh steps without its interactive guard: download v0.4.0 tarball, `uv export` to constraints, `uv tool install --force --python 3.12 --constraints <file> <src>`; `filo doctor`, `filo protocol validate` and `filo privacy show` then work with no setup.",
+            "readme_said": "curl -LsSf https://raw.githubusercontent.com/matteodante/filo/main/install.sh | sh",
+            "actually_needed": "installer requires interactive terminal (/dev/tty) for guided `filo setup`; under non-interactive sh it exits 2, so replicated its non-interactive steps: download source tarball, `uv export` to constraints, `uv tool install --force --python 3.12 --constraints ... /tmp/filo-src`, skipping setup",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "install.sh fetches uv binary",
+            "actually_needed": "installer downloads verified uv binary archive and license from github releases and executes it without prior reading",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show filo doctor, protocol validate, and --help all succeeding with their expected signals.",
+          "observed": "All three screenshots show expected outputs: doctor reports the protocol, validate reports Hash OK, and help shows the Experimental AI description.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-filo-20261031-002612-a16e/report.json",
+          "trace_path": "runs/verify/verify-filo-20261031-040550-0408/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-filo-20261031-002612-a16e/check-1-cmd9.judged.png",
-            "runs/verify/verify-filo-20261031-002612-a16e/check-2-cmd10.judged.png",
-            "runs/verify/verify-filo-20261031-002612-a16e/check-3-cmd8.judged.png"
+            "runs/verify/verify-filo-20261031-040550-0408/check-1-cmd10.judged.png",
+            "runs/verify/verify-filo-20261031-040550-0408/check-2-cmd11.judged.png",
+            "runs/verify/verify-filo-20261031-040550-0408/check-3-cmd9.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.07263
+        "cost_usd": 0.114582,
+        "features": [
+          {
+            "feature": "Have AI conversations for self-reflection",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs personal ChatGPT Plus/Pro via codex OAuth; not attempted without account"
+          },
+          {
+            "feature": "Chat via terminal or Telegram",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "terminal/Telegram chat needs provider login and Telegram allowlist"
+          },
+          {
+            "feature": "Keep encrypted local memory",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows standard mode with no evidence of encryption."
+          },
+          {
+            "feature": "Review recurring themes and experiments",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows nothing recorded rather than recurring themes."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:11:57+08:00",
+    "computed_at": "2026-10-31T04:08:05+08:00",
     "quality": {
-      "total": 80.1,
+      "total": 75.0,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.68,
+          "score": 0.578,
           "weight": 40.0
         },
         "install_docs": {
@@ -261,8 +325,8 @@
       "packages": []
     },
     "treasure": {
-      "is_treasure": true,
-      "value": 57.67
+      "is_treasure": false,
+      "value": 54.0
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -553,5 +617,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T04:08:05.672345+08:00"
 }

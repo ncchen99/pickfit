@@ -77,18 +77,18 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-dukascopy-go-20261031-002140-6643",
+      "run_id": "verify-dukascopy-go-20261031-035648-3d4e",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -sL -o /tmp/dukascopy-go.tar.gz https://github.com/Nosvemos/dukascopy-go/releases/download/v0.2.0/dukascopy-go_0.2.0_linux_amd64.tar.gz && tar -xzf /tmp/dukascopy-go.tar.gz -C /tmp && chmod +x /tmp/dukascopy-go && mkdir -p ~/.local/bin && cp /tmp/dukascopy-go ~/.local/bin/dukascopy-go && chmod +x ~/.local/bin/dukascopy-go",
-          "purpose": "Download v0.2.0 linux_amd64 tarball and install binary to ~/.local/bin"
+          "command": "mkdir -p ~/.local/bin /tmp/dukago && curl -fsSL -o /tmp/dukago/dukascopy-go.tar.gz https://github.com/Nosvemos/dukascopy-go/releases/download/v0.2.0/dukascopy-go_0.2.0_linux_amd64.tar.gz && tar -xzf /tmp/dukago/dukascopy-go.tar.gz -C /tmp/dukago && cp /tmp/dukago/dukascopy-go ~/.local/bin/dukascopy-go && chmod +x ~/.local/bin/dukascopy-go",
+          "purpose": "download and install linux_amd64 release binary"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "dukascopy-go --version",
-        "expected_signal": "dukascopy-go 0.2.0 (7a6759c)"
+        "expected_signal": "dukascopy-go 0.2.0"
       },
       "first_task": "dukascopy-go instruments --query gold"
     },
@@ -122,10 +122,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:23:19.297387+08:00",
+    "checked_at": "2026-10-31T03:59:10.227410+08:00",
     "runs": [
       {
-        "id": "verify-dukascopy-go-20261031-002140-6643",
+        "id": "verify-dukascopy-go-20261031-035648-3d4e",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -133,32 +133,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:23:19.297387+08:00",
-        "tool_version": "0.2.0",
+        "checked_at": "2026-10-31T03:59:10.227410+08:00",
+        "tool_version": "0.2.0 (7a6759c)",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -sL -o /tmp/dukascopy-go.tar.gz https://github.com/Nosvemos/dukascopy-go/releases/download/v0.2.0/dukascopy-go_0.2.0_linux_amd64.tar.gz && tar -xzf /tmp/dukascopy-go.tar.gz -C /tmp && chmod +x /tmp/dukascopy-go && mkdir -p ~/.local/bin && cp /tmp/dukascopy-go ~/.local/bin/dukascopy-go && chmod +x ~/.local/bin/dukascopy-go",
-            "purpose": "Download v0.2.0 linux_amd64 tarball and install binary to ~/.local/bin"
+            "command": "mkdir -p ~/.local/bin /tmp/dukago && curl -fsSL -o /tmp/dukago/dukascopy-go.tar.gz https://github.com/Nosvemos/dukascopy-go/releases/download/v0.2.0/dukascopy-go_0.2.0_linux_amd64.tar.gz && tar -xzf /tmp/dukago/dukascopy-go.tar.gz -C /tmp/dukago && cp /tmp/dukago/dukascopy-go ~/.local/bin/dukascopy-go && chmod +x ~/.local/bin/dukascopy-go",
+            "purpose": "download and install linux_amd64 release binary"
           }
         ],
         "smoke_tests": [
           {
             "command": "dukascopy-go --version",
-            "expected_signal": "dukascopy-go 0.2.0 (7a6759c)",
+            "expected_signal": "dukascopy-go 0.2.0",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "date: 2026-08-17T19:46:34Z",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "dukascopy-go --help",
-            "expected_signal": "instruments Search Dukascopy instruments",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "instruments Search Dukascopy instruments",
             "setup": [],
             "offline": true
           },
@@ -170,51 +161,115 @@
             "observed_excerpt": "XAU/USD XAUUSD Gold vs US Dollar",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "dukascopy-go download --symbol eurusd --timeframe m1 --from 2024-01-01 --to 2024-01-02 --output /tmp/eurusd_m1.csv",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "<H2>The request could not be satisfied.</H2> <HR noshade size=\"1px\"> Request blocked. We can't connect to the server for this app or website at this time. There might be too much traffic or a configuration error. Try again later, or c",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "timeout 15 dukascopy-go live --symbol eurusd --timeframe tick --format jsonl",
+            "expected_signal": "",
+            "exit_code": 124,
+            "passed": false,
+            "observed_excerpt": "\u001b[36mlive\u001b[0m streaming EUR/USD [TICK] (poll every 1s) — press Ctrl+C to stop",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "dukascopy-go download --symbol eurusd --timeframe m1 --from 2024-01-01 --to 2024-01-02 --output /tmp/eurusd_ml.csv --features returns:log,rsi:14,ema:20",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "<H2>The request could not be satisfied.</H2> <HR noshade size=\"1px\"> Request blocked. We can't connect to the server for this app or website at this time. There might be too much traffic or a configuration error. Try again later, or c",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "pip install dukascopy-go",
-            "actually_needed": "PyPI has no dukascopy-go (404 on pypi.org/simple/dukascopy-go); used the README's pre-built Linux amd64 binary v0.2.0 from the GitHub Releases page instead",
+            "readme_said": "pip install dukascopy-go / pip install 'dukascopy-go[pandas]'",
+            "actually_needed": "installed pre-built linux_amd64 binary v0.2.0 from GitHub Releases into ~/.local/bin; PyPI returns 404 for dukascopy-go",
             "kind": "readme_wrong"
           },
           {
-            "readme_said": "Prerequisites: go 1.26+",
-            "actually_needed": "No Go toolchain present or installed (must not install one); the pre-built static binary runs with zero dependencies and no Go needed",
+            "readme_said": "go install github.com/Nosvemos/dukascopy-go/cmd/dukascopy-go@latest (go 1.26+)",
+            "actually_needed": "used release binary; box has no Go toolchain so go install cannot run here",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "download / live examples query Dukascopy API successfully",
+            "actually_needed": "Dukascopy API jetta.dukascopy.com returned 403 Forbidden (CloudFront Request blocked) for every download; live stream emitted no ticks",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show expected outputs: gold query lists XAU/USD and --version prints 0.2.0 (7a6759c).",
+          "observed": "Screenshots show gold query listing XAU/USD and version output showing dukascopy-go 0.2.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-dukascopy-go-20261031-002140-6643/report.json",
+          "trace_path": "runs/verify/verify-dukascopy-go-20261031-035648-3d4e/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-dukascopy-go-20261031-002140-6643/check-1-cmd9.judged.png",
-            "runs/verify/verify-dukascopy-go-20261031-002140-6643/check-2-cmd7.judged.png"
+            "runs/verify/verify-dukascopy-go-20261031-035648-3d4e/check-1-cmd10.judged.png",
+            "runs/verify/verify-dukascopy-go-20261031-035648-3d4e/check-2-cmd9.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.058052
+        "cost_usd": 0.098582,
+        "features": [
+          {
+            "feature": "download historical tick and bar data",
+            "status": "test_failed",
+            "smoke_tests": [
+              2
+            ],
+            "reason": "needs_account",
+            "failure": "sandbox",
+            "note": "Dukascopy API 403 Request blocked, no data"
+          },
+          {
+            "feature": "stream real-time market data",
+            "status": "test_failed",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "live banner only, zero ticks in 15s; upstream blocked"
+          },
+          {
+            "feature": "calculate quant indicators on download",
+            "status": "test_failed",
+            "smoke_tests": [
+              4
+            ],
+            "reason": "needs_account",
+            "failure": "sandbox",
+            "note": "same Dukascopy API 403, no feature output"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:11:57+08:00",
+    "computed_at": "2026-10-31T03:59:10+08:00",
     "quality": {
-      "total": 77.4,
+      "total": 72.6,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.7225,
+          "score": 0.6141,
           "weight": 40.0
         },
         "install_docs": {
@@ -255,7 +310,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 55.26
+      "value": 51.84
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -562,5 +617,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:31+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:59:10.235609+08:00"
 }

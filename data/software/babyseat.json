@@ -57,18 +57,18 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-babyseat-20261030-234646-2c6d",
+      "run_id": "verify-babyseat-20261031-035228-b1ff",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install babyseat 2>&1",
-          "purpose": "install babyseat via uv tool install babyseat"
+          "purpose": "install babyseat via uv tool"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "membrane --help 2>&1",
-        "expected_signal": "membrane CLI -- one entry point for every membrane surface."
+        "expected_signal": "membrane CLI"
       },
       "first_task": "membrane doctor 2>&1"
     },
@@ -89,10 +89,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-30T23:47:30.039627+08:00",
+    "checked_at": "2026-10-31T03:53:25.619375+08:00",
     "runs": [
       {
-        "id": "verify-babyseat-20261030-234646-2c6d",
+        "id": "verify-babyseat-20261031-035228-b1ff",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -100,20 +100,20 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-30T23:47:30.039627+08:00",
-        "tool_version": "0.7.3",
+        "checked_at": "2026-10-31T03:53:25.619375+08:00",
+        "tool_version": "0.7.4",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install babyseat 2>&1",
-            "purpose": "install babyseat via uv tool install babyseat"
+            "purpose": "install babyseat via uv tool"
           }
         ],
         "smoke_tests": [
           {
             "command": "membrane --help 2>&1",
-            "expected_signal": "membrane CLI -- one entry point for every membrane surface.",
+            "expected_signal": "membrane CLI",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "membrane CLI -- one entry point for every membrane surface.",
@@ -122,57 +122,88 @@
           },
           {
             "command": "membrane doctor 2>&1",
-            "expected_signal": "entity field: MEMBRANE_EFIELD=on on FileBackend",
+            "expected_signal": "membrane doctor",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "entity field: MEMBRANE_EFIELD=on on FileBackend; events none; entities none",
+            "observed_excerpt": "membrane doctor",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "membrane stats 2>&1",
+            "expected_signal": "seat accounting",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "seat accounting (serve-msgs store):",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "membrane stats",
-            "actually_needed": "on a fresh project membrane stats exits 1 with FileNotFoundError: .membrane/serve-msgs.json (no seat has run yet)",
-            "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "membrane state",
-            "actually_needed": "membrane state and membrane state --help both exit 2 and print the top-level usage (no state subcommand listed)",
+            "readme_said": "README example `membrane state` prints the shape of a running field",
+            "actually_needed": "subcommand absent in installed 0.7.4: prints top-level help and exits 2",
             "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show membrane --help header and doctor output with FileBackend entity field, both matching expected signals.",
+          "observed": "Screenshots show membrane --help listing commands, doctor reporting install status, and stats showing seat accounting with zero counts.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-babyseat-20261030-234646-2c6d/report.json",
+          "trace_path": "runs/verify/verify-babyseat-20261031-035228-b1ff/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-babyseat-20261030-234646-2c6d/check-1-cmd3.judged.png",
-            "runs/verify/verify-babyseat-20261030-234646-2c6d/check-2-cmd4.judged.png"
+            "runs/verify/verify-babyseat-20261031-035228-b1ff/check-1-cmd4.judged.png",
+            "runs/verify/verify-babyseat-20261031-035228-b1ff/check-2-cmd5.judged.png",
+            "runs/verify/verify-babyseat-20261031-035228-b1ff/check-3-cmd6.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.059916
+        "cost_usd": 0.079655,
+        "features": [
+          {
+            "feature": "inject relevant memories instead of full chat history",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs Ollama backend which doctor shows as DOWN; not exercised"
+          },
+          {
+            "feature": "learn from every message in real time",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs Ollama backend which doctor shows as DOWN; not exercised"
+          },
+          {
+            "feature": "recall and learn memory via MCP tools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs running seat on :11500 plus MCP client; not exercised"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-30T23:55:13+08:00",
+    "computed_at": "2026-10-31T03:53:25+08:00",
     "quality": {
-      "total": 80.3,
+      "total": 86.6,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.7225,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -213,7 +244,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 55.65
+      "value": 60.01
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -472,5 +503,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:54+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:53:25.620798+08:00"
 }

@@ -60,20 +60,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-context-guardian-20261031-004254-d5bd",
+      "run_id": "verify-context-guardian-20261031-040133-b9c4",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g context-guardian-mcp",
-          "purpose": "install via npm global"
+          "purpose": "install context-guardian via npm"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "context-guardian --version",
-        "expected_signal": "0.3.0"
+        "command": "curl -s http://localhost:9120/mcp -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"index_content\",\"arguments\":{\"content\":\"function login(user, pass) { return auth(user, pass); }\\nERROR 2024-01-01 login failed for user alice\\nconfig: {\\\"port\\\": 9120}\",\"source\":\"auth.ts\"}}}'",
+        "expected_signal": "Indexed 1 chunks from"
       },
-      "first_task": "context-guardian check"
+      "first_task": "curl -s http://localhost:9120/mcp -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"index_content\",\"arguments\":{\"content\":\"function login(user, pass) { return auth(user, pass); }\\nERROR 2024-01-01 login failed for user alice\\nconfig: {\\\"port\\\": 9"
     },
     "windows": null
   },
@@ -92,10 +92,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:44:03.240197+08:00",
+    "checked_at": "2026-10-31T04:03:12.593748+08:00",
     "runs": [
       {
-        "id": "verify-context-guardian-20261031-004254-d5bd",
+        "id": "verify-context-guardian-20261031-040133-b9c4",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -103,53 +103,26 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:44:03.240197+08:00",
+        "checked_at": "2026-10-31T04:03:12.593748+08:00",
         "tool_version": "0.3.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g context-guardian-mcp",
-            "purpose": "install via npm global"
+            "purpose": "install context-guardian via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "context-guardian --version",
-            "expected_signal": "0.3.0",
+            "command": "curl -s http://localhost:9120/mcp -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"index_content\",\"arguments\":{\"content\":\"function login(user, pass) { return auth(user, pass); }\\nERROR 2024-01-01 login failed for user alice\\nconfig: {\\\"port\\\": 9120}\",\"source\":\"auth.ts\"}}}'",
+            "expected_signal": "Indexed 1 chunks from",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "0.3.0",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "context-guardian --help",
-            "expected_signal": "Start the Context Guardian proxy",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "start [options] Start the Context Guardian proxy",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "context-guardian check",
-            "expected_signal": "Ollama: NOT FOUND",
-            "exit_code": 1,
-            "passed": true,
-            "observed_excerpt": "Ollama: NOT FOUND at http://localhost:11434",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "python3 -c \"import json,urllib.request; d=json.dumps({'jsonrpc':'2.0','id':1,'method':'tools/list','params':{}}).encode(); r=urllib.request.urlopen(urllib.request.Request('http://localhost:9120/mcp',data=d,headers={'Content-Type':'application/json','Accept':'application/json, text/event-stream'})); b=r.read().decode(); print('LEN',len(b)); print('HAS_index_content', 'index_content' in b); print(b[:1500])\"",
-            "expected_signal": "index_content",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "HAS_index_content True",
+            "observed_excerpt": "{\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Indexed 1 chunks from \\\"auth.ts\\\". Labels: error(1). Store now has 1 total chunks. Use log_search, grep, file_read, or summary to query.\"}]}}",
             "setup": [
               {
-                "command": "context-guardian mcp",
+                "command": "context-guardian mcp --port 9120",
                 "background": true,
                 "port": 9120
               }
@@ -157,21 +130,36 @@
             "offline": true
           },
           {
-            "command": "python3 /tmp/mcptest.py",
-            "expected_signal": "Indexed 1 chunks",
+            "command": "curl -s http://localhost:9120/mcp -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":{\"name\":\"grep\",\"arguments\":{\"pattern\":\"login\"}}}'",
+            "expected_signal": "function login",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Indexed 1 chunks from \\\"test.log\\\". Labels: other(1). Store now has 1 total chunks. Use log_search, grep, file_read, or summary to query.\"}]}}",
+            "observed_excerpt": "{\"jsonrpc\":\"2.0\",\"id\":3,\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"[1] auth.ts:1\\n> 1: function login(user, pass) { return auth(user, pass); }\\n 2: ERROR 2024-01-01 login failed for user alice\\n 3: config: {\\\"port\\\": 9120}\\n\\n[2] auth.ts:2\\n 1: function login(user, pass) { return auth(user, pass);…",
             "setup": [
               {
-                "command": "context-guardian mcp",
+                "command": "context-guardian mcp --port 9120",
                 "background": true,
                 "port": 9120
               },
               {
-                "command": "cat > /tmp/mcptest.py <<'PY'\nimport json, urllib.request\ndef call(method, params):\n    d = json.dumps({\"jsonrpc\":\"2.0\",\"id\":1,\"method\":method,\"params\":params}).encode()\n    req = urllib.request.Request('http://localhost:9120/mcp', data=d, headers={'Content-Type':'application/json','Accept':'application/json, text/event-stream'})\n    return urllib.request.urlopen(req).read().decode()\nprint(call(\"tools/call\", {\"name\":\"index_content\",\"arguments\":{\"content\":\"line1 hello world\\nline2 test error foo\",\"source\":\"test.log\"}})[:3000])\nprint(\"---SECOND---\")\nprint(call(\"tools/call\", {\"name\":\"grep\",\"arguments\":{\"pattern\":\"hello\"}})[:3000])\nPY",
+                "command": "curl -s http://localhost:9120/mcp -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"index_content\",\"arguments\":{\"content\":\"function login(user, pass) { return auth(user, pass); }\\nERROR 2024-01-01 login failed for user alice\\nconfig: {\\\"port\\\": 9120}\",\"source\":\"auth.ts\"}}}'",
                 "background": false,
                 "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://localhost:9119/health; echo; curl -s http://localhost:9119/v1/models -H 'Authorization: Bearer test'",
+            "expected_signal": "\"status\":\"ok\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"ok\",\"version\":\"0.3.0\",\"intercepted\":0,\"passedThrough\":0,\"tokensSaved\":0,\"storeSize\":0}",
+            "setup": [
+              {
+                "command": "context-guardian start --port 9119",
+                "background": true,
+                "port": 9119
               }
             ],
             "offline": true
@@ -179,29 +167,64 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "Create .context-guardian.json with context-guardian init",
-            "actually_needed": "init creates guardian.config.json (message: Created guardian.config.json)",
+            "readme_said": "Create `.context-guardian.json` with `context-guardian init`",
+            "actually_needed": "init creates guardian.config.json in cwd and prints to stderr",
             "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "Requirements: Ollama running locally with qwen3.5:4b and nomic-embed-text",
+            "actually_needed": "index_content and grep work without Ollama via heuristic classification and zero-vector embedding fallback; proxy warns Ollama not detected and uses fallback behavior",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show Ollama NOT FOUND warning, MCP tools list containing index_content, and version 0.3.0.",
+          "observed": "Screenshots show index_content confirming 1 chunk, grep returning function login matches, and health endpoint returning status ok.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-context-guardian-20261031-004254-d5bd/report.json",
+          "trace_path": "runs/verify/verify-context-guardian-20261031-040133-b9c4/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-context-guardian-20261031-004254-d5bd/check-1-cmd5.judged.png",
-            "runs/verify/verify-context-guardian-20261031-004254-d5bd/check-2-cmd8.judged.png",
-            "runs/verify/verify-context-guardian-20261031-004254-d5bd/check-3-cmd2.judged.png"
+            "runs/verify/verify-context-guardian-20261031-040133-b9c4/check-1-cmd7.judged.png",
+            "runs/verify/verify-context-guardian-20261031-040133-b9c4/check-2-cmd8.judged.png",
+            "runs/verify/verify-context-guardian-20261031-040133-b9c4/check-3-cmd10.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.040697
+        "cost_usd": 0.094801,
+        "features": [
+          {
+            "feature": "index code, logs and config locally",
+            "status": "checked",
+            "smoke_tests": [
+              0
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "give coding agents search tools over index",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "proxy OpenAI/Anthropic agent requests locally",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows health ok but zero intercepted requests and empty models list."
+          }
+        ]
       }
     ]
   },
@@ -531,5 +554,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T04:03:12.594928+08:00"
 }

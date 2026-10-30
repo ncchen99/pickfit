@@ -77,18 +77,18 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-lox-20261031-000752-0cbe",
+      "run_id": "verify-lox-20261031-035302-dc21",
       "method": "binary",
       "steps": [
         {
-          "command": "mkdir -p ~/.local/bin && curl -fsSL -o ~/.local/bin/lox https://github.com/discostu105/lox/releases/download/v0.27.0/lox-linux-x86_64 && chmod +x ~/.local/bin/lox && curl -fsSL -o /tmp/lox.sha256 https://github.com/discostu105/lox/releases/download/v0.27.0/lox-linux-x86_64.sha256 && (cd ~/.local/bin && sha256sum -c /tmp/lox.sha256 || cat /tmp/lox.sha256; sha256sum lox)",
-          "purpose": "Download prebuilt linux x86_64 binary to ~/.local/bin/lox"
+          "command": "mkdir -p ~/.local/bin && curl -fsSL -o ~/.local/bin/lox https://github.com/discostu105/lox/releases/download/v0.29.0/lox-linux-x86_64 && chmod +x ~/.local/bin/lox && curl -fsSL https://github.com/discostu105/lox/releases/download/v0.29.0/lox-linux-x86_64.sha256 | cat && sha256sum ~/.local/bin/lox",
+          "purpose": "Download lox Linux binary to PATH"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "lox --version",
-        "expected_signal": "lox 0.27.0"
+        "expected_signal": "lox 0.29.0"
       },
       "first_task": "lox completions bash"
     },
@@ -122,10 +122,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:08:38.572877+08:00",
+    "checked_at": "2026-10-31T03:54:04.580174+08:00",
     "runs": [
       {
-        "id": "verify-lox-20261031-000752-0cbe",
+        "id": "verify-lox-20261031-035302-dc21",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -133,32 +133,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:08:38.572877+08:00",
-        "tool_version": "0.27.0",
+        "checked_at": "2026-10-31T03:54:04.580174+08:00",
+        "tool_version": "0.29.0",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "mkdir -p ~/.local/bin && curl -fsSL -o ~/.local/bin/lox https://github.com/discostu105/lox/releases/download/v0.27.0/lox-linux-x86_64 && chmod +x ~/.local/bin/lox && curl -fsSL -o /tmp/lox.sha256 https://github.com/discostu105/lox/releases/download/v0.27.0/lox-linux-x86_64.sha256 && (cd ~/.local/bin && sha256sum -c /tmp/lox.sha256 || cat /tmp/lox.sha256; sha256sum lox)",
-            "purpose": "Download prebuilt linux x86_64 binary to ~/.local/bin/lox"
+            "command": "mkdir -p ~/.local/bin && curl -fsSL -o ~/.local/bin/lox https://github.com/discostu105/lox/releases/download/v0.29.0/lox-linux-x86_64 && chmod +x ~/.local/bin/lox && curl -fsSL https://github.com/discostu105/lox/releases/download/v0.29.0/lox-linux-x86_64.sha256 | cat && sha256sum ~/.local/bin/lox",
+            "purpose": "Download lox Linux binary to PATH"
           }
         ],
         "smoke_tests": [
           {
             "command": "lox --version",
-            "expected_signal": "lox 0.27.0",
+            "expected_signal": "lox 0.29.0",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "lox 0.27.0",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "lox --help",
-            "expected_signal": "Loxone Miniserver CLI",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Loxone Miniserver CLI",
+            "observed_excerpt": "lox 0.29.0",
             "setup": [],
             "offline": true
           },
@@ -172,64 +163,98 @@
             "offline": true
           },
           {
-            "command": "lox schema -o json | python3 -c \"import json,sys; d=json.load(sys.stdin); print(type(d).__name__, len(d) if hasattr(d,'__len__') else ''); print(str(d)[:500])\"",
-            "expected_signal": "commands",
+            "command": "lox mcp tools",
+            "expected_signal": "24 tools",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "{'commands': [{'description': 'Control analog/virtual inputs: set | pulse', 'name': 'input', 'subcommands': [{'args': [{'description': 'Control name or UUID', 'name': 'name_or_uuid'}, {'description': 'Value to send (numeric or text)', 'name': 'value'}, {'long': '--room', 'name': 'room', 'short': '-…",
+            "observed_excerpt": "24 tools",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "cargo build --release / git clone https://github.com/discostu105/lox (both need Rust 1.91+ toolchain)",
-            "actually_needed": "Downloaded prebuilt lox-linux-x86_64 binary from GitHub releases v0.27.0 to ~/.local/bin/lox and chmod +x; verified sha256 hash matches (9f4e84f315aaa3f778c33ef61abf8eaf24fb067a1ee7104555f11dc2e1f74925)",
+            "readme_said": "cargo build --release or brew install discostu105/lox/lox",
+            "actually_needed": "downloaded prebuilt lox-linux-x86_64 v0.29.0 from GitHub releases to ~/.local/bin/lox and verified sha256 matched",
             "kind": "sandbox"
           },
           {
-            "readme_said": "Release provides lox-linux-x86_64 plus .sha256 file",
-            "actually_needed": "sha256 file names the asset lox-linux-x86_64 while installed file is renamed to lox, so sha256sum -c warns about missing file; compared hashes manually and they match",
-            "kind": "note"
+            "readme_said": "lox config init ~/loxone-config as one-time setup",
+            "actually_needed": "lox setup set --host/--user/--pass (or LOX_PASS) is required before lox config init",
+            "kind": "readme_wrong"
           },
           {
-            "readme_said": "lox tui --demo (first README example, needs interactive TTY)",
-            "actually_needed": "Skipped interactive full-screen TUI and smoke-tested the second README example 'lox completions bash' plus offline 'lox schema -o json'",
+            "readme_said": "lox tui --demo try it without a Miniserver",
+            "actually_needed": "lox tui --demo aborts when stdin/stdout are not a TTY",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show bash completions with complete -F _lox, schema JSON containing commands, and version lox 0.27.0.",
+          "observed": "All three checks show expected outputs: bash completion script, 24-tool MCP list, and version lox 0.29.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-lox-20261031-000752-0cbe/report.json",
+          "trace_path": "runs/verify/verify-lox-20261031-035302-dc21/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-lox-20261031-000752-0cbe/check-1-cmd5.judged.png",
-            "runs/verify/verify-lox-20261031-000752-0cbe/check-2-cmd6.judged.png",
-            "runs/verify/verify-lox-20261031-000752-0cbe/check-3-cmd3.judged.png"
+            "runs/verify/verify-lox-20261031-035302-dc21/check-1-cmd4.judged.png",
+            "runs/verify/verify-lox-20261031-035302-dc21/check-2-cmd6.judged.png",
+            "runs/verify/verify-lox-20261031-035302-dc21/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.04484
+        "cost_usd": 0.068371,
+        "features": [
+          {
+            "feature": "Control lights, blinds and thermostats via CLI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs Miniserver connection; no dummy host invented"
+          },
+          {
+            "feature": "Monitor house with live terminal UI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "lox tui --demo errors: needs interactive terminal (stdin/stdout must be TTY)"
+          },
+          {
+            "feature": "Version Miniserver config in git repository",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "lox config init errors without setup/host; pull/log/diff need Miniserver"
+          },
+          {
+            "feature": "Expose smart home to AI agents via MCP",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists 24 tool names/descriptions without showing the MCP server running or serving an agent."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:11:57+08:00",
+    "computed_at": "2026-10-31T03:54:04+08:00",
     "quality": {
-      "total": 79.0,
+      "total": 85.4,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.7225,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -270,7 +295,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 41.87
+      "value": 45.26
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -617,5 +642,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:29+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:54:04.581894+08:00"
 }

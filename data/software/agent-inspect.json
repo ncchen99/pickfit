@@ -58,28 +58,24 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-agent-inspect-20261031-001627-1e9b",
+      "run_id": "verify-agent-inspect-20261031-035119-ec99",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g agent-inspect && agent-inspect --version && which agent-inspect",
-          "purpose": "Install agent-inspect globally via npm"
+          "command": "npm install -g agent-inspect 2>&1",
+          "purpose": "global install agent-inspect via npm"
         },
         {
-          "command": "agent-inspect init --yes",
-          "purpose": "Initialize demo project with init --yes"
-        },
-        {
-          "command": "npm install agent-inspect && node examples/agent-inspect-demo.mjs",
-          "purpose": "Install locally and generate trace with demo script"
+          "command": "npm init -y 2>&1 && npm install agent-inspect 2>&1",
+          "purpose": "local npm install so demo import resolves"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "agent-inspect --version",
+        "command": "agent-inspect --version 2>&1",
         "expected_signal": "6.31.30"
       },
-      "first_task": "agent-inspect list --dir .agent-inspect"
+      "first_task": "f=(.agent-inspect/run_*.jsonl); RUN=${f[0]##*/}; RUN=${RUN%.jsonl}; echo \"RUN=$RUN\" && agent-inspect view \"$RUN\" --dir .agent-inspect --summary"
     },
     "windows": null
   },
@@ -98,10 +94,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:17:54.887001+08:00",
+    "checked_at": "2026-10-31T03:52:27.168089+08:00",
     "runs": [
       {
-        "id": "verify-agent-inspect-20261031-001627-1e9b",
+        "id": "verify-agent-inspect-20261031-035119-ec99",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -109,27 +105,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:17:54.887001+08:00",
+        "checked_at": "2026-10-31T03:52:27.168089+08:00",
         "tool_version": "6.31.30",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g agent-inspect && agent-inspect --version && which agent-inspect",
-            "purpose": "Install agent-inspect globally via npm"
+            "command": "npm install -g agent-inspect 2>&1",
+            "purpose": "global install agent-inspect via npm"
           },
           {
-            "command": "agent-inspect init --yes",
-            "purpose": "Initialize demo project with init --yes"
-          },
-          {
-            "command": "npm install agent-inspect && node examples/agent-inspect-demo.mjs",
-            "purpose": "Install locally and generate trace with demo script"
+            "command": "npm init -y 2>&1 && npm install agent-inspect 2>&1",
+            "purpose": "local npm install so demo import resolves"
           }
         ],
         "smoke_tests": [
           {
-            "command": "agent-inspect --version",
+            "command": "agent-inspect --version 2>&1",
             "expected_signal": "6.31.30",
             "exit_code": 0,
             "passed": true,
@@ -138,81 +130,120 @@
             "offline": true
           },
           {
-            "command": "agent-inspect --help",
-            "expected_signal": "Start localhost read-only viewer",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "viewer [options] Start localhost read-only viewer (traces, suite, or workspace) (v5.3+)",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "agent-inspect list --dir .agent-inspect",
-            "expected_signal": "Recent AgentInspect Runs",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Recent AgentInspect Runs",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "RUN_ID=$(basename .agent-inspect/run_*.jsonl .jsonl) && agent-inspect view $RUN_ID --dir .agent-inspect --summary",
+            "command": "f=(.agent-inspect/run_*.jsonl); RUN=${f[0]##*/}; RUN=${RUN%.jsonl}; echo \"RUN=$RUN\" && agent-inspect view \"$RUN\" --dir .agent-inspect --summary",
             "expected_signal": "Run Summary",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "Run Summary",
-            "setup": [],
+            "setup": [
+              {
+                "command": "agent-inspect init --yes && node examples/agent-inspect-demo.mjs && agent-inspect list --dir .agent-inspect",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           },
           {
-            "command": "RUN_ID=$(basename .agent-inspect/run_*.jsonl .jsonl) && agent-inspect check $RUN_ID --dir .agent-inspect --preset trajectory",
+            "command": "f=(.agent-inspect/run_*.jsonl); RUN=${f[0]##*/}; RUN=${RUN%.jsonl}; echo \"RUN=$RUN\" && agent-inspect check \"$RUN\" --dir .agent-inspect --preset trajectory",
             "expected_signal": "Trajectory: PASS",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "Trajectory: PASS",
-            "setup": [],
+            "setup": [
+              {
+                "command": "agent-inspect init --yes && node examples/agent-inspect-demo.mjs && agent-inspect list --dir .agent-inspect",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "f=(.agent-inspect/run_*.jsonl); RUN=${f[0]##*/}; RUN=${RUN%.jsonl}; echo \"RUN=$RUN\" && agent-inspect bundle \"$RUN\" --dir .agent-inspect --profile share --out ./evidence && agent-inspect bundle verify ./evidence",
+            "expected_signal": "Evidence verify: pass",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Evidence verify: pass (11 file(s) checked)",
+            "setup": [
+              {
+                "command": "agent-inspect init --yes && node examples/agent-inspect-demo.mjs && agent-inspect list --dir .agent-inspect",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "npm install agent-inspect, init, then node examples/agent-inspect-demo.mjs",
-            "actually_needed": "Also run local `npm install agent-inspect` in the project before `node examples/agent-inspect-demo.mjs`, otherwise node fails with ERR_MODULE_NOT_FOUND for 'agent-inspect' even when the CLI is installed globally.",
-            "kind": "note"
+            "readme_said": "npm install agent-inspect then npx agent-inspect init --yes then node examples/agent-inspect-demo.mjs",
+            "actually_needed": "ran npm init -y && npm install agent-inspect locally before node examples/agent-inspect-demo.mjs; global install alone leaves Cannot find package 'agent-inspect' (init prints No dependencies were installed)",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show list output with Recent AgentInspect Runs, detailed Run Summary for DemoAgent.run, and version 6.31.30, all with exit code 0.",
+          "observed": "Screenshots show version 6.31.30, Run Summary details, and Trajectory PASS check.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-agent-inspect-20261031-001627-1e9b/report.json",
+          "trace_path": "runs/verify/verify-agent-inspect-20261031-035119-ec99/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-agent-inspect-20261031-001627-1e9b/check-1-cmd12.judged.png",
-            "runs/verify/verify-agent-inspect-20261031-001627-1e9b/check-2-cmd10.judged.png",
-            "runs/verify/verify-agent-inspect-20261031-001627-1e9b/check-3-cmd9.judged.png"
+            "runs/verify/verify-agent-inspect-20261031-035119-ec99/check-1-cmd2.judged.png",
+            "runs/verify/verify-agent-inspect-20261031-035119-ec99/check-2-cmd8.judged.png",
+            "runs/verify/verify-agent-inspect-20261031-035119-ec99/check-3-cmd9.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.06394
+        "cost_usd": 0.065546,
+        "features": [
+          {
+            "feature": "inspect agent execution trees locally",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Summary shows 0 total steps with 0 LLM/tool/logic steps, so no nested steps or calls are displayed."
+          },
+          {
+            "feature": "run deterministic trajectory checks in CI",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "create shareable offline evidence bundles",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:11:57+08:00",
+    "computed_at": "2026-10-31T03:52:27+08:00",
     "quality": {
-      "total": 83.5,
+      "total": 89.2,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.7225,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -255,7 +286,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 9.27
+      "value": 9.9
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -522,5 +553,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:13+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:52:27.169310+08:00"
 }

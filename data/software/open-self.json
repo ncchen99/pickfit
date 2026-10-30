@@ -77,12 +77,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-open-self-20261031-021829-6a3f",
+      "run_id": "verify-open-self-20261031-035032-15c5",
       "method": "npm",
       "steps": [
         {
-          "command": "node --version && npm --version && npm install -g openself",
-          "purpose": "Install openself globally via npm"
+          "command": "npm install -g openself",
+          "purpose": "Install openself via npm"
         }
       ],
       "manual_steps": [],
@@ -90,7 +90,7 @@
         "command": "openself --version",
         "expected_signal": "1.0.1"
       },
-      "first_task": "openself memory stats"
+      "first_task": "rm -rf /tmp/osvault && openself memory add --type decision --scope project/openself --content \"Use SQLite as the local source of truth\" --source docs/architecture.md --tags architecture,database --data-dir /tmp/osvault && openself memory search --query \"Which database did we choose?\" --scope project"
     },
     "windows": {
       "basis": "readme_claim",
@@ -122,10 +122,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:21:08.831114+08:00",
+    "checked_at": "2026-10-31T03:53:34.238834+08:00",
     "runs": [
       {
-        "id": "verify-open-self-20261031-021829-6a3f",
+        "id": "verify-open-self-20261031-035032-15c5",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -133,14 +133,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:21:08.831114+08:00",
+        "checked_at": "2026-10-31T03:53:34.238834+08:00",
         "tool_version": "1.0.1",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "node --version && npm --version && npm install -g openself",
-            "purpose": "Install openself globally via npm"
+            "command": "npm install -g openself",
+            "purpose": "Install openself via npm"
           }
         ],
         "smoke_tests": [
@@ -154,32 +154,23 @@
             "offline": true
           },
           {
-            "command": "openself memory stats",
-            "expected_signal": "\"total\": 0",
+            "command": "rm -rf /tmp/osvault && openself memory add --type decision --scope project/openself --content \"Use SQLite as the local source of truth\" --source docs/architecture.md --tags architecture,database --data-dir /tmp/osvault && openself memory search --query \"Which database did we choose?\" --scope project/openself --data-dir /tmp/osvault && openself memory stats --data-dir /tmp/osvault",
+            "expected_signal": "Remembered decision",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "\"total\": 0,",
+            "observed_excerpt": "✓ Remembered decision 49e409c8-9809-4b82-bb7f-0555449aecd7",
             "setup": [],
             "offline": true
           },
           {
-            "command": "rm -rf ./smoke-data && openself memory add --data-dir ./smoke-data --type decision --scope project/openself --content \"Use SQLite as the local source of truth\" --source docs/architecture.md --tags architecture,database",
-            "expected_signal": "Use SQLite as the local source of truth",
+            "command": "openself memory import --file /tmp/notes.md --scope project/atlas --data-dir /tmp/osvault && openself memory search --query \"Atlas database\" --scope project/atlas --data-dir /tmp/osvault",
+            "expected_signal": "\"created\": 2",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "\"content\": \"Use SQLite as the local source of truth\",",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "openself memory search --data-dir ./smoke-data --query \"Which database did we choose?\" --scope project/openself",
-            "expected_signal": "Use SQLite as the local source of truth",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "\"content\": \"Use SQLite as the local source of truth\",",
+            "observed_excerpt": "\"created\": 2,",
             "setup": [
               {
-                "command": "rm -rf ./smoke-data && openself memory add --data-dir ./smoke-data --type decision --scope project/openself --content \"Use SQLite as the local source of truth\" --source docs/architecture.md --tags architecture,database",
+                "command": "cat > /tmp/notes.md <<'EOF'\n# Atlas Decisions\n\n## Database\nUse SQLite as the local source of truth for Atlas.\n\n## Editor\nPreferred code editor is Zed.\nEOF\ncat /tmp/notes.md",
                 "background": false,
                 "port": null
               }
@@ -187,65 +178,91 @@
             "offline": true
           },
           {
-            "command": "openself memory stats --data-dir ./smoke-data",
-            "expected_signal": "\"total\": 1",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "\"total\": 1,",
-            "setup": [
-              {
-                "command": "rm -rf ./smoke-data && openself memory add --data-dir ./smoke-data --type decision --scope project/openself --content \"Use SQLite as the local source of truth\" --source docs/architecture.md --tags architecture,database",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
+            "command": "openself context \"Which database did we choose?\" --scope project/openself --explain --data-dir /tmp/osvault",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "error: unknown command 'context'",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "openself demo --data-dir ./demo-data, openself init --data-dir ~/.openself, openself doctor, openself context ... --explain",
-            "actually_needed": "Use 'openself memory add/search/stats/conflicts' with '--data-dir ./smoke-data'; 'demo', 'init', 'doctor' and 'context' are not present in the published 1.0.1 CLI ('error: unknown command').",
+            "readme_said": "openself init --data-dir ~/.openself and openself doctor",
+            "actually_needed": "no init needed; `openself memory add --data-dir /tmp/osvault` auto-creates vault; `openself init` and `openself doctor` do not exist in 1.0.1",
             "kind": "readme_wrong"
           },
           {
-            "readme_said": "To pin this release, use openself@1.1.0",
-            "actually_needed": "npm install -g openself installs 1.0.1 (latest tag); 1.1.0 is not published on npm (versions are 0.7.0, 1.0.0-rc.2, 1.0.0, 1.0.1).",
+            "readme_said": "1.1.0 stable, openself context --explain, openself demo --data-dir ./demo-data",
+            "actually_needed": "npm latest is 1.0.1 (only 0.7.0, 1.0.0-rc.2, 1.0.0, 1.0.1 published); `openself context --explain` and `openself demo` do not exist (unknown command)",
             "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three screenshots show exit 0 with stats total 0, remembered decision with SQLite content, and version 1.0.1.",
+          "observed": "Screenshots show memory add/search/stats succeeding, markdown import creating 2 entries with search hit, and version 1.0.1 printing.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-open-self-20261031-021829-6a3f/report.json",
+          "trace_path": "runs/verify/verify-open-self-20261031-035032-15c5/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-open-self-20261031-021829-6a3f/check-1-cmd4.judged.png",
-            "runs/verify/verify-open-self-20261031-021829-6a3f/check-2-cmd9.judged.png",
-            "runs/verify/verify-open-self-20261031-021829-6a3f/check-3-cmd2.judged.png"
+            "runs/verify/verify-open-self-20261031-035032-15c5/check-1-cmd7.judged.png",
+            "runs/verify/verify-open-self-20261031-035032-15c5/check-2-cmd10.judged.png",
+            "runs/verify/verify-open-self-20261031-035032-15c5/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.059203
+        "cost_usd": 0.07774,
+        "features": [
+          {
+            "feature": "store decisions, preferences and facts",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "compile bounded explainable context packages",
+            "status": "test_failed",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": "tool",
+            "note": "no context command in npm 1.0.1; README describes newer CLI"
+          },
+          {
+            "feature": "import documents and chat exports",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:43:57+08:00",
+    "computed_at": "2026-10-31T03:53:34+08:00",
     "quality": {
-      "total": 76.4,
+      "total": 82.7,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.7225,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -287,8 +304,8 @@
       ]
     },
     "treasure": {
-      "is_treasure": false,
-      "value": 44.01
+      "is_treasure": true,
+      "value": 47.64
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -611,5 +628,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:47:37+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:53:34.240181+08:00"
 }

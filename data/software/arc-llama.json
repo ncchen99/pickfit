@@ -59,7 +59,7 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-arc-llama-20261031-021822-f769",
+      "run_id": "verify-arc-llama-20261031-035013-fe8d",
       "method": "uv",
       "steps": [
         {
@@ -67,8 +67,8 @@
           "purpose": "Install arc-llama via uv tool"
         },
         {
-          "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/stories260K.gguf && arc-llama install-runtime 2>&1",
-          "purpose": "Download tiny model and install Vulkan runtime"
+          "command": "arc-llama install-runtime 2>&1",
+          "purpose": "Install portable Vulkan llama-server runtime"
         }
       ],
       "manual_steps": [],
@@ -110,10 +110,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:19:57.304639+08:00",
+    "checked_at": "2026-10-31T03:51:56.176131+08:00",
     "runs": [
       {
-        "id": "verify-arc-llama-20261031-021822-f769",
+        "id": "verify-arc-llama-20261031-035013-fe8d",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -121,7 +121,7 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:19:57.304639+08:00",
+        "checked_at": "2026-10-31T03:51:56.176131+08:00",
         "tool_version": "1.0.0",
         "install_method": "uv",
         "replayed": true,
@@ -131,8 +131,8 @@
             "purpose": "Install arc-llama via uv tool"
           },
           {
-            "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/stories260K.gguf && arc-llama install-runtime 2>&1",
-            "purpose": "Download tiny model and install Vulkan runtime"
+            "command": "arc-llama install-runtime 2>&1",
+            "purpose": "Install portable Vulkan llama-server runtime"
           }
         ],
         "smoke_tests": [
@@ -146,17 +146,17 @@
             "offline": true
           },
           {
-            "command": "arc-llama --help 2>&1",
-            "expected_signal": "Usage: arc-llama",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Usage: arc-llama [OPTIONS] COMMAND [ARGS]...",
+            "command": "arc-llama init 2>&1",
+            "expected_signal": "No Intel GPUs detected.",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Use --force to overwrite, or edit it directly.",
             "setup": [],
-            "offline": true
+            "offline": null
           },
           {
             "command": "arc-llama doctor 2>&1",
-            "expected_signal": "no Intel GPUs detected",
+            "expected_signal": "no Intel GPUs detected via sysfs",
             "exit_code": 2,
             "passed": true,
             "observed_excerpt": "no Intel GPUs detected via sysfs",
@@ -164,7 +164,16 @@
             "offline": true
           },
           {
-            "command": "curl -s http://127.0.0.1:11437/v1/models",
+            "command": "arc-llama gpus 2>&1",
+            "expected_signal": "No Intel GPUs detected.",
+            "exit_code": 2,
+            "passed": true,
+            "observed_excerpt": "No Intel GPUs detected.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:11437/v1/models 2>&1",
             "expected_signal": "\"object\":\"list\"",
             "exit_code": 0,
             "passed": true,
@@ -179,11 +188,11 @@
             "offline": true
           },
           {
-            "command": "curl -s http://127.0.0.1:11437/health",
-            "expected_signal": "\"status\":\"ok\"",
+            "command": "curl -s http://127.0.0.1:11437/ 2>&1",
+            "expected_signal": "Open WebUI",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "{\"status\":\"ok\",\"uptime_seconds\":3.18,\"loaded_models\":[],\"loaded_model_count\":0}",
+            "observed_excerpt": "<button role=\"tab\" id=\"tab-openwebui\" class=\"frontend-tab\" aria-controls=\"panel-openwebui\" aria-selected=\"true\">Open WebUI</button>",
             "setup": [
               {
                 "command": "arc-llama serve --port 11437",
@@ -196,43 +205,86 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "arc-llama init detects GPUs and writes config, then doctor/gpus/add/serve follow",
-            "actually_needed": "On a box with no Intel GPU, `arc-llama init`, `arc-llama doctor` and `arc-llama gpus` report `No Intel GPUs detected` / detailed diagnosis and exit 2; `arc-llama add` refuses with `No GPUs in config`. `arc-llama install-runtime` and `arc-llama serve` still work.",
+            "readme_said": "pip install arc-llama",
+            "actually_needed": "uv tool install arc-llama (isolated install avoids PEP 668 / read-only system)",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "arc-llama init writes starter config and registers GPUs",
+            "actually_needed": "On a box with no Intel GPU, init/doctor/gpus exit 2 with 'No Intel GPUs detected' and no config is written; add/scan then refuse with 'No GPUs in config'",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show version 1.0.0, full help output, and doctor correctly reporting no Intel GPUs with diagnostic FAIL gates.",
+          "observed": "Screenshots show version 1.0.0 and doctor and gpus correctly reporting no Intel GPUs with expected exit codes.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-arc-llama-20261031-021822-f769/report.json",
+          "trace_path": "runs/verify/verify-arc-llama-20261031-035013-fe8d/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-arc-llama-20261031-021822-f769/check-1-cmd2.judged.png",
-            "runs/verify/verify-arc-llama-20261031-021822-f769/check-2-cmd3.judged.png",
-            "runs/verify/verify-arc-llama-20261031-021822-f769/check-3-cmd5.judged.png"
+            "runs/verify/verify-arc-llama-20261031-035013-fe8d/check-1-cmd2.judged.png",
+            "runs/verify/verify-arc-llama-20261031-035013-fe8d/check-2-cmd4.judged.png",
+            "runs/verify/verify-arc-llama-20261031-035013-fe8d/check-3-cmd5.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.119143
+        "cost_usd": 0.10847,
+        "features": [
+          {
+            "feature": "Detect Intel Arc GPUs automatically",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output reports 'No Intel GPUs detected' and FAIL gates, so no GPU detection is demonstrated."
+          },
+          {
+            "feature": "Serve models via OpenAI-compatible API",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Discover and download GGUF models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "arc-llama add/scan refused without GPU in config, so HF download+registration untestable here"
+          },
+          {
+            "feature": "Manage models via built-in web UI",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:43:57+08:00",
+    "computed_at": "2026-10-31T03:51:56+08:00",
     "quality": {
-      "total": 80.4,
+      "total": 87.2,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.765,
+          "score": 0.9,
           "weight": 40.0
         },
         "install_docs": {
@@ -275,7 +327,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 42.37
+      "value": 45.95
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -558,5 +610,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:48:25+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:51:56.177990+08:00"
 }

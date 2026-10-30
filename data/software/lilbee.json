@@ -66,20 +66,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-lilbee-20261031-004231-cab7",
+      "run_id": "verify-lilbee-20261031-035910-e438",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g lilbee 2>&1",
-          "purpose": "install lilbee via npm"
+          "purpose": "npm install -g lilbee"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "lilbee version",
-        "expected_signal": "lilbee 0.6.90b691"
+        "command": "which lilbee && lilbee --version 2>&1",
+        "expected_signal": "0.6.90b691"
       },
-      "first_task": "lilbee version"
+      "first_task": "lilbee self-check 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -114,10 +114,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:45:57.456737+08:00",
+    "checked_at": "2026-10-31T04:04:05.431473+08:00",
     "runs": [
       {
-        "id": "verify-lilbee-20261031-004231-cab7",
+        "id": "verify-lilbee-20261031-035910-e438",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -125,79 +125,153 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:45:57.456737+08:00",
+        "checked_at": "2026-10-31T04:04:05.431473+08:00",
         "tool_version": "0.6.90b691",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g lilbee 2>&1",
-            "purpose": "install lilbee via npm"
+            "purpose": "npm install -g lilbee"
           }
         ],
         "smoke_tests": [
           {
-            "command": "lilbee version",
-            "expected_signal": "lilbee 0.6.90b691",
+            "command": "which lilbee && lilbee --version 2>&1",
+            "expected_signal": "0.6.90b691",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "lilbee 0.6.90b691",
+            "observed_excerpt": "lilbee: downloading lilbee-linux-x86_64 (398MB) from tobocop2/lilbee@v0.6.90b691. One-time per release; cached after that.",
             "setup": [],
             "offline": false
           },
           {
-            "command": "lilbee self-check",
+            "command": "lilbee self-check 2>&1",
             "expected_signal": "SELF-CHECK PASSED",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "SELF-CHECK PASSED",
             "setup": [],
             "offline": false
+          },
+          {
+            "command": "lilbee model list 2>&1",
+            "expected_signal": "No models installed.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No models installed.",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "lilbee --global add /tmp/lilbee-demo/bees.txt 2>&1",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Error: Ingest needs an embedding model. None is configured: pull one and set embedding_model.",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/lilbee-demo && cat > /tmp/lilbee-demo/bees.txt <<'EOF'\nLilbee is a small local AI bee that loves honey.\nLilbee stores honey in the blue hive behind the garden.\nThe blue hive holds 42 jars of honey.\nEOF\ncat /tmp/lilbee-demo/bees.txt",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "lilbee --global model pull nomic-ai/nomic-embed-text-v1.5-GGUF 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "lilbee --global model pull Qwen/Qwen3-0.6B-GGUF 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "npm install -g lilbee",
-            "actually_needed": "first lilbee invocation downloads and verifies the matching standalone binary (~478 MB Linux) into ~/.cache/lilbee before any command runs",
+            "readme_said": "npm install -g lilbee then lilbee self-check",
+            "actually_needed": "first lilbee invocation downloads ~398MB standalone binary to ~/.cache/lilbee-npm and then runs",
             "kind": "tool_handled"
           },
           {
-            "readme_said": "lilbee self-check (~90 MB download)",
-            "actually_needed": "self-check downloads Qwen3-0.6B-Q8_0.gguf chat model and nomic-embed-text-v1.5 embedding model and runs inference plus embedding locally",
-            "kind": "tool_handled"
+            "readme_said": "lilbee add files then ask",
+            "actually_needed": "after pulling models, run use-embedder to set embedding_model before add; chat model still unconfigured so ingest/ask needs more setup",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show expected outputs: self-check ends with SELF-CHECK PASSED and version prints lilbee 0.6.90b691.",
+          "observed": "Screenshots show lilbee version 0.6.90b691, SELF-CHECK PASSED, and No models installed as expected.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-lilbee-20261031-004231-cab7/report.json",
+          "trace_path": "runs/verify/verify-lilbee-20261031-035910-e438/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-lilbee-20261031-004231-cab7/check-1-cmd4.judged.png",
-            "runs/verify/verify-lilbee-20261031-004231-cab7/check-2-cmd3.judged.png"
+            "runs/verify/verify-lilbee-20261031-035910-e438/check-1-cmd2.judged.png",
+            "runs/verify/verify-lilbee-20261031-035910-e438/check-2-cmd3.judged.png",
+            "runs/verify/verify-lilbee-20261031-035910-e438/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.158004
+        "cost_usd": 0.175494,
+        "features": [
+          {
+            "feature": "run and manage local AI models",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "talk to search engine with cited answers",
+            "status": "test_failed",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "add failed: no embedding/chat role configured yet"
+          },
+          {
+            "feature": "crawl websites into your library",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "no commands left to try crawl"
+          },
+          {
+            "feature": "serve coding agents as MCP server",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "no commands left to try MCP stdio"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:11:57+08:00",
+    "computed_at": "2026-10-31T04:04:05+08:00",
     "quality": {
-      "total": 78.1,
+      "total": 84.1,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.68,
+          "score": 0.8,
           "weight": 40.0
         },
         "install_docs": {
@@ -241,7 +315,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 22.1
+      "value": 23.8
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -564,5 +638,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T04:04:05.434790+08:00"
 }

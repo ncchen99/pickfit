@@ -60,12 +60,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-unlimited-context-llm-20261030-234458-4896",
+      "run_id": "verify-unlimited-context-llm-20261031-034647-af34",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install aether-context 2>&1",
-          "purpose": "Install via uv tool candidate 1"
+          "purpose": "Install via uv tool (candidate 1)"
         }
       ],
       "manual_steps": [],
@@ -92,10 +92,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-30T23:45:48.810467+08:00",
+    "checked_at": "2026-10-31T03:47:53.872286+08:00",
     "runs": [
       {
-        "id": "verify-unlimited-context-llm-20261030-234458-4896",
+        "id": "verify-unlimited-context-llm-20261031-034647-af34",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -103,14 +103,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-30T23:45:48.810467+08:00",
+        "checked_at": "2026-10-31T03:47:53.872286+08:00",
         "tool_version": "0.5.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install aether-context 2>&1",
-            "purpose": "Install via uv tool candidate 1"
+            "purpose": "Install via uv tool (candidate 1)"
           }
         ],
         "smoke_tests": [
@@ -124,15 +124,6 @@
             "offline": true
           },
           {
-            "command": "aether-context --help 2>&1",
-            "expected_signal": "usage: aether-context",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "usage: aether-context [-h] [--version] [--pool N] [--dir D]",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "aether-context setup 2>&1",
             "expected_signal": "engine round trip passed",
             "exit_code": 0,
@@ -142,12 +133,18 @@
             "offline": true
           },
           {
-            "command": "aether-context doctor 2>&1",
-            "expected_signal": "ollama daemon not reachable",
-            "exit_code": 1,
+            "command": "aether-context run \"when does the deploy key rotate?\" --dir ./pool 2>&1",
+            "expected_signal": "recalled 1",
+            "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "✗ [fail] ollama daemon not reachable at http://localhost:11434",
-            "setup": [],
+            "observed_excerpt": "[pool 5 GB | slices 4/2275390 | reach 1.17B tok | hit 0% | recalled 1 | mode separate | index flat]",
+            "setup": [
+              {
+                "command": "rm -rf ./pool && aether-context run \"remember: the deploy key rotates on Fridays\" --dir ./pool 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           },
           {
@@ -160,20 +157,11 @@
             "offline": true
           },
           {
-            "command": "aether-context run \"remember: the deploy key rotates on Fridays\" --dir ./pool 2>&1",
-            "expected_signal": "[pool 5 GB | slices 2/2275390",
-            "exit_code": 0,
+            "command": "aether-context doctor 2>&1",
+            "expected_signal": "ollama daemon not reachable",
+            "exit_code": 1,
             "passed": true,
-            "observed_excerpt": "[pool 5 GB | slices 2/2275390 | reach 1.17B tok | hit 0% | recalled 0 | mode separate | index flat]",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "aether-context run \"when does the deploy key rotate?\" --dir ./pool 2>&1",
-            "expected_signal": "recalled 1",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "[pool 5 GB | slices 4/2275390 | reach 1.17B tok | hit 0% | recalled 1 | mode separate | index flat]",
+            "observed_excerpt": "✗ [fail] ollama daemon not reachable at http://localhost:11434",
             "setup": [],
             "offline": true
           }
@@ -181,28 +169,57 @@
         "pitfalls": [
           {
             "readme_said": "pip install aether-context",
-            "actually_needed": "uv tool install aether-context (isolated install avoids PEP 668 / read-only system python)",
+            "actually_needed": "uv tool install aether-context (isolated, avoids PEP 668 / read-only system)",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show version 0.5.0, full help usage, and setup completing with engine round trip passed.",
+          "observed": "Screenshots show version 0.5.0, setup completing with engine round trip passed, and run output with recalled 1 in the status footer.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-unlimited-context-llm-20261030-234458-4896/report.json",
+          "trace_path": "runs/verify/verify-unlimited-context-llm-20261031-034647-af34/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-unlimited-context-llm-20261030-234458-4896/check-1-cmd2.judged.png",
-            "runs/verify/verify-unlimited-context-llm-20261030-234458-4896/check-2-cmd3.judged.png",
-            "runs/verify/verify-unlimited-context-llm-20261030-234458-4896/check-3-cmd4.judged.png"
+            "runs/verify/verify-unlimited-context-llm-20261031-034647-af34/check-1-cmd2.judged.png",
+            "runs/verify/verify-unlimited-context-llm-20261031-034647-af34/check-2-cmd3.judged.png",
+            "runs/verify/verify-unlimited-context-llm-20261031-034647-af34/check-3-cmd6.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.048542
+        "cost_usd": 0.065815,
+        "features": [
+          {
+            "feature": "keep billion-token pool on local disk",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "recall connected thread via MPO chain",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output is mock-model gibberish with no deploy-key answer or connected thread shown."
+          },
+          {
+            "feature": "use any local model via Ollama",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "doctor shows no Ollama daemon at localhost:11434, no model to run"
+          }
+        ]
       }
     ]
   },
@@ -550,5 +567,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:24+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:47:53.876226+08:00"
 }

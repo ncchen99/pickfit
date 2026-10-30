@@ -60,24 +60,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-my-focal-ai-20261031-002316-d472",
-      "method": "source",
+      "run_id": "verify-my-focal-ai-20261031-040311-70aa",
+      "method": "script",
       "steps": [
         {
-          "command": "git clone https://github.com/YanCheng-go/my-focal-ai.git 2>&1 && ls -la my-focal-ai/ 2>&1",
-          "purpose": "Clone repo to get start.sh"
-        },
-        {
-          "command": "cd my-focal-ai && uv sync 2>&1",
-          "purpose": "Install deps via uv sync"
+          "command": "rm -rf my-focal-ai && git clone --depth 1 https://github.com/YanCheng-go/my-focal-ai.git my-focal-ai",
+          "purpose": "Shallow clone repo (provides start.sh, deps installed by start.sh via uv sync)"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "cd my-focal-ai && uv run ainews --help 2>&1",
+        "command": "cd my-focal-ai && uv run ainews --help",
         "expected_signal": "MyFocalAI"
       },
-      "first_task": "curl -s http://localhost:8000/api/items?limit=5 2>&1"
+      "first_task": "cd my-focal-ai && uv run ainews list-sources"
     },
     "windows": null
   },
@@ -96,10 +92,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:27:38.619324+08:00",
+    "checked_at": "2026-10-31T04:05:59.186184+08:00",
     "runs": [
       {
-        "id": "verify-my-focal-ai-20261031-002316-d472",
+        "id": "verify-my-focal-ai-20261031-040311-70aa",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -107,23 +103,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:27:38.619324+08:00",
+        "checked_at": "2026-10-31T04:05:59.186184+08:00",
         "tool_version": "0.8.0",
-        "install_method": "source",
+        "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "git clone https://github.com/YanCheng-go/my-focal-ai.git 2>&1 && ls -la my-focal-ai/ 2>&1",
-            "purpose": "Clone repo to get start.sh"
-          },
-          {
-            "command": "cd my-focal-ai && uv sync 2>&1",
-            "purpose": "Install deps via uv sync"
+            "command": "rm -rf my-focal-ai && git clone --depth 1 https://github.com/YanCheng-go/my-focal-ai.git my-focal-ai",
+            "purpose": "Shallow clone repo (provides start.sh, deps installed by start.sh via uv sync)"
           }
         ],
         "smoke_tests": [
           {
-            "command": "cd my-focal-ai && uv run ainews --help 2>&1",
+            "command": "cd my-focal-ai && uv run ainews --help",
             "expected_signal": "MyFocalAI",
             "exit_code": 0,
             "passed": true,
@@ -132,75 +124,117 @@
             "offline": true
           },
           {
-            "command": "curl -s http://localhost:8000/api/items?limit=5 2>&1",
-            "expected_signal": "\"items\"",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "{\"items\":[{\"id\":\"0a782cbdf8f14641\",\"url\":\"https://www.youtube.com/shorts/hOVaubDnu5A\",\"title\":\"AI Exposes Legacy Code\",\"summary\":\"AI is forcing teams to revisit abandoned code. What dependencies are lurking? Time to modernize your stack before vulnerabilities strike.\\n------------------------------…",
-            "setup": [
-              {
-                "command": "cd my-focal-ai && ./start.sh --no-score",
-                "background": true,
-                "port": 8000
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "curl -s http://localhost:8000/api/digest?hours=24 2>&1",
-            "expected_signal": "period_hours",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "{\"period_hours\":24,\"min_score\":0.6,\"items\":[]}",
-            "setup": [
-              {
-                "command": "cd my-focal-ai && ./start.sh --no-score",
-                "background": true,
-                "port": 8000
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "cd my-focal-ai && uv run ainews list-sources 2>&1",
+            "command": "cd my-focal-ai && uv run ainews list-sources",
             "expected_signal": "Configured sources:",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "Configured sources:",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "curl -sf http://localhost:8000/api/items",
+            "expected_signal": "\"items\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"items\":[{\"id\":\"d1dfa75f17d82852\",\"url\":\"https://www.youtube.com/watch?v=8vDzncmzxyg\",\"title\":\"Your AI Agent Starts Every Session Like a New Hire - Killian Carlsen-Phelan, Sonar\",\"summary\":\"Every new coding agent session starts like a new hire: it doesn't know your conventions, architecture rules …",
+            "setup": [
+              {
+                "command": "cd my-focal-ai && ./start.sh --no-score",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sf http://localhost:8000/",
+            "expected_signal": "</html>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "</html>",
+            "setup": [
+              {
+                "command": "cd my-focal-ai && ./start.sh --no-score",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd my-focal-ai && ./start.sh stop",
+            "expected_signal": "Stopping services...",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Stopping services...",
+            "setup": [
+              {
+                "command": "cd my-focal-ai && ./start.sh --no-score",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
             "readme_said": "Prerequisites: uv and Docker",
-            "actually_needed": "Warns '[!!] Docker not found — RSSHub sources won't work' and continues; fetch+dashboard still work without Docker/RSSHub",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "./start.sh stop stops all services",
-            "actually_needed": "No lsof in box so './start.sh stop' prints 'Stopping services...' and exits 0 but leaves the server on port 8000 running",
-            "kind": "sandbox"
+            "actually_needed": "Docker missing only warns and continues; --no-score works without Docker",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Help shows MyFocalAI commands, items API returns 5 of 725 items, and digest API returns valid period_hours JSON.",
+          "observed": "All three checks show expected output: source list, items JSON API, and help with MyFocalAI.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-my-focal-ai-20261031-002316-d472/report.json",
+          "trace_path": "runs/verify/verify-my-focal-ai-20261031-040311-70aa/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-my-focal-ai-20261031-002316-d472/check-1-cmd4.judged.png",
-            "runs/verify/verify-my-focal-ai-20261031-002316-d472/check-2-cmd6.judged.png",
-            "runs/verify/verify-my-focal-ai-20261031-002316-d472/check-3-cmd8.judged.png"
+            "runs/verify/verify-my-focal-ai-20261031-040311-70aa/check-1-cmd6.judged.png",
+            "runs/verify/verify-my-focal-ai-20261031-040311-70aa/check-2-cmd9.judged.png",
+            "runs/verify/verify-my-focal-ai-20261031-040311-70aa/check-3-cmd5.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.09749
+        "cost_usd": 0.149387,
+        "features": [
+          {
+            "feature": "aggregate AI content from curated sources",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "score relevance with LLM",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "needs Ollama + qwen3:4b pull (GBs, over 300MB budget)"
+          },
+          {
+            "feature": "serve personal web dashboard",
+            "status": "checked",
+            "smoke_tests": [
+              2,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -546,5 +580,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T04:05:59.188423+08:00"
 }

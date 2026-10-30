@@ -78,21 +78,21 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-rgx-20261031-021805-b7d1",
+      "run_id": "verify-rgx-20261031-034647-aca0",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL https://github.com/danalec/rgx/releases/download/rgx-v0.1.1/rgx-v0.1.1-x86_64-linux-gnu.tar.gz -o /tmp/rgx-clean.tar.gz",
-          "purpose": "Download Linux glibc tarball"
+          "command": "curl -fsSL https://github.com/danalec/rgx/releases/download/rgx-v0.1.1/rgx-v0.1.1-x86_64-linux-gnu.tar.gz -o /tmp/rgx.tar.gz",
+          "purpose": "Download Linux tarball"
         },
         {
-          "command": "mkdir -p ~/.local/bin && tar xzf /tmp/rgx-clean.tar.gz -C /tmp && cp /tmp/rgx-v0.1.1-x86_64-linux-gnu/rgx ~/.local/bin/rgx && chmod +x ~/.local/bin/rgx",
-          "purpose": "Extract rgx binary to ~/.local/bin"
+          "command": "mkdir -p ~/.local/bin && tar xzf /tmp/rgx.tar.gz -C /tmp && cp /tmp/rgx-v0.1.1-x86_64-linux-gnu/rgx ~/.local/bin/rgx && chmod +x ~/.local/bin/rgx",
+          "purpose": "Extract and install rgx binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "rgx --version",
+        "command": "cp /tmp/rgx-v0.1.1-x86_64-linux-gnu/rgx ~/.local/bin/rgx && chmod +x ~/.local/bin/rgx && export PATH=\"$HOME/.local/bin:$PATH\" && rgx --version",
         "expected_signal": "rgx 0.1.1"
       },
       "first_task": "rgx \"fn main\" -t rust --sort path ."
@@ -127,10 +127,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:19:12.657371+08:00",
+    "checked_at": "2026-10-31T03:48:13.945920+08:00",
     "runs": [
       {
-        "id": "verify-rgx-20261031-021805-b7d1",
+        "id": "verify-rgx-20261031-034647-aca0",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -138,23 +138,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:19:12.657371+08:00",
+        "checked_at": "2026-10-31T03:48:13.945920+08:00",
         "tool_version": "0.1.1",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://github.com/danalec/rgx/releases/download/rgx-v0.1.1/rgx-v0.1.1-x86_64-linux-gnu.tar.gz -o /tmp/rgx-clean.tar.gz",
-            "purpose": "Download Linux glibc tarball"
+            "command": "curl -fsSL https://github.com/danalec/rgx/releases/download/rgx-v0.1.1/rgx-v0.1.1-x86_64-linux-gnu.tar.gz -o /tmp/rgx.tar.gz",
+            "purpose": "Download Linux tarball"
           },
           {
-            "command": "mkdir -p ~/.local/bin && tar xzf /tmp/rgx-clean.tar.gz -C /tmp && cp /tmp/rgx-v0.1.1-x86_64-linux-gnu/rgx ~/.local/bin/rgx && chmod +x ~/.local/bin/rgx",
-            "purpose": "Extract rgx binary to ~/.local/bin"
+            "command": "mkdir -p ~/.local/bin && tar xzf /tmp/rgx.tar.gz -C /tmp && cp /tmp/rgx-v0.1.1-x86_64-linux-gnu/rgx ~/.local/bin/rgx && chmod +x ~/.local/bin/rgx",
+            "purpose": "Extract and install rgx binary to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "rgx --version",
+            "command": "cp /tmp/rgx-v0.1.1-x86_64-linux-gnu/rgx ~/.local/bin/rgx && chmod +x ~/.local/bin/rgx && export PATH=\"$HOME/.local/bin:$PATH\" && rgx --version",
             "expected_signal": "rgx 0.1.1",
             "exit_code": 0,
             "passed": true,
@@ -163,23 +163,14 @@
             "offline": true
           },
           {
-            "command": "rgx --help",
-            "expected_signal": "--engine <engine>",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "--engine <engine> search engine: auto (adaptive detector), tv (pack store), rgx (in-process SIMD)",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "rgx \"fn main\" -t rust --sort path .",
-            "expected_signal": "./hello.rs:fn main() {",
+            "expected_signal": "./rgxdemo/src/main.rs:fn main() {",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "./hello.rs:fn main() {",
+            "observed_excerpt": "./rgxdemo/src/main.rs:fn main() {",
             "setup": [
               {
-                "command": "cat > hello.rs <<'EOF'\nfn main() {\n    println!(\"hello\");\n}\nEOF\nprintf 'hidden_dim 4096\\ntensor: weight\\n' > model.gguf\nls -l hello.rs model.gguf && cat hello.rs && cat model.gguf",
+                "command": "mkdir -p rgxdemo/src && printf 'fn main() {\\n    println!(\"hello rgx\");\\n}\\n' > rgxdemo/src/main.rs && printf 'hello plain text marker PLAINMARKER123\\n' > rgxdemo/hello.txt && python3 -c \"import zipfile; z=zipfile.ZipFile('rgxdemo/bundle.zip','w'); z.writestr('inner.txt','invoice total secret ARCHIVEMARKER987 inside zip\\n'); z.writestr('script.py','print(\\\"filterme lang python PYFILTERMARKER456\\\")\\n'); z.close(); print('zip done')\" && ls -R rgxdemo",
                 "background": false,
                 "port": null
               }
@@ -187,51 +178,115 @@
             "offline": true
           },
           {
-            "command": "rgx \"hidden_dim\" model.gguf",
-            "expected_signal": "hidden_dim 4096",
+            "command": "rgx \"ARCHIVEMARKER987\" rgxdemo",
+            "expected_signal": "rgxdemo/bundle.zip!inner.txt:invoice total secret ARCHIVEMARKER987 inside zip",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "hidden_dim 4096",
+            "observed_excerpt": "rgxdemo/bundle.zip!inner.txt:invoice total secret ARCHIVEMARKER987 inside zip",
             "setup": [
               {
-                "command": "cat > hello.rs <<'EOF'\nfn main() {\n    println!(\"hello\");\n}\nEOF\nprintf 'hidden_dim 4096\\ntensor: weight\\n' > model.gguf\nls -l hello.rs model.gguf && cat hello.rs && cat model.gguf",
+                "command": "mkdir -p rgxdemo/src && printf 'fn main() {\\n    println!(\"hello rgx\");\\n}\\n' > rgxdemo/src/main.rs && printf 'hello plain text marker PLAINMARKER123\\n' > rgxdemo/hello.txt && python3 -c \"import zipfile; z=zipfile.ZipFile('rgxdemo/bundle.zip','w'); z.writestr('inner.txt','invoice total secret ARCHIVEMARKER987 inside zip\\n'); z.writestr('script.py','print(\\\"filterme lang python PYFILTERMARKER456\\\")\\n'); z.close(); print('zip done')\" && ls -R rgxdemo",
                 "background": false,
                 "port": null
               }
             ],
+            "offline": true
+          },
+          {
+            "command": "rgx \"PYFILTERMARKER456\" --filter 'container:zip AND lang:python' rgxdemo",
+            "expected_signal": "rgxdemo/bundle.zip!script.py",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "rgxdemo/bundle.zip!script.py:print(\"filterme lang python PYFILTERMARKER456\")",
+            "setup": [
+              {
+                "command": "mkdir -p rgxdemo/src && printf 'fn main() {\\n    println!(\"hello rgx\");\\n}\\n' > rgxdemo/src/main.rs && printf 'hello plain text marker PLAINMARKER123\\n' > rgxdemo/hello.txt && python3 -c \"import zipfile; z=zipfile.ZipFile('rgxdemo/bundle.zip','w'); z.writestr('inner.txt','invoice total secret ARCHIVEMARKER987 inside zip\\n'); z.writestr('script.py','print(\\\"filterme lang python PYFILTERMARKER456\\\")\\n'); z.close(); print('zip done')\" && ls -R rgxdemo",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "printf '%s\\n' '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"t\",\"version\":\"0\"}}}' | timeout 5 rgx --mcp\n",
+            "expected_signal": "\"serverInfo\":{\"name\":\"rgx\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{\"tools\":{}},\"serverInfo\":{\"name\":\"rgx\",\"version\":\"0.1.1\"}}}",
+            "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
             "readme_said": "irm https://raw.githubusercontent.com/danalec/rgx/main/install.ps1 | iex",
-            "actually_needed": "Used Linux glibc tarball rgx-v0.1.1-x86_64-linux-gnu.tar.gz from the release page and copied rgx to ~/.local/bin; install.ps1 is Windows-only (downloads x86_64-windows.zip, installs rgx.exe via PowerShell)",
+            "actually_needed": "download rgx-v0.1.1-x86_64-linux-gnu.tar.gz from releases page and copy rgx binary to ~/.local/bin",
             "kind": "readme_wrong"
           },
           {
             "readme_said": "cargo install rgx-search",
-            "actually_needed": "Skipped cargo install rgx-search: box has no Rust toolchain and installing one is not allowed, so used prebuilt Linux binary instead",
+            "actually_needed": "skipped cargo install rgx-search: box has no Rust toolchain and must not install one",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show rgx finding the Rust match, extracting GGUF metadata, and printing version 0.1.1.",
+          "observed": "All three screenshots show rgx printing the expected Rust match, the zip-inner match, and version 0.1.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-rgx-20261031-021805-b7d1/report.json",
+          "trace_path": "runs/verify/verify-rgx-20261031-034647-aca0/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-rgx-20261031-021805-b7d1/check-1-cmd7.judged.png",
-            "runs/verify/verify-rgx-20261031-021805-b7d1/check-2-cmd8.judged.png",
-            "runs/verify/verify-rgx-20261031-021805-b7d1/check-3-cmd4.judged.png"
+            "runs/verify/verify-rgx-20261031-034647-aca0/check-1-cmd6.judged.png",
+            "runs/verify/verify-rgx-20261031-034647-aca0/check-2-cmd7.judged.png",
+            "runs/verify/verify-rgx-20261031-034647-aca0/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.082159
+        "cost_usd": 0.091156,
+        "features": [
+          {
+            "feature": "search inside PDFs, Office documents and archives",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "run ripgrep-compatible pattern searches",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "filter searches by file metadata",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "expose search through MCP server",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only MCP initialize handshake, no search result."
+          }
+        ]
       }
     ]
   },
@@ -595,5 +650,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:45:35+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:48:13.947153+08:00"
 }

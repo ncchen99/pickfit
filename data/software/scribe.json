@@ -85,24 +85,28 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-scribe-20261031-004220-f89d",
+      "run_id": "verify-scribe-20261031-035651-46bc",
       "method": "script",
       "steps": [
         {
           "command": "curl -fsSL https://raw.githubusercontent.com/oliver-kriska/scribe/main/install.sh -o /tmp/install-scribe.sh && ls -l /tmp/install-scribe.sh && wc -l /tmp/install-scribe.sh",
-          "purpose": "Download install script for reading"
+          "purpose": "Download install script to read before running"
         },
         {
           "command": "bash /tmp/install-scribe.sh",
-          "purpose": "Install scribe via release script"
+          "purpose": "Install scribe binary with verified release archive"
+        },
+        {
+          "command": "export PATH=\"$HOME/.local/bin:$PATH\" && scribe init --path /tmp/test-kb2 --owner-name \"Test User\" --owner-context \"Test engineer verifying scribe.\" --domains testing --yes",
+          "purpose": "Scaffold test KB non-interactively for smoke tests"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "scribe --version",
+        "command": "export PATH=\"$HOME/.local/bin:$PATH\" && scribe --version",
         "expected_signal": "scribe 0.5.10"
       },
-      "first_task": "scribe cron status"
+      "first_task": "export PATH=\"$HOME/.local/bin:$PATH\" && scribe cron status"
     },
     "windows": null
   },
@@ -121,10 +125,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:43:25.408555+08:00",
+    "checked_at": "2026-10-31T03:58:20.011380+08:00",
     "runs": [
       {
-        "id": "verify-scribe-20261031-004220-f89d",
+        "id": "verify-scribe-20261031-035651-46bc",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -132,23 +136,27 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:43:25.408555+08:00",
+        "checked_at": "2026-10-31T03:58:20.011380+08:00",
         "tool_version": "0.5.10",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
             "command": "curl -fsSL https://raw.githubusercontent.com/oliver-kriska/scribe/main/install.sh -o /tmp/install-scribe.sh && ls -l /tmp/install-scribe.sh && wc -l /tmp/install-scribe.sh",
-            "purpose": "Download install script for reading"
+            "purpose": "Download install script to read before running"
           },
           {
             "command": "bash /tmp/install-scribe.sh",
-            "purpose": "Install scribe via release script"
+            "purpose": "Install scribe binary with verified release archive"
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && scribe init --path /tmp/test-kb2 --owner-name \"Test User\" --owner-context \"Test engineer verifying scribe.\" --domains testing --yes",
+            "purpose": "Scaffold test KB non-interactively for smoke tests"
           }
         ],
         "smoke_tests": [
           {
-            "command": "scribe --version",
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && scribe --version",
             "expected_signal": "scribe 0.5.10",
             "exit_code": 0,
             "passed": true,
@@ -157,16 +165,7 @@
             "offline": true
           },
           {
-            "command": "scribe --help",
-            "expected_signal": "cron status",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "cron status",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "scribe cron status",
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && scribe cron status",
             "expected_signal": "No registered KBs",
             "exit_code": 0,
             "passed": true,
@@ -175,79 +174,80 @@
             "offline": true
           },
           {
-            "command": "scribe init --check",
-            "expected_signal": "(--check: plan only — nothing written)",
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && cd /tmp/test-kb2 && scribe status",
+            "expected_signal": "KB status",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "(--check: plan only — nothing written)",
+            "observed_excerpt": "KB status",
             "setup": [],
-            "offline": true
-          },
-          {
-            "command": "scribe -C /tmp/test-kb doctor",
-            "expected_signal": "Summary: 19 ok, 17 warn, 10 FAIL",
-            "exit_code": 1,
-            "passed": true,
-            "observed_excerpt": "Summary: 19 ok, 17 warn, 10 FAIL",
-            "setup": [
-              {
-                "command": "scribe init --path /tmp/test-kb --owner-name \"Test User\" --owner-context \"Testing scribe verification.\" --domains test --yes --no-claude-md --no-codex-md --no-amp-md --no-cron && echo \"INIT_OK\" && ls /tmp/test-kb",
-                "background": false,
-                "port": null
-              }
-            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "Prerequisites the README states: Go>=1.26, git, sqlite3",
-            "actually_needed": "Binary install via install.sh succeeded with no Go toolchain and no sqlite3 present; Go is only needed for the source-build fallback path.",
-            "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "Example command listed as bare `scribe doctor`",
-            "actually_needed": "scribe doctor must run inside a KB checkout (created via scribe init) or with -C <path>/SCRIBE_KB; outside a KB it exits 1 with 'not inside a scribe KB checkout'.",
-            "kind": "note"
-          },
-          {
-            "readme_said": "curl -fsSL https://raw.githubusercontent.com/oliver-kriska/scribe/main/install.sh | bash",
-            "actually_needed": "install.sh fetches a prebuilt release tarball (scribe_<tag>_<os>_<arch>.tar.gz) plus checksums.txt from GitHub releases and verifies sha256; the tarball binary cannot be read before running the installer.",
+            "readme_said": "scribe doctor tells you which deps are missing; scribe init --check re-validates",
+            "actually_needed": "scribe doctor and scribe init --check exit 1 while reporting missing optional deps and unwired cron; output still shows full check tables and fix hints",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three checks show expected output: cron status reports no KBs, init --check shows plan only, and version prints scribe 0.5.10.",
+          "observed": "All three checks show expected outputs: cron status reports no KBs, KB status details for /tmp/test-kb2, and version scribe 0.5.10.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-scribe-20261031-004220-f89d/report.json",
+          "trace_path": "runs/verify/verify-scribe-20261031-035651-46bc/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-scribe-20261031-004220-f89d/check-1-cmd7.judged.png",
-            "runs/verify/verify-scribe-20261031-004220-f89d/check-2-cmd8.judged.png",
-            "runs/verify/verify-scribe-20261031-004220-f89d/check-3-cmd4.judged.png"
+            "runs/verify/verify-scribe-20261031-035651-46bc/check-1-cmd7.judged.png",
+            "runs/verify/verify-scribe-20261031-035651-46bc/check-2-cmd14.judged.png",
+            "runs/verify/verify-scribe-20261031-035651-46bc/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.062692
+        "cost_usd": 0.129787,
+        "features": [
+          {
+            "feature": "create and maintain personal knowledge base",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only empty KB status with 0 files, not creation or maintenance of content."
+          },
+          {
+            "feature": "extract knowledge from git repos and sessions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "ran sync estimate earlier but setup citation was invalid; budget left no rerun"
+          },
+          {
+            "feature": "compile curated wiki for semantic search",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "ran lint earlier but setup citation was invalid; budget left no rerun"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:31:27+08:00",
+    "computed_at": "2026-10-31T03:58:20+08:00",
     "quality": {
-      "total": 83.3,
+      "total": 77.6,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -288,7 +288,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 30.57
+      "value": 28.48
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -619,5 +619,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:58:20.013488+08:00"
 }

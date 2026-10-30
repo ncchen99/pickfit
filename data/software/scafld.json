@@ -53,24 +53,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-scafld-20261031-001928-3dac",
+      "run_id": "verify-scafld-20261031-035348-4dc7",
       "method": "pipx",
       "steps": [
         {
           "command": "pipx install scafld 2>&1",
-          "purpose": "pipx install scafld"
-        },
-        {
-          "command": "scafld --version 2>&1",
-          "purpose": "fetch cached native binary via first run"
+          "purpose": "pipx install scafld (ranked candidate 1)"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "scafld --help 2>&1",
-        "expected_signal": "scafld - deterministic protocol for multi-phase agent work"
+        "command": "scafld --version 2>&1",
+        "expected_signal": "2.5.10"
       },
-      "first_task": "mkdir -p /tmp/scafld-demo && cd /tmp/scafld-demo && scafld init 2>&1"
+      "first_task": "cd /tmp/scafld-demo && scafld plan add-cache 2>&1"
     },
     "windows": null
   },
@@ -89,10 +85,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:20:43.853641+08:00",
+    "checked_at": "2026-10-31T03:55:07.279499+08:00",
     "runs": [
       {
-        "id": "verify-scafld-20261031-001928-3dac",
+        "id": "verify-scafld-20261031-035348-4dc7",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -100,36 +96,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:20:43.853641+08:00",
+        "checked_at": "2026-10-31T03:55:07.279499+08:00",
         "tool_version": "2.5.10",
         "install_method": "pipx",
         "replayed": true,
         "steps": [
           {
             "command": "pipx install scafld 2>&1",
-            "purpose": "pipx install scafld"
-          },
-          {
-            "command": "scafld --version 2>&1",
-            "purpose": "fetch cached native binary via first run"
+            "purpose": "pipx install scafld (ranked candidate 1)"
           }
         ],
         "smoke_tests": [
           {
-            "command": "scafld --help 2>&1",
-            "expected_signal": "scafld - deterministic protocol for multi-phase agent work",
+            "command": "scafld --version 2>&1",
+            "expected_signal": "2.5.10",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "scafld - deterministic protocol for multi-phase agent work",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "mkdir -p /tmp/scafld-demo && cd /tmp/scafld-demo && scafld init 2>&1",
-            "expected_signal": "initialized scafld workspace: /tmp/scafld-demo",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "initialized scafld workspace: /tmp/scafld-demo",
+            "observed_excerpt": "2.5.10",
             "setup": [],
             "offline": true
           },
@@ -149,8 +132,28 @@
             "offline": true
           },
           {
+            "command": "cd /tmp/scafld-demo && scafld harden add-cache 2>&1",
+            "expected_signal": "round: round-1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "round: round-1",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/scafld-demo && cd /tmp/scafld-demo && scafld init 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/scafld-demo && scafld plan add-cache 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
             "command": "cd /tmp/scafld-demo && scafld list 2>&1",
-            "expected_signal": "add-cache draft add-cache",
+            "expected_signal": "add-cache",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "add-cache draft add-cache",
@@ -167,47 +170,107 @@
               }
             ],
             "offline": true
+          },
+          {
+            "command": "cd /tmp/scafld-demo && scafld build add-cache 2>&1 && scafld review add-cache --print-context 2>&1",
+            "expected_signal": "",
+            "exit_code": 4,
+            "passed": false,
+            "observed_excerpt": "next: scafld build add-cache",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/scafld-demo && cd /tmp/scafld-demo && scafld init 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/scafld-demo && scafld plan add-cache 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/scafld-demo && git init 2>&1 && git config user.email \"test@test.com\" && git config user.name \"test\" && git add -A 2>&1 && git commit -m init 2>&1 && scafld approve add-cache --reason \"test approval\" 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "pipx install scafld",
-            "actually_needed": "first scafld invocation downloads the version-pinned native Go binary from GitHub Releases into ~/.cache/scafld/bin/<version>/ and verifies checksums.txt, so the first run needs network even though pipx install succeeds offline of that asset",
+            "readme_said": "Quick Start runs `scafld approve add-cache` with no git setup or reason",
+            "actually_needed": "git init plus an initial commit and `scafld approve add-cache --reason ...` to override in-progress harden round",
+            "kind": "note"
+          },
+          {
+            "readme_said": "`scafld review add-cache --print-context` renders the review brief",
+            "actually_needed": "task must be advanced through approve/build with passing acceptance to status review before `scafld review --print-context` works; on draft/active it exits 4",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show help text, successful workspace init, and draft spec creation with no errors.",
+          "observed": "Screenshots show version 2.5.10, created draft spec path, and harden packet ending with round: round-1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-scafld-20261031-001928-3dac/report.json",
+          "trace_path": "runs/verify/verify-scafld-20261031-035348-4dc7/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-scafld-20261031-001928-3dac/check-1-cmd3.judged.png",
-            "runs/verify/verify-scafld-20261031-001928-3dac/check-2-cmd5.judged.png",
-            "runs/verify/verify-scafld-20261031-001928-3dac/check-3-cmd7.judged.png"
+            "runs/verify/verify-scafld-20261031-035348-4dc7/check-1-cmd2.judged.png",
+            "runs/verify/verify-scafld-20261031-035348-4dc7/check-2-cmd4.judged.png",
+            "runs/verify/verify-scafld-20261031-035348-4dc7/check-3-cmd5.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.05976
+        "cost_usd": 0.097278,
+        "features": [
+          {
+            "feature": "stress-test draft specs before approval",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only round setup text and mark-passed instructions with no stress-test findings or decision."
+          },
+          {
+            "feature": "run adversarial review gate",
+            "status": "test_failed",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "review --print-context blocked: session not found / task not in review status; full gate also needs external provider"
+          },
+          {
+            "feature": "create draft Markdown specs",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:31:27+08:00",
+    "computed_at": "2026-10-31T03:55:07+08:00",
     "quality": {
-      "total": 80.2,
+      "total": 67.9,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -250,7 +313,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 37.93
+      "value": 32.12
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -509,5 +572,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:31+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:55:07.286613+08:00"
 }

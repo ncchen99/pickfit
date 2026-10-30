@@ -74,16 +74,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-infercrane-20261031-023354-b485",
+      "run_id": "verify-infercrane-20261031-035533-ed69",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -sL -o /tmp/infercrane.tar.gz 'https://github.com/infercrane/infercrane/releases/download/v1.0.0-rc.1/infercrane_1.0.0-rc.1_linux_amd64.tar.gz' && tar tzf /tmp/infercrane.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/infercrane.tar.gz -C /tmp/ && ls -la /tmp/*.tar.gz /tmp/infercrane* 2>&1; echo \"===\"; find /tmp -maxdepth 2 -type f -name \"infercrane*\" -exec ls -la {} \\;",
-          "purpose": "Download Linux CLI archive and extract binary"
+          "command": "curl -sL -o /tmp/infercrane.tar.gz 'https://github.com/infercrane/infercrane/releases/download/v1.0.0-rc.1/infercrane_1.0.0-rc.1_linux_amd64.tar.gz' && tar -tzf /tmp/infercrane.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/infercrane.tar.gz -C /tmp/ && ls -la /tmp/*.tar.gz /tmp/infercrane* 2>&1; find /tmp -maxdepth 2 -name \"infercrane*\" -type f",
+          "purpose": "download and inspect CLI archive"
         },
         {
           "command": "cp /tmp/infercrane ~/.local/bin/infercrane && chmod +x ~/.local/bin/infercrane && infercrane --version && infercrane --help",
-          "purpose": "Install infercrane binary to ~/.local/bin"
+          "purpose": "install CLI binary and check version"
         }
       ],
       "manual_steps": [],
@@ -91,7 +91,7 @@
         "command": "infercrane --version",
         "expected_signal": "infercrane version 1.0.0-rc.1"
       },
-      "first_task": "rm -rf /tmp/support ./support && infercrane workload init ./support --recipe qwen3-8b"
+      "first_task": "infercrane workload init ./support --recipe qwen3-8b"
     },
     "windows": null
   },
@@ -106,10 +106,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:35:05.335659+08:00",
+    "checked_at": "2026-10-31T03:56:48.341100+08:00",
     "runs": [
       {
-        "id": "verify-infercrane-20261031-023354-b485",
+        "id": "verify-infercrane-20261031-035533-ed69",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -117,18 +117,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:35:05.335659+08:00",
+        "checked_at": "2026-10-31T03:56:48.341100+08:00",
         "tool_version": "1.0.0-rc.1",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -sL -o /tmp/infercrane.tar.gz 'https://github.com/infercrane/infercrane/releases/download/v1.0.0-rc.1/infercrane_1.0.0-rc.1_linux_amd64.tar.gz' && tar tzf /tmp/infercrane.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/infercrane.tar.gz -C /tmp/ && ls -la /tmp/*.tar.gz /tmp/infercrane* 2>&1; echo \"===\"; find /tmp -maxdepth 2 -type f -name \"infercrane*\" -exec ls -la {} \\;",
-            "purpose": "Download Linux CLI archive and extract binary"
+            "command": "curl -sL -o /tmp/infercrane.tar.gz 'https://github.com/infercrane/infercrane/releases/download/v1.0.0-rc.1/infercrane_1.0.0-rc.1_linux_amd64.tar.gz' && tar -tzf /tmp/infercrane.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/infercrane.tar.gz -C /tmp/ && ls -la /tmp/*.tar.gz /tmp/infercrane* 2>&1; find /tmp -maxdepth 2 -name \"infercrane*\" -type f",
+            "purpose": "download and inspect CLI archive"
           },
           {
             "command": "cp /tmp/infercrane ~/.local/bin/infercrane && chmod +x ~/.local/bin/infercrane && infercrane --version && infercrane --help",
-            "purpose": "Install infercrane binary to ~/.local/bin"
+            "purpose": "install CLI binary and check version"
           }
         ],
         "smoke_tests": [
@@ -142,16 +142,7 @@
             "offline": true
           },
           {
-            "command": "infercrane --help",
-            "expected_signal": "Use \"infercrane [command] --help\" for more information about a command.",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Use \"infercrane [command] --help\" for more information about a command.",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "rm -rf /tmp/support ./support && infercrane workload init ./support --recipe qwen3-8b",
+            "command": "infercrane workload init ./support --recipe qwen3-8b",
             "expected_signal": "Inference project created",
             "exit_code": 0,
             "passed": true,
@@ -162,33 +153,46 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "npm install '@infercrane/sdk@1.0.0-rc.1' and python -m pip install '.../infercrane-1.0.0rc1-py3-none-any.whl' install the CLI",
-            "actually_needed": "Downloaded and installed the Linux CLI archive infercrane_1.0.0-rc.1_linux_amd64.tar.gz from the v1.0.0-rc.1 release and copied the 'infercrane' binary to ~/.local/bin; neither artifact provides an 'infercrane' executable",
-            "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "infercrane workload plan runs after 'infercrane workload init ./support --recipe qwen3-8b' with no mention of an API key",
-            "actually_needed": "INFERCRANE_API_KEY is required (error: 'INFERCRANE_API_KEY is required; run infercrane init or set the environment variable'), so 'infercrane workload plan' cannot run without an account/key in this box",
+            "readme_said": "npm install '@infercrane/sdk@1.0.0-rc.1' and pip install infercrane wheel install the CLI",
+            "actually_needed": "Linux CLI binary from release archive infercrane_1.0.0-rc.1_linux_amd64.tar.gz extracted and copied to ~/.local/bin/infercrane",
             "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show workload init creating the inference project with details and next steps, and --version printing 1.0.0-rc.1.",
+          "observed": "Screenshots show workload init succeeded with project details and --version printed 1.0.0-rc.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-infercrane-20261031-023354-b485/report.json",
+          "trace_path": "runs/verify/verify-infercrane-20261031-035533-ed69/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-infercrane-20261031-023354-b485/check-1-cmd12.judged.png",
-            "runs/verify/verify-infercrane-20261031-023354-b485/check-2-cmd9.judged.png"
+            "runs/verify/verify-infercrane-20261031-035533-ed69/check-1-cmd10.judged.png",
+            "runs/verify/verify-infercrane-20261031-035533-ed69/check-2-cmd9.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.085363
+        "cost_usd": 0.075116,
+        "features": [
+          {
+            "feature": "optimize existing inference workloads",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "workload plan requires INFERCRANE_API_KEY (command 11); cannot exercise without account"
+          },
+          {
+            "feature": "adopt existing inference endpoints",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "connect/doctor requires INFERCRANE_API_KEY (command 12); cannot exercise without account"
+          }
+        ]
       }
     ]
   },
@@ -526,5 +530,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:49:14+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:56:48.342244+08:00"
 }

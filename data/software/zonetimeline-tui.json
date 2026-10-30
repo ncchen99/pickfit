@@ -61,16 +61,16 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-zonetimeline-tui-20261031-004833-bf12",
+      "run_id": "verify-zonetimeline-tui-20261031-034753-af57",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL -o /tmp/ztl.tar.gz https://github.com/findyourexit/zonetimeline-tui/releases/download/v0.4.1/ztl-0.4.1-x86_64-unknown-linux-gnu.tar.gz && tar tzf /tmp/ztl.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/ztl.tar.gz -C /tmp && ls -R /tmp/ztl* 2>&1; ls -l /tmp/*.tar.gz; find /tmp -maxdepth 3 -name \"ztl\" -type f -ls",
-          "purpose": "Download Linux x86_64 release tarball and extract"
+          "command": "curl -L -o /tmp/ztl2.tar.gz https://github.com/findyourexit/zonetimeline-tui/releases/download/v0.4.1/ztl-0.4.1-x86_64-unknown-linux-gnu.tar.gz",
+          "purpose": "Download Linux x86_64 release tarball"
         },
         {
-          "command": "install -m 755 /tmp/ztl-0.4.1-x86_64-unknown-linux-gnu/ztl ~/.local/bin/ztl && export PATH=\"$HOME/.local/bin:$PATH\" && ztl --version && ztl --help",
-          "purpose": "Install ztl binary to ~/.local/bin"
+          "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/ztl2.tar.gz -C /tmp && cp /tmp/ztl-0.4.1-x86_64-unknown-linux-gnu/ztl ~/.local/bin/ztl && chmod +x ~/.local/bin/ztl && ~/.local/bin/ztl --version",
+          "purpose": "Extract tarball and install binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -110,10 +110,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:49:27.196839+08:00",
+    "checked_at": "2026-10-31T03:49:04.598001+08:00",
     "runs": [
       {
-        "id": "verify-zonetimeline-tui-20261031-004833-bf12",
+        "id": "verify-zonetimeline-tui-20261031-034753-af57",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -121,18 +121,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:49:27.196839+08:00",
-        "tool_version": "0.4.1",
+        "checked_at": "2026-10-31T03:49:04.598001+08:00",
+        "tool_version": "ztl 0.4.1",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL -o /tmp/ztl.tar.gz https://github.com/findyourexit/zonetimeline-tui/releases/download/v0.4.1/ztl-0.4.1-x86_64-unknown-linux-gnu.tar.gz && tar tzf /tmp/ztl.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/ztl.tar.gz -C /tmp && ls -R /tmp/ztl* 2>&1; ls -l /tmp/*.tar.gz; find /tmp -maxdepth 3 -name \"ztl\" -type f -ls",
-            "purpose": "Download Linux x86_64 release tarball and extract"
+            "command": "curl -L -o /tmp/ztl2.tar.gz https://github.com/findyourexit/zonetimeline-tui/releases/download/v0.4.1/ztl-0.4.1-x86_64-unknown-linux-gnu.tar.gz",
+            "purpose": "Download Linux x86_64 release tarball"
           },
           {
-            "command": "install -m 755 /tmp/ztl-0.4.1-x86_64-unknown-linux-gnu/ztl ~/.local/bin/ztl && export PATH=\"$HOME/.local/bin:$PATH\" && ztl --version && ztl --help",
-            "purpose": "Install ztl binary to ~/.local/bin"
+            "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/ztl2.tar.gz -C /tmp && cp /tmp/ztl-0.4.1-x86_64-unknown-linux-gnu/ztl ~/.local/bin/ztl && chmod +x ~/.local/bin/ztl && ~/.local/bin/ztl --version",
+            "purpose": "Extract tarball and install binary to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -142,15 +142,6 @@
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "ztl 0.4.1",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "ztl --help",
-            "expected_signal": "Usage: ztl [OPTIONS] [COMMAND]",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Usage: ztl [OPTIONS] [COMMAND]",
             "setup": [],
             "offline": true
           },
@@ -171,47 +162,97 @@
             "observed_excerpt": "America/New_York: 2026-10-30 03:30:00",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "TERM=xterm-256color CLICOLOR_FORCE=1 ztl --plain --zones UTC,Europe/London,America/New_York,Asia/Tokyo --time 13:00 --nhours 12 --width 120",
+            "expected_signal": "Asia/Tokyo:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Asia/Tokyo: 2026-10-30 22:00:00",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "cargo install --locked --git https://github.com/findyourexit/zonetimeline-tui (Requires Rust 1.88 or newer)",
-            "actually_needed": "Used pre-built Linux x86_64 tarball from GitHub Releases (ztl-0.4.1-x86_64-unknown-linux-gnu.tar.gz) extracted and installed to ~/.local/bin/ztl because the box has no Rust toolchain and installing one is not allowed",
+            "readme_said": "cargo install --locked --git https://github.com/findyourexit/zonetimeline-tui (needs Rust 1.88+, ranked candidate 1)",
+            "actually_needed": "downloaded Linux x86_64 tarball from GitHub Releases (v0.4.1) and copied single binary ztl to ~/.local/bin",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "brew tap findyourexit/tap && brew install ztl",
+            "actually_needed": "skipped brew tap/install steps; README marks them macOS-only and box is Debian Linux",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show a long zone list, a three-zone 12-hour timeline with conversions, and version 0.4.1 printed.",
+          "observed": "Screenshots show ztl listing zones, rendering a 3-zone 12-hour timeline with correct conversions, and printing version 0.4.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-zonetimeline-tui-20261031-004833-bf12/report.json",
+          "trace_path": "runs/verify/verify-zonetimeline-tui-20261031-034753-af57/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-zonetimeline-tui-20261031-004833-bf12/check-1-cmd6.judged.png",
-            "runs/verify/verify-zonetimeline-tui-20261031-004833-bf12/check-2-cmd7.judged.png",
-            "runs/verify/verify-zonetimeline-tui-20261031-004833-bf12/check-3-cmd4.judged.png"
+            "runs/verify/verify-zonetimeline-tui-20261031-034753-af57/check-1-cmd4.judged.png",
+            "runs/verify/verify-zonetimeline-tui-20261031-034753-af57/check-2-cmd5.judged.png",
+            "runs/verify/verify-zonetimeline-tui-20261031-034753-af57/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.043771
+        "cost_usd": 0.082771,
+        "features": [
+          {
+            "feature": "visually compare time zones",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "see working hours overlap across zones",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows hour numbers with no working-hours highlighting or overlap indication."
+          },
+          {
+            "feature": "find meeting slots",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only the timeline with no meeting slots suggested."
+          },
+          {
+            "feature": "manage zone list interactively",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "add/remove/edit/reorder via interactive TUI keys requires interactive terminal"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:31:27+08:00",
+    "computed_at": "2026-10-31T03:49:04+08:00",
     "quality": {
-      "total": 82.7,
+      "total": 76.4,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -254,7 +295,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 33.0
+      "value": 30.48
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -561,5 +602,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:22+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:49:04.600022+08:00"
 }
