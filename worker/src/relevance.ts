@@ -3,7 +3,7 @@
  * matcher reads (name, tags, summary, use cases, alternatives, MCP tool names),
  * with field weights. Used to choose which cards reach the model when more
  * than MAX_CARDS pass the hard filters, and by the rules fallback. Words are
- * English: requests in other languages get English keywords first (expand.ts).
+ * English; Meta adds English keywords for the request first (expand.ts).
  */
 import { OSES, type Entry } from './catalog.ts';
 
@@ -18,12 +18,13 @@ const STOPWORDS = new Set(
   ).split(' '),
 );
 
-/** A light stemmer: plurals, -ing/-ed and a final e, so "converting", "converts" and "convert" agree. */
+/** A light stemmer: plurals, -ing/-ed/-ly and a final e, so "converting", "converts" and "convert" agree. */
 function stem(word: string): string {
   let w = word;
   if (w.length > 4 && w.endsWith('ies')) w = `${w.slice(0, -3)}y`;
   else if (w.length > 3 && w.endsWith('s') && !/(ss|us|is)$/.test(w)) w = w.slice(0, -1);
-  if (w.length > 5 && w.endsWith('ing')) w = w.slice(0, -3);
+  if (w.length > 6 && w.endsWith('ly')) w = w.slice(0, -2);
+  else if (w.length > 5 && w.endsWith('ing')) w = w.slice(0, -3);
   else if (w.length > 4 && w.endsWith('ed')) w = w.slice(0, -2);
   if (w.length > 3 && /([b-df-hj-np-tv-z])\1$/.test(w) && !/(ll|ss|zz)$/.test(w)) w = w.slice(0, -1);
   if (w.length > 3 && w.endsWith('e')) w = w.slice(0, -1);
@@ -97,11 +98,6 @@ export function relevanceIndex(corpus: readonly Entry[]): RelevanceIndex {
     indexes.set(corpus, index);
   }
   return index;
-}
-
-/** Share of the terms that appear anywhere in the corpus; low means the words are not the profiles' words. */
-export function knownShare(index: RelevanceIndex, query: string[]): number {
-  return query.length ? query.filter((term) => index.df.has(term)).length / query.length : 0;
 }
 
 /** BM25 of each entry (scored against the whole corpus's statistics); 0 when no term matches. */

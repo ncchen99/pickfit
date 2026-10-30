@@ -1,6 +1,6 @@
 /**
  * The Worker's model calls: Meta Responses API, muse-spark-1.3 (the match
- * call, and English keywords for a long shortlist, expand.ts).
+ * call, and English keywords when the shortlist must cut, expand.ts).
  *
  * User requests are private, so the model is fixed here: never the
  * -contributor models (their inputs may be used for training), and

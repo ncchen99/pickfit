@@ -1,14 +1,13 @@
 /**
  * find_software and find_alternatives (architecture F.2): hard filters
  * (code) -> at most MAX_CARDS candidate cards, the ones that best match the
- * request's words when more pass (filter.ts; a request in another language
- * first gets English keywords, expand.ts) -> one muse-spark-1.3 call that
- * parses the request and chooses -> guard (code). Without the model (off, no key, over
- * budget, failure after one retry of a transient error, or every pick
- * rejected) it ranks by rules and says so:
- * matched_by "rules", degraded true. find_alternatives sends the current tool
- * and its pain points too, drops the current tool from the candidates, and
- * may advise keeping it.
+ * request's words when more pass (filter.ts; English keywords for the request
+ * from muse-spark-1.3 first, expand.ts) -> one muse-spark-1.3 call that
+ * parses the request and chooses -> guard (code). Without the model (off, no
+ * key, over budget, failure after one retry of a transient error, or every
+ * pick rejected) it ranks by rules and says so: matched_by "rules", degraded
+ * true. find_alternatives sends the current tool and its pain points too,
+ * drops the current tool from the candidates, and may advise keeping it.
  */
 import { bestGuide, nameKey, verifiedOnUserSystem, type Arch, type Catalog, type Entry, type InstallGuide, type OS } from './catalog.ts';
 import { toCard, type Card } from './cards.ts';
@@ -16,12 +15,12 @@ import { checkBudget, recordSpend } from './budget.ts';
 import { ranSentence } from './evidence.ts';
 import type { Settings } from './env.ts';
 import { logEvent, logFailure, newId, type Reporter } from './events.ts';
-import { englishKeywords, EXPAND_TIMEOUT_MS, needsEnglish, type Expansion } from './expand.ts';
+import { englishKeywords, EXPAND_TIMEOUT_MS, type Expansion } from './expand.ts';
 import { hardFilter, MAX_CARDS, type Conditions } from './filter.ts';
 import { clip, guardPicks, guardWellKnown, NO_WELL_KNOWN, parseAnswer, type GuardedPick, type GuardedWellKnown } from './guard.ts';
 import { callMeta, estimateCostUsd, MATCH_MODEL, MetaCallError, requestBody } from './meta.ts';
 import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer, type ModelReason } from './prompt.ts';
-import { queryTerms, relevanceIndex } from './relevance.ts';
+import { queryTerms } from './relevance.ts';
 import { rankByRules, templateReasons } from './rules.ts';
 
 export interface FindInput extends Conditions {
@@ -373,9 +372,9 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   const limit = Math.min(Math.max(cond.limit ?? 3, 1), 3);
   const corpus = deps.catalog.entries;
   let filtered = hardFilter(corpus, cond, { terms: queryTerms(req.rulesText), current: req.currentTool });
-  // Only a shortlist that must cut needs the request in the profiles' language.
+  // Only a shortlist that must cut needs the request in the profiles' words.
   let expansion: Expansion | null = null;
-  if (filtered.passed > MAX_CARDS && needsEnglish(req.rulesText, relevanceIndex(corpus))) {
+  if (filtered.passed > MAX_CARDS) {
     expansion = await englishKeywords(req.rulesText, deps, now, Math.min(EXPAND_TIMEOUT_MS, deps.settings.timeoutMs));
     if (expansion.keywords) {
       const terms = queryTerms(req.rulesText, ...expansion.keywords);

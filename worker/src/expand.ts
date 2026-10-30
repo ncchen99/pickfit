@@ -1,24 +1,22 @@
 /**
- * English keywords for a request written in another language, so the
- * shortlist (filter.ts, relevance.ts) has words to match against the English
- * profiles: one small muse-spark-1.3 call, made only when more than MAX_CARDS
- * tools pass the hard filters. Any failure leaves the request's own words;
- * with none of those the shortlist is the treasure order.
+ * English keywords for the request, so the shortlist (filter.ts,
+ * relevance.ts) has the profiles' words to match: a translation when the
+ * request is in another language, synonyms when it is in English. One small
+ * muse-spark-1.3 call, made only when more than MAX_CARDS tools pass the hard
+ * filters. Any failure leaves the request's own words; with none of those
+ * (a request in Chinese, say) the shortlist is the treasure order.
  */
 import { checkBudget, recordSpend } from './budget.ts';
 import type { Deps } from './find.ts';
 import { logFailure } from './events.ts';
 import { callMeta, estimateCostUsd, MATCH_MODEL, MetaCallError, requestBody } from './meta.ts';
 import { safeJson } from './prompt.ts';
-import { knownShare, queryTerms, type RelevanceIndex } from './relevance.ts';
 
 /** The most the keyword call may take; the match call gets what is left of META_TIMEOUT_MS. */
 export const EXPAND_TIMEOUT_MS = 5_000;
 /** Reasoning shares this limit; minimal effort used about 100 tokens per call. */
 const MAX_OUTPUT_TOKENS = 600;
 const MAX_KEYWORDS = 15;
-/** Below this share of words the profiles use, a Latin-script request (Spanish, German, ...) is expanded too. */
-export const MIN_KNOWN_SHARE = 0.5;
 
 export const EXPAND_INSTRUCTIONS = `You turn one person's software request into English search keywords. The keywords are matched against English profiles of developer CLI tools, local AI tools and MCP servers, so use the words such a profile would use.
 
@@ -33,15 +31,6 @@ const SCHEMA = {
   required: ['keywords'],
   additionalProperties: false,
 };
-
-const NON_LATIN_LETTER = /(?=\p{L})\P{Script=Latin}/gu;
-
-/** Written (at least partly) in a non-Latin script, or in Latin-script words the profiles mostly do not use. */
-export function needsEnglish(text: string, index: RelevanceIndex): boolean {
-  if ((text.match(NON_LATIN_LETTER) ?? []).length >= 2) return true;
-  const own = queryTerms(text);
-  return own.length > 0 && knownShare(index, own) < MIN_KNOWN_SHARE;
-}
 
 export interface Expansion {
   keywords: string[] | null;

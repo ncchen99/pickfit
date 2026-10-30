@@ -1,11 +1,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Catalog, Entry } from '../src/catalog.ts';
-import { needsEnglish } from '../src/expand.ts';
 import { findAlternatives, findSoftware } from '../src/find.ts';
 import { hardFilter, MAX_CARDS, TREASURE_SLOTS } from '../src/filter.ts';
 import { MATCH_MODEL } from '../src/meta.ts';
-import { queryTerms, relevance, relevanceIndex, terms } from '../src/relevance.ts';
+import { queryTerms, relevance, terms } from '../src/relevance.ts';
 import { rankByRules } from '../src/rules.ts';
 import { answer, fixtureCatalog, harness, metaResponse } from './helpers.ts';
 
@@ -47,6 +46,8 @@ test('terms: camelCase and snake_case split, stopwords dropped, plural and -ing 
   assert.deepEqual(terms('convertingFiles to_JSON'), ['convert', 'fil', 'json']);
   assert.deepEqual(terms('I want a tool that converts files'), terms('convert file'));
   assert.deepEqual(terms('queries'), terms('query'));
+  assert.deepEqual(terms('runs locally, privately'), terms('run local private'));
+  assert.deepEqual(terms('assemblies'), terms('assembly'));
   assert.deepEqual(terms('我想要把錄音轉成文字'), []);
   assert.deepEqual(queryTerms('audio audio', 'Audio files'), ['audio', 'fil']);
 });
@@ -118,14 +119,6 @@ test('rules: relevance tier first, then verification on the OS, then treasure', 
   assert.deepEqual(slugsOf(rankByRules(entries, new Map())).slice(0, 2), ['sheet-69', 'sheet-68']);
 });
 
-test('needsEnglish: other scripts and Latin words the profiles do not use; not English requests', () => {
-  const index = relevanceIndex(fixtures.entries);
-  assert.equal(needsEnglish('我想要把錄音檔轉成逐字稿', index), true);
-  assert.equal(needsEnglish('幫我找 offline 的 LLM 工具', index), true);
-  assert.equal(needsEnglish('Quiero pasar grabaciones a texto sin conexión', index), true);
-  assert.equal(needsEnglish('transcribe audio files offline', index), false);
-});
-
 const ZH_NEED = '我想把會議錄音轉成逐字稿 (secret-xyz)';
 
 function twoCalls(keywords: Response | (() => Response), pick = 'quiet-transcriber') {
@@ -142,7 +135,7 @@ function twoCalls(keywords: Response | (() => Response), pick = 'quiet-transcrib
         );
 }
 
-test('a non-English request over MAX_CARDS gets English keywords from muse-spark-1.3 first', async () => {
+test('a request over MAX_CARDS gets English keywords from muse-spark-1.3 first (here a Chinese one)', async () => {
   const h = harness(twoCalls(() => metaResponse({ keywords: ['transcribe audio', 'speech to text', 'recordings'] })));
   h.deps.catalog = asCatalog(bulk());
   const out = await findSoftware({ need: ZH_NEED }, h.deps);
@@ -185,14 +178,19 @@ test('when the keyword call fails the shortlist is the treasure order and matchi
   }
 });
 
-test('an English request, or one at most MAX_CARDS tools meet, sends no keyword call', async () => {
-  const h = harness(twoCalls(() => metaResponse({ keywords: [] })));
+test('English requests get keywords too (synonyms); none when at most MAX_CARDS tools meet the conditions', async () => {
+  const h = harness(twoCalls(() => metaResponse({ keywords: ['transcribe', 'speech to text'] })));
   h.deps.catalog = asCatalog(bulk());
-  await findSoftware({ need: 'transcribe my audio recordings to text' }, h.deps);
-  assert.equal(h.requests.length, 1);
+  const out = await findSoftware({ need: 'dictate my notes' }, h.deps);
+  assert.equal(h.requests.length, 2);
+  assert.ok(h.requests[1].body.text.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
+  assert.deepEqual(out.picks.map((p) => p.slug), ['quiet-transcriber']);
   const small = harness(twoCalls(() => metaResponse({ keywords: [] }), 'fixture-transcribe'));
   await findSoftware({ need: ZH_NEED }, small.deps);
   assert.equal(small.requests.length, 1);
+  await small.settle();
+  const row = small.sqlite.prepare('SELECT need FROM events WHERE type = ?').get('find') as any;
+  assert.equal(JSON.parse(row.need).shortlist, null);
 });
 
 test('rules only (MATCH_MODE off): no Meta call at all, picks ranked by relevance', async () => {
@@ -206,7 +204,7 @@ test('rules only (MATCH_MODE off): no Meta call at all, picks ranked by relevanc
   assert.equal(zh.degraded_reason, 'model_off');
   assert.equal(zh.picks[0].slug, 'sheet-69'); // nothing to match: treasure order
   const rows = h.sqlite.prepare('SELECT need FROM events ORDER BY rowid').all() as any[];
-  assert.deepEqual(rows.map((r) => JSON.parse(r.need).shortlist.keywords), [null, 'model_off']);
+  assert.deepEqual(rows.map((r) => JSON.parse(r.need).shortlist.keywords), ['model_off', 'model_off']);
 });
 
 test('degraded after the keywords: the rules use them', async () => {
