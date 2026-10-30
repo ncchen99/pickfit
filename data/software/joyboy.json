@@ -79,9 +79,74 @@
   "last_release": null,
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_more_resources",
+    "checked_at": "2026-10-31T00:10:40.034609+08:00",
+    "runs": [
+      {
+        "id": "verify-joyboy-20261031-000847-6d02",
+        "level": "unverified",
+        "unverified_reason": "needs_more_resources",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:10:40.034609+08:00",
+        "tool_version": null,
+        "install_method": "source",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "git clone https://github.com/Senzo13/JoyBoy.git JoyBoy-src",
+            "purpose": "Clone JoyBoy repo to get launcher"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "pip install --quiet flask requests python-dotenv psutil && python3 JoyBoy-src/scripts/bootstrap.py doctor --json",
+            "expected_signal": "\"ready\": true",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "\"ready\": true,",
+            "setup": [
+              {
+                "command": "git clone https://github.com/Senzo13/JoyBoy.git JoyBoy-src",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "./start_linux.sh / ./setup_linux.sh for Linux",
+            "actually_needed": "setup_linux.sh exits 1 with '[ERROR] nvidia-smi not found' on a machine without NVIDIA GPU; it is the CUDA/cloud-GPU full-setup path, not the default Linux launch",
+            "kind": "note"
+          },
+          {
+            "readme_said": "./start_linux.sh then open http://127.0.0.1:7860",
+            "actually_needed": "start_linux.sh creates a venv and runs scripts/bootstrap.py setup which pip-installs ~40 entries from scripts/requirements.txt (torch, torchvision, torchaudio, diffusers, transformers, mediapipe, insightface, basicsr, plus triton/flash_attn) and web/app.py auto-installs requirements.txt on startup;…",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Doctor and onboarding check dependencies, GPU profile, providers",
+            "actually_needed": "scripts/bootstrap.py doctor --json runs with system Python plus flask/requests and reports status warning / ready true without torch or ollama; GPU and model checks report missing torch/ollama modules",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-joyboy-20261031-000847-6d02/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.147669
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -300,5 +365,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:59+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:10:40.036192+08:00"
 }

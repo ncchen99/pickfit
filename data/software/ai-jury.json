@@ -70,17 +70,20 @@
       "first_task": "jury --mock"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "brew",
+      "basis": "replayed",
+      "run_id": "verify-ai-jury-20261031-000626-5773",
+      "method": "uv",
       "steps": [
         {
-          "command": "brew install berkayturanci/ai-jury/ai-jury",
-          "purpose": null
+          "command": "uv tool install ai-jury && jury --version",
+          "purpose": "Install ai-jury via uv tool install"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "jury --version",
+        "expected_signal": "jury 1.28.0"
+      },
       "first_task": "jury --mock"
     },
     "windows": null
@@ -98,10 +101,97 @@
     "url": "https://github.com/berkayturanci/ai-jury/releases/tag/v1.28.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:07:05.105994+08:00",
+    "runs": [
+      {
+        "id": "verify-ai-jury-20261031-000626-5773",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:07:05.105994+08:00",
+        "tool_version": "1.28.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install ai-jury && jury --version",
+            "purpose": "Install ai-jury via uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "jury --version",
+            "expected_signal": "jury 1.28.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "jury 1.28.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "jury --help",
+            "expected_signal": "Subcommands",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Subcommands (each takes its own --help): init, config, comment, apply, replay, run-agent, cache",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "jury --mock",
+            "expected_signal": "synthesis: chair 'claude' consolidating verdict",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[jury] synthesis: chair 'claude' consolidating verdict",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "jury --doctor",
+            "expected_signal": "jury doctor",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "jury doctor",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "jury init --list-agents",
+            "expected_signal": "claude Claude Code",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "claude Claude Code (Anthropic) [not found]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exit 0 with mock review synthesis, doctor report, and version 1.28.0 printed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ai-jury-20261031-000626-5773/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ai-jury-20261031-000626-5773/check-1-cmd4.judged.png",
+            "runs/verify/verify-ai-jury-20261031-000626-5773/check-2-cmd5.judged.png",
+            "runs/verify/verify-ai-jury-20261031-000626-5773/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.032761
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -352,5 +442,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:07:05.106594+08:00"
 }

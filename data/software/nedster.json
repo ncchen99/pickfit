@@ -60,7 +60,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-nedster-20261030-235631-67ea",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone --depth 1 https://github.com/unrealumanga/Nedster.git /tmp/Nedster && ls -la /tmp/Nedster && cat /tmp/Nedster/install.sh",
+          "purpose": "Clone Nedster repo for install.sh source"
+        },
+        {
+          "command": "uv tool install --force /tmp/Nedster && uv tool update-shell && echo INSTALLED",
+          "purpose": "Install nedster via uv like install.sh does"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "nedster --version",
+        "expected_signal": "Nedster 4.0.0a1"
+      },
+      "first_task": "nedster doctor"
+    },
     "windows": null
   },
   "pricing": {
@@ -72,10 +92,112 @@
   "processing": "local",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:58:00.364371+08:00",
+    "runs": [
+      {
+        "id": "verify-nedster-20261030-235631-67ea",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:58:00.364371+08:00",
+        "tool_version": "4.0.0a1",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/unrealumanga/Nedster.git /tmp/Nedster && ls -la /tmp/Nedster && cat /tmp/Nedster/install.sh",
+            "purpose": "Clone Nedster repo for install.sh source"
+          },
+          {
+            "command": "uv tool install --force /tmp/Nedster && uv tool update-shell && echo INSTALLED",
+            "purpose": "Install nedster via uv like install.sh does"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nedster --version",
+            "expected_signal": "Nedster 4.0.0a1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Nedster 4.0.0a1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nedster --help",
+            "expected_signal": "Nedster — a local coding agent for Ollama",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Nedster — a local coding agent for Ollama (works alone or as a token-saving worker for Claude Code",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nedster doctor",
+            "expected_signal": "inference-ready NOT READY",
+            "exit_code": 3,
+            "passed": true,
+            "observed_excerpt": "inference-ready NOT READY · Ollama not reachable at http://127.0.0.1:11434",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nedster models recommend",
+            "expected_signal": "qwen3.5:9b-q4_K_M",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "worker qwen3.5:9b-q4_K_M",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nedster config show",
+            "expected_signal": "models.ollama_url",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "models.ollama_url = http://127.0.0.1:11434 [default]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "./install.sh puts nedster on PATH and runs nedster setup",
+            "actually_needed": "Ran only the install portion (uv tool install --force /tmp/Nedster); skipped the trailing `nedster setup` which installs Ollama and pulls ~10GB of models (models recommend shows 10.3GB) and needs GPU/VRAM.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "nedster doctor must say: inference ready, execution ready",
+            "actually_needed": "nedster doctor exits 3 with NOT READY reports when Ollama/model and sandbox are absent; this is the correct not-ready exit per the README exit-code table, not a failure.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show doctor reporting NOT READY statuses, models recommend listing the balanced worker model, and version printing Nedster 4.0.0a1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nedster-20261030-235631-67ea/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nedster-20261030-235631-67ea/check-1-cmd7.judged.png",
+            "runs/verify/verify-nedster-20261030-235631-67ea/check-2-cmd8.judged.png",
+            "runs/verify/verify-nedster-20261030-235631-67ea/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.101101
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -342,5 +464,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:59+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-30T23:58:00.365390+08:00"
 }

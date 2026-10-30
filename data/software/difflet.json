@@ -53,7 +53,31 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-difflet-20261031-000241-3dd5",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone https://github.com/ai-decentralized/Difflet.git Difflet-src && ls -la && df -h /home/sbx /tmp && python3 --version && pip --version",
+          "purpose": "Clone Difflet source with HTTPS"
+        },
+        {
+          "command": "pip install --index-url https://download.pytorch.org/whl/cu128 torch==2.11.0",
+          "purpose": "Install torch cu128 per README"
+        },
+        {
+          "command": "cd Difflet-src && pip install -e \".[cuda]\"",
+          "purpose": "Install difflet with cuda extras"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "difflet --help",
+        "expected_signal": "usage: difflet"
+      },
+      "first_task": "difflet cache ls"
+    },
     "windows": null
   },
   "pricing": {
@@ -65,10 +89,98 @@
   "processing": "local",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:09:13.215242+08:00",
+    "runs": [
+      {
+        "id": "verify-difflet-20261031-000241-3dd5",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:09:13.215242+08:00",
+        "tool_version": "0.0.0.dev0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/ai-decentralized/Difflet.git Difflet-src && ls -la && df -h /home/sbx /tmp && python3 --version && pip --version",
+            "purpose": "Clone Difflet source with HTTPS"
+          },
+          {
+            "command": "pip install --index-url https://download.pytorch.org/whl/cu128 torch==2.11.0",
+            "purpose": "Install torch cu128 per README"
+          },
+          {
+            "command": "cd Difflet-src && pip install -e \".[cuda]\"",
+            "purpose": "Install difflet with cuda extras"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "difflet --help",
+            "expected_signal": "usage: difflet",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: difflet [-h] {download,compile,generate,run,plan,clean,serve,cache} ...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "difflet cache ls",
+            "expected_signal": "no manifests found under",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no manifests found under /home/sbx/.cache/difflet",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "difflet plan --model-id black-forest-labs/FLUX.1-dev --objective latency",
+            "expected_signal": "sp_enabled and cp_degree > 1 are mutually exclusive",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "dp2tp1cp2sp [exclusivity] sp_enabled and cp_degree > 1 are mutually exclusive",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "git clone git@github.com:ai-decentralized/Difflet.git",
+            "actually_needed": "Clone with https://github.com/ai-decentralized/Difflet.git (e.g. git clone https://github.com/ai-decentralized/Difflet.git Difflet-src); the git@ SSH URL needs an SSH key/account.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "difflet run / serve generates images and videos",
+            "actually_needed": "Generation and serving need an NVIDIA GPU (or AWS Trainium2) with tens of GB plus gated Hugging Face access; on this CPU-only box only the CPU-safe commands (--help, cache ls, plan) can run.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show the empty cache message, plan output with sp_enabled exclusivity notes, and the difflet help usage text.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-difflet-20261031-000241-3dd5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-difflet-20261031-000241-3dd5/check-1-cmd6.judged.png",
+            "runs/verify/verify-difflet-20261031-000241-3dd5/check-2-cmd7.judged.png",
+            "runs/verify/verify-difflet-20261031-000241-3dd5/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.119863
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -273,5 +385,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:43+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:09:13.216012+08:00"
 }

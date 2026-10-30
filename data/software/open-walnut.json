@@ -78,20 +78,21 @@
       "first_task": "walnut --help"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-open-walnut-20261031-000359-4696",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g open-walnut",
-          "purpose": null
+          "command": "npm install -g open-walnut 2>&1",
+          "purpose": "npm global install open-walnut"
         }
       ],
-      "manual_steps": [
-        "Sign in to Claude Code once"
-      ],
-      "check": null,
-      "first_task": "walnut --help"
+      "manual_steps": [],
+      "check": {
+        "command": "open-walnut --version 2>&1",
+        "expected_signal": "0.6.20"
+      },
+      "first_task": "open-walnut projects 2>&1"
     },
     "windows": null
   },
@@ -108,10 +109,126 @@
     "url": "https://github.com/EvanZhang008/open-walnut/releases/tag/v0.6.20"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:05:13.839491+08:00",
+    "runs": [
+      {
+        "id": "verify-open-walnut-20261031-000359-4696",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:05:13.839491+08:00",
+        "tool_version": "0.6.20 (5aa5ab16c, 2026-10-30)",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g open-walnut 2>&1",
+            "purpose": "npm global install open-walnut"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open-walnut --version 2>&1",
+            "expected_signal": "0.6.20",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.6.20 (5aa5ab16c, 2026-10-30)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open-walnut --help 2>&1",
+            "expected_signal": "Start the web server",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "web [options] Start the web server",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open-walnut projects 2>&1",
+            "expected_signal": "No projects found.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No projects found.",
+            "setup": [
+              {
+                "command": "open-walnut web",
+                "background": true,
+                "port": 3456
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "open-walnut sessions 2>&1",
+            "expected_signal": "No sessions found.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No sessions found.",
+            "setup": [
+              {
+                "command": "open-walnut web",
+                "background": true,
+                "port": 3456
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:3456/",
+            "expected_signal": "200",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "200",
+            "setup": [
+              {
+                "command": "open-walnut web",
+                "background": true,
+                "port": 3456
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "walnut projects / walnut sessions",
+            "actually_needed": "With the npm install the binary is `open-walnut`, so the examples run as `open-walnut projects` and `open-walnut sessions` (plain `walnut` comes from the install.sh/Homebrew installs).",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "walnut projects lists projects with no stated prerequisite",
+            "actually_needed": "`open-walnut web` must be running on port 3456 first; otherwise `open-walnut projects` exits 1 with 'Open Walnut server is not running at http://127.0.0.1:3456'.",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.6.20 printed, help listing including Start the web server, and No projects found output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-open-walnut-20261031-000359-4696/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-open-walnut-20261031-000359-4696/check-1-cmd3.judged.png",
+            "runs/verify/verify-open-walnut-20261031-000359-4696/check-2-cmd9.judged.png",
+            "runs/verify/verify-open-walnut-20261031-000359-4696/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.048878
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -378,5 +495,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:05:13.840385+08:00"
 }

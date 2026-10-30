@@ -48,7 +48,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-vllm-rlt-20261031-000136-0a01",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone --depth 1 https://github.com/InferMatrixLab/vllm-rlt vllm-rlt && ls vllm-rlt/pyproject.toml vllm-rlt/vllm_rlt/__init__.py",
+          "purpose": "clone repo into work dir for install"
+        },
+        {
+          "command": "uv venv --python 3.12 .venv && VIRTUAL_ENV=$PWD/.venv uv pip install -e ./vllm-rlt",
+          "purpose": "create venv and install project there"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "./.venv/bin/python -m vllm_rlt.entrypoints.serve --help",
+        "expected_signal": "--attention-backend"
+      },
+      "first_task": "./.venv/bin/python -c \"import torch; from vllm_rlt.worker.sampler import Sampler; from vllm_rlt.sampling_params import SamplingParams; s=Sampler(); t=s.sample(torch.tensor([0.1,2.0,1.0]), SamplingParams(temperature=0.0), None); print('greedy_token:', int(t)); print('ok')\""
+    },
     "windows": null
   },
   "pricing": {
@@ -64,10 +84,93 @@
     "url": "https://github.com/InferMatrixLab/vllm-rlt/releases/tag/v0.1.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:06:48.256914+08:00",
+    "runs": [
+      {
+        "id": "verify-vllm-rlt-20261031-000136-0a01",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:06:48.256914+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/InferMatrixLab/vllm-rlt vllm-rlt && ls vllm-rlt/pyproject.toml vllm-rlt/vllm_rlt/__init__.py",
+            "purpose": "clone repo into work dir for install"
+          },
+          {
+            "command": "uv venv --python 3.12 .venv && VIRTUAL_ENV=$PWD/.venv uv pip install -e ./vllm-rlt",
+            "purpose": "create venv and install project there"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "./.venv/bin/python -m vllm_rlt.entrypoints.serve --help",
+            "expected_signal": "--attention-backend",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[--attention-backend {auto,torch,triton,flash_attn,flash_attn_2,flash_attn_3,flash_attn_4}]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "./.venv/bin/python -m vllm_rlt.entrypoints.cli --help",
+            "expected_signal": "--exit-threshold",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[--min-loops MIN_LOOPS] [--exit-threshold EXIT_THRESHOLD]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "./.venv/bin/python -c \"import torch; from vllm_rlt.worker.sampler import Sampler; from vllm_rlt.sampling_params import SamplingParams; s=Sampler(); t=s.sample(torch.tensor([0.1,2.0,1.0]), SamplingParams(temperature=0.0), None); print('greedy_token:', int(t)); print('ok')\"",
+            "expected_signal": "greedy_token: 1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "greedy_token: 1",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "uv pip install -e .",
+            "actually_needed": "create isolated env first: uv venv --python 3.12 .venv, then VIRTUAL_ENV=$PWD/.venv uv pip install -e ./vllm-rlt; plain install fails with 'No virtual environment found' and --system fails with Permission denied to /usr/local/lib/python3.12/site-packages",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "serve/CLI/Python examples with Ouro-1.4B on cuda",
+            "actually_needed": "generation examples require NVIDIA GPU with BF16 plus ~3 GB Ouro-1.4B checkpoint and support only native Ouro/Nanbeige/Huginn checkpoints, so generic tiny models (stories260K/SmolLM2) cannot be used; verified CPU sampler logic instead",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot 1 prints greedy_token: 1 and ok, and screenshot 2 shows serve --help listing --attention-backend.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-vllm-rlt-20261031-000136-0a01/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-vllm-rlt-20261031-000136-0a01/check-1-cmd9.judged.png",
+            "runs/verify/verify-vllm-rlt-20261031-000136-0a01/check-2-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.109173
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -278,5 +381,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:43+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:06:48.257437+08:00"
 }

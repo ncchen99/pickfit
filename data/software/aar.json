@@ -64,18 +64,25 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-aar-20261031-000648-5f3c",
       "method": "pip",
       "steps": [
         {
-          "command": "pip install \"aar-agent[all,dev]\"",
-          "purpose": null
+          "command": "rm -rf ./aar && git clone https://github.com/fischerf/aar.git ./aar",
+          "purpose": "Clone aar repo from GitHub"
+        },
+        {
+          "command": "cd ./aar && pip install -e \".[all,dev]\"",
+          "purpose": "Editable from-source install with all extras"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "aar --help"
+      "check": {
+        "command": "aar --help",
+        "expected_signal": "Lean Python Agent CLI"
+      },
+      "first_task": "aar tools"
     },
     "windows": {
       "basis": "readme_claim",
@@ -105,10 +112,98 @@
     "url": "https://github.com/fischerf/aar/releases/tag/v0.4.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:08:47.328038+08:00",
+    "runs": [
+      {
+        "id": "verify-aar-20261031-000648-5f3c",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:08:47.328038+08:00",
+        "tool_version": "0.4.1.dev0",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf ./aar && git clone https://github.com/fischerf/aar.git ./aar",
+            "purpose": "Clone aar repo from GitHub"
+          },
+          {
+            "command": "cd ./aar && pip install -e \".[all,dev]\"",
+            "purpose": "Editable from-source install with all extras"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "aar --help",
+            "expected_signal": "Lean Python Agent CLI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Lean Python Agent CLI",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "aar tui --help",
+            "expected_signal": "Full-screen mode with fixed bars",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ --fixed Full-screen mode with fixed bars, │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "aar tools",
+            "expected_signal": "read_file",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "read_file (read) Read a file and return its contents with line numbers. Large files (>500 lines)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "aar prompt",
+            "expected_signal": "You are a helpful assistant with access to tools.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ You are a helpful assistant with access to tools. │",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install \"aar-agent[all,dev]\" after git clone",
+            "actually_needed": "Clone repo then run pip install -e \".[all,dev]\" from inside the cloned directory (candidate 2); bare pip install aar-agent finds nothing on PyPI",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show aar listing tools, printing the system prompt, and showing help with the expected signals present.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-aar-20261031-000648-5f3c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-aar-20261031-000648-5f3c/check-1-cmd11.judged.png",
+            "runs/verify/verify-aar-20261031-000648-5f3c/check-2-cmd13.judged.png",
+            "runs/verify/verify-aar-20261031-000648-5f3c/check-3-cmd10.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.09223
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -375,5 +470,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:08:47.328729+08:00"
 }

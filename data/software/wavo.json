@@ -71,17 +71,20 @@
       "first_task": "wavo list"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-wavo-20261030-235638-ea8b",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo install wavo",
-          "purpose": null
+          "command": "curl -fL -o /tmp/wavo-dev.tar.gz https://github.com/vladkens/wavo/releases/download/dev/wavo-dev-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/wavo-dev.tar.gz -C /tmp && cp /tmp/wavo ~/.local/bin/wavo && chmod +x ~/.local/bin/wavo && wavo --version",
+          "purpose": "Download dev-release binary tarball, extract, install wavo to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "curl -fL -o /tmp/wavo-dev.tar.gz https://github.com/vladkens/wavo/releases/download/dev/wavo-dev-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/wavo-dev.tar.gz -C /tmp && cp /tmp/wavo ~/.local/bin/wavo && chmod +x ~/.local/bin/wavo && wavo --version",
+        "expected_signal": "wavo 0.3.1-23-ga3b5c3b"
+      },
       "first_task": "wavo list"
     },
     "windows": {
@@ -112,10 +115,95 @@
     "url": "https://github.com/vladkens/wavo/releases/tag/v0.3.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:58:51.654469+08:00",
+    "runs": [
+      {
+        "id": "verify-wavo-20261030-235638-ea8b",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:58:51.654469+08:00",
+        "tool_version": "0.3.1-23-ga3b5c3b",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fL -o /tmp/wavo-dev.tar.gz https://github.com/vladkens/wavo/releases/download/dev/wavo-dev-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/wavo-dev.tar.gz -C /tmp && cp /tmp/wavo ~/.local/bin/wavo && chmod +x ~/.local/bin/wavo && wavo --version",
+            "purpose": "Download dev-release binary tarball, extract, install wavo to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "curl -fL -o /tmp/wavo-dev.tar.gz https://github.com/vladkens/wavo/releases/download/dev/wavo-dev-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/wavo-dev.tar.gz -C /tmp && cp /tmp/wavo ~/.local/bin/wavo && chmod +x ~/.local/bin/wavo && wavo --version",
+            "expected_signal": "wavo 0.3.1-23-ga3b5c3b",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "wavo 0.3.1-23-ga3b5c3b",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "wavo list",
+            "expected_signal": "no models downloaded",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no models downloaded; try: wavo pull parakeet-ultra",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "wavo debug",
+            "expected_signal": "--- GPU ---",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "--- GPU ------------------------------------------------------------------------",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install wavo / cargo install --git https://github.com/vladkens/wavo",
+            "actually_needed": "Downloaded the prebuilt Linux x86_64 tarball from GitHub releases and copied wavo to ~/.local/bin (no build step)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "wavo debug (and wavo serve) as documented commands",
+            "actually_needed": "Used the dev-release binary (wavo-dev-x86_64-unknown-linux-gnu.tar.gz); the latest stable release v0.3.1 prints 'error: unknown command: wavo debug' because the README follows main, ahead of the release",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "wavo runs through Vulkan/GPU on Linux",
+            "actually_needed": "On this CPU-only box wavo debug reports 'error=no GPU adapter' and warns 'wavo can't load a model', so model load/transcription was not attempted; list/debug still work",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show expected output: empty model list, debug info with GPU section, and version string after reinstall.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-wavo-20261030-235638-ea8b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-wavo-20261030-235638-ea8b/check-1-cmd11.judged.png",
+            "runs/verify/verify-wavo-20261030-235638-ea8b/check-2-cmd10.judged.png",
+            "runs/verify/verify-wavo-20261030-235638-ea8b/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.072397
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -358,5 +446,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:18+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-30T23:58:51.655332+08:00"
 }

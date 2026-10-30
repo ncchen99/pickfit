@@ -69,18 +69,21 @@
       "first_task": "airdrop start"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-airdrop-llm-20261030-235452-4e4f",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g airdrop-llm@latest",
-          "purpose": null
+          "purpose": "Install airdrop-llm globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "airdrop start"
+      "check": {
+        "command": "airdrop --version",
+        "expected_signal": "airdrop-llm v0.1.6"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -110,10 +113,65 @@
     "url": "https://github.com/Mohit-jpg-dot/AirDrop-LLM/releases/tag/v0.1.6"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:56:31.193228+08:00",
+    "runs": [
+      {
+        "id": "verify-airdrop-llm-20261030-235452-4e4f",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:56:31.193228+08:00",
+        "tool_version": "0.1.6",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g airdrop-llm@latest",
+            "purpose": "Install airdrop-llm globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "airdrop --version",
+            "expected_signal": "airdrop-llm v0.1.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "airdrop-llm v0.1.6",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "airdrop start",
+            "actually_needed": "pass --no-browser when starting headless (airdrop start --no-browser) so it does not try xdg-open",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows `airdrop --version` printing `airdrop-llm v0.1.6`.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-airdrop-llm-20261030-235452-4e4f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-airdrop-llm-20261030-235452-4e4f/check-1-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.254595
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -364,5 +422,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:59+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-30T23:56:31.193858+08:00"
 }

@@ -73,18 +73,21 @@
       "first_task": "vortelio serve --port 11500"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-vortelio-20261030-235800-75a1",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install \"git+https://github.com/metiu1/Vortelio#subdirectory=vortelio-pip\"",
-          "purpose": null
+          "command": "uv tool install \"git+https://github.com/metiu1/Vortelio#subdirectory=vortelio-pip\" && vortelio --help",
+          "purpose": "install vortelio via uv tool from git"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "vortelio serve --port 11500"
+      "check": {
+        "command": "vortelio --version",
+        "expected_signal": "vortelio version 0.4.6"
+      },
+      "first_task": "curl -s http://localhost:11500/api/status"
     },
     "windows": {
       "basis": "readme_claim",
@@ -114,10 +117,107 @@
     "url": "https://github.com/metiutek/Vortelio/releases/tag/v0.4.6"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "inference",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:02:41.150975+08:00",
+    "runs": [
+      {
+        "id": "verify-vortelio-20261030-235800-75a1",
+        "level": "inference",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:02:41.150975+08:00",
+        "tool_version": "0.4.6",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install \"git+https://github.com/metiu1/Vortelio#subdirectory=vortelio-pip\" && vortelio --help",
+            "purpose": "install vortelio via uv tool from git"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "vortelio --version",
+            "expected_signal": "vortelio version 0.4.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "vortelio version 0.4.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://localhost:11500/api/status",
+            "expected_signal": "\"model_count\":1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"hardware\":\"CPU\",\"model_count\":1,\"name\":\"vortelio\",\"version\":\"0.4.6\"}",
+            "setup": [
+              {
+                "command": "vortelio serve --port 11500",
+                "background": true,
+                "port": 11500
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://localhost:11500/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\":\"llm/bartowski--smollm2-135m-instruct-gguf:q8-0\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hi\"}],\"temperature\":0,\"max_tokens\":16}'",
+            "expected_signal": "chat.completion",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"message\":{\"content\":\"Hello! How can I help you today?\",\"role\":\"assistant\"}}],\"created\":1793376156,\"id\":\"chatcmpl-1793376156323525451\",\"model\":\"bartowski--smollm2-135m-instruct-gguf:q8-0\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":0,\"prompt…",
+            "setup": [
+              {
+                "command": "vortelio pull llm/hf.co/bartowski/SmolLM2-135M-Instruct-GGUF:Q8_0",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "vortelio serve --port 11500",
+                "background": true,
+                "port": 11500
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Install uv first via install.sh or pip install uv",
+            "actually_needed": "uv 0.13.6 already on PATH so skipped derived pipx/pip uv installs; went straight to candidate 1",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "vortelio pull llm/hf.co/unsloth/Qwen2.5-0.5B-Instruct-GGUF:Q4_K_M",
+            "actually_needed": "input llm/hf.co/bartowski/SmolLM2-135M-Instruct-GGUF:Q8_0 is stored/listed as llm/bartowski--smollm2-135m-instruct-gguf:q8-0 and API returns model bartowski--smollm2-135m-instruct-gguf:q8-0; use lowercased name for /v1/chat/completions",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show status with model_count 1, chat completion with greeting and chat.completion object, and CLI reporting version 0.4.6.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-vortelio-20261030-235800-75a1/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-vortelio-20261030-235800-75a1/check-1-cmd8.judged.png",
+            "runs/verify/verify-vortelio-20261030-235800-75a1/check-2-cmd12.judged.png",
+            "runs/verify/verify-vortelio-20261030-235800-75a1/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.13025
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -408,5 +508,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:17+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:02:41.151900+08:00"
 }

@@ -69,18 +69,21 @@
       "first_task": "phone-a-friend doctor"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-phone-a-friend-20261030-235908-7a30",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g @freibergergarcia/phone-a-friend",
-          "purpose": null
+          "purpose": "Install phone-a-friend via npm global"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "phone-a-friend doctor"
+      "check": {
+        "command": "phone-a-friend --version",
+        "expected_signal": "phone-a-friend 4.14.1"
+      },
+      "first_task": "phone-a-friend config show"
     },
     "windows": null
   },
@@ -97,10 +100,84 @@
     "url": "https://github.com/freibergergarcia/phone-a-friend/releases/tag/v4.14.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:00:29.680857+08:00",
+    "runs": [
+      {
+        "id": "verify-phone-a-friend-20261030-235908-7a30",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:00:29.680857+08:00",
+        "tool_version": "4.14.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @freibergergarcia/phone-a-friend",
+            "purpose": "Install phone-a-friend via npm global"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "phone-a-friend --version",
+            "expected_signal": "phone-a-friend 4.14.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "phone-a-friend 4.14.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "phone-a-friend --help",
+            "expected_signal": "Relay prompt/context to a coding backend",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "relay [options] Relay prompt/context to a coding backend (default)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "phone-a-friend config show",
+            "expected_signal": "\"backend\": \"codex\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"backend\": \"codex\",",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "phone-a-friend doctor",
+            "actually_needed": "doctor exits 2 and reports '0 of 3 relay backends ready' when no backend CLIs are installed; this is its health-report behavior, not an install failure",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show config containing backend codex and version output phone-a-friend 4.14.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-phone-a-friend-20261030-235908-7a30/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-phone-a-friend-20261030-235908-7a30/check-1-cmd7.judged.png",
+            "runs/verify/verify-phone-a-friend-20261030-235908-7a30/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.055873
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -311,5 +388,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:00:29.681718+08:00"
 }

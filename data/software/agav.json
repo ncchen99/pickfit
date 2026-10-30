@@ -66,18 +66,25 @@
       "first_task": "agav"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-agav-20261031-000101-8ea4",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://agav.dev/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://agav.dev/install.sh -o /tmp/agav-install.sh && ls -l /tmp/agav-install.sh && wc -c /tmp/agav-install.sh",
+          "purpose": "Download install script"
+        },
+        {
+          "command": "bash /tmp/agav-install.sh",
+          "purpose": "Install Agav via script"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "agav"
+      "check": {
+        "command": "agav --version",
+        "expected_signal": "0.2.6"
+      },
+      "first_task": "agav update"
     },
     "windows": {
       "basis": "readme_claim",
@@ -107,10 +114,82 @@
     "url": "https://github.com/prapaa-ai/agav/releases/tag/v0.2.6"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:02:08.385358+08:00",
+    "runs": [
+      {
+        "id": "verify-agav-20261031-000101-8ea4",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:02:08.385358+08:00",
+        "tool_version": "0.2.6",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://agav.dev/install.sh -o /tmp/agav-install.sh && ls -l /tmp/agav-install.sh && wc -c /tmp/agav-install.sh",
+            "purpose": "Download install script"
+          },
+          {
+            "command": "bash /tmp/agav-install.sh",
+            "purpose": "Install Agav via script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "agav --version",
+            "expected_signal": "0.2.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.2.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "agav --help",
+            "expected_signal": "Show this help",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "--help, -h Show this help",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "agav update",
+            "expected_signal": "Already up to date.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Already up to date.",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show update check reporting Already up to date and --version printing 0.2.6.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-agav-20261031-000101-8ea4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-agav-20261031-000101-8ea4/check-1-cmd5.judged.png",
+            "runs/verify/verify-agav-20261031-000101-8ea4/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.051226
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -337,5 +416,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:02:08.386707+08:00"
 }

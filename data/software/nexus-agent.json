@@ -60,7 +60,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-nexus-agent-20261031-000105-3940",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "rm -rf nexus-agent && git clone https://github.com/rudra496/nexus-agent.git 2>&1 && ls nexus-agent/pyproject.toml",
+          "purpose": "Clone source repo"
+        },
+        {
+          "command": "pip install --user \"./nexus-agent[all]\" 2>&1",
+          "purpose": "Install nexus-agent from source with all extras"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "nexus --help 2>&1",
+        "expected_signal": "NexusAgent: The Zero-Config, Self-Evolving Local AI Agent."
+      },
+      "first_task": "nexus status 2>&1"
+    },
     "windows": null
   },
   "pricing": {
@@ -76,10 +96,98 @@
     "url": "https://github.com/rudra496/nexus-agent/releases/tag/v1.0.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:04:46.133042+08:00",
+    "runs": [
+      {
+        "id": "verify-nexus-agent-20261031-000105-3940",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:04:46.133042+08:00",
+        "tool_version": "1.0.0",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf nexus-agent && git clone https://github.com/rudra496/nexus-agent.git 2>&1 && ls nexus-agent/pyproject.toml",
+            "purpose": "Clone source repo"
+          },
+          {
+            "command": "pip install --user \"./nexus-agent[all]\" 2>&1",
+            "purpose": "Install nexus-agent from source with all extras"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nexus --help 2>&1",
+            "expected_signal": "NexusAgent: The Zero-Config, Self-Evolving Local AI Agent.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "NexusAgent: The Zero-Config, Self-Evolving Local AI Agent.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nexus status 2>&1",
+            "expected_signal": "Nexus Diagnostics",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Nexus Diagnostics",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nexus skills 2>&1",
+            "expected_signal": "Nexus Skill Tree:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Nexus Skill Tree:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nexus evolve 2>&1",
+            "expected_signal": "Evolution complete!",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Evolution complete!",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install nexus-agent / pipx install nexus-agent gives NexusAgent",
+            "actually_needed": "Uninstall/remove placeholder and install from source: git clone https://github.com/rudra496/nexus-agent.git then pip install --user \"./nexus-agent[all]\" (v1.0.0 with nexus entry point)",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show help tagline, diagnostics table, and skill-tree message across the three commands with exit 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nexus-agent-20261031-000105-3940/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nexus-agent-20261031-000105-3940/check-1-cmd5.judged.png",
+            "runs/verify/verify-nexus-agent-20261031-000105-3940/check-2-cmd6.judged.png",
+            "runs/verify/verify-nexus-agent-20261031-000105-3940/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.068565
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -346,5 +454,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:04:46.133638+08:00"
 }

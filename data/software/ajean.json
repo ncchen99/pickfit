@@ -59,18 +59,21 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-ajean-20261031-000446-ea7c",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -L -o ajean https://github.com/nathaninline/ajean/releases/latest/download/ajean-linux",
-          "purpose": null
+          "command": "curl -L -o /tmp/ajean https://github.com/nathaninline/ajean/releases/latest/download/ajean-linux && chmod +x /tmp/ajean && mkdir -p ~/.local/bin && mv /tmp/ajean ~/.local/bin/ajean && ls -lh ~/.local/bin/ajean",
+          "purpose": "Download release binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "ajean where"
+      "check": {
+        "command": "ajean version",
+        "expected_signal": "ajean 0.18.16"
+      },
+      "first_task": "ajean version"
     },
     "windows": null
   },
@@ -87,10 +90,91 @@
     "url": "https://github.com/nathaninline/ajean/releases/tag/v0.18.16"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:06:26.369564+08:00",
+    "runs": [
+      {
+        "id": "verify-ajean-20261031-000446-ea7c",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:06:26.369564+08:00",
+        "tool_version": "0.18.16",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -L -o /tmp/ajean https://github.com/nathaninline/ajean/releases/latest/download/ajean-linux && chmod +x /tmp/ajean && mkdir -p ~/.local/bin && mv /tmp/ajean ~/.local/bin/ajean && ls -lh ~/.local/bin/ajean",
+            "purpose": "Download release binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ajean version",
+            "expected_signal": "ajean 0.18.16",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ajean 0.18.16",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ajean where",
+            "expected_signal": "données (AJEAN_HOME)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "données (AJEAN_HOME) /etc/ajean",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8099/api/ping",
+            "expected_signal": "\"ok\":true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"ok\":true,\"service\":\"ajean\",\"version\":\"0.18.16\"}",
+            "setup": [
+              {
+                "command": "AJEAN_HOME=$HOME/ajean-data ajean web 8099",
+                "background": true,
+                "port": 8099
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "chmod +x ajean && sudo mv ajean /usr/local/bin/ajean; sudo ajean install (services, permissions, folders)",
+            "actually_needed": "install binary to ~/.local/bin without sudo and run with AJEAN_HOME=$HOME/ajean-data (writable dir); no systemctl/sudo used, `ajean web` still serves the UI and API",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show AJEAN locations listed, API ping returning ok true version 0.18.16, and version command printing ajean 0.18.16.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ajean-20261031-000446-ea7c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ajean-20261031-000446-ea7c/check-1-cmd3.judged.png",
+            "runs/verify/verify-ajean-20261031-000446-ea7c/check-2-cmd15.judged.png",
+            "runs/verify/verify-ajean-20261031-000446-ea7c/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.151533
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -341,5 +425,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:06:26.370519+08:00"
 }

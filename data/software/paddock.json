@@ -64,7 +64,31 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-paddock-20261031-000208-b0f5",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/paddock-bin /tmp/paddock-dl && curl -fL -o /tmp/paddock-dl/paddock.tar.gz https://github.com/truespar/paddock/releases/download/v0.1.19/paddock-0.1.19-x86_64-linux.tar.gz && ls -lh /tmp/paddock-dl/",
+          "purpose": "Download Linux x86_64 binary release"
+        },
+        {
+          "command": "tar -xzf /tmp/paddock-dl/paddock.tar.gz -C ~/paddock-bin",
+          "purpose": "Extract portable binaries"
+        },
+        {
+          "command": "ln -sf ~/paddock-bin/paddock-0.1.19-x86_64-linux/paddock ~/.local/bin/paddock && ln -sf ~/paddock-bin/paddock-0.1.19-x86_64-linux/paddock-runner ~/.local/bin/paddock-runner && ls -l ~/.local/bin/paddock* && paddock --version",
+          "purpose": "Install paddock and paddock-runner to PATH"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ln -sf ~/paddock-bin/paddock-0.1.19-x86_64-linux/paddock ~/.local/bin/paddock && ln -sf ~/paddock-bin/paddock-0.1.19-x86_64-linux/paddock-runner ~/.local/bin/paddock-runner && ls -l ~/.local/bin/paddock* && paddock --version",
+        "expected_signal": "paddock 0.1.19"
+      },
+      "first_task": "curl -sk https://127.0.0.1:11500/"
+    },
     "windows": null
   },
   "pricing": {
@@ -80,10 +104,124 @@
     "url": "https://github.com/truespar/paddock/releases/tag/v0.1.19"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:03:59.193332+08:00",
+    "runs": [
+      {
+        "id": "verify-paddock-20261031-000208-b0f5",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:03:59.193332+08:00",
+        "tool_version": "0.1.19 (g9aa69660)",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/paddock-bin /tmp/paddock-dl && curl -fL -o /tmp/paddock-dl/paddock.tar.gz https://github.com/truespar/paddock/releases/download/v0.1.19/paddock-0.1.19-x86_64-linux.tar.gz && ls -lh /tmp/paddock-dl/",
+            "purpose": "Download Linux x86_64 binary release"
+          },
+          {
+            "command": "tar -xzf /tmp/paddock-dl/paddock.tar.gz -C ~/paddock-bin",
+            "purpose": "Extract portable binaries"
+          },
+          {
+            "command": "ln -sf ~/paddock-bin/paddock-0.1.19-x86_64-linux/paddock ~/.local/bin/paddock && ln -sf ~/paddock-bin/paddock-0.1.19-x86_64-linux/paddock-runner ~/.local/bin/paddock-runner && ls -l ~/.local/bin/paddock* && paddock --version",
+            "purpose": "Install paddock and paddock-runner to PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ln -sf ~/paddock-bin/paddock-0.1.19-x86_64-linux/paddock ~/.local/bin/paddock && ln -sf ~/paddock-bin/paddock-0.1.19-x86_64-linux/paddock-runner ~/.local/bin/paddock-runner && ls -l ~/.local/bin/paddock* && paddock --version",
+            "expected_signal": "paddock 0.1.19",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "paddock 0.1.19 (g9aa69660)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "paddock --help",
+            "expected_signal": "Usage: paddock",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: paddock [OPTIONS] [COMMAND]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -sk https://127.0.0.1:11500/",
+            "expected_signal": "<title>Paddock Studio</title>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "<title>Paddock Studio</title>",
+            "setup": [
+              {
+                "command": "paddock --port 11500",
+                "background": true,
+                "port": 11500
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "paddock ps",
+            "expected_signal": "no models running",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no models running (start one: paddock serve <model>)",
+            "setup": [
+              {
+                "command": "paddock --port 11500",
+                "background": true,
+                "port": 11500
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo build --release -p paddock-manager -p paddock-runner",
+            "actually_needed": "Used prebuilt paddock-0.1.19-x86_64-linux.tar.gz from GitHub releases and symlinked paddock and paddock-runner into ~/.local/bin; box has node/npm only, no rustc/cargo/cmake/gcc and installing a Rust toolchain is forbidden",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "AI inference server for NVIDIA GPUs and Apple Silicon",
+            "actually_needed": "Manager runs without GPU and serves Studio at https://127.0.0.1:11500 over TLS with self-signed cert (curl -k needed); log warns 'no usable graphics card ... models cannot run' so no runner inference was attempted",
+            "kind": "note"
+          },
+          {
+            "readme_said": "OpenAI/Anthropic API on the manager port",
+            "actually_needed": "Manager has no /v1/models or /api/health (both return not_found_error) and no /openapi.json; health is Studio HTML at / and status via `paddock ps` because clients talk to runners directly, manager is never a proxy",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show Paddock Studio HTML served, paddock ps reporting no models, and paddock 0.1.19 version.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-paddock-20261031-000208-b0f5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-paddock-20261031-000208-b0f5/check-1-cmd13.judged.png",
+            "runs/verify/verify-paddock-20261031-000208-b0f5/check-2-cmd14.judged.png",
+            "runs/verify/verify-paddock-20261031-000208-b0f5/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.148565
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -350,5 +488,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:43+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:03:59.193938+08:00"
 }

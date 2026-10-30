@@ -52,7 +52,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-localharness-20261030-235452-2ec9",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install 'localharness[embeddings,mobile]' 2>&1",
+          "purpose": "install localharness via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "localharness --version 2>&1",
+        "expected_signal": "localharness 0.25.0"
+      },
+      "first_task": "localharness plugins list 2>&1"
+    },
     "windows": null
   },
   "pricing": {
@@ -68,10 +84,88 @@
     "url": "https://github.com/ahwurm/localharness/releases/tag/v0.22.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:57:02.005125+08:00",
+    "runs": [
+      {
+        "id": "verify-localharness-20261030-235452-2ec9",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:57:02.005125+08:00",
+        "tool_version": "0.25.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install 'localharness[embeddings,mobile]' 2>&1",
+            "purpose": "install localharness via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "localharness --version 2>&1",
+            "expected_signal": "localharness 0.25.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "localharness 0.25.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "localharness --help 2>&1",
+            "expected_signal": "Launch the agent REPL",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ start Launch the agent REPL. Zero to chatting in one command. │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "localharness plugins list 2>&1",
+            "expected_signal": "memory persistent memory",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "memory persistent memory: facts recalled on built in",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "localharness agent list 2>&1",
+            "expected_signal": "No agents configured.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No agents configured. Run: localharness agent create <name>",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.25.0, help listing start as Launch the agent REPL, and plugins list with memory persistent memory on.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-localharness-20261030-235452-2ec9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-localharness-20261030-235452-2ec9/check-1-cmd2.judged.png",
+            "runs/verify/verify-localharness-20261030-235452-2ec9/check-2-cmd3.judged.png",
+            "runs/verify/verify-localharness-20261030-235452-2ec9/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.031927
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -290,5 +384,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:22+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-30T23:57:02.005782+08:00"
 }

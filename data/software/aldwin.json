@@ -73,20 +73,21 @@
       "first_task": "aldwin --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-aldwin-20261031-000710-9a19",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install aldwin",
-          "purpose": null
+          "purpose": "Install aldwin via uv tool"
         }
       ],
-      "manual_steps": [
-        "Provide OpenAI API key on first run"
-      ],
-      "check": null,
-      "first_task": "aldwin --version"
+      "manual_steps": [],
+      "check": {
+        "command": "aldwin --version",
+        "expected_signal": "aldwin 0.0.2.1 (protocol v2, agentling 0.1.1)"
+      },
+      "first_task": "aldwin skills"
     },
     "windows": null
   },
@@ -103,10 +104,78 @@
     "url": "https://github.com/lunarstack-co/aldwin/releases/tag/v0.0.2.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:07:51.031995+08:00",
+    "runs": [
+      {
+        "id": "verify-aldwin-20261031-000710-9a19",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:07:51.031995+08:00",
+        "tool_version": "0.0.2.1",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install aldwin",
+            "purpose": "Install aldwin via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "aldwin --version",
+            "expected_signal": "aldwin 0.0.2.1 (protocol v2, agentling 0.1.1)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "aldwin 0.0.2.1 (protocol v2, agentling 0.1.1)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "aldwin --help",
+            "expected_signal": "Usage: aldwin [OPTIONS] COMMAND [ARGS]...",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: aldwin [OPTIONS] COMMAND [ARGS]...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "aldwin skills",
+            "expected_signal": "using-aldwin · default",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "using-aldwin · default · Who made Aldwin, capabilities, approvals, commands and settings. Use when",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show successful outputs listing skills including using-aldwin and printing the expected version string.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-aldwin-20261031-000710-9a19/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-aldwin-20261031-000710-9a19/check-1-cmd4.judged.png",
+            "runs/verify/verify-aldwin-20261031-000710-9a19/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.028738
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -365,5 +434,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:07:51.032659+08:00"
 }

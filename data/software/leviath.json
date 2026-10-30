@@ -81,20 +81,29 @@
       "first_task": "lev --help"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-leviath-20261031-000705-112c",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://leviath.dev/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://leviath.dev/install.sh -o /tmp/leviath-install.sh && wc -c /tmp/leviath-install.sh && head -c 2000 /tmp/leviath-install.sh",
+          "purpose": "Download outer install script for reading"
+        },
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/GEMISIS/leviath-dist/main/install.sh -o /tmp/leviath-dist-install.sh && wc -c /tmp/leviath-dist-install.sh && echo \"---downloaded-ok---\"",
+          "purpose": "Download nested dist install script for reading"
+        },
+        {
+          "command": "sed 's|^INSTALL_DIR=.*|INSTALL_DIR=\"$HOME/.local/bin\"|' /tmp/leviath-dist-install.sh > /tmp/leviath-user-install.sh && grep -n \"INSTALL_DIR\" /tmp/leviath-user-install.sh && bash /tmp/leviath-user-install.sh --channel stable",
+          "purpose": "Install stable binary to ~/.local/bin via patched script"
         }
       ],
-      "manual_steps": [
-        "Obtain an API key from a model provider"
-      ],
-      "check": null,
-      "first_task": "lev --help"
+      "manual_steps": [],
+      "check": {
+        "command": "lev --help",
+        "expected_signal": "Leviath agent framework CLI"
+      },
+      "first_task": "lev ps"
     },
     "windows": {
       "basis": "readme_claim",
@@ -126,10 +135,103 @@
     "url": "https://github.com/GEMISIS/leviath/releases/tag/v0.6.4"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:08:36.906641+08:00",
+    "runs": [
+      {
+        "id": "verify-leviath-20261031-000705-112c",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:08:36.906641+08:00",
+        "tool_version": "lev 0.6.4",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://leviath.dev/install.sh -o /tmp/leviath-install.sh && wc -c /tmp/leviath-install.sh && head -c 2000 /tmp/leviath-install.sh",
+            "purpose": "Download outer install script for reading"
+          },
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/GEMISIS/leviath-dist/main/install.sh -o /tmp/leviath-dist-install.sh && wc -c /tmp/leviath-dist-install.sh && echo \"---downloaded-ok---\"",
+            "purpose": "Download nested dist install script for reading"
+          },
+          {
+            "command": "sed 's|^INSTALL_DIR=.*|INSTALL_DIR=\"$HOME/.local/bin\"|' /tmp/leviath-dist-install.sh > /tmp/leviath-user-install.sh && grep -n \"INSTALL_DIR\" /tmp/leviath-user-install.sh && bash /tmp/leviath-user-install.sh --channel stable",
+            "purpose": "Install stable binary to ~/.local/bin via patched script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lev --help",
+            "expected_signal": "Leviath agent framework CLI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Leviath agent framework CLI",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lev --version",
+            "expected_signal": "lev 0.6.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lev 0.6.4",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lev ps",
+            "expected_signal": "no agent runs active",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no agent runs active",
+            "setup": [
+              {
+                "command": "lev daemon",
+                "background": true,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://leviath.dev/install.sh | sh installs a prebuilt binary with no extra steps",
+            "actually_needed": "Installer hardcodes INSTALL_DIR=/usr/local/bin and falls back to `sudo install`; box has no sudo and /usr/local/bin is not writable, so patched a copy of the dist install script with INSTALL_DIR=\"$HOME/.local/bin\" and ran `bash /tmp/leviath-user-install.sh --channel stable`.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "lev ps lists running agents",
+            "actually_needed": "Started the shared-world daemon first with `lev daemon` (background); only then does `lev ps` succeed and print `no agent runs active`.",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show lev ps reporting no active runs and lev --help displaying the Leviath agent framework CLI help.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-leviath-20261031-000705-112c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-leviath-20261031-000705-112c/check-1-cmd10.judged.png",
+            "runs/verify/verify-leviath-20261031-000705-112c/check-2-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.074599
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -444,5 +546,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:52+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:08:36.907249+08:00"
 }

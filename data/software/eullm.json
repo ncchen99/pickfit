@@ -69,18 +69,25 @@
       "first_task": "eullm run hf.co/Qwen/Qwen3-8B-GGUF:Q4_K_M"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-eullm-20261030-235736-c2ca",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/eullm/eullm/main/installer/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/eullm/eullm/main/installer/install.sh -o /tmp/eullm-install.sh && wc -c /tmp/eullm-install.sh && head -c 2000 /tmp/eullm-install.sh",
+          "purpose": "Download installer script for review"
+        },
+        {
+          "command": "sh /tmp/eullm-install.sh",
+          "purpose": "Install eullm via reviewed script"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "eullm run hf.co/Qwen/Qwen3-8B-GGUF:Q4_K_M"
+      "check": {
+        "command": "eullm --version",
+        "expected_signal": "eullm 0.8.5"
+      },
+      "first_task": "curl -s http://localhost:11434/v1/models"
     },
     "windows": {
       "basis": "readme_claim",
@@ -110,10 +117,111 @@
     "url": "https://github.com/eullm/eullm/releases/tag/EuLLM-v0.8.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "inference",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:59:08.370015+08:00",
+    "runs": [
+      {
+        "id": "verify-eullm-20261030-235736-c2ca",
+        "level": "inference",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:59:08.370015+08:00",
+        "tool_version": "0.8.5",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/eullm/eullm/main/installer/install.sh -o /tmp/eullm-install.sh && wc -c /tmp/eullm-install.sh && head -c 2000 /tmp/eullm-install.sh",
+            "purpose": "Download installer script for review"
+          },
+          {
+            "command": "sh /tmp/eullm-install.sh",
+            "purpose": "Install eullm via reviewed script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "eullm --version",
+            "expected_signal": "eullm 0.8.5",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "eullm 0.8.5 (CPU) [a3bbe56fc2b6]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://localhost:11434/v1/models",
+            "expected_signal": "stories260K",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"data\":[{\"created\":1700000000,\"id\":\"stories260K\",\"object\":\"model\",\"owned_by\":\"eullm\"},{\"created\":1700000000,\"id\":\"qwen3-0.6b\",\"object\":\"model\",\"owned_by\":\"eullm\"},{\"created\":1700000000,\"id\":\"qwen3-1.7b\",\"object\":\"model\",\"owned_by\":\"eullm\"},{\"created\":1700000000,\"id\":\"smollm2-1.7b\",\"object\":\"model\"…",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -l ~/models/stories260K.gguf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "eullm run /home/sbx/models/stories260K.gguf --no-ui --port 11434",
+                "background": true,
+                "port": 11434
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -si http://localhost:11434/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\":\"stories260K\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hi\"}],\"max_tokens\":16,\"temperature\":0}'",
+            "expected_signal": "completion_tokens",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"choices\":[{\"finish_reason\":\"length\",\"index\":0,\"message\":{\"content\":\"\\\"Here?\\\" Annabyed.\\n\",\"role\":\"assistant\"}}],\"created\":1793375942,\"id\":\"chatcmpl-d3482fad-bec7-475f-8569-aa49d88654b6\",\"model\":\"stories260K\",\"object\":\"chat.completion\",\"timings\":{\"predicted_ms\":1.852201,\"predicted_n\":16,\"prompt_m…",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -l ~/models/stories260K.gguf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "eullm run /home/sbx/models/stories260K.gguf --no-ui --port 11434",
+                "background": true,
+                "port": 11434
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Ollama and OpenAI APIs on port 11434",
+            "actually_needed": "Use POST /v1/chat/completions even for base completion model; POST /v1/completions returns 404",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show model list containing stories260K, a successful chat completion with token usage, and eullm 0.8.5 version output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-eullm-20261030-235736-c2ca/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-eullm-20261030-235736-c2ca/check-1-cmd10.judged.png",
+            "runs/verify/verify-eullm-20261030-235736-c2ca/check-2-cmd13.judged.png",
+            "runs/verify/verify-eullm-20261030-235736-c2ca/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.097279
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -348,5 +456,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-30T23:59:08.370782+08:00"
 }

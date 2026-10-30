@@ -57,7 +57,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-memcode-20261031-000836-edc3",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://memcode.ai/install.sh -o /tmp/install_memcode.sh && ls -l /tmp/install_memcode.sh && wc -c /tmp/install_memcode.sh",
+          "purpose": "Download install script for inspection"
+        },
+        {
+          "command": "script -qec 'sh /tmp/install_memcode.sh' /dev/null < /dev/null",
+          "purpose": "Install memcode with tty stdin to skip prompt"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "memcode version",
+        "expected_signal": "memcode 0.47.4"
+      },
+      "first_task": "memcode version"
+    },
     "windows": null
   },
   "pricing": {
@@ -73,10 +93,98 @@
     "url": "https://github.com/memcode-ai/memcode/releases/tag/v0.47.4"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:10:22.438508+08:00",
+    "runs": [
+      {
+        "id": "verify-memcode-20261031-000836-edc3",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:10:22.438508+08:00",
+        "tool_version": "0.47.4",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://memcode.ai/install.sh -o /tmp/install_memcode.sh && ls -l /tmp/install_memcode.sh && wc -c /tmp/install_memcode.sh",
+            "purpose": "Download install script for inspection"
+          },
+          {
+            "command": "script -qec 'sh /tmp/install_memcode.sh' /dev/null < /dev/null",
+            "purpose": "Install memcode with tty stdin to skip prompt"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "memcode version",
+            "expected_signal": "memcode 0.47.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "memcode 0.47.4 (commit fddb90c, built 2026-10-14T14:59:55Z)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "memcode --help",
+            "expected_signal": "Available Commands:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Available Commands:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "memcode doctor",
+            "expected_signal": "repo root:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "repo root: /home/sbx/work (working directory)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "memcode task list",
+            "expected_signal": "No tasks yet.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No tasks yet. Write one at .memcode/tasks/<name>.yaml, or ask memcode to",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://memcode.ai/install.sh | sh",
+            "actually_needed": "Run the installer with stdin on a tty (e.g. script -qec 'sh /tmp/install_memcode.sh' /dev/null) so it takes the non-interactive branch and exits 0; a bare non-interactive run installs the binary but then execs memcode from /dev/tty and exits 2.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show doctor reporting repo root, task list reporting no tasks, and version reporting 0.47.4.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-memcode-20261031-000836-edc3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-memcode-20261031-000836-edc3/check-1-cmd9.judged.png",
+            "runs/verify/verify-memcode-20261031-000836-edc3/check-2-cmd10.judged.png",
+            "runs/verify/verify-memcode-20261031-000836-edc3/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.06321
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -311,5 +419,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:10:22.439339+08:00"
 }

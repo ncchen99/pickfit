@@ -54,7 +54,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-inferbridge-20261030-235855-69b4",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "rm -rf /tmp/ib2 && git clone https://github.com/Quazmoz/InferBridge.git /tmp/ib2 && cp -r /tmp/ib2/. ./",
+          "purpose": "Clone InferBridge source"
+        },
+        {
+          "command": "pip install -e .[dev]",
+          "purpose": "Install with pip editable dev dependencies"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "inferbridge --help",
+        "expected_signal": "usage: inferbridge"
+      },
+      "first_task": "curl -sf http://127.0.0.1:8123/health/ready"
+    },
     "windows": {
       "basis": "readme_claim",
       "run_id": null,
@@ -83,10 +103,116 @@
     "url": "https://github.com/Quazmoz/InferBridge/releases/tag/v1.0.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:01:05.046004+08:00",
+    "runs": [
+      {
+        "id": "verify-inferbridge-20261030-235855-69b4",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:01:05.046004+08:00",
+        "tool_version": null,
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf /tmp/ib2 && git clone https://github.com/Quazmoz/InferBridge.git /tmp/ib2 && cp -r /tmp/ib2/. ./",
+            "purpose": "Clone InferBridge source"
+          },
+          {
+            "command": "pip install -e .[dev]",
+            "purpose": "Install with pip editable dev dependencies"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "inferbridge --help",
+            "expected_signal": "usage: inferbridge",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: inferbridge [-h] [--model MODEL] [--device DEVICE] [--host HOST] [--port PORT]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -sf http://127.0.0.1:8123/health/ready",
+            "expected_signal": "\"status\":\"ready\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"ready\"}",
+            "setup": [
+              {
+                "command": "OV_LLM_MOCK=1 python -m app.server --mock --host 127.0.0.1 --port 8123 --model tinyllama-1.1b-chat-fp16",
+                "background": true,
+                "port": 8123
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8123/v1/models",
+            "expected_signal": "qwen2.5-3b-int8",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"object\":\"list\",\"data\":[{\"id\":\"bge-small-en-v1.5\",\"object\":\"model\",\"created\":1793376058,\"owned_by\":\"openvino\",\"name\":\"BGE Small En v1.5\",\"description\":\"High-performance, lightweight text embedding model by BAAI.\",\"status\":\"ready_to_load\"},{\"id\":\"tinyllama-1.1b-chat-fp16\",\"object\":\"model\",\"created\"…",
+            "setup": [
+              {
+                "command": "OV_LLM_MOCK=1 python -m app.server --mock --host 127.0.0.1 --port 8123 --model tinyllama-1.1b-chat-fp16",
+                "background": true,
+                "port": 8123
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8123/v1/chat/completions -H Content-Type:application/json -d '{\"model\":\"tinyllama-1.1b-chat-fp16\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hello\"}],\"temperature\":0,\"max_tokens\":16}'",
+            "expected_signal": "completion_tokens",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":\"chatcmpl-4e873ee6fa43453481ea7715af48c2d2\",\"object\":\"chat.completion\",\"created\":1793376058,\"model\":\"tinyllama-1.1b-chat-fp16\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"**Mock engine** — OpenVINO is not active, so this is a canned response.\\n\\nYou said: _Say hello_\\n\\nThi…",
+            "setup": [
+              {
+                "command": "OV_LLM_MOCK=1 python -m app.server --mock --host 127.0.0.1 --port 8123 --model tinyllama-1.1b-chat-fp16",
+                "background": true,
+                "port": 8123
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "`pip install -e .[dev]` then `.\\start_server.bat --mock` / `.\\start_server.bat --check-devices`",
+            "actually_needed": "On Linux use `OV_LLM_MOCK=1 python -m app.server --mock --host 127.0.0.1 --port 8123 --model tinyllama-1.1b-chat-fp16` (installed `inferbridge` CLI works the same); `start_server.sh --mock` requires a `.venv` created by `./setup.sh --minimal` and `start_server.bat` is Windows-only.",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show readiness JSON, model catalog containing qwen2.5-3b-int8, and inferbridge usage help.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-inferbridge-20261030-235855-69b4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-inferbridge-20261030-235855-69b4/check-1-cmd6.judged.png",
+            "runs/verify/verify-inferbridge-20261030-235855-69b4/check-2-cmd7.judged.png",
+            "runs/verify/verify-inferbridge-20261030-235855-69b4/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.124183
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -313,5 +439,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:01:05.046864+08:00"
 }

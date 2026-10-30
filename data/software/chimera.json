@@ -57,7 +57,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-chimera-20261030-235609-3c2b",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/chimera-dl2 && curl -fL -o /tmp/chimera-dl2/chimera.tar.gz https://github.com/shakfu/chimera/releases/download/0.7.0/chimera-0.7.0-linux-x86_64.tar.gz && tar -xzf /tmp/chimera-dl2/chimera.tar.gz -C /tmp/chimera-dl2 && install -m 755 /tmp/chimera-dl2/chimera ~/.local/bin/chimera",
+          "purpose": "Download prebuilt Linux x86_64 CPU release tarball and install to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "chimera --help",
+        "expected_signal": "SUBCOMMANDS:"
+      },
+      "first_task": "chimera info"
+    },
     "windows": null
   },
   "pricing": {
@@ -73,10 +89,116 @@
     "url": "https://github.com/shakfu/chimera/releases/tag/0.7.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "inference",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:57:35.999088+08:00",
+    "runs": [
+      {
+        "id": "verify-chimera-20261030-235609-3c2b",
+        "level": "inference",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:57:35.999088+08:00",
+        "tool_version": "0.7.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/chimera-dl2 && curl -fL -o /tmp/chimera-dl2/chimera.tar.gz https://github.com/shakfu/chimera/releases/download/0.7.0/chimera-0.7.0-linux-x86_64.tar.gz && tar -xzf /tmp/chimera-dl2/chimera.tar.gz -C /tmp/chimera-dl2 && install -m 755 /tmp/chimera-dl2/chimera ~/.local/bin/chimera",
+            "purpose": "Download prebuilt Linux x86_64 CPU release tarball and install to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "chimera --help",
+            "expected_signal": "SUBCOMMANDS:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "SUBCOMMANDS:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "chimera info",
+            "expected_signal": "chimera 0.7.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "chimera 0.7.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -fsSL http://127.0.0.1:9931/v1/models",
+            "expected_signal": "\"object\":\"list\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"models\":[{\"name\":\"/home/sbx/models/stories260K.gguf\",\"model\":\"/home/sbx/models/stories260K.gguf\",\"modified_at\":\"\",\"size\":\"\",\"digest\":\"\",\"type\":\"model\",\"description\":\"\",\"tags\":[\"\"],\"capabilities\":[\"completion\"],\"parameters\":\"\",\"details\":{\"parent_model\":\"\",\"format\":\"gguf\",\"family\":\"\",\"families\":[\"\"…",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -la ~/models/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "chimera serve -m ~/models/stories260K.gguf --port 9931",
+                "background": true,
+                "port": 9931
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsSL http://127.0.0.1:9931/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"/home/sbx/models/stories260K.gguf\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hello.\"}],\"temperature\":0,\"max_tokens\":16}'",
+            "expected_signal": "completion_tokens",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"choices\":[{\"finish_reason\":\"length\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\\\"Here,\\\" Annabyed.\\n\"}}],\"created\":1793375849,\"model\":\"/home/sbx/models/stories260K.gguf\",\"system_fingerprint\":\"chimera\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":16,\"prompt_tokens\":46,\"total_tok…",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -la ~/models/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "chimera serve -m ~/models/stories260K.gguf --port 9931",
+                "background": true,
+                "port": 9931
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "make build (then optionally make install) with OpenSSL installed via apt",
+            "actually_needed": "Used the prebuilt CPU asset chimera-0.7.0-linux-x86_64.tar.gz from GitHub releases (tarball contains a single bare file named 'chimera'); installed it to ~/.local/bin/chimera with install -m 755. Departed from ranked source candidates because the box has no compiler, cmake, make, or OpenSSL headers…",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show chimera info reporting 0.7.0, server listing a model with object list, and help listing subcommands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-chimera-20261030-235609-3c2b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-chimera-20261030-235609-3c2b/check-1-cmd15.judged.png",
+            "runs/verify/verify-chimera-20261030-235609-3c2b/check-2-cmd14.judged.png",
+            "runs/verify/verify-chimera-20261030-235609-3c2b/check-3-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.131408
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -311,5 +433,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:11+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-30T23:57:35.999845+08:00"
 }

@@ -71,20 +71,25 @@
       "first_task": "motita config"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-motita-20261031-000751-9230",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://motita.kodingvibes.com/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://motita.kodingvibes.com/install.sh -o /tmp/motita-install.sh && ls -l /tmp/motita-install.sh && wc -c /tmp/motita-install.sh",
+          "purpose": "download installer script only"
+        },
+        {
+          "command": "openssl version; sh /tmp/motita-install.sh",
+          "purpose": "run motita installer script"
         }
       ],
-      "manual_steps": [
-        "picks your provider, model and the check that proves a task is done"
-      ],
-      "check": null,
-      "first_task": "motita config"
+      "manual_steps": [],
+      "check": {
+        "command": "motita -version",
+        "expected_signal": "motita v4.81.0 (linux/amd64)"
+      },
+      "first_task": "motita gateway stop"
     },
     "windows": {
       "basis": "readme_claim",
@@ -116,10 +121,92 @@
     "url": "https://github.com/madkoding/motita/releases/tag/v4.81.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:09:07.813177+08:00",
+    "runs": [
+      {
+        "id": "verify-motita-20261031-000751-9230",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:09:07.813177+08:00",
+        "tool_version": "v4.81.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://motita.kodingvibes.com/install.sh -o /tmp/motita-install.sh && ls -l /tmp/motita-install.sh && wc -c /tmp/motita-install.sh",
+            "purpose": "download installer script only"
+          },
+          {
+            "command": "openssl version; sh /tmp/motita-install.sh",
+            "purpose": "run motita installer script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "motita -version",
+            "expected_signal": "motita v4.81.0 (linux/amd64)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "motita v4.81.0 (linux/amd64)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "motita gateway stop",
+            "expected_signal": "no gateway is running.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no gateway is running.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "motita gateway status",
+            "expected_signal": "no gateway is running.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no gateway is running.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "motita doctor",
+            "expected_signal": "motita works;",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "motita works; the ⚠️ lines above are worth a look.",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version v4.81.0 and both gateway commands reporting no gateway is running.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-motita-20261031-000751-9230/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-motita-20261031-000751-9230/check-1-cmd3.judged.png",
+            "runs/verify/verify-motita-20261031-000751-9230/check-2-cmd6.judged.png",
+            "runs/verify/verify-motita-20261031-000751-9230/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.052302
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -346,5 +433,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:09:07.814010+08:00"
 }

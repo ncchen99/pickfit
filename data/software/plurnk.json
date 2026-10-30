@@ -55,7 +55,31 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-plurnk-20261031-000846-6a1d",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL https://nodejs.org/dist/v26.13.0/node-v26.13.0-linux-x64.tar.xz -o /tmp/node26.tar.xz && tar -xJf /tmp/node26.tar.xz -C /tmp && cp -rf /tmp/node-v26.13.0-linux-x64/. ~/.local/",
+          "purpose": "install Node 26 tarball"
+        },
+        {
+          "command": "curl -fsSL https://ftp.debian.org/debian/pool/main/g/gcc-14/libatomic1_14.2.0-19_amd64.deb -o /tmp/libatomic1.deb && mkdir -p /tmp/ladeb2 ~/.local/lib && dpkg-deb -x /tmp/libatomic1.deb /tmp/ladeb2 && cp -f /tmp/ladeb2/usr/lib/x86_64-linux-gnu/libatomic.so.1.2.0 ~/.local/lib/ && ln -sf libatomic.so.1.2.0 ~/.local/lib/libatomic.so.1",
+          "purpose": "install libatomic library"
+        },
+        {
+          "command": "LD_LIBRARY_PATH=$HOME/.local/lib npm install -g @plurnk/plurnk",
+          "purpose": "install plurnk via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "LD_LIBRARY_PATH=$HOME/.local/lib plurnk --help",
+        "expected_signal": "subcommands:"
+      },
+      "first_task": "LD_LIBRARY_PATH=$HOME/.local/lib plurnk models"
+    },
     "windows": null
   },
   "pricing": {
@@ -71,10 +95,93 @@
     "url": "https://github.com/plurnk/plurnk/releases/tag/v4.3.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:12:33.875617+08:00",
+    "runs": [
+      {
+        "id": "verify-plurnk-20261031-000846-6a1d",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:12:33.875617+08:00",
+        "tool_version": "4.3.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://nodejs.org/dist/v26.13.0/node-v26.13.0-linux-x64.tar.xz -o /tmp/node26.tar.xz && tar -xJf /tmp/node26.tar.xz -C /tmp && cp -rf /tmp/node-v26.13.0-linux-x64/. ~/.local/",
+            "purpose": "install Node 26 tarball"
+          },
+          {
+            "command": "curl -fsSL https://ftp.debian.org/debian/pool/main/g/gcc-14/libatomic1_14.2.0-19_amd64.deb -o /tmp/libatomic1.deb && mkdir -p /tmp/ladeb2 ~/.local/lib && dpkg-deb -x /tmp/libatomic1.deb /tmp/ladeb2 && cp -f /tmp/ladeb2/usr/lib/x86_64-linux-gnu/libatomic.so.1.2.0 ~/.local/lib/ && ln -sf libatomic.so.1.2.0 ~/.local/lib/libatomic.so.1",
+            "purpose": "install libatomic library"
+          },
+          {
+            "command": "LD_LIBRARY_PATH=$HOME/.local/lib npm install -g @plurnk/plurnk",
+            "purpose": "install plurnk via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "LD_LIBRARY_PATH=$HOME/.local/lib plurnk --help",
+            "expected_signal": "subcommands:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "subcommands:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "LD_LIBRARY_PATH=$HOME/.local/lib plurnk models",
+            "expected_signal": "(no models match; use --all to include models missing local configuration)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "(no models match; use --all to include models missing local configuration)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Requirements: Node.js 26+",
+            "actually_needed": "Installed Node v26.13.0 from nodejs.org linux-x64 tarball into ~/.local (shadows /usr/local/bin/node v22.23.4); npm install warns EBADENGINE under Node 22 and plurnk exits 1 requiring Node 26",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "npm install -g @plurnk/plurnk works on Linux",
+            "actually_needed": "Fetched libatomic1_14.2.0-19_amd64.deb from ftp.debian.org, copied libatomic.so.1* to ~/.local/lib and run all node/plurnk commands with LD_LIBRARY_PATH=$HOME/.local/lib",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "plurnk models lists available model routes",
+            "actually_needed": "plurnk models exits 0 with '(no models match; use --all to include models missing local configuration)' and auto-starts plurnk-service daemon when no API keys are configured",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show plurnk models reporting no matching models and plurnk --help listing usage with subcommands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-plurnk-20261031-000846-6a1d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-plurnk-20261031-000846-6a1d/check-1-cmd12.judged.png",
+            "runs/verify/verify-plurnk-20261031-000846-6a1d/check-2-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.093447
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -293,5 +400,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:12:33.876881+08:00"
 }

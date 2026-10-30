@@ -56,7 +56,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-loci-20261031-000913-51e8",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install loci-rag 2>&1",
+          "purpose": "install loci-rag with uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "loci --version 2>&1",
+        "expected_signal": "loci 0.9.0"
+      },
+      "first_task": "loci demo 2>&1"
+    },
     "windows": null
   },
   "pricing": {
@@ -72,10 +88,85 @@
     "url": "https://github.com/IvenKooLab/loci/releases/tag/v0.8.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:10:19.196393+08:00",
+    "runs": [
+      {
+        "id": "verify-loci-20261031-000913-51e8",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:10:19.196393+08:00",
+        "tool_version": "0.9.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install loci-rag 2>&1",
+            "purpose": "install loci-rag with uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "loci --version 2>&1",
+            "expected_signal": "loci 0.9.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "loci 0.9.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "loci --help 2>&1",
+            "expected_signal": "loci — Q&A over your personal knowledge base",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "loci — Q&A over your personal knowledge base",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "loci demo 2>&1",
+            "expected_signal": "6 files · 35 chunks",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "6 files · 35 chunks, just copied and safe to edit",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install loci-rag",
+            "actually_needed": "used `uv tool install loci-rag` (isolated env) to avoid PEP 668 / read-only system python",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.9.0, help with Q&A tagline, and demo indexing 6 files with example search results.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-loci-20261031-000913-51e8/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-loci-20261031-000913-51e8/check-1-cmd2.judged.png",
+            "runs/verify/verify-loci-20261031-000913-51e8/check-2-cmd3.judged.png",
+            "runs/verify/verify-loci-20261031-000913-51e8/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.037476
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -310,5 +401,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:10:19.197320+08:00"
 }
