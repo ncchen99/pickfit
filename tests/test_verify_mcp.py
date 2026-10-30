@@ -316,4 +316,6 @@ def test_http_only_mcp_servers_are_verified_too() -> None:
     seen = handshake(out, f"{PROBE_COMMAND} --url {url}", offline=True, background=["notes-mcp --http --port 8765"])
     assert seen.transport == "streamable_http" and seen.url == url and seen.launch == ["notes-mcp", "--http", "--port", "8765"]
     assert handshake(out, f"{PROBE_COMMAND} --url {url}", offline=True, background=[]) is None
+    v6 = summary(transport="streamable_http", url="http://[::1]:8765/mcp")
+    assert handshake(v6, f"{PROBE_COMMAND} --url http://[::1]:8765/mcp", offline=True, background=["notes-mcp"]) is None
     assert probe_kind(f"{PROBE_COMMAND} --call x --args '{{}}' --url {url}") == "mcp_call"

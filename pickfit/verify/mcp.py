@@ -29,6 +29,8 @@ import shlex
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from pydantic import ValidationError
+
 from pickfit.schema import MCP_TOOLS_MAX, McpHandshake, Pitfall
 
 if TYPE_CHECKING:
@@ -158,11 +160,14 @@ def handshake(check_stdout: str, command: str, *, offline: bool | None,
     url = summary.get("url") if http and isinstance(summary.get("url"), str) else None
     if http and not url:
         return None
-    return McpHandshake(
-        transport="streamable_http" if http else "stdio", launch=[a[:200] for a in argv[:40]], url=url,
+    try:
+        return McpHandshake(
+            transport="streamable_http" if http else "stdio", launch=[a[:200] for a in argv[:40]], url=url,
         protocol_version=_short(summary.get("protocol"), 40), server_name=_short(summary.get("server"), 80),
-        server_version=_short(summary.get("version"), 60), tools=tools, tool_count=max(count, len(tools)),
-        called_tool=called[:80] if called else None, offline=offline)
+            server_version=_short(summary.get("version"), 60), tools=tools, tool_count=max(count, len(tools)),
+            called_tool=called[:80] if called else None, offline=offline)
+    except ValidationError:  # e.g. a URL the record does not accept: no handshake rather than a crash
+        return None
 
 
 def _short(value: Any, limit: int) -> str | None:
