@@ -83,20 +83,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-nadzoring-20261029-012023-cfcc",
-      "method": "uv",
+      "run_id": "verify-nadzoring-20261031-023628-49ec",
+      "method": "pip",
       "steps": [
         {
-          "command": "rm -rf ~/nadz-venv ~/.local/bin/nadzoring && uv venv ~/nadz-venv && uv pip install --python ~/nadz-venv/bin/python netifaces-plus aiohttp certifi click cryptography dnspython elevate geopy packaging pandas ping3 pysocks python-dateutil python-whois pyyaml requests scapy tabulate tqdm && uv pip install --python ~/nadz-venv/bin/python --no-deps nadzoring && ln -sf ~/nadz-venv/bin/nadzoring ~/.local/bin/nadzoring",
-          "purpose": "Create venv and install nadzoring with netifaces-plus workaround"
+          "command": "pip install --user --break-system-packages --no-deps nadzoring && pip install --user --break-system-packages aiohttp certifi click cryptography dnspython elevate geopy packaging pandas ping3 pysocks python-dateutil python-whois pyyaml \"requests[socks]\" scapy tabulate tqdm 2>&1",
+          "purpose": "Install nadzoring without netifaces build"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "nadzoring --help",
-        "expected_signal": "Usage: nadzoring [OPTIONS] COMMAND [ARGS]..."
+        "command": "nadzoring --help 2>&1",
+        "expected_signal": "FOSS tool for detecting website blocks"
       },
-      "first_task": "nadzoring core doctor --format json"
+      "first_task": "nadzoring dns resolve google.com 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -128,10 +128,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:23:44.832995+08:00",
+    "checked_at": "2026-10-31T02:38:15.931298+08:00",
     "runs": [
       {
-        "id": "verify-nadzoring-20261029-012023-cfcc",
+        "id": "verify-nadzoring-20261031-023628-49ec",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -139,74 +139,115 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T01:23:44.832995+08:00",
+        "checked_at": "2026-10-31T02:38:15.931298+08:00",
         "tool_version": "0.5.0",
-        "install_method": "uv",
+        "install_method": "pip",
         "replayed": true,
         "steps": [
           {
-            "command": "rm -rf ~/nadz-venv ~/.local/bin/nadzoring && uv venv ~/nadz-venv && uv pip install --python ~/nadz-venv/bin/python netifaces-plus aiohttp certifi click cryptography dnspython elevate geopy packaging pandas ping3 pysocks python-dateutil python-whois pyyaml requests scapy tabulate tqdm && uv pip install --python ~/nadz-venv/bin/python --no-deps nadzoring && ln -sf ~/nadz-venv/bin/nadzoring ~/.local/bin/nadzoring",
-            "purpose": "Create venv and install nadzoring with netifaces-plus workaround"
+            "command": "pip install --user --break-system-packages --no-deps nadzoring && pip install --user --break-system-packages aiohttp certifi click cryptography dnspython elevate geopy packaging pandas ping3 pysocks python-dateutil python-whois pyyaml \"requests[socks]\" scapy tabulate tqdm 2>&1",
+            "purpose": "Install nadzoring without netifaces build"
           }
         ],
         "smoke_tests": [
           {
-            "command": "nadzoring --help",
-            "expected_signal": "Usage: nadzoring [OPTIONS] COMMAND [ARGS]...",
+            "command": "nadzoring --help 2>&1",
+            "expected_signal": "FOSS tool for detecting website blocks",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Usage: nadzoring [OPTIONS] COMMAND [ARGS]...",
+            "observed_excerpt": "FOSS tool for detecting website blocks, downdetecting and network analysis.",
             "setup": [],
             "offline": true
           },
           {
-            "command": "nadzoring core doctor --format json",
-            "expected_signal": "28/33 checks passed",
-            "exit_code": 2,
+            "command": "nadzoring dns resolve google.com 2>&1",
+            "expected_signal": "google.com",
+            "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "\"detail\": \"28/33 checks passed (84%)\",",
+            "observed_excerpt": "Resolving google.com A: 0%| | 0/1 [00:00<?, ?query/s]",
             "setup": [],
-            "offline": false
+            "offline": true
           }
         ],
         "pitfalls": [
           {
             "readme_said": "pip install nadzoring",
-            "actually_needed": "create venv (uv venv ~/nadz-venv), install prebuilt netifaces-plus plus all other dependencies, then install nadzoring with --no-deps and symlink ~/nadz-venv/bin/nadzoring to ~/.local/bin/nadzoring, because netifaces==0.11.0 has no cp312 manylinux wheels and the box has no gcc or libc headers to co…",
-            "kind": null
+            "actually_needed": "install with `pip install --user --break-system-packages --no-deps nadzoring` then install all runtime deps except netifaces; wheel contains no netifaces import so CLI works without it",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "plain pip install",
+            "actually_needed": "Debian pip requires --break-system-packages and --user flags for non-root install",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show doctor JSON summary of 28/33 checks passed and help output with usage and commands.",
+          "observed": "Screenshots show help text with FOSS tagline and DNS table resolving google.com to IP addresses.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-nadzoring-20261029-012023-cfcc/report.json",
+          "trace_path": "runs/verify/verify-nadzoring-20261031-023628-49ec/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-nadzoring-20261029-012023-cfcc/check-1-cmd15.judged.png",
-            "runs/verify/verify-nadzoring-20261029-012023-cfcc/check-2-cmd14.judged.png"
+            "runs/verify/verify-nadzoring-20261031-023628-49ec/check-1-cmd14.judged.png",
+            "runs/verify/verify-nadzoring-20261031-023628-49ec/check-2-cmd15.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.148068
+        "cost_usd": 0.108768,
+        "features": [
+          {
+            "feature": "detect website blocks",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "no commands left to check block detection"
+          },
+          {
+            "feature": "monitor service availability",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "no commands left to check availability monitoring"
+          },
+          {
+            "feature": "perform DNS diagnostics",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "monitor ARP spoofing",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "no commands left to check ARP monitoring"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:40:05+08:00",
+    "computed_at": "2026-10-31T02:38:15+08:00",
     "quality": {
-      "total": 88.6,
+      "total": 96.1,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -247,7 +288,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 43.86
+      "value": 47.57
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -602,5 +643,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:07:48+08:00",
-  "updated_at": "2026-10-31T01:37:07+08:00"
+  "updated_at": "2026-10-31T02:38:15.932753+08:00"
 }
