@@ -94,6 +94,7 @@ def _funnel(args: argparse.Namespace) -> int:
 def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     from pickfit.discover.github import PUSHED_DAYS, TOPICS
     from pickfit.discover.run import DEFAULT_PER_QUERY
+    from pickfit.schema import LISTED_CATEGORIES
 
     d = sub.add_parser("discover", help="search GitHub for candidates, fetch details, apply rules ($0)")
     d.add_argument("--per-query", type=int, default=DEFAULT_PER_QUERY,
@@ -131,8 +132,8 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
 
     p = sub.add_parser("profiles", help="write data/software/<slug>.json from stored extractions ($0)")
     p.add_argument("--model", default="prod", help='extractions by this model: "prod" (default), "dev" or an id')
-    p.add_argument("--category", action="append", choices=["dev_cli", "local_ai", "other"],
-                   help="categories to write (repeatable; default dev_cli and local_ai)")
+    p.add_argument("--category", action="append", choices=[*LISTED_CATEGORIES, "other"],
+                   help="categories to write (repeatable; default " + ", ".join(LISTED_CATEGORIES) + ")")
     p.add_argument("--out", type=Path, default=None, help="output directory (default data/software)")
     p.add_argument("--dry-run", action="store_true", help="build and validate, write nothing")
     p.set_defaults(func=_profiles)

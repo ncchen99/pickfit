@@ -18,7 +18,7 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--repo", action="append", help="batch: only this repo id (gh:<id>) or owner/name")
     v.add_argument("--records", action="store_true",
                    help="batch: only candidates that have a record in --data-dir (the profiles)")
-    v.add_argument("--category", action="append", choices=["dev_cli", "local_ai"],
+    v.add_argument("--category", action="append", choices=["dev_cli", "local_ai", "mcp_server"],
                    help="batch: only this category (repeatable)")
     v.add_argument("--force", action="store_true", help="batch: also tools that already have a run")
     v.add_argument("--since", metavar="YYYYmmdd-HHMMSS",

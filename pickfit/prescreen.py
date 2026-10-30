@@ -84,8 +84,9 @@ research code, demos and prototypes with no install path, tutorials, homework, t
 and config or dotfiles.
 - kind: the single best label. Must agree with usable_software.
 - category: dev_cli for developer tools used from a terminal or editor; local_ai for software \
-that runs AI models on the user's own machine or wraps them in a local app or agent; other for \
-anything else.
+that runs AI models on the user's own machine or wraps them in a local app or agent; mcp_server \
+for a Model Context Protocol server that AI clients (Claude Code, Cursor, IDEs) start or connect to; \
+other for anything else.
 - confidence: 0 to 1, how sure you are about usable_software.
 - reason: one short sentence in English pointing at what in the sources decided it.
 
@@ -95,7 +96,7 @@ Judge only what the sources show. Popularity is not a signal and is not given to
 class PrescreenResult(BaseModel):
     usable_software: bool
     kind: Kind
-    category: Literal["dev_cli", "local_ai", "other"]
+    category: Literal["dev_cli", "local_ai", "mcp_server", "other"]
     confidence: float = Field(ge=0, le=1)
     reason: str = Field(max_length=300)
 

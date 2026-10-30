@@ -70,6 +70,10 @@ TOPICS: dict[str, tuple[str, ...]] = {
         # Command-line front ends to a local runner:
         "ollama+cli",
     ),
+    # Added 2026-10-31: MCP servers, the programs AI clients start or connect to over the
+    # Model Context Protocol. Category-wide topics only, written from that definition; not
+    # shaped around any particular need.
+    "mcp_server": ("mcp-server", "model-context-protocol", "mcp", "mcp-servers", "mcp-tools", "fastmcp"),
 }
 STARS = "5..300"
 PUSHED_DAYS = 14
