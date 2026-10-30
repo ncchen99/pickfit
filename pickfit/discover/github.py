@@ -39,7 +39,8 @@ README_MAX_CHARS = 200_000
 MANIFESTS = ("package.json", "pyproject.toml", "Cargo.toml", "setup.cfg")
 
 # Waits (seconds) for rate limits and server errors; a reset further away than
-# RATE_LIMIT_MAX_WAIT_S fails the run instead of stalling it.
+# RATE_LIMIT_MAX_WAIT_S fails the run instead of stalling it (a bulk run that
+# needs more than one hour of REST calls passes a longer wait to GitHub()).
 RATE_LIMIT_MAX_WAIT_S = 900.0
 SECONDARY_LIMIT_WAIT_S = 60.0
 SERVER_ERROR_TRIES = 3
@@ -55,7 +56,13 @@ monotonic = time.monotonic
 # definitions alone, not from the eval questions (eval/README.md section 3).
 # "a+b" means a repo must carry both topics.
 TOPICS: dict[str, tuple[str, ...]] = {
-    "dev_cli": ("cli", "tui", "terminal"),
+    "dev_cli": (
+        "cli", "tui", "terminal",
+        # Added 2026-10-30 from the same definition (developer tools used from a
+        # terminal): other spellings of the same three tags, and developer tools
+        # tagged as command-line ones.
+        "command-line", "cli-tool", "command-line-tool", "terminal-ui", "developer-tools+cli",
+    ),
     "local_ai": (
         "local-llm", "ollama", "llama-cpp",
         # Added 2026-10-29 from the same definition ("local model runners, inference
@@ -69,6 +76,9 @@ TOPICS: dict[str, tuple[str, ...]] = {
         "text-to-speech+offline",
         # Command-line front ends to a local runner:
         "ollama+cli",
+        # Added 2026-10-30, same definition: models run on the user's own device or
+        # server, and the Apple Silicon runner format.
+        "on-device-ai", "edge-ai", "mlx", "llm-serving", "self-hosted-ai", "local-first+llm",
     ),
 }
 STARS = "5..300"
@@ -131,13 +141,15 @@ class GitHub:
     """A small GitHub REST client: throttled search, retries, request counts, search trace."""
 
     def __init__(self, token: str, *, http: httpx2.Client | None = None,
-                 trace_dir: Path | None = None, search_interval_s: float = SEARCH_INTERVAL_S) -> None:
+                 trace_dir: Path | None = None, search_interval_s: float = SEARCH_INTERVAL_S,
+                 rate_limit_max_wait_s: float = RATE_LIMIT_MAX_WAIT_S) -> None:
         self._http = http or httpx2.Client(base_url=API, timeout=30.0)
         self._headers = {"Authorization": f"Bearer {token}", "User-Agent": USER_AGENT,
                          "X-GitHub-Api-Version": "2022-11-28"}
         self._token = token
         self._trace_dir = trace_dir or runs_dir() / "traces"
         self._interval = search_interval_s
+        self._max_wait = rate_limit_max_wait_s
         self._search_lock = threading.Lock()
         self._last_search: float | None = None
         self._count_lock = threading.Lock()
@@ -171,7 +183,7 @@ class GitHub:
                 return None
             wait = self._rate_limit_wait(resp)
             if wait is not None:
-                if wait > RATE_LIMIT_MAX_WAIT_S:
+                if wait > self._max_wait:
                     raise GitHubError(f"GET {path}: rate limited for {wait:.0f}s more")
                 sleep(wait)
                 continue
