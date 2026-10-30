@@ -83,24 +83,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-darkubectl-20261031-002549-bbc7",
+      "run_id": "verify-darkubectl-20261031-034442-1750",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -sSfL https://github.com/rahacloud/darkubectl/releases/download/v0.13.0/darkubectl_0.13.0_linux_amd64.tar.gz -o /tmp/darkubectl.tar.gz",
-          "purpose": "Download v0.13.0 linux amd64 tarball"
+          "command": "mkdir -p ~/.local/bin /tmp/darku && curl -sSfL https://github.com/rahacloud/darkubectl/releases/download/v0.13.0/darkubectl_0.13.0_linux_amd64.tar.gz -o /tmp/darku/darkubectl.tar.gz",
+          "purpose": "Download darkubectl tarball"
         },
         {
-          "command": "tar xzf /tmp/darkubectl.tar.gz -C /tmp && mkdir -p ~/.local/bin && install /tmp/darkubectl ~/.local/bin/darkubectl",
-          "purpose": "Extract tarball and install binary to ~/.local/bin"
+          "command": "tar xzf /tmp/darku/darkubectl.tar.gz -C /tmp/darku && install /tmp/darku/darkubectl ~/.local/bin/darkubectl",
+          "purpose": "Extract and install darkubectl binary"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "darkubectl version",
-        "expected_signal": "darkubectl 0.13.0"
+        "command": "darkubectl --version",
+        "expected_signal": "darkubectl version 0.13.0"
       },
-      "first_task": "darkubectl version"
+      "first_task": "darkubectl completion bash"
     },
     "windows": {
       "basis": "readme_claim",
@@ -135,10 +135,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:26:52.097720+08:00",
+    "checked_at": "2026-10-31T03:45:24.796350+08:00",
     "runs": [
       {
-        "id": "verify-darkubectl-20261031-002549-bbc7",
+        "id": "verify-darkubectl-20261031-034442-1750",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -146,36 +146,27 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:26:52.097720+08:00",
+        "checked_at": "2026-10-31T03:45:24.796350+08:00",
         "tool_version": "0.13.0",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -sSfL https://github.com/rahacloud/darkubectl/releases/download/v0.13.0/darkubectl_0.13.0_linux_amd64.tar.gz -o /tmp/darkubectl.tar.gz",
-            "purpose": "Download v0.13.0 linux amd64 tarball"
+            "command": "mkdir -p ~/.local/bin /tmp/darku && curl -sSfL https://github.com/rahacloud/darkubectl/releases/download/v0.13.0/darkubectl_0.13.0_linux_amd64.tar.gz -o /tmp/darku/darkubectl.tar.gz",
+            "purpose": "Download darkubectl tarball"
           },
           {
-            "command": "tar xzf /tmp/darkubectl.tar.gz -C /tmp && mkdir -p ~/.local/bin && install /tmp/darkubectl ~/.local/bin/darkubectl",
-            "purpose": "Extract tarball and install binary to ~/.local/bin"
+            "command": "tar xzf /tmp/darku/darkubectl.tar.gz -C /tmp/darku && install /tmp/darku/darkubectl ~/.local/bin/darkubectl",
+            "purpose": "Extract and install darkubectl binary"
           }
         ],
         "smoke_tests": [
           {
-            "command": "darkubectl version",
-            "expected_signal": "darkubectl 0.13.0",
+            "command": "darkubectl --version",
+            "expected_signal": "darkubectl version 0.13.0",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "darkubectl 0.13.0",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "darkubectl --help",
-            "expected_signal": "COMMANDS:",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "COMMANDS:",
+            "observed_excerpt": "darkubectl version 0.13.0",
             "setup": [],
             "offline": true
           },
@@ -191,33 +182,62 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "go install github.com/rahacloud/darkubectl@latest",
-            "actually_needed": "Skipped ranked candidates 1 (go install) and 2 (git clone + go build) because the box has no Go toolchain and installing one is forbidden; used the README's Binaries tarball method instead (pinned v0.13.0 linux amd64).",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "sudo install darkubectl /usr/local/bin/",
-            "actually_needed": "Installed to ~/.local/bin (on PATH) via `install /tmp/darkubectl ~/.local/bin/darkubectl` instead of `sudo install darkubectl /usr/local/bin/` which needs root.",
+            "readme_said": "Binary install ends with `sudo install darkubectl /usr/local/bin/`",
+            "actually_needed": "Installed to ~/.local/bin/darkubectl without sudo (no root in box).",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show the bash completion script ending with the expected complete line and version printing darkubectl 0.13.0.",
+          "observed": "Screenshots show bash completion script ending with the expected complete line and version output matching 0.13.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-darkubectl-20261031-002549-bbc7/report.json",
+          "trace_path": "runs/verify/verify-darkubectl-20261031-034442-1750/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-darkubectl-20261031-002549-bbc7/check-1-cmd7.judged.png",
-            "runs/verify/verify-darkubectl-20261031-002549-bbc7/check-2-cmd5.judged.png"
+            "runs/verify/verify-darkubectl-20261031-034442-1750/check-1-cmd4.judged.png",
+            "runs/verify/verify-darkubectl-20261031-034442-1750/check-2-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.058392
+        "cost_usd": 0.054101,
+        "features": [
+          {
+            "feature": "list, inspect and create apps from terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Requires DARKUBE_TOKEN/DARKUBE_ORG or console login; not exercised without credentials."
+          },
+          {
+            "feature": "tail and follow app logs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Requires DARKUBE_TOKEN and live app; logs -f needs auth."
+          },
+          {
+            "feature": "open interactive shell in apps",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Requires console JWT login (email+password+TOTP) for exec websocket."
+          },
+          {
+            "feature": "detect orphaned Helm releases",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Requires tenant auth plus live cluster context."
+          }
+        ]
       }
     ]
   },
@@ -595,5 +615,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:22+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:45:24.797380+08:00"
 }

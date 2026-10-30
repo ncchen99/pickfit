@@ -83,12 +83,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-atago-20261031-001829-2bef",
+      "run_id": "verify-atago-20261031-032846-3ee6",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -sL -o /tmp/atago.tar.gz https://github.com/nao1215/atago/releases/download/v0.25.2/atago_0.25.2_linux_amd64.tar.gz && tar -tzf /tmp/atago.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/atago.tar.gz -C /tmp && cp /tmp/atago ~/.local/bin/atago && chmod +x ~/.local/bin/atago && ~/.local/bin/atago --version",
-          "purpose": "Download and install atago binary release"
+          "command": "mkdir -p ~/.local/bin /tmp/atago-dl && curl -fsSL -o /tmp/atago-dl/atago.tar.gz https://github.com/nao1215/atago/releases/download/v0.25.2/atago_0.25.2_linux_amd64.tar.gz && tar -xzf /tmp/atago-dl/atago.tar.gz -C /tmp/atago-dl && ls -la /tmp/atago-dl && install -m 0755 /tmp/atago-dl/atago ~/.local/bin/atago && ~/.local/bin/atago --version",
+          "purpose": "Download prebuilt linux_amd64 tarball from releases and install atago to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -96,7 +96,7 @@
         "command": "atago --version",
         "expected_signal": "atago v0.25.2"
       },
-      "first_task": "atago run demo.atago.yaml"
+      "first_task": "atago run specs/f1.atago.yaml"
     },
     "windows": {
       "basis": "readme_claim",
@@ -128,10 +128,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:19:36.290716+08:00",
+    "checked_at": "2026-10-31T03:29:51.742252+08:00",
     "runs": [
       {
-        "id": "verify-atago-20261031-001829-2bef",
+        "id": "verify-atago-20261031-032846-3ee6",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -139,14 +139,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:19:36.290716+08:00",
-        "tool_version": "atago v0.25.2",
+        "checked_at": "2026-10-31T03:29:51.742252+08:00",
+        "tool_version": "v0.25.2",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -sL -o /tmp/atago.tar.gz https://github.com/nao1215/atago/releases/download/v0.25.2/atago_0.25.2_linux_amd64.tar.gz && tar -tzf /tmp/atago.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/atago.tar.gz -C /tmp && cp /tmp/atago ~/.local/bin/atago && chmod +x ~/.local/bin/atago && ~/.local/bin/atago --version",
-            "purpose": "Download and install atago binary release"
+            "command": "mkdir -p ~/.local/bin /tmp/atago-dl && curl -fsSL -o /tmp/atago-dl/atago.tar.gz https://github.com/nao1215/atago/releases/download/v0.25.2/atago_0.25.2_linux_amd64.tar.gz && tar -xzf /tmp/atago-dl/atago.tar.gz -C /tmp/atago-dl && ls -la /tmp/atago-dl && install -m 0755 /tmp/atago-dl/atago ~/.local/bin/atago && ~/.local/bin/atago --version",
+            "purpose": "Download prebuilt linux_amd64 tarball from releases and install atago to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -160,118 +160,140 @@
             "offline": true
           },
           {
-            "command": "atago --help",
-            "expected_signal": "atago runs the *.atago.yaml specs",
+            "command": "atago run specs/f1.atago.yaml",
+            "expected_signal": "PASSED 1 scenario: 1 passed",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "atago runs the *.atago.yaml specs in a directory (or the files you name):",
+            "observed_excerpt": "PASSED 1 scenario: 1 passed, 0 failed, 0 errored, 0 skipped (2ms)",
+            "setup": [
+              {
+                "command": "mkdir -p specs && cat > specs/f1.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: example\nscenarios:\n  - name: echo greets the world\n    steps:\n      - run:\n          shell: true\n          command: echo \"hello atago\"\n      - assert:\n          exit_code: 0\n          stdout:\n            contains: atago\n          stderr:\n            empty: true\nYAML\ncat > specs/f2.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: files-example\nscenarios:\n  - name: the generator writes the expected files\n    steps:\n      - run:\n          shell: true\n          command: mkdir -p site && echo \"<html>hello</html>\" > site/index.html && cat site/index.html\n      - assert:\n          file:\n            path: site/index.html\n            contains:\n              - \"<html\"\nYAML\ncat > specs/f3.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: pty-example\nscenarios:\n  - name: the init wizard completes\n    steps:\n      - pty:\n          command: sh -c 'printf \"Project name: \"; read name; echo \"created $name/\"'\n          session:\n            - expect: \"Project name:\"\n            - send: \"demo\\n\"\n            - expect: \"created demo/\"\n      - assert:\n          exit_code: 0\nYAML\nls -la specs/ && cat specs/f1.atago.yaml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "atago run specs/f2.atago.yaml",
+            "expected_signal": "PASSED 1 scenario: 1 passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PASSED 1 scenario: 1 passed, 0 failed, 0 errored, 0 skipped (5ms)",
+            "setup": [
+              {
+                "command": "mkdir -p specs && cat > specs/f1.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: example\nscenarios:\n  - name: echo greets the world\n    steps:\n      - run:\n          shell: true\n          command: echo \"hello atago\"\n      - assert:\n          exit_code: 0\n          stdout:\n            contains: atago\n          stderr:\n            empty: true\nYAML\ncat > specs/f2.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: files-example\nscenarios:\n  - name: the generator writes the expected files\n    steps:\n      - run:\n          shell: true\n          command: mkdir -p site && echo \"<html>hello</html>\" > site/index.html && cat site/index.html\n      - assert:\n          file:\n            path: site/index.html\n            contains:\n              - \"<html\"\nYAML\ncat > specs/f3.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: pty-example\nscenarios:\n  - name: the init wizard completes\n    steps:\n      - pty:\n          command: sh -c 'printf \"Project name: \"; read name; echo \"created $name/\"'\n          session:\n            - expect: \"Project name:\"\n            - send: \"demo\\n\"\n            - expect: \"created demo/\"\n      - assert:\n          exit_code: 0\nYAML\nls -la specs/ && cat specs/f1.atago.yaml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "atago run specs/f3.atago.yaml",
+            "expected_signal": "PASSED 1 scenario: 1 passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PASSED 1 scenario: 1 passed, 0 failed, 0 errored, 0 skipped (6ms)",
+            "setup": [
+              {
+                "command": "cat > specs/f3.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: pty-example\nscenarios:\n  - name: the init wizard completes\n    steps:\n      - pty:\n          command: \"sh -c 'printf \\\"Project name: \\\"; read name; echo \\\"created $name/\\\"'\"\n          session:\n            - expect: \"Project name:\"\n            - send: \"demo\\n\"\n            - expect: \"created demo/\"\n      - assert:\n          exit_code: 0\nYAML\ncat specs/f3.atago.yaml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "atago record --out demo.atago.yaml -- git --version && atago run demo.atago.yaml",
+            "expected_signal": "PASSED 1 scenario: 1 passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PASSED 1 scenario: 1 passed, 0 failed, 0 errored, 0 skipped (2ms)",
             "setup": [],
-            "offline": true
-          },
-          {
-            "command": "atago record --out demo.atago.yaml -- git --version && cat demo.atago.yaml",
-            "expected_signal": "wrote demo.atago.yaml",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "wrote demo.atago.yaml",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "atago run demo.atago.yaml",
-            "expected_signal": "PASSED 1 scenario",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "PASSED 1 scenario: 1 passed, 0 failed, 0 errored, 0 skipped (4ms)",
-            "setup": [
-              {
-                "command": "atago record --out demo.atago.yaml -- git --version && cat demo.atago.yaml",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "mkdir -p specs && cp demo.atago.yaml specs/ && atago list ./specs",
-            "expected_signal": "git --version",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "git git --version - - - -",
-            "setup": [
-              {
-                "command": "atago record --out demo.atago.yaml -- git --version && cat demo.atago.yaml",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "atago run --report junit specs/",
-            "expected_signal": "<testcase name=\"git --version\"",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "<testcase name=\"git --version\" time=\"0.003183\"></testcase>",
-            "setup": [
-              {
-                "command": "atago record --out demo.atago.yaml -- git --version && cat demo.atago.yaml",
-                "background": false,
-                "port": null
-              },
-              {
-                "command": "mkdir -p specs && cp demo.atago.yaml specs/ && atago list ./specs",
-                "background": false,
-                "port": null
-              }
-            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "go install github.com/nao1215/atago@latest (Requires Go 1.26.10+), yay -S atago-bin, aqua g -i nao1215/atago, mise use -g aqua:nao1215/atago",
-            "actually_needed": "used README-documented prebuilt archive atago_0.25.2_linux_amd64.tar.gz from the release page, extracted `atago` to ~/.local/bin; `go`/`yay`/`aqua`/`mise`/`brew` are all absent on this Debian box",
+            "readme_said": "go install github.com/nao1215/atago@latest (requires Go 1.26.10+); yay -S atago-bin; aqua g -i nao1215/atago; mise use -g aqua:nao1215/atago",
+            "actually_needed": "downloaded atago_0.25.2_linux_amd64.tar.gz from GitHub releases page (documented in README) and installed atago binary to ~/.local/bin",
             "kind": "sandbox"
           },
           {
-            "readme_said": "go run github.com/nao1215/atago@latest record --out demo.atago.yaml -- git --version",
-            "actually_needed": "ran `atago record --out demo.atago.yaml -- git --version` and `atago run demo.atago.yaml` directly with the installed binary",
-            "kind": "sandbox"
+            "readme_said": "README wizard example uses a bare command without ': ' so needs no quoting",
+            "actually_needed": "quote a pty/run command value containing ': ' in double quotes or it fails to load with ATG2003",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show atago recording git --version to YAML, passing the recorded scenario on rerun, and reporting version v0.25.2.",
+          "observed": "All three screenshots show expected PASSED results for both specs and version v0.25.2.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-atago-20261031-001829-2bef/report.json",
+          "trace_path": "runs/verify/verify-atago-20261031-032846-3ee6/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-atago-20261031-001829-2bef/check-1-cmd5.judged.png",
-            "runs/verify/verify-atago-20261031-001829-2bef/check-2-cmd6.judged.png",
-            "runs/verify/verify-atago-20261031-001829-2bef/check-3-cmd3.judged.png"
+            "runs/verify/verify-atago-20261031-032846-3ee6/check-1-cmd6.judged.png",
+            "runs/verify/verify-atago-20261031-032846-3ee6/check-2-cmd7.judged.png",
+            "runs/verify/verify-atago-20261031-032846-3ee6/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.057146
+        "cost_usd": 0.072931,
+        "features": [
+          {
+            "feature": "Check exit code, stdout, and stderr",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only says 1 passed without showing any exit code, stdout, or stderr values."
+          },
+          {
+            "feature": "Check generated files and snapshots",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only says 1 passed without showing any file or snapshot comparison."
+          },
+          {
+            "feature": "Drive interactive prompts and TUIs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only says 1 passed without showing any interactive prompt or TUI interaction."
+          },
+          {
+            "feature": "Record real runs as specs",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:11:57+08:00",
+    "computed_at": "2026-10-31T03:29:51+08:00",
     "quality": {
-      "total": 88.6,
+      "total": 82.2,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -312,7 +334,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 49.44
+      "value": 45.87
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -659,5 +681,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:46+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:29:51.744176+08:00"
 }

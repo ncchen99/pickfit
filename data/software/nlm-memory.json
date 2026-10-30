@@ -76,20 +76,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-nlm-memory-20261031-023404-49a3",
+      "run_id": "verify-nlm-memory-20261031-033913-198b",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g nlm-memory",
-          "purpose": "install nlm-memory globally with npm"
+          "command": "npm install -g nlm-memory 2>&1",
+          "purpose": "Install nlm-memory via npm"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "which nlm && nlm --version",
+        "command": "nlm --version 2>&1",
         "expected_signal": "0.21.20"
       },
-      "first_task": "nlm recall \"why did we change the database?\""
+      "first_task": "nlm recall \"why did we change the database?\" 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -121,10 +121,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:35:27.113068+08:00",
+    "checked_at": "2026-10-31T03:42:09.788620+08:00",
     "runs": [
       {
-        "id": "verify-nlm-memory-20261031-023404-49a3",
+        "id": "verify-nlm-memory-20261031-033913-198b",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -132,19 +132,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:35:27.113068+08:00",
+        "checked_at": "2026-10-31T03:42:09.788620+08:00",
         "tool_version": "0.21.20",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g nlm-memory",
-            "purpose": "install nlm-memory globally with npm"
+            "command": "npm install -g nlm-memory 2>&1",
+            "purpose": "Install nlm-memory via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "which nlm && nlm --version",
+            "command": "nlm --version 2>&1",
             "expected_signal": "0.21.20",
             "exit_code": 0,
             "passed": true,
@@ -153,16 +153,7 @@
             "offline": true
           },
           {
-            "command": "nlm --help",
-            "expected_signal": "Interactive first-run setup",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "setup Interactive first-run setup: detect runtimes, wire MCP + hooks, start daemon",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "nlm recall \"why did we change the database?\"",
+            "command": "nlm recall \"why did we change the database?\" 2>&1",
             "expected_signal": "(no matches)",
             "exit_code": 0,
             "passed": true,
@@ -171,38 +162,84 @@
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "npm ci then npm run demo:memory",
+            "actually_needed": "source-checkout demo (npm ci) fails building better-sqlite3 (node-gyp rebuild) — box lacks C toolchain; used installed package dist + migrations directly instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "demo shows property filter and ownership correction",
+            "actually_needed": "stable npm 0.21.20 has sessions/facts/supersedence but no property catalog APIs; property filter and ownership correction need prerelease next channel",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show recall returning (no matches) and nlm --version reporting 0.21.20 from the expected path.",
+          "observed": "Screenshots show version 0.21.20, empty recall returning (no matches), and functional test recovering SQLite evidence with superseded/fact/history checks.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-nlm-memory-20261031-023404-49a3/report.json",
+          "trace_path": "runs/verify/verify-nlm-memory-20261031-033913-198b/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-nlm-memory-20261031-023404-49a3/check-1-cmd5.judged.png",
-            "runs/verify/verify-nlm-memory-20261031-023404-49a3/check-2-cmd3.judged.png"
+            "runs/verify/verify-nlm-memory-20261031-033913-198b/check-1-cmd3.judged.png",
+            "runs/verify/verify-nlm-memory-20261031-033913-198b/check-2-cmd4.judged.png",
+            "runs/verify/verify-nlm-memory-20261031-033913-198b/check-3-cmd15.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.02731
+        "cost_usd": 0.160203,
+        "features": [
+          {
+            "feature": "Recover earlier decisions across sessions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; keywordSearch for full question returned empty; F1 line printed no ids"
+          },
+          {
+            "feature": "Inspect source conversation evidence",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          },
+          {
+            "feature": "Mark outdated reasoning as superseded",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          },
+          {
+            "feature": "Recall structured facts with provenance",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:43:57+08:00",
+    "computed_at": "2026-10-31T03:42:09+08:00",
     "quality": {
-      "total": 92.2,
+      "total": 84.7,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -245,7 +282,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 56.89
+      "value": 52.26
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -568,5 +605,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:47:37+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:42:09.789895+08:00"
 }

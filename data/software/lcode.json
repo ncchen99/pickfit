@@ -75,7 +75,7 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-lcode-20261031-001540-3a4d",
+      "run_id": "verify-lcode-20261031-032908-1561",
       "method": "uv",
       "steps": [
         {
@@ -85,10 +85,10 @@
       ],
       "manual_steps": [],
       "check": {
-        "command": "lcode --version 2>&1",
-        "expected_signal": "lcode 0.52.0"
+        "command": "lcode --help 2>&1",
+        "expected_signal": "A local-first terminal coding agent"
       },
-      "first_task": "lcode doctor 2>&1"
+      "first_task": "lcode models 2>&1"
     },
     "windows": null
   },
@@ -107,10 +107,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:16:27.739106+08:00",
+    "checked_at": "2026-10-31T03:29:45.204471+08:00",
     "runs": [
       {
-        "id": "verify-lcode-20261031-001540-3a4d",
+        "id": "verify-lcode-20261031-032908-1561",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -118,7 +118,7 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:16:27.739106+08:00",
+        "checked_at": "2026-10-31T03:29:45.204471+08:00",
         "tool_version": "0.52.0",
         "install_method": "uv",
         "replayed": true,
@@ -130,29 +130,11 @@
         ],
         "smoke_tests": [
           {
-            "command": "lcode --version 2>&1",
-            "expected_signal": "lcode 0.52.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "lcode 0.52.0",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "lcode --help 2>&1",
             "expected_signal": "A local-first terminal coding agent",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "A local-first terminal coding agent powered by open-weight models via Ollama.",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "lcode doctor 2>&1",
-            "expected_signal": "cannot reach Ollama at http://localhost:11434",
-            "exit_code": 1,
-            "passed": true,
-            "observed_excerpt": "✗ Ollama cannot reach Ollama at http://localhost:11434: HTTPConnectionPool(host='localhost',",
             "setup": [],
             "offline": true
           },
@@ -164,27 +146,70 @@
             "observed_excerpt": "│ qwen3.5-4b │ 3.4 GB │ 256K │ no │ too large │ tested │",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "lcode doctor 2>&1",
+            "expected_signal": "cannot reach Ollama",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "✗ Ollama cannot reach Ollama at http://localhost:11434: HTTPConnectionPool(host='localhost',",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show version 0.52.0, help with local-first agent tagline, and doctor correctly reporting Ollama unreachable.",
+          "observed": "All three checks show expected output: help with local-first tagline, models table containing qwen3.5-4b, and doctor correctly reporting Ollama unreachable.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-lcode-20261031-001540-3a4d/report.json",
+          "trace_path": "runs/verify/verify-lcode-20261031-032908-1561/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-lcode-20261031-001540-3a4d/check-1-cmd2.judged.png",
-            "runs/verify/verify-lcode-20261031-001540-3a4d/check-2-cmd3.judged.png",
-            "runs/verify/verify-lcode-20261031-001540-3a4d/check-3-cmd4.judged.png"
+            "runs/verify/verify-lcode-20261031-032908-1561/check-1-cmd2.judged.png",
+            "runs/verify/verify-lcode-20261031-032908-1561/check-2-cmd4.judged.png",
+            "runs/verify/verify-lcode-20261031-032908-1561/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.032259
+        "cost_usd": 0.033005,
+        "features": [
+          {
+            "feature": "run entirely on local machine with open-weight models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "Smallest catalog model is 3.4 GB; box is CPU-only with 2 GB RAM and no Ollama (lcode doctor)."
+          },
+          {
+            "feature": "talk to repository in terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "Requires a running Ollama model; none fits/runs on this CPU-only 2 GB box."
+          },
+          {
+            "feature": "write and edit files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "Requires a running Ollama model; none fits/runs on this CPU-only 2 GB box."
+          },
+          {
+            "feature": "run scripts and tests",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "Requires a running Ollama model; none fits/runs on this CPU-only 2 GB box."
+          }
+        ]
       }
     ]
   },
@@ -556,5 +581,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:29:45.205939+08:00"
 }

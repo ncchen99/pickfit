@@ -72,20 +72,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-kx-20261031-000846-74c9",
+      "run_id": "verify-kx-20261031-034036-6f6c",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install kx-cli 2>&1",
-          "purpose": "Install kx via uv tool"
+          "command": "uv tool install kx-cli",
+          "purpose": "install kx via uv tool"
+        },
+        {
+          "command": "curl -fsSL -o /home/sbx/.local/bin/kubectl https://dl.k8s.io/release/v1.34.1/bin/linux/amd64/kubectl && chmod +x /home/sbx/.local/bin/kubectl && kubectl version --client",
+          "purpose": "install kubectl prerequisite binary"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "kx --version 2>&1",
+        "command": "kx --version",
         "expected_signal": "kx v0.11.0"
       },
-      "first_task": "kx theme 2>&1"
+      "first_task": "kx theme"
     },
     "windows": {
       "basis": "readme_claim",
@@ -117,10 +121,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:09:39.068446+08:00",
+    "checked_at": "2026-10-31T03:41:46.234616+08:00",
     "runs": [
       {
-        "id": "verify-kx-20261031-000846-74c9",
+        "id": "verify-kx-20261031-034036-6f6c",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -128,19 +132,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:09:39.068446+08:00",
+        "checked_at": "2026-10-31T03:41:46.234616+08:00",
         "tool_version": "v0.11.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install kx-cli 2>&1",
-            "purpose": "Install kx via uv tool"
+            "command": "uv tool install kx-cli",
+            "purpose": "install kx via uv tool"
+          },
+          {
+            "command": "curl -fsSL -o /home/sbx/.local/bin/kubectl https://dl.k8s.io/release/v1.34.1/bin/linux/amd64/kubectl && chmod +x /home/sbx/.local/bin/kubectl && kubectl version --client",
+            "purpose": "install kubectl prerequisite binary"
           }
         ],
         "smoke_tests": [
           {
-            "command": "kx --version 2>&1",
+            "command": "kx --version",
             "expected_signal": "kx v0.11.0",
             "exit_code": 0,
             "passed": true,
@@ -149,29 +157,20 @@
             "offline": true
           },
           {
-            "command": "kx --help 2>&1",
-            "expected_signal": "Run 'kx COMMAND --help'",
+            "command": "kx theme",
+            "expected_signal": "Themes · 11 items",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Run 'kx COMMAND --help' for a command's options and examples.",
+            "observed_excerpt": "Themes · 11 items",
             "setup": [],
             "offline": true
           },
           {
-            "command": "kx theme 2>&1",
-            "expected_signal": "github-dark",
+            "command": "kx state --all",
+            "expected_signal": "No history yet",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "1 → github-dark ✓ ok ! warn ✗ error header body muted",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "kx completion bash 2>&1",
-            "expected_signal": "__start_kx",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "__start_kx()",
+            "observed_excerpt": "No history yet — run 'kx get <resource>' to start one",
             "setup": [],
             "offline": true
           }
@@ -179,42 +178,76 @@
         "pitfalls": [
           {
             "readme_said": "Requires kubectl on your PATH",
-            "actually_needed": "kx --version/--help, kx theme, kx state, kx completion all work without kubectl; kx --version reports 'kubectl not found on PATH'. Cluster commands like kx get pods were not run (no cluster/kubectl in box).",
-            "kind": "note"
+            "actually_needed": "installed real kubectl v1.34.1 binary to ~/.local/bin via dl.k8s.io release artifact before kx could talk to a cluster; kx --version reported kubectl not found on PATH until then",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show kx v0.11.0 version info, help with Run footer, and theme list containing github-dark.",
+          "observed": "Screenshots show 11-item theme list, empty history prompt, and kx v0.11.0 version details.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-kx-20261031-000846-74c9/report.json",
+          "trace_path": "runs/verify/verify-kx-20261031-034036-6f6c/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-kx-20261031-000846-74c9/check-1-cmd2.judged.png",
-            "runs/verify/verify-kx-20261031-000846-74c9/check-2-cmd3.judged.png",
-            "runs/verify/verify-kx-20261031-000846-74c9/check-3-cmd4.judged.png"
+            "runs/verify/verify-kx-20261031-034036-6f6c/check-1-cmd10.judged.png",
+            "runs/verify/verify-kx-20261031-034036-6f6c/check-2-cmd9.judged.png",
+            "runs/verify/verify-kx-20261031-034036-6f6c/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.039702
+        "cost_usd": 0.068358,
+        "features": [
+          {
+            "feature": "reference resources by index number",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs live cluster; kx get pods refused localhost:8080, kx ref 1 has no state"
+          },
+          {
+            "feature": "triage namespace and diagnose unhealthy resources",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs live cluster; kx diag reports no Kubernetes configuration"
+          },
+          {
+            "feature": "scan workload images for vulnerabilities",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs live cluster plus scanner CLI; kx scan reports Docker Scout plugin missing"
+          },
+          {
+            "feature": "show ownership graph for resources",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs live cluster; kx tree reports no Kubernetes configuration"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:11:57+08:00",
+    "computed_at": "2026-10-31T03:41:46+08:00",
     "quality": {
-      "total": 88.3,
+      "total": 74.4,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -254,8 +287,8 @@
       "packages": []
     },
     "treasure": {
-      "is_treasure": true,
-      "value": 60.4
+      "is_treasure": false,
+      "value": 50.89
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -562,5 +595,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:20+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:41:46.236041+08:00"
 }

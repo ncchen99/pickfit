@@ -54,12 +54,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-ci-whisper-20261031-000542-9129",
+      "run_id": "verify-ci-whisper-20261031-032805-a610",
       "method": "pipx",
       "steps": [
         {
           "command": "pipx install git+https://github.com/mgkvibez/ci-whisper.git",
-          "purpose": "install ci-whisper from git via pipx"
+          "purpose": "install ci-whisper via pipx git"
         }
       ],
       "manual_steps": [],
@@ -86,10 +86,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:06:43.181228+08:00",
+    "checked_at": "2026-10-31T03:29:07.998344+08:00",
     "runs": [
       {
-        "id": "verify-ci-whisper-20261031-000542-9129",
+        "id": "verify-ci-whisper-20261031-032805-a610",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -97,14 +97,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:06:43.181228+08:00",
+        "checked_at": "2026-10-31T03:29:07.998344+08:00",
         "tool_version": "0.1.2",
         "install_method": "pipx",
         "replayed": true,
         "steps": [
           {
             "command": "pipx install git+https://github.com/mgkvibez/ci-whisper.git",
-            "purpose": "install ci-whisper from git via pipx"
+            "purpose": "install ci-whisper via pipx git"
           }
         ],
         "smoke_tests": [
@@ -118,15 +118,6 @@
             "offline": true
           },
           {
-            "command": "ci-whisper --version",
-            "expected_signal": "ci-whisper 0.1.2",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "ci-whisper 0.1.2",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "ci-whisper --file /tmp/build.log",
             "expected_signal": "FIRST REAL ERROR",
             "exit_code": 0,
@@ -134,7 +125,7 @@
             "observed_excerpt": "FIRST REAL ERROR",
             "setup": [
               {
-                "command": "cat > /tmp/build.log <<'EOF'\nRun pytest tests\nFAILED test_app.py::test_add - AssertionError: assert 1 == 2\n##[error]Process completed with exit code 1\nEOF\ncp /tmp/build.log ./build.log\ncat ./build.log",
+                "command": "cat > /tmp/build.log <<'LOG'\nStarting job: build and test\nRun npm ci\nnpm ERR! code ERESOLVE\nnpm ERR! ERESOLVE could not resolve peer react@\"^19\" from next@15\n##[error]Process completed with exit code 1.\nLOG\ncp /tmp/build.log ./build.log && cat /tmp/build.log",
                 "background": false,
                 "port": null
               }
@@ -143,13 +134,28 @@
           },
           {
             "command": "ci-whisper --file build.log --json",
-            "expected_signal": "\"kind\": \"test-failure\"",
+            "expected_signal": "root_cause",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "\"kind\": \"test-failure\",",
+            "observed_excerpt": "\"root_cause\": {",
             "setup": [
               {
-                "command": "cat > /tmp/build.log <<'EOF'\nRun pytest tests\nFAILED test_app.py::test_add - AssertionError: assert 1 == 2\n##[error]Process completed with exit code 1\nEOF\ncp /tmp/build.log ./build.log\ncat ./build.log",
+                "command": "cat > /tmp/build.log <<'LOG'\nStarting job: build and test\nRun npm ci\nnpm ERR! code ERESOLVE\nnpm ERR! ERESOLVE could not resolve peer react@\"^19\" from next@15\n##[error]Process completed with exit code 1.\nLOG\ncp /tmp/build.log ./build.log && cat /tmp/build.log",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cat /tmp/build.log | ci-whisper",
+            "expected_signal": "SUGGESTED FIX",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "SUGGESTED FIX",
+            "setup": [
+              {
+                "command": "cat > /tmp/build.log <<'LOG'\nStarting job: build and test\nRun npm ci\nnpm ERR! code ERESOLVE\nnpm ERR! ERESOLVE could not resolve peer react@\"^19\" from next@15\n##[error]Process completed with exit code 1.\nLOG\ncp /tmp/build.log ./build.log && cat /tmp/build.log",
                 "background": false,
                 "port": null
               }
@@ -161,21 +167,53 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three screenshots show ci-whisper reporting the first error, JSON with test-failure kind, and usage help as expected.",
+          "observed": "Screenshots show ci-whisper reporting FIRST REAL ERROR with chain, JSON with root_cause, and help usage as intended.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-ci-whisper-20261031-000542-9129/report.json",
+          "trace_path": "runs/verify/verify-ci-whisper-20261031-032805-a610/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-ci-whisper-20261031-000542-9129/check-1-cmd8.judged.png",
-            "runs/verify/verify-ci-whisper-20261031-000542-9129/check-2-cmd9.judged.png",
-            "runs/verify/verify-ci-whisper-20261031-000542-9129/check-3-cmd2.judged.png"
+            "runs/verify/verify-ci-whisper-20261031-032805-a610/check-1-cmd8.judged.png",
+            "runs/verify/verify-ci-whisper-20261031-032805-a610/check-2-cmd9.judged.png",
+            "runs/verify/verify-ci-whisper-20261031-032805-a610/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.050965
+        "cost_usd": 0.069723,
+        "features": [
+          {
+            "feature": "Get first real error from CI log",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Show error causal chain",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Suggest fix for failure",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -481,5 +519,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:46+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:29:08.007824+08:00"
 }

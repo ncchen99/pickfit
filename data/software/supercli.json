@@ -67,24 +67,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-supercli-20261031-000756-8a98",
+      "run_id": "verify-supercli-20261031-033549-414b",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g superacli 2>&1",
-          "purpose": "Install superacli globally via npm"
+          "purpose": "Install superacli globally"
         },
         {
-          "command": "npm install -g dotenv vm2 express mongodb 2>&1 && supercli --version 2>&1",
-          "purpose": "Install missing runtime deps dotenv vm2 express mongodb"
+          "command": "cd ~/.local/lib/node_modules/superacli && npm install --no-audit --no-fund dotenv express mongodb vm2 2>&1",
+          "purpose": "Install missing runtime deps package.json omits"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "supercli --version 2>&1",
-        "expected_signal": "\"version\":\"1.31.5\""
+        "command": "supercli --help 2>&1",
+        "expected_signal": "Universal Capability Router"
       },
-      "first_task": "supercli help 2>&1"
+      "first_task": "supercli skills search \"github\" 2>&1"
     },
     "windows": null
   },
@@ -103,10 +103,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:09:45.674301+08:00",
+    "checked_at": "2026-10-31T03:37:23.116290+08:00",
     "runs": [
       {
-        "id": "verify-supercli-20261031-000756-8a98",
+        "id": "verify-supercli-20261031-033549-414b",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -114,30 +114,21 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:09:45.674301+08:00",
-        "tool_version": "1.31.5",
+        "checked_at": "2026-10-31T03:37:23.116290+08:00",
+        "tool_version": "1.32.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g superacli 2>&1",
-            "purpose": "Install superacli globally via npm"
+            "purpose": "Install superacli globally"
           },
           {
-            "command": "npm install -g dotenv vm2 express mongodb 2>&1 && supercli --version 2>&1",
-            "purpose": "Install missing runtime deps dotenv vm2 express mongodb"
+            "command": "cd ~/.local/lib/node_modules/superacli && npm install --no-audit --no-fund dotenv express mongodb vm2 2>&1",
+            "purpose": "Install missing runtime deps package.json omits"
           }
         ],
         "smoke_tests": [
-          {
-            "command": "supercli --version 2>&1",
-            "expected_signal": "\"version\":\"1.31.5\"",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "{\"name\":\"SuperCLI\",\"implementation\":\"JavaScript\",\"version\":\"1.31.5\",\"node_version\":\"v22.23.4\",\"binary_name\":\"supercli\"}",
-            "setup": [],
-            "offline": true
-          },
           {
             "command": "supercli --help 2>&1",
             "expected_signal": "Universal Capability Router",
@@ -148,11 +139,20 @@
             "offline": true
           },
           {
-            "command": "supercli help 2>&1",
-            "expected_signal": "\"namespaces\":[]",
+            "command": "supercli skills search \"github\" 2>&1",
+            "expected_signal": "\"total\":0",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "{\"version\":\"1.0\",\"namespaces\":[]}",
+            "observed_excerpt": "{\"skills\":[],\"total\":0,\"returned\":0,\"offset\":0}",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "supercli plugins list 2>&1",
+            "expected_signal": "\"plugins\":[]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"plugins\":[]}",
             "setup": [],
             "offline": true
           },
@@ -166,59 +166,110 @@
             "offline": true
           },
           {
-            "command": "supercli skills search \"github\" 2>&1",
-            "expected_signal": "\"total\":0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "{\"skills\":[],\"total\":0,\"returned\":0,\"offset\":0}",
+            "command": "supercli inspect http check health 2>&1",
+            "expected_signal": "",
+            "exit_code": 92,
+            "passed": false,
+            "observed_excerpt": "{\"error\":{\"code\":92,\"type\":\"resource_not_found\",\"message\":\"Command http.check.health not found\",\"recoverable\":false,\"suggestions\":[\"Run: supercli commands\"]}}",
             "setup": [],
-            "offline": true
+            "offline": null
+          },
+          {
+            "command": "supercli inspect beads issue create 2>&1",
+            "expected_signal": "",
+            "exit_code": 92,
+            "passed": false,
+            "observed_excerpt": "{\"error\":{\"code\":92,\"type\":\"resource_not_found\",\"message\":\"Command beads.issue.create not found\",\"recoverable\":false,\"suggestions\":[\"Run: supercli commands\"]}}",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "npx supercli skills list works with zero install",
-            "actually_needed": "Install the `superacli` package globally (`npm install -g superacli`) then run the `supercli` binary directly (`supercli skills list`); equivalently `npx -p superacli supercli skills list`.",
+            "readme_said": "npx supercli skills list (zero-install)",
+            "actually_needed": "install package superacli (npm install -g superacli) then run `supercli`; bare `npx supercli` pulls unrelated npm package supercli 0.4.1 and errors could not determine executable to run",
             "kind": "readme_wrong"
           },
           {
-            "readme_said": "npm install -g superacli is sufficient for repeated use",
-            "actually_needed": "Also run `npm install -g dotenv vm2 express mongodb` because the published superacli package declares no dependencies yet requires dotenv, vm2, express and mongodb; without them `supercli --version` fails with `Cannot find module 'dotenv'`.",
+            "readme_said": "npm install -g superacli then run supercli",
+            "actually_needed": "cd ~/.local/lib/node_modules/superacli && npm install dotenv express mongodb vm2",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "curl -sSL .../v0.2.1-machin/install.sh | bash",
+            "actually_needed": "v0.2.1-machin install.sh URL returns 9-byte Not Found",
             "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show version 1.31.5 JSON, help JSON with Universal Capability Router description, and help output with empty namespaces.",
+          "observed": "Screenshots show help describing Universal Capability Router, empty skills search with total 0, and empty plugins list, all with exit 0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-supercli-20261031-000756-8a98/report.json",
+          "trace_path": "runs/verify/verify-supercli-20261031-033549-414b/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-supercli-20261031-000756-8a98/check-1-cmd10.judged.png",
-            "runs/verify/verify-supercli-20261031-000756-8a98/check-2-cmd14.judged.png",
-            "runs/verify/verify-supercli-20261031-000756-8a98/check-3-cmd11.judged.png"
+            "runs/verify/verify-supercli-20261031-033549-414b/check-1-cmd10.judged.png",
+            "runs/verify/verify-supercli-20261031-033549-414b/check-2-cmd11.judged.png",
+            "runs/verify/verify-supercli-20261031-033549-414b/check-3-cmd13.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.088012
+        "cost_usd": 0.096323,
+        "features": [
+          {
+            "feature": "Discover CLI tools via searchable skill graph",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Search returned zero skills with total 0, showing nothing found."
+          },
+          {
+            "feature": "Execute CLI tools with consistent JSON output",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows empty plugins list with no executed tool result."
+          },
+          {
+            "feature": "Combine multiple tools into structured response",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "ask needs OPENAI_API_KEY/BASE_URL/MODEL per README troubleshooting"
+          },
+          {
+            "feature": "Inspect capability interface before execution",
+            "status": "test_failed",
+            "smoke_tests": [
+              4,
+              5
+            ],
+            "reason": null,
+            "failure": "tool",
+            "note": "http.check.health and beads.issue.create both 92 resource_not_found on fresh install"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:31:27+08:00",
+    "computed_at": "2026-10-31T03:37:23+08:00",
     "quality": {
-      "total": 85.9,
+      "total": 81.1,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.7225,
+          "score": 0.6141,
           "weight": 40.0
         },
         "install_docs": {
@@ -259,7 +310,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 39.77
+      "value": 37.55
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -534,5 +585,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:20+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:37:23.119160+08:00"
 }

@@ -87,20 +87,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-leviath-20261031-000705-112c",
+      "run_id": "verify-leviath-20261031-034240-b5cb",
       "method": "script",
       "steps": [
         {
           "command": "curl -fsSL https://leviath.dev/install.sh -o /tmp/leviath-install.sh && wc -c /tmp/leviath-install.sh && head -c 2000 /tmp/leviath-install.sh",
-          "purpose": "Download outer install script for reading"
+          "purpose": "Download thin install script for inspection"
         },
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/GEMISIS/leviath-dist/main/install.sh -o /tmp/leviath-dist-install.sh && wc -c /tmp/leviath-dist-install.sh && echo \"---downloaded-ok---\"",
-          "purpose": "Download nested dist install script for reading"
+          "command": "curl -fsSL https://raw.githubusercontent.com/GEMISIS/leviath-dist/main/install.sh -o /tmp/leviath-dist-install.sh && wc -c /tmp/leviath-dist-install.sh && wc -l /tmp/leviath-dist-install.sh",
+          "purpose": "Download nested dist install script for inspection"
         },
         {
-          "command": "sed 's|^INSTALL_DIR=.*|INSTALL_DIR=\"$HOME/.local/bin\"|' /tmp/leviath-dist-install.sh > /tmp/leviath-user-install.sh && grep -n \"INSTALL_DIR\" /tmp/leviath-user-install.sh && bash /tmp/leviath-user-install.sh --channel stable",
-          "purpose": "Install stable binary to ~/.local/bin via patched script"
+          "command": "mkdir -p ~/.local/bin && sed 's|INSTALL_DIR=\"/usr/local/bin\"|INSTALL_DIR=\"$HOME/.local/bin\"|' /tmp/leviath-dist-install.sh > /tmp/lev-install-user.sh && bash /tmp/lev-install-user.sh --channel stable",
+          "purpose": "Install Leviath to ~/.local/bin via patched script"
         }
       ],
       "manual_steps": [],
@@ -142,10 +142,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:08:36.906641+08:00",
+    "checked_at": "2026-10-31T03:43:53.305727+08:00",
     "runs": [
       {
-        "id": "verify-leviath-20261031-000705-112c",
+        "id": "verify-leviath-20261031-034240-b5cb",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -153,22 +153,22 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:08:36.906641+08:00",
-        "tool_version": "lev 0.6.4",
+        "checked_at": "2026-10-31T03:43:53.305727+08:00",
+        "tool_version": "0.6.4",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
             "command": "curl -fsSL https://leviath.dev/install.sh -o /tmp/leviath-install.sh && wc -c /tmp/leviath-install.sh && head -c 2000 /tmp/leviath-install.sh",
-            "purpose": "Download outer install script for reading"
+            "purpose": "Download thin install script for inspection"
           },
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/GEMISIS/leviath-dist/main/install.sh -o /tmp/leviath-dist-install.sh && wc -c /tmp/leviath-dist-install.sh && echo \"---downloaded-ok---\"",
-            "purpose": "Download nested dist install script for reading"
+            "command": "curl -fsSL https://raw.githubusercontent.com/GEMISIS/leviath-dist/main/install.sh -o /tmp/leviath-dist-install.sh && wc -c /tmp/leviath-dist-install.sh && wc -l /tmp/leviath-dist-install.sh",
+            "purpose": "Download nested dist install script for inspection"
           },
           {
-            "command": "sed 's|^INSTALL_DIR=.*|INSTALL_DIR=\"$HOME/.local/bin\"|' /tmp/leviath-dist-install.sh > /tmp/leviath-user-install.sh && grep -n \"INSTALL_DIR\" /tmp/leviath-user-install.sh && bash /tmp/leviath-user-install.sh --channel stable",
-            "purpose": "Install stable binary to ~/.local/bin via patched script"
+            "command": "mkdir -p ~/.local/bin && sed 's|INSTALL_DIR=\"/usr/local/bin\"|INSTALL_DIR=\"$HOME/.local/bin\"|' /tmp/leviath-dist-install.sh > /tmp/lev-install-user.sh && bash /tmp/lev-install-user.sh --channel stable",
+            "purpose": "Install Leviath to ~/.local/bin via patched script"
           }
         ],
         "smoke_tests": [
@@ -178,15 +178,6 @@
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "Leviath agent framework CLI",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "lev --version",
-            "expected_signal": "lev 0.6.4",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "lev 0.6.4",
             "setup": [],
             "offline": true
           },
@@ -208,47 +199,73 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -fsSL https://leviath.dev/install.sh | sh installs a prebuilt binary with no extra steps",
-            "actually_needed": "Installer hardcodes INSTALL_DIR=/usr/local/bin and falls back to `sudo install`; box has no sudo and /usr/local/bin is not writable, so patched a copy of the dist install script with INSTALL_DIR=\"$HOME/.local/bin\" and ran `bash /tmp/leviath-user-install.sh --channel stable`.",
+            "readme_said": "curl -fsSL https://leviath.dev/install.sh | sh installs prebuilt binary",
+            "actually_needed": "Patch INSTALL_DIR from /usr/local/bin to $HOME/.local/bin (e.g. sed to /tmp/lev-install-user.sh) and run bash /tmp/lev-install-user.sh --channel stable; installs to ~/.local/bin/lev with no sudo.",
             "kind": "sandbox"
           },
           {
-            "readme_said": "lev ps lists running agents",
-            "actually_needed": "Started the shared-world daemon first with `lev daemon` (background); only then does `lev ps` succeed and print `no agent runs active`.",
-            "kind": "readme_wrong"
+            "readme_said": "lev ps lists running agents (At a glance shows it with no setup step)",
+            "actually_needed": "Start background daemon with `lev daemon` before `lev ps`; otherwise lev ps exits 1 with 'daemon is not reachable'.",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show lev ps reporting no active runs and lev --help displaying the Leviath agent framework CLI help.",
+          "observed": "Both screenshots show lev ps reporting no active runs and lev --help displaying the CLI header and command list.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-leviath-20261031-000705-112c/report.json",
+          "trace_path": "runs/verify/verify-leviath-20261031-034240-b5cb/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-leviath-20261031-000705-112c/check-1-cmd10.judged.png",
-            "runs/verify/verify-leviath-20261031-000705-112c/check-2-cmd6.judged.png"
+            "runs/verify/verify-leviath-20261031-034240-b5cb/check-1-cmd8.judged.png",
+            "runs/verify/verify-leviath-20261031-034240-b5cb/check-2-cmd5.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.074599
+        "cost_usd": 0.072722,
+        "features": [
+          {
+            "feature": "run AI agents with structured context",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Needs a model provider API key (Anthropic/OpenAI/Google/OpenRouter/Bedrock) or local Ollama; box has none."
+          },
+          {
+            "feature": "run multi-stage agent workflows",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Multi-stage runs require lev run with a provider API key; box has none."
+          },
+          {
+            "feature": "orchestrate thousands of agents in one process",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Orchestrating agents requires lev run with a provider; box has none."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:11:57+08:00",
+    "computed_at": "2026-10-31T03:43:53+08:00",
     "quality": {
-      "total": 84.7,
+      "total": 78.3,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -289,7 +306,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 44.47
+      "value": 41.11
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -668,5 +685,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:52+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:43:53.306701+08:00"
 }

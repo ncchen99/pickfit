@@ -61,7 +61,7 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-fitllm-engine-20261030-234458-62a1",
+      "run_id": "verify-fitllm-engine-20261031-032510-5223",
       "method": "npm",
       "steps": [
         {
@@ -72,9 +72,9 @@
       "manual_steps": [],
       "check": {
         "command": "fitllm --help",
-        "expected_signal": "usage:"
+        "expected_signal": "exit codes: 0 fits"
       },
-      "first_task": "npx fitllm \"Gemma 4 12b\" --gpu \"RTX 4090\""
+      "first_task": "fitllm \"Gemma 4 12b\" --gpu \"RTX 4090\""
     },
     "windows": {
       "basis": "readme_claim",
@@ -106,10 +106,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-30T23:45:50.821020+08:00",
+    "checked_at": "2026-10-31T03:26:08.583785+08:00",
     "runs": [
       {
-        "id": "verify-fitllm-engine-20261030-234458-62a1",
+        "id": "verify-fitllm-engine-20261031-032510-5223",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -117,7 +117,7 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-30T23:45:50.821020+08:00",
+        "checked_at": "2026-10-31T03:26:08.583785+08:00",
         "tool_version": "2.22.0",
         "install_method": "npm",
         "replayed": true,
@@ -130,15 +130,15 @@
         "smoke_tests": [
           {
             "command": "fitllm --help",
-            "expected_signal": "usage:",
+            "expected_signal": "exit codes: 0 fits",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "usage:",
+            "observed_excerpt": "exit codes: 0 fits · 1 won't fit · 2 error (guard-friendly: run before you download)",
             "setup": [],
             "offline": true
           },
           {
-            "command": "npx fitllm \"Gemma 4 12b\" --gpu \"RTX 4090\"",
+            "command": "fitllm \"Gemma 4 12b\" --gpu \"RTX 4090\"",
             "expected_signal": "✓ FITS — Gemma 4 12b on RTX 4090",
             "exit_code": 0,
             "passed": true,
@@ -147,63 +147,117 @@
             "offline": true
           },
           {
-            "command": "npx fitllm --top --gpu 4090",
-            "expected_signal": "Qwen 3.8 27B",
+            "command": "fitllm --top --gpu 4090",
+            "expected_signal": "max ctx",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "3. Qwen 3.8 27B 27.781B Q4_K_M △ 22.9/24 GB max ctx ~7K tokens",
+            "observed_excerpt": "1. GLM-4.7-Flash 31.2B Q4_K_M ✓ 22.6/24 GB max ctx ~10K tokens",
             "setup": [],
             "offline": true
           },
           {
-            "command": "npx fitllm scan",
-            "expected_signal": "No supported runtime answered on this machine.",
+            "command": "fitllm scan",
+            "expected_signal": "No supported runtime answered",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "No supported runtime answered on this machine.",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "fitllm --top --detect --json",
+            "expected_signal": "",
+            "exit_code": 2,
+            "passed": false,
+            "observed_excerpt": "hardware detection failed (nvidia-smi unavailable: spawnSync nvidia-smi ENOENT); pass --gpu \"<name>\" or --mac <GB>",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "README shows usage via npx fitllm without documenting --version/--help flags.",
-            "actually_needed": "Use `fitllm --help` (or `npx fitllm --help`); `fitllm --version` exits 2 with 'unknown model' and is not supported.",
+            "readme_said": "npm install fitllm-engine",
+            "actually_needed": "npm install -g fitllm-engine puts fitllm on PATH via ~/.local prefix; README examples use npx fitllm",
+            "kind": "note"
+          },
+          {
+            "readme_said": "--version or --help check (only --help works)",
+            "actually_needed": "use fitllm --help; fitllm --version is parsed as a model name and exits 2 with unknown model",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three screenshots show FitLLM Engine printing the FITS estimate, the ranked top-models list, and help usage with exit code 0.",
+          "observed": "All three screenshots show expected outputs: GPU fit verdict, top-models list with max ctx values, and help with exit codes.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-fitllm-engine-20261030-234458-62a1/report.json",
+          "trace_path": "runs/verify/verify-fitllm-engine-20261031-032510-5223/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-fitllm-engine-20261030-234458-62a1/check-1-cmd4.judged.png",
-            "runs/verify/verify-fitllm-engine-20261030-234458-62a1/check-2-cmd5.judged.png",
-            "runs/verify/verify-fitllm-engine-20261030-234458-62a1/check-3-cmd3.judged.png"
+            "runs/verify/verify-fitllm-engine-20261031-032510-5223/check-1-cmd4.judged.png",
+            "runs/verify/verify-fitllm-engine-20261031-032510-5223/check-2-cmd5.judged.png",
+            "runs/verify/verify-fitllm-engine-20261031-032510-5223/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.068622
+        "cost_usd": 0.083875,
+        "features": [
+          {
+            "feature": "check if an LLM fits your GPU",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "rank models that fit your hardware",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "scan downloaded Ollama and LM Studio models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output reports no runtime answered and scans no models."
+          },
+          {
+            "feature": "detect local GPU hardware automatically",
+            "status": "test_failed",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "no nvidia-smi/GPU in box; exit 2 hardware detection failed"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-30T23:55:13+08:00",
+    "computed_at": "2026-10-31T03:26:08+08:00",
     "quality": {
-      "total": 92.2,
+      "total": 84.7,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -246,7 +300,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 49.6
+      "value": 45.57
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -537,5 +591,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:26:08.587264+08:00"
 }

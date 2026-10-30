@@ -77,12 +77,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-ai-jury-20261031-000626-5773",
+      "run_id": "verify-ai-jury-20261031-034209-b28d",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install ai-jury && jury --version",
-          "purpose": "Install ai-jury via uv tool install"
+          "command": "uv tool install ai-jury",
+          "purpose": "Install ai-jury via uv tool"
         }
       ],
       "manual_steps": [],
@@ -109,10 +109,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:07:05.105994+08:00",
+    "checked_at": "2026-10-31T03:43:25.891151+08:00",
     "runs": [
       {
-        "id": "verify-ai-jury-20261031-000626-5773",
+        "id": "verify-ai-jury-20261031-034209-b28d",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -120,14 +120,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:07:05.105994+08:00",
+        "checked_at": "2026-10-31T03:43:25.891151+08:00",
         "tool_version": "1.28.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install ai-jury && jury --version",
-            "purpose": "Install ai-jury via uv tool install"
+            "command": "uv tool install ai-jury",
+            "purpose": "Install ai-jury via uv tool"
           }
         ],
         "smoke_tests": [
@@ -141,38 +141,38 @@
             "offline": true
           },
           {
-            "command": "jury --help",
-            "expected_signal": "Subcommands",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Subcommands (each takes its own --help): init, config, comment, apply, replay, run-agent, cache",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "jury --mock",
-            "expected_signal": "synthesis: chair 'claude' consolidating verdict",
+            "expected_signal": "unchecked return value may swallow an error",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "[jury] synthesis: chair 'claude' consolidating verdict",
+            "observed_excerpt": "- [major] [introduced] src/example.py:42 — claude: unchecked return value may swallow an error (reviewers: claude, codex)",
             "setup": [],
             "offline": true
           },
           {
-            "command": "jury --doctor",
-            "expected_signal": "jury doctor",
+            "command": "jury --mock --rounds 2",
+            "expected_signal": "Round 2 — cross-examination",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "jury doctor",
+            "observed_excerpt": "## Round 2 — cross-examination",
             "setup": [],
             "offline": true
           },
           {
-            "command": "jury init --list-agents",
-            "expected_signal": "claude Claude Code",
+            "command": "jury --mock --rounds 1 --decision vote",
+            "expected_signal": "reviews for a downstream consumer: 2 of 2 ballot(s)",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "claude Claude Code (Anthropic) [not found]",
+            "observed_excerpt": "- reviews for a downstream consumer: 2 of 2 ballot(s) (a ballot counts only when it names what it read and votes; the chair's synthesis record is carried alongside them and is not a review); chair `claude` also sat on the panel — its review is one of them",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "jury --mock --transcript",
+            "expected_signal": "## Decision — verdict & reasoning",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "## Decision — verdict & reasoning",
             "setup": [],
             "offline": true
           }
@@ -181,21 +181,63 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three checks exit 0 with mock review synthesis, doctor report, and version 1.28.0 printed.",
+          "observed": "Screenshots show mock jury reviews completing with REQUEST CHANGES verdicts and jury 1.28.0 version output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-ai-jury-20261031-000626-5773/report.json",
+          "trace_path": "runs/verify/verify-ai-jury-20261031-034209-b28d/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-ai-jury-20261031-000626-5773/check-1-cmd4.judged.png",
-            "runs/verify/verify-ai-jury-20261031-000626-5773/check-2-cmd5.judged.png",
-            "runs/verify/verify-ai-jury-20261031-000626-5773/check-3-cmd2.judged.png"
+            "runs/verify/verify-ai-jury-20261031-034209-b28d/check-1-cmd3.judged.png",
+            "runs/verify/verify-ai-jury-20261031-034209-b28d/check-2-cmd4.judged.png",
+            "runs/verify/verify-ai-jury-20261031-034209-b28d/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.032761
+        "cost_usd": 0.087373,
+        "features": [
+          {
+            "feature": "review PRs, diffs, or issues",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "debate and verify findings across agents",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "synthesize verdict via chair or vote",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "stream live and transcript output",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -575,5 +617,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:43:25.892192+08:00"
 }

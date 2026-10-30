@@ -72,16 +72,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-agav-20261031-000101-8ea4",
+      "run_id": "verify-agav-20261031-033942-cee3",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://agav.dev/install.sh -o /tmp/agav-install.sh && ls -l /tmp/agav-install.sh && wc -c /tmp/agav-install.sh",
-          "purpose": "Download install script"
+          "command": "curl -fsSL https://agav.dev/install.sh -o /tmp/agav-install.sh && ls -la /tmp/agav-install.sh && wc -c /tmp/agav-install.sh",
+          "purpose": "Download install script for reading before running"
         },
         {
           "command": "bash /tmp/agav-install.sh",
-          "purpose": "Install Agav via script"
+          "purpose": "Install Agav with the README script"
         }
       ],
       "manual_steps": [],
@@ -121,10 +121,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:02:08.385358+08:00",
+    "checked_at": "2026-10-31T03:40:44.265746+08:00",
     "runs": [
       {
-        "id": "verify-agav-20261031-000101-8ea4",
+        "id": "verify-agav-20261031-033942-cee3",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -132,18 +132,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:02:08.385358+08:00",
+        "checked_at": "2026-10-31T03:40:44.265746+08:00",
         "tool_version": "0.2.6",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://agav.dev/install.sh -o /tmp/agav-install.sh && ls -l /tmp/agav-install.sh && wc -c /tmp/agav-install.sh",
-            "purpose": "Download install script"
+            "command": "curl -fsSL https://agav.dev/install.sh -o /tmp/agav-install.sh && ls -la /tmp/agav-install.sh && wc -c /tmp/agav-install.sh",
+            "purpose": "Download install script for reading before running"
           },
           {
             "command": "bash /tmp/agav-install.sh",
-            "purpose": "Install Agav via script"
+            "purpose": "Install Agav with the README script"
           }
         ],
         "smoke_tests": [
@@ -157,17 +157,8 @@
             "offline": true
           },
           {
-            "command": "agav --help",
-            "expected_signal": "Show this help",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "--help, -h Show this help",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "agav update",
-            "expected_signal": "Already up to date.",
+            "expected_signal": "Already up to date",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "Already up to date.",
@@ -175,24 +166,56 @@
             "offline": false
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://agav.dev/install.sh | bash",
+            "actually_needed": "Installer fetches a prebuilt agav-linux-x64 binary (plus SHA256SUMS for verification) at runtime, which cannot be read/audited like the shell script",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show update check reporting Already up to date and --version printing 0.2.6.",
+          "observed": "Both screenshots show expected outputs: update reports Already up to date and --version prints 0.2.6.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-agav-20261031-000101-8ea4/report.json",
+          "trace_path": "runs/verify/verify-agav-20261031-033942-cee3/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-agav-20261031-000101-8ea4/check-1-cmd5.judged.png",
-            "runs/verify/verify-agav-20261031-000101-8ea4/check-2-cmd3.judged.png"
+            "runs/verify/verify-agav-20261031-033942-cee3/check-1-cmd4.judged.png",
+            "runs/verify/verify-agav-20261031-033942-cee3/check-2-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.051226
+        "cost_usd": 0.051569,
+        "features": [
+          {
+            "feature": "Inspect code from the CLI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Needs provider API key or Ollama server; probe showed 'no provider credentials found'"
+          },
+          {
+            "feature": "Edit files from the CLI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Needs provider API key or Ollama server; same credential gate as F1"
+          },
+          {
+            "feature": "Run tests and verify changes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Needs provider API key or Ollama server; same credential gate as F1"
+          }
+        ]
       }
     ]
   },
@@ -538,5 +561,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:40:44.266860+08:00"
 }

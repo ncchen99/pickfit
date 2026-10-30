@@ -77,20 +77,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-dryrun-20261031-000850-097e",
+      "run_id": "verify-dryrun-20261031-034044-ec2d",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g @boringsql/dryrun",
-          "purpose": "install dryrun globally via npm"
+          "command": "npm install -g @boringsql/dryrun 2>&1",
+          "purpose": "Install dryrun globally via npm"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "dryrun --version",
-        "expected_signal": "dryrun version v0.20.0"
+        "command": "dryrun --version 2>&1",
+        "expected_signal": "v0.20.0"
       },
-      "first_task": "cd dryrun-demo/examples/demo && dryrun lint"
+      "first_task": "cd /tmp/dryrun-src/examples/demo && dryrun lint 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -122,10 +122,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:10:03.031832+08:00",
+    "checked_at": "2026-10-31T03:42:09.728181+08:00",
     "runs": [
       {
-        "id": "verify-dryrun-20261031-000850-097e",
+        "id": "verify-dryrun-20261031-034044-ec2d",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -133,20 +133,20 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:10:03.031832+08:00",
+        "checked_at": "2026-10-31T03:42:09.728181+08:00",
         "tool_version": "v0.20.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g @boringsql/dryrun",
-            "purpose": "install dryrun globally via npm"
+            "command": "npm install -g @boringsql/dryrun 2>&1",
+            "purpose": "Install dryrun globally via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "dryrun --version",
-            "expected_signal": "dryrun version v0.20.0",
+            "command": "dryrun --version 2>&1",
+            "expected_signal": "v0.20.0",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "dryrun version v0.20.0",
@@ -154,14 +154,69 @@
             "offline": true
           },
           {
-            "command": "cd dryrun-demo/examples/demo && dryrun lint",
-            "expected_signal": "26 finding(s): 6 error, 20 warning, 0 info (13 tables checked)",
+            "command": "cd /tmp/dryrun-src/examples/demo && dryrun lint 2>&1",
+            "expected_signal": "26 finding(s): 6 error, 20 warning",
             "exit_code": 1,
             "passed": true,
             "observed_excerpt": "26 finding(s): 6 error, 20 warning, 0 info (13 tables checked)",
             "setup": [
               {
-                "command": "git clone --depth 1 https://github.com/boringsql/dryrun.git dryrun-demo",
+                "command": "git clone --depth 1 https://github.com/boringsql/dryrun.git /tmp/dryrun-src 2>&1 && ls /tmp/dryrun-src/examples/demo/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/dryrun-src/examples/demo && dryrun check migration mig.sql 2>&1",
+            "expected_signal": "lock: ACCESS EXCLUSIVE",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lock: ACCESS EXCLUSIVE, duration: brief (milliseconds)",
+            "setup": [
+              {
+                "command": "git clone --depth 1 https://github.com/boringsql/dryrun.git /tmp/dryrun-src 2>&1 && ls /tmp/dryrun-src/examples/demo/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > /tmp/dryrun-src/examples/demo/mig.sql <<'EOF'\nALTER TABLE users ADD COLUMN nickname text;\nEOF\ncat > /tmp/dryrun-src/examples/demo/query.sql <<'EOF'\nSELECT user_id, email FROM users WHERE user_id = 1;\nEOF\nls -l /tmp/dryrun-src/examples/demo/*.sql",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/dryrun-src/examples/demo && dryrun check query query.sql 2>&1",
+            "expected_signal": "query.sql: valid",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "query.sql: valid",
+            "setup": [
+              {
+                "command": "git clone --depth 1 https://github.com/boringsql/dryrun.git /tmp/dryrun-src 2>&1 && ls /tmp/dryrun-src/examples/demo/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > /tmp/dryrun-src/examples/demo/mig.sql <<'EOF'\nALTER TABLE users ADD COLUMN nickname text;\nEOF\ncat > /tmp/dryrun-src/examples/demo/query.sql <<'EOF'\nSELECT user_id, email FROM users WHERE user_id = 1;\nEOF\nls -l /tmp/dryrun-src/examples/demo/*.sql",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/dryrun-src/examples/demo && dryrun snapshot diff 55feb5b 55feb5b 2>&1",
+            "expected_signal": "no changes",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no changes",
+            "setup": [
+              {
+                "command": "git clone --depth 1 https://github.com/boringsql/dryrun.git /tmp/dryrun-src 2>&1 && ls /tmp/dryrun-src/examples/demo/",
                 "background": false,
                 "port": null
               }
@@ -173,20 +228,63 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show dryrun lint reporting 26 findings with expected counts and dryrun --version reporting v0.20.0.",
+          "observed": "Screenshots show version v0.20.0, lint reporting 26 findings with 6 errors, and migration check reporting ACCESS EXCLUSIVE lock.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-dryrun-20261031-000850-097e/report.json",
+          "trace_path": "runs/verify/verify-dryrun-20261031-034044-ec2d/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-dryrun-20261031-000850-097e/check-1-cmd6.judged.png",
-            "runs/verify/verify-dryrun-20261031-000850-097e/check-2-cmd2.judged.png"
+            "runs/verify/verify-dryrun-20261031-034044-ec2d/check-1-cmd2.judged.png",
+            "runs/verify/verify-dryrun-20261031-034044-ec2d/check-2-cmd4.judged.png",
+            "runs/verify/verify-dryrun-20261031-034044-ec2d/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.047383
+        "cost_usd": 0.137729,
+        "features": [
+          {
+            "feature": "Lint PostgreSQL schemas offline",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Check migration safety",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Validate queries against schema",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Compare schema snapshots for drift",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -566,5 +664,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:42:09.729342+08:00"
 }

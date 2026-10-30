@@ -61,12 +61,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-llm-router-20261031-001754-7c18",
+      "run_id": "verify-llm-router-20261031-033051-ba09",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install llm-routing 2>&1",
-          "purpose": "install via uv tool"
+          "purpose": "uv tool install llm-routing"
         }
       ],
       "manual_steps": [],
@@ -74,7 +74,7 @@
         "command": "llm-router --version 2>&1",
         "expected_signal": "llm_router v15.4.0"
       },
-      "first_task": "llm-router install 2>&1"
+      "first_task": "llm-router status 2>&1"
     },
     "windows": null
   },
@@ -93,10 +93,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:18:58.417308+08:00",
+    "checked_at": "2026-10-31T03:32:37.454787+08:00",
     "runs": [
       {
-        "id": "verify-llm-router-20261031-001754-7c18",
+        "id": "verify-llm-router-20261031-033051-ba09",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -104,14 +104,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:18:58.417308+08:00",
+        "checked_at": "2026-10-31T03:32:37.454787+08:00",
         "tool_version": "15.4.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install llm-routing 2>&1",
-            "purpose": "install via uv tool"
+            "purpose": "uv tool install llm-routing"
           }
         ],
         "smoke_tests": [
@@ -125,39 +125,6 @@
             "offline": true
           },
           {
-            "command": "llm-router --help 2>&1",
-            "expected_signal": "Every command above is dispatchable",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Every command above is dispatchable; `tests/test_f38_every_command_is_documented.py`",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "llm-router install 2>&1",
-            "expected_signal": "LLM Router installed globally.",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "✓ LLM Router installed globally.",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "llm-router doctor 2>&1",
-            "expected_signal": "All doctor checks passed",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "\u001b[32m\u001b[1m ✓ All doctor checks passed (see NOT CHECKED above).\u001b[0m\u001b[0m",
-            "setup": [
-              {
-                "command": "llm-router install 2>&1",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          },
-          {
             "command": "llm-router status 2>&1",
             "expected_signal": "LLM_ROUTER Status",
             "exit_code": 0,
@@ -165,27 +132,112 @@
             "observed_excerpt": "│ ⚡ LLM_ROUTER Status · Health: Optimal │",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "llm-router doctor 2>&1",
+            "expected_signal": "15 issue(s) found",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "\u001b[31m\u001b[1m ✗ 15 issue(s) found:\u001b[0m\u001b[0m",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "/home/sbx/.local/share/uv/tools/llm-routing/bin/python -c \"from llm_router.classify import classify_signals; s=classify_signals('what does this error mean?'); print('task_type='+str(s.task_type)); print('complexity='+str(s.complexity)); print('confident='+str(s.confident)); print('score='+str(s.score))\" 2>&1",
+            "expected_signal": "task_type=TaskType.QUERY",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "task_type=TaskType.QUERY",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "/home/sbx/.local/share/uv/tools/llm-routing/bin/python -c \"from llm_router.health import ProviderHealth; h=ProviderHealth(); h.record_rate_limit(); print('rate_limited_healthy='+str(h.is_healthy())); print('circuit_state='+h.circuit_state); h2=ProviderHealth(); print('fresh_healthy='+str(h2.is_healthy())); print('fresh_circuit='+h2.circuit_state)\" 2>&1",
+            "expected_signal": "circuit_state=rate_limited",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "circuit_state=rate_limited",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "/home/sbx/.local/share/uv/tools/llm-routing/bin/python -c \"from llm_router.secret_scrubber import scrub_text; out=scrub_text('deploy with sk-ant-abcdefghijklmnopqrstuvwxy123456 and AKIAIOSFODNN7EXAMPLE'); print(out)\" 2>&1",
+            "expected_signal": "[REDACTED-ANTHROPIC_API_KEY]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "deploy with [REDACTED-ANTHROPIC_API_KEY] and [REDACTED-AWS_KEY_ID]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "/home/sbx/.local/share/uv/tools/llm-routing/bin/python -c \"from llm_router.tool_surface import CONSOLIDATED_TOOLS; tools=sorted(CONSOLIDATED_TOOLS); print(tools); print('has_llm_image='+str('llm_image' in CONSOLIDATED_TOOLS)); print('has_llm_audio='+str('llm_audio' in CONSOLIDATED_TOOLS))\" 2>&1",
+            "expected_signal": "has_llm_image=True",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "has_llm_image=True",
+            "setup": [],
+            "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "llm-router doctor checks setup",
+            "actually_needed": "doctor exits 1 listing uninstalled hooks/MCP registration; this is its designed findings report, not an install failure",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show version 15.4.0 printed, full help with dispatchable line, and successful global install with hooks registered.",
+          "observed": "All three checks show expected output: version v15.4.0, status dashboard with Health Optimal, and doctor exiting 1 reporting 15 missing hooks/rules.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-llm-router-20261031-001754-7c18/report.json",
+          "trace_path": "runs/verify/verify-llm-router-20261031-033051-ba09/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-llm-router-20261031-001754-7c18/check-1-cmd2.judged.png",
-            "runs/verify/verify-llm-router-20261031-001754-7c18/check-2-cmd3.judged.png",
-            "runs/verify/verify-llm-router-20261031-001754-7c18/check-3-cmd6.judged.png"
+            "runs/verify/verify-llm-router-20261031-033051-ba09/check-1-cmd2.judged.png",
+            "runs/verify/verify-llm-router-20261031-033051-ba09/check-2-cmd4.judged.png",
+            "runs/verify/verify-llm-router-20261031-033051-ba09/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.049528
+        "cost_usd": 0.169548,
+        "features": [
+          {
+            "feature": "Draft answers on free or local models first",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows classification signals only, not a draft answer being generated."
+          },
+          {
+            "feature": "Automatically fall back across providers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows health/circuit state flags, not an actual fallback across providers."
+          },
+          {
+            "feature": "Keep secret prompts on local models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows text redaction but no routing to a local model."
+          },
+          {
+            "feature": "Generate image, video and audio media",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output lists tool names without llm_video and shows no media generated."
+          }
+        ]
       }
     ]
   },
@@ -509,5 +561,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:32:37.458319+08:00"
 }

@@ -74,22 +74,22 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-rustcode-20261031-001907-57b4",
+      "run_id": "verify-rustcode-20261031-033723-5fe0",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://rustcode.lhagfoss.com/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
-          "purpose": "Download install script for inspection"
+          "command": "curl -fsSL https://rustcode.lhagfoss.com/install.sh -o /tmp/install.sh",
+          "purpose": "Download install script only"
         },
         {
           "command": "bash /tmp/install.sh",
-          "purpose": "Install via official install.sh script"
+          "purpose": "Install rustcode via script"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "rustcode --version",
-        "expected_signal": "rustcode 0.111.0"
+        "expected_signal": "rustcode 0.112.1"
       },
       "first_task": "rustcode doctor"
     },
@@ -123,10 +123,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:19:57.409707+08:00",
+    "checked_at": "2026-10-31T03:38:37.407872+08:00",
     "runs": [
       {
-        "id": "verify-rustcode-20261031-001907-57b4",
+        "id": "verify-rustcode-20261031-033723-5fe0",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -134,67 +134,98 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:19:57.409707+08:00",
-        "tool_version": "0.111.0",
+        "checked_at": "2026-10-31T03:38:37.407872+08:00",
+        "tool_version": "0.112.1",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://rustcode.lhagfoss.com/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
-            "purpose": "Download install script for inspection"
+            "command": "curl -fsSL https://rustcode.lhagfoss.com/install.sh -o /tmp/install.sh",
+            "purpose": "Download install script only"
           },
           {
             "command": "bash /tmp/install.sh",
-            "purpose": "Install via official install.sh script"
+            "purpose": "Install rustcode via script"
           }
         ],
         "smoke_tests": [
           {
             "command": "rustcode --version",
-            "expected_signal": "rustcode 0.111.0",
+            "expected_signal": "rustcode 0.112.1",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "rustcode 0.111.0",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "rustcode --help",
-            "expected_signal": "AI-powered agentic coding assistant terminal",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "AI-powered agentic coding assistant terminal",
+            "observed_excerpt": "rustcode 0.112.1",
             "setup": [],
             "offline": true
           },
           {
             "command": "rustcode doctor",
-            "expected_signal": "[ok ] git: /usr/bin/git",
+            "expected_signal": "[ok ] config-dir",
             "exit_code": 1,
             "passed": true,
-            "observed_excerpt": "[ok ] git: /usr/bin/git (git version 2.47.3)",
+            "observed_excerpt": "[ok ] config-dir: /home/sbx/.config/rustcode",
             "setup": [],
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "rustcode doctor",
+            "actually_needed": "doctor exits 1 when checks fail (missing keys, rg, tmux, skills dir) but still prints the check table; judge by output not exit 0",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Doctor output shows git ok with expected path and version command prints 0.111.0.",
+          "observed": "Doctor reports [ok] config-dir with expected missing-key/tool FAILs, and --version prints rustcode 0.112.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-rustcode-20261031-001907-57b4/report.json",
+          "trace_path": "runs/verify/verify-rustcode-20261031-033723-5fe0/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-rustcode-20261031-001907-57b4/check-1-cmd5.judged.png",
-            "runs/verify/verify-rustcode-20261031-001907-57b4/check-2-cmd3.judged.png"
+            "runs/verify/verify-rustcode-20261031-033723-5fe0/check-1-cmd4.judged.png",
+            "runs/verify/verify-rustcode-20261031-033723-5fe0/check-2-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.035856
+        "cost_usd": 0.048642,
+        "features": [
+          {
+            "feature": "code with any model provider",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs provider key/subscription; default profile points to localhost:3000 and --prompt times out with connect_timeout"
+          },
+          {
+            "feature": "edit files and run shell commands",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "file edits and shell run inside agent loop which needs a model provider key"
+          },
+          {
+            "feature": "run background tasks with delivered results",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "detach/long commands need a running agent session with a model provider"
+          },
+          {
+            "feature": "spawn and manage child subagents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "child agents need a running agent session with a model provider"
+          }
+        ]
       }
     ]
   },
@@ -516,5 +547,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:38:37.409041+08:00"
 }

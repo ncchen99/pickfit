@@ -65,24 +65,24 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-memcode-20261031-000836-edc3",
+      "run_id": "verify-memcode-20261031-034353-e916",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://memcode.ai/install.sh -o /tmp/install_memcode.sh && ls -l /tmp/install_memcode.sh && wc -c /tmp/install_memcode.sh",
-          "purpose": "Download install script for inspection"
+          "command": "curl -fsSL https://memcode.ai/install.sh -o /tmp/memcode-install.sh && wc -c /tmp/memcode-install.sh && head -c 2000 /tmp/memcode-install.sh",
+          "purpose": "Download install script for reading before running"
         },
         {
-          "command": "script -qec 'sh /tmp/install_memcode.sh' /dev/null < /dev/null",
-          "purpose": "Install memcode with tty stdin to skip prompt"
+          "command": "bash /tmp/memcode-install.sh",
+          "purpose": "Install memcode via downloaded script with bash"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "memcode version",
-        "expected_signal": "memcode 0.47.4"
+        "command": "memcode --help",
+        "expected_signal": "Available Commands:"
       },
-      "first_task": "memcode version"
+      "first_task": "memcode doctor"
     },
     "windows": null
   },
@@ -101,10 +101,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:10:22.438508+08:00",
+    "checked_at": "2026-10-31T03:45:52.764029+08:00",
     "runs": [
       {
-        "id": "verify-memcode-20261031-000836-edc3",
+        "id": "verify-memcode-20261031-034353-e916",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -112,30 +112,21 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:10:22.438508+08:00",
+        "checked_at": "2026-10-31T03:45:52.764029+08:00",
         "tool_version": "0.47.4",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://memcode.ai/install.sh -o /tmp/install_memcode.sh && ls -l /tmp/install_memcode.sh && wc -c /tmp/install_memcode.sh",
-            "purpose": "Download install script for inspection"
+            "command": "curl -fsSL https://memcode.ai/install.sh -o /tmp/memcode-install.sh && wc -c /tmp/memcode-install.sh && head -c 2000 /tmp/memcode-install.sh",
+            "purpose": "Download install script for reading before running"
           },
           {
-            "command": "script -qec 'sh /tmp/install_memcode.sh' /dev/null < /dev/null",
-            "purpose": "Install memcode with tty stdin to skip prompt"
+            "command": "bash /tmp/memcode-install.sh",
+            "purpose": "Install memcode via downloaded script with bash"
           }
         ],
         "smoke_tests": [
-          {
-            "command": "memcode version",
-            "expected_signal": "memcode 0.47.4",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "memcode 0.47.4 (commit fddb90c, built 2026-10-14T14:59:55Z)",
-            "setup": [],
-            "offline": true
-          },
           {
             "command": "memcode --help",
             "expected_signal": "Available Commands:",
@@ -162,47 +153,95 @@
             "observed_excerpt": "No tasks yet. Write one at .memcode/tasks/<name>.yaml, or ask memcode to",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "memcode stack",
+            "expected_signal": "Languages",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Languages",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
             "readme_said": "curl -fsSL https://memcode.ai/install.sh | sh",
-            "actually_needed": "Run the installer with stdin on a tty (e.g. script -qec 'sh /tmp/install_memcode.sh' /dev/null) so it takes the non-interactive branch and exits 0; a bare non-interactive run installs the binary but then execs memcode from /dev/tty and exits 2.",
+            "actually_needed": "run the downloaded script with `bash /tmp/memcode-install.sh` for exit 0; `sh` (dash) still installed the binary to ~/.local/bin but exited 2 after install with no controlling terminal",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "install script verifies checksum before installing",
+            "actually_needed": "installer downloads memcode_Linux_x86_64.tar.gz binary archive plus checksums.txt from memcode.ai/dl (GitHub Releases) and installs unverified binary beyond checksum",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show doctor reporting repo root, task list reporting no tasks, and version reporting 0.47.4.",
+          "observed": "All three commands exited 0 and printed repo root info, No tasks yet guidance, and a full help command list.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-memcode-20261031-000836-edc3/report.json",
+          "trace_path": "runs/verify/verify-memcode-20261031-034353-e916/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-memcode-20261031-000836-edc3/check-1-cmd9.judged.png",
-            "runs/verify/verify-memcode-20261031-000836-edc3/check-2-cmd10.judged.png",
-            "runs/verify/verify-memcode-20261031-000836-edc3/check-3-cmd7.judged.png"
+            "runs/verify/verify-memcode-20261031-034353-e916/check-1-cmd8.judged.png",
+            "runs/verify/verify-memcode-20261031-034353-e916/check-2-cmd9.judged.png",
+            "runs/verify/verify-memcode-20261031-034353-e916/check-3-cmd12.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.06321
+        "cost_usd": 0.143139,
+        "features": [
+          {
+            "feature": "Run interactive terminal coding agent in repo",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "interactive memcode TUI needs model API key/endpoint and TTY; cannot run here"
+          },
+          {
+            "feature": "Remember repo layout, history and preferences",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows 0 subsystems and empty repo model, not remembered layout or history."
+          },
+          {
+            "feature": "Run tasks via chat channels",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Telegram/Discord/Slack etc. need outside accounts, pairing and network services"
+          },
+          {
+            "feature": "Run autonomous agents on schedule",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows 'No tasks yet' with no autonomous agent run demonstrated."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:31:27+08:00",
+    "computed_at": "2026-10-31T03:45:52+08:00",
     "quality": {
-      "total": 84.4,
+      "total": 76.9,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -243,7 +282,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 45.91
+      "value": 41.83
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -550,5 +589,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:45:52.765643+08:00"
 }

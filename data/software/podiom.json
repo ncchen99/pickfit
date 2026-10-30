@@ -74,12 +74,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-podiom-20261031-001809-77fa",
+      "run_id": "verify-podiom-20261031-033253-75cf",
       "method": "script",
       "steps": [
         {
           "command": "curl -fsSL https://github.com/Podiom/Podiom/releases/latest/download/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
-          "purpose": "Download install script"
+          "purpose": "Download installer script"
         },
         {
           "command": "bash /tmp/install.sh --no-onboard --autostart no",
@@ -88,8 +88,8 @@
       ],
       "manual_steps": [],
       "check": {
-        "command": "podiom --version",
-        "expected_signal": "podiom version v0.1.384 (67c8736)"
+        "command": "podiom --help",
+        "expected_signal": "Available Commands:"
       },
       "first_task": "podiom status"
     },
@@ -123,10 +123,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:20:04.250658+08:00",
+    "checked_at": "2026-10-31T03:34:24.208030+08:00",
     "runs": [
       {
-        "id": "verify-podiom-20261031-001809-77fa",
+        "id": "verify-podiom-20261031-033253-75cf",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -134,14 +134,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:20:04.250658+08:00",
+        "checked_at": "2026-10-31T03:34:24.208030+08:00",
         "tool_version": "v0.1.384 (67c8736)",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
             "command": "curl -fsSL https://github.com/Podiom/Podiom/releases/latest/download/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
-            "purpose": "Download install script"
+            "purpose": "Download installer script"
           },
           {
             "command": "bash /tmp/install.sh --no-onboard --autostart no",
@@ -150,35 +150,17 @@
         ],
         "smoke_tests": [
           {
-            "command": "podiom --version",
-            "expected_signal": "podiom version v0.1.384 (67c8736)",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "podiom version v0.1.384 (67c8736)",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "podiom --help",
-            "expected_signal": "podiom is the command-line client",
+            "expected_signal": "Available Commands:",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "podiom is the command-line client for Podiom. It connects to a running",
+            "observed_excerpt": "Available Commands:",
             "setup": [],
             "offline": true
-          },
-          {
-            "command": "podiom update check",
-            "expected_signal": "status: up to date",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "status: up to date",
-            "setup": [],
-            "offline": false
           },
           {
             "command": "podiom status",
-            "expected_signal": "podiomd is live at 127.0.0.1:8787",
+            "expected_signal": "podiomd is live",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "podiomd is live at 127.0.0.1:8787",
@@ -192,11 +174,11 @@
             "offline": true
           },
           {
-            "command": "curl -fsSL http://127.0.0.1:8787/ -o /tmp/index.html && wc -c /tmp/index.html",
-            "expected_signal": "675 /tmp/index.html",
+            "command": "podiom agents create testagent --provider claude && podiom agents list",
+            "expected_signal": "created agent testagent",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "675 /tmp/index.html",
+            "observed_excerpt": "created agent testagent (claude)",
             "setup": [
               {
                 "command": "podiomd",
@@ -205,52 +187,145 @@
               }
             ],
             "offline": true
+          },
+          {
+            "command": "podiom sessions list",
+            "expected_signal": "no sessions yet",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no sessions yet",
+            "setup": [
+              {
+                "command": "podiomd",
+                "background": true,
+                "port": 8787
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "podiom schedules list",
+            "expected_signal": "test-routine",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "test-routine enabled agent=testagent 0 7 * * * preapproved next=Sat 07:00 runs=0",
+            "setup": [
+              {
+                "command": "podiomd",
+                "background": true,
+                "port": 8787
+              },
+              {
+                "command": "podiom agents create testagent --provider claude && podiom agents list",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > /home/sbx/.podiom/schedules/test-routine.md <<'EOF'\n---\nagent: testagent\ncron: \"0 7 * * *\"\nenabled: true\nrun_permission: preapproved\nallowed_tools: []\n---\n\nSummarise today's workspace in three lines.\nEOF\ncat /home/sbx/.podiom/schedules/test-routine.md",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "TOKEN=$(podiom token show) && curl -s -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"title\":\"Test goal\",\"description\":\"Verify goal assignment\",\"success_criteria\":\"Done means verified\",\"lead_agent\":\"testagent\",\"review_cadence\":\"\"}' http://127.0.0.1:8787/api/goals",
+            "expected_signal": "Test goal",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"ID\":\"4b2cc710-f9a3-4ca9-bf19-cef8fb9b03ba\",\"Title\":\"Test goal\",\"Description\":\"Verify goal assignment\",\"SuccessCriteria\":\"Done means verified\",\"Metrics\":[],\"ReviewEvery\":\"\",\"LeadAgent\":\"testagent\",\"ProjectID\":\"\",\"Provider\":\"\",\"Profile\":\"\",\"Model\":\"\",\"Effort\":\"\",\"LeadSessionID\":\"\",\"Status\":\"active\"…",
+            "setup": [
+              {
+                "command": "podiomd",
+                "background": true,
+                "port": 8787
+              },
+              {
+                "command": "podiom agents create testagent --provider claude && podiom agents list",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -fsSL https://github.com/Podiom/Podiom/releases/latest/download/install.sh | bash",
-            "actually_needed": "Download to /tmp/install.sh, read it, then run `bash /tmp/install.sh --no-onboard --autostart no` to avoid the interactive autostart prompt and onboard wizard in a non-interactive box",
+            "readme_said": "curl -fsSL .../install.sh | bash",
+            "actually_needed": "ran bash /tmp/install.sh --no-onboard --autostart no after downloading and reading it",
             "kind": "sandbox"
-          },
-          {
-            "readme_said": "./bin/podiom status",
-            "actually_needed": "Installed client is `podiom status` from ~/.local/bin; `./bin/podiom status` only exists after `make build` in a source checkout",
-            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three screenshots show the expected update status, daemon live status, and version strings.",
+          "observed": "Screenshots show podiomd live status, successful testagent creation and listing, and full help with Available Commands.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-podiom-20261031-001809-77fa/report.json",
+          "trace_path": "runs/verify/verify-podiom-20261031-033253-75cf/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-podiom-20261031-001809-77fa/check-1-cmd7.judged.png",
-            "runs/verify/verify-podiom-20261031-001809-77fa/check-2-cmd9.judged.png",
-            "runs/verify/verify-podiom-20261031-001809-77fa/check-3-cmd4.judged.png"
+            "runs/verify/verify-podiom-20261031-033253-75cf/check-1-cmd5.judged.png",
+            "runs/verify/verify-podiom-20261031-033253-75cf/check-2-cmd9.judged.png",
+            "runs/verify/verify-podiom-20261031-033253-75cf/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.064777
+        "cost_usd": 0.135676,
+        "features": [
+          {
+            "feature": "chat with named agents with durable context",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows agent created and listed but no chat or message exchange."
+          },
+          {
+            "feature": "keep canonical history for every session",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output says no sessions yet, showing no history stored."
+          },
+          {
+            "feature": "assign long-term goals to agents",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "schedule recurring routines and timed work",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:31:27+08:00",
+    "computed_at": "2026-10-31T03:34:24+08:00",
     "quality": {
-      "total": 84.7,
+      "total": 92.2,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -291,7 +366,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 38.62
+      "value": 42.04
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -590,5 +665,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:22+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:34:24.209003+08:00"
 }
