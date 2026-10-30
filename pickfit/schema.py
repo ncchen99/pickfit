@@ -323,6 +323,32 @@ class ExtractedPrerequisites(_Model):
     )
 
 
+FEATURES_DESCRIPTION = (
+    "The 2-4 main features the sources advertise, most prominent first: what a user can do with it, "
+    "each a short English label (at most 8 words, e.g. 'convert CSV files to JSON') quoting the passage "
+    "that advertises it. Not install methods, platforms, license or speed claims."
+)
+
+
+def _short_features(items: list[Cited[str]]) -> list[Cited[str]]:
+    # A label is the model's own words: one too long to show is dropped, not cut.
+    return [f for f in items if len(f.value) <= FEATURE_MAX][:FEATURES_MAX]
+
+
+class ExtractedFeatures(_Model):
+    """Only the main advertised features, read from the <source> blocks (features-only extraction).
+
+    For records extracted before features existed: the rest of their extraction stays as it was.
+    """
+
+    features: CitedList = Field(description=FEATURES_DESCRIPTION)
+
+    @model_validator(mode="after")
+    def _short(self) -> ExtractedFeatures:
+        self.features = _short_features(self.features)
+        return self
+
+
 class ExtractionResult(_Model):
     """Facts about one software project, read only from the <source> blocks.
 
@@ -390,15 +416,7 @@ class ExtractionResult(_Model):
     alternatives_to: CitedList = Field(
         description="Well-known tools the sources compare it to or replace."
     )
-    features: CitedList = Field(
-        default=[],
-        description=(
-            "The 2-4 main features the sources advertise, most prominent first: what a user can do "
-            "with it, each a short English label (at most 8 words, e.g. 'convert CSV files to JSON') "
-            "quoting the passage that advertises it. Not install methods, platforms, license or "
-            "speed claims."
-        ),
-    )
+    features: CitedList = Field(default=[], description=FEATURES_DESCRIPTION)
 
     @model_validator(mode="after")
     def _drop_unusable_commands(self) -> ExtractionResult:
@@ -407,8 +425,7 @@ class ExtractionResult(_Model):
         self.smoke_test_candidates = [
             c for c in self.smoke_test_candidates if _usable_command(c.command)
         ]
-        # A label is the model's own words: one too long to show is dropped, not cut.
-        self.features = [f for f in self.features if len(f.value) <= FEATURE_MAX][:FEATURES_MAX]
+        self.features = _short_features(self.features)
         return self
 
 

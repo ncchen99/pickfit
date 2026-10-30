@@ -286,6 +286,22 @@ def test_features_only_touches_features_of_existing_records(db: PipelineDB, tmp_
     assert write_features(db, model=MODEL, out_dir=out, now=later).unchanged == ["tinyq"]
 
 
+def test_features_only_reads_a_features_only_extraction(db: PipelineDB, tmp_path: Path) -> None:
+    key = add(db, 7, "someone/tinyq", extraction())
+    out = tmp_path / "software"
+    write_profiles(db, model=MODEL, out_dir=out, now=NOW)
+    assert write_features(db, model=MODEL, out_dir=out, now=NOW).skipped == {
+        "tinyq": "no extraction with features by muse-spark-1.3"}
+    db.save_extraction(repo_id=key, run_id="extract-features-x", model=MODEL, reasoning_effort="minimal",
+                       status="features", sources_sha="y", result={"features": FEATURES[:2]}, quote_failures=[],
+                       quotes_checked=2, error=None, usage=None, cost_usd=0.01, cache_hit=False, response_id="r3",
+                       latency_s=1.0)
+    assert write_features(db, model=MODEL, out_dir=out, now=NOW).written == ["tinyq"]
+    assert read(out, "tinyq")["features"] == ["query JSON Lines with a path", "run fully offline"]
+    # Profiles never build a record from a features-only row.
+    assert write_profiles(db, model=MODEL, out_dir=out, now=NOW).unchanged == ["tinyq"]
+
+
 def test_helpers() -> None:
     assert slugify("Unreal-MCP") == "unreal-mcp" and slugify("ELI_v2.0") == "eli-v2-0"
     assert open_source_from_license("AGPL-3.0") is True

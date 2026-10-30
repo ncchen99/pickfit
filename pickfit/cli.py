@@ -52,9 +52,15 @@ def _discover(args: argparse.Namespace) -> int:
 def _extract(args: argparse.Namespace) -> int:
     from pickfit.extract import run_extract
 
+    repo_ids = args.repo
+    if args.records:
+        from pickfit.verify.batch import record_slugs
+        from pickfit.verify.result import DATA_DIR
+
+        repo_ids = [*(repo_ids or []), *record_slugs(DATA_DIR)]
     summary = run_extract(limit=args.limit, model=args.model, reasoning_effort=args.effort,
-                          repo_ids=args.repo, force=args.force, concurrency=args.concurrency,
-                          max_attempts=args.attempts)
+                          repo_ids=repo_ids, force=args.force, features_only=args.features_only,
+                          concurrency=args.concurrency, max_attempts=args.attempts)
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     return 0 if summary["errors"] == 0 else 1
 
@@ -130,6 +136,9 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     e.add_argument("--effort", default="minimal", help="reasoning effort (default minimal)")
     e.add_argument("--repo", action="append", help="extract this repo id (gh:<id>) or owner/name")
     e.add_argument("--force", action="store_true", help="extract again even if already extracted")
+    e.add_argument("--features-only", action="store_true",
+                   help="ask only for the main advertised features (records extracted before features existed)")
+    e.add_argument("--records", action="store_true", help="the candidates that have a record in data/software")
     e.add_argument("--concurrency", type=int, default=1, help="calls in flight at once (default 1)")
     e.add_argument("--attempts", type=int, default=2,
                    help="tries per candidate for transient failures (default 2)")

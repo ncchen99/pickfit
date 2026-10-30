@@ -2,7 +2,8 @@
 
 Candidates come from the pipeline database (runs/pipeline.db, or --db), opened
 read-only: a candidate that passed the rules and has a finished extraction
-(muse-spark-1.3 preferred over the contributor model). Before any box starts,
+(muse-spark-1.3 preferred over the contributor model), with the features of a
+newer features-only extraction merged in. Before any box starts,
 the program sets aside what the box cannot verify (GUI apps, browser
 extensions, GPU only, another OS only, Apple Silicon only in a Linux box, no
 install path the box can run) with the reason, and skips slugs that already
@@ -37,11 +38,12 @@ from typing import Any
 from pydantic import ValidationError
 
 from pickfit.ledger import TAIPEI, taipei_now
-from pickfit.schema import TOOL_KINDS, ExtractionResult, is_passed
+from pickfit.schema import TOOL_KINDS, ExtractedFeatures, ExtractionResult, is_passed
 from pickfit.verify.plan import plan_for
 from pickfit.verify.task import VerifyTask
 
 DONE_STATUSES = ("ok", "quotes_dropped")
+FEATURES_STATUS = "features"  # a features-only extraction (extract.py)
 MODEL_PREFERENCE = ("muse-spark-1.3", "muse-spark-1.3-contributor")
 NOT_IN_BOX_KINDS = {"desktop_app": "GUI app", "browser_extension": "browser extension"}
 
@@ -170,6 +172,13 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
             "FROM candidates c JOIN extractions e ON e.repo_id = c.repo_id "
             f"WHERE c.rule_passed = 1 AND e.status IN ({','.join('?' * len(DONE_STATUSES))}) "
             "ORDER BY e.id", DONE_STATUSES).fetchall()
+        feature_rows = conn.execute("SELECT repo_id, model, result, id FROM extractions WHERE status = ? "
+                                    "ORDER BY id", (FEATURES_STATUS,)).fetchall()
+    features: dict[str, sqlite3.Row] = {}
+    for row in feature_rows:
+        held = features.get(row["repo_id"])
+        if held is None or _model_rank(row["model"]) <= _model_rank(held["model"]):
+            features[row["repo_id"]] = row
     best: dict[str, sqlite3.Row] = {}
     for row in rows:  # ordered by id: a later extraction of an equally preferred model wins
         held = best.get(row["repo_id"])
@@ -188,6 +197,9 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
         note = {"repo_id": row["repo_id"], "full_name": row["full_name"], "slug": slug}
         try:
             ex = ExtractionResult.model_validate_json(row["result"])
+            extra = features.get(row["repo_id"])
+            if extra is not None and (not ex.features or extra["id"] > row["id"]):
+                ex = ex.model_copy(update={"features": ExtractedFeatures.model_validate_json(extra["result"]).features})
         except ValidationError as err:
             skipped.append({**note, "reason": f"extraction does not validate: {str(err)[:120]}"})
             continue

@@ -295,6 +295,36 @@ def test_run_extract_stores_results_and_spends_through_call_meta(tmp_path: Path,
     assert again["attempted"] == 0
 
 
+def test_features_only_asks_for_features_and_keeps_the_earlier_extraction(tmp_path: Path, ledger: Ledger) -> None:
+    db_path = tmp_path / "pipeline.db"
+    db = PipelineDB(db_path)
+    key = add_candidate(db, 1, "someone/tinyq")
+    run_extract(limit=5, db_path=db_path, client=FakeMeta(ok(extraction())).client(), ledger=ledger,
+                runs_dir=tmp_path / "runs", log=lambda line: None)
+    features = {"features": [cited("query JSON Lines with a path", "A tiny jq-like query tool for JSON Lines."),
+                             cited("edit YAML", "edits YAML files")]}
+    server = FakeMeta(ok(features))
+    summary = run_extract(limit=5, db_path=db_path, features_only=True, client=server.client(), ledger=ledger,
+                          runs_dir=tmp_path / "runs", log=lambda line: None)
+    assert summary["by_status"] == {"features": 1} and summary["with_features"] == 1
+    assert summary["run_id"].startswith("extract-features-")
+    (request,) = server.requests
+    assert request["text"]["format"]["name"] == "software_features"
+    assert set(request["text"]["format"]["schema"]["properties"]) == {"features"}
+    assert "This run asks only for features" in request["instructions"]
+    rows = db.extractions()
+    assert [r["status"] for r in rows] == ["ok", "features"]
+    assert rows[1]["result"] == {"features": [{"value": "query JSON Lines with a path",
+                                               "quote": "A tiny jq-like query tool for JSON Lines."}]}
+    assert [f["path"] for f in rows[1]["quote_failures"]] == ["/features/1"]
+    # The earlier extraction still counts as done; features are not asked for again.
+    assert run_extract(limit=5, db_path=db_path, client=FakeMeta().client(), ledger=ledger,
+                       runs_dir=tmp_path / "runs", log=lambda line: None)["attempted"] == 0
+    assert run_extract(limit=5, db_path=db_path, features_only=True, client=FakeMeta().client(), ledger=ledger,
+                       runs_dir=tmp_path / "runs", log=lambda line: None)["attempted"] == 0
+    assert db.last_extraction(key, "muse-spark-1.3-contributor", exclude=("features",))["status"] == "ok"
+
+
 def test_run_extract_records_schema_errors_and_quote_failures(tmp_path: Path, ledger: Ledger) -> None:
     db_path = tmp_path / "pipeline.db"
     db = PipelineDB(db_path)

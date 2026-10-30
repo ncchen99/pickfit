@@ -9,6 +9,11 @@ text that was sent: a value whose quote is not in the sources is a guess, so it
 is dropped and recorded as a quote failure. Results stay in runs/pipeline.db;
 pickfit/profiles.py turns them into data/software/ records.
 
+A features-only run (`features_only`) asks for ExtractedFeatures instead, for
+candidates extracted before features existed; its rows have status "features",
+so the earlier extraction stays the one profiles and verification build on, and
+they merge the features into it (feature_rows).
+
 Batches run a few calls at once (`concurrency`). A call that fails for a
 transient reason (server or network error after call_meta's own retries, an
 unparseable answer, or running out of output tokens) is tried again, up to
@@ -35,7 +40,7 @@ from pickfit.discover.run import pipeline_db_path
 from pickfit.discover.store import PipelineDB
 from pickfit.ledger import BudgetExceeded, Ledger, taipei_now
 from pickfit.meta import call_meta, resolve_model
-from pickfit.schema import ExtractionResult, meta_strict_schema
+from pickfit.schema import ExtractedFeatures, ExtractionResult, meta_strict_schema
 
 STAGE = "extract"
 README_MAX_CHARS = 30_000  # about 8-10K tokens; long READMEs are cut, and the source says so
@@ -80,6 +85,13 @@ list, the headline, the first examples), most prominent first. Each is one capab
 try, such as "render a graph as ASCII art"; not how to install it, where it runs, its license or how \
 fast it is.
 """
+
+FEATURES_ONLY = """
+This run asks only for features: the other facts about this project were read before. Rules 1-2, 5, 6 \
+and 7 apply.
+"""
+FEATURES_STATUS = "features"  # a features-only row; never the extraction records are built from
+FEATURES_CACHE_KEY = "pickfit-extract-features-v1"
 
 _SOURCE_TAG = re.compile(r"<(/?)(source)", re.I)
 
@@ -144,14 +156,16 @@ def render_sources(sources: list[Source]) -> str:
     return "\n\n".join(blocks)
 
 
-def build_body(sources: list[Source]) -> dict[str, Any]:
+def build_body(sources: list[Source], features_only: bool = False) -> dict[str, Any]:
+    model = ExtractedFeatures if features_only else ExtractionResult
     return {
-        "instructions": INSTRUCTIONS,
+        "instructions": INSTRUCTIONS + (FEATURES_ONLY if features_only else ""),
         "input": [{"role": "user", "content": [{"type": "input_text", "text": render_sources(sources)}]}],
-        "text": {"format": {"type": "json_schema", "name": "software_extraction",
-                            "schema": meta_strict_schema(ExtractionResult), "strict": True}},
+        "text": {"format": {"type": "json_schema",
+                            "name": "software_features" if features_only else "software_extraction",
+                            "schema": meta_strict_schema(model), "strict": True}},
         "store": False,
-        "prompt_cache_key": PROMPT_CACHE_KEY,
+        "prompt_cache_key": FEATURES_CACHE_KEY if features_only else PROMPT_CACHE_KEY,
     }
 
 
@@ -203,8 +217,8 @@ def _walk_cited(node: Any, path: str) -> Iterator[tuple[str, dict[str, Any]]]:
             yield from _walk_cited(value, f"{path}/{i}")
 
 
-def check_quotes(result: ExtractionResult, sources: list[Source]
-                 ) -> tuple[ExtractionResult, list[dict[str, Any]], int]:
+def check_quotes(result: ExtractionResult | ExtractedFeatures, sources: list[Source]
+                 ) -> tuple[Any, list[dict[str, Any]], int]:
     """Drop every value whose quote (or copied command) is not in the sources.
 
     Returns the cleaned result, the failures (JSON pointer and the text that was
@@ -222,14 +236,13 @@ def check_quotes(result: ExtractionResult, sources: list[Source]
             fail(path, cited["quote"])
             cited["value"] = cited["quote"] = None
     kept_installs = []
-    for i, claim in enumerate(data["install_methods"]):
+    for i, claim in enumerate(data.get("install_methods", [])):
         if checker.found(claim["command"]):
             kept_installs.append(claim)
         else:
             fail(f"/install_methods/{i}/command", claim["command"])
-    data["install_methods"] = kept_installs
     kept_smoke = []
-    for i, smoke in enumerate(data["smoke_test_candidates"]):
+    for i, smoke in enumerate(data.get("smoke_test_candidates", [])):
         if not checker.found(smoke["command"]):
             fail(f"/smoke_test_candidates/{i}/command", smoke["command"])
             continue
@@ -237,9 +250,10 @@ def check_quotes(result: ExtractionResult, sources: list[Source]
             fail(f"/smoke_test_candidates/{i}/expected_output", smoke["expected_output"])
             smoke["expected_output"] = None
         kept_smoke.append(smoke)
-    data["smoke_test_candidates"] = kept_smoke
+    if isinstance(result, ExtractionResult):
+        data["install_methods"], data["smoke_test_candidates"] = kept_installs, kept_smoke
     # Re-validating drops list items whose value was just reset to null.
-    return ExtractionResult.model_validate(data), failures, checker.checked
+    return type(result).model_validate(data), failures, checker.checked
 
 
 # --- Running ----------------------------------------------------------------------
@@ -248,19 +262,20 @@ def check_quotes(result: ExtractionResult, sources: list[Source]
 def extract_one(candidate: dict[str, Any], *, model: str, run_id: str, reasoning_effort: str,
                 client: Any = None, ledger: Ledger | None = None,
                 runs_dir: Path | str | None = None, cache: bool | None = None,
-                max_output_tokens: int = MAX_OUTPUT_TOKENS) -> dict[str, Any]:
+                max_output_tokens: int = MAX_OUTPUT_TOKENS, features_only: bool = False) -> dict[str, Any]:
     """One extraction call; returns the row to store. BudgetExceeded propagates."""
     sources = build_sources(candidate)
+    output_model = ExtractedFeatures if features_only else ExtractionResult
     started = time.monotonic()
     row: dict[str, Any] = {"repo_id": candidate["repo_id"], "run_id": run_id, "model": model,
                            "reasoning_effort": reasoning_effort, "sources_sha": sources_sha(sources),
                            "result": None, "quote_failures": [], "quotes_checked": 0, "error": None,
                            "usage": None, "cost_usd": 0.0, "cache_hit": False, "response_id": None}
     try:
-        meta = call_meta("responses", build_body(sources), stage=STAGE, public_data_only=True,
+        meta = call_meta("responses", build_body(sources, features_only), stage=STAGE, public_data_only=True,
                          max_output_tokens=max_output_tokens, model=model,
                          reasoning_effort=reasoning_effort, scope=f"{STAGE}:{candidate['repo_id']}",
-                         scope_cap_usd=SCOPE_CAP_USD, run_id=run_id, output_model=ExtractionResult,
+                         scope_cap_usd=SCOPE_CAP_USD, run_id=run_id, output_model=output_model,
                          cache=cache, client=client, ledger=ledger, runs_dir=runs_dir)
     except BudgetExceeded:
         raise
@@ -277,7 +292,8 @@ def extract_one(candidate: dict[str, Any], *, model: str, run_id: str, reasoning
     if meta.parsed is None:
         return {**row, "status": "schema_error", "error": meta.parse_error}
     cleaned, failures, checked = check_quotes(meta.parsed, sources)
-    return {**row, "status": "quotes_dropped" if failures else "ok",
+    status = FEATURES_STATUS if features_only else "quotes_dropped" if failures else "ok"
+    return {**row, "status": status,
             "result": cleaned.model_dump(mode="json"), "quote_failures": failures,
             "quotes_checked": checked}
 
@@ -313,11 +329,19 @@ def extract_with_retries(candidate: dict[str, Any], *, max_attempts: int = MAX_A
 
 
 _DONE = ("ok", "quotes_dropped")
+
+
+def feature_rows(db: PipelineDB, repo_id: str, model: str) -> dict[str, Any] | None:
+    """The newest row that lists features for a repo: a features-only row, or a full extraction made
+    since extraction asked for features. None when neither exists."""
+    rows = [r for r in (db.last_extraction(repo_id, model, (FEATURES_STATUS,)),
+                        db.last_extraction(repo_id, model, _DONE)) if r and (r["result"] or {}).get("features")]
+    return max(rows, key=lambda r: r["id"], default=None)
 _LABEL_ORDER = {"tool": 0, "uncertain": 1}
 
 
 def select_candidates(db: PipelineDB, *, model: str, limit: int, repo_ids: list[str] | None = None,
-                      force: bool = False) -> list[dict[str, Any]]:
+                      force: bool = False, features_only: bool = False) -> list[dict[str, Any]]:
     """Rule-passed candidates not yet extracted from the same sources by this model.
 
     Candidates the prescreen rejected are skipped unless asked for by id; unscreened ones still go.
@@ -337,10 +361,14 @@ def select_candidates(db: PipelineDB, *, model: str, limit: int, repo_ids: list[
             continue
         if not repo_ids and prescreen.get(c["repo_id"], {}).get("keep") is False:
             continue  # the open-weight prescreen (or its review) said this is not usable software
-        last = db.last_extraction(c["repo_id"], model)
-        if not force and last and last["status"] in _DONE and last["sources_sha"] == sources_sha(
-                build_sources(c)):
-            continue
+        if features_only:
+            if not force and feature_rows(db, c["repo_id"], model):
+                continue
+        else:
+            last = db.last_extraction(c["repo_id"], model, exclude=(FEATURES_STATUS,))
+            if not force and last and last["status"] in _DONE and last["sources_sha"] == sources_sha(
+                    build_sources(c)):
+                continue
         todo.append(c)
     todo.sort(key=lambda c: c["repo"].get("pushed_at") or "", reverse=True)
     todo.sort(key=lambda c: _LABEL_ORDER.get(c["rule_label"], 2))
@@ -358,7 +386,7 @@ def select_candidates(db: PipelineDB, *, model: str, limit: int, repo_ids: list[
 
 
 def run_extract(*, limit: int, model: str = "dev", reasoning_effort: str = "minimal",
-                repo_ids: list[str] | None = None, force: bool = False,
+                repo_ids: list[str] | None = None, force: bool = False, features_only: bool = False,
                 concurrency: int = 1, max_attempts: int = MAX_ATTEMPTS,
                 db_path: Path | None = None, client: Any = None, ledger: Ledger | None = None,
                 runs_dir: Path | str | None = None, cache: bool | None = None,
@@ -373,8 +401,9 @@ def run_extract(*, limit: int, model: str = "dev", reasoning_effort: str = "mini
         raise ValueError("limit, concurrency and max_attempts must be positive")
     model_id = resolve_model(model)
     db = PipelineDB(db_path or pipeline_db_path())
-    run_id = f"{STAGE}-" + taipei_now().strftime("%Y%m%d-%H%M%S")
-    todo = select_candidates(db, model=model_id, limit=limit, repo_ids=repo_ids, force=force)
+    run_id = f"{STAGE}{'-features' if features_only else ''}-" + taipei_now().strftime("%Y%m%d-%H%M%S")
+    todo = select_candidates(db, model=model_id, limit=limit, repo_ids=repo_ids, force=force,
+                             features_only=features_only)
     log(f"extract {run_id}: {len(todo)} candidates with {model_id} (effort {reasoning_effort}, "
         f"{concurrency} at a time, up to {max_attempts} attempts)")
     stop = threading.Event()
@@ -386,7 +415,7 @@ def run_extract(*, limit: int, model: str = "dev", reasoning_effort: str = "mini
         try:
             return extract_with_retries(c, max_attempts=max_attempts, model=model_id, run_id=run_id,
                                         reasoning_effort=reasoning_effort, client=client, ledger=ledger,
-                                        runs_dir=runs_dir, cache=cache)
+                                        runs_dir=runs_dir, cache=cache, features_only=features_only)
         except BudgetExceeded as err:
             if not stop.is_set():
                 stopped.append(f"budget: {err}")
@@ -436,6 +465,7 @@ def run_extract(*, limit: int, model: str = "dev", reasoning_effort: str = "mini
         "run_id": run_id, "model": model_id, "reasoning_effort": reasoning_effort,
         "attempted": len(finals), "calls": len(rows), "by_status": statuses,
         "errors": sum(1 for r in finals if r["status"] in ("error", "incomplete", "schema_error")),
+        "with_features": sum(1 for r in finals if (r["result"] or {}).get("features")),
         "quotes_checked": sum(r["quotes_checked"] for r in finals),
         "quote_failures": sum(len(r["quote_failures"]) for r in finals),
         "tokens": tokens, "cost_usd": round(sum(r["cost_usd"] for r in rows), 6),

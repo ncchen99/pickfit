@@ -11,7 +11,8 @@ Records start unverified. Install commands are kept as `readme_claim` guides,
 which the index never serves; verification (P3) adds runs and replayed guides.
 Writing again keeps what verification and scoring added to an existing record
 (verification, replayed or human guides, scores, outcomes) and its slug and
-first_seen_at.
+first_seen_at, and its features when the extraction lists none (they came from
+a features-only extraction).
 
 Only tools for end users are written (TOOL_KINDS, not import_only), by default
 only in the dev_cli and local_ai categories.
@@ -32,9 +33,9 @@ from pydantic import ValidationError
 
 from pickfit.discover.store import PipelineDB
 from pickfit.extract import Source as ExtractSource
-from pickfit.extract import build_sources, normalize_for_match
+from pickfit.extract import build_sources, feature_rows, normalize_for_match
 from pickfit.ledger import taipei_now
-from pickfit.schema import TOOL_KINDS, ExtractionResult, InstallClaim, SoftwareRecord
+from pickfit.schema import TOOL_KINDS, ExtractedFeatures, ExtractionResult, InstallClaim, SoftwareRecord
 from pickfit.score import refresh_scores
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -385,6 +386,11 @@ def _keep_verified_work(data: dict[str, Any], existing: dict[str, Any]) -> None:
     data["sources"] += [s for s in existing.get("sources") or [] if s["id"] in kept_runs]
     run_evidence = [e for e in existing.get("evidence") or [] if e.get("method") in ("sandbox", "human")]
     data["evidence"] += run_evidence
+    if not data.get("features") and existing.get("features"):  # set from a features-only extraction
+        data["features"] = existing["features"]
+        sources = {s["id"] for s in data["sources"]}
+        data["evidence"] += [e for e in existing.get("evidence") or []
+                             if e["field"].startswith("/features/") and e["source_id"] in sources]
 
 
 def feature_update(candidate: dict[str, Any], extraction: dict[str, Any], existing: dict[str, Any]
@@ -394,7 +400,7 @@ def feature_update(candidate: dict[str, Any], extraction: dict[str, Any], existi
     None when the extraction lists no feature a source the record cites still holds. Everything
     else in the record stays as it is, so verification and scores are untouched.
     """
-    result = ExtractionResult.model_validate(extraction["result"])
+    result = ExtractedFeatures.model_validate({"features": (extraction["result"] or {}).get("features") or []})
     cited_ids = {s["id"] for s in existing.get("sources") or []}
     source_ids = {"description": _API_SOURCE, "readme": "readme"}
     release = next((s for s in build_sources(candidate) if s.id == "release"), None)
@@ -417,17 +423,17 @@ def feature_update(candidate: dict[str, Any], extraction: dict[str, Any], existi
 def write_features(db: PipelineDB, *, model: str, out_dir: Path = DEFAULT_OUT, slugs: list[str] | None = None,
                    dry_run: bool = False, now: datetime | None = None,
                    log: Callable[[str], None] | None = None) -> WriteSummary:
-    """Set `features` on existing records from the latest extraction by `model`; nothing else changes."""
+    """Set `features` on existing records from the newest extraction by `model` that lists them (a
+    features-only one, or a full one); nothing else changes."""
     log = log or (lambda line: None)
     now = now or taipei_now()
     summary = WriteSummary()
-    extractions = latest_extractions(db, model)
     for repo_id, data in _existing_records(out_dir).items():
         if slugs and data["slug"] not in slugs:
             continue
-        extraction = extractions.get(repo_id)
+        extraction = feature_rows(db, repo_id, model)
         if extraction is None:
-            summary.skipped[data["slug"]] = f"no extraction by {model}"
+            summary.skipped[data["slug"]] = f"no extraction with features by {model}"
             continue
         updated = feature_update(db.candidate(repo_id), extraction, data)
         if updated is None:
