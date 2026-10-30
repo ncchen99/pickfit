@@ -58,8 +58,10 @@ FINISH_FEATURES = {
         "reason": {"type": ["string", "null"], "enum": [*GAPS, None], "description": (
             "not_checked: needs_account (an account or API key), needs_gpu, needs_display (a GUI or "
             "browser), needs_hardware (a microphone, camera, device), needs_service (an outside service "
-            "or server pickfit does not run), needs_more_resources (too big or slow for this box), "
-            "other_os, not_attempted (no budget left), other (say why in note).")},
+            "or server pickfit does not run), needs_more_resources (too big or slow for this box, or more "
+            "than one machine), needs_container (Docker or Podman), needs_root (sudo, system services), "
+            "needs_toolchain (a source build with Rust, Go or a C compiler), other_os, not_attempted (the "
+            "commands ran out before it), other (say why in note).")},
         "failure": {"type": ["string", "null"], "enum": [*get_args(FeatureFailure.__value__), None]},
         "note": {"type": "string", "description": "A few words: why not, or the error it showed."}},
         "required": ["feature", "status", "command_ids", "reason", "failure", "note"],
@@ -75,7 +77,8 @@ check print its result to stdout (it is shown to you); do not send it to a file 
 input file in a run_command of its own (a heredoc that exits 0) and cite it in setup_ids of every check \
 and server that reads it: a fresh box runs only the cited commands. Checks that do not depend on each \
 other can go in one turn as several run_command calls. Cite every feature check as a smoke test, also \
-one that failed (with the expected_signal the feature should have printed). In finish, report each \
+one that failed: with expected_exit_code 0 and the expected_signal the feature should have printed, never \
+with the error it showed (a failure is not a passing check). In finish, report each \
 listed feature: checked, not_checked with the reason when this box cannot exercise it, or test_failed \
 when its check failed after a working install. Never invent an account, an API key or an outside \
 service's answer to get a feature through; that is not_checked. If commands run short, keep the install \
@@ -258,9 +261,11 @@ def coverage(resolved: list[dict[str, Any]], smoke_index: dict[int, int], smoke:
             if held:
                 checks.append(FeatureCheck(feature=name, status="checked", smoke_tests=held))
                 continue
-            notes.append(f"feature {name!r}: its check did not pass again in the fresh box")
+            kept = any(cid in smoke_index for cid in item["command_ids"])
+            why = "did not pass again in a fresh box" if kept else "is too long for the record"
+            notes.append(f"feature {name!r}: its check {why}")
             checks.append(FeatureCheck(feature=name, status="not_checked", reason="other",
-                                       note="its check passed in the agent's box but not again in a fresh box"))
+                                       note=f"its check passed in the agent's box but {why}"))
         elif status == "test_failed":
             held: list[int] = []
             excerpt = None

@@ -269,3 +269,10 @@ def test_write_back_keeps_the_coverage(tmp_path: Path):
     run = next(r for r in saved.verification.runs if r.id == outcome.run_id)
     assert [f.status for f in run.features] == ["checked", "test_failed", "not_checked", "not_checked"]
     assert saved.install.linux.first_task == "graphtty graph.json"  # a failed feature check is never the first task
+
+
+def test_a_container_engine_the_box_lacks_is_named_as_such(tmp_path: Path):
+    docker = {NEON: (1, "", "Cannot connect to the Docker daemon at unix:///var/run/docker.sock")}
+    outcome, _ = verify(tmp_path, [*turns(REPORTED), judge_answer()], Boxes(script(**docker), script(**docker)))
+    themes = by_name(outcome.run)["switch color themes"]
+    assert (themes.status, themes.failure, themes.reason) == ("test_failed", "sandbox", "needs_container")
