@@ -69,18 +69,21 @@
       "first_task": "observer analyze . --out report.html"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "brew",
+      "basis": "replayed",
+      "run_id": "verify-getobserver-20261031-000753-66fa",
+      "method": "binary",
       "steps": [
         {
-          "command": "brew install https://raw.githubusercontent.com/sanks205/getobserver/main/packaging/homebrew/observer.rb",
-          "purpose": null
+          "command": "curl -fsSL -o /tmp/observer_linux_amd64 https://github.com/sanks205/getobserver/releases/download/v0.8.2/observer_linux_amd64 && curl -fsSL -o /tmp/SHA256SUMS.txt https://github.com/sanks205/getobserver/releases/download/v0.8.2/SHA256SUMS.txt && cat /tmp/SHA256SUMS.txt && (cd /tmp && sha256sum -c SHA256SUMS.txt --ignore-missing) && chmod +x /tmp/observer_linux_amd64 && mkdir -p ~/.local/bin && mv /tmp/observer_linux_amd64 ~/.local/bin/observer && observer --help",
+          "purpose": "download verify install observer binary"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "observer analyze . --out report.html"
+      "check": {
+        "command": "observer version",
+        "expected_signal": "observer 0.8.2"
+      },
+      "first_task": "observer version"
     },
     "windows": {
       "basis": "readme_claim",
@@ -110,10 +113,85 @@
     "url": "https://github.com/sanks205/getobserver/releases/tag/v0.8.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:08:50.038407+08:00",
+    "runs": [
+      {
+        "id": "verify-getobserver-20261031-000753-66fa",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:08:50.038407+08:00",
+        "tool_version": "0.8.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/observer_linux_amd64 https://github.com/sanks205/getobserver/releases/download/v0.8.2/observer_linux_amd64 && curl -fsSL -o /tmp/SHA256SUMS.txt https://github.com/sanks205/getobserver/releases/download/v0.8.2/SHA256SUMS.txt && cat /tmp/SHA256SUMS.txt && (cd /tmp && sha256sum -c SHA256SUMS.txt --ignore-missing) && chmod +x /tmp/observer_linux_amd64 && mkdir -p ~/.local/bin && mv /tmp/observer_linux_amd64 ~/.local/bin/observer && observer --help",
+            "purpose": "download verify install observer binary"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "observer version",
+            "expected_signal": "observer 0.8.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "observer 0.8.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "observer doctor",
+            "expected_signal": "Built-in analyzer: available",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Built-in analyzer: available (local heuristic rules)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "observer analyze . --out report.html",
+            "expected_signal": "Report written to",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Report written to /home/sbx/work/report.html",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go build -o observer ./cmd/cli (requires Go 1.26+)",
+            "actually_needed": "used README's recommended single-binary download: curl the observer_linux_amd64 asset for v0.8.2 from GitHub releases, verified SHA256SUMS.txt, chmod +x and moved to ~/.local/bin/observer",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show expected output: doctor reports built-in analyzer available, analyze writes report.html, and version prints 0.8.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-getobserver-20261031-000753-66fa/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-getobserver-20261031-000753-66fa/check-1-cmd5.judged.png",
+            "runs/verify/verify-getobserver-20261031-000753-66fa/check-2-cmd6.judged.png",
+            "runs/verify/verify-getobserver-20261031-000753-66fa/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.042537
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -364,5 +442,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:38+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "updated_at": "2026-10-31T00:08:50.039029+08:00"
 }

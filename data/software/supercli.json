@@ -60,18 +60,25 @@
       "first_task": "npx supercli skills list"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-supercli-20261031-000756-8a98",
       "method": "npm",
       "steps": [
         {
-          "command": "npx supercli skills list",
-          "purpose": null
+          "command": "npm install -g superacli 2>&1",
+          "purpose": "Install superacli globally via npm"
+        },
+        {
+          "command": "npm install -g dotenv vm2 express mongodb 2>&1 && supercli --version 2>&1",
+          "purpose": "Install missing runtime deps dotenv vm2 express mongodb"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "npx supercli skills list"
+      "check": {
+        "command": "supercli --version 2>&1",
+        "expected_signal": "\"version\":\"1.31.5\""
+      },
+      "first_task": "supercli help 2>&1"
     },
     "windows": null
   },
@@ -88,10 +95,112 @@
     "url": "https://github.com/javimosch/supercli/releases/tag/v0.1.1-zig"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:09:45.674301+08:00",
+    "runs": [
+      {
+        "id": "verify-supercli-20261031-000756-8a98",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:09:45.674301+08:00",
+        "tool_version": "1.31.5",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g superacli 2>&1",
+            "purpose": "Install superacli globally via npm"
+          },
+          {
+            "command": "npm install -g dotenv vm2 express mongodb 2>&1 && supercli --version 2>&1",
+            "purpose": "Install missing runtime deps dotenv vm2 express mongodb"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "supercli --version 2>&1",
+            "expected_signal": "\"version\":\"1.31.5\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"name\":\"SuperCLI\",\"implementation\":\"JavaScript\",\"version\":\"1.31.5\",\"node_version\":\"v22.23.4\",\"binary_name\":\"supercli\"}",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "supercli --help 2>&1",
+            "expected_signal": "Universal Capability Router",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"name\":\"SuperCLI\",\"description\":\"Universal Capability Router for AI Agents\",\"repository\":\"https://github.com/javimosch/supercli\",\"quick_overview\":[\"Capabilities: namespace.resource.action commands\",\"Plugin System: Install external CLIs as harnesses\",\"MCP Support: Model Context Protocol server inte…",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "supercli help 2>&1",
+            "expected_signal": "\"namespaces\":[]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"version\":\"1.0\",\"namespaces\":[]}",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "supercli skills list 2>&1",
+            "expected_signal": "plugins.registry.usage",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"skills\":[{\"name\":\"plugins.registry.usage\",\"description\":\"Discover and install plugins from the registry or remote git repos\"},{\"name\":\"plugins.authoring.usage\",\"description\":\"Design, implement, test, and register a new SuperCLI plugin\"},{\"name\":\"mcp.servers.usage\",\"description\":\"Manage MCP server…",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "supercli skills search \"github\" 2>&1",
+            "expected_signal": "\"total\":0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"skills\":[],\"total\":0,\"returned\":0,\"offset\":0}",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx supercli skills list works with zero install",
+            "actually_needed": "Install the `superacli` package globally (`npm install -g superacli`) then run the `supercli` binary directly (`supercli skills list`); equivalently `npx -p superacli supercli skills list`.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "npm install -g superacli is sufficient for repeated use",
+            "actually_needed": "Also run `npm install -g dotenv vm2 express mongodb` because the published superacli package declares no dependencies yet requires dotenv, vm2, express and mongodb; without them `supercli --version` fails with `Cannot find module 'dotenv'`.",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 1.31.5 JSON, help JSON with Universal Capability Router description, and help output with empty namespaces.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-supercli-20261031-000756-8a98/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-supercli-20261031-000756-8a98/check-1-cmd10.judged.png",
+            "runs/verify/verify-supercli-20261031-000756-8a98/check-2-cmd14.judged.png",
+            "runs/verify/verify-supercli-20261031-000756-8a98/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.088012
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -294,5 +403,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:20+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "updated_at": "2026-10-31T00:09:45.675313+08:00"
 }

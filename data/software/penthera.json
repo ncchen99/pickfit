@@ -73,17 +73,20 @@
       "first_task": "penthera giants"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-penthera-20261031-000542-1bc3",
       "method": "npm",
       "steps": [
         {
-          "command": "npx penthera",
-          "purpose": null
+          "command": "npm install -g penthera && penthera --version",
+          "purpose": "Install penthera globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "penthera --version",
+        "expected_signal": "penthera v2.1.0"
+      },
       "first_task": "penthera giants"
     },
     "windows": null
@@ -101,10 +104,88 @@
     "url": "https://github.com/danoszz/penthera/releases/tag/v2.1.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:06:27.513420+08:00",
+    "runs": [
+      {
+        "id": "verify-penthera-20261031-000542-1bc3",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:06:27.513420+08:00",
+        "tool_version": "2.1.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g penthera && penthera --version",
+            "purpose": "Install penthera globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "penthera --version",
+            "expected_signal": "penthera v2.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "penthera v2.1.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "penthera --help",
+            "expected_signal": "Show this help",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "-h, --help Show this help",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "penthera giants",
+            "expected_signal": "gitleaks not found",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[2mRun them with: penthera --repo . --giants (docs/commands/giants.md)\u001b[0m",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "penthera rules list",
+            "expected_signal": "Rule packs in effect",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[1mRule packs in effect\u001b[0m",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show expected outputs: giants tool status, rule packs list, and version v2.1.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-penthera-20261031-000542-1bc3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-penthera-20261031-000542-1bc3/check-1-cmd4.judged.png",
+            "runs/verify/verify-penthera-20261031-000542-1bc3/check-2-cmd5.judged.png",
+            "runs/verify/verify-penthera-20261031-000542-1bc3/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.048923
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -379,5 +460,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "updated_at": "2026-10-31T00:06:27.514219+08:00"
 }

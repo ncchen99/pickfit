@@ -59,18 +59,21 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-labelize-20261031-000542-a71b",
       "method": "npm",
       "steps": [
         {
           "command": "npm install @goodboy008/labelize-wasm",
-          "purpose": null
+          "purpose": "Install @goodboy008/labelize-wasm via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "labelize convert label.zpl"
+      "check": {
+        "command": "node -e \"import('./node_modules/@goodboy008/labelize-wasm/package.json', {with:{type:'json'}}).then(m=>console.log(m.default.version))\"",
+        "expected_signal": "1.10.0"
+      },
+      "first_task": "node -e \"import('./node_modules/@goodboy008/labelize-wasm/package.json', {with:{type:'json'}}).then(m=>console.log(m.default.version))\""
     },
     "windows": {
       "basis": "readme_claim",
@@ -100,10 +103,97 @@
     "url": "https://github.com/GOODBOY008/labelize/releases/tag/v1.10.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:06:50.121017+08:00",
+    "runs": [
+      {
+        "id": "verify-labelize-20261031-000542-a71b",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:06:50.121017+08:00",
+        "tool_version": "1.10.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install @goodboy008/labelize-wasm",
+            "purpose": "Install @goodboy008/labelize-wasm via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "node -e \"import('./node_modules/@goodboy008/labelize-wasm/package.json', {with:{type:'json'}}).then(m=>console.log(m.default.version))\"",
+            "expected_signal": "1.10.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.10.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 -c \"d=open('label.png','rb').read(); print('is_png=', d[:8]==bytes.fromhex('89504e470d0a1a0a')); print('size=', len(d))\"",
+            "expected_signal": "PNG magic: 89504e470d0a1a0a",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PNG magic: 89504e470d0a1a0a",
+            "setup": [
+              {
+                "command": "cat > render-test.mjs <<'EOF'\nimport { lz_render } from \"@goodboy008/labelize-wasm/init\";\nimport { writeFileSync } from \"node:fs\";\nconst zpl = Buffer.from(\"^XA^FO50,50^A0N,40,40^FDHello World^FS^XZ\", \"ascii\");\nconst png = lz_render(zpl, 102.0, 152.0, 8, false, false, false);\nwriteFileSync(\"label.png\", png);\nconsole.log(\"PNG bytes:\", png.length);\nconsole.log(\"PNG magic:\", Buffer.from(png.slice(0,8)).toString(\"hex\"));\nEOF\nnode render-test.mjs && ls -l label.png",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cat > encode-test.mjs <<'EOF'\nimport { lz_encode } from \"@goodboy008/labelize-wasm/init\";\nimport { readFileSync, writeFileSync } from \"node:fs\";\nconst source = readFileSync(\"label.png\");\nconst zpl = lz_encode(source, 8, 128, \"zpl\");\nwriteFileSync(\"logo.zpl\", zpl);\nconsole.log(\"ZPL bytes:\", zpl.length);\nconsole.log(new TextDecoder().decode(zpl.slice(0, 120)));\nEOF\nnode encode-test.mjs && ls -l logo.zpl && head -c 300 logo.zpl",
+            "expected_signal": "^GFA",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "^FO0,0^GFA,99960,99960,102,",
+            "setup": [
+              {
+                "command": "cat > render-test.mjs <<'EOF'\nimport { lz_render } from \"@goodboy008/labelize-wasm/init\";\nimport { writeFileSync } from \"node:fs\";\nconst zpl = Buffer.from(\"^XA^FO50,50^A0N,40,40^FDHello World^FS^XZ\", \"ascii\");\nconst png = lz_render(zpl, 102.0, 152.0, 8, false, false, false);\nwriteFileSync(\"label.png\", png);\nconsole.log(\"PNG bytes:\", png.length);\nconsole.log(\"PNG magic:\", Buffer.from(png.slice(0,8)).toString(\"hex\"));\nEOF\nnode render-test.mjs && ls -l label.png && python3 -c \"d=open('label.png','rb').read(); print('is_png=', d[:8]==bytes.fromhex('89504e470d0a1a0a')); print('size=', len(d))\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "labelize convert label.zpl / labelize encode logo.png / labelize serve --port 8080",
+            "actually_needed": "Use the JavaScript WebAssembly API via `import { lz_render, lz_encode } from \"@goodboy008/labelize-wasm/init\"` on Node >=20; no `labelize` binary is installed by this package",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 1.10.0, successful ZPL-to-PNG render with valid PNG magic, and PNG-to-ZPL encode emitting ^GFA.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-labelize-20261031-000542-a71b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-labelize-20261031-000542-a71b/check-1-cmd7.judged.png",
+            "runs/verify/verify-labelize-20261031-000542-a71b/check-2-cmd4.judged.png",
+            "runs/verify/verify-labelize-20261031-000542-a71b/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.073373
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -354,5 +444,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:29+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "updated_at": "2026-10-31T00:06:50.121724+08:00"
 }

@@ -47,7 +47,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-ci-whisper-20261031-000542-9129",
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install git+https://github.com/mgkvibez/ci-whisper.git",
+          "purpose": "install ci-whisper from git via pipx"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ci-whisper --help",
+        "expected_signal": "usage: ci-whisper"
+      },
+      "first_task": "ci-whisper --file /tmp/build.log"
+    },
     "windows": null
   },
   "pricing": {
@@ -63,10 +79,100 @@
     "url": "https://github.com/mgkvibez/ci-whisper/releases/tag/v0.1.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:06:43.181228+08:00",
+    "runs": [
+      {
+        "id": "verify-ci-whisper-20261031-000542-9129",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:06:43.181228+08:00",
+        "tool_version": "0.1.2",
+        "install_method": "pipx",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pipx install git+https://github.com/mgkvibez/ci-whisper.git",
+            "purpose": "install ci-whisper from git via pipx"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ci-whisper --help",
+            "expected_signal": "usage: ci-whisper",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: ci-whisper [-h] [--file FILE] [--gh RUN_ID] [--json] [--version]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ci-whisper --version",
+            "expected_signal": "ci-whisper 0.1.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ci-whisper 0.1.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ci-whisper --file /tmp/build.log",
+            "expected_signal": "FIRST REAL ERROR",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "FIRST REAL ERROR",
+            "setup": [
+              {
+                "command": "cat > /tmp/build.log <<'EOF'\nRun pytest tests\nFAILED test_app.py::test_add - AssertionError: assert 1 == 2\n##[error]Process completed with exit code 1\nEOF\ncp /tmp/build.log ./build.log\ncat ./build.log",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "ci-whisper --file build.log --json",
+            "expected_signal": "\"kind\": \"test-failure\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"kind\": \"test-failure\",",
+            "setup": [
+              {
+                "command": "cat > /tmp/build.log <<'EOF'\nRun pytest tests\nFAILED test_app.py::test_add - AssertionError: assert 1 == 2\n##[error]Process completed with exit code 1\nEOF\ncp /tmp/build.log ./build.log\ncat ./build.log",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show ci-whisper reporting the first error, JSON with test-failure kind, and usage help as expected.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ci-whisper-20261031-000542-9129/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ci-whisper-20261031-000542-9129/check-1-cmd8.judged.png",
+            "runs/verify/verify-ci-whisper-20261031-000542-9129/check-2-cmd9.judged.png",
+            "runs/verify/verify-ci-whisper-20261031-000542-9129/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.050965
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -253,5 +359,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:46+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "updated_at": "2026-10-31T00:06:43.181919+08:00"
 }

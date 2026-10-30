@@ -55,17 +55,24 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "go",
+      "basis": "replayed",
+      "run_id": "verify-nox-20261031-000630-d0d7",
+      "method": "binary",
       "steps": [
         {
-          "command": "go install github.com/nox-hq/nox/cli@latest",
-          "purpose": null
+          "command": "mkdir -p ~/.local/bin /tmp/noxdl2 && curl -L -o /tmp/noxdl2/nox.tar.gz https://github.com/Nox-HQ/nox/releases/download/v1.55.6/nox_1.55.6_linux_amd64.tar.gz",
+          "purpose": "download nox release tarball cleanly"
+        },
+        {
+          "command": "tar -xzf /tmp/noxdl2/nox.tar.gz -C /tmp/noxdl2 && cp /tmp/noxdl2/nox ~/.local/bin/nox && chmod +x ~/.local/bin/nox",
+          "purpose": "extract and install nox binary"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "nox --version",
+        "expected_signal": "nox 1.55.6"
+      },
       "first_task": "nox scan ."
     },
     "windows": null
@@ -83,10 +90,108 @@
     "url": "https://github.com/Nox-HQ/nox/releases/tag/v1.55.6"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:08:46.386436+08:00",
+    "runs": [
+      {
+        "id": "verify-nox-20261031-000630-d0d7",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:08:46.386436+08:00",
+        "tool_version": "1.55.6",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/noxdl2 && curl -L -o /tmp/noxdl2/nox.tar.gz https://github.com/Nox-HQ/nox/releases/download/v1.55.6/nox_1.55.6_linux_amd64.tar.gz",
+            "purpose": "download nox release tarball cleanly"
+          },
+          {
+            "command": "tar -xzf /tmp/noxdl2/nox.tar.gz -C /tmp/noxdl2 && cp /tmp/noxdl2/nox ~/.local/bin/nox && chmod +x ~/.local/bin/nox",
+            "purpose": "extract and install nox binary"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nox --version",
+            "expected_signal": "nox 1.55.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "nox 1.55.6 (commit: 7470246c43581157b8d6226bb70404e7f13f08ec, built: 2026-10-30T12:47:25Z)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nox scan .",
+            "expected_signal": "[results] 1 findings, 0 dependencies, 0 AI components",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "[results] 1 findings, 0 dependencies, 0 AI components",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nox scan . --format all --output reports/",
+            "expected_signal": "[results] 1 findings, 0 dependencies, 0 AI components",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "[results] 1 findings, 0 dependencies, 0 AI components",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ls -R reports",
+            "expected_signal": "findings.json",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "findings.json",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go install github.com/nox-hq/nox/cli@latest (and brew tap/install)",
+            "actually_needed": "downloaded official linux_amd64 tarball from GitHub releases (v1.55.6) and copied single 'nox' binary to ~/.local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "README shows scan output but documents no exit codes",
+            "actually_needed": "exit 1 when findings exist, exit 0 when clean (verified: empty project scan exits 0); treat exit 1 as success-with-findings",
+            "kind": "note"
+          },
+          {
+            "readme_said": "--version or --help works",
+            "actually_needed": "nox --version exits 0; top-level nox --help prints usage to stderr but exits 2",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show the expected scan summary lines and version string with matching exit codes.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nox-20261031-000630-d0d7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nox-20261031-000630-d0d7/check-1-cmd6.judged.png",
+            "runs/verify/verify-nox-20261031-000630-d0d7/check-2-cmd8.judged.png",
+            "runs/verify/verify-nox-20261031-000630-d0d7/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.086584
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -321,5 +426,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:29+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "updated_at": "2026-10-31T00:08:46.386970+08:00"
 }

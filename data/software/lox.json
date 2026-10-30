@@ -70,22 +70,21 @@
       "first_task": "lox tui --demo"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "brew",
+      "basis": "replayed",
+      "run_id": "verify-lox-20261031-000752-0cbe",
+      "method": "binary",
       "steps": [
         {
-          "command": "brew tap discostu105/lox https://github.com/discostu105/lox",
-          "purpose": null
-        },
-        {
-          "command": "brew install discostu105/lox/lox",
-          "purpose": null
+          "command": "mkdir -p ~/.local/bin && curl -fsSL -o ~/.local/bin/lox https://github.com/discostu105/lox/releases/download/v0.27.0/lox-linux-x86_64 && chmod +x ~/.local/bin/lox && curl -fsSL -o /tmp/lox.sha256 https://github.com/discostu105/lox/releases/download/v0.27.0/lox-linux-x86_64.sha256 && (cd ~/.local/bin && sha256sum -c /tmp/lox.sha256 || cat /tmp/lox.sha256; sha256sum lox)",
+          "purpose": "Download prebuilt linux x86_64 binary to ~/.local/bin/lox"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "lox tui --demo"
+      "check": {
+        "command": "lox --version",
+        "expected_signal": "lox 0.27.0"
+      },
+      "first_task": "lox completions bash"
     },
     "windows": {
       "basis": "readme_claim",
@@ -115,10 +114,104 @@
     "url": "https://github.com/discostu105/lox/releases/tag/v0.27.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:08:38.572877+08:00",
+    "runs": [
+      {
+        "id": "verify-lox-20261031-000752-0cbe",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:08:38.572877+08:00",
+        "tool_version": "0.27.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin && curl -fsSL -o ~/.local/bin/lox https://github.com/discostu105/lox/releases/download/v0.27.0/lox-linux-x86_64 && chmod +x ~/.local/bin/lox && curl -fsSL -o /tmp/lox.sha256 https://github.com/discostu105/lox/releases/download/v0.27.0/lox-linux-x86_64.sha256 && (cd ~/.local/bin && sha256sum -c /tmp/lox.sha256 || cat /tmp/lox.sha256; sha256sum lox)",
+            "purpose": "Download prebuilt linux x86_64 binary to ~/.local/bin/lox"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lox --version",
+            "expected_signal": "lox 0.27.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lox 0.27.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lox --help",
+            "expected_signal": "Loxone Miniserver CLI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Loxone Miniserver CLI",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lox completions bash",
+            "expected_signal": "complete -F _lox",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "complete -F _lox -o nosort -o bashdefault -o default lox",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lox schema -o json | python3 -c \"import json,sys; d=json.load(sys.stdin); print(type(d).__name__, len(d) if hasattr(d,'__len__') else ''); print(str(d)[:500])\"",
+            "expected_signal": "commands",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{'commands': [{'description': 'Control analog/virtual inputs: set | pulse', 'name': 'input', 'subcommands': [{'args': [{'description': 'Control name or UUID', 'name': 'name_or_uuid'}, {'description': 'Value to send (numeric or text)', 'name': 'value'}, {'long': '--room', 'name': 'room', 'short': '-…",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo build --release / git clone https://github.com/discostu105/lox (both need Rust 1.91+ toolchain)",
+            "actually_needed": "Downloaded prebuilt lox-linux-x86_64 binary from GitHub releases v0.27.0 to ~/.local/bin/lox and chmod +x; verified sha256 hash matches (9f4e84f315aaa3f778c33ef61abf8eaf24fb067a1ee7104555f11dc2e1f74925)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Release provides lox-linux-x86_64 plus .sha256 file",
+            "actually_needed": "sha256 file names the asset lox-linux-x86_64 while installed file is renamed to lox, so sha256sum -c warns about missing file; compared hashes manually and they match",
+            "kind": "note"
+          },
+          {
+            "readme_said": "lox tui --demo (first README example, needs interactive TTY)",
+            "actually_needed": "Skipped interactive full-screen TUI and smoke-tested the second README example 'lox completions bash' plus offline 'lox schema -o json'",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show bash completions with complete -F _lox, schema JSON containing commands, and version lox 0.27.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lox-20261031-000752-0cbe/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lox-20261031-000752-0cbe/check-1-cmd5.judged.png",
+            "runs/verify/verify-lox-20261031-000752-0cbe/check-2-cmd6.judged.png",
+            "runs/verify/verify-lox-20261031-000752-0cbe/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.04484
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -393,5 +486,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:29+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "updated_at": "2026-10-31T00:08:38.573473+08:00"
 }

@@ -71,18 +71,25 @@
       "first_task": "ee --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-eidetic-engine-cli-20261031-000542-23fb",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo +nightly install eidetic-engine --version 0.18.0 --locked",
-          "purpose": null
+          "command": "curl -fsSL https://github.com/Dicklesworthstone/eidetic_engine_cli/releases/download/v0.18.0/install.sh -o /tmp/install-ee.sh && ls -l /tmp/install-ee.sh && head -c 2000 /tmp/install-ee.sh",
+          "purpose": "Download release installer script only"
+        },
+        {
+          "command": "export EE_VERSION=v0.18.0 && bash /tmp/install-ee.sh --easy-mode --verify --no-gum 2>&1",
+          "purpose": "Install ee v0.18.0 binary via release installer"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "ee --version"
+      "check": {
+        "command": "ee --version",
+        "expected_signal": "ee 0.18.0"
+      },
+      "first_task": "ee doctor --json"
     },
     "windows": {
       "basis": "readme_claim",
@@ -112,10 +119,124 @@
     "url": "https://github.com/Dicklesworthstone/eidetic_engine_cli/releases/tag/v0.18.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:07:11.452600+08:00",
+    "runs": [
+      {
+        "id": "verify-eidetic-engine-cli-20261031-000542-23fb",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:07:11.452600+08:00",
+        "tool_version": "0.18.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/Dicklesworthstone/eidetic_engine_cli/releases/download/v0.18.0/install.sh -o /tmp/install-ee.sh && ls -l /tmp/install-ee.sh && head -c 2000 /tmp/install-ee.sh",
+            "purpose": "Download release installer script only"
+          },
+          {
+            "command": "export EE_VERSION=v0.18.0 && bash /tmp/install-ee.sh --easy-mode --verify --no-gum 2>&1",
+            "purpose": "Install ee v0.18.0 binary via release installer"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ee --version",
+            "expected_signal": "ee 0.18.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ee 0.18.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ee doctor --json",
+            "expected_signal": "\"command\":\"doctor\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"schema\":\"ee.response.v2\",\"success\":true,\"degraded\":[],\"fields\":\"doctor_concise\",\"data\":{\"command\":\"doctor\",\"mode\":\"concise\",\"version\":\"0.18.0\",\"posture\":\"degraded_recoverable\",\"healthy\":false,\"fullCommand\":\"ee doctor --full --json\",\"coreChecks\":[{\"name\":\"runtime\",\"tier\":\"core\",\"severity\":\"ok\",\"me…",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ee capabilities --json",
+            "expected_signal": "availableCommands",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "se,\"source\":\"unset\"},{\"name\":\"EE_E2E_RETENTION_MANIFEST\",\"category\":\"paths\",\"controls\":\"Override the retained-artifact manifest path used by diagnostics.\",\"defaultValue\":null,\"isSet\":false,\"source\":\"unset\"},{\"name\":\"EE_EMBED_BACKEND\",\"category\":\"embeddings\",\"controls\":\"Select the embedding backend:…",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ee search \"clippy warnings as errors\" --workspace /tmp/ee-smoke --limit 5 --json 2>&1",
+            "expected_signal": "\"resultCount\":1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"schema\":\"ee.response.v2\",\"success\":true,\"data\":{\"command\":\"search\",\"status\":\"success\",\"embed_backend\":\"neural_local\",\"query\":\"clippy warnings as errors\",\"request\":{\"sourceMode\":\"hybrid\",\"strictSourceMode\":false,\"memoryScope\":\"swarm\",\"strictScope\":false},\"scopeStats\":{\"scopeApplied\":\"swarm\",\"stric…",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/ee-smoke && ee init --workspace /tmp/ee-smoke 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "ee remember \"This project treats clippy warnings as errors with pedantic and nursery enabled.\" --workspace /tmp/ee-smoke --level procedural --kind rule --json 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "ee index rebuild --workspace /tmp/ee-smoke --json 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo +nightly install eidetic-engine --version 0.18.0 --locked",
+            "actually_needed": "Skipped ranked candidate 1 (cargo +nightly install eidetic-engine --version 0.18.0 --locked) because the box has no Rust toolchain and rules forbid installing Rust/Go toolchains; used the README's release installer script (install.sh v0.18.0, binary install) instead.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Release installer downloads and checksum-verifies the release binary",
+            "actually_needed": "Installer fetches a compiled tarball (ee-x86_64-unknown-linux-musl.tar.xz) plus its .sha256 at install time; that binary payload cannot be pre-read as text, only the install.sh script was read before running.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Quick Example runs remember then search/pack with no index rebuild (rebuild only shown after cass import)",
+            "actually_needed": "After ee remember, ee search returned degraded index_incompatible (stored vector producer mismatch) and required ee index rebuild --workspace /tmp/ee-smoke --json before search returned the memory.",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show doctor JSON with command doctor, capabilities JSON with 557 availableCommands, and version ee 0.18.0, all with exit 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-eidetic-engine-cli-20261031-000542-23fb/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-eidetic-engine-cli-20261031-000542-23fb/check-1-cmd4.judged.png",
+            "runs/verify/verify-eidetic-engine-cli-20261031-000542-23fb/check-2-cmd5.judged.png",
+            "runs/verify/verify-eidetic-engine-cli-20261031-000542-23fb/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.083953
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -382,5 +503,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:20+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "updated_at": "2026-10-31T00:07:11.453276+08:00"
 }

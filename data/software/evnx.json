@@ -50,7 +50,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-evnx-20261031-000711-f7b3",
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install evnx",
+          "purpose": "install evnx via pipx first candidate"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "evnx --version",
+        "expected_signal": "evnx 0.11.0"
+      },
+      "first_task": "cd /tmp/evnx-smoke && evnx scan"
+    },
     "windows": null
   },
   "pricing": {
@@ -66,10 +82,100 @@
     "url": "https://github.com/urwithajit9/evnx/releases/tag/v0.11.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:07:56.267532+08:00",
+    "runs": [
+      {
+        "id": "verify-evnx-20261031-000711-f7b3",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:07:56.267532+08:00",
+        "tool_version": "0.11.0",
+        "install_method": "pipx",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pipx install evnx",
+            "purpose": "install evnx via pipx first candidate"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "evnx --version",
+            "expected_signal": "evnx 0.11.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "evnx 0.11.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "evnx --help",
+            "expected_signal": "Manage .env files",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Manage .env files — validation, secret scanning, and format conversion",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/evnx-smoke && evnx scan",
+            "expected_signal": "No secrets detected",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ No secrets detected",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/evnx-smoke && printf 'PORT=3000\\nDEBUG=false\\n' > /tmp/evnx-smoke/.env && printf 'PORT=\\nDEBUG=\\n' > /tmp/evnx-smoke/.env.example && printf 'PORT=3000\\n' > /tmp/evnx-smoke/clean.txt && ls -la /tmp/evnx-smoke && cat /tmp/evnx-smoke/.env",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/evnx-smoke && evnx validate",
+            "expected_signal": "All checks passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ All checks passed",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/evnx-smoke && printf 'PORT=3000\\nDEBUG=false\\n' > /tmp/evnx-smoke/.env && printf 'PORT=\\nDEBUG=\\n' > /tmp/evnx-smoke/.env.example && printf 'PORT=3000\\n' > /tmp/evnx-smoke/clean.txt && ls -la /tmp/evnx-smoke && cat /tmp/evnx-smoke/.env",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show evnx scan reporting no secrets, validate reporting all checks passed, and version 0.11.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-evnx-20261031-000711-f7b3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-evnx-20261031-000711-f7b3/check-1-cmd5.judged.png",
+            "runs/verify/verify-evnx-20261031-000711-f7b3/check-2-cmd6.judged.png",
+            "runs/verify/verify-evnx-20261031-000711-f7b3/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.040085
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -272,5 +378,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:55+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "updated_at": "2026-10-31T00:07:56.268397+08:00"
 }

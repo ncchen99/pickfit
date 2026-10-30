@@ -71,18 +71,21 @@
       "first_task": "agent-database-cli --help"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-agent-database-cli-20261031-000643-2259",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g agent-database-cli",
-          "purpose": null
+          "purpose": "global install via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "agent-database-cli --help"
+      "check": {
+        "command": "agent-database-cli --help",
+        "expected_signal": "展示支持的数据库类型和本地连接"
+      },
+      "first_task": "agent-database-cli install-skill --dry-run"
     },
     "windows": {
       "basis": "readme_claim",
@@ -112,10 +115,78 @@
     "url": "https://github.com/sleepinginsummer/agent-database-cli/releases/tag/v0.4.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:07:27.688857+08:00",
+    "runs": [
+      {
+        "id": "verify-agent-database-cli-20261031-000643-2259",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:07:27.688857+08:00",
+        "tool_version": "0.4.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g agent-database-cli",
+            "purpose": "global install via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "agent-database-cli --help",
+            "expected_signal": "展示支持的数据库类型和本地连接",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "list 展示支持的数据库类型和本地连接，可按分组或标签筛选",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "agent-database-cli --version",
+            "expected_signal": "agent-database-cli 0.4.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "agent-database-cli 0.4.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "agent-database-cli install-skill --dry-run",
+            "expected_signal": "dry-run，不写文件",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "模式: dry-run，不写文件、不创建软链接",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show successful outputs: dry-run install plan with no file writes and help listing supported database types.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-agent-database-cli-20261031-000643-2259/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-agent-database-cli-20261031-000643-2259/check-1-cmd4.judged.png",
+            "runs/verify/verify-agent-database-cli-20261031-000643-2259/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.030533
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -366,5 +437,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:55+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "updated_at": "2026-10-31T00:07:27.689449+08:00"
 }

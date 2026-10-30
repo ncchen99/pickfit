@@ -51,7 +51,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-baldanders-20261031-000820-260e",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install baldanders==0.1.5 && baldanders --version",
+          "purpose": "Install baldanders 0.1.5 via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "baldanders --version",
+        "expected_signal": "baldanders, version 0.1.5"
+      },
+      "first_task": "echo \"Call me on +54 9 11 4567-8901\" | baldanders scrub"
+    },
     "windows": null
   },
   "pricing": {
@@ -67,10 +83,88 @@
     "url": "https://github.com/Nahuel990/Baldanders/releases/tag/v0.1.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:09:11.740573+08:00",
+    "runs": [
+      {
+        "id": "verify-baldanders-20261031-000820-260e",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:09:11.740573+08:00",
+        "tool_version": "0.1.5",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install baldanders==0.1.5 && baldanders --version",
+            "purpose": "Install baldanders 0.1.5 via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "baldanders --version",
+            "expected_signal": "baldanders, version 0.1.5",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "baldanders, version 0.1.5",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "baldanders --help",
+            "expected_signal": "Scrub TEXT (or stdin)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "scrub Scrub TEXT (or stdin) and print the result.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "echo \"Call me on +54 9 11 4567-8901\" | baldanders scrub",
+            "expected_signal": "Call me on [PHONE_1]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Call me on [PHONE_1]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "baldanders scrub --json \"IBAN DE89 3704 0044 0532 0130 00\"",
+            "expected_signal": "\"type\": \"IBAN\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"type\": \"IBAN\",",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show phone number scrubbed to [PHONE_1], IBAN detected as JSON type IBAN, and version 0.1.5 reported.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-baldanders-20261031-000820-260e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-baldanders-20261031-000820-260e/check-1-cmd4.judged.png",
+            "runs/verify/verify-baldanders-20261031-000820-260e/check-2-cmd5.judged.png",
+            "runs/verify/verify-baldanders-20261031-000820-260e/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.035637
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -273,5 +367,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:38+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "updated_at": "2026-10-31T00:09:11.741242+08:00"
 }

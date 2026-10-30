@@ -74,20 +74,25 @@
       "first_task": "./target/release/sbh --help"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-storage-ballast-helper-20261031-000727-7978",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/Dicklesworthstone/storage_ballast_helper/main/scripts/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/Dicklesworthstone/storage_ballast_helper/main/scripts/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -l /tmp/install.sh",
+          "purpose": "Download installer script for reading before running"
+        },
+        {
+          "command": "bash /tmp/install.sh && echo \"---INSTALLED---\" && ls -l ~/.local/bin/sbh",
+          "purpose": "Run installer script to install sbh binary"
         }
       ],
-      "manual_steps": [
-        "Grant Full Disk Access for cleanup scans of protected locations"
-      ],
-      "check": null,
-      "first_task": "./target/release/sbh --help"
+      "manual_steps": [],
+      "check": {
+        "command": "sbh --version",
+        "expected_signal": "sbh 0.7.9"
+      },
+      "first_task": "sbh status --json"
     },
     "windows": null
   },
@@ -104,10 +109,92 @@
     "url": "https://github.com/Dicklesworthstone/storage_ballast_helper/releases/tag/v0.7.9"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:08:20.039047+08:00",
+    "runs": [
+      {
+        "id": "verify-storage-ballast-helper-20261031-000727-7978",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:08:20.039047+08:00",
+        "tool_version": "0.7.9",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/Dicklesworthstone/storage_ballast_helper/main/scripts/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -l /tmp/install.sh",
+            "purpose": "Download installer script for reading before running"
+          },
+          {
+            "command": "bash /tmp/install.sh && echo \"---INSTALLED---\" && ls -l ~/.local/bin/sbh",
+            "purpose": "Run installer script to install sbh binary"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "sbh --version",
+            "expected_signal": "sbh 0.7.9",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "sbh 0.7.9",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sbh --help",
+            "expected_signal": "Show current health and pressure status",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "status Show current health and pressure status",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sbh status --json",
+            "expected_signal": "\"command\":\"status\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"ballast\":{\"authoritative\":true,\"available_count\":0,\"file_count\":10,\"file_size_bytes\":1073741824,\"health\":\"empty\",\"missing_count\":10,\"releasable_bytes\":0,\"total_pool_bytes\":10737418240,\"unreadable_count\":0},\"command\":\"status\",\"config_path\":\"/home/sbx/.config/sbh/config.toml\",\"daemon\":null,\"daemon_…",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sbh check --target-free 15",
+            "expected_signal": "\"command\":\"check\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"ballast\":{\"authoritative\":true,\"available_count\":0,\"configured_pool_bytes\":10737418240,\"health\":\"empty\",\"missing_count\":10,\"releasable_bytes\":0,\"unreadable_count\":0},\"command\":\"check\",\"container_available_bytes\":null,\"container_id\":null,\"container_total_bytes\":null,\"exit_code\":0,\"forecast\":null,\"…",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show status JSON with command status, check JSON with command check and ok status, and version sbh 0.7.9.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-storage-ballast-helper-20261031-000727-7978/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-storage-ballast-helper-20261031-000727-7978/check-1-cmd5.judged.png",
+            "runs/verify/verify-storage-ballast-helper-20261031-000727-7978/check-2-cmd6.judged.png",
+            "runs/verify/verify-storage-ballast-helper-20261031-000727-7978/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.061845
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -350,5 +437,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:29+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "updated_at": "2026-10-31T00:08:20.039644+08:00"
 }

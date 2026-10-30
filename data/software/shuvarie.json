@@ -52,7 +52,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-shuvarie-20261031-001003-4894",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin && curl -L -o /tmp/shuvarie.tar.gz https://github.com/shuvarie/shuvarie/releases/download/v0.5.6/shuvarie-0.5.6-x86_64-unknown-linux-musl.tar.gz && tar -tzf /tmp/shuvarie.tar.gz && tar -xzf /tmp/shuvarie.tar.gz -C /tmp/ && ls -la /tmp/shuvarie-*/ && cp /tmp/shuvarie-0.5.6/shuvarie ~/.local/bin/shuvarie && chmod +x ~/.local/bin/shuvarie && ls -la ~/.local/bin/shuvarie",
+          "purpose": "Download and install static binary release"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "shuvarie --version",
+        "expected_signal": "shuvarie 0.5.6"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -68,10 +84,84 @@
     "url": "https://github.com/shuvarie/shuvarie/releases/tag/v0.5.6"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:11:25.736518+08:00",
+    "runs": [
+      {
+        "id": "verify-shuvarie-20261031-001003-4894",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:11:25.736518+08:00",
+        "tool_version": "0.5.6",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin && curl -L -o /tmp/shuvarie.tar.gz https://github.com/shuvarie/shuvarie/releases/download/v0.5.6/shuvarie-0.5.6-x86_64-unknown-linux-musl.tar.gz && tar -tzf /tmp/shuvarie.tar.gz && tar -xzf /tmp/shuvarie.tar.gz -C /tmp/ && ls -la /tmp/shuvarie-*/ && cp /tmp/shuvarie-0.5.6/shuvarie ~/.local/bin/shuvarie && chmod +x ~/.local/bin/shuvarie && ls -la ~/.local/bin/shuvarie",
+            "purpose": "Download and install static binary release"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "shuvarie --version",
+            "expected_signal": "shuvarie 0.5.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "shuvarie 0.5.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "shuvarie --help",
+            "expected_signal": "Usage: shuvarie",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: shuvarie [OPTIONS] [WORK_DIR] [COMMAND]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install --path .",
+            "actually_needed": "box has no Rust toolchain and installing Rust/Go toolchains is forbidden, so skipped cargo candidate and installed the official prebuilt static binary shuvarie-0.5.6-x86_64-unknown-linux-musl.tar.gz from GitHub releases to ~/.local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "nix run . / nix profile install .",
+            "actually_needed": "nix is not installed in the box and nix run would build the Rust workspace from source; used the same prebuilt musl tarball instead (tar -xzf, cp shuvarie to ~/.local/bin)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "launch shuvarie and choose provider/model from selectors",
+            "actually_needed": "all usage (TUI launch, shuvarie run) requires a provider API key in ~/.config/shuvarie/connections.kdl plus an interactive terminal, so no README functional example could run here; verified only --version and --help",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Terminal shows shuvarie --version outputting shuvarie 0.5.6.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-shuvarie-20261031-001003-4894/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-shuvarie-20261031-001003-4894/check-1-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.069152
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -282,5 +372,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "updated_at": "2026-10-31T00:11:25.737312+08:00"
 }

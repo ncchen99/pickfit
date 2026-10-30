@@ -54,7 +54,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-go-magnetar-20261031-001045-eb50",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -sL -o /tmp/go-magnetar.tar.gz https://github.com/wmentor/go-magnetar/releases/download/v1.7.0/go-magnetar_1.7.0_linux_amd64.tar.gz && ls -lh /tmp/go-magnetar.tar.gz",
+          "purpose": "Download prebuilt Linux binary tarball"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && tar xzf /tmp/go-magnetar.tar.gz -O go-magnetar > ~/.local/bin/go-magnetar && chmod +x ~/.local/bin/go-magnetar && ls -lh ~/.local/bin/go-magnetar",
+          "purpose": "Install binary to PATH"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "go-magnetar --help",
+        "expected_signal": "RAG indexer and AI chat agent"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -70,10 +90,74 @@
     "url": "https://github.com/wmentor/go-magnetar/releases/tag/v1.7.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:11:53.759355+08:00",
+    "runs": [
+      {
+        "id": "verify-go-magnetar-20261031-001045-eb50",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:11:53.759355+08:00",
+        "tool_version": "v1.7.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sL -o /tmp/go-magnetar.tar.gz https://github.com/wmentor/go-magnetar/releases/download/v1.7.0/go-magnetar_1.7.0_linux_amd64.tar.gz && ls -lh /tmp/go-magnetar.tar.gz",
+            "purpose": "Download prebuilt Linux binary tarball"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && tar xzf /tmp/go-magnetar.tar.gz -O go-magnetar > ~/.local/bin/go-magnetar && chmod +x ~/.local/bin/go-magnetar && ls -lh ~/.local/bin/go-magnetar",
+            "purpose": "Install binary to PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "go-magnetar --help",
+            "expected_signal": "RAG indexer and AI chat agent",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "RAG indexer and AI chat agent",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go install github.com/wmentor/go-magnetar/cmd/go-magnetar@latest and git clone + make build (Go 1.27.3)",
+            "actually_needed": "Used README Option A pre-built binary go-magnetar_1.7.0_linux_amd64.tar.gz extracted to ~/.local/bin with no Go toolchain; ranked go-install and source-build candidates need a Go toolchain the box does not have and must not install.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "CLI flags table with no documented version flag",
+            "actually_needed": "--help works; --version is rejected as unknown flag",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows go-magnetar --help printing usage, RAG description, and flags with exit 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-go-magnetar-20261031-001045-eb50/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-go-magnetar-20261031-001045-eb50/check-1-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.061653
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -276,5 +360,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:55+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "updated_at": "2026-10-31T00:11:53.760360+08:00"
 }

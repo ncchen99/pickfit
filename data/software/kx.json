@@ -65,18 +65,21 @@
       "first_task": null
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "script",
+      "basis": "replayed",
+      "run_id": "verify-kx-20261031-000846-74c9",
+      "method": "uv",
       "steps": [
         {
-          "command": "curl -fsSL https://jzills.github.io/kx/install.sh | sh",
-          "purpose": null
+          "command": "uv tool install kx-cli 2>&1",
+          "purpose": "Install kx via uv tool"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": null
+      "check": {
+        "command": "kx --version 2>&1",
+        "expected_signal": "kx v0.11.0"
+      },
+      "first_task": "kx theme 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -106,10 +109,94 @@
     "url": "https://github.com/jzills/kx/releases/tag/v0.11.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:09:39.068446+08:00",
+    "runs": [
+      {
+        "id": "verify-kx-20261031-000846-74c9",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:09:39.068446+08:00",
+        "tool_version": "v0.11.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install kx-cli 2>&1",
+            "purpose": "Install kx via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "kx --version 2>&1",
+            "expected_signal": "kx v0.11.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "kx v0.11.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "kx --help 2>&1",
+            "expected_signal": "Run 'kx COMMAND --help'",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Run 'kx COMMAND --help' for a command's options and examples.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "kx theme 2>&1",
+            "expected_signal": "github-dark",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1 → github-dark ✓ ok ! warn ✗ error header body muted",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "kx completion bash 2>&1",
+            "expected_signal": "__start_kx",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "__start_kx()",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Requires kubectl on your PATH",
+            "actually_needed": "kx --version/--help, kx theme, kx state, kx completion all work without kubectl; kx --version reports 'kubectl not found on PATH'. Cluster commands like kx get pods were not run (no cluster/kubectl in box).",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show kx v0.11.0 version info, help with Run footer, and theme list containing github-dark.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-kx-20261031-000846-74c9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-kx-20261031-000846-74c9/check-1-cmd2.judged.png",
+            "runs/verify/verify-kx-20261031-000846-74c9/check-2-cmd3.judged.png",
+            "runs/verify/verify-kx-20261031-000846-74c9/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.039702
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -344,5 +431,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:20+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "updated_at": "2026-10-31T00:09:39.069335+08:00"
 }

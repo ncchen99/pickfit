@@ -74,20 +74,21 @@
       "first_task": "nexscope --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-nexscope-cli-20261031-000939-9d88",
       "method": "pip",
       "steps": [
         {
-          "command": "python -m pip install --index-url https://pypi.org/simple nexscope-cli==0.1.5",
-          "purpose": null
+          "command": "python3 --version && python3 -m pip install --index-url https://pypi.org/simple nexscope-cli==0.1.5",
+          "purpose": "Install nexscope-cli via pip"
         }
       ],
-      "manual_steps": [
-        "Connect Nexscope account via browser approval"
-      ],
-      "check": null,
-      "first_task": "nexscope --version"
+      "manual_steps": [],
+      "check": {
+        "command": "nexscope --version",
+        "expected_signal": "0.1.5"
+      },
+      "first_task": "nexscope doctor --offline"
     },
     "windows": {
       "basis": "readme_claim",
@@ -119,10 +120,79 @@
     "url": "https://github.com/nexscope-ai/nexscope-cli/releases/tag/v0.1.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:10:45.120191+08:00",
+    "runs": [
+      {
+        "id": "verify-nexscope-cli-20261031-000939-9d88",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:10:45.120191+08:00",
+        "tool_version": "0.1.5",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "python3 --version && python3 -m pip install --index-url https://pypi.org/simple nexscope-cli==0.1.5",
+            "purpose": "Install nexscope-cli via pip"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nexscope --version",
+            "expected_signal": "0.1.5",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.1.5",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nexscope doctor --offline",
+            "expected_signal": "READY_LOCAL",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"status\": \"READY_LOCAL\",",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nexscope demo product-comparison --out release-smoke",
+            "expected_signal": "COMPLETE",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"status\": \"COMPLETE\",",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show doctor reporting READY_LOCAL, demo reporting COMPLETE with reports generated, and --version printing 0.1.5.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nexscope-cli-20261031-000939-9d88/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nexscope-cli-20261031-000939-9d88/check-1-cmd3.judged.png",
+            "runs/verify/verify-nexscope-cli-20261031-000939-9d88/check-2-cmd4.judged.png",
+            "runs/verify/verify-nexscope-cli-20261031-000939-9d88/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.034643
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -373,5 +443,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "updated_at": "2026-10-31T00:10:45.121183+08:00"
 }

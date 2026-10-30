@@ -71,18 +71,25 @@
       "first_task": "orangu -s"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-orangu-20261031-000627-1bfa",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://mnemosyne-systems.github.io/orangu/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://mnemosyne-systems.github.io/orangu/install.sh -o /tmp/orangu-install.sh && wc -c /tmp/orangu-install.sh && head -c 2000 /tmp/orangu-install.sh",
+          "purpose": "Download install script for reading"
+        },
+        {
+          "command": "sh /tmp/orangu-install.sh",
+          "purpose": "Install orangu via release script"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "orangu -s"
+      "check": {
+        "command": "orangu --version",
+        "expected_signal": "orangu 1.4.0"
+      },
+      "first_task": "SHELL=/bin/bash orangu -s"
     },
     "windows": {
       "basis": "readme_claim",
@@ -112,10 +119,117 @@
     "url": "https://github.com/mnemosyne-systems/orangu/releases/tag/1.4.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:07:52.865368+08:00",
+    "runs": [
+      {
+        "id": "verify-orangu-20261031-000627-1bfa",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:07:52.865368+08:00",
+        "tool_version": "1.4.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://mnemosyne-systems.github.io/orangu/install.sh -o /tmp/orangu-install.sh && wc -c /tmp/orangu-install.sh && head -c 2000 /tmp/orangu-install.sh",
+            "purpose": "Download install script for reading"
+          },
+          {
+            "command": "sh /tmp/orangu-install.sh",
+            "purpose": "Install orangu via release script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "orangu --version",
+            "expected_signal": "orangu 1.4.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "orangu 1.4.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "orangu --help",
+            "expected_signal": "A coding environment for OpenAI-compatible servers",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "A coding environment for OpenAI-compatible servers",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "SHELL=/bin/bash orangu -s",
+            "expected_signal": "# bash completion for orangu",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "# bash completion for orangu",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "orangu -l",
+            "expected_signal": "No sessions found.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No sessions found.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "orangu-server --version",
+            "expected_signal": "orangu-server 1.4.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "orangu-server 1.4.0",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "orangu -s",
+            "actually_needed": "SHELL=/bin/bash orangu -s (run with $SHELL set to a supported shell)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "orangu --init",
+            "actually_needed": "orangu --init is an interactive wizard prompting for endpoint/model and hangs waiting for TTY input; it cannot complete non-interactively with stdin closed",
+            "kind": "note"
+          },
+          {
+            "readme_said": "curl -fsSL https://mnemosyne-systems.github.io/orangu/install.sh | sh",
+            "actually_needed": "install.sh downloads a prebuilt binary tarball orangu-1.4.0-x86_64-unknown-linux-gnu.tar.gz from GitHub releases, which was installed unread as a binary",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show bash completion script header, 'No sessions found.', and 'orangu 1.4.0' all printing correctly with exit 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-orangu-20261031-000627-1bfa/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-orangu-20261031-000627-1bfa/check-1-cmd6.judged.png",
+            "runs/verify/verify-orangu-20261031-000627-1bfa/check-2-cmd9.judged.png",
+            "runs/verify/verify-orangu-20261031-000627-1bfa/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.060189
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -374,5 +488,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:38+08:00",
-  "updated_at": "2026-10-31T00:05:19+08:00"
+  "updated_at": "2026-10-31T00:07:52.866134+08:00"
 }
