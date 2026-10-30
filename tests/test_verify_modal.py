@@ -238,7 +238,7 @@ def test_a_missing_image_is_published_once_then_used(monkeypatch: pytest.MonkeyP
     monkeypatch.setattr(modal.Sandbox, "create", create)
     monkeypatch.setattr(modal.Image, "from_name", lambda name: f"image:{name}")
     monkeypatch.setattr(mb, "sandbox_image_tag", lambda: "pickfit-sbx:abc")
-    monkeypatch.setattr(mb, "publish_image", lambda client, app, log: published.append("x") or "pickfit-sbx:abc")
+    monkeypatch.setattr(mb, "publish_image", lambda client, app, log, **kw: published.append("x") or "pickfit-sbx:abc")
     ModalBox(client="client", log=lambda s: None).start()
     assert attempts == ["image:pickfit-sbx:abc"] * 2 and published == ["x"]
 

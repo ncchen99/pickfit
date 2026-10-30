@@ -15,6 +15,13 @@
   missing name triggers the build. (`Image.from_name(...).hydrate()` is not
   supported by the client, so the name is resolved by Sandbox.create.)
 
+- runtime="vm" (a microVM with its own kernel) is the same box otherwise. Measured 2026-10-31: under both
+  runtimes Modal's resolver (172.21.0.1) still answers DNS with the allowlist empty, so "offline" resolves
+  names; in a VM, root adds an nftables rule that drops the box user's DNS while the network is off
+  (gVisor has no netfilter, so a gVisor box cannot close it). A VM gives 1 vCPU per requested core.
+- display=True adds GUI_PACKAGES to the image and starts Xvfb (gui.py) as the box user at start.
+  The display works under both runtimes (2026-10-31: Xvfb, headed Chromium, Electron and WebKitGTK apps).
+
 Credentials come from MODAL_TOKEN_ID / MODAL_TOKEN_SECRET in .env and go to
 an explicit modal.Client; nothing is put into the process environment, and the
 sandbox gets no secrets.
@@ -22,6 +29,7 @@ sandbox gets no secrets.
 
 from __future__ import annotations
 
+import hashlib
 import ipaddress
 import shlex
 import threading
@@ -45,6 +53,7 @@ from pickfit.verify.box import (
     _Capture,
     sandbox_image_tag,
 )
+from pickfit.verify.gui import DISPLAY, GUI_PACKAGES, xvfb_script
 
 APP_NAME = "pickfit-verify"
 READ_TIMEOUT_S = 20  # read_file: a FIFO or a device would block `head` forever
@@ -73,6 +82,28 @@ def public_cidrs(blocked: tuple[str, ...] = BLOCKED_NETS) -> list[str]:
 
 
 ONLINE_CIDRS = public_cidrs()
+RUNTIMES = ("gvisor", "vm")
+VM_PACKAGES = ("nftables",)  # root's offline DNS rule (VM only: gVisor has no netfilter)
+# Drops the box user's DNS (to Modal's resolver or anywhere) while the network is off; root sets it.
+DNS_TABLE = "pickfit_offline"
+DNS_BLOCK = (f"nft add table inet {DNS_TABLE} && nft add chain inet {DNS_TABLE} out "
+             "'{ type filter hook output priority 0; policy accept; }' && "
+             f"nft add rule inet {DNS_TABLE} out meta skuid {BOX_UID} udp dport 53 drop && "
+             f"nft add rule inet {DNS_TABLE} out meta skuid {BOX_UID} tcp dport 53 drop")
+DNS_UNBLOCK = f"nft delete table inet {DNS_TABLE}"
+
+
+def image_layers(runtime: str = "gvisor", display: bool = False) -> tuple[str, tuple[str, ...]]:
+    """(published image name, apt packages added on top of sandbox.Dockerfile) for a kind of box.
+
+    The plain box keeps `pickfit-sbx:<Dockerfile hash>`; a variant hashes the Dockerfile and its packages.
+    """
+    packages = (*(VM_PACKAGES if runtime == "vm" else ()), *(GUI_PACKAGES if display else ()))
+    if not packages:
+        return sandbox_image_tag(), ()
+    digest = hashlib.sha256(SANDBOX_DOCKERFILE.read_bytes() + "\n".join(packages).encode()).hexdigest()[:12]
+    kinds = "-".join(k for k, on in (("vm", runtime == "vm"), ("gui", display)) if on)
+    return f"pickfit-sbx-{kinds}:{digest}", packages
 
 
 def modal_client() -> Any:
@@ -81,30 +112,34 @@ def modal_client() -> Any:
     return modal.Client.from_credentials(require_env("MODAL_TOKEN_ID"), require_env("MODAL_TOKEN_SECRET"))
 
 
-def publish_image(client: Any, app: Any, *, log: Callable[[str], None] = print) -> str:
-    """Build the sandbox image from sandbox.Dockerfile and publish it under its hash name.
+def publish_image(client: Any, app: Any, *, log: Callable[[str], None] = print, runtime: str = "gvisor",
+                  display: bool = False) -> str:
+    """Build the sandbox image from sandbox.Dockerfile (plus the variant's packages) and publish it.
 
     Modal caches the build, so an unchanged Dockerfile takes a few seconds.
     """
     import modal
 
-    name = sandbox_image_tag()
+    name, packages = image_layers(runtime, display)
     began = time.monotonic()
     image = modal.Image.from_dockerfile(SANDBOX_DOCKERFILE, context_dir=SANDBOX_DOCKERFILE.parent,
                                         ignore=lambda path: True)
+    if packages:
+        image = image.apt_install(*packages)
     image.build(app)
     image.publish(name, client=client)
     log(f"Modal image {name} built and published in {time.monotonic() - began:.0f}s")
     return name
 
 
-def ensure_published_image(log: Callable[[str], None] = print) -> str:
+def ensure_published_image(log: Callable[[str], None] = print, *, runtime: str = "gvisor",
+                           display: bool = False) -> str:
     """Publish the image for the current Dockerfile before parallel boxes start; returns its name."""
     import modal
 
     client = modal_client()
     app = modal.App.lookup(APP_NAME, create_if_missing=True, client=client)
-    return publish_image(client, app, log=log)
+    return publish_image(client, app, log=log, runtime=runtime, display=display)
 
 
 def _missing_image(err: Exception) -> bool:
@@ -113,18 +148,26 @@ def _missing_image(err: Exception) -> bool:
 
 
 class ModalBox(Box):
-    """A Modal Sandbox (gVisor) driven like a DockerBox."""
+    """A Modal Sandbox (gVisor, or a VM) driven like a DockerBox."""
 
     runner = "modal-gvisor"
     image = sandbox_image_tag()
 
     def __init__(self, *, limits: BoxLimits = BoxLimits(), tags: dict[str, str] | None = None,
                  app_name: str = APP_NAME, client: Any = None, gpu: str | None = None,
-                 log: Callable[[str], None] = print) -> None:
+                 runtime: str = "gvisor", display: bool = False, log: Callable[[str], None] = print) -> None:
         if gpu is not None and gpu not in GPU_USD_PER_S:
             raise ValueError(f"gpu must be one of {sorted(GPU_USD_PER_S)}, got {gpu!r}")
+        if runtime not in RUNTIMES:
+            raise ValueError(f"runtime must be one of {RUNTIMES}, got {runtime!r}")
+        if gpu and runtime != "gvisor":
+            raise ValueError("Modal GPU sandboxes run only under gVisor")
         self.limits = limits
         self.gpu = gpu
+        self.runtime = runtime
+        self.runner = f"modal-{runtime}"
+        self.display = DISPLAY if display else None
+        self.image = image_layers(runtime, display)[0]
         self.tags = {"pickfit": "verify", **(tags or {})}
         self.app_name = app_name
         self.client = client
@@ -141,7 +184,7 @@ class ModalBox(Box):
         """Sandbox.create arguments other than app, image and client (separate so tests can check them)."""
         lim = self.limits
         cores = lim.cpus / 2  # Modal counts physical cores; one core is two vCPU
-        kwargs = {"runtime": "gvisor", "timeout": lim.lifetime_s, "cpu": (cores, cores),
+        kwargs = {"runtime": self.runtime, "timeout": lim.lifetime_s, "cpu": (cores, cores),
                   "memory": (lim.memory_mb, lim.memory_mb), "workdir": "/",
                   "outbound_cidr_allowlist": ONLINE_CIDRS, "outbound_domain_allowlist": [],
                   "tags": self.tags}
@@ -157,7 +200,7 @@ class ModalBox(Box):
         began = time.monotonic()
         self.client = self.client or modal_client()
         app = modal.App.lookup(self.app_name, create_if_missing=True, client=self.client)
-        self.image = sandbox_image_tag()
+        self.image = image_layers(self.runtime, self.display is not None)[0]
 
         def create() -> Any:
             return modal.Sandbox.create("sleep", str(self.limits.lifetime_s), app=app, client=self.client,
@@ -169,7 +212,8 @@ class ModalBox(Box):
             except Exception as err:
                 if not _missing_image(err):
                     raise
-                publish_image(self.client, app, log=self.log)  # first box after a Dockerfile change
+                publish_image(self.client, app, log=self.log, runtime=self.runtime,  # first box after a change
+                              display=self.display is not None)
                 self.sandbox = create()
         except Exception as err:
             raise BoxError(f"Modal sandbox create failed: {type(err).__name__}: {err}") from err
@@ -180,6 +224,11 @@ class ModalBox(Box):
         if setup.exit_code != 0 or chown.exit_code != 0:
             self.close()
             raise BoxError(f"box setup failed: {(setup.stderr or chown.stderr).strip()[-500:]}")
+        if self.display:  # as the box user: the X server is no more privileged than the apps it shows
+            xvfb = self.exec(xvfb_script(self.detach), 30)
+            if xvfb.exit_code != 0:
+                self.close()
+                raise BoxError(f"the virtual display did not start: {(xvfb.stdout + xvfb.stderr).strip()[-500:]}")
         self.start_s = round(time.monotonic() - began, 2)
 
     def close(self) -> None:
@@ -317,3 +366,7 @@ class ModalBox(Box):
         except Exception as err:
             raise BoxError(f"modal network policy failed: {type(err).__name__}: {err}") from err
         self.network_enabled = enabled
+        if self.runtime == "vm":  # Modal's resolver answers even with an empty allowlist; root closes it
+            rule = self._exec_raw(["bash", "-c", DNS_UNBLOCK if enabled else DNS_BLOCK], 30, as_root=True)
+            if rule.exit_code != 0:
+                raise BoxError(f"offline DNS rule failed: {(rule.stdout + rule.stderr).strip()[-300:]}")
