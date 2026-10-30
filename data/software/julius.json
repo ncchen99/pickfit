@@ -49,7 +49,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-julius-20261031-021904-bfdc",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/praetorian-inc/julius/releases/download/v1.6.0/julius_1.6.0_linux_amd64.tar.gz -o /tmp/julius.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/julius.tar.gz -C /tmp && ls -la /tmp/*.tar.gz /tmp/julius* 2>&1 && tar -tzf /tmp/julius.tar.gz",
+          "purpose": "Download prebuilt linux_amd64 tarball"
+        },
+        {
+          "command": "cp /tmp/julius ~/.local/bin/julius && chmod +x ~/.local/bin/julius && julius list --help && echo INSTALLED_OK",
+          "purpose": "Install binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "julius --help",
+        "expected_signal": "Julius is a tool for fingerprinting LLM services"
+      },
+      "first_task": "julius list"
+    },
     "windows": null
   },
   "pricing": {
@@ -65,10 +85,105 @@
     "url": "https://github.com/praetorian-inc/julius/releases/tag/v1.6.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:19:57.422616+08:00",
+    "runs": [
+      {
+        "id": "verify-julius-20261031-021904-bfdc",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:19:57.422616+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/praetorian-inc/julius/releases/download/v1.6.0/julius_1.6.0_linux_amd64.tar.gz -o /tmp/julius.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/julius.tar.gz -C /tmp && ls -la /tmp/*.tar.gz /tmp/julius* 2>&1 && tar -tzf /tmp/julius.tar.gz",
+            "purpose": "Download prebuilt linux_amd64 tarball"
+          },
+          {
+            "command": "cp /tmp/julius ~/.local/bin/julius && chmod +x ~/.local/bin/julius && julius list --help && echo INSTALLED_OK",
+            "purpose": "Install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "julius --help",
+            "expected_signal": "Julius is a tool for fingerprinting LLM services",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Julius is a tool for fingerprinting LLM services by sending HTTP probes",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "julius list",
+            "expected_signal": "Total: 64 probe definitions",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Total: 64 probe definitions",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "julius validate /tmp/myprobes",
+            "expected_signal": "1 valid, 0 errors",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Validation complete: 1 valid, 0 errors",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/myprobes && cat > /tmp/myprobes/my-llm-service.yaml <<'EOF'\nname: my-llm-service\ndescription: My custom LLM service detection\ncategory: self-hosted\nport_hint: 8080\napi_docs: https://example.com/api-docs\n\nrequests:\n  - path: /health\n    method: GET\n    match:\n      - type: status\n        value: 200\n      - type: body.contains\n        value: '\"service\":\"my-llm\"'\n\n  - path: /api/version\n    method: GET\n    match:\n      - type: status\n        value: 200\n      - type: content-type\n        value: application/json\n\nmodels:\n  path: /api/models\n  method: GET\n  extract: \".models[].name\"\nEOF\ncat /tmp/myprobes/my-llm-service.yaml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go install github.com/praetorian-inc/julius/cmd/julius@latest",
+            "actually_needed": "Downloaded prebuilt julius_1.6.0_linux_amd64.tar.gz from GitHub releases (v1.6.0) and copied the julius binary to ~/.local/bin; ranked candidate 1 (go install) was skipped because the box has no Go toolchain and installing one is not allowed",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "standard --version check",
+            "actually_needed": "julius supports --help but julius --version fails with 'unknown flag: --version'; use julius --help to confirm install",
+            "kind": "note"
+          },
+          {
+            "readme_said": "julius validate ./probes",
+            "actually_needed": "Created /tmp/myprobes/my-llm-service.yaml from the README's custom-probe YAML example and ran julius validate /tmp/myprobes",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show Julius listing 64 probe definitions, validating 1 file with 0 errors, and help describing LLM service fingerprinting.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-julius-20261031-021904-bfdc/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-julius-20261031-021904-bfdc/check-1-cmd7.judged.png",
+            "runs/verify/verify-julius-20261031-021904-bfdc/check-2-cmd9.judged.png",
+            "runs/verify/verify-julius-20261031-021904-bfdc/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.066743
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -255,5 +370,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:47:12+08:00",
-  "updated_at": "2026-10-31T02:17:52+08:00"
+  "updated_at": "2026-10-31T02:19:57.423680+08:00"
 }

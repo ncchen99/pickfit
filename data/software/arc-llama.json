@@ -52,20 +52,25 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "pip",
+      "basis": "replayed",
+      "run_id": "verify-arc-llama-20261031-021822-f769",
+      "method": "uv",
       "steps": [
         {
-          "command": "pip install arc-llama",
-          "purpose": null
+          "command": "uv tool install arc-llama 2>&1",
+          "purpose": "Install arc-llama via uv tool"
+        },
+        {
+          "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/stories260K.gguf && arc-llama install-runtime 2>&1",
+          "purpose": "Download tiny model and install Vulkan runtime"
         }
       ],
-      "manual_steps": [
-        "Enable ReBAR in BIOS for Intel Arc performance"
-      ],
-      "check": null,
-      "first_task": "arc-llama init"
+      "manual_steps": [],
+      "check": {
+        "command": "arc-llama --version 2>&1",
+        "expected_signal": "arc-llama, version 1.0.0"
+      },
+      "first_task": "arc-llama doctor 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -97,10 +102,119 @@
     "url": "https://github.com/offbyonebit/arc-llama/releases/tag/v1.0.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:19:57.304639+08:00",
+    "runs": [
+      {
+        "id": "verify-arc-llama-20261031-021822-f769",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:19:57.304639+08:00",
+        "tool_version": "1.0.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install arc-llama 2>&1",
+            "purpose": "Install arc-llama via uv tool"
+          },
+          {
+            "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/stories260K.gguf && arc-llama install-runtime 2>&1",
+            "purpose": "Download tiny model and install Vulkan runtime"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "arc-llama --version 2>&1",
+            "expected_signal": "arc-llama, version 1.0.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "arc-llama, version 1.0.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "arc-llama --help 2>&1",
+            "expected_signal": "Usage: arc-llama",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: arc-llama [OPTIONS] COMMAND [ARGS]...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "arc-llama doctor 2>&1",
+            "expected_signal": "no Intel GPUs detected",
+            "exit_code": 2,
+            "passed": true,
+            "observed_excerpt": "no Intel GPUs detected via sysfs",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:11437/v1/models",
+            "expected_signal": "\"object\":\"list\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"object\":\"list\",\"data\":[]}",
+            "setup": [
+              {
+                "command": "arc-llama serve --port 11437",
+                "background": true,
+                "port": 11437
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:11437/health",
+            "expected_signal": "\"status\":\"ok\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"ok\",\"uptime_seconds\":3.18,\"loaded_models\":[],\"loaded_model_count\":0}",
+            "setup": [
+              {
+                "command": "arc-llama serve --port 11437",
+                "background": true,
+                "port": 11437
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "arc-llama init detects GPUs and writes config, then doctor/gpus/add/serve follow",
+            "actually_needed": "On a box with no Intel GPU, `arc-llama init`, `arc-llama doctor` and `arc-llama gpus` report `No Intel GPUs detected` / detailed diagnosis and exit 2; `arc-llama add` refuses with `No GPUs in config`. `arc-llama install-runtime` and `arc-llama serve` still work.",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 1.0.0, full help output, and doctor correctly reporting no Intel GPUs with diagnostic FAIL gates.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-arc-llama-20261031-021822-f769/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-arc-llama-20261031-021822-f769/check-1-cmd2.judged.png",
+            "runs/verify/verify-arc-llama-20261031-021822-f769/check-2-cmd3.judged.png",
+            "runs/verify/verify-arc-llama-20261031-021822-f769/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.119143
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -311,5 +425,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:48:25+08:00",
-  "updated_at": "2026-10-31T02:17:52+08:00"
+  "updated_at": "2026-10-31T02:19:57.305536+08:00"
 }

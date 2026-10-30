@@ -67,17 +67,24 @@
       "first_task": "taracode doctor"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-taracode-20261031-021957-f0ab",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://engine.tara.vision/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://code.tara.vision/install.sh -o /tmp/taracode-install.sh && echo DOWNLOAD_OK && wc -c /tmp/taracode-install.sh && head -n 50 /tmp/taracode-install.sh",
+          "purpose": "Download taracode install script"
+        },
+        {
+          "command": "INSTALL_DIR=\"$HOME/.local/bin\" bash /tmp/taracode-install.sh",
+          "purpose": "Install taracode to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "taracode --version",
+        "expected_signal": "taracode version 3.5.0"
+      },
       "first_task": "taracode doctor"
     },
     "windows": null
@@ -95,10 +102,93 @@
     "url": "https://github.com/tara-vision/taracode/releases/tag/v3.5.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:20:50.896072+08:00",
+    "runs": [
+      {
+        "id": "verify-taracode-20261031-021957-f0ab",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:20:50.896072+08:00",
+        "tool_version": "3.5.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://code.tara.vision/install.sh -o /tmp/taracode-install.sh && echo DOWNLOAD_OK && wc -c /tmp/taracode-install.sh && head -n 50 /tmp/taracode-install.sh",
+            "purpose": "Download taracode install script"
+          },
+          {
+            "command": "INSTALL_DIR=\"$HOME/.local/bin\" bash /tmp/taracode-install.sh",
+            "purpose": "Install taracode to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "taracode --version",
+            "expected_signal": "taracode version 3.5.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "taracode version 3.5.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "taracode --help",
+            "expected_signal": "doctor Diagnose the LLM server, installed models and external tools",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "doctor Diagnose the LLM server, installed models and external tools",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "taracode doctor",
+            "expected_signal": "Policy ok (built-in)",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "Policy ok (built-in)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://code.tara.vision/install.sh | bash",
+            "actually_needed": "INSTALL_DIR=\"$HOME/.local/bin\" bash /tmp/taracode-install.sh (default /usr/local/bin is not writable without root)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "taracode doctor",
+            "actually_needed": "taracode doctor reports missing engine/tools and exits 1; this is its diagnostic job, not an install failure",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show doctor reporting Policy ok (built-in) and version command reporting taracode version 3.5.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-taracode-20261031-021957-f0ab/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-taracode-20261031-021957-f0ab/check-1-cmd6.judged.png",
+            "runs/verify/verify-taracode-20261031-021957-f0ab/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.063767
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -317,5 +407,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:46:41+08:00",
-  "updated_at": "2026-10-31T02:17:52+08:00"
+  "updated_at": "2026-10-31T02:20:50.897749+08:00"
 }

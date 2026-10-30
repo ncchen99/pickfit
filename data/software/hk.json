@@ -74,17 +74,24 @@
       "first_task": "hk list"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "source",
+      "basis": "replayed",
+      "run_id": "verify-hk-20261031-021805-b3b4",
+      "method": "uv",
       "steps": [
         {
-          "command": "zig build -Doptimize=ReleaseFast",
-          "purpose": null
+          "command": "uv tool install hknt 2>&1",
+          "purpose": "Isolated install of README pip package via uv tool install hknt"
+        },
+        {
+          "command": "curl -fL -o /home/sbx/.local/share/uv/tools/hknt/lib/python3.12/site-packages/hk/hk-x86_64-linux https://github.com/harshitkhandelwal208/hk/releases/download/v2.0.0/hk-x86_64-linux && chmod +x /home/sbx/.local/share/uv/tools/hknt/lib/python3.12/site-packages/hk/hk-x86_64-linux",
+          "purpose": "Download native hk-x86_64-linux release binary next to Python package and make executable"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "hk --help",
+        "expected_signal": "hardware-profile"
+      },
       "first_task": "hk list"
     },
     "windows": {
@@ -115,10 +122,110 @@
     "url": "https://github.com/harshitkhandelwal208/hk/releases/tag/v2.0.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "inference",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:21:01.526495+08:00",
+    "runs": [
+      {
+        "id": "verify-hk-20261031-021805-b3b4",
+        "level": "inference",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:21:01.526495+08:00",
+        "tool_version": "2.0.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install hknt 2>&1",
+            "purpose": "Isolated install of README pip package via uv tool install hknt"
+          },
+          {
+            "command": "curl -fL -o /home/sbx/.local/share/uv/tools/hknt/lib/python3.12/site-packages/hk/hk-x86_64-linux https://github.com/harshitkhandelwal208/hk/releases/download/v2.0.0/hk-x86_64-linux && chmod +x /home/sbx/.local/share/uv/tools/hknt/lib/python3.12/site-packages/hk/hk-x86_64-linux",
+            "purpose": "Download native hk-x86_64-linux release binary next to Python package and make executable"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "hk --help",
+            "expected_signal": "hardware-profile",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hardware-profile Profile host CPU, vector units, and optimal page alignment",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "hk list",
+            "expected_signal": "no models cached yet",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no models cached yet (/home/sbx/.cache/hk/models)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8080/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"smol\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hi\"}],\"temperature\":0,\"max_tokens\":16}'",
+            "expected_signal": "completion_tokens",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":\"chatcmpl-1a18e0b20481\",\"object\":\"chat.completion\",\"created\":1793384456,\"model\":\"smol\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello! How can I help you today?\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":32,\"completion_tokens\":9,\"total_tokens\":41,\"prompt_tokens_…",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/models && curl -fL -o /home/sbx/models/SmolLM2-135M-Instruct-Q8_0.gguf https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "hk convert-gguf /home/sbx/models/SmolLM2-135M-Instruct-Q8_0.gguf /home/sbx/models/smol.hk",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "hk serve /home/sbx/models/smol.hk --port 8080",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install hknt (bundles the native library and CLI)",
+            "actually_needed": "Download hk-x86_64-linux from releases v2.0.0 into the installed hk package dir and chmod +x so the `hk` shim finds it",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "--version or --help works",
+            "actually_needed": "Use `hk --help`; native binary has no `--version` flag (exits 1 with BadUsage)",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show empty cache notice, successful OpenAI chat completion with token usage, and help listing hardware-profile.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-hk-20261031-021805-b3b4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-hk-20261031-021805-b3b4/check-1-cmd10.judged.png",
+            "runs/verify/verify-hk-20261031-021805-b3b4/check-2-cmd15.judged.png",
+            "runs/verify/verify-hk-20261031-021805-b3b4/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.144262
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -385,5 +492,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:48:47+08:00",
-  "updated_at": "2026-10-31T02:17:52+08:00"
+  "updated_at": "2026-10-31T02:21:01.527481+08:00"
 }

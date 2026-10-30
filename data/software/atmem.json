@@ -51,7 +51,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-atmem-20261031-021805-a412",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install atmem==2.3.10 2>&1",
+          "purpose": "Install atmem via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "atmem --version 2>&1",
+        "expected_signal": "atmem 2.3.10"
+      },
+      "first_task": "atmem status --json 2>&1"
+    },
     "windows": null
   },
   "pricing": {
@@ -67,10 +83,101 @@
     "url": "https://github.com/aetna000/atmem/releases/tag/v2.3.10"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:19:04.342054+08:00",
+    "runs": [
+      {
+        "id": "verify-atmem-20261031-021805-a412",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:19:04.342054+08:00",
+        "tool_version": "2.3.10",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install atmem==2.3.10 2>&1",
+            "purpose": "Install atmem via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "atmem --version 2>&1",
+            "expected_signal": "atmem 2.3.10",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "atmem 2.3.10",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "atmem status --json 2>&1",
+            "expected_signal": "\"format\": \"atmem-install-status-v1\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"format\": \"atmem-install-status-v1\",",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "atmem control verify 2>&1",
+            "expected_signal": "PASS mode_context_policy",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PASS mode_context_policy",
+            "setup": [
+              {
+                "command": "atmem init --no-open 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "python -m pip install --upgrade atmem==2.3.10",
+            "actually_needed": "Use isolated install `uv tool install atmem==2.3.10` (provides `atmem` on PATH via ~/.local/bin) instead of system `python -m pip install` to avoid PEP 668 / read-only system",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "atmem control verify",
+            "actually_needed": "Run `atmem init --no-open` once before `atmem control verify`; otherwise verify exits 1 with FileNotFoundError: /home/sbx/.atmem/config/control-plane.json. init also auto-downloads and verifies pinned Bun 1.4.2 to ~/.atmem/runtime/bun.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "atmem control shadow --host generic --memory-db ~/.atmem/memories.db",
+            "actually_needed": "After `atmem init`, `atmem control shadow --host generic --memory-db ~/.atmem/memories.db` fails with ValueError: migration already shadow; init already leaves the plane in shadow so no separate shadow start is needed before verify.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show expected outputs: version 2.3.10, install-status JSON, and control verification with all PASS including mode_context_policy.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-atmem-20261031-021805-a412/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-atmem-20261031-021805-a412/check-1-cmd2.judged.png",
+            "runs/verify/verify-atmem-20261031-021805-a412/check-2-cmd4.judged.png",
+            "runs/verify/verify-atmem-20261031-021805-a412/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.055255
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -289,5 +396,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:51:54+08:00",
-  "updated_at": "2026-10-31T02:17:52+08:00"
+  "updated_at": "2026-10-31T02:19:04.342873+08:00"
 }
