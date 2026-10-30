@@ -71,7 +71,8 @@ package then fails.
 It starts the server over stdio, sends initialize and tools/list, prints the tool names with their argument \
 names (* = required), and exits 0 with "handshake: ok". Cite it as a smoke test with expected_signal \
 "handshake: ok". Add --timeout 120 if the server is slow to start. Run it from the directory the server \
-needs (cd dir && {PROBE_COMMAND} -- ...).
+needs (cd dir && {PROBE_COMMAND} -- ...). If the server needs a config file or sample data, write it with a \
+heredoc in its own run_command and cite that command in the check's setup_ids, not as an install step.
    A server that only speaks HTTP (streamable HTTP, no stdio mode): start it with run_background on a local \
 port, then run {PROBE_COMMAND} --url http://127.0.0.1:<port>/<its MCP path, often mcp> and cite that run_background \
 in the check's setup_ids.
