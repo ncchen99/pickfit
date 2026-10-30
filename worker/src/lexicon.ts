@@ -77,3 +77,36 @@ export const ZH_EN: Record<string, string> = {
   截圖: 'screenshot', 生成: 'generate generation', 產生: 'generate', 光學辨識: 'ocr', 文字辨識: 'ocr',
   費用: 'cost', 花費: 'cost spending', 成本: 'cost', 額度: 'quota limit', 工作流: 'workflow',
 };
+
+/**
+ * For deciding whether a tool fits (rules only; not used for ranking): words in
+ * a request that are not part of the job itself. Request filler ("looking",
+ * "recommend", "thousands") and the kind of tool, which the category already
+ * settles ("MCP", "LLM", "AI assistant", "local").
+ */
+export const NOT_THE_JOB_WORDS = (
+  'want wanted need needs needed looking look find something anything someone way able allow allows let lets ' +
+  'recommend recommendation recommended suggest suggestion alternative alternatives similar prefer preferably ideally ' +
+  'possible try trying good great nice best better also just only even well really sure kind sort ' +
+  'many multiple several lot lots each every all any both other same own whole entire thousand thousands hundred ' +
+  'hundreds dozen dozens before after first last next one two three four five few some more most ' +
+  'mcp ai llm llms model models local locally offline assistant assistants chatgpt claude cursor copilot'
+).split(' ');
+
+/** English phrasings of a job that the profiles say in one word (decision only). */
+export const EN_PHRASES: Record<string, string> = {
+  'keep an eye on': 'monitor',
+  'keep track of': 'track',
+  'look up': 'search',
+  'clean up': 'cleanup',
+  'back up': 'backup',
+  'spin up': 'start',
+  'set up': 'setup',
+  'read aloud': 'text to speech',
+  'speak out': 'text to speech',
+  'dictate': 'speech to text',
+  'take notes': 'notes',
+  'jot down': 'notes',
+  'turn into': 'convert',
+  'figure out': 'analyze',
+};
