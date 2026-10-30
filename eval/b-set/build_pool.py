@@ -289,7 +289,9 @@ def load_records(cache: Path) -> list[dict]:
     recs = []
     se = cache / "se.jsonl"
     if se.exists():
-        for line in se.read_text(encoding="utf-8").splitlines():
+        for line in se.read_text(encoding="utf-8").split("\n"):
+            if not line:
+                continue
             it = json.loads(line)
             recs.append({
                 "source": "stackexchange", "url": f"https://softwarerecs.stackexchange.com/questions/{it['question_id']}",
@@ -304,7 +306,9 @@ def load_records(cache: Path) -> list[dict]:
                 "conflict_text": ""})
     hn = cache / "hn.jsonl"
     if hn.exists():
-        for line in hn.read_text(encoding="utf-8").splitlines():
+        for line in hn.read_text(encoding="utf-8").split("\n"):
+            if not line:
+                continue
             rec = json.loads(line)
             h = rec["hit"]
             recs.append({
@@ -316,7 +320,9 @@ def load_records(cache: Path) -> list[dict]:
                 "conflict_text": (h.get("author") or "")})
     gh = cache / "gh.jsonl"
     if gh.exists():
-        for line in gh.read_text(encoding="utf-8").splitlines():
+        for line in gh.read_text(encoding="utf-8").split("\n"):
+            if not line:
+                continue
             rec = json.loads(line)
             n = rec["node"]
             recs.append({
