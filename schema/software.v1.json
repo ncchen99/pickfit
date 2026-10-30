@@ -246,7 +246,7 @@
     },
     "GuiCheck": {
       "additionalProperties": false,
-      "description": "How far a GUI app got on the box's virtual display (Linux, Xvfb, no window manager).\n\nTiers, weakest first: none (no window, not running), process_alive (no window of its own), window (a\nmapped window whose X client is one of the app's processes, per the X server), ui_rendered (the screen\njudge saw the app's own interface in a crop of its windows: its main screen or its first-run screen;\n`screen` says which). A GUI launch supports install only; checking controls or that an action changed\ncheckable state is not built, so no tier claims it.",
+      "description": "How far a GUI app got on the box's virtual display (Linux, Xvfb, no window manager).\n\nRecorded only for a launch whose checked screenshot the judge read. window: a mapped window whose X\nclient is one of the app's processes (per the X server), showing something other than the app's UI\n(`screen`: a sign-in wall, a crash, a blank or loading screen); ui_rendered: the judge saw the app's own\ninterface in a crop of its windows (its main screen or its first-run screen). A GUI launch supports\ninstall only; checking controls or that an action changed checkable state is not built.",
       "properties": {
         "command": {
           "description": "How the app was started.",
@@ -260,15 +260,8 @@
           "type": "string"
         },
         "screen": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/GuiScreen"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "What the screen judge saw; null when it did not run."
+          "$ref": "#/$defs/GuiScreen",
+          "description": "What the screen judge saw in the crop of the app's windows."
         },
         "tier": {
           "$ref": "#/$defs/GuiTier"
@@ -283,7 +276,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Set by the app; data only."
         }
       },
       "required": [
@@ -308,8 +302,6 @@
     },
     "GuiTier": {
       "enum": [
-        "none",
-        "process_alive",
         "window",
         "ui_rendered"
       ],

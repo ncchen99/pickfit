@@ -304,7 +304,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
     outputs = [f"{c.stdout}\n{c.stderr}" for c in report.commands]
     method = infer_install_method([s.command for s in steps], finish.get("install_method"))
     pitfalls = [Pitfall(readme_said=_clip(p["readme_said"], 300) or "-",
-                        actually_needed=_clip(p["actually_needed"], 300) or "-", kind=p.get("kind"))
+                        actually_needed=_clip(p["actually_needed"], 300) or "-", kind=_pitfall_kind(p))
                 for p in finish.get("pitfalls") or []]
     # A downloaded script the install ran, or brought in, before anything read it: a note, not a block,
     # whatever the agent's own pitfalls say. Steps are numbered as the install guide lists them.
@@ -340,22 +340,29 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
     return run, notes
 
 
+def _pitfall_kind(pitfall: dict[str, Any]) -> str | None:
+    """Needing --no-sandbox is this box's doing (no user namespaces, no setuid helper), never the README's: such
+    a pitfall the agent filed as readme_wrong (or left unfiled) is kind sandbox. tool_handled and note stand."""
+    kind = pitfall.get("kind")
+    if "--no-sandbox" in f"{pitfall.get('actually_needed') or ''}" and kind in (None, "readme_wrong"):
+        return "sandbox"
+    return kind
+
+
 def gui_check(report: VerifyReport, replay: ReplayResult | None, judge: JudgeResult | None) -> GuiCheck | None:
-    """The GUI launch's tier: the replay's launch the judge read (judged_launch), else the agent's last one."""
-    launch: dict[str, Any] | None = None
-    command = None
+    """The GUI launch's tier, recorded only when the judge read that launch's checked screenshot (the replay's
+    judged_launch); a launch nothing judged leaves no GUI record (its outcome is in the notes and smoke tests)."""
     chosen = judged_launch(replay.checks) if replay else None
-    if chosen is not None and chosen.run is not None and chosen.run.gui is not None:
-        launch, command = chosen.run.gui, chosen.command
-    judged = chosen is not None and chosen.passed
-    if launch is None:
-        last = next((c for c in reversed(report.commands) if c.tool == "launch_gui" and c.gui), None)
-        if last is None:
-            return None
-        launch, command = last.gui, last.command
+    if chosen is None or not chosen.passed or chosen.run is None or chosen.run.gui is None:
+        return None
+    screen = judge.screen if judge is not None else None
+    if screen is None:
+        return None
+    launch, command = chosen.run.gui, chosen.command
     tier = launch.get("tier") or "none"
-    screen = judge.screen if judge is not None and judged else None
-    if tier == "window" and screen in ("main_ui", "first_run"):
+    if tier != "window":
+        return None
+    if screen in ("main_ui", "first_run"):
         tier = "ui_rendered"
     windows = launch.get("windows") or []
     title = max(windows, key=lambda w: w.get("width", 0) * w.get("height", 0)).get("title") if windows else None
@@ -408,8 +415,9 @@ def install_guide(run: VerificationRun) -> InstallGuide:
     check = next((t for t in passing if t.exit_code == 0), passing[0] if passing else None)
     examples = [t for t in users
                 if t.passed and not re.search(r"--?(?:version|help)\b|^\S+\s+-[Vh]$", t.command)]
-    # The first task shown to users: one that also worked with the network off, if any did.
-    example = next((t for t in examples if t.offline), examples[0] if examples else None)
+    # The first task shown to users: a GUI app's own launch, else one that also worked with the network off.
+    launched = next((t for t in examples if t.command == launch), None)
+    example = launched or next((t for t in examples if t.offline), examples[0] if examples else None)
     return InstallGuide(
         basis="replayed", run_id=run.id, method=run.install_method or "other", steps=run.steps,
         check=Check(command=check.command, expected_signal=check.expected_signal) if check else None,

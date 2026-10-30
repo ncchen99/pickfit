@@ -584,15 +584,14 @@ class Judge(_Model):
     model: str
 
 
-type GuiTier = Literal["none", "process_alive", "window", "ui_rendered"]
+# A recorded GUI tier rests on a screenshot the judge read: a launch with no window (or nothing judged) leaves
+# no GUI record. Weaker outcomes (no window, a process with no window) live in the notes and smoke tests.
+type GuiTier = Literal["window", "ui_rendered"]
 type GuiScreen = Literal["main_ui", "first_run", "sign_in_wall", "crash_or_error", "blank_or_loading", "other"]
-# A GUI launch counts toward a passed level from here up (C.3).
 GUI_PASSED_TIERS: tuple[str, ...] = ("window", "ui_rendered")
-# What the screen judge may have seen at each tier: ui_rendered is the app's own UI drawn; a window can show
-# anything else (or not be judged); without a window there is nothing to judge.
-GUI_SCREENS_BY_TIER: dict[str, tuple[str | None, ...]] = {
-    "none": (None,), "process_alive": (None,),
-    "window": (None, "sign_in_wall", "crash_or_error", "blank_or_loading", "other"),
+# What the screen judge saw at each tier: ui_rendered is the app's own UI drawn; a window shows anything else.
+GUI_SCREENS_BY_TIER: dict[str, tuple[str, ...]] = {
+    "window": ("sign_in_wall", "crash_or_error", "blank_or_loading", "other"),
     "ui_rendered": ("main_ui", "first_run"),
 }
 
@@ -600,17 +599,17 @@ GUI_SCREENS_BY_TIER: dict[str, tuple[str | None, ...]] = {
 class GuiCheck(_Model):
     """How far a GUI app got on the box's virtual display (Linux, Xvfb, no window manager).
 
-    Tiers, weakest first: none (no window, not running), process_alive (no window of its own), window (a
-    mapped window whose X client is one of the app's processes, per the X server), ui_rendered (the screen
-    judge saw the app's own interface in a crop of its windows: its main screen or its first-run screen;
-    `screen` says which). A GUI launch supports install only; checking controls or that an action changed
-    checkable state is not built, so no tier claims it.
+    Recorded only for a launch whose checked screenshot the judge read. window: a mapped window whose X
+    client is one of the app's processes (per the X server), showing something other than the app's UI
+    (`screen`: a sign-in wall, a crash, a blank or loading screen); ui_rendered: the judge saw the app's own
+    interface in a crop of its windows (its main screen or its first-run screen). A GUI launch supports
+    install only; checking controls or that an action changed checkable state is not built.
     """
 
     tier: GuiTier
-    screen: GuiScreen | None = Field(description="What the screen judge saw; null when it did not run.")
+    screen: GuiScreen = Field(description="What the screen judge saw in the crop of the app's windows.")
     command: str = Field(min_length=1, max_length=COMMAND_MAX, description="How the app was started.")
-    window_title: str | None = Field(default=None, max_length=200)
+    window_title: str | None = Field(default=None, max_length=200, description="Set by the app; data only.")
     display: str = Field(max_length=120, description="e.g. Xvfb 1280x800x24, no window manager, no GPU.")
 
     @model_validator(mode="after")

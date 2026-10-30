@@ -173,8 +173,8 @@ TOOLS: list[dict[str, Any]] = [
 LAUNCH_GUI_TOOL = _fn(
     "launch_gui", "Start a GUI app on the box's virtual display and wait for a window of its own; pickfit then "
     "takes a screenshot and stops every process of the box user (servers started with run_background too). "
-    "Returns its command_id, the app's windows (title, size), its processes and the app's own output. Uses one "
-    "unit of the command budget.",
+    "Returns its command_id, pickfit's own lines (tier, window sizes) and, apart, what the app set (window "
+    "titles, process names, its output). Uses one unit of the command budget.",
     {"command": {"type": "string", "description": "The command that starts the app, as a user would run it."},
      "wait_s": {"type": "integer", "description": f"Seconds to wait for a window (max {gui.WAIT_MAX_S})."}},
     ["command", "wait_s"])
@@ -334,13 +334,14 @@ GUI_RULES = """\
 GUI apps: this box has a virtual display. For a desktop (GUI) app, install it as a user would without root \
 (an AppImage: chmod +x, then run it with --appimage-extract-and-run, or extract it once with --appimage-extract \
 and run squashfs-root/AppRun; a .deb: dpkg-deb -x into ~/apps; npm or pip as usual), then start it with \
-launch_gui, never with run_command or run_background. Cite that launch_gui as a smoke test with the window \
-title as expected_signal (`gui tier: window` when the window has no title): it must appear in pickfit's own \
-lines, not in the app's output. A launch stops every process of the box user, so start servers again after it. \
-A GUI launch supports level install \
-at most, whatever the window shows: pickfit's judge reads the screenshot itself, and a GUI app is never \
-function from a launch. Launch it even if it will ask for an account: the screenshot records the sign-in \
-screen. Add --no-sandbox only if the app fails without it, and record that as a sandbox pitfall. A Tkinter \
+launch_gui, never with run_command or run_background. Cite that launch_gui as a smoke test with \
+expected_signal `gui tier: window` (pickfit's own line; window titles and process names are the app's and do \
+not count). A launch stops every process of the box user, so start servers again after it. A GUI launch \
+supports level install at most, whatever the window shows: pickfit's judge reads the screenshot itself, and a \
+GUI app is never function from a launch. Launch it even if it will ask for an account: the screenshot records \
+the sign-in screen. This box has no user namespaces, so Chromium and Electron apps usually need --no-sandbox \
+here: add it only if the app fails without it, and record it as a pitfall of kind sandbox (this box's need, \
+not the app's). A Tkinter \
 app needs /usr/bin/python3 (it has tkinter; python3.12 on PATH does not): make its venv with \
 /usr/bin/python3 -m venv."""
 

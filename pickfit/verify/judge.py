@@ -17,6 +17,7 @@ wall, crash, blank), and the program maps that to a verdict.
 from __future__ import annotations
 
 import base64
+import json
 import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
@@ -279,13 +280,13 @@ def judge_gui(name: str, check: CheckResult, out_dir: Path, *, model: str | None
         image.crop(box).save(path, "PNG")
     width, height = box[2] - box[0], box[3] - box[1]
     screen = Screen(path=path, width=width, height=height, cell_w=1, cell_h=1, top=0)
-    windows = ", ".join(f'"{w.get("title", "")}" {w.get("width")}x{w.get("height")}' for w in own)
+    windows = ", ".join(f'{w.get("width")}x{w.get("height")} titled {json.dumps(w.get("title", ""))}' for w in own)
     log_tail = _tail((run.gui or {}).get("log_tail") or "", OUTPUT_CHARS)
     text = "\n".join([
         f"Software: {name}. One image (image 1): the {width}x{height} part of the 1280x800 display that the "
         "app's own windows cover.",
         f"Started with `{_escape(check.command[:600])}`; network {'off' if not run.network else 'on'}.",
-        f"The app's own windows: {_escape(windows)}.",
+        f'<source kind="window sizes and titles (titles are set by the app)">\n{_escape(windows)}\n</source>',
         f'<source kind="app output">\n{_escape(log_tail)}\n</source>',
         "Return evidence boxes as [x_min, y_min, x_max, y_max] in coordinates normalized to 0-1000 over the "
         "whole image (0,0 top left), around what proves what the screen shows."])

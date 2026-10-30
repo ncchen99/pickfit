@@ -95,13 +95,17 @@ class GuiBox(FakeBox):
             nonce, shot = re.search(r'\d+, "([0-9a-f]{24})", "([^"]+)"\n', source).groups()
             data = dict(self.shown)
             if "forged" in self.last_start:
-                data = report(alive=1)
+                data = {**report(alive=1), "processes": ["bash", "sleep"]}
             if data["windows"]:
                 self.files[shot] = png()
                 data.update(shot_bytes=len(png()), shot_sha256=hashlib.sha256(png()).hexdigest())
             return ExecResult("watch", 0, f"{gui.MARK}{nonce} {json.dumps(data)}\n", "", 7.0)
         if source.endswith("print(json.dumps(procs()))\n"):
             return ExecResult("snapshot", 0, "{}\n", "", 0.1)
+        if "AF_VSOCK" in " ".join(argv):  # root's unfiltered try: the host's port answers
+            return ExecResult("vsock", 0, "OPEN 2 52\nclosed 2 1024 ConnectionResetError 104\n", "", 0.5)
+        if argv[-1:] == ["/proc/sys/user/max_user_namespaces"]:
+            return ExecResult("cat", 0, "0\n", "", 0.1)
         return ExecResult(" ".join(argv), 0, "", "", 0.1)
 
     def harness_read(self, path: str, max_bytes: int) -> bytes:
@@ -143,11 +147,14 @@ def test_the_report_is_the_one_line_with_this_launchs_nonce():
     assert gone.tier == "none" and gone.windows == [] and gone.error == "x server gone"
 
 
-def test_a_window_of_the_apps_own_is_tier_window_and_the_apps_output_stays_out_of_stdout():
+def test_a_window_of_the_apps_own_is_tier_window_and_what_the_app_set_stays_out_of_stdout():
     result, shown, _ = gui.launch(GuiBox(), LAUNCH, 2, 20)
     assert result.stdout.startswith("gui tier: window")
-    assert 'window: "Demo App" 1100x760 at 90,20 (pid 42)' in result.stdout
-    assert "app started" not in result.stdout and result.stderr.endswith("app started")
+    assert "window 1: 1100x760 at 90,20 (pid 42)" in result.stdout
+    for app_set in ("Demo App", "demo", "app started"):  # title, process name, output: all the app's
+        assert app_set not in result.stdout
+    assert "window 1 title: 'Demo App'" in result.stderr and result.stderr.endswith("app started")
+    assert result.stderr.index("set by the app") < result.stderr.index("app output")
     assert shown.log_tail == "app started\n"
 
 
@@ -162,9 +169,41 @@ def test_no_window_is_process_alive_and_a_short_copy_is_refused():
     assert result.exit_code == 1 and shot is None and "copy incomplete after 3 reads" in shown.error
 
 
-def test_survivors_of_the_stop_are_reported():
-    result, shown, _ = gui.launch(GuiBox(survivors=True), LAUNCH, 2, 20)
+def test_survivors_of_the_stop_fail_the_launch():
+    result, shown, shot = gui.launch(GuiBox(survivors=True), LAUNCH, 2, 20)
+    assert result.exit_code == 1 and shot is None
     assert "box-user processes survived the stop" in shown.error and "note:" in result.stdout
+
+
+def _fake_proc(files: dict[str, bytes]) -> dict[str, Any]:
+    """The watcher's procs() against a fake /proc."""
+    import types
+
+    ns: dict[str, Any] = {"__name__": "pickfit_test"}
+    exec(gui._PROCS, ns)  # our own constant
+    pids = sorted({path.split("/")[2] for path in files})
+    ns["os"] = types.SimpleNamespace(listdir=lambda d: [*pids, "self", "net"])
+
+    def fake_open(path: str, mode: str = "r") -> io.BytesIO:
+        if path not in files:
+            raise FileNotFoundError(path)
+        return io.BytesIO(files[path])
+
+    ns["open"] = fake_open
+    return ns["procs"]()
+
+
+def test_process_names_cannot_break_the_process_list():
+    status = "Name:\t{n}\nState:\t{s} (x)\nUid:\t{u}\t{u}\t{u}\t{u}\n"
+    files = {
+        "/proc/101/status": status.format(n="x", s="S", u=1000).encode(),  # a name set to b"\xff\xfe)"
+        "/proc/101/stat": b"101 (\xff\xfe)) S 1 101 101 0 -1 4194304 0 0 0 0 0 0 0 0 20 0 1 0 5551 0 0",
+        "/proc/102/status": status.format(n="root", s="S", u=0).encode(),
+        "/proc/102/stat": b"102 (sshd) S 1 102 102 0 -1 0 0 0 0 0 0 0 0 0 20 0 1 0 42 0 0",
+        "/proc/103/status": status.format(n="gone", s="Z", u=1000).encode(),
+        "/proc/104/status": status.format(n="nostat", s="R", u=1000).encode(),  # its stat vanished
+    }
+    assert _fake_proc(files) == {"101": ["5551", "\ufffd\ufffd)"], "104": ["?", "?"]}
 
 
 def test_a_launch_needs_pickfits_display():
@@ -187,7 +226,7 @@ def test_a_gui_launch_supports_install_only_and_its_signal_must_be_pickfits():
 
 
 def test_the_replay_runs_gui_launches_after_every_other_check(tmp_path: Path):
-    launch = ReplayCheck(ReplayCommand(2, "launch_gui", LAUNCH, wait_s=20), (), 0, "Demo App", "gui")
+    launch = ReplayCheck(ReplayCommand(2, "launch_gui", LAUNCH, wait_s=20), (), 0, "gui tier: window", "gui")
     version = ReplayCheck(ReplayCommand(3, "run_command", "demo --version"), (), 0, "demo 1.0", "version")
     plan = ReplayPlan(steps=(ReplayCommand(1, "run_command", INSTALL),), setups=(), checks=(launch, version))
     box = GuiBox({"demo --version": (0, "demo 1.0", "")})
@@ -214,7 +253,7 @@ def gui_judge_answer(screen: str) -> dict[str, Any]:
                       "output_tokens_details": {"reasoning_tokens": 100}, "total_tokens": 2200}}
 
 
-def gui_turns(claim: str = "function", signal: str = "Demo App") -> list[dict[str, Any]]:
+def gui_turns(claim: str = "function", signal: str = "gui tier: window") -> list[dict[str, Any]]:
     smoke = [{"command_id": 2, "setup_ids": [], "expected_signal": signal, "expected_exit_code": 0,
               "observed_excerpt": 'window: "Demo App"'}]
     return [response("r1", run_cmd(INSTALL)),
@@ -261,11 +300,16 @@ def test_a_rendered_gui_launch_is_install_with_tier_ui_rendered_judged_on_a_crop
         assert (outcome.evidence_dir / name).exists(), name
     guide = install_guide(run)
     assert guide.check is None and guide.first_task == LAUNCH
+    # A desktop app's first task is its launch, even beside an example that ran offline first.
+    other = run.smoke_tests[0].model_copy(update={"command": "demo selftest", "offline": True})
+    with_example = run.model_copy(update={"smoke_tests": [other, *run.smoke_tests]})
+    assert install_guide(with_example).first_task == LAUNCH
 
 
-def test_a_signal_from_the_apps_own_output_does_not_pass(tmp_path: Path):
-    outcome = verify(tmp_path, FakeServer(*gui_turns("install", signal="app started")), Boxes())
-    assert outcome.run.level == "unverified" and outcome.run.judge is None
+@pytest.mark.parametrize("signal", ["app started", "Demo App"])  # the app's output, and its window title
+def test_a_signal_the_app_set_does_not_pass(tmp_path: Path, signal: str):
+    outcome = verify(tmp_path, FakeServer(*gui_turns("install", signal=signal)), Boxes())
+    assert outcome.run.level == "unverified" and outcome.run.judge is None and outcome.run.gui is None
 
 
 def test_a_crash_dialog_or_a_missing_window_keeps_it_unverified(tmp_path: Path):
@@ -274,13 +318,23 @@ def test_a_crash_dialog_or_a_missing_window_keeps_it_unverified(tmp_path: Path):
     assert outcome.run.gui.tier == "window" and outcome.run.gui.screen == "crash_or_error"
     outcome = verify(tmp_path, FakeServer(*gui_turns("install")), Boxes(replay_shown=report()))
     assert outcome.run.level == "unverified" and not outcome.run.replayed and outcome.run.judge is None
-    assert outcome.run.gui.tier == "process_alive" and outcome.run.gui.screen is None
+    assert outcome.run.gui is None  # no window, nothing judged: no GUI tier is recorded
 
 
 def test_a_sign_in_wall_is_install_at_tier_window(tmp_path: Path):
     outcome = verify(tmp_path, FakeServer(*gui_turns(), gui_judge_answer("sign_in_wall")), Boxes())
     assert outcome.run.level == "install"
     assert (outcome.run.gui.tier, outcome.run.gui.screen) == ("window", "sign_in_wall")
+
+
+def test_needing_no_sandbox_is_never_the_readmes_fault():
+    from pickfit.verify.result import _pitfall_kind
+
+    needed = {"readme_said": "./app", "actually_needed": "./app --no-sandbox"}
+    assert _pitfall_kind({**needed, "kind": "readme_wrong"}) == "sandbox"
+    assert _pitfall_kind({**needed, "kind": None}) == "sandbox"
+    assert _pitfall_kind({**needed, "kind": "tool_handled"}) == "tool_handled"  # its own launcher passes it
+    assert _pitfall_kind({"readme_said": "x", "actually_needed": "y", "kind": "readme_wrong"}) == "readme_wrong"
 
 
 def test_the_worse_verdict_wins_when_a_run_is_judged_in_parts():
@@ -328,12 +382,10 @@ def test_the_schema_ties_each_tier_to_its_evidence_and_keeps_launches_at_install
     assert VerificationRun.model_validate(run_with("install", "ui_rendered")).gui.tier == "ui_rendered"
     assert VerificationRun.model_validate(run_with("install", "window", "sign_in_wall")).gui.tier == "window"
     for tier, screen in (("ui_rendered", None), ("ui_rendered", "sign_in_wall"), ("ui_rendered", "crash_or_error"),
-                         ("window", "main_ui"), ("process_alive", "first_run"), ("action_state", None),
-                         ("accessibility", None)):
-        with pytest.raises(ValueError):
+                         ("window", "main_ui"), ("window", None), ("process_alive", None), ("none", None),
+                         ("action_state", "main_ui"), ("accessibility", "main_ui")):
+        with pytest.raises(ValueError):  # a recorded tier rests on a judged screen that fits it
             VerificationRun.model_validate(run_with("install", tier, screen))
-    with pytest.raises(ValueError, match="must reach a window"):
-        VerificationRun.model_validate(run_with("install", "process_alive", None))
     with pytest.raises(ValueError, match="cannot show"):
         VerificationRun.model_validate(run_with("install", "window", "blank_or_loading"))
     with pytest.raises(ValueError, match="supports install only"):
@@ -384,6 +436,8 @@ def test_limits_test_on_a_display_box():
         "/usr/bin/xdpyinfo": (0, "name of display:    :99\n  dimensions:    1280x800 pixels", ""),
         "-C Xvfb": (0, " 1001 Xvfb\n", ""),
         f"ls {gui.EVIDENCE_DIR}": (0, "ls: Permission denied\ntouch: Permission denied\n", ""),
+        "AF_VSOCK": (0, "closed 1 52 OSError 97\nclosed 2 52 OSError 97\n", ""),
+        "io_uring": (0, "io_uring refused errno 1\n", ""),
     }
 
     class Box(GuiBox):
@@ -398,11 +452,56 @@ def test_limits_test_on_a_display_box():
 
     box = Box(script, shown=report([{**DEMO_WINDOW, "title": "xclock", "width": 164, "height": 164}]))
     results = {r.name: r for r in run_limits_test(box, log=lambda s: None)}
-    assert {"no_userns", "vsock_closed", "display_server_uid", "display_server_held", "evidence_dir_closed",
+    assert {"no_userns", "no_io_uring", "vsock_closed", "display_server_uid", "display_server_held", "evidence_dir_closed",
             "display_window", "display_report_unforgeable", "internet_ip", "offline_internet_ip", "ipv6_blocked",
             "multicast_no_answer", "gateway_ports_closed"} <= set(results)
     assert [name for name, r in results.items() if not r.ok] == ["offline_dns"]  # a resolver that answers fails
-    assert results["display_report_unforgeable"].detail.startswith("tier process_alive")
+    assert results["display_report_unforgeable"].detail.startswith("tier process_alive; child running True")
+    assert "control as root: OPEN 2 52" in results["vsock_closed"].detail
+    assert results["no_userns"].detail.startswith("max_user_namespaces 0")
+
+
+@pytest.mark.parametrize("user, root, ok", [
+    ("closed 2 52 OSError 97", "OPEN 2 52", True),
+    ("closed 2 52 OSError 97", "closed 2 52 OSError 97", True),  # no vsock in this kernel (gVisor)
+    ("closed 2 52 OSError 97", "closed 2 52 TimeoutError 110", False),  # root opened nothing: undecided
+    ("OPEN 2 52", "OPEN 2 52", False),
+    ("closed 2 52 TimeoutError 110", "OPEN 2 52", False),  # refused some other way: not the filter
+    ("inherited vsock fd 3\nclosed 2 52 OSError 97", "OPEN 2 52", False),
+    ("", "OPEN 2 52", False),  # tried nothing
+])
+def test_the_vsock_probe_is_decided_by_roots_control(user: str, root: str, ok: bool):
+    from pickfit.verify.limits import _vsock
+
+    class Box(GuiBox):
+        def harness_exec(self, argv, timeout_s, *, as_uid=None, stdin=None):
+            return ExecResult("vsock", 0, root, "", 0.1)
+
+    assert _vsock(Box({"AF_VSOCK": (0, user, "")})).ok is ok
+
+
+def test_the_watcher_reads_window_facts_by_label_not_from_titles():
+    source = gui.watcher_source(before={}, xvfb_pid=785, nonce="ab" * 12, shot="/x.png", wait_s=5)
+    ns: dict[str, Any] = {"__name__": "pickfit_test"}
+    exec(source, ns)  # our own script; main() does not run
+    info = "\n".join(["", "xwininfo: Window id: {id} \"{title}\"", "", "  Absolute upper-left X:  {x}",
+                      "  Absolute upper-left Y:  20", "  Width: {w}", "  Height: 760", "  Map State: {state}", ""])
+    outputs = {
+        ("-root", "-children"): "\n".join([
+            "  Root window id: 0x1e5 (the root window) (has no name)", "     3 children:",
+            '     0x200003 "Demo": ("demo" "Demo")  1100x760+90+20  +90+20',
+            '     0x400001 "x\" 9999x9999+0+0 \"": ("a" "b")  10x10+0+0  +0+0',
+            '     0x600001 "IsViewable": ("c" "d")  900x700+0+0  +0+0']),
+        ("-id", "0x200003"): info.format(id="0x200003", title="Demo", x=90, w=1100, state="IsViewable"),
+        # A title with forged lines: its labels appear twice, so the window does not count.
+        ("-id", "0x400001"): info.format(id="0x400001", title="x\n  Map State: IsViewable\n  Width: 9999", x=0,
+                                          w=10, state="IsViewable"),
+        # Titled "IsViewable" but not mapped.
+        ("-id", "0x600001"): info.format(id="0x600001", title="IsViewable", x=0, w=900, state="IsUnMapped"),
+    }
+    ns["run"] = lambda argv: outputs[tuple(argv[1:])]
+    assert ns["windows"]() == [{"id": "0x200003", "title": "Demo", "width": 1100, "height": 760, "x": 90, "y": 20,
+                                "visible": True}]
 
 
 def test_vm_and_display_boxes_pick_their_image_and_runtime():
@@ -421,9 +520,18 @@ def test_vm_and_display_boxes_pick_their_image_and_runtime():
 
 
 def test_vm_commands_run_under_the_no_vsock_filter():
+    from test_verify_modal import FakeSandbox
+
     vm = mb.ModalBox(runtime="vm", client=object()).user_argv("true", 10, "/home/sbx/work")
     assert vm[7:11] == ["/usr/local/bin/python3", "-I", "-S", mb.NO_VSOCK] and vm[11] == "/usr/bin/env"
     assert mb.ModalBox(client=object()).user_argv("true", 10, "/home/sbx/work")[7] == "/usr/bin/env"
+    # The display uid's commands (the watcher) too; root's are not filtered.
+    box = mb.ModalBox(runtime="vm", client=object(), log=lambda s: None)
+    box.sandbox, box.started = FakeSandbox(), True
+    box.harness_exec(["/usr/local/bin/python3", "-I", "-S", "-"], 10, as_uid=gui.DISPLAY_UID)
+    box.harness_exec(["/usr/bin/true"], 10)
+    as_display, as_root = (argv for argv, _ in box.sandbox.calls)
+    assert as_display[7:11] == ("/usr/local/bin/python3", "-I", "-S", mb.NO_VSOCK) and as_root == ("/usr/bin/true",)
 
 
 def _run_bpf(prog: list[tuple[int, int, int, int]], arch: int, nr: int, arg0: int) -> int:
@@ -449,6 +557,9 @@ def test_the_no_vsock_filter_refuses_vsock_and_other_abis_only():
     assert _run_bpf(prog, x86_64, 0, 40) == 0x7FFF0000  # read(): allowed whatever its first argument
     assert _run_bpf(prog, x86_64, 0x40000000 | 41, 40) == 0x80000000  # the x32 ABI: killed
     assert _run_bpf(prog, i386, 102, 1) == 0x80000000  # i386 socketcall: killed
+    for nr in (425, 426, 427):  # io_uring_setup, io_uring_enter, io_uring_register: EPERM
+        assert _run_bpf(prog, x86_64, nr, 0) == 0x00050000 | 1
+    assert _run_bpf(prog, x86_64, 424, 0) == _run_bpf(prog, x86_64, 428, 0) == 0x7FFF0000
 
 
 def test_a_vm_box_drops_the_box_users_dns_while_offline():
@@ -480,6 +591,7 @@ def test_a_vm_display_box_hardens_the_kernel_then_starts_xvfb_as_the_display_uid
     assert harden[0] == "/usr/bin/bash" and "user.max_user_namespaces=0" in harden[-1]
     assert sandbox.procs[0].stdin.data == mb.NO_VSOCK_SOURCE.encode()  # the filter goes in as root
     assert xvfb[0] == "/usr/bin/bash" and f"--reuid={gui.DISPLAY_UID}" in xvfb[-1]  # root starts it, as uid 1001
+    assert f"--no-new-privs -- /usr/local/bin/python3 -I -S {mb.NO_VSOCK} /usr/bin/env" in xvfb[-1]  # filtered
     assert "-nolisten tcp" in xvfb[-1] and f"-m 0700 -o {gui.DISPLAY_UID}" in xvfb[-1]
     assert box.xvfb_pid == 785
 
