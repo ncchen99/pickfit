@@ -12,7 +12,9 @@ the log and decides from what actually ran:
 - the level is the weaker of the claim and what the passing checks support:
   install needs a passing check, function a README example (not only
   --version/--help), service a background server, inference a generation
-  request against it;
+  request against it. A GUI launch (launch_gui: a window of the app's own)
+  supports install only: a GUI app is not function until an action is shown
+  to change checkable state, which pickfit does not check yet;
 - for an MCP server (mcp.py), only pickfit's probe counts: function needs its
   completed handshake, service a tool call; nothing else passes, and a check
   or step that sets a credential variable never counts.
@@ -376,9 +378,11 @@ def _excerpt(record: CommandRecord, signal: str) -> str:
 MCP_KINDS = ("mcp", "mcp_call")
 
 
-def check_kind(command: str) -> str:
-    """mcp or mcp_call (pickfit's MCP probe), version (--version/--help only), generation (asks a model for
-    text), or example."""
+def check_kind(command: str, tool: str = "run_command") -> str:
+    """gui (a launch_gui), mcp or mcp_call (pickfit's MCP probe), version (--version/--help only), generation
+    (asks a model for text), or example."""
+    if tool == "launch_gui":
+        return "gui"
     probe = probe_kind(last_command(command))
     if probe:
         return probe
@@ -424,9 +428,12 @@ class LogVerdict:
         return {**asdict(self), "agrees": self.agrees}
 
 
-def evaluate_check(record: CommandRecord, expected_exit_code: int, expected_signal: str
-                   ) -> tuple[bool, list[str]]:
-    """Whether one recorded command shows a passing check; the reasons when not."""
+def evaluate_check(record: CommandRecord, expected_exit_code: int, expected_signal: str, *,
+                   trusted_only: bool = False) -> tuple[bool, list[str]]:
+    """Whether one recorded command shows a passing check; the reasons when not.
+
+    trusted_only (a GUI launch): the signal must be in stdout, pickfit's own lines; stderr is the app's output.
+    """
     problems: list[str] = []
     masked = masked_exit(record.command)
     if masked:
@@ -441,8 +448,9 @@ def evaluate_check(record: CommandRecord, expected_exit_code: int, expected_sign
     signal = _plain(expected_signal)
     if expected_exit_code != 0 and not signal:
         problems.append("a non-zero expected exit needs an expected_signal")
-    if signal and signal not in output:
-        problems.append(f"expected_signal not in the output: {expected_signal[:80]!r}")
+    if signal and signal not in (_plain(record.stdout) if trusted_only else output):
+        where = "pickfit's own lines about the launch" if trusted_only else "the output"
+        problems.append(f"expected_signal not in {where}: {expected_signal[:80]!r}")
     crash = _CRASH.search(_ANSI.sub("", f"{record.stdout}\n{record.stderr}"))
     if crash:
         problems.append(f"output shows a crash: {crash.group(0)!r}")
@@ -475,9 +483,9 @@ def supported_level(steps_ok: bool, checks: list[ResolvedCheck], has_service: bo
         return "service" if "mcp_call" in kinds else "function" if "mcp" in kinds else None
     if any(c.kind == "generation" for c in passing) and has_service:
         return "inference"
-    if has_service and any(c.kind != "version" for c in passing):
+    if has_service and any(c.kind not in ("version", "gui") for c in passing):
         return "service"
-    if any(c.kind != "version" for c in passing):
+    if any(c.kind not in ("version", "gui") for c in passing):
         return "function"
     return "install"
 
@@ -545,7 +553,7 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord], *, mcp: bool 
             command_id=test.command_id, command=record.command, tool=record.tool,
             setup_ids=list(test.setup_ids), expected_signal=test.expected_signal.strip(),
             expected_exit_code=test.expected_exit_code, exit_code=record.exit_code, passed=False,
-            kind=check_kind(record.command))
+            kind=check_kind(record.command, record.tool))
         setup_ok = True
         for setup_id in test.setup_ids:
             if setup_id in step_ids:  # an install step: the replay runs every step first anyway
@@ -557,7 +565,8 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord], *, mcp: bool 
             elif setup.exit_code != 0 or setup.timed_out:
                 setup_ok = False
                 check.problems.append(f"setup {setup_id} exited {setup.exit_code}")
-        ok, why = evaluate_check(record, check.expected_exit_code, check.expected_signal)
+        ok, why = evaluate_check(record, check.expected_exit_code, check.expected_signal,
+                                 trusted_only=check.kind == "gui")
         if check.kind in MCP_KINDS:
             why += mcp_problems(check.kind, record.stdout)
         if mcp:

@@ -584,6 +584,41 @@ class Judge(_Model):
     model: str
 
 
+# A recorded GUI tier rests on a screenshot the judge read: a launch with no window (or nothing judged) leaves
+# no GUI record. Weaker outcomes (no window, a process with no window) live in the notes and smoke tests.
+type GuiTier = Literal["window", "ui_rendered"]
+type GuiScreen = Literal["main_ui", "first_run", "sign_in_wall", "crash_or_error", "blank_or_loading", "other"]
+GUI_PASSED_TIERS: tuple[str, ...] = ("window", "ui_rendered")
+# What the screen judge saw at each tier: ui_rendered is the app's own UI drawn; a window shows anything else.
+GUI_SCREENS_BY_TIER: dict[str, tuple[str, ...]] = {
+    "window": ("sign_in_wall", "crash_or_error", "blank_or_loading", "other"),
+    "ui_rendered": ("main_ui", "first_run"),
+}
+
+
+class GuiCheck(_Model):
+    """How far a GUI app got on the box's virtual display (Linux, Xvfb, no window manager).
+
+    Recorded only for a launch whose checked screenshot the judge read. window: a mapped window whose X
+    client is one of the app's processes (per the X server), showing something other than the app's UI
+    (`screen`: a sign-in wall, a crash, a blank or loading screen); ui_rendered: the judge saw the app's own
+    interface in a crop of its windows (its main screen or its first-run screen). A GUI launch supports
+    install only; checking controls or that an action changed checkable state is not built.
+    """
+
+    tier: GuiTier
+    screen: GuiScreen = Field(description="What the screen judge saw in the crop of the app's windows.")
+    command: str = Field(min_length=1, max_length=COMMAND_MAX, description="How the app was started.")
+    window_title: str | None = Field(default=None, max_length=200, description="Set by the app; data only.")
+    display: str = Field(max_length=120, description="e.g. Xvfb 1280x800x24, no window manager, no GPU.")
+
+    @model_validator(mode="after")
+    def _screen_fits_tier(self) -> GuiCheck:
+        if self.screen not in GUI_SCREENS_BY_TIER[self.tier]:
+            raise ValueError(f"tier {self.tier!r} cannot rest on screen {self.screen!r}")
+        return self
+
+
 class ArtifactCheck(_Model):
     """A check of the published package file itself, made by hand, not by a box.
 
@@ -680,6 +715,11 @@ class VerificationRun(_Model):
         exclude_if=lambda value: value is None,
         description="A check of the published package by hand: the only ground for a failed sandbox run.",
     )
+    gui: GuiCheck | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="A GUI app's launch on a virtual display: the strongest evidence tier it reached.",
+    )
     mcp: McpHandshake | None = Field(
         default=None,
         exclude_if=lambda value: value is None,
@@ -698,6 +738,12 @@ class VerificationRun(_Model):
                 raise ValueError("a passed run needs the judge's verdict to be 'working'")
             if self.level != "install" and not any(t.passed for t in self.smoke_tests):
                 raise ValueError(f"a {self.level!r} run needs at least one passing smoke test")
+            if self.gui and self.gui.tier not in GUI_PASSED_TIERS:
+                raise ValueError(f"a passed run's GUI launch must reach a window, not {self.gui.tier!r}")
+            if self.gui and self.gui.screen in ("crash_or_error", "blank_or_loading", "other"):
+                raise ValueError(f"a passed run's GUI launch cannot show {self.gui.screen!r}")
+            if self.gui and self.level != "install":
+                raise ValueError("a GUI launch supports install only")
             if self.level == "service" and self.mcp is not None and self.mcp.called_tool is None:
                 raise ValueError("an MCP server's service run needs a tool call (mcp.called_tool)")
         if self.level == "failed" and not self.blocking_error:
@@ -1066,6 +1112,15 @@ class SoftwareRecord(_Model):
                 raise ValueError(f"evidence {item.field} cites unknown source {item.source_id!r}")
             if item.field.split("/")[1] not in type(self).model_fields:
                 raise ValueError(f"evidence points to unknown field {item.field}")
+        return self
+
+    @model_validator(mode="after")
+    def _check_gui_app_levels(self) -> SoftwareRecord:
+        if self.kind == "desktop_app":
+            for run in self.verification.runs:
+                if run.level in ("function", "service", "inference"):
+                    raise ValueError(f"run {run.id}: a desktop app is not {run.level}: that needs an action shown to "
+                                     "change checkable state, which pickfit does not check yet")
         return self
 
     @model_validator(mode="after")
