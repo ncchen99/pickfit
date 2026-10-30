@@ -10,12 +10,22 @@ no /proc and no per-process memory cap (the VM's RAM is the cap), so it checks
 instead that the box user is not an admin, cannot sudo or change the firewall,
 and cannot reach the host.
 
-A Linux box also checks that names do not resolve with the network off (measured
-2026-10-31: Modal's resolver answers under both runtimes with an empty
-allowlist; a VM box drops the box user's DNS with nftables, gVisor cannot, so a
-gVisor box fails this probe) and that /dev/kvm is absent. A box with a display
-checks that Xvfb runs as the box user, does not listen on TCP, and shows a real
-window (xclock) that pickfit can find and screenshot.
+A Linux box also checks (2026-10-31 review): no /dev/kvm; no user namespaces
+for the box user (VM; gVisor keeps them inside its own kernel); no vsock
+connection (a VM's host answered on port 52 until a seccomp filter closed it;
+root's unfiltered attempt is the positive control); the internet by literal
+IP, online (positive control) and offline; no IPv6 (global, link-local, the
+fd00:ec2::254 metadata address); no multicast answer; no open port on the
+gateway or the resolver; and names that do not resolve with the network off
+(Modal's resolver answers under both runtimes with an empty allowlist; a VM box
+drops the box user's DNS with nftables, gVisor cannot, so a gVisor box fails
+this probe).
+
+A box with a display checks that Xvfb runs as pickfit's display uid, survives
+the box user's kill and a second server on :99, does not listen on TCP; that the
+evidence directory is closed to the box user; that xclock reaches tier window
+with a verified screenshot; that a launch which prints a forged report and
+double-forks reaches no window and leaves no box-user process behind.
 """
 
 from __future__ import annotations
@@ -82,6 +92,54 @@ except OSError as e:
 PICKFIT_PY"""
 
 
+VSOCK_PROBE = r"""/usr/local/bin/python3 -I -S - <<'PICKFIT_PY'
+import socket
+for cid in (1, 2):
+    for port in (52, 1024, 5000, 9999, 10000):
+        try:
+            s = socket.socket(socket.AF_VSOCK, socket.SOCK_STREAM)
+            s.settimeout(3)
+            s.connect((cid, port))
+            s.close()
+            print("OPEN", cid, port)
+        except Exception as e:
+            print("closed", cid, port, type(e).__name__, getattr(e, "errno", ""))
+PICKFIT_PY"""
+IP_HTTPS = "curl -sS -m 10 -o /dev/null -w '%{http_code}' https://1.1.1.1/"  # Cloudflare answers on its literal IP
+IPV6_PROBE = ("ip -6 -o addr show scope global; for u in 'https://[2606:4700:4700::1111]/' 'http://[fd00:ec2::254]/' "
+              "'http://[fe80::1%25eth0]/'; do curl -sS -m 5 -o /dev/null -w \"%{http_code} $u\\n\" \"$u\" 2>&1; done")
+MULTICAST_PROBE = r"""/usr/local/bin/python3 -I -S - <<'PICKFIT_PY'
+import socket, time
+mdns = bytes.fromhex("000000000001000000000000") + b"\x09_services\x07_dns-sd\x04_udp\x05local\x00" + bytes.fromhex("000c0001")
+ssdp = b"M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1900\r\nMAN: \"ssdp:discover\"\r\nMX: 1\r\nST: ssdp:all\r\n\r\n"
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+s.settimeout(0.5)
+for payload, target in ((mdns, ("224.0.0.251", 5353)), (ssdp, ("239.255.255.250", 1900)), (ssdp, ("255.255.255.255", 1900))):
+    try:
+        s.sendto(payload, target)
+        print("sent", target)
+    except OSError as e:
+        print("send failed", target, e)
+end = time.time() + 3
+while time.time() < end:
+    try:
+        data, peer = s.recvfrom(2048)
+        print("answer from", peer, len(data))
+    except OSError:
+        pass
+PICKFIT_PY"""
+# The default gateway and any private resolver: no port of theirs answers the box user (DNS itself is 53/udp).
+GATEWAY_PROBE = r"""hosts="$(/usr/local/bin/python3 -I -S -c "import socket, struct
+gw = [socket.inet_ntoa(struct.pack('<L', int(f[2], 16))) for f in (l.split() for l in open('/proc/net/route'))
+      if f[1] == '00000000' and f[2] != 'Gateway']
+ns = [l.split()[1] for l in open('/etc/resolv.conf') if l.startswith('nameserver') and l.split()[1].startswith(('10.', '172.', '192.168.'))]
+print(' '.join(dict.fromkeys(gw + ns)))")"
+echo "hosts: $hosts"
+for h in $hosts; do for p in 22 80 443 2375 2376 3000 5000 6443 8000 8080 8443 9000 10250; do
+  timeout 3 bash -c "echo > /dev/tcp/$h/$p" 2>/dev/null && echo "open $h:$p"; done; done; true"""
+
+
 @dataclass
 class ProbeResult:
     name: str
@@ -101,6 +159,30 @@ def _probe(box: Box, name: str, command: str, timeout_s: int, expect: str,
            check: Callable[[ExecResult], bool]) -> ProbeResult:
     result = box.exec(command, timeout_s)
     return ProbeResult(name, bool(check(result)), expect, result.exit_code, result.seconds, _detail(result))
+
+
+def _same_pid(stdout: str) -> bool:
+    found = dict(line.split(" ", 1) for line in stdout.splitlines() if line.startswith(("before ", "after ")))
+    return bool(found.get("before")) and found.get("before") == found.get("after")
+
+
+def _box_user_processes(box: Box) -> str:
+    """The box user's live processes as pickfit's display uid sees them (JSON; "{}" when none)."""
+    seen = box.harness_exec([gui.PYTHON, "-I", "-S", "-"], 30, as_uid=gui.DISPLAY_UID, stdin=gui.SNAPSHOT_PY.encode())
+    return seen.stdout.strip()[-300:] or "?"
+
+
+def _vsock(box: Box) -> ProbeResult:
+    """No vsock connection for the box user; root's unfiltered try, where it can run, is the positive control."""
+    result = box.exec(VSOCK_PROBE, 60)
+    try:
+        control = box.harness_exec(["/usr/bin/bash", "-c", VSOCK_PROBE], 60)
+        opened = [line for line in control.stdout.splitlines() if line.startswith("OPEN")]
+        note = f"control as root: {', '.join(opened) or 'nothing open (no vsock here)'}"
+    except BoxError:
+        note = "no control (this box has no root channel)"
+    return ProbeResult("vsock_closed", "OPEN" not in result.stdout, "the box user opens no vsock connection",
+                       result.exit_code, result.seconds, f"{note}; {_detail(result)}"[-300:])
 
 
 def _not_admin(result: ExecResult) -> bool:
@@ -146,18 +228,43 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
                    lambda r: r.stdout.split()[:1] == ["1000"] and "CapEff:\t0000000000000000" in r.stdout))
         add(_probe(box, "no_kvm", "test -e /dev/kvm && echo present; true", 20, "no /dev/kvm",
                    lambda r: "present" not in r.stdout))
+        if getattr(box, "runtime", None) != "gvisor":  # gVisor's user namespaces live inside its own kernel
+            add(_probe(box, "no_userns", "unshare -U true && echo made-U; unshare -Urn true && echo made-Urn; true",
+                       20, "the box user cannot make a user namespace", lambda r: "made" not in r.stdout))
+        add(_vsock(box))
     if box.display:
-        add(_probe(box, "display_up", f"DISPLAY={box.display} xdpyinfo", 20, f"Xvfb answers on {box.display}",
+        add(_probe(box, "display_up", f"DISPLAY={box.display} /usr/bin/xdpyinfo", 20, f"Xvfb answers on {box.display}",
                    lambda r: r.exit_code == 0 and "dimensions:" in r.stdout))
-        add(_probe(box, "display_as_box_user", "ps -o uid=,comm= -C Xvfb", 20, "Xvfb runs as uid 1000",
-                   lambda r: bool(r.stdout.split()) and all(u == "1000" for u in r.stdout.split()[::2])))
+        uid = str(gui.DISPLAY_UID)
+        add(_probe(box, "display_server_uid", "ps -o uid=,comm= -C Xvfb", 20, f"Xvfb runs as uid {uid}, not the box user",
+                   lambda r: bool(r.stdout.split()) and all(u == uid for u in r.stdout.split()[::2])))
+        add(_probe(box, "display_server_held",
+                   f"p=$(pgrep -x Xvfb); echo \"before $p\"; kill -KILL $p 2>&1; timeout 5 Xvfb {box.display} -nolisten tcp "
+                   f"2>&1 | grep -m1 -o 'already active'; sleep 1; echo \"after $(pgrep -x Xvfb)\"; "
+                   f"DISPLAY={box.display} /usr/bin/xdpyinfo > /dev/null && echo still-up", 30,
+                   "the box user cannot kill pickfit's X server or start another on its display",
+                   lambda r: "Operation not permitted" in r.stdout and "already active" in r.stdout
+                   and "still-up" in r.stdout and _same_pid(r.stdout)))
         add(_probe(box, "display_no_tcp",
                    "for p in 6000 6099; do (echo > /dev/tcp/127.0.0.1/$p) 2>/dev/null && echo \"open $p\"; done; true",
                    20, "the X server does not listen on TCP", lambda r: "open" not in r.stdout))
+        add(_probe(box, "evidence_dir_closed", f"ls {gui.EVIDENCE_DIR} 2>&1; touch {gui.EVIDENCE_DIR}/x 2>&1; true", 20,
+                   "the box user cannot list or write pickfit's evidence directory",
+                   lambda r: r.stdout.count("Permission denied") == 2))
         launched, shown, png = gui.launch(box, "xclock", "limits", 15)
-        add(ProbeResult("display_window", launched.exit_code == 0 and shown.title == "xclock" and bool(png),
-                        "xclock shows a window of its own and a screenshot", launched.exit_code, launched.seconds,
-                        " ".join(f"{launched.stdout} png {len(png or b'')} bytes".split())[-300:]))
+        left = _box_user_processes(box)
+        add(ProbeResult("display_window", launched.exit_code == 0 and shown.title == "xclock" and bool(png)
+                        and left == "{}", "xclock reaches tier window with a verified screenshot; nothing is left "
+                        "running", launched.exit_code, launched.seconds,
+                        " ".join(f"{launched.stdout} png {len(png or b'')} bytes; left {left}".split())[-300:]))
+        forged = (f"printf '{gui.MARK}0 {{\"windows\": [{{\"id\": \"0x1\", \"title\": \"forged\", \"width\": 900, "
+                  f"\"height\": 700}}]}}\\n'; (/usr/bin/setsid /usr/bin/bash -c 'sleep 60' &); exit 3")
+        launched, shown, png = gui.launch(box, forged, "limits-forged", 8)
+        left = _box_user_processes(box)
+        add(ProbeResult("display_report_unforgeable", shown.tier != "window" and launched.exit_code != 0 and png is None
+                        and left == "{}", "a launch that prints a forged report and double-forks reaches no window "
+                        "and leaves nothing running", launched.exit_code, launched.seconds,
+                        " ".join(f"tier {shown.tier}; left {left}; {launched.stdout}".split())[-300:]))
     # The base image sets GPG_KEY (the public Python release key id); real secrets look like these.
     add(_probe(box, "no_secrets_in_env", "env | cut -d= -f1 | sort | tr '\\n' ' '", 20,
                "no API_KEY/TOKEN/SECRET/PASSWORD variables",
@@ -172,6 +279,15 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
             add(ProbeResult("containment_check_ran", False, "the containment check completes", None, 0.0, str(err)))
     else:
         add(_probe(box, "internet", PYPI, 30, "PyPI answers 200", lambda r: r.stdout.strip() == "200"))
+        add(_probe(box, "internet_ip", IP_HTTPS, 20, "1.1.1.1 answers by literal IP (control for offline_internet_ip)",
+                   lambda r: r.exit_code == 0 and r.stdout.strip() not in ("", "000")))
+        add(_probe(box, "ipv6_blocked", IPV6_PROBE, 40, "no global IPv6 address; IPv6 internet, fd00:ec2::254 and "
+                   "link-local unreachable", lambda r: "inet6" not in r.stdout and
+                   not re.search(r"^(?!000 )\d{3} ", r.stdout, re.M)))
+        add(_probe(box, "multicast_no_answer", MULTICAST_PROBE, 30, "no answer to mDNS, SSDP or broadcast",
+                   lambda r: "answer from" not in r.stdout))
+        add(_probe(box, "gateway_ports_closed", GATEWAY_PROBE, 180, "no port answers on the gateway or the resolver",
+                   lambda r: "hosts:" in r.stdout and "open " not in r.stdout))
         add(_probe(box, "metadata_blocked", "curl -sS -m 5 http://169.254.169.254/latest/meta-data/", 20,
                    "169.254.169.254 unreachable", lambda r: r.exit_code != 0))
         add(_probe(box, "private_blocked", "curl -sS -m 5 http://10.0.0.1/", 20,
@@ -183,6 +299,8 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
         if not macos:
             add(_probe(box, "offline_internet", PYPI, 30, "PyPI unreachable with the network off",
                        lambda r: r.stdout.strip() != "200"))
+            add(_probe(box, "offline_internet_ip", IP_HTTPS, 20, "1.1.1.1 unreachable by literal IP with the network "
+                       "off", lambda r: r.exit_code != 0 and r.stdout.strip() in ("", "000")))
             add(_probe(box, "offline_dns", DNS_PROBE, 40, "names do not resolve with the network off",
                        lambda r: "answered" not in r.stdout and "resolved" not in r.stdout))
         add(_probe(box, "offline_localhost", "curl -sS -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/",
