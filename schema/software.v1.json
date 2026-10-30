@@ -245,7 +245,7 @@
     },
     "GuiCheck": {
       "additionalProperties": false,
-      "description": "How far a GUI app got on the box's virtual display (Linux, Xvfb, no window manager).\n\nTiers, weakest first: none (exited), process_alive (no window of its own), window (a mapped window\nwhose X client is one of the app's processes, per the X server), ui_rendered (the screen judge saw\nthe app's own interface: its main screen or its first-run screen; `screen` says which),\naccessibility (controls in the accessibility tree), action_state (one action changed checkable\nstate). Only action_state can support more than install.",
+      "description": "How far a GUI app got on the box's virtual display (Linux, Xvfb, no window manager).\n\nTiers, weakest first: none (no window, not running), process_alive (no window of its own), window (a\nmapped window whose X client is one of the app's processes, per the X server), ui_rendered (the screen\njudge saw the app's own interface in a crop of its windows: its main screen or its first-run screen;\n`screen` says which). A GUI launch supports install only; checking controls or that an action changed\ncheckable state is not built, so no tier claims it.",
       "properties": {
         "command": {
           "description": "How the app was started.",
@@ -310,9 +310,7 @@
         "none",
         "process_alive",
         "window",
-        "ui_rendered",
-        "accessibility",
-        "action_state"
+        "ui_rendered"
       ],
       "type": "string"
     },

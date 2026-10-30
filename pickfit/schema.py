@@ -522,20 +522,27 @@ class Judge(_Model):
     model: str
 
 
-type GuiTier = Literal["none", "process_alive", "window", "ui_rendered", "accessibility", "action_state"]
+type GuiTier = Literal["none", "process_alive", "window", "ui_rendered"]
 type GuiScreen = Literal["main_ui", "first_run", "sign_in_wall", "crash_or_error", "blank_or_loading", "other"]
 # A GUI launch counts toward a passed level from here up (C.3).
-GUI_PASSED_TIERS: tuple[str, ...] = ("window", "ui_rendered", "accessibility", "action_state")
+GUI_PASSED_TIERS: tuple[str, ...] = ("window", "ui_rendered")
+# What the screen judge may have seen at each tier: ui_rendered is the app's own UI drawn; a window can show
+# anything else (or not be judged); without a window there is nothing to judge.
+GUI_SCREENS_BY_TIER: dict[str, tuple[str | None, ...]] = {
+    "none": (None,), "process_alive": (None,),
+    "window": (None, "sign_in_wall", "crash_or_error", "blank_or_loading", "other"),
+    "ui_rendered": ("main_ui", "first_run"),
+}
 
 
 class GuiCheck(_Model):
     """How far a GUI app got on the box's virtual display (Linux, Xvfb, no window manager).
 
-    Tiers, weakest first: none (exited), process_alive (no window of its own), window (a mapped window
-    whose X client is one of the app's processes, per the X server), ui_rendered (the screen judge saw
-    the app's own interface: its main screen or its first-run screen; `screen` says which),
-    accessibility (controls in the accessibility tree), action_state (one action changed checkable
-    state). Only action_state can support more than install.
+    Tiers, weakest first: none (no window, not running), process_alive (no window of its own), window (a
+    mapped window whose X client is one of the app's processes, per the X server), ui_rendered (the screen
+    judge saw the app's own interface in a crop of its windows: its main screen or its first-run screen;
+    `screen` says which). A GUI launch supports install only; checking controls or that an action changed
+    checkable state is not built, so no tier claims it.
     """
 
     tier: GuiTier
@@ -543,6 +550,12 @@ class GuiCheck(_Model):
     command: str = Field(min_length=1, max_length=COMMAND_MAX, description="How the app was started.")
     window_title: str | None = Field(default=None, max_length=200)
     display: str = Field(max_length=120, description="e.g. Xvfb 1280x800x24, no window manager, no GPU.")
+
+    @model_validator(mode="after")
+    def _screen_fits_tier(self) -> GuiCheck:
+        if self.screen not in GUI_SCREENS_BY_TIER[self.tier]:
+            raise ValueError(f"tier {self.tier!r} cannot rest on screen {self.screen!r}")
+        return self
 
 
 class ArtifactCheck(_Model):
@@ -625,8 +638,10 @@ class VerificationRun(_Model):
                 raise ValueError(f"a {self.level!r} run needs at least one passing smoke test")
             if self.gui and self.gui.tier not in GUI_PASSED_TIERS:
                 raise ValueError(f"a passed run's GUI launch must reach a window, not {self.gui.tier!r}")
-            if self.gui and self.level != "install" and self.gui.tier != "action_state":
-                raise ValueError("a GUI launch supports install only, until an action changes checkable state")
+            if self.gui and self.gui.screen in ("crash_or_error", "blank_or_loading", "other"):
+                raise ValueError(f"a passed run's GUI launch cannot show {self.gui.screen!r}")
+            if self.gui and self.level != "install":
+                raise ValueError("a GUI launch supports install only")
         if self.level == "failed" and not self.blocking_error:
             raise ValueError("a failed run must record blocking_error")
         if self.level == "failed" and self.method == "sandbox" and self.artifact_check is None:
@@ -970,10 +985,9 @@ class SoftwareRecord(_Model):
     def _check_gui_app_levels(self) -> SoftwareRecord:
         if self.kind == "desktop_app":
             for run in self.verification.runs:
-                if run.level in ("function", "service", "inference") and \
-                        (run.gui is None or run.gui.tier != "action_state"):
-                    raise ValueError(f"run {run.id}: a desktop app is {run.level} only once one action changed "
-                                     "checkable state (gui.tier action_state); a launch supports install")
+                if run.level in ("function", "service", "inference"):
+                    raise ValueError(f"run {run.id}: a desktop app is not {run.level}: that needs an action shown to "
+                                     "change checkable state, which pickfit does not check yet")
         return self
 
     @model_validator(mode="after")

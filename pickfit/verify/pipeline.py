@@ -39,7 +39,7 @@ from pickfit.verify.failure import (
     tool_command,
 )
 from pickfit.verify.judge import JudgeResult, judge_checks, judge_gui, merge
-from pickfit.verify.replay import Replayer, ReplayResult, plan_from
+from pickfit.verify.replay import Replayer, ReplayResult, judged_launch, plan_from
 from pickfit.verify.result import DATA_DIR, build_run, save_run, write_back
 from pickfit.verify.task import VerifyTask
 
@@ -176,8 +176,8 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
                               scope_cap_usd=limits.scope_cap_usd, log=log, **call_kwargs)
             try:
                 parts = [judge_checks(_display_name(task), replay.checks, evidence_dir, **judge_args)]
-                launched = next((c for c in replay.checks if c.passed and c.kind == "gui"), None)
-                if launched is not None:  # a window without a readable screenshot cannot pass
+                launched = judged_launch(replay.checks)
+                if launched is not None and launched.passed:  # a window without a readable screenshot cannot pass
                     parts.append(judge_gui(_display_name(task), launched, evidence_dir, **judge_args) or JudgeResult(
                         verdict="inconclusive", observed="the GUI launch left no screenshot to judge",
                         error_text=None, matches_expected_signal=False, model=resolve_model(model)))

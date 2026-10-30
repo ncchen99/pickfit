@@ -66,6 +66,7 @@ from pickfit.verify.failure import (
     tool_command,
 )
 from pickfit.verify.gui import DISPLAY_NOTE as GUI_DISPLAY
+from pickfit.verify.replay import judged_launch
 from pickfit.verify.verdict import split_last, unread_scripts, weaker
 
 if TYPE_CHECKING:
@@ -269,8 +270,9 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         level = "install"
         notes.append("no passing smoke test fits the record")
     gui = gui_check(report, replay, judge)
-    if is_passed(level) and level != "install" and (gui_app or gui) and not (gui and gui.tier == "action_state"):
-        notes.append(f"a GUI app's {level} needs an action that changed checkable state; recorded as install")
+    if is_passed(level) and level != "install" and (gui_app or gui):
+        notes.append(f"a GUI app's {level} needs an action shown to change checkable state, which pickfit does "
+                     "not check yet; recorded as install")
         level = "install"
     if is_passed(level) and gui and gui.tier not in GUI_PASSED_TIERS:
         notes.append(f"the GUI launch reached only {gui.tier}")
@@ -318,13 +320,13 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
 
 
 def gui_check(report: VerifyReport, replay: ReplayResult | None, judge: JudgeResult | None) -> GuiCheck | None:
-    """The GUI launch's tier: the replay's launch when it ran one (judged), else the agent's last one."""
+    """The GUI launch's tier: the replay's launch the judge read (judged_launch), else the agent's last one."""
     launch: dict[str, Any] | None = None
     command = None
-    for c in (replay.checks if replay else []):
-        if c.kind == "gui" and c.run is not None and c.run.gui is not None and (launch is None or c.passed):
-            launch, command = c.run.gui, c.command
-    judged = launch is not None
+    chosen = judged_launch(replay.checks) if replay else None
+    if chosen is not None and chosen.run is not None and chosen.run.gui is not None:
+        launch, command = chosen.run.gui, chosen.command
+    judged = chosen is not None and chosen.passed
     if launch is None:
         last = next((c for c in reversed(report.commands) if c.tool == "launch_gui" and c.gui), None)
         if last is None:
