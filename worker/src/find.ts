@@ -26,7 +26,8 @@ import { ranSentence } from './evidence.ts';
 import type { Settings } from './env.ts';
 import { logEvent, logFailure, newId, type Reporter } from './events.ts';
 import { englishKeywords, EXPAND_TIMEOUT_MS, type Expansion } from './expand.ts';
-import { hardFilter, MAX_CARDS, type Conditions } from './filter.ts';
+import { fitOf, jobOf, partialNote, type Fit, type FitQuality } from './fit.ts';
+import { hardFilter, MAX_CARDS, replacesCurrent, type Conditions } from './filter.ts';
 import { clip, guardPicks, guardWellKnown, NO_WELL_KNOWN, parseAnswer, type GuardedPick, type GuardedWellKnown } from './guard.ts';
 import { callMeta, estimateCostUsd, MATCH_MODEL, MetaCallError, requestBody } from './meta.ts';
 import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer, type ModelReason } from './prompt.ts';
@@ -90,6 +91,8 @@ export interface PickOut {
   scores: { quality: number | null; popularity: number | null; treasure: boolean };
   repo: string;
   homepage: string | null;
+  /** Rules only: how well the profile fits the request and which of its words it covers (fit.ts); absent when the model chose. */
+  match?: { quality: 'good' | 'partial'; covers: string[]; missing: string[] };
 }
 
 export interface FindOutput {
@@ -109,6 +112,8 @@ export interface FindOutput {
   well_known_option: { name: string; why: string; verified: false; how_we_know: string } | null;
   clarifying_question: string | null;
   coverage_note: string | null;
+  /** Rules only: good, partial or none (no picks: no verified tool fits); absent when the model chose. */
+  match_quality?: FitQuality;
 }
 
 export interface AlternativesOutput extends FindOutput {
@@ -126,7 +131,7 @@ function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, 
   }
   parts.push(
     matchedBy === 'rules'
-      ? `Ranked by rules (request keywords, verification on your OS, treasure score) among ${considered} tools that passed the hard filters; no model was used.`
+      ? `Ranked by rules (request keywords, verification on your OS, treasure score) among ${considered} tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.`
       : `Chosen by ${matchedBy} among ${considered} tools that passed pickfit's hard filters; code checked each reason against the profile.`,
   );
   return parts.join(' ');
@@ -147,7 +152,7 @@ function outsideHowWeKnow(matchedBy: string, cond: Conditions): string {
 
 function pickOut(
   entry: Entry,
-  chosen: GuardedPick,
+  chosen: GuardedPick & { match?: Fit },
   os: OS | undefined,
   arch: Arch | undefined,
   matchedBy: string,
@@ -201,11 +206,13 @@ function pickOut(
     },
     repo: entry.repo_url,
     homepage: entry.homepage,
+    ...(chosen.match ? { match: { ...chosen.match, quality: chosen.match.quality as 'good' | 'partial' } } : {}),
   };
 }
 
 interface Choice {
-  picks: GuardedPick[];
+  /** match: rules only, how well the pick fits (fit.ts). */
+  picks: (GuardedPick & { match?: Fit })[];
   bestFree: { slug: string; reason: string } | null;
   noInstall: string | null;
   question: string | null;
@@ -213,6 +220,10 @@ interface Choice {
   emptyByModel: boolean;
   keepCurrent: { recommended: boolean; reason: string } | null;
   wellKnown: GuardedWellKnown;
+  /** Rules only: the best fit among the candidates; "none" means no picks. */
+  matchQuality?: FitQuality;
+  /** Rules only, "none": the request's words the closest profile does not mention. */
+  unmatched?: string[];
 }
 
 const NO_CHOICE: Choice = {
@@ -274,29 +285,40 @@ function fromRules(
   relevance: Map<string, number>,
   cards: Map<string, Card>,
   limit: number,
+  corpus: Entry[],
 ): Choice {
   const os = req.conditions.os;
   const ranked = rankByRules(candidates, relevance, os, req.currentTool);
-  const top = ranked.slice(0, limit);
-  const free = ranked.find((entry) => entry.pricing === 'free');
-  const osSets = new Set(top.map((entry) => entry.platforms.slice().sort().join(',')));
+  // Only tools that fit: good ones in rank order, then partial ones; none at all when nothing fits.
+  const job = jobOf(corpus, req.rulesText);
+  const fits = ranked.map((entry) => ({ entry, fit: replacesCurrent(entry, req.currentTool) ? replacing(req.currentTool!) : fitOf(entry, job) }));
+  const usable = [...fits.filter((x) => x.fit.quality === 'good'), ...fits.filter((x) => x.fit.quality === 'partial')];
+  const top = usable.slice(0, limit);
+  const free = usable.find((x) => x.entry.pricing === 'free')?.entry;
+  const osSets = new Set(top.map((x) => x.entry.platforms.slice().sort().join(',')));
   return {
-    picks: top.map((entry) => ({
+    picks: top.map(({ entry, fit }) => ({
       slug: entry.slug,
       fit: entry.summary,
       reasons: templateReasons(entry, cards.get(entry.slug)!, os),
-      tradeoffs: [],
+      tradeoffs: fit.quality === 'partial' ? [partialNote(fit)] : [],
       vs_well_known: null,
+      match: fit,
     })),
     bestFree: free ? { slug: free.slug, reason: 'The highest-ranked free tool by rules.' } : null,
     noInstall: null,
-    question: !os && osSets.size > 1 ? 'Which OS will you use it on: macOS, Linux or Windows?' : null,
+    question: top.length && !os && osSets.size > 1 ? 'Which OS will you use it on: macOS, Linux or Windows?' : null,
     parsedNeed: null,
     emptyByModel: false,
     keepCurrent: null, // rules cannot judge the current tool
     wellKnown: NO_WELL_KNOWN, // rules know only pickfit's data
+    matchQuality: top[0]?.fit.quality ?? 'none',
+    unmatched: top.length ? undefined : fits[0]?.fit.missing.slice(0, 5),
   };
 }
+
+/** find_alternatives: a profile that names the current tool as what it replaces. */
+const replacing = (current: string): Fit => ({ quality: 'good', covers: [`an alternative to ${current}`], missing: [] });
 
 /** statuses: HTTP status of each request sent to Meta (null where none came back). */
 type Attempt = { cost: number; statuses: (number | null)[] } & (
@@ -425,7 +447,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     } else {
       degradedReason = attempt.failure;
       httpStatus = attempt.httpStatus;
-      choice = fromRules(req, candidates, rulesScores(), cards, limit);
+      choice = fromRules(req, candidates, rulesScores(), cards, limit, corpus);
       if (attempt.rejected) {
         // Not shown (the whole answer was rejected), but the log still says what the model named.
         const named = guardWellKnown(attempt.rejected, deps.catalog.entries, req.currentTool);
@@ -443,6 +465,14 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     );
   } else if (choice.emptyByModel) {
     notes.push(`None of the ${candidates.length} verified tools that meet the conditions fits this request.`);
+  } else if (choice.matchQuality === 'none') {
+    const words = choice.unmatched?.length ? ` (the closest profile does not mention: ${choice.unmatched.join(', ')})` : '';
+    notes.push(
+      `pickfit has no verified ${what} for this yet: judging by their profiles, none of the ${passed} that meet the conditions does this job${words}. ` +
+        'pickfit lists only lesser-known tools, so a well-known one may still fit.',
+    );
+  } else if (choice.matchQuality === 'partial') {
+    notes.push(`No verified ${what} covers the whole request; each pick's tradeoffs say which part it covers.`);
   }
   if (passed > MAX_CARDS) {
     notes.push(
@@ -468,6 +498,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
       : null,
     clarifying_question: choice.question,
     coverage_note: notes.length ? notes.join(' ') : null,
+    ...(choice.matchQuality ? { match_quality: choice.matchQuality } : {}),
   };
 
   deps.waitUntil(
@@ -494,6 +525,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
           choice.wellKnown.name || choice.wellKnown.dropped
             ? { name: choice.wellKnown.name, dropped: choice.wellKnown.dropped }
             : null,
+        ...(choice.matchQuality ? { match_quality: choice.matchQuality } : {}),
         // How the cards were chosen when not all could be sent; counts and outcomes only.
         shortlist:
           passed > MAX_CARDS ? { by_relevance: byRelevance, keywords: expansion?.outcome ?? null } : null,

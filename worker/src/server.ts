@@ -87,6 +87,14 @@ const pick = z.object({
   }),
   repo: z.string(),
   homepage: z.string().nullable(),
+  match: z
+    .object({
+      quality: z.enum(['good', 'partial']),
+      covers: z.array(z.string()).describe("The request's words this profile mentions"),
+      missing: z.array(z.string()).describe("The request's words it does not mention"),
+    })
+    .optional()
+    .describe('Rules-only answers: how well the profile fits the request; absent when the model chose'),
 });
 
 /** The user's conditions, shared by find_software and find_alternatives. */
@@ -148,6 +156,10 @@ const findOutput = z.object({
     ),
   clarifying_question: z.string().nullable(),
   coverage_note: z.string().nullable(),
+  match_quality: z
+    .enum(['good', 'partial', 'none'])
+    .optional()
+    .describe('Rules-only answers: none = pickfit has no verified tool that does this, so no picks; absent when the model chose'),
 });
 
 const alternativesOutput = findOutput.extend({

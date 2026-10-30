@@ -90,7 +90,13 @@ export const NOT_THE_JOB_WORDS = (
   'possible try trying good great nice best better also just only even well really sure kind sort ' +
   'many multiple several lot lots each every all any both other same own whole entire thousand thousands hundred ' +
   'hundreds dozen dozens before after first last next one two three four five few some more most ' +
-  'mcp ai llm llms model models local locally offline assistant assistants chatgpt claude cursor copilot'
+  'mcp ai llm llms model models local locally offline assistant assistants chatgpt claude cursor copilot ' +
+  // Generic actions (added after the dev half): the object carries the job ("create tickets").
+  'change changes changing apply applying create creating update updating add adding make making get getting ' +
+  'set setting show showing see view check checking do doing give put take go ' +
+  // How well, not what (added after the dev half); privacy is a constraint like offline.
+  'natural accurate reliable robust smooth pretty beautiful intuitive friendly flexible configurable powerful ' +
+  'efficient convenient stable privacy private'
 ).split(' ');
 
 /** English phrasings of a job that the profiles say in one word (decision only). */

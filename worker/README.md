@@ -56,6 +56,13 @@ GUI 桌面 app 的實跑另帶 `verification.gui`（`find_*` 的 pick 與 `get_i
 3. **一次 `muse-spark-1.3`**（Responses API、`store: false`、`reasoning.effort: low`、strict JSON schema；slug 欄位的 enum 就是這次的候選）：解析需求成條件、選 1–3 個、每個理由引用一個卡片欄位與原值、取捨、和知名工具比、最好的免費選項、「內建就夠」、不在資料裡的知名免費工具（`well_known_option`，見下）、最多 1 個追問。模型固定在程式裡，不能換成 `-contributor`（使用者需求是私人資料）。`find_alternatives` 用同一份 prompt，**後面加 4 條規則**（`ALTERNATIVES_RULES`：只選做同一件事、至少解決一個痛點、保留 `must_keep` 的；和目前的工具比較；`keep_current`；解析出的痛點）；`find_software` 的 prompt 與 schema 不變。
 4. **守門（程式）**：slug 必須在候選裡；理由引用的值要真的出現在該欄位；理由不能和卡片矛盾（離線、免費、開源、在某 OS 驗證過、不需 key、不需 GPU）。不合的理由丟掉，沒有理由的推薦丟掉。`well_known_option` 另有自己的檢查（見下）。
 5. **退回規則**：模型關掉、沒有 key、超出預算、逾時、HTTP 錯誤（重試一次後仍失敗，見下面「重試」）、輸出壞掉、或推薦全被守門擋掉 → 依「（`find_alternatives`）卡片的 `alternatives_to` 提到目前的工具 → 規則的相關度分數（有關鍵字就加上關鍵字）→ 分數相同時：在使用者 OS 驗證過 → 寶藏分數」排序，理由用模板（只從欄位產生），標 `matched_by: "rules"`、`degraded: true`、`degraded_reason`。規則模式不判斷 `keep_current`（回 `null`）。
+   - **合不合（`src/fit.ts`，只在規則模式）**：把需求裡「具體的字」（去掉通用字、OS、`MCP server` 這類工具種類、口語填充字、`without`／`no`／`不用` 之後的限制、`secret-project-xyz` 這類自己取的名字；只留目錄裡有出現過的字或產品名）和每個工具的能力欄位（名稱、summary、use cases、tags、MCP 工具名）比對。每個字算一樣重。
+     - **good**：需求點名的產品（Notion、GitHub、PostgreSQL 這類大小寫混合或句中大寫的字；PDF、JSON 這種縮寫算一般字）全都提到，而且涵蓋至少一半的具體字。
+     - **partial**：至少提到一個點名的產品（有點名時），涵蓋至少三分之一、而且至少兩個字（只共用一個字不算證據）。
+     - **none**：其他。需求的具體字目錄裡完全沒出現過，也是 none。
+     - 回應：picks 只放 good（照原排序）再接 partial，none 的工具不列；每個 pick 多一個 `match`（`quality`、`covers`、`missing`），partial 的 `tradeoffs` 寫明「提到了哪些、沒提到哪些」。整體多一個 `match_quality`（good／partial／none）。none 時 picks 是空的、`best_free` 是 `null`、不問 OS，`coverage_note` 說 pickfit 目前沒有驗證過的工具能做這件事，並列出最接近的那張卡沒提到的字。`find_alternatives` 裡 `alternatives_to` 寫了目前工具的算 good。`events.need.match_quality` 也記下來。
+     - **模型路徑完全不變**：`match`、`match_quality` 在模型選的回應裡不存在（schema 是 optional；`test/conformance.test.ts` 驗證兩種回應）；`bench/ai_path_same.ts` 用存下的關鍵字跑 1268 筆，模型回答的回應與 main 逐位元相同。
+     - 量法：`scripts/rules_eval.py queries --fit` 產生新題目（Baseten，不看工具），`label` 給每題所有過硬條件的工具打分；`bench/fit_eval.ts` 依標註把題目分成 good／partial／none 三類，算判斷對錯、誤報、漏報與 P@5。
 
 `find_alternatives` 的 `current`：`matched_slug` 是目錄裡的那筆（有的話，且不會出現在 picks）；`known` 是「目錄有它，或某張卡的 `alternatives_to` 提到它」。`keep_current.recommended: true` 表示沒有一個候選明顯比較好，這時 picks 可能是空的。
 
