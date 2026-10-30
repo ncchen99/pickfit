@@ -68,6 +68,7 @@ from pydantic import ValidationError
 
 from pickfit.ledger import BudgetExceeded, taipei_now
 from pickfit.schema import (
+    PASSED_LEVELS,
     QUALITY_CAPS,
     TREASURE_MAX_POPULARITY,
     TREASURE_MIN_QUALITY,
@@ -337,6 +338,19 @@ def sandbox_score(verification: Verification, category: str) -> float | None:
     if best is not None:
         return best
     return 0.0 if verification.level == "failed" else None
+
+
+def feature_coverage(verification: Verification) -> dict[str, int] | None:
+    """Advertised features the strongest passed run exercised, and how many it reported on.
+
+    Carried next to the scores, not into them: the formula does not use it. None when no passed run
+    recorded features.
+    """
+    passed = [r for r in verification.runs if is_passed(r.level) and r.features]
+    if not passed:
+        return None
+    run = min(passed, key=lambda r: (PASSED_LEVELS.index(r.level), -r.checked_at.timestamp()))
+    return {"checked": sum(f.status == "checked" for f in run.features), "listed": len(run.features)}
 
 
 def _ladder(age_days: float, steps: tuple[tuple[float, float], ...]) -> float:
@@ -823,7 +837,8 @@ def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: st
     row.update(quality=scores["quality"]["total"], confidence=scores["quality"]["confidence"],
                cap_reason=scores["quality"]["cap_reason"], popularity=scores["popularity"]["score"],
                treasure=scores["treasure"]["is_treasure"], treasure_value=scores["treasure"]["value"],
-               components={k: c["score"] for k, c in scores["quality"]["components"].items()})
+               components={k: c["score"] for k, c in scores["quality"]["components"].items()},
+               features=feature_coverage(record.verification))
     if _same_scores(old.model_dump(mode="json") if old else None, scores):
         row["status"] = "unchanged"
         return row

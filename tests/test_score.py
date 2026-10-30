@@ -302,6 +302,28 @@ def test_scoring_writes_only_scores_and_reuses_the_rubric(tmp_path: Path) -> Non
     assert again.unchanged == ["tinyq"] and again.reused == 1 and calls == ["score:tinyq"]
 
 
+def test_feature_coverage_rides_along_and_leaves_the_formula_alone(tmp_path: Path) -> None:
+    db_path, out = setup_records(tmp_path)
+    plain = score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=LATER,
+                          grade=fake_grade())
+    assert plain.rows[0]["features"] is None
+    path = out / "tinyq.json"
+    record = json.loads(path.read_text())
+    before = record["scores"]
+    smoke = record["verification"]["runs"][0]["smoke_tests"]
+    smoke.append({"command": "tinyq .a sample.jsonl", "expected_signal": "1", "exit_code": 0, "passed": True})
+    record["verification"]["runs"][0]["features"] = [
+        {"feature": "query JSON Lines", "status": "checked", "smoke_tests": [1]},
+        {"feature": "stream from stdin", "status": "not_checked", "reason": "not_attempted"}]
+    path.write_text(json.dumps(record))
+    covered = score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=LATER,
+                            grade=fake_grade())
+    assert covered.unchanged == ["tinyq"] and covered.rows[0]["features"] == {"checked": 1, "listed": 2}
+    after = json.loads(path.read_text())
+    assert after["scores"] == before and after["verification"]["runs"][0]["features"][0]["status"] == "checked"
+    assert refresh_scores(after, LATER) is None  # write-back's refresh sees nothing to change either
+
+
 def test_scores_of_an_older_formula_that_break_todays_rules_are_replaced_and_the_rubric_kept(
         tmp_path: Path) -> None:
     db_path, out = setup_records(tmp_path)
