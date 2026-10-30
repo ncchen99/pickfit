@@ -100,6 +100,7 @@ def test_mcp_servers_rank_by_whether_a_box_can_start_them() -> None:
     docker, docker_signals = mcp("Run `docker run -i --rm org/server`.")
     remote, remote_signals = mcp("Connect to https://example.com/mcp from your client.")
     assert local_signals == {"mcp_stdio_launch"}  # naming clients is not the coding-agent penalty
-    assert keyed_signals == {"mcp_stdio_launch", "mcp_needs_key"} and local > keyed
+    keyless, _ = mcp("Run `npx -y saas-mcp`.")
+    assert {"mcp_stdio_launch", "mcp_needs_key"} <= keyed_signals and keyless > keyed
     assert "mcp_docker_only" in docker_signals and "mcp_remote_only" in remote_signals
     assert local > docker and local > remote
