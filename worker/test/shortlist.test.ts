@@ -162,20 +162,25 @@ test('a request over MAX_CARDS gets English keywords from muse-spark-1.3 first (
   assert.ok(!stored.includes('secret-xyz') && !stored.includes('transcribe audio'));
 });
 
-test('when the keyword call fails the shortlist is the treasure order and matching goes on', async () => {
+test('when the keyword call fails the rules scorer chooses the cards (Chinese through the dictionary) and matching goes on', async () => {
   for (const failure of [new Response('{}', { status: 500 }), metaResponse('not json')]) {
-    const h = harness(twoCalls(() => failure.clone(), 'sheet-69'));
+    const h = harness(twoCalls(() => failure.clone()));
     h.deps.catalog = asCatalog(bulk());
     const out = await findSoftware({ need: ZH_NEED }, h.deps);
     await h.settle();
     assert.equal(h.requests.length, 2);
-    assert.ok(!h.requests[1].body.text.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
+    assert.ok(h.requests[1].body.text.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
     assert.equal(out.matched_by, MATCH_MODEL);
-    assert.match(out.coverage_note ?? '', /no profile matched the request's words/);
     const row = h.sqlite.prepare('SELECT need FROM events WHERE type = ?').get('find') as any;
-    assert.equal(JSON.parse(row.need).shortlist.by_relevance, 0);
+    assert.ok(JSON.parse(row.need).shortlist.by_relevance >= 1);
     assert.match(JSON.parse(row.need).shortlist.keywords, /^model_(http|bad_output)$/);
   }
+  // No word the profiles or the dictionary know: the treasure order, as before.
+  const h = harness(twoCalls(() => new Response('{}', { status: 500 }), 'sheet-69'));
+  h.deps.catalog = asCatalog(bulk());
+  const out = await findSoftware({ need: '我想要一個好用的東西 (secret-xyz)' }, h.deps);
+  assert.ok(!h.requests[1].body.text.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
+  assert.match(out.coverage_note ?? '', /no profile matched the request's words/);
 });
 
 test('English requests get keywords too (synonyms); none when at most MAX_CARDS tools meet the conditions', async () => {
@@ -200,11 +205,13 @@ test('rules only (MATCH_MODE off): no Meta call at all, picks ranked by relevanc
   assert.equal(en.matched_by, 'rules');
   assert.equal(en.picks[0].slug, 'quiet-transcriber');
   const zh = await findSoftware({ need: ZH_NEED }, h.deps);
-  await h.settle();
   assert.equal(zh.degraded_reason, 'model_off');
-  assert.equal(zh.picks[0].slug, 'sheet-69'); // nothing to match: treasure order
+  assert.equal(zh.picks[0].slug, 'quiet-transcriber'); // 錄音, 逐字稿 through the dictionary
+  const none = await findSoftware({ need: '我想要一個好用的東西' }, h.deps);
+  await h.settle();
+  assert.equal(none.picks[0].slug, 'sheet-69'); // nothing to match: treasure order
   const rows = h.sqlite.prepare('SELECT need FROM events ORDER BY rowid').all() as any[];
-  assert.deepEqual(rows.map((r) => JSON.parse(r.need).shortlist.keywords), ['model_off', 'model_off']);
+  assert.deepEqual(rows.map((r) => JSON.parse(r.need).shortlist.keywords), ['model_off', 'model_off', 'model_off']);
 });
 
 test('degraded after the keywords: the rules use them', async () => {

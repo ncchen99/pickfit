@@ -1,6 +1,6 @@
 /** Step B of find_software: hard conditions, applied by code before any model sees a card. */
 import { nameKey, verifiedOn, type Arch, type Entry, type OS } from './catalog.ts';
-import { relevance } from './relevance.ts';
+import { relevance, rulesRelevance } from './relevance.ts';
 
 export interface Conditions {
   category?: 'dev_cli' | 'local_ai' | 'mcp_server' | 'any';
@@ -41,6 +41,8 @@ export const TREASURE_SLOTS = 10;
 export interface Query {
   terms: string[];
   current?: string;
+  /** "bm25" (default): with Meta's keywords, for the model. "rules": no keywords (rules only, or the call failed). */
+  scorer?: 'bm25' | 'rules';
 }
 
 export interface Filtered {
@@ -49,7 +51,7 @@ export interface Filtered {
   passed: number;
   /** Shortlist slots filled by fit to the request rather than treasure value; 0 when all passed or nothing matched. */
   byRelevance: number;
-  /** BM25 of every entry that passed, for the rules fallback. */
+  /** The scorer's relevance of every entry that passed. */
   relevance: Map<string, number>;
 }
 
@@ -70,9 +72,12 @@ export function replacesCurrent(entry: Entry, current: string | undefined): bool
  * MAX_CARDS - TREASURE_SLOTS; the rest are the highest treasure values. A
  * request with no matching words gets the treasure order alone.
  */
+/** Every entry that meets the hard conditions, in catalog order. */
+export const passing = (entries: Entry[], cond: Conditions) => entries.filter((entry) => fits(entry, cond));
+
 export function hardFilter(entries: Entry[], cond: Conditions, query: Query = { terms: [] }): Filtered {
-  const passed = entries.filter((entry) => fits(entry, cond));
-  const scores = relevance(entries, passed, query.terms);
+  const passed = passing(entries, cond);
+  const scores = (query.scorer === 'rules' ? rulesRelevance : relevance)(entries, passed, query.terms);
   if (passed.length <= MAX_CARDS) return { candidates: passed, passed: passed.length, byRelevance: 0, relevance: scores };
   const fit = passed
     .map((entry) => ({ entry, replaces: replacesCurrent(entry, query.current), score: scores.get(entry.slug)! }))

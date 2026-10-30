@@ -30,7 +30,7 @@ import { hardFilter, MAX_CARDS, type Conditions } from './filter.ts';
 import { clip, guardPicks, guardWellKnown, NO_WELL_KNOWN, parseAnswer, type GuardedPick, type GuardedWellKnown } from './guard.ts';
 import { callMeta, estimateCostUsd, MATCH_MODEL, MetaCallError, requestBody } from './meta.ts';
 import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer, type ModelReason } from './prompt.ts';
-import { queryTerms } from './relevance.ts';
+import { queryTerms, rulesRelevance, rulesTerms } from './relevance.ts';
 import { rankByRules, templateReasons } from './rules.ts';
 
 export interface FindInput extends Conditions {
@@ -384,7 +384,8 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   const cond = req.conditions;
   const limit = Math.min(Math.max(cond.limit ?? 3, 1), 3);
   const corpus = deps.catalog.entries;
-  let filtered = hardFilter(corpus, cond, { terms: queryTerms(req.rulesText), current: req.currentTool });
+  // Without Meta's keywords (rules only, the call failed, or no shortlist cut) the rules' scorer chooses and ranks.
+  let filtered = hardFilter(corpus, cond, { terms: rulesTerms(req.rulesText), current: req.currentTool, scorer: 'rules' });
   // Only a shortlist that must cut needs the request in the profiles' words.
   let expansion: Expansion | null = null;
   if (filtered.passed > MAX_CARDS) {
@@ -394,7 +395,12 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
       filtered = hardFilter(corpus, cond, { terms, current: req.currentTool });
     }
   }
-  const { candidates, passed, byRelevance, relevance } = filtered;
+  const { candidates, passed, byRelevance } = filtered;
+  // The rules rank with their own scorer, adding Meta's keywords when there are some.
+  const rulesScores = () =>
+    expansion?.keywords
+      ? rulesRelevance(corpus, candidates, rulesTerms(req.rulesText, ...expansion.keywords))
+      : filtered.relevance;
   const entries = new Map(candidates.map((entry) => [entry.slug, entry]));
   const cards = new Map(candidates.map((entry) => [entry.slug, toCard(entry, cond.os, cond.arch)]));
 
@@ -419,7 +425,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     } else {
       degradedReason = attempt.failure;
       httpStatus = attempt.httpStatus;
-      choice = fromRules(req, candidates, relevance, cards, limit);
+      choice = fromRules(req, candidates, rulesScores(), cards, limit);
       if (attempt.rejected) {
         // Not shown (the whole answer was rejected), but the log still says what the model named.
         const named = guardWellKnown(attempt.rejected, deps.catalog.entries, req.currentTool);
