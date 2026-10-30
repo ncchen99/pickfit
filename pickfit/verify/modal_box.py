@@ -57,7 +57,7 @@ from pickfit.verify.box import (
     _Capture,
     sandbox_image_tag,
 )
-from pickfit.verify.gui import DISPLAY, DISPLAY_UID, EVIDENCE_DIR, GUI_PACKAGES, HARNESS_PATH, xvfb_script
+from pickfit.verify.gui import DISPLAY, DISPLAY_UID, EVIDENCE_DIR, GUI_PACKAGES, HARNESS_PATH, PYTHON, xvfb_script
 
 APP_NAME = "pickfit-verify"
 READ_TIMEOUT_S = 20  # read_file: a FIFO or a device would block `head` forever
@@ -101,13 +101,15 @@ VM_HARDEN = ("/usr/sbin/sysctl -qw user.max_user_namespaces=0 && "
              "/usr/bin/install -d -m 0755 /usr/local/lib/pickfit && "
              "/usr/bin/install -m 0644 /dev/stdin /usr/local/lib/pickfit/no_vsock.py")
 NO_VSOCK = "/usr/local/lib/pickfit/no_vsock.py"
-# A seccomp filter (x86_64): socket(AF_VSOCK, ...) fails with EAFNOSUPPORT, other ABIs are killed; then exec.
-# Inherited by every child and cannot be removed; setpriv has already set no_new_privs.
+# A seccomp filter (x86_64): socket(AF_VSOCK, ...) fails with EAFNOSUPPORT, io_uring_setup/enter/register
+# (425-427) with EPERM, other ABIs are killed; then exec. Inherited by every child and cannot be removed;
+# setpriv has already set no_new_privs. The box user's commands, Xvfb and the watcher all run under it.
 NO_VSOCK_SOURCE = r"""import ctypes, os, struct, sys
 LD, JEQ, JGE, RET = 0x20, 0x15, 0x35, 0x06
 ALLOW, ERRNO, KILL = 0x7FFF0000, 0x00050000, 0x80000000
-prog = [(LD, 0, 0, 4), (JEQ, 0, 7, 0xC000003E), (LD, 0, 0, 0), (JGE, 5, 0, 0x40000000), (JEQ, 0, 2, 41),
-        (LD, 0, 0, 16), (JEQ, 1, 0, 40), (RET, 0, 0, ALLOW), (RET, 0, 0, ERRNO | 97), (RET, 0, 0, KILL)]
+prog = [(LD, 0, 0, 4), (JEQ, 0, 10, 0xC000003E), (LD, 0, 0, 0), (JGE, 8, 0, 0x40000000), (JEQ, 0, 2, 41),
+        (LD, 0, 0, 16), (JEQ, 3, 2, 40), (JGE, 0, 1, 425), (JGE, 0, 2, 428), (RET, 0, 0, ALLOW),
+        (RET, 0, 0, ERRNO | 97), (RET, 0, 0, ERRNO | 1), (RET, 0, 0, KILL)]
 raw = b"".join(struct.pack("HBBI", *ins) for ins in prog)
 buf = ctypes.create_string_buffer(raw, len(raw))
 class Prog(ctypes.Structure):
@@ -261,7 +263,7 @@ class ModalBox(Box):
         steps.append(("box setup", self._exec_raw(["/usr/bin/chown", "-R", f"{BOX_UID}:{BOX_UID}", BOX_HOME], 60,
                                                   as_root=True)))
         if self.display:  # root starts it as DISPLAY_UID: the box user can draw on it, not kill or replace it
-            xvfb = self._exec_raw(["/usr/bin/bash", "-c", xvfb_script()], 60, as_root=True)
+            xvfb = self._exec_raw(["/usr/bin/bash", "-c", xvfb_script(tuple(self.seccomp()))], 60, as_root=True)
             steps.append(("the virtual display", xvfb))
             pid = next((line.split()[1] for line in xvfb.stdout.splitlines() if line.startswith("xvfb_pid ")), "")
             self.xvfb_pid = int(pid) if pid.isdigit() else None
@@ -297,16 +299,20 @@ class ModalBox(Box):
         guard = (f"ulimit -u {lim.pids} -n {lim.nofile} -f {lim.home_mb * 1024} && cd {shlex.quote(cwd)} && "
                  f"exec /usr/bin/timeout -s KILL {timeout_s} /usr/bin/bash -c {shlex.quote(command)}")
         env = [f"{key}={value}" for key, value in BOX_ENV.items()]
-        seccomp = ["/usr/local/bin/python3", "-I", "-S", NO_VSOCK] if self.runtime == "vm" else []
-        return [*_drop_to(BOX_UID), *seccomp, "/usr/bin/env", "-i", *env, "/usr/bin/bash", "-c", guard]
+        return [*_drop_to(BOX_UID), *self.seccomp(), "/usr/bin/env", "-i", *env, "/usr/bin/bash", "-c", guard]
+
+    def seccomp(self) -> list[str]:
+        """The argv prefix that runs a command under the no-vsock, no-io_uring filter (a VM box; gVisor has
+        neither vsock nor these host-kernel paths)."""
+        return [PYTHON, "-I", "-S", NO_VSOCK] if self.runtime == "vm" else []
 
     def harness_exec(self, argv: list[str], timeout_s: int, *, as_uid: int | None = None,
                      stdin: bytes | None = None) -> ExecResult:
         """Run argv for pickfit itself: as root, or as `as_uid` with an empty environment (no box-user PATH)."""
         self._require_started()
         if as_uid is not None:
-            argv = [*_drop_to(as_uid), "/usr/bin/env", "-i", f"PATH={HARNESS_PATH}", f"HOME={EVIDENCE_DIR}",
-                    "LANG=C.UTF-8", *argv]
+            argv = [*_drop_to(as_uid), *self.seccomp(), "/usr/bin/env", "-i", f"PATH={HARNESS_PATH}",
+                    f"HOME={EVIDENCE_DIR}", "LANG=C.UTF-8", *argv]
         return self._exec_raw(argv, timeout_s, stdin=stdin, as_root=True)
 
     def harness_read(self, path: str, max_bytes: int) -> bytes:

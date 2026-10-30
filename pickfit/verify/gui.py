@@ -70,10 +70,11 @@ SHOT_READS = 3  # a long read can come back short when the box's output stream i
 MARK = "PICKFIT_GUI_"
 
 
-def xvfb_script() -> str:
-    """Root: the evidence directory, then Xvfb as DISPLAY_UID; prints `xvfb_pid N` once it answers."""
+def xvfb_script(filter_argv: tuple[str, ...] = ()) -> str:
+    """Root: the evidence directory, then Xvfb as DISPLAY_UID (under the box's seccomp filter, if any: it
+    parses what the app sends); prints `xvfb_pid N` once it answers."""
     drop = (f"/usr/bin/setpriv --reuid={DISPLAY_UID} --regid={DISPLAY_UID} --clear-groups --inh-caps=-all "
-            f"--no-new-privs -- /usr/bin/env -i PATH={HARNESS_PATH} HOME={EVIDENCE_DIR}")
+            f"--no-new-privs -- {' '.join(filter_argv)} /usr/bin/env -i PATH={HARNESS_PATH} HOME={EVIDENCE_DIR}")
     return (f"/usr/bin/install -d -m 0700 -o {DISPLAY_UID} -g {DISPLAY_UID} {EVIDENCE_DIR} && "
             "/usr/bin/install -d -m 1777 -o root -g root /tmp/.X11-unix && "
             f"{{ /usr/bin/setsid {drop} /usr/bin/Xvfb {DISPLAY} -screen 0 {SCREEN} -nolisten tcp "
@@ -83,26 +84,33 @@ def xvfb_script() -> str:
             f"/usr/bin/tail -5 {EVIDENCE_DIR}/xvfb.log; exit 1")
 
 
-# Shared by the snapshot and the watcher: the box user's live processes as {pid: [starttime, comm]}.
+# Shared by the snapshot, the watcher and the stop: the box user's live processes as {pid: [starttime, comm]}.
+# Read as bytes, one pid at a time: a process name is the app's (PR_SET_NAME can make it any bytes), and one
+# odd process must not stop the list. Its real or effective uid decides, from /proc/<pid>/status.
 _PROCS = r"""
 import json, os, re, subprocess, sys, time, hashlib
-BOX_UID = "1000"
+BOX_UID = b"1000"
 def procs():
     out = {}
     for d in os.listdir("/proc"):
         if not d.isdigit():
             continue
         try:
-            status = open(f"/proc/{d}/status").read()
-            stat = open(f"/proc/{d}/stat").read()
-        except OSError:
+            status = open(f"/proc/{d}/status", "rb").read()
+        except Exception:
             continue
-        fields = dict(line.split(":", 1) for line in status.splitlines() if ":" in line)
-        uids = fields.get("Uid", "").split()
-        if BOX_UID not in uids[:2] or fields.get("State", "").split()[:1] == ["Z"]:
+        uid = re.search(rb"^Uid:\s+(\d+)\s+(\d+)", status, re.M)
+        state = re.search(rb"^State:\s+(\S)", status, re.M)
+        if not uid or BOX_UID not in uid.groups() or (state and state.group(1) == b"Z"):
             continue
-        rest = stat[stat.rindex(")") + 2:].split()
-        out[d] = [rest[19], stat[stat.index("(") + 1:stat.rindex(")")]]
+        start, name = "?", "?"
+        try:
+            stat = open(f"/proc/{d}/stat", "rb").read()
+            start = stat[stat.rindex(b")") + 2:].split()[19].decode("ascii")
+            name = stat[stat.index(b"(") + 1:stat.rindex(b")")].decode("utf-8", "replace")
+        except Exception:
+            pass
+        out[d] = [start, name]
     return out
 """
 
@@ -120,7 +128,7 @@ for round_ in range(200):
         for pid in left:
             try:
                 os.kill(int(pid), sig)
-            except OSError:
+            except Exception:
                 pass
     time.sleep(0.05)
 else:
@@ -161,15 +169,26 @@ def clients():
             cur[kv.group(1).replace("-", "_")] = int(kv.group(2), 16)
     return found
 def windows():
+    # Ids only from the root's children (each line starts with one); every other fact comes from the window's
+    # own xwininfo, by label. Its first line holds the title, which the app sets to anything (newlines too):
+    # a label seen twice means the title forged lines, and the window does not count.
     found = []
-    for line in run(["/usr/bin/xwininfo", "-root", "-children"]).splitlines():
-        m = re.match(r'^\s+(0x[0-9a-f]+) (?:"([^"]*)"|\(has no name\)).*?\s(\d+)x(\d+)\+(-?\d+)\+(-?\d+)', line)
-        if not m or "IsViewable" not in run(["/usr/bin/xwininfo", "-id", m.group(1)]):
+    ids = [m.group(1) for m in (re.match(r"^\s+(0x[0-9a-f]+)\s", line) for line in
+                                run(["/usr/bin/xwininfo", "-root", "-children"]).splitlines()) if m]
+    for wid in dict.fromkeys(ids):
+        lines = run(["/usr/bin/xwininfo", "-id", wid]).splitlines()
+        def field(label):
+            values = [l.split(":", 1)[1].strip() for l in lines if l.strip().startswith(label + ":")]
+            return values[0] if len(values) == 1 else None
+        geo = [field(k) for k in ("Absolute upper-left X", "Absolute upper-left Y", "Width", "Height")]
+        if field("Map State") != "IsViewable" or not all(v and re.fullmatch(r"-?\d+", v) for v in geo):
             continue
-        x, y, w, h = int(m.group(5)), int(m.group(6)), int(m.group(3)), int(m.group(4))
+        x, y, w, h = (int(v) for v in geo)
+        head = next((m for m in (re.match(r'^xwininfo: Window id: 0x[0-9a-f]+ "(.*)"$', l) for l in lines) if m),
+                    None)
         vw, vh = min(x + w, SW) - max(x, 0), min(y + h, SH) - max(y, 0)
-        found.append({"id": m.group(1), "title": (m.group(2) or "")[:200], "width": w, "height": h, "x": x, "y": y,
-                      "visible": vw >= MIN_W and vh >= MIN_H})
+        found.append({"id": wid, "title": (head.group(1) if head else "")[:200], "width": w, "height": h, "x": x,
+                      "y": y, "visible": vw >= MIN_W and vh >= MIN_H})
     return found
 def look():
     mine = app()
@@ -183,36 +202,40 @@ def look():
         (own if c and c["pid"] in mine and w.pop("visible") else other).append(w)
         w.pop("visible", None)
     return mine, own, other
-problems = [] if our_server() else ["pickfit's X server was not running when the watch began"]
-began, first = time.time(), None
-while not problems:
-    mine, own, other = look()
-    if own and first is None:
-        first = time.time() - began
-    if first is not None and time.time() - began >= first + SETTLE_S:
-        break
-    if not mine or time.time() - began >= WAIT_S + (SETTLE_S if first is not None else 0):
-        break
-    time.sleep(1)
-mine, own, other = look() if not problems else ({}, [], [])
-data = b""
-if not problems:
-    xwd = subprocess.Popen(["/usr/bin/xwd", "-root", "-silent"], stdout=subprocess.PIPE, env=ENV)
-    conv = subprocess.run(["/usr/bin/convert", "xwd:-", "png:" + SHOT], stdin=xwd.stdout, capture_output=True,
-                          timeout=60, env=ENV)
-    xwd.wait(timeout=60)
-    if conv.returncode == 0 and xwd.returncode == 0:
-        data = open(SHOT, "rb").read()
-    else:
-        problems.append("the screenshot failed")
-    if not our_server():  # a server the app started after killing or crashing ours could have lied
-        problems.append("pickfit's X server was gone when the watch ended")
-        own, data = [], b""
-print(MARK + NONCE + " " + json.dumps({
-    "seconds_to_window": None if first is None else round(first, 1), "alive": len(mine),
-    "processes": sorted({v[1] for v in mine.values()})[:12], "windows": own, "other_windows": other[:5],
-    "shot_bytes": len(data), "shot_sha256": hashlib.sha256(data).hexdigest() if data else None,
-    "problems": problems, "watched_s": round(time.time() - began, 1)}))
+def main():
+    problems = [] if our_server() else ["pickfit's X server was not running when the watch began"]
+    began, first = time.time(), None
+    while not problems:
+        mine, own, other = look()
+        if own and first is None:
+            first = time.time() - began
+        if first is not None and time.time() - began >= first + SETTLE_S:
+            break
+        if not mine or time.time() - began >= WAIT_S + (SETTLE_S if first is not None else 0):
+            break
+        time.sleep(1)
+    mine, own, other = look() if not problems else ({}, [], [])
+    data = b""
+    if not problems:
+        xwd = subprocess.Popen(["/usr/bin/xwd", "-root", "-silent"], stdout=subprocess.PIPE, env=ENV)
+        conv = subprocess.run(["/usr/bin/convert", "xwd:-", "png:" + SHOT], stdin=xwd.stdout, capture_output=True,
+                              timeout=60, env=ENV)
+        xwd.wait(timeout=60)
+        if conv.returncode == 0 and xwd.returncode == 0:
+            data = open(SHOT, "rb").read()
+        else:
+            why = (conv.stderr or b"").decode("utf-8", "replace").strip()[-200:]
+            problems.append(f"the screenshot failed (xwd {xwd.returncode}, convert {conv.returncode}: {why})")
+        if not our_server():  # a server the app started after killing or crashing ours could have lied
+            problems.append("pickfit's X server was gone when the watch ended")
+            own, data = [], b""
+    print(MARK + NONCE + " " + json.dumps({
+        "seconds_to_window": None if first is None else round(first, 1), "alive": len(mine),
+        "processes": sorted({v[1] for v in mine.values()})[:12], "windows": own, "other_windows": other[:5],
+        "shot_bytes": len(data), "shot_sha256": hashlib.sha256(data).hexdigest() if data else None,
+        "problems": problems, "watched_s": round(time.time() - began, 1)}))
+if __name__ == "__main__":
+    main()
 """
 
 
@@ -299,23 +322,32 @@ def parse_report(stdout: str, nonce: str) -> GuiLaunch:
 
 
 def observation(launch: GuiLaunch) -> str:
-    """pickfit's own lines about the launch: what the agent cites and the replay checks (stdout)."""
+    """pickfit's own lines about the launch (stdout): what the agent cites and the replay checks. Nothing the app
+    chooses is here: window titles and process names go to app_facts()."""
     meaning = {"window": "a window of the app's own process is shown",
                "process_alive": "the app is still running but showed no window of its own",
                "none": "the app showed no window and is not running"}[launch.tier]
     lines = [f"gui tier: {launch.tier} ({meaning})"]
-    for w in launch.windows:
-        lines.append(f"window: \"{w.title}\" {w.width}x{w.height} at {w.x},{w.y} (pid {w.pid})")
-    for w in launch.other_windows[:3]:
-        lines.append(f"other window, not counted: \"{w.title}\" {w.width}x{w.height} ({w.client or 'unknown client'})")
+    for i, w in enumerate(launch.windows, start=1):
+        lines.append(f"window {i}: {w.width}x{w.height} at {w.x},{w.y} (pid {w.pid})")
+    if launch.other_windows:
+        lines.append(f"{len(launch.other_windows)} other window(s) not counted (not the app's, or too small)")
     if launch.seconds_to_window is not None:
         lines.append(f"first window after {launch.seconds_to_window}s")
-    if launch.processes:
-        lines.append(f"processes: {', '.join(launch.processes)}")
     if launch.error:
         lines.append(f"note: {launch.error}")
     lines.append("pickfit took a screenshot and then stopped every process of the box user.")
     return "\n".join(lines)
+
+
+def app_facts(launch: GuiLaunch) -> str:
+    """What the app itself set (stderr, as data): window titles, process names, then its output."""
+    lines = ["--- set by the app: window titles and process names ---"]
+    lines += [f"window {i} title: {w.title!r}" for i, w in enumerate(launch.windows, start=1)]
+    if launch.processes:
+        lines.append(f"processes: {', '.join(map(repr, launch.processes))}")
+    lines += ["--- app output (the app's own, not pickfit's) ---", launch.log_tail.rstrip()]
+    return "\n".join(lines).rstrip()
 
 
 def read_shot(box: Box, path: str, shown: GuiLaunch) -> tuple[bytes | None, str | None]:
@@ -367,7 +399,8 @@ def launch(box: Box, command: str, tag: str | int, wait_s: int, *, timeout_s: in
         if watch.exit_code != 0 and not shown.error:
             shown.error = f"the watcher exited {watch.exit_code}: {watch.stderr.strip()[-300:]}"
     stopped = stop_box_user(box)
-    if "PICKFIT_KILLED" not in stopped.stdout:
+    survived = "PICKFIT_KILLED" not in stopped.stdout
+    if survived:  # something of the box user's outlived the launch: nothing about it counts
         shown.error = "; ".join(filter(None, [shown.error, "box-user processes survived the stop"]))
     png: bytes | None = None
     if shown.tier == "window":
@@ -376,8 +409,9 @@ def launch(box: Box, command: str, tag: str | int, wait_s: int, *, timeout_s: in
             shown.error = "; ".join(filter(None, [shown.error, why]))
     log = box.exec(f"/usr/bin/tail -c 3000 -- {APP_LOG_DIR}/{tag}.log", 20)
     shown.log_tail = log.stdout if log.exit_code == 0 else ""
-    code = 0 if shown.tier == "window" and png is not None and not timed_out else 1
-    result = ExecResult(command=command, exit_code=code, stdout=observation(shown),
-                        stderr=f"--- app output (the app's own, not pickfit's) ---\n{shown.log_tail}".rstrip(),
+    if survived:
+        png = None
+    code = 0 if shown.tier == "window" and png is not None and not timed_out and not survived else 1
+    result = ExecResult(command=command, exit_code=code, stdout=observation(shown), stderr=app_facts(shown),
                         seconds=seconds, timed_out=timed_out)
     return result, shown, png
