@@ -9,6 +9,13 @@ that goes over the memory limit; Modal kills the whole sandbox. A macOS box has
 no /proc and no per-process memory cap (the VM's RAM is the cap), so it checks
 instead that the box user is not an admin, cannot sudo or change the firewall,
 and cannot reach the host.
+
+A Linux box also checks that names do not resolve with the network off (measured
+2026-10-31: Modal's resolver answers under both runtimes with an empty
+allowlist; a VM box drops the box user's DNS with nftables, gVisor cannot, so a
+gVisor box fails this probe) and that /dev/kvm is absent. A box with a display
+checks that Xvfb runs as the box user, does not listen on TCP, and shows a real
+window (xclock) that pickfit can find and screenshot.
 """
 
 from __future__ import annotations
@@ -21,6 +28,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from pickfit.ledger import taipei_now
+from pickfit.verify import gui
 from pickfit.verify.box import Box, BoxError, ExecResult
 
 PYPI = "curl -sS -I -m 15 -o /dev/null -w '%{http_code}' https://pypi.org/simple/pip/"
@@ -45,6 +53,29 @@ while time.time() < end:
         os.write(fd, b"admin\\n")
         sent = True
 print(out.decode(errors="replace"))
+PICKFIT_PY"""
+
+
+# Asks each resolver in resolv.conf for a name over UDP, then the system resolver; prints what answered.
+DNS_PROBE = r"""python3 -I - <<'PICKFIT_PY'
+import random, socket, struct
+def ask(server):
+    pkt = struct.pack(">HHHHHH", random.randint(0, 65535), 0x0100, 1, 0, 0, 0)
+    pkt += b"".join(bytes([len(p)]) + p.encode() for p in "pypi.org".split(".")) + b"\0" + struct.pack(">HH", 1, 1)
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(4)
+    try:
+        s.sendto(pkt, (server, 53))
+        return f"answered {len(s.recv(512))} bytes"
+    except OSError as e:
+        return f"no answer ({type(e).__name__})"
+servers = [l.split()[1] for l in open("/etc/resolv.conf") if l.startswith("nameserver")]
+for server in servers[:3]:
+    print(server, ask(server))
+try:
+    print("getaddrinfo resolved", socket.getaddrinfo("pypi.org", 443)[0][4][0])
+except OSError as e:
+    print("getaddrinfo failed", e)
 PICKFIT_PY"""
 
 
@@ -110,6 +141,20 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
         add(_probe(box, "non_root", "id -u; grep CapEff /proc/self/status", 20,
                    "uid 1000, no effective capabilities",
                    lambda r: r.stdout.split()[:1] == ["1000"] and "CapEff:\t0000000000000000" in r.stdout))
+        add(_probe(box, "no_kvm", "test -e /dev/kvm && echo present; true", 20, "no /dev/kvm",
+                   lambda r: "present" not in r.stdout))
+    if box.display:
+        add(_probe(box, "display_up", f"DISPLAY={box.display} xdpyinfo", 20, f"Xvfb answers on {box.display}",
+                   lambda r: r.exit_code == 0 and "dimensions:" in r.stdout))
+        add(_probe(box, "display_as_box_user", "ps -o uid=,comm= -C Xvfb", 20, "Xvfb runs as uid 1000",
+                   lambda r: bool(r.stdout.split()) and all(u == "1000" for u in r.stdout.split()[::2])))
+        add(_probe(box, "display_no_tcp",
+                   "for p in 6000 6099; do (echo > /dev/tcp/127.0.0.1/$p) 2>/dev/null && echo \"open $p\"; done; true",
+                   20, "the X server does not listen on TCP", lambda r: "open" not in r.stdout))
+        launched, shown, png = gui.launch(box, "xclock", "limits", 15)
+        add(ProbeResult("display_window", launched.exit_code == 0 and shown.title == "xclock" and bool(png),
+                        "xclock shows a window of its own and a screenshot", launched.exit_code, launched.seconds,
+                        " ".join(f"{launched.stdout} png {len(png or b'')} bytes".split())[-300:]))
     # The base image sets GPG_KEY (the public Python release key id); real secrets look like these.
     add(_probe(box, "no_secrets_in_env", "env | cut -d= -f1 | sort | tr '\\n' ' '", 20,
                "no API_KEY/TOKEN/SECRET/PASSWORD variables",
@@ -135,6 +180,8 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
         if not macos:
             add(_probe(box, "offline_internet", PYPI, 30, "PyPI unreachable with the network off",
                        lambda r: r.stdout.strip() != "200"))
+            add(_probe(box, "offline_dns", DNS_PROBE, 40, "names do not resolve with the network off",
+                       lambda r: "answered" not in r.stdout and "resolved" not in r.stdout))
         add(_probe(box, "offline_localhost", "curl -sS -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/",
                    20, "localhost still answers with the network off", lambda r: r.stdout.strip() == "200"))
     finally:

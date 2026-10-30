@@ -216,7 +216,7 @@ def test_limits_test_reports_each_probe():
     results = run_limits_test(Box(script), log=lambda s: None)
     assert [r.name for r in results if not r.ok] == []
     assert [r.name for r in results][-1] == "memory_cap"
-    assert len(results) == 12
+    assert len(results) == 14
 
 
 def test_a_missing_image_is_published_once_then_used(monkeypatch: pytest.MonkeyPatch):
