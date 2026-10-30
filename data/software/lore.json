@@ -62,18 +62,25 @@
       "first_task": "lore search \"error handling\""
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "brew",
+      "basis": "replayed",
+      "run_id": "verify-lore-20261031-021007-5af7",
+      "method": "binary",
       "steps": [
         {
-          "command": "brew install attila/tap/lore",
-          "purpose": null
+          "command": "curl -LO https://github.com/attila/lore/releases/download/v0.5.0/lore-0.5.0-x86_64-unknown-linux-gnu.tar.gz && curl -LO https://github.com/attila/lore/releases/download/v0.5.0/SHA256SUMS && ls -l",
+          "purpose": "Download prebuilt lore archive and SHA256SUMS"
+        },
+        {
+          "command": "sha256sum -c SHA256SUMS --ignore-missing && tar xzf lore-0.5.0-x86_64-unknown-linux-gnu.tar.gz && ls -l && mkdir -p ~/.local/bin && mv lore ~/.local/bin/ && lore --version",
+          "purpose": "Verify checksum, extract, install lore to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "lore search \"error handling\""
+      "check": {
+        "command": "lore --help",
+        "expected_signal": "Local semantic search for your software patterns"
+      },
+      "first_task": "lore search \"error handling\" --config /tmp/lore.toml"
     },
     "windows": null
   },
@@ -90,10 +97,145 @@
     "url": "https://github.com/attila/lore/releases/tag/v0.5.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:11:28.845917+08:00",
+    "runs": [
+      {
+        "id": "verify-lore-20261031-021007-5af7",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:11:28.845917+08:00",
+        "tool_version": "0.5.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -LO https://github.com/attila/lore/releases/download/v0.5.0/lore-0.5.0-x86_64-unknown-linux-gnu.tar.gz && curl -LO https://github.com/attila/lore/releases/download/v0.5.0/SHA256SUMS && ls -l",
+            "purpose": "Download prebuilt lore archive and SHA256SUMS"
+          },
+          {
+            "command": "sha256sum -c SHA256SUMS --ignore-missing && tar xzf lore-0.5.0-x86_64-unknown-linux-gnu.tar.gz && ls -l && mkdir -p ~/.local/bin && mv lore ~/.local/bin/ && lore --version",
+            "purpose": "Verify checksum, extract, install lore to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lore --help",
+            "expected_signal": "Local semantic search for your software patterns",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Local semantic search for your software patterns",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lore search \"error handling\" --config /tmp/lore.toml",
+            "expected_signal": "Error Handling with Result Types",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[1] Error Handling with Result Types",
+            "setup": [
+              {
+                "command": "mkdir -p ~/lore-kb ~/lore-data && cat > ~/lore-kb/error-handling.md <<'EOF'\n---\ntags: [error-handling, rust, result-types]\n---\n\n# Error Handling with Result Types\n\nAlways use Result<T, E> for fallible operations.\n\n## Context\n\nUse this pattern for error handling in Rust code.\n\n## Rule\n\nPrefer `?` operator and `thiserror` for error propagation.\nEOF\ncat ~/lore-kb/error-handling.md\ncat > /tmp/lore.toml <<'EOF'\nknowledge_dir = \"/home/sbx/lore-kb\"\ndatabase = \"/home/sbx/lore-data/knowledge.db\"\nbind = \"localhost:3100\"\n\n[search]\nhybrid = false\ntop_k = 5\nmin_relevance = 0.0\nEOF\ncat /tmp/lore.toml",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > /tmp/lore.toml <<'EOF'\nknowledge_dir = \"/home/sbx/lore-kb\"\ndatabase = \"/home/sbx/lore-data/knowledge.db\"\nbind = \"localhost:3100\"\n\n[ollama]\nhost = \"http://127.0.0.1:11434\"\nmodel = \"nomic-embed-text\"\n\n[search]\nhybrid = false\ntop_k = 5\nmin_relevance = 0.0\n\n[chunking]\nstrategy = \"heading\"\nmax_tokens = 1024\nEOF\ncat /tmp/lore.toml && lore ingest --config /tmp/lore.toml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- lore serve --config /tmp/lore.toml",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "mkdir -p ~/lore-kb ~/lore-data && cat > ~/lore-kb/error-handling.md <<'EOF'\n---\ntags: [error-handling, rust, result-types]\n---\n\n# Error Handling with Result Types\n\nAlways use Result<T, E> for fallible operations.\n\n## Context\n\nUse this pattern for error handling in Rust code.\n\n## Rule\n\nPrefer `?` operator and `thiserror` for error propagation.\nEOF\ncat ~/lore-kb/error-handling.md\ncat > /tmp/lore.toml <<'EOF'\nknowledge_dir = \"/home/sbx/lore-kb\"\ndatabase = \"/home/sbx/lore-data/knowledge.db\"\nbind = \"localhost:3100\"\n\n[search]\nhybrid = false\ntop_k = 5\nmin_relevance = 0.0\nEOF\ncat /tmp/lore.toml",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > /tmp/lore.toml <<'EOF'\nknowledge_dir = \"/home/sbx/lore-kb\"\ndatabase = \"/home/sbx/lore-data/knowledge.db\"\nbind = \"localhost:3100\"\n\n[ollama]\nhost = \"http://127.0.0.1:11434\"\nmodel = \"nomic-embed-text\"\n\n[search]\nhybrid = false\ntop_k = 5\nmin_relevance = 0.0\n\n[chunking]\nstrategy = \"heading\"\nmax_tokens = 1024\nEOF\ncat /tmp/lore.toml && lore ingest --config /tmp/lore.toml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install --path .",
+            "actually_needed": "Used prebuilt release archive lore-0.5.0-x86_64-unknown-linux-gnu.tar.gz: verify SHA256SUMS, extract, move lore to ~/.local/bin; cargo candidate needs Rust toolchain which must not be installed in the box",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Set hybrid=false to skip the embedding server",
+            "actually_needed": "Manual lore.toml with [ollama] section plus [search] hybrid=false still attempts embeddings at ingest time (warns embedding failure(s)) but ingest exits 0 and FTS search works offline; lore init itself requires a running Ollama server",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "lore status checks health",
+            "actually_needed": "lore status report is printed to stderr with exit 0, not stdout",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show successful pattern search results, MCP server handshake with 6 tools, and help text describing local semantic search.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lore-20261031-021007-5af7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lore-20261031-021007-5af7/check-1-cmd13.judged.png",
+            "runs/verify/verify-lore-20261031-021007-5af7/check-2-cmd15.judged.png",
+            "runs/verify/verify-lore-20261031-021007-5af7/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.089109,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "lore",
+            "serve",
+            "--config",
+            "/tmp/lore.toml"
+          ],
+          "url": null,
+          "protocol_version": "2024-11-05",
+          "server_name": "lore",
+          "server_version": "0.5.0",
+          "tools": [
+            "search_patterns",
+            "add_pattern",
+            "update_pattern",
+            "append_to_pattern",
+            "list_patterns",
+            "lore_status"
+          ],
+          "tool_count": 6,
+          "called_tool": null,
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -118,15 +260,15 @@
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:03:51+08:00",
+    "computed_at": "2026-10-31T02:11:28+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 71.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.578,
           "weight": 40.0
         },
         "install_docs": {
@@ -167,7 +309,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 51.75
+      "value": 53.32
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -498,5 +640,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-10-31T02:03:51+08:00"
+  "updated_at": "2026-10-31T02:11:28.847071+08:00"
 }
