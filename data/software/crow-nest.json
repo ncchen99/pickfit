@@ -81,9 +81,61 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "model_too_large",
+    "checked_at": "2026-10-31T00:19:05.778409+08:00",
+    "runs": [
+      {
+        "id": "verify-crow-nest-20261031-001759-d213",
+        "level": "unverified",
+        "unverified_reason": "model_too_large",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:19:05.778409+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "curl -fLO https://github.com/nibor1896/crow-nest/releases/download/v0.15.0/crow-nest-engine-0.15.0-linux-x64.tar.gz; mkdir -p crow-nest-engine && tar -xzf crow-nest-engine-0.15.0-linux-x64.tar.gz -C crow-nest-engine && ls -la crow-nest-engine/",
+            "purpose": "download and extract release tarball"
+          },
+          {
+            "command": "bash crow-nest-engine/fetch-nvrtc.sh --target crow-nest-engine && ls -la crow-nest-engine/",
+            "purpose": "fetch NVRTC runtime per README"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && ln -sf $PWD/crow-nest-engine/serve ~/.local/bin/serve && command -v serve && LD_LIBRARY_PATH=$PWD/crow-nest-engine ldd $PWD/crow-nest-engine/serve | grep -i nvrtc; echo PATH_OK",
+            "purpose": "expose serve on PATH"
+          }
+        ],
+        "smoke_tests": [],
+        "pitfalls": [
+          {
+            "readme_said": "README lists serve invocations with --port but documents no --version/--help flag",
+            "actually_needed": "serve only accepts --port and --slot-save-path; both 'serve --help' and 'serve --version' exit 2 with '[serve] --help/--version needs a value (usage: serve [--port <n>] [--slot-save-path <dir>])'",
+            "kind": "note"
+          },
+          {
+            "readme_said": "run via tools/serve-linux.sh --port 8099 / serve --port 8099 and crow --base-url http://127.0.0.1:8099/v1",
+            "actually_needed": "serve exits at startup with 'cannot load models/Qwen3.8-Flash-Next-original/tokenizer.json: No such file or directory' unless the multi-GB tokenizer plus 104.7 GB Qwen3.8-Flash-Next-CNQ4.5-M (or 124.6 GB GLM-5.3-Flash / 27B CNQ4.5) container is present; generic tiny GGUF/Safetensors models under 30…",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-crow-nest-20261031-001759-d213/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.055114
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v4",
@@ -379,5 +431,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:43+08:00",
-  "updated_at": "2026-10-30T23:55:13+08:00"
+  "updated_at": "2026-10-31T00:19:05.780544+08:00"
 }

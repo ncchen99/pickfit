@@ -62,9 +62,83 @@
   "last_release": null,
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_gpu",
+    "checked_at": "2026-10-31T00:21:47.885850+08:00",
+    "runs": [
+      {
+        "id": "verify-helios-20261031-001912-695a",
+        "level": "unverified",
+        "unverified_reason": "needs_gpu",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:21:47.885850+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "source",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "git clone https://github.com/sidmanale643/helios.git helios 2>&1 && ls -la helios 2>&1 && cat helios/pyproject.toml 2>&1",
+            "purpose": "Clone Helios repository"
+          },
+          {
+            "command": "cd helios && uv sync 2>&1",
+            "purpose": "Install dependencies with uv sync"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd helios && ls .venv/bin/helios && uv run python -c \"import torch, helios; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))\"",
+            "expected_signal": "2.13.0+cu130",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2.13.0+cu130",
+            "setup": [
+              {
+                "command": "git clone https://github.com/sidmanale643/helios.git helios 2>&1 && ls -la helios 2>&1 && cat helios/pyproject.toml 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd helios && uv sync 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "An Ampere or newer NVIDIA GPU (SM80+) with FP16 or BF16 support",
+            "actually_needed": "Box has Tesla T4 compute capability 7.5; src/helios/runtime/generate.py raises 'Paged attention requires an SM80+ GPU and FP16 or BF16' when capability major < 8, so server cannot start here",
+            "kind": "note"
+          },
+          {
+            "readme_said": "HELIOS_MODEL_ID defaults to Qwen/Qwen3-4B; model field must match loaded model",
+            "actually_needed": "Only Qwen/Qwen3-4B architecture is implemented; tiny GGUF/SmolLM2 models under 300 MB cannot be substituted for an inference check, and full weights (~8 GB) exceed this box's 2 GB host RAM and 20-minute budget",
+            "kind": "note"
+          },
+          {
+            "readme_said": "uv run helios starts the server",
+            "actually_needed": "helios entry point (helios.main:main) takes no arguments and starts the server; there is no --version or --help flag to confirm install",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-helios-20261031-001912-695a/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.084784
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -261,5 +335,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:43+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:21:47.886862+08:00"
 }

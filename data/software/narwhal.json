@@ -54,18 +54,21 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "pip",
+      "basis": "replayed",
+      "run_id": "verify-narwhal-20261031-001759-4772",
+      "method": "uv",
       "steps": [
         {
-          "command": "python -m pip install narwhal-inference",
-          "purpose": null
+          "command": "uv tool install narwhal-inference 2>&1",
+          "purpose": "Install narwhal-inference with uv tool install"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "narwhal-serve --version"
+      "check": {
+        "command": "narwhal-serve --version",
+        "expected_signal": "narwhal-inference 0.8.0"
+      },
+      "first_task": null
     },
     "windows": null
   },
@@ -82,10 +85,74 @@
     "url": "https://github.com/athrael-soju/Narwhal/releases/tag/v0.8.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:19:12.885944+08:00",
+    "runs": [
+      {
+        "id": "verify-narwhal-20261031-001759-4772",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:19:12.885944+08:00",
+        "tool_version": "0.8.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install narwhal-inference 2>&1",
+            "purpose": "Install narwhal-inference with uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "narwhal-serve --version",
+            "expected_signal": "narwhal-inference 0.8.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "narwhal-inference 0.8.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "narwhal --help",
+            "expected_signal": "Manage a local shared-GPU development fleet",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Manage a local shared-GPU development fleet",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "narwhal dev init then narwhal dev status",
+            "actually_needed": "Even after creating ~/.cache/huggingface and ~/.cache/huggingface/hub, `narwhal dev init` still exits 2 with FileNotFound for `~/.cache/huggingface/hub/models--Qwen--Qwen3.5-0.8B`; `narwhal dev status` without a prior successful init exits 2 with missing runs/dev/instance.json.",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows narwhal-serve --version outputting narwhal-inference 0.8.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-narwhal-20261031-001759-4772/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-narwhal-20261031-001759-4772/check-1-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.050247
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -304,5 +371,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:30+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:19:12.887697+08:00"
 }
