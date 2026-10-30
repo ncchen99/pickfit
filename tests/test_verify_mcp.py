@@ -85,6 +85,9 @@ def test_probe_commands_and_launch_argv() -> None:
     ("MAX_TOKENS=16 notes-mcp", []),
     ("NOTES_ROOT=~/work " + PROBE, []),
     ("GITHUB_TOKEN= notes-mcp", []),
+    (PROBE_COMMAND + " -- notes-mcp --api-key sk-test", ["--api-key"]),
+    (PROBE_COMMAND + " -- notes-mcp --token=abc", ["--token"]),
+    ("notes-mcp --max-tokens 16 --tokenizer x", []),
 ])
 def test_credentials(command: str, names: list[str]) -> None:
     assert credentials(command) == names

@@ -44,6 +44,9 @@ _PROBE = re.compile(r"(?:^|[\s/])\.pickfit/mcp_probe\.py(?=\s|$)")
 # NAME=value where NAME names a credential: an API key, token, secret or password.
 _CREDENTIAL = re.compile(r"(?:^|[\s;&|(]|\bexport\s+)([A-Z][A-Z0-9_]*(?:API_?KEY|ACCESS_?KEY|_KEY|SECRET|TOKEN|"
                          r"PASSWORD|PASSWD|_PAT|CREDENTIALS?))=(?!\s|$)")
+# --api-key VALUE, --token=VALUE: the same thing as a command-line flag.
+_CREDENTIAL_FLAG = re.compile(r"(?:^|\s)(--?(?:api[-_]?key|access[-_]?token|auth[-_]?token|token|secret|password))"
+                              r"(?:=|\s+)(?!-)\S", re.I)
 
 FLAG_TEXT = {
     "instruction_tag": "a hidden <IMPORTANT>-style tag",
@@ -124,8 +127,8 @@ def launch_argv(command: str) -> list[str] | None:
 
 
 def credentials(command: str) -> list[str]:
-    """Credential variables a command sets (NAME=value), by name."""
-    return sorted(set(_CREDENTIAL.findall(command)))
+    """Credentials a command supplies: variables (NAME=value) and flags (--api-key value), by name."""
+    return sorted(set(_CREDENTIAL.findall(command)) | {f.lower() for f in _CREDENTIAL_FLAG.findall(command)})
 
 
 def handshake(check_stdout: str, command: str, *, offline: bool | None) -> McpHandshake | None:
