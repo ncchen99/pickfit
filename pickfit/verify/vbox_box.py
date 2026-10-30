@@ -1115,8 +1115,10 @@ def prepare_router(*, iso: Path | None = None, name: str = ROUTER_VM, vboxmanage
 # ---------------------------------------------------------------- building the Windows base
 
 
-WIN_MEMORY_MB = 4096
-WIN_CPUS = 4
+# The host is a 4-core/8-thread laptop with 16 GB; with 4 GB and 4 vCPUs (and no host I/O cache) setup froze
+# in its first phase on Hyper-V (an AHCI port reset, then no disk I/O for hours). 6 GB leaves the host ~1.5 GB.
+WIN_MEMORY_MB = 6144
+WIN_CPUS = 6
 WIN_DISK_MB = 65536  # Windows 11 setup requires 64 GB; the VDI is dynamic (about 25 GB used)
 
 PROVISION_SYSTEM = r"""
@@ -1284,7 +1286,8 @@ def create_base_vm(vbox: VBox, name: str, state: Path) -> None:
     for step in (["inituefivarstore"], ["enrollmssignatures"], ["enrollorclpk"], ["secureboot", "--enable"]):
         vbox("modifynvram", name, *step)
     vbox("createmedium", "disk", "--filename", str(disk), "--size", str(WIN_DISK_MB), "--format", "VDI")
-    vbox("storagectl", name, "--name", "SATA", "--add", "sata", "--controller", "IntelAhci", "--portcount", "4")
+    vbox("storagectl", name, "--name", "SATA", "--add", "sata", "--controller", "IntelAhci", "--portcount", "4",
+         "--hostiocache", "on")
     vbox("storageattach", name, "--storagectl", "SATA", "--port", "0", "--device", "0", "--type", "hdd",
          "--medium", str(disk))
 
