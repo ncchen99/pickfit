@@ -176,7 +176,7 @@ def fake(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
             return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()] if path.exists() else []
 
         def state(self) -> dict:
-            return json.loads((tmp_path / "state.json").read_text())
+            return json.loads((tmp_path / "state.json").read_text(encoding="utf-8"))
 
     return Fake()
 

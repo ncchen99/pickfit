@@ -82,7 +82,7 @@ def test_page_walks_through_agent_replay_judge_and_calls(tmp_path: Path) -> None
     runs = tmp_path / "runs"
     write_run(runs)
     assert main([RUN, "--runs", str(runs)]) == 0
-    page = (runs / "pages" / f"{RUN}.html").read_text()
+    page = (runs / "pages" / f"{RUN}.html").read_text(encoding="utf-8")
     assert "Fails: Check version" in page and "exit 2" in page and "rule · flag_unsupported" in page
     assert "&lt;script&gt;alert(1)" in page and "<script>alert(1)" not in page
     assert "Trying the README&#x27;s install." in page and "claimed level" in page
@@ -100,7 +100,7 @@ def test_page_without_judge_or_traces_still_renders(tmp_path: Path) -> None:
     (runs / "traces" / "2026-10-29.jsonl").unlink()
     out = tmp_path / "page.html"
     assert main([RUN, "--runs", str(runs), "--out", str(out)]) == 0
-    page = out.read_text()
+    page = out.read_text(encoding="utf-8")
     assert "A second model judges" not in page and "Every Meta model call" not in page
     assert "$0.0090" in page  # falls back to outcome.json's cost
     assert run_dir.exists()

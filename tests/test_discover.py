@@ -114,10 +114,10 @@ def test_searches_are_spaced_and_traced_without_the_token(tmp_path: Path, no_sle
     assert fake.requests[0].url.params["q"] == "topic:cli"
     assert fake.requests[0].url.params["sort"] == "updated"
     lines = [json.loads(line) for path in (tmp_path / "traces").iterdir()
-             for line in path.read_text().splitlines()]
+             for line in path.read_text(encoding="utf-8").splitlines()]
     assert [line["query_id"] for line in lines] == ["dev_cli:cli", "dev_cli:cli"]
     assert lines[0]["q"] == "topic:cli" and lines[0]["total_count"] == 1 and lines[0]["ts"]
-    assert TOKEN not in (tmp_path / "traces").iterdir().__next__().read_text()
+    assert TOKEN not in (tmp_path / "traces").iterdir().__next__().read_text(encoding="utf-8")
 
 
 def test_search_all_pages_until_max_results(tmp_path: Path) -> None:

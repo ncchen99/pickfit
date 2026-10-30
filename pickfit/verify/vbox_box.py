@@ -591,7 +591,8 @@ class VBoxBox(Box):
     def describe(self) -> str:
         m = self.manifest
         tools = ", ".join(f"{k} {m[k]}" for k in ("python", "uv", "pipx", "node", "npm", "git", "winget") if m.get(k))
-        return (f"Box: Windows 11 Enterprise {m.get('windows', '')} {self.arch} virtual machine, user {WIN_USER} "
+        return (f"Box: {m.get('product', 'Windows 11 Enterprise')} {m.get('windows', '')} {self.arch} virtual "
+                f"machine, user {WIN_USER} "
                 f"(standard user, not an administrator, no UAC elevation), USERPROFILE={self.home}, work dir "
                 f"{self.workdir}. Commands run in PowerShell 7 (pwsh {m.get('pwsh', '7')}): use PowerShell "
                 "syntax (&& and || chain as in bash; $env:NAME for variables; here-strings @' '@ for files). "
@@ -1154,9 +1155,40 @@ icacls $d /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F
 'users-ok'
 """
 
+# Windows LTSC has no Microsoft Store, so no App Installer (winget). Microsoft's documented way for such
+# editions: the winget-cli GitHub release (msixbundle, its licence and the x64 dependencies), provisioned
+# for every user (sbx gets it at its first logon) and added for this one.
+PROVISION_WINGET = r"""
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+  $t = Join-Path $env:TEMP 'pf-winget'
+  New-Item -ItemType Directory -Force $t | Out-Null
+  $rel = Invoke-RestMethod 'https://api.github.com/repos/microsoft/winget-cli/releases/latest' -Headers @{ 'User-Agent' = 'pickfit' }
+  "release=$($rel.tag_name)"
+  foreach ($pat in '\.msixbundle$', '_License1\.xml$', '^DesktopAppInstaller_Dependencies\.zip$') {
+    $a = $rel.assets | Where-Object { $_.name -match $pat } | Select-Object -First 1
+    if (-not $a) { "asset missing: $pat"; exit 4 }
+    & curl.exe -fsSL -o (Join-Path $t $a.name) $a.browser_download_url
+    if ($LASTEXITCODE) { "download failed: $($a.name)"; exit 5 }
+  }
+  Expand-Archive -Path (Get-ChildItem $t -Filter '*Dependencies.zip').FullName -DestinationPath "$t\deps" -Force
+  $deps = @(Get-ChildItem "$t\deps" -Recurse -Include *.appx, *.msix | Where-Object { $_.FullName -match 'x64' } | ForEach-Object FullName)
+  $bundle = (Get-ChildItem $t -Filter *.msixbundle).FullName
+  $sig = Get-AuthenticodeSignature $bundle
+  "bundle_signer=$($sig.SignerCertificate.Subject)"
+  $lic = (Get-ChildItem $t -Filter *License1.xml).FullName
+  Add-AppxProvisionedPackage -Online -PackagePath $bundle -DependencyPackagePath $deps -LicensePath $lic | Out-Null
+  Add-AppxPackage -Path $bundle -DependencyPath $deps -ErrorAction SilentlyContinue
+  $env:Path += ";$env:LOCALAPPDATA\Microsoft\WindowsApps"
+}
+"winget=$(winget --version)"
+"""
+
 # Machine-wide tools (as Administrator) from winget's community repository.
 PROVISION_TOOLS = r"""
 $ErrorActionPreference = 'Continue'
+$env:Path += ";$env:LOCALAPPDATA\Microsoft\WindowsApps"
 $w = Get-Command winget -ErrorAction SilentlyContinue
 if (-not $w) { 'winget missing'; exit 3 }
 $common = '--exact', '--scope', 'machine', '--silent', '--source', 'winget', '--accept-package-agreements',
@@ -1255,7 +1287,8 @@ def create_base_vm(vbox: VBox, name: str, state: Path) -> None:
 
 def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = ROUTER_VM,
                  vboxmanage: Sequence[str] | str | None = None, state_dir: Path | None = None,
-                 resume: bool = False, log: Callable[[str], None] = print) -> dict[str, Any]:
+                 image_index: int = 1, iso_sha256: str | None = None, resume: bool = False,
+                 log: Callable[[str], None] = print) -> dict[str, Any]:
     """Install Windows 11 Enterprise Evaluation unattended, activate it online (through the router),
     install pwsh/git/node/python/uv/pipx machine-wide, create sbx and the harness, harden, boot once more to
     check it like every box will, and take the powered-off `clean` snapshot. Hours, mostly the install.
@@ -1268,6 +1301,14 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
     if iso is None or not Path(iso).exists():
         raise BoxError("give the Windows 11 Enterprise evaluation ISO (--iso) or put it in ~/.pickfit/vbox/iso")
     router_manifest = load_manifest(router, state, "; build the router first")
+    if iso_sha256 is None:
+        import hashlib
+
+        digest = hashlib.sha256()
+        with open(iso, "rb") as f:
+            for chunk in iter(lambda: f.read(1 << 20), b""):
+                digest.update(chunk)
+        iso_sha256 = digest.hexdigest()
     pw = {user: state / f"{name}.{user}.pw" for user in (ADMIN_USER, WIN_USER)}
     exists = vbox("showvminfo", name, check=False).returncode == 0
     if exists and not resume:
@@ -1275,6 +1316,12 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
                        "(or resume=True to continue provisioning it)")
     manifest_path(name, state).unlink(missing_ok=True)
     began = time.monotonic()
+    found = vbox("unattended", "detect", f"--iso={iso}", timeout_s=300)
+    detect = found.stdout + found.stderr
+    image = re.search(rf"Image #{image_index}\s*=\s*(.+?) \(", detect)
+    if image is None:
+        raise BoxError(f"cannot find image {image_index} in the ISO: {detect.strip()[-400:]}")
+    log(f"vbox: {name}: {image.group(1)} from {Path(iso).name}")
     Router(vbox, name=router, state_dir=state, log=log).reset(host_public_ipv4(), router_manifest)
     if not exists:
         for path in pw.values():
@@ -1284,11 +1331,12 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
         vbox("unattended", "install", name, f"--iso={iso}", f"--user={ADMIN_USER}",
              f"--user-password-file={pw[ADMIN_USER]}", f"--full-user-name={ADMIN_USER}", "--install-additions",
              f"--additions-iso={additions}", "--locale=en_US", "--country=TW", "--time-zone=Taipei Standard Time",
-             "--hostname=pickfit-win.local", "--start-vm=headless", timeout_s=300)
+             "--hostname=pickfit-win.local", f"--image-index={image_index}", "--start-vm=headless", timeout_s=300)
         log(f"vbox: {name}: unattended Windows install started (this takes a long time on Hyper-V)")
     _wait_guest(vbox, name, pw[ADMIN_USER], timeout_s=4 * 3600, log=log)
     log(f"vbox: {name}: Guest Additions answer after {time.monotonic() - began:.0f}s; provisioning")
-    manifest: dict[str, Any] = {"base": name, "iso": Path(iso).name, "arch": "x86_64", "user": WIN_USER,
+    manifest: dict[str, Any] = {"base": name, "iso": Path(iso).name, "iso_sha256": iso_sha256,
+                                "product": image.group(1), "arch": "x86_64", "user": WIN_USER,
                                 "virtualbox": vbox("--version").stdout.strip()}
 
     def admin(step: str, script: str, timeout_s: int, ok: Callable[[int, str], bool]) -> str:
@@ -1309,6 +1357,8 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
              .replace("{run}", base64.b64encode(RUN_SCRIPT.encode()).decode())
              .replace("{probe}", base64.b64encode(PROBE_SCRIPT.encode()).decode()))
     admin("sbx and harness", users, 300, lambda c, o: "users-ok" in o)
+    out = admin("winget", PROVISION_WINGET, 1200, lambda c, o: re.search(r"winget=v\d", o) is not None)
+    manifest["winget_bootstrap"] = _kv(out).get("release")
     admin("tools (winget)", PROVISION_TOOLS, 3600, lambda c, o: "pip uv pipx -> 0" in o)
     code, out, err = _raw_ps(vbox, name, WIN_USER, pw[WIN_USER], PROVISION_SBX, 600)
     versions = _kv(out)
@@ -1342,7 +1392,7 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
 
 def image_label(manifest: dict[str, Any], router: dict[str, Any]) -> str:
     """What `VerificationRun.image` records: guest edition and build, base build id, router build id."""
-    return (f"Windows 11 Enterprise Evaluation {manifest.get('windows', '?')} (VirtualBox "
+    return (f"{manifest.get('product', 'Windows 11 Enterprise Evaluation')} {manifest.get('windows', '?')} (VirtualBox "
             f"{manifest.get('virtualbox', '?')}) +{manifest.get('base', BASE_VM)}@{manifest.get('build_id', 'nobuild')}"
             f" router@{router.get('build_id', 'nobuild')}")[:120]
 

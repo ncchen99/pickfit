@@ -117,7 +117,7 @@ def test_works_offline_follows_the_first_task():
     from pickfit.index import works_offline
     from pickfit.schema import VerificationRun
 
-    record = json.loads((FIXTURES / "fixture-llm-runner.json").read_text())
+    record = json.loads((FIXTURES / "fixture-llm-runner.json").read_text(encoding="utf-8"))
     run = VerificationRun.model_validate(record["verification"]["runs"][0])
     online = run.smoke_tests[0].model_copy(update={"command": "npx tool@latest", "offline": False})
     offline = run.smoke_tests[0].model_copy(update={"command": "tool scan --offline", "offline": True})

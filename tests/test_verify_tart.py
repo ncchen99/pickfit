@@ -182,12 +182,12 @@ def make_box(fake_tart: Path, state_dir: Path, monkeypatch: pytest.MonkeyPatch) 
 
 
 def _calls(fake: Path) -> list[list[str]]:
-    return [json.loads(line) for line in (fake.parent / "calls.jsonl").read_text().splitlines()]
+    return [json.loads(line) for line in (fake.parent / "calls.jsonl").read_text(encoding="utf-8").splitlines()]
 
 
 def _phases(fake: Path) -> list[str]:
     log = fake.parent / "phases.log"
-    return log.read_text().split() if log.exists() else []
+    return log.read_text(encoding="utf-8").split() if log.exists() else []
 
 
 @POSIX_ONLY

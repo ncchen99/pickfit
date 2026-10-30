@@ -86,7 +86,7 @@ def fake_docker(tmp_path: Path) -> Path:
 
 
 def _calls(fake: Path) -> list[list[str]]:
-    return [json.loads(line) for line in (fake.parent / "calls.jsonl").read_text().splitlines()]
+    return [json.loads(line) for line in (fake.parent / "calls.jsonl").read_text(encoding="utf-8").splitlines()]
 
 
 @POSIX_ONLY

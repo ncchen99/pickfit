@@ -268,7 +268,7 @@ def setup_records(tmp_path: Path, *, verified: bool = True) -> tuple[Path, Path]
     write_profiles(db, model=MODEL, out_dir=out, now=NOW)
     if verified:
         path = out / "tinyq.json"
-        record = json.loads(path.read_text())
+        record = json.loads(path.read_text(encoding="utf-8"))
         record["verification"] = verification(run(steps=2)).model_dump(mode="json")
         record["install"]["linux"] = {"basis": "replayed", "run_id": "verify-1", "method": "other",
                                       "steps": [{"command": "step 0"}, {"command": "step 1"}]}
@@ -280,12 +280,12 @@ def setup_records(tmp_path: Path, *, verified: bool = True) -> tuple[Path, Path]
 
 def test_scoring_writes_only_scores_and_reuses_the_rubric(tmp_path: Path) -> None:
     db_path, out = setup_records(tmp_path)
-    before = SoftwareRecord.model_validate_json((out / "tinyq.json").read_text()).model_dump(mode="json")
+    before = SoftwareRecord.model_validate_json((out / "tinyq.json").read_text(encoding="utf-8")).model_dump(mode="json")
     calls: list[str] = []
     summary = score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=LATER,
                             grade=fake_grade(calls=calls))
     assert summary.written == ["tinyq"] and calls == ["score:tinyq"] and not summary.errors
-    after = json.loads((out / "tinyq.json").read_text())
+    after = json.loads((out / "tinyq.json").read_text(encoding="utf-8"))
     assert {k for k in after if after[k] != before.get(k)} == {"scores", "updated_at"}
     record = SoftwareRecord.model_validate(after)
     scores = record.scores
@@ -308,7 +308,7 @@ def test_scores_of_an_older_formula_that_break_todays_rules_are_replaced_and_the
     score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW,
                   grade=fake_grade())
     path = out / "tinyq.json"
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding="utf-8"))
     q = data["scores"]["quality"]["total"]
     data["scores"]["formula_version"] = "older"
     data["scores"]["popularity"]["score"] = 10.0  # a treasure under a line below today's quality
@@ -322,7 +322,7 @@ def test_scores_of_an_older_formula_that_break_todays_rules_are_replaced_and_the
     summary = score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False,
                             now=LATER, grade=fake_grade(calls=calls))
     assert summary.written == ["tinyq"] and not summary.errors and calls == []  # the rubric was reused
-    scores = SoftwareRecord.model_validate_json(path.read_text()).scores
+    scores = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8")).scores
     assert scores.formula_version == FORMULA_VERSION and scores.docs_rubric is not None
 
 
@@ -337,15 +337,15 @@ def test_a_rescore_without_lookups_keeps_the_stored_signals(tmp_path: Path) -> N
     score_records(out, db_path=db_path, model=MODEL, use_github=False, now=NOW, grade=fake_grade(),
                   registries=Fixed())
     path = out / "tinyq.json"
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding="utf-8"))
     comps = {k: v["score"] for k, v in data["scores"]["quality"]["components"].items()}
     data["scores"]["quality"] = compose_quality({**comps, "responsiveness": 0.5}, 10, None)  # measured before
     data["scores"]["treasure"] = treasure(data["scores"]["quality"]["total"], data["scores"]["popularity"]["score"])
     path.write_text(json.dumps(data))
-    before = SoftwareRecord.model_validate_json(path.read_text()).scores
+    before = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8")).scores
     again = score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=LATER,
                           grade=fake_grade())
-    after = SoftwareRecord.model_validate_json(path.read_text()).scores
+    after = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8")).scores
     assert again.unchanged == ["tinyq"] and after.quality == before.quality
     assert after.quality.components.responsiveness.score == 0.5
     assert after.popularity.signals == before.popularity.signals and after.popularity.packages == ["npm:tinyq"]
@@ -354,7 +354,7 @@ def test_a_rescore_without_lookups_keeps_the_stored_signals(tmp_path: Path) -> N
 def test_unverified_records_are_capped_below_the_treasure_line(tmp_path: Path) -> None:
     db_path, out = setup_records(tmp_path, verified=False)
     score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW, grade=fake_grade())
-    scores = SoftwareRecord.model_validate_json((out / "tinyq.json").read_text()).scores
+    scores = SoftwareRecord.model_validate_json((out / "tinyq.json").read_text(encoding="utf-8")).scores
     assert scores.quality.cap_reason == "unverified" and scores.quality.total <= 69
     assert scores.quality.components.sandbox_verification.score is None
     assert not scores.treasure.is_treasure
@@ -363,21 +363,21 @@ def test_unverified_records_are_capped_below_the_treasure_line(tmp_path: Path) -
 def test_profiles_rewrite_keeps_scores(tmp_path: Path) -> None:
     db_path, out = setup_records(tmp_path)
     score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW, grade=fake_grade())
-    scored = json.loads((out / "tinyq.json").read_text())
+    scored = json.loads((out / "tinyq.json").read_text(encoding="utf-8"))
     again = write_profiles(PipelineDB(db_path), model=MODEL, out_dir=out, now=NOW)
     assert again.unchanged == ["tinyq"]
-    assert json.loads((out / "tinyq.json").read_text())["scores"] == scored["scores"]
+    assert json.loads((out / "tinyq.json").read_text(encoding="utf-8"))["scores"] == scored["scores"]
 
 
 def test_write_back_keeps_scores_and_refreshes_what_follows_the_run(tmp_path: Path) -> None:
     db_path, out = setup_records(tmp_path, verified=False)
     score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW, grade=fake_grade(1))
-    before = SoftwareRecord.model_validate_json((out / "tinyq.json").read_text()).scores
+    before = SoftwareRecord.model_validate_json((out / "tinyq.json").read_text(encoding="utf-8")).scores
     assert before.quality.cap_reason == "unverified"
     new_run = VerificationRun.model_validate(run("verify-2", steps=5, pitfalls=1))
     written, note = write_back(new_run, "tinyq", out)
     assert written and "scores refreshed" in note
-    after = SoftwareRecord.model_validate_json((out / "tinyq.json").read_text())
+    after = SoftwareRecord.model_validate_json((out / "tinyq.json").read_text(encoding="utf-8"))
     assert after.verification.level == "function" and after.install.linux.run_id == "verify-2"
     s = after.scores
     assert s.quality.cap_reason is None
