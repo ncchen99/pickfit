@@ -40,7 +40,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 2. `reasoning_effort` 預設 `minimal` 或 `low`；只有驗證 agent 用 `medium`。
 3. 所有呼叫都走 `call_meta`（P1.4）：記 trace（model、token、花費）、硬上限、開發模式的回應快取（同一個請求不重複付費）。單元測試一律用錄好的 fixture，不打真的 API。
 4. **只有一本帳**：花費記在 repo 外、所有 worktree 共用的 `~/.pickfit/ledger.sqlite`（加鎖寫入）。上限照這本帳算，平行的 session 才不會各算各的。
-5. **上限分階段**：10/29 前每日 $3；10/29 起管線每日 $25，10/31–11/2 每日 $45；管線總額 $115 硬停（10/31 念誠同意由 $100 調高）。Worker 另計：每日 $3、評審期總額 $20（10/31 由 $40 調降，之前只花 $0.07）；評測部署總額 $10。Windows 主機有自己的帳本，用 `PICKFIT_PIPELINE_TOTAL_CAP_USD=5` 另設 $5 硬停（這個設定只能調低）。
+5. **上限分階段**：10/29 前每日 $3；10/29 起管線每日 $25，10/31 $80、11/1–11/2 每日 $45（念誠 10/31 同意，總額不變）；管線總額 $115 硬停（10/31 念誠同意由 $100 調高）。Worker 另計：每日 $3、評審期總額 $20（10/31 由 $40 調降，之前只花 $0.07）；評測部署總額 $10。Windows 主機有自己的帳本，用 `PICKFIT_PIPELINE_TOTAL_CAP_USD=5` 另設 $5 硬停（這個設定只能調低）。
 6. **先小後大**：新 prompt 先跑 1 筆，再 5 筆、30 筆；每一步看過 `usage` 才放大。
 7. **不要整份 `source .env`**：裡面有 `ANTHROPIC_API_KEY`，從那個 shell 啟動的 `claude` 會改用 API key 計費。spike 在 subshell 裡只帶需要的變數，例如 `(set -a; . ./.env; set +a; unset ANTHROPIC_API_KEY; python3 spikes/…)`；`pickfit` 程式自己從 `.env` 只讀它要的變數。
 8. Anthropic key 只給評測執行器與評分：先跑 2 題估單題花費，再跑全部。評測上限（10/29 事先登記）：第 1 次 $30、補充重跑 $60、Claude 評分 $20；看到結果後不追加。
