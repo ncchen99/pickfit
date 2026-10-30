@@ -56,7 +56,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-neuraldeck-20261031-023423-fc84",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "rm -rf app && git clone https://github.com/AegeanWorks/NeuralDeck.git app",
+          "purpose": "Clone NeuralDeck source from GitHub"
+        },
+        {
+          "command": "/usr/bin/python3 -m venv $HOME/neuraldeck-venv && $HOME/neuraldeck-venv/bin/pip install --upgrade pip && $HOME/neuraldeck-venv/bin/pip install -r app/requirements.txt",
+          "purpose": "Create Tkinter-enabled venv and pip install app requirements"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "cd app && /home/sbx/neuraldeck-venv/bin/python -m pytest tests -q",
+        "expected_signal": "134 passed, 1 skipped"
+      },
+      "first_task": "cd app && /home/sbx/neuraldeck-venv/bin/python -m pytest tests -q"
+    },
     "windows": null
   },
   "pricing": {
@@ -72,22 +92,109 @@
     "url": "https://github.com/AegeanWorks/NeuralDeck/releases/tag/0.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:35:58.230839+08:00",
+    "runs": [
+      {
+        "id": "verify-neuraldeck-20261031-023423-fc84",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-vm",
+        "image": "pickfit-sbx-vm-gui:d217e76065c9",
+        "checked_at": "2026-10-31T02:35:58.230839+08:00",
+        "tool_version": null,
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf app && git clone https://github.com/AegeanWorks/NeuralDeck.git app",
+            "purpose": "Clone NeuralDeck source from GitHub"
+          },
+          {
+            "command": "/usr/bin/python3 -m venv $HOME/neuraldeck-venv && $HOME/neuraldeck-venv/bin/pip install --upgrade pip && $HOME/neuraldeck-venv/bin/pip install -r app/requirements.txt",
+            "purpose": "Create Tkinter-enabled venv and pip install app requirements"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd app && /home/sbx/neuraldeck-venv/bin/python -m pytest tests -q",
+            "expected_signal": "134 passed, 1 skipped",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "134 passed, 1 skipped, 1 warning in 0.46s",
+            "setup": [
+              {
+                "command": "$HOME/neuraldeck-venv/bin/pip install pytest && $HOME/neuraldeck-venv/bin/python --version && $HOME/neuraldeck-venv/bin/python -c \"import ttkbootstrap, docx, pptx, PyPDF2; print('deps ok')\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "bash -c 'cd /home/sbx/work/app && /home/sbx/neuraldeck-venv/bin/python main.py'",
+            "expected_signal": "NeuralDeck",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "window: \"NeuralDeck\" 1200x800 at 0,0 (pid 858)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install -r requirements.txt",
+            "actually_needed": "create venv with /usr/bin/python3 -m venv ~/neuraldeck-venv (the Tkinter-enabled interpreter) and install requirements with that venv's pip; plain `pip install -r requirements.txt` with python3.12 on PATH lacks Tkinter needed by the Tk/ttkbootstrap GUI",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "use the pre-built portable executable from Releases",
+            "actually_needed": "the only release asset NeuralDeck-0.2.zip contains the Windows portable build (NeuralDeck.exe per README); on Linux the app must be run from source as `python main.py`",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows pytest completing with 134 passed, 1 skipped in 0.46s. / NeuralDeck's Generator workspace with review controls, document input, deck list, and status log is fully displayed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-neuraldeck-20261031-023423-fc84/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-neuraldeck-20261031-023423-fc84/check-1-cmd10.judged.png",
+            "runs/verify/verify-neuraldeck-20261031-023423-fc84/replay-8-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.081589,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "bash -c 'cd /home/sbx/work/app && /home/sbx/neuraldeck-venv/bin/python main.py'",
+          "window_title": "NeuralDeck",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        }
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:40:05+08:00",
+    "computed_at": "2026-10-31T02:37:14+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 55.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.3685,
           "weight": 40.0
         },
         "install_docs": {
@@ -128,7 +235,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 49.54
+      "value": 39.71
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -395,5 +502,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-29T14:40:05+08:00"
+  "updated_at": "2026-10-31T02:37:14.564478+08:00"
 }

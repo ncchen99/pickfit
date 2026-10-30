@@ -75,7 +75,31 @@
       "check": null,
       "first_task": "lokalbot-cli search \"database decision\""
     },
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-lokalbot-20261031-023423-2491",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "cd ~/work && curl -fL -o LokalBot-linux.tar.gz https://github.com/stevyhacker/LokalBot/releases/download/v0.11.6/LokalBot-0.11.6-linux-x86_64.tar.gz && ls -lh LokalBot-linux.tar.gz",
+          "purpose": "Download Linux tarball from latest release"
+        },
+        {
+          "command": "mkdir -p ~/work/lokalbot-extract && tar -xzf ~/work/LokalBot-linux.tar.gz -C ~/work/lokalbot-extract",
+          "purpose": "Extract tarball with install.sh and binaries"
+        },
+        {
+          "command": "cd ~/work/lokalbot-extract/LokalBot-0.11.6-linux-x86_64 && ./install.sh",
+          "purpose": "Run install.sh to install app and CLI"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "lokalbot-cli --version",
+        "expected_signal": "lokalbot-cli 0.11.6"
+      },
+      "first_task": "lokalbot"
+    },
     "windows": null
   },
   "pricing": {
@@ -91,22 +115,105 @@
     "url": "https://github.com/stevyhacker/LokalBot/releases/tag/v0.11.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:35:53.613556+08:00",
+    "runs": [
+      {
+        "id": "verify-lokalbot-20261031-023423-2491",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-vm",
+        "image": "pickfit-sbx-vm-gui:d217e76065c9",
+        "checked_at": "2026-10-31T02:35:53.613556+08:00",
+        "tool_version": "0.11.6",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd ~/work && curl -fL -o LokalBot-linux.tar.gz https://github.com/stevyhacker/LokalBot/releases/download/v0.11.6/LokalBot-0.11.6-linux-x86_64.tar.gz && ls -lh LokalBot-linux.tar.gz",
+            "purpose": "Download Linux tarball from latest release"
+          },
+          {
+            "command": "mkdir -p ~/work/lokalbot-extract && tar -xzf ~/work/LokalBot-linux.tar.gz -C ~/work/lokalbot-extract",
+            "purpose": "Extract tarball with install.sh and binaries"
+          },
+          {
+            "command": "cd ~/work/lokalbot-extract/LokalBot-0.11.6-linux-x86_64 && ./install.sh",
+            "purpose": "Run install.sh to install app and CLI"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lokalbot-cli --version",
+            "expected_signal": "lokalbot-cli 0.11.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lokalbot-cli 0.11.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lokalbot-cli --help",
+            "expected_signal": "Read-only access to your local LokalBot meeting library.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Read-only access to your local LokalBot meeting library.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lokalbot",
+            "expected_signal": "Welcome to LokalBot",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "window: \"Welcome to LokalBot\" 650x640 at 317,80 (pid 836)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows `lokalbot-cli --version` printing `lokalbot-cli 0.11.6`. / The LokalBot window shows a 'Welcome to LokalBot' onboarding wizard asking to 'Choose What to Remember' with Step 1 of 4 and Continue controls.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lokalbot-20261031-023423-2491/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lokalbot-20261031-023423-2491/check-1-cmd5.judged.png",
+            "runs/verify/verify-lokalbot-20261031-023423-2491/replay-7-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.08347,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "lokalbot",
+          "window_title": "LokalBot",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        }
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:40:05+08:00",
+    "computed_at": "2026-10-31T02:37:14+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 73.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.51,
           "weight": 40.0
         },
         "install_docs": {
@@ -147,7 +254,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 21.18
+      "value": 22.41
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -454,5 +561,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-10-29T14:40:05+08:00"
+  "updated_at": "2026-10-31T02:37:14.563080+08:00"
 }
