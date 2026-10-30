@@ -54,7 +54,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-telegram-archive-mcp-20261031-012800-cc25",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g telegram-archive-mcp",
+          "purpose": "install telegram-archive-mcp globally"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "telegram-archive-mcp --help",
+        "expected_signal": "Telegram-Archive MCP Bridge 0.4.1"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -70,10 +86,96 @@
     "url": "https://github.com/GeiserX/telegram-archive-mcp/releases/tag/v0.4.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:28:37.091669+08:00",
+    "runs": [
+      {
+        "id": "verify-telegram-archive-mcp-20261031-012800-cc25",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:28:37.091669+08:00",
+        "tool_version": "0.4.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g telegram-archive-mcp",
+            "purpose": "install telegram-archive-mcp globally"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "telegram-archive-mcp --help",
+            "expected_signal": "Telegram-Archive MCP Bridge 0.4.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Telegram-Archive MCP Bridge 0.4.1 (8b5a0fc) 2026-10-28T19:59:46Z",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- telegram-archive-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show successful MCP handshake with 12 tools and the expected 0.4.1 help header.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-telegram-archive-mcp-20261031-012800-cc25/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-telegram-archive-mcp-20261031-012800-cc25/check-1-cmd3.judged.png",
+            "runs/verify/verify-telegram-archive-mcp-20261031-012800-cc25/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.027987,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "telegram-archive-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "Telegram-Archive?MCP?Bridge",
+          "server_version": "0.4.1",
+          "tools": [
+            "get_chat_stats",
+            "get_media",
+            "get_message_context",
+            "get_messages",
+            "get_messages_by_date",
+            "get_pinned_messages",
+            "get_topics",
+            "list_chats",
+            "list_folders",
+            "refresh_stats",
+            "search_all_chats",
+            "search_messages"
+          ],
+          "tool_count": 12,
+          "called_tool": null,
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -530,5 +632,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:42+08:00",
-  "updated_at": "2026-10-31T01:15:49+08:00"
+  "updated_at": "2026-10-31T01:28:37.092542+08:00"
 }

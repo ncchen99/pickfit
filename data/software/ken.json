@@ -115,9 +115,64 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "suspected_tool_fault",
+    "checked_at": "2026-10-31T01:23:49.980470+08:00",
+    "runs": [
+      {
+        "id": "verify-ken-20261031-012317-cd3d",
+        "level": "unverified",
+        "unverified_reason": "suspected_tool_fault",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:23:49.980470+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "uname -m && curl -L -o /tmp/ken.tar.gz https://github.com/townsendmerino/ken/releases/download/v1.12.1/ken_1.12.1_linux_amd64.tar.gz && tar tzf /tmp/ken.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/ken.tar.gz -C /tmp/ && ls -la /tmp/*.tar.gz /tmp/ken* 2>&1; ls -la /tmp/",
+            "purpose": "Download prebuilt linux_amd64 ken tarball and extract ken and ken-mcp binaries"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ken --help",
+            "expected_signal": "ken download-model fetches",
+            "exit_code": 2,
+            "passed": false,
+            "observed_excerpt": "ken download-model fetches the three files Model2Vec needs (model.safetensors,",
+            "setup": [
+              {
+                "command": "uname -m && curl -L -o /tmp/ken.tar.gz https://github.com/townsendmerino/ken/releases/download/v1.12.1/ken_1.12.1_linux_amd64.tar.gz && tar tzf /tmp/ken.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/ken.tar.gz -C /tmp/ && ls -la /tmp/*.tar.gz /tmp/ken* 2>&1; ls -la /tmp/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go install github.com/townsendmerino/ken/cmd/ken@latest and go install github.com/townsendmerino/ken/cmd/ken-mcp@latest",
+            "actually_needed": "Go toolchain is not installed in the box and must not be installed per rules, so go install candidates cannot be used; used prebuilt linux_amd64 tarball from GitHub releases instead",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": "suspected tool fault, not proven: nothing checked further (install step 2 did not succeed); ken --help / ken --version / ken version all exit 2 while printing help text to stderr (repeated across command_ids 3, 4, 5, 6); --version/--help never exited 0 so PATH check and MCP probe could not be completed",
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-ken-20261031-012317-cd3d/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.058874
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -592,5 +647,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-10-31T01:15:49+08:00"
+  "updated_at": "2026-10-31T01:23:49.981818+08:00"
 }

@@ -70,13 +70,13 @@
       "first_task": null
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-yet-another-agentic-chat-20261031-012621-1f13",
       "method": "uv",
       "steps": [
         {
-          "command": "uvx --from \"yet-another-agentic-chat[chat]\" yaac-chat",
-          "purpose": null
+          "command": "uv tool install \"yet-another-agentic-chat\" 2>&1",
+          "purpose": "install yet-another-agentic-chat with uv tool"
         }
       ],
       "manual_steps": [],
@@ -111,10 +111,91 @@
     "url": "https://github.com/amyodov/yet-another-agentic-chat/releases/tag/v0.6.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:27:24.529858+08:00",
+    "runs": [
+      {
+        "id": "verify-yet-another-agentic-chat-20261031-012621-1f13",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:27:24.529858+08:00",
+        "tool_version": "0.6.5",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install \"yet-another-agentic-chat\" 2>&1",
+            "purpose": "install yet-another-agentic-chat with uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- yet-another-agentic-chat",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call list_channels --args '{}' -- yet-another-agentic-chat",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list_channels content=text text_chars=136",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show MCP handshake ok with 7 tools listed and list_channels returning an empty normal result.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-yet-another-agentic-chat-20261031-012621-1f13/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-yet-another-agentic-chat-20261031-012621-1f13/check-1-cmd4.judged.png",
+            "runs/verify/verify-yet-another-agentic-chat-20261031-012621-1f13/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.038657,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "yet-another-agentic-chat"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "yaac",
+          "server_version": null,
+          "tools": [
+            "list_channels",
+            "join_channel",
+            "send",
+            "check_inbox",
+            "peers",
+            "leave_channel",
+            "dev_connections"
+          ],
+          "tool_count": 7,
+          "called_tool": "list_channels",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -455,5 +536,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-10-31T01:15:49+08:00"
+  "updated_at": "2026-10-31T01:27:24.530608+08:00"
 }

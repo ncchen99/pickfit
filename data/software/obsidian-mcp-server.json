@@ -52,7 +52,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-obsidian-mcp-server-20261031-012317-8166",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "mkdir -p /tmp/test-vault && printf '# Hello\\n\\nThis is a test note with tag #test.\\n\\nSee [[Other]].\\n' > /tmp/test-vault/Hello.md && printf '# Other\\n\\nLinked back from Hello.\\n' > /tmp/test-vault/Other.md && ls -la /tmp/test-vault && npm install -g @smith-and-web/obsidian-mcp-server",
+          "purpose": "create test vault and npm install -g package"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "curl http://localhost:3001/health",
+        "expected_signal": "\"status\":\"ok\""
+      },
+      "first_task": "curl http://localhost:3001/health"
+    },
     "windows": null
   },
   "pricing": {
@@ -68,10 +84,151 @@
     "url": "https://github.com/smith-and-web/obsidian-mcp-server/releases/tag/v1.5.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:24:52.221689+08:00",
+    "runs": [
+      {
+        "id": "verify-obsidian-mcp-server-20261031-012317-8166",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:24:52.221689+08:00",
+        "tool_version": "1.12.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p /tmp/test-vault && printf '# Hello\\n\\nThis is a test note with tag #test.\\n\\nSee [[Other]].\\n' > /tmp/test-vault/Hello.md && printf '# Other\\n\\nLinked back from Hello.\\n' > /tmp/test-vault/Other.md && ls -la /tmp/test-vault && npm install -g @smith-and-web/obsidian-mcp-server",
+            "purpose": "create test vault and npm install -g package"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "curl http://localhost:3001/health",
+            "expected_signal": "\"status\":\"ok\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"ok\",\"vault\":\"/tmp/test-vault\",\"auth\":\"disabled\",\"semanticSearch\":\"disabled\"}",
+            "setup": [
+              {
+                "command": "VAULT_PATH=/tmp/test-vault PORT=3001 obsidian-mcp-server",
+                "background": true,
+                "port": 3001
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --url http://127.0.0.1:3001/sse",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "VAULT_PATH=/tmp/test-vault PORT=3001 obsidian-mcp-server",
+                "background": true,
+                "port": 3001
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call list-vault --args '{}' --url http://127.0.0.1:3001/sse",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list-vault content=text text_chars=91",
+            "setup": [
+              {
+                "command": "VAULT_PATH=/tmp/test-vault PORT=3001 obsidian-mcp-server",
+                "background": true,
+                "port": 3001
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "VAULT_PATH=/path/to/your/vault npx @smith-and-web/obsidian-mcp-server and 'obsidian-mcp-server --help' style checks",
+            "actually_needed": "Use global install 'npm install -g @smith-and-web/obsidian-mcp-server' then run 'VAULT_PATH=/tmp/test-vault PORT=3001 obsidian-mcp-server'; npx fetch would fail with network off on replay. The binary 'obsidian-mcp-server' has no --help/--version: running it with --help starts the server instead of …",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Health returns status ok, MCP handshake lists 31 tools, and list-vault call returns Hello.md and Other.md.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-obsidian-mcp-server-20261031-012317-8166/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-obsidian-mcp-server-20261031-012317-8166/check-1-cmd5.judged.png",
+            "runs/verify/verify-obsidian-mcp-server-20261031-012317-8166/check-2-cmd6.judged.png",
+            "runs/verify/verify-obsidian-mcp-server-20261031-012317-8166/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.054911,
+        "mcp": {
+          "transport": "streamable_http",
+          "launch": [
+            "VAULT_PATH=/tmp/test-vault",
+            "PORT=3001",
+            "obsidian-mcp-server"
+          ],
+          "url": "http://127.0.0.1:3001/sse",
+          "protocol_version": "2024-11-05",
+          "server_name": "obsidian-mcp",
+          "server_version": "1.12.0",
+          "tools": [
+            "read-note",
+            "read-multiple-notes",
+            "create-note",
+            "edit-note",
+            "delete-note",
+            "move-note",
+            "duplicate-note",
+            "write-note",
+            "get-notes-info",
+            "create-directory",
+            "delete-directory",
+            "rename-directory",
+            "list-vault",
+            "get-frontmatter",
+            "update-frontmatter",
+            "add-tags",
+            "remove-tags",
+            "list-tags",
+            "find-notes-by-tag",
+            "search-missing-tag",
+            "audit-tags",
+            "search-vault",
+            "get-backlinks",
+            "find-broken-links",
+            "append-to-file",
+            "append-to-section",
+            "replace-section",
+            "insert-at-marker",
+            "read-section",
+            "list-headings",
+            "find-replace"
+          ],
+          "tool_count": 31,
+          "called_tool": "list-vault",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -524,5 +681,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:50:21+08:00",
-  "updated_at": "2026-10-31T01:15:49+08:00"
+  "updated_at": "2026-10-31T01:24:52.222390+08:00"
 }

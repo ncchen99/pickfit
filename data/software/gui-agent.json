@@ -94,9 +94,62 @@
   "last_release": null,
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "gui_only",
+    "checked_at": "2026-10-31T01:25:53.781566+08:00",
+    "runs": [
+      {
+        "id": "verify-gui-agent-20261031-012425-2fe6",
+        "level": "unverified",
+        "unverified_reason": "gui_only",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:25:53.781566+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "source",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/leandre755/gui_agent.git /tmp/gui_agent 2>&1 | tail -c 2000\nls /tmp/gui_agent 2>&1; echo \"---\"; ls /tmp/gui_agent/linux 2>&1 | head -n 50",
+            "purpose": "Clone repo source for local install"
+          },
+          {
+            "command": "rm -rf /tmp/gui_build && cp -r /tmp/gui_agent /tmp/gui_build && sed -i '/evdev>=/d' /tmp/gui_build/pyproject.toml && grep -n evdev /tmp/gui_build/pyproject.toml; echo \"patched\"; uv tool install /tmp/gui_build --force 2>&1",
+            "purpose": "Remove evdev dependency and install with uv tool"
+          }
+        ],
+        "smoke_tests": [],
+        "pitfalls": [
+          {
+            "readme_said": "uv tool install gui-agent",
+            "actually_needed": "PyPI package gui-agent 0.0.1 provides no executables; must install from git source instead",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "uv tool install git+https://github.com/leandre755/gui_agent.git",
+            "actually_needed": "remove the evdev>=1.7.0 line from pyproject.toml before install because evdev builds from source and needs kernel headers (linux/input.h) not present and not installable without root",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "launch command gui-agent speaks MCP over stdio",
+            "actually_needed": "a running X11 display is required; with DISPLAY=:0 and no X server the server exits during import with Xlib.error.DisplayConnectionError: Can't connect to display",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-gui-agent-20261031-012425-2fe6/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.153361
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -519,5 +572,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-10-31T01:15:49+08:00"
+  "updated_at": "2026-10-31T01:25:53.783512+08:00"
 }

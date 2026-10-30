@@ -67,17 +67,20 @@
       "first_task": null
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-termcp-20261031-012724-a2db",
       "method": "npm",
       "steps": [
         {
           "command": "npm i -g @open-mcp-ai/termcp",
-          "purpose": null
+          "purpose": "Install termcp via npm global"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "termcp -version",
+        "expected_signal": "termcp v0.2.8"
+      },
       "first_task": null
     },
     "windows": {
@@ -108,10 +111,97 @@
     "url": "https://github.com/open-mcp-ai/Termcp/releases/tag/v0.2.8"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:28:55.212204+08:00",
+    "runs": [
+      {
+        "id": "verify-termcp-20261031-012724-a2db",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:28:55.212204+08:00",
+        "tool_version": "v0.2.8",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm i -g @open-mcp-ai/termcp",
+            "purpose": "Install termcp via npm global"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "termcp -version",
+            "expected_signal": "termcp v0.2.8",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "termcp v0.2.8 (commit 0595cb5) built 2026-10-26T15:58:14Z",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- termcp daemon stdio",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call term --args '{}' -- termcp daemon stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=term content=text text_chars=4148",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show termcp v0.2.8 printed, MCP stdio handshake succeeding, and term tool call returning 200 OK.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-termcp-20261031-012724-a2db/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-termcp-20261031-012724-a2db/check-1-cmd3.judged.png",
+            "runs/verify/verify-termcp-20261031-012724-a2db/check-2-cmd4.judged.png",
+            "runs/verify/verify-termcp-20261031-012724-a2db/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.068581,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "termcp",
+            "daemon",
+            "stdio"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "termcp",
+          "server_version": "v0.2.8",
+          "tools": [
+            "term"
+          ],
+          "tool_count": 1,
+          "called_tool": "term",
+          "offline": false
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -392,5 +482,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:34+08:00",
-  "updated_at": "2026-10-31T01:15:49+08:00"
+  "updated_at": "2026-10-31T01:28:55.213147+08:00"
 }

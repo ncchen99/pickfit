@@ -63,9 +63,103 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "gui_only",
+    "checked_at": "2026-10-31T01:27:32.106218+08:00",
+    "runs": [
+      {
+        "id": "verify-freecad-addon-robust-mcp-server-20261031-012621-9147",
+        "level": "unverified",
+        "unverified_reason": "gui_only",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:27:32.106218+08:00",
+        "tool_version": "0.6.1",
+        "install_method": "uv",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "uv tool install freecad-robust-mcp 2>&1",
+            "purpose": "Install via uv tool install freecad-robust-mcp"
+          },
+          {
+            "command": "uv pip install --python ~/.local/share/uv/tools/freecad-robust-mcp/bin/python \"mcp<2\" 2>&1",
+            "purpose": "Pin mcp<2 in tool env to fix FastMCP import"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "freecad-mcp --help 2>&1",
+            "expected_signal": "FreeCAD Robust MCP Server",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "FreeCAD Robust MCP Server - Connect AI assistants to FreeCAD",
+            "setup": [
+              {
+                "command": "uv tool install freecad-robust-mcp 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "uv pip install --python ~/.local/share/uv/tools/freecad-robust-mcp/bin/python \"mcp<2\" 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "freecad-mcp --version 2>&1",
+            "expected_signal": "freecad-mcp unknown",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "freecad-mcp unknown",
+            "setup": [
+              {
+                "command": "uv tool install freecad-robust-mcp 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "uv pip install --python ~/.local/share/uv/tools/freecad-robust-mcp/bin/python \"mcp<2\" 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install freecad-robust-mcp then freecad-mcp --help",
+            "actually_needed": "downgrade the isolated tool env to mcp v1: uv pip install --python ~/.local/share/uv/tools/freecad-robust-mcp/bin/python \"mcp<2\" (gets mcp 1.30.0) before freecad-mcp will start",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "freecad-mcp --version shows version information",
+            "actually_needed": "freecad-mcp --version prints 'freecad-mcp unknown' (package is freecad-robust-mcp 0.6.1); use install output for version",
+            "kind": "note"
+          },
+          {
+            "readme_said": "FREECAD_MODE=xmlrpc freecad-mcp starts the MCP server",
+            "actually_needed": "a running FreeCAD with the Robust MCP Bridge started (XML-RPC localhost:9875 / socket localhost:9876) is required before the MCP handshake; server exits with CONNECTION REFUSED otherwise",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-freecad-addon-robust-mcp-server-20261031-012621-9147/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.089517
+      }
+    ]
   },
   "mcp": {
     "transports": [],
@@ -522,5 +616,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-10-31T01:15:49+08:00"
+  "updated_at": "2026-10-31T01:27:32.109429+08:00"
 }

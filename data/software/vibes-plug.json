@@ -105,9 +105,123 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "suspected_tool_fault",
+    "checked_at": "2026-10-31T01:31:19.388763+08:00",
+    "runs": [
+      {
+        "id": "verify-vibes-plug-20261031-012553-ee21",
+        "level": "unverified",
+        "unverified_reason": "suspected_tool_fault",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:31:19.388763+08:00",
+        "tool_version": "4.2.1",
+        "install_method": "npm",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "npm i -g vibes-plug 2>&1",
+            "purpose": "Install vibes-plug globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "vibes --version",
+            "expected_signal": "Vibes-Plug CLI (v4.2.1)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "🌊 Vibes-Plug CLI (v4.2.1)",
+            "setup": [
+              {
+                "command": "npm i -g vibes-plug 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "vibes --help",
+            "expected_signal": "Start the native Model Context Protocol",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mcp Start the native Model Context Protocol (MCP) server on stdio",
+            "setup": [
+              {
+                "command": "npm i -g vibes-plug 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 -- node /home/sbx/.local/lib/node_modules/vibes-plug/bin/mcp-server.mjs",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "npm i -g vibes-plug 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 --call vibes_compile_cache --args '{}' -- node /home/sbx/.local/lib/node_modules/vibes-plug/bin/mcp-server.mjs",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=vibes_compile_cache content=text text_chars=173",
+            "setup": [
+              {
+                "command": "npm i -g vibes-plug 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- vibes mcp",
+            "expected_signal": "",
+            "exit_code": 3,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"error\": \"no answer to initialize within 120s\", \"exit\": 0, \"launch\": [\"vibes\", \"mcp\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"transport\": \"stdio\", \"url\": null}",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "vibes mcp starts the native MCP server on stdio",
+            "actually_needed": "Run the underlying server directly: node /home/sbx/.local/lib/node_modules/vibes-plug/bin/mcp-server.mjs (handshake ok, 8 tools). The `vibes mcp` wrapper never forwards stdio because the parent keeps a readline on stdin.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "VibesPlug Pro v4.5.0 with 176 skills and 42 MCP tools",
+            "actually_needed": "npm installs vibes-plug 4.2.1 exposing 8 MCP tools (vibes_ast_query, vibes_eval_sql, vibes_arbitrate_code, vibes_verify_invariants, vibes_get_skill, vibes_memory, vibes_swarm, vibes_compile_cache) and 147 skills, not 176 skills / 42 tools.",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": "suspected tool fault, not proven: command 4 exits 3 (command 4 shows no error of the tool's own code); it failed again in a fresh box; `vibes mcp` never answers MCP initialize (probe: no answer to initialize within 120s). Wrapper bin/vibes.mjs holds stdin in a readline interface and spawns bin/mcp-server.mjs with stdio:inherit, so the child never receives the JSON-RPC request; launching bin/mcp-server.mjs directly handshakes fine.",
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-vibes-plug-20261031-012553-ee21/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.104426
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -393,5 +507,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:50:21+08:00",
-  "updated_at": "2026-10-31T01:15:49+08:00"
+  "updated_at": "2026-10-31T01:31:19.390670+08:00"
 }

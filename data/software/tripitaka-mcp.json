@@ -58,7 +58,24 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-tripitaka-mcp-20261031-012513-09f2",
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install tripitaka-mcp 2>&1",
+          "purpose": "pipx install tripitaka-mcp"
+        },
+        {
+          "command": "tripitaka-mcp init 2>&1",
+          "purpose": "download SQLite database via tripitaka-mcp init"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -74,10 +91,106 @@
     "url": "https://github.com/dhamma-seeker/tripitaka-mcp/releases/tag/v1.3.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:26:21.804032+08:00",
+    "runs": [
+      {
+        "id": "verify-tripitaka-mcp-20261031-012513-09f2",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:26:21.804032+08:00",
+        "tool_version": "1.1.0",
+        "install_method": "pipx",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pipx install tripitaka-mcp 2>&1",
+            "purpose": "pipx install tripitaka-mcp"
+          },
+          {
+            "command": "tripitaka-mcp init 2>&1",
+            "purpose": "download SQLite database via tripitaka-mcp init"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- tripitaka-mcp serve 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call list_structure --args '{}' -- tripitaka-mcp serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list_structure content=text text_chars=3753",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "The server sends its own instructions to the calling agent when a client connects",
+            "actually_needed": "The server's instructions have instruction-like text aimed at the agent (text about how to use other tools). pickfit neither kept nor followed it; read what the server sends before enabling it.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP initialize handshake with 11 tools and a successful list_structure call returning corpus data.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tripitaka-mcp-20261031-012513-09f2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tripitaka-mcp-20261031-012513-09f2/check-1-cmd4.judged.png",
+            "runs/verify/verify-tripitaka-mcp-20261031-012513-09f2/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.041287,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "tripitaka-mcp",
+            "serve"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "Tripitaka",
+          "server_version": "4.1.4",
+          "tools": [
+            "search_by_keyword",
+            "survey_corpus",
+            "get_sutta",
+            "list_structure",
+            "get_reference",
+            "list_editions",
+            "compare_translations",
+            "get_word_definition",
+            "verify_quote",
+            "define_from_suttas",
+            "parse_pali_word"
+          ],
+          "tool_count": 11,
+          "called_tool": "list_structure",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -594,5 +707,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:50:13+08:00",
-  "updated_at": "2026-10-31T01:15:49+08:00"
+  "updated_at": "2026-10-31T01:26:21.804749+08:00"
 }

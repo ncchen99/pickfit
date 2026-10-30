@@ -53,7 +53,20 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mcp-india-stack-20261031-012443-1cbb",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install mcp-india-stack 2>&1",
+          "purpose": "install mcp-india-stack with uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -69,10 +82,158 @@
     "url": "https://github.com/rehan1020/MCP-India-Stack/releases/tag/v0.7.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:25:43.232477+08:00",
+    "runs": [
+      {
+        "id": "verify-mcp-india-stack-20261031-012443-1cbb",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:25:43.232477+08:00",
+        "tool_version": "0.7.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install mcp-india-stack 2>&1",
+            "purpose": "install mcp-india-stack with uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- mcp-india-stack 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call validate_pan --args '{\"pan\": \"ABCDE1234F\"}' -- mcp-india-stack 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=validate_pan content=text text_chars=769",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake listing 74 tools and successful validate_pan call returning valid true.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mcp-india-stack-20261031-012443-1cbb/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mcp-india-stack-20261031-012443-1cbb/check-1-cmd3.judged.png",
+            "runs/verify/verify-mcp-india-stack-20261031-012443-1cbb/check-2-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.044218,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "mcp-india-stack"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "mcp-india-stack",
+          "server_version": "1.30.0",
+          "tools": [
+            "lookup_ifsc",
+            "bulk_validate_ifsc",
+            "lookup_bbps_biller",
+            "calculate_epf_esic",
+            "calculate_neft_rtgs_imps_charges",
+            "lookup_bank",
+            "validate_aa_consent_artifact",
+            "decode_aa_fi_type",
+            "calculate_emi",
+            "calculate_gratuity",
+            "calculate_ppf_maturity",
+            "calculate_fd_maturity",
+            "calculate_rd_maturity",
+            "calculate_sip_returns",
+            "calculate_step_up_sip",
+            "calculate_nps_projection",
+            "calculate_sukanya_samriddhi",
+            "calculate_home_vs_rent",
+            "validate_gstin",
+            "bulk_validate_gstin",
+            "validate_pan",
+            "bulk_validate_pan",
+            "decode_pan_type",
+            "validate_upi_vpa",
+            "validate_aadhaar",
+            "bulk_validate_aadhaar",
+            "validate_voter_id",
+            "validate_driving_license",
+            "validate_passport",
+            "validate_cin",
+            "validate_din",
+            "validate_fssai",
+            "validate_tan",
+            "validate_mobile_number",
+            "validate_pran",
+            "validate_llpin",
+            "validate_epf_code",
+            "validate_esic_code",
+            "decode_digilocker_uri",
+            "decode_cnr_number",
+            "lookup_court_establishment_code",
+            "lookup_ipc_section",
+            "lookup_bns_section",
+            "lookup_crpc_section",
+            "lookup_bnss_section",
+            "lookup_evidence_act_section",
+            "lookup_bsa_section",
+            "decode_ipc_bns_crosswalk",
+            "calculate_limitation_deadline",
+            "calculate_court_fee",
+            "calculate_stamp_duty",
+            "calculate_rti_fee",
+            "calculate_rti_deadline",
+            "calculate_rti_penalty_estimate",
+            "get_regulatory_deadlines",
+            "lookup_pincode",
+            "lookup_hsn_code",
+            "decode_state_code",
+            "decode_isin",
+            "get_stock_quote",
+            "get_stock_history",
+            "calculate_income_tax",
+            "calculate_tds",
+            "calculate_gst",
+            "calculate_surcharge",
+            "calculate_hra_exemption",
+            "calculate_capital_gains",
+            "calculate_advance_tax",
+            "calculate_gst_late_fee",
+            "calculate_income_tax_interest",
+            "calculate_presumptive_tax",
+            "calculate_professional_tax",
+            "calculate_leave_encashment_tax",
+            "calculate_salary_restructuring"
+          ],
+          "tool_count": 74,
+          "called_tool": "validate_pan",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [],
@@ -406,5 +567,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-10-31T01:15:49+08:00"
+  "updated_at": "2026-10-31T01:25:43.233090+08:00"
 }

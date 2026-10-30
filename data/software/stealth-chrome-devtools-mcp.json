@@ -53,7 +53,20 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-stealth-chrome-devtools-mcp-20261031-012705-d458",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install stealth-chrome-devtools-mcp==2.1.54",
+          "purpose": "install via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -69,10 +82,181 @@
     "url": "https://github.com/DevinoSolutions/stealth-chrome-devtools-mcp/releases/tag/v2.1.54"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:28:05.294071+08:00",
+    "runs": [
+      {
+        "id": "verify-stealth-chrome-devtools-mcp-20261031-012705-d458",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:28:05.294071+08:00",
+        "tool_version": "2.1.54",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install stealth-chrome-devtools-mcp==2.1.54",
+            "purpose": "install via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- stealth-chrome-devtools-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call list_instances --args '{}' -- stealth-chrome-devtools-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list_instances content=- text_chars=0",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show successful initialize with 97 tools, handshake ok, and list_instances call returning ok with zero content.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-stealth-chrome-devtools-mcp-20261031-012705-d458/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-stealth-chrome-devtools-mcp-20261031-012705-d458/check-1-cmd3.judged.png",
+            "runs/verify/verify-stealth-chrome-devtools-mcp-20261031-012705-d458/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.033905,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "stealth-chrome-devtools-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "stealth-chrome-devtools-mcp",
+          "server_version": "2.1.54",
+          "tools": [
+            "spawn_browser",
+            "list_instances",
+            "close_instance",
+            "get_instance_state",
+            "navigate",
+            "go_back",
+            "go_forward",
+            "reload_page",
+            "query_elements",
+            "click_element",
+            "upload_file",
+            "type_text",
+            "paste_text",
+            "select_option",
+            "get_element_state",
+            "wait_for_element",
+            "scroll_page",
+            "execute_script",
+            "get_page_content",
+            "take_screenshot",
+            "list_network_requests",
+            "get_request_details",
+            "get_response_details",
+            "get_response_content",
+            "search_network_requests",
+            "export_network_data",
+            "import_network_data",
+            "set_network_capture_filters",
+            "get_network_capture_filters",
+            "modify_headers",
+            "get_cookies",
+            "set_cookie",
+            "clear_cookies",
+            "get_debug_view",
+            "clear_debug_view",
+            "export_debug_logs",
+            "get_debug_lock_status",
+            "validate_browser_environment_tool",
+            "list_tabs",
+            "switch_tab",
+            "close_tab",
+            "get_active_tab",
+            "new_tab",
+            "extract_element_styles",
+            "extract_element_structure",
+            "extract_element_events",
+            "extract_element_animations",
+            "extract_element_assets",
+            "extract_element_styles_cdp",
+            "extract_related_files",
+            "clone_element_complete",
+            "extract_complete_element_cdp",
+            "clone_element_progressive",
+            "expand_styles",
+            "expand_events",
+            "expand_children",
+            "expand_css_rules",
+            "expand_pseudo_elements",
+            "expand_animations",
+            "list_stored_elements",
+            "clear_stored_element",
+            "clear_all_elements",
+            "clone_element_to_file",
+            "extract_complete_element_to_file",
+            "extract_element_styles_to_file",
+            "extract_element_structure_to_file",
+            "extract_element_events_to_file",
+            "extract_element_animations_to_file",
+            "extract_element_assets_to_file",
+            "list_clone_files",
+            "cleanup_clone_files",
+            "list_cdp_commands",
+            "execute_cdp_command",
+            "get_execution_contexts",
+            "discover_global_functions",
+            "discover_object_methods",
+            "call_javascript_function",
+            "inspect_function_signature",
+            "inject_and_execute_script",
+            "create_persistent_function",
+            "execute_function_sequence",
+            "create_python_binding",
+            "execute_python_in_browser",
+            "get_function_executor_info",
+            "create_dynamic_hook",
+            "create_simple_dynamic_hook",
+            "list_dynamic_hooks",
+            "get_dynamic_hook_details",
+            "remove_dynamic_hook",
+            "get_hook_documentation",
+            "get_hook_examples",
+            "get_hook_requirements_documentation",
+            "get_hook_common_patterns",
+            "validate_hook_function",
+            "acquire_session_lock",
+            "release_session_lock",
+            "get_session_lock_status"
+          ],
+          "tool_count": 97,
+          "called_tool": "list_instances",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -500,5 +684,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:19+08:00",
-  "updated_at": "2026-10-31T01:15:49+08:00"
+  "updated_at": "2026-10-31T01:28:05.296257+08:00"
 }

@@ -57,7 +57,20 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-cad-mcp-server-20261031-012435-b0a8",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g cad-mcp-server",
+          "purpose": "Install cad-mcp-server globally with npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -73,10 +86,94 @@
     "url": "https://github.com/ottonic/cad-mcp-server/releases/tag/cad-mcp-server-v0.8.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:26:21.786628+08:00",
+    "runs": [
+      {
+        "id": "verify-cad-mcp-server-20261031-012435-b0a8",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:26:21.786628+08:00",
+        "tool_version": "0.3.2",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g cad-mcp-server",
+            "purpose": "Install cad-mcp-server globally with npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- cad-mcp-server",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Requirements: Node.js 24+",
+            "actually_needed": "Node.js v22.23.4 worked; package.json engines field allows >=22",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "Tools table lists inspect, find_entities, measure, describe_pmi, diff",
+            "actually_needed": "Server lists 4 tools: inspect_step, query_step, diff_step, transact_step (probe output)",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "Launch command: npx -y cad-mcp-server",
+            "actually_needed": "Use installed binary directly: cad-mcp-server (on PATH via npm install -g cad-mcp-server); it runs over stdio with no --version/--help (with an argument it just starts the server: 'CAD MCP Server started (4-tool surface)' and waits on stdin)",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows MCP probe initializing successfully, listing 4 tools, and reporting handshake: ok.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-cad-mcp-server-20261031-012435-b0a8/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-cad-mcp-server-20261031-012435-b0a8/check-1-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.089454,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "cad-mcp-server"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "cad-mcp-server",
+          "server_version": "0.3.2",
+          "tools": [
+            "inspect_step",
+            "query_step",
+            "diff_step",
+            "transact_step"
+          ],
+          "tool_count": 4,
+          "called_tool": null,
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -379,5 +476,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:19+08:00",
-  "updated_at": "2026-10-31T01:15:49+08:00"
+  "updated_at": "2026-10-31T01:26:21.787287+08:00"
 }

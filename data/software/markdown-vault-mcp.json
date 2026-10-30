@@ -51,7 +51,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-markdown-vault-mcp-20261031-012543-65ee",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install \"markdown-vault-mcp\" && markdown-vault-mcp --help",
+          "purpose": "Install markdown-vault-mcp with uv tool install"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "markdown-vault-mcp --help",
+        "expected_signal": "serve"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -67,10 +83,177 @@
     "url": "https://github.com/pvliesdonk/markdown-vault-mcp/releases/tag/v5.1.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:27:23.998770+08:00",
+    "runs": [
+      {
+        "id": "verify-markdown-vault-mcp-20261031-012543-65ee",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:27:23.998770+08:00",
+        "tool_version": "5.1.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install \"markdown-vault-mcp\" && markdown-vault-mcp --help",
+            "purpose": "Install markdown-vault-mcp with uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "markdown-vault-mcp --help",
+            "expected_signal": "serve",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ serve Run the MCP server. │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "MARKDOWN_VAULT_MCP_SOURCE_DIR=/tmp/vault python3 ~/.pickfit/mcp_probe.py --timeout 120 -- markdown-vault-mcp serve",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "ls ~/.pickfit/mcp_probe.py && mkdir -p /tmp/vault && printf '# Hello\\n\\nThis is a test note about pickfit verification.\\n\\nSee [[Other]] for more.\\n' > /tmp/vault/hello.md && printf '# Other\\n\\nSecond note linking back to [[Hello]].\\n' > /tmp/vault/other.md && ls -la /tmp/vault && cat /tmp/vault/hello.md",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "MARKDOWN_VAULT_MCP_SOURCE_DIR=/tmp/vault python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get_server_info --args '{}' -- markdown-vault-mcp serve",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_server_info content=text text_chars=261",
+            "setup": [
+              {
+                "command": "ls ~/.pickfit/mcp_probe.py && mkdir -p /tmp/vault && printf '# Hello\\n\\nThis is a test note about pickfit verification.\\n\\nSee [[Other]] for more.\\n' > /tmp/vault/hello.md && printf '# Other\\n\\nSecond note linking back to [[Hello]].\\n' > /tmp/vault/other.md && ls -la /tmp/vault && cat /tmp/vault/hello.md",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "MARKDOWN_VAULT_MCP_SOURCE_DIR=/tmp/vault python3 ~/.pickfit/mcp_probe.py --timeout 120 --call vault_list --args '{}' -- markdown-vault-mcp serve",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=vault_list content=text text_chars=124",
+            "setup": [
+              {
+                "command": "ls ~/.pickfit/mcp_probe.py && mkdir -p /tmp/vault && printf '# Hello\\n\\nThis is a test note about pickfit verification.\\n\\nSee [[Other]] for more.\\n' > /tmp/vault/hello.md && printf '# Other\\n\\nSecond note linking back to [[Hello]].\\n' > /tmp/vault/other.md && ls -la /tmp/vault && cat /tmp/vault/hello.md",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "README gives launch command markdown-vault-mcp serve without documenting --version/--help flags.",
+            "actually_needed": "No --version option exists; use markdown-vault-mcp --help (shows serve/index/search/reindex commands) to confirm the binary is on PATH.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "MARKDOWN_VAULT_MCP_SOURCE_DIR defaults to /data/vault.",
+            "actually_needed": "Set MARKDOWN_VAULT_MCP_SOURCE_DIR to an existing vault directory containing .md files (here /tmp/vault with hello.md and other.md); with the default /data/vault every tool reports the vault is missing.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show successful MCP handshake listing 44 tools, successful get_server_info tool call, and help listing the serve command.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-markdown-vault-mcp-20261031-012543-65ee/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-markdown-vault-mcp-20261031-012543-65ee/check-1-cmd4.judged.png",
+            "runs/verify/verify-markdown-vault-mcp-20261031-012543-65ee/check-2-cmd5.judged.png",
+            "runs/verify/verify-markdown-vault-mcp-20261031-012543-65ee/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.055137,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "markdown-vault-mcp",
+            "serve"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "markdown-vault-mcp",
+          "server_version": "4.1.4",
+          "tools": [
+            "search",
+            "read",
+            "list_documents",
+            "list_folders",
+            "list_tags",
+            "stats",
+            "get_similar",
+            "get_toc",
+            "get_recent",
+            "get_context",
+            "get_conventions",
+            "okf_validate",
+            "get_backlinks",
+            "get_outlinks",
+            "get_broken_links",
+            "get_orphan_notes",
+            "get_most_linked",
+            "get_connection_path",
+            "embeddings_status",
+            "get_index_status",
+            "write",
+            "edit",
+            "append",
+            "delete",
+            "rename",
+            "move_folder",
+            "fetch",
+            "okf_convert_links",
+            "okf_generate_index",
+            "okf_seed_log",
+            "get_history",
+            "get_diff",
+            "browse_vault",
+            "vault_context",
+            "show_context",
+            "vault_graph_neighborhood",
+            "vault_graph_hubs",
+            "vault_list",
+            "vault_read",
+            "vault_search",
+            "get_server_info",
+            "reindex",
+            "build_embeddings",
+            "get_job_result"
+          ],
+          "tool_count": 44,
+          "called_tool": "get_server_info",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -487,5 +670,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-10-31T01:15:49+08:00"
+  "updated_at": "2026-10-31T01:27:23.999805+08:00"
 }

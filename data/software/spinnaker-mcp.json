@@ -53,7 +53,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-spinnaker-mcp-20261031-012732-4aaf",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g spinnaker-mcp",
+          "purpose": "Install spinnaker-mcp globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "spinnaker-mcp --version",
+        "expected_signal": "spinnaker-mcp 0.4.1"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -69,10 +85,111 @@
     "url": "https://github.com/GeiserX/spinnaker-mcp/releases/tag/v0.4.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:28:13.027435+08:00",
+    "runs": [
+      {
+        "id": "verify-spinnaker-mcp-20261031-012732-4aaf",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:28:13.027435+08:00",
+        "tool_version": "0.4.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g spinnaker-mcp",
+            "purpose": "Install spinnaker-mcp globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "spinnaker-mcp --version",
+            "expected_signal": "spinnaker-mcp 0.4.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "spinnaker-mcp 0.4.1 (dc92236) 2026-10-28T21:03:09Z",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- spinnaker-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake ok with 27 tools listed and spinnaker-mcp 0.4.1 version output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-spinnaker-mcp-20261031-012732-4aaf/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-spinnaker-mcp-20261031-012732-4aaf/check-1-cmd4.judged.png",
+            "runs/verify/verify-spinnaker-mcp-20261031-012732-4aaf/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.038124,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "spinnaker-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "Spinnaker?MCP",
+          "server_version": "0.4.1",
+          "tools": [
+            "evaluate_expression",
+            "find_images",
+            "get_account",
+            "get_application",
+            "get_cluster",
+            "get_console_output",
+            "get_execution",
+            "get_firewall",
+            "get_image_tags",
+            "get_instance",
+            "get_pipeline",
+            "get_pipeline_history",
+            "get_scaling_activities",
+            "get_target_server_group",
+            "get_task",
+            "list_accounts",
+            "list_applications",
+            "list_clusters",
+            "list_executions",
+            "list_firewalls",
+            "list_load_balancers",
+            "list_networks",
+            "list_pipelines",
+            "list_server_groups",
+            "list_strategies",
+            "list_subnets",
+            "search_executions"
+          ],
+          "tool_count": 27,
+          "called_tool": null,
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -393,5 +510,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:42+08:00",
-  "updated_at": "2026-10-31T01:15:49+08:00"
+  "updated_at": "2026-10-31T01:28:13.028107+08:00"
 }

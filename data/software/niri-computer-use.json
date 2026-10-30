@@ -52,20 +52,29 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-niri-computer-use-20261031-012317-0ed3",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://github.com/ayagmar/niri-computer-use/releases/latest/download/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://github.com/ayagmar/niri-computer-use/releases/latest/download/install.sh -o /tmp/ncu-install.sh && ls -l /tmp/ncu-install.sh",
+          "purpose": "Download install script only"
+        },
+        {
+          "command": "mkdir -p ~/.local/lib ~/.local/debxkb && curl -fsSL https://ftp.debian.org/debian/pool/main/libx/libxkbcommon/libxkbcommon0_1.7.0-2_amd64.deb -o /tmp/libxkbcommon0.deb && dpkg-deb -x /tmp/libxkbcommon0.deb ~/.local/debxkb && find ~/.local/debxkb -name \"*.so*\" -ls && cp -P ~/.local/debxkb/usr/lib/x86_64-linux-gnu/libxkbcommon.so* ~/.local/lib/ && ls -l ~/.local/lib/",
+          "purpose": "Fetch and extract libxkbcommon locally"
+        },
+        {
+          "command": "export LD_LIBRARY_PATH=\"$HOME/.local/lib:${LD_LIBRARY_PATH:-}\" && NCU_REGISTER=0 sh /tmp/ncu-install.sh",
+          "purpose": "Retry install with local lib path"
         }
       ],
-      "manual_steps": [
-        "Bind the stop key in niri config"
-      ],
-      "check": null,
-      "first_task": "~/.local/bin/niri-computer-use status"
+      "manual_steps": [],
+      "check": {
+        "command": "LD_LIBRARY_PATH=\"$HOME/.local/lib:${LD_LIBRARY_PATH:-}\" ~/.local/bin/niri-computer-use --version",
+        "expected_signal": "niri-computer-use 0.1.5"
+      },
+      "first_task": "LD_LIBRARY_PATH=\"$HOME/.local/lib:${LD_LIBRARY_PATH:-}\" ~/.local/bin/niri-computer-use status"
     },
     "windows": null
   },
@@ -82,10 +91,139 @@
     "url": "https://github.com/ayagmar/niri-computer-use/releases/tag/v0.1.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:24:43.009915+08:00",
+    "runs": [
+      {
+        "id": "verify-niri-computer-use-20261031-012317-0ed3",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:24:43.009915+08:00",
+        "tool_version": "0.1.5",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/ayagmar/niri-computer-use/releases/latest/download/install.sh -o /tmp/ncu-install.sh && ls -l /tmp/ncu-install.sh",
+            "purpose": "Download install script only"
+          },
+          {
+            "command": "mkdir -p ~/.local/lib ~/.local/debxkb && curl -fsSL https://ftp.debian.org/debian/pool/main/libx/libxkbcommon/libxkbcommon0_1.7.0-2_amd64.deb -o /tmp/libxkbcommon0.deb && dpkg-deb -x /tmp/libxkbcommon0.deb ~/.local/debxkb && find ~/.local/debxkb -name \"*.so*\" -ls && cp -P ~/.local/debxkb/usr/lib/x86_64-linux-gnu/libxkbcommon.so* ~/.local/lib/ && ls -l ~/.local/lib/",
+            "purpose": "Fetch and extract libxkbcommon locally"
+          },
+          {
+            "command": "export LD_LIBRARY_PATH=\"$HOME/.local/lib:${LD_LIBRARY_PATH:-}\" && NCU_REGISTER=0 sh /tmp/ncu-install.sh",
+            "purpose": "Retry install with local lib path"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "LD_LIBRARY_PATH=\"$HOME/.local/lib:${LD_LIBRARY_PATH:-}\" ~/.local/bin/niri-computer-use --version",
+            "expected_signal": "niri-computer-use 0.1.5",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "niri-computer-use 0.1.5",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "LD_LIBRARY_PATH=\"$HOME/.local/lib:${LD_LIBRARY_PATH:-}\" ~/.local/bin/niri-computer-use status",
+            "expected_signal": "niri_unavailable",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"error\": \"niri_unavailable\",",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "LD_LIBRARY_PATH=\"$HOME/.local/lib:${LD_LIBRARY_PATH:-}\" python3 ~/.pickfit/mcp_probe.py --timeout 120 -- ~/.local/bin/niri-computer-use serve",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "LD_LIBRARY_PATH=\"$HOME/.local/lib:${LD_LIBRARY_PATH:-}\" python3 ~/.pickfit/mcp_probe.py --call status --args '{}' --timeout 120 -- ~/.local/bin/niri-computer-use serve",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=status content=text text_chars=2484",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://github.com/ayagmar/niri-computer-use/releases/latest/download/install.sh | sh installs the release binary",
+            "actually_needed": "Manually fetched libxkbcommon0_1.7.0-2_amd64.deb from ftp.debian.org, extracted with dpkg-deb -x to ~/.local/debxkb, copied libxkbcommon.so.0* to ~/.local/lib, and ran the install script and every niri-computer-use invocation with LD_LIBRARY_PATH=$HOME/.local/lib",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "install script installs the release binary checked against its .sha256",
+            "actually_needed": "install.sh downloads a compiled binary tarball (niri-computer-use-0.1.5-x86_64-linux.tar.gz + .sha256) which was verified by checksum but cannot be read as a script",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show status JSON reporting missing runtime, MCP serve handshake ok with 17 tools, and version 0.1.5 printed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-niri-computer-use-20261031-012317-0ed3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-niri-computer-use-20261031-012317-0ed3/check-2-cmd12.judged.png",
+            "runs/verify/verify-niri-computer-use-20261031-012317-0ed3/check-3-cmd10.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.097978,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "~/.local/bin/niri-computer-use",
+            "serve"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "niri-computer-use",
+          "server_version": "0.1.5",
+          "tools": [
+            "acquire_desktop",
+            "click",
+            "clipboard_read",
+            "close_window",
+            "desktop_state",
+            "drag",
+            "focus",
+            "key",
+            "launch",
+            "niri_action",
+            "pointer_move",
+            "release_desktop",
+            "screenshot",
+            "scroll",
+            "status",
+            "type_text",
+            "wait_for"
+          ],
+          "tool_count": 17,
+          "called_tool": "status",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -423,5 +561,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:19+08:00",
-  "updated_at": "2026-10-31T01:15:49+08:00"
+  "updated_at": "2026-10-31T01:24:43.010559+08:00"
 }

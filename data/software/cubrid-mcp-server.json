@@ -68,9 +68,48 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_account",
+    "checked_at": "2026-10-31T01:26:21.616217+08:00",
+    "runs": [
+      {
+        "id": "verify-cubrid-mcp-server-20261031-012452-b53a",
+        "level": "unverified",
+        "unverified_reason": "needs_account",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:26:21.616217+08:00",
+        "tool_version": "0.7.0",
+        "install_method": "uv",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "ls ~/.pickfit/mcp_probe.py && uv tool install cubrid-mcp-server 2>&1",
+            "purpose": "Install cubrid-mcp-server with uv tool so launch command is on PATH offline"
+          }
+        ],
+        "smoke_tests": [],
+        "pitfalls": [
+          {
+            "readme_said": "cubrid-mcp-server --help and --version exit 0 without reading CUBRID_* or starting the MCP loop",
+            "actually_needed": "server exits 1 with 'configuration error: missing required environment variable: CUBRID_HOST' unless CUBRID_HOST/CUBRID_USER/CUBRID_PASSWORD/CUBRID_DATABASE are set, so --help/--version do not work check-without-database as described",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-cubrid-mcp-server-20261031-012452-b53a/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.118668
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -528,5 +567,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-10-31T01:15:49+08:00"
+  "updated_at": "2026-10-31T01:26:21.620360+08:00"
 }
