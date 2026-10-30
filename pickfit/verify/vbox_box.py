@@ -563,7 +563,10 @@ class VBoxBox(Box):
     shell = "pwsh"
     user_rule = (r"You are a standard Windows user, not an administrator: no UAC elevation, no per-machine "
                  r"installs into C:\Program Files, nothing written outside your profile (C:\Users\sbx) and "
-                 r"the temp dir; installs need a user scope (winget --scope user, scoop, pip/uv/pipx, npm -g).")
+                 r"the temp dir; installs need a user scope (winget --scope user, scoop, pip/uv/pipx, npm -g). "
+                 "This Windows has no Microsoft Store: if the README's only Windows install needs the Store or "
+                 "winget's msstore source, finish unverified (reason other, and say needs_store in the summary); "
+                 "do not switch to another source and call that the README's path.")
     detach = ""  # run_background is PowerShell here; see background()
 
     def __init__(self, *, base: str = BASE_VM, router: str = ROUTER_VM, limits: BoxLimits = BoxLimits(),
@@ -1158,19 +1161,20 @@ icacls $d /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F
 # Windows LTSC has no Microsoft Store, so no App Installer (winget). Microsoft's documented way for such
 # editions: the winget-cli GitHub release (msixbundle, its licence and the x64 dependencies), provisioned
 # for every user (sbx gets it at its first logon) and added for this one.
+WINGET_RELEASE = "v1.29.380"  # pinned: the files are named, sized and approved before a build downloads them
+WINGET_ASSETS = ("Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle",
+                 "e53e159d00e04f729cc2180cffd1c02e_License1.xml", "DesktopAppInstaller_Dependencies.zip")
 PROVISION_WINGET = r"""
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
+"release={release}"
 if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
   $t = Join-Path $env:TEMP 'pf-winget'
   New-Item -ItemType Directory -Force $t | Out-Null
-  $rel = Invoke-RestMethod 'https://api.github.com/repos/microsoft/winget-cli/releases/latest' -Headers @{ 'User-Agent' = 'pickfit' }
-  "release=$($rel.tag_name)"
-  foreach ($pat in '\.msixbundle$', '_License1\.xml$', '^DesktopAppInstaller_Dependencies\.zip$') {
-    $a = $rel.assets | Where-Object { $_.name -match $pat } | Select-Object -First 1
-    if (-not $a) { "asset missing: $pat"; exit 4 }
-    & curl.exe -fsSL -o (Join-Path $t $a.name) $a.browser_download_url
-    if ($LASTEXITCODE) { "download failed: $($a.name)"; exit 5 }
+  foreach ($name in {assets}) {
+    & curl.exe -fsSL -o (Join-Path $t $name) "https://github.com/microsoft/winget-cli/releases/download/{release}/$name"
+    if ($LASTEXITCODE) { "download failed: $name"; exit 5 }
+    "sha256_$($name -replace '[^A-Za-z0-9]','_')=$((Get-FileHash (Join-Path $t $name) -Algorithm SHA256).Hash.ToLower())"
   }
   Expand-Archive -Path (Get-ChildItem $t -Filter '*Dependencies.zip').FullName -DestinationPath "$t\deps" -Force
   $deps = @(Get-ChildItem "$t\deps" -Recurse -Include *.appx, *.msix | Where-Object { $_.FullName -match 'x64' } | ForEach-Object FullName)
@@ -1357,8 +1361,14 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
              .replace("{run}", base64.b64encode(RUN_SCRIPT.encode()).decode())
              .replace("{probe}", base64.b64encode(PROBE_SCRIPT.encode()).decode()))
     admin("sbx and harness", users, 300, lambda c, o: "users-ok" in o)
-    out = admin("winget", PROVISION_WINGET, 1200, lambda c, o: re.search(r"winget=v\d", o) is not None)
-    manifest["winget_bootstrap"] = _kv(out).get("release")
+    winget_script = (PROVISION_WINGET.replace("{release}", WINGET_RELEASE)
+                     .replace("{assets}", ", ".join(ps_quote(a) for a in WINGET_ASSETS)))
+    out = admin("winget", winget_script, 1200, lambda c, o: re.search(r"winget=v\d", o) is not None)
+    got = _kv(out)
+    manifest["winget_bootstrap"] = {"source": f"github.com/microsoft/winget-cli/releases/{WINGET_RELEASE}",
+                                    "winget": got.get("winget"), "bundle_signer": got.get("bundle_signer"),
+                                    "sha256": {k.removeprefix("sha256_"): v for k, v in got.items()
+                                               if k.startswith("sha256_")}}
     admin("tools (winget)", PROVISION_TOOLS, 3600, lambda c, o: "pip uv pipx -> 0" in o)
     code, out, err = _raw_ps(vbox, name, WIN_USER, pw[WIN_USER], PROVISION_SBX, 600)
     versions = _kv(out)
@@ -1379,6 +1389,14 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
     code, out, err = check_box._admin(HARDENED_CHECK, 120)
     if code != 0:
         raise BoxError(f"the hardened base fails its check: {(out + err).strip()[-400:]}")
+    # The build the snapshot really has (no cumulative updates are installed; Windows Update is off).
+    final = _kv(check_box._admin(
+        "$v = Get-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion'; "
+        "\"build=$($v.CurrentBuild).$($v.UBR)\"; \"display=$($v.DisplayVersion)\"; "
+        "\"license=$((cscript //nologo $env:SystemRoot\\System32\\slmgr.vbs /dli | Select-String 'License Status') -replace '.*: ','')\"",
+        120)[1])
+    manifest.update(windows=f"{final.get('display', '?')} (build {final.get('build', '?')})",
+                    license_status=final.get("license"))
     admin("shutdown", "shutdown.exe /s /t 5 /f; 'bye'", 60, lambda c, o: True)
     vbox.poweroff(name, 300)
     vbox("snapshot", name, "take", SNAPSHOT, "--description", "pickfit Windows base, powered off")
