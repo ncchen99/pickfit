@@ -4,8 +4,9 @@ The model decides every step through function tools (list_dir, read_file,
 run_command, run_background, finish); the program runs them in the Box and
 enforces the limits: 25 turns, 15 commands, 20 minutes, $0.50 per run
 (`scope="verify:<slug>"` in the shared ledger), and a stop after the same
-error three times. Near a limit the model gets one last turn with only
-`finish`. README text and tool output reach the model inside <source> blocks;
+error three times. Near a limit the model is told to call `finish` now; it
+keeps the same tools, so the conversation's prompt cache still holds, but any
+other call is refused unrun, and it gets one more turn if it does not finish. README text and tool output reach the model inside <source> blocks;
 the Box holds no keys, and every model call goes through call_meta. Every
 budgeted command gets a command_id; `finish` cites ids, and verdict.py
 decides the level from the recorded commands, not from the model's claims.
@@ -571,6 +572,7 @@ class VerifyAgent:
         history: list[dict[str, Any]] = []
         previous_id: str | None = None
         wrap_up: str | None = None
+        grace = 1  # turns after the wrap-up turn when the model has not called finish yet
         nudges = 0
         turn = 0
         while True:
@@ -588,7 +590,7 @@ class VerifyAgent:
             turn += 1
             # prompt_cache_key keeps one run's growing history on the same prefix cache (a hint).
             body: dict[str, Any] = {"instructions": self.instructions,
-                                    "tools": [FINISH_TOOL] if wrap_up else TOOLS,
+                                    "tools": TOOLS,
                                     "reasoning": {"summary": "auto"}, "prompt_cache_key": self.run_id}
             if self.mode == "chain":
                 body["input"] = pending
@@ -605,19 +607,26 @@ class VerifyAgent:
                 history.extend(result.output_items)
             pending = []
             if not result.tool_calls:
-                if wrap_up or nudges >= MAX_NUDGES:
+                if (wrap_up and not grace) or (not wrap_up and nudges >= MAX_NUDGES):
                     self._stop("no_finish")
                     return
+                if wrap_up:
+                    grace -= 1
+                    pending.append(_user("Call finish now, alone. Nothing else runs any more."))
+                    continue
                 nudges += 1
                 pending.append(_user("Continue with the tools; call finish when you are done."))
                 continue
-            finished = self._handle_calls(result.tool_calls, turn, pending, can_retry=wrap_up is None)
+            finished = self._handle_calls(result.tool_calls, turn, pending, can_retry=wrap_up is None,
+                                          finish_only=wrap_up is not None)
             if finished:
                 self.report.stop_reason = "finished"
                 return
             if wrap_up:
-                self._stop("no_finish")
-                return
+                if not grace:
+                    self._stop("no_finish")
+                    return
+                grace -= 1
 
     def _stop(self, reason: str) -> None:
         # A finish sent back for a retry still stands if the model never sends another.
@@ -629,8 +638,8 @@ class VerifyAgent:
             return f"the same error happened {lim.same_error_limit} times ({self.repeated_error})"
         if self.commands_used >= lim.max_commands:
             return f"the command budget ({lim.max_commands}) is used up"
-        if turns_done + 1 >= lim.max_turns:
-            return f"this is the last of {lim.max_turns} turns"
+        if turns_done + 2 >= lim.max_turns:  # leaves one turn in case the model does not finish at once
+            return f"the {lim.max_turns}-turn limit is near"
         if self._elapsed() >= lim.max_seconds - WRAP_UP_SECONDS:
             return f"the {round(lim.max_seconds / 60)}-minute limit is near"
         return None
@@ -676,13 +685,20 @@ class VerifyAgent:
     # -- tool calls
 
     def _handle_calls(self, calls: list[ToolCall], turn: int, outputs: list[dict[str, Any]],
-                      can_retry: bool) -> bool:
-        """Run each call in order, append its output; True once a valid finish is recorded."""
-        alone = len(calls) == 1
+                      can_retry: bool, finish_only: bool = False) -> bool:
+        """Run each call in order, append its output; True once a valid finish is recorded.
+
+        finish_only: past a limit, other calls are refused without running, so finish counts as alone.
+        """
+        finishes = sum(call.name == "finish" for call in calls)
+        alone = len(calls) == 1 or (finish_only and finishes == 1)
         finished = False
         for call in calls:
             if call.name == "finish":
                 text, finished = self._finish(call, alone, can_retry)
+            elif finish_only:
+                self._say(f"  {call.name} refused: past the limit, only finish")
+                text = "error: nothing else runs past the limit. Call finish now, alone."
             else:
                 text = self._dispatch(call, turn)
             outputs.append({"type": "function_call_output", "call_id": call.call_id, "output": text})
