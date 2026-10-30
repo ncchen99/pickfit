@@ -12,7 +12,9 @@ the log and decides from what actually ran:
 - the level is the weaker of the claim and what the passing checks support:
   install needs a passing check, function a README example (not only
   --version/--help), service a background server, inference a generation
-  request against it.
+  request against it. A GUI launch (launch_gui: a window of the app's own)
+  supports install only: a GUI app is not function until an action is shown
+  to change checkable state, which pickfit does not check yet.
 """
 
 from __future__ import annotations
@@ -369,8 +371,10 @@ def _excerpt(record: CommandRecord, signal: str) -> str:
     return lines[-1].strip()[:EXCERPT_CHARS] if lines else ""
 
 
-def check_kind(command: str) -> str:
-    """version (--version/--help only), generation (asks a model for text), or example."""
+def check_kind(command: str, tool: str = "run_command") -> str:
+    """gui (a launch_gui), version (--version/--help only), generation (asks a model for text), or example."""
+    if tool == "launch_gui":
+        return "gui"
     if _GENERATION.search(command):
         return "generation"
     if _VERSION_HELP.search(last_command(command)):
@@ -445,9 +449,9 @@ def supported_level(steps_ok: bool, checks: list[ResolvedCheck], has_service: bo
         return None
     if any(c.kind == "generation" for c in passing) and has_service:
         return "inference"
-    if has_service and any(c.kind != "version" for c in passing):
+    if has_service and any(c.kind not in ("version", "gui") for c in passing):
         return "service"
-    if any(c.kind != "version" for c in passing):
+    if any(c.kind not in ("version", "gui") for c in passing):
         return "function"
     return "install"
 
@@ -508,7 +512,7 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict
             command_id=test.command_id, command=record.command, tool=record.tool,
             setup_ids=list(test.setup_ids), expected_signal=test.expected_signal.strip(),
             expected_exit_code=test.expected_exit_code, exit_code=record.exit_code, passed=False,
-            kind=check_kind(record.command))
+            kind=check_kind(record.command, record.tool))
         setup_ok = True
         for setup_id in test.setup_ids:
             if setup_id in step_ids:  # an install step: the replay runs every step first anyway

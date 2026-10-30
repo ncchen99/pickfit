@@ -19,8 +19,10 @@ from __future__ import annotations
 import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from pickfit.verify import gui
 from pickfit.verify.box import Box, BoxError, ExecResult, background_script
 from pickfit.verify.verdict import ResolvedCheck, evaluate_check, supported_level
 
@@ -47,7 +49,7 @@ def replay_timeout(recorded_s: float | None) -> int:
 @dataclass(frozen=True)
 class ReplayCommand:
     command_id: int
-    tool: str  # run_command or run_background
+    tool: str  # run_command, run_background or launch_gui
     command: str
     port: int | None = None
     wait_s: int | None = None
@@ -102,6 +104,8 @@ class RanCommand:
     stdout: str
     stderr: str
     network: bool  # whether the network was on
+    screenshot: str | None = None  # launch_gui: the PNG of the display
+    gui: dict[str, Any] | None = None  # launch_gui: what the launch showed (gui.GuiLaunch)
 
     @property
     def ok(self) -> bool:
@@ -143,12 +147,28 @@ class Replayer:
     """Runs one ReplayPlan in one fresh, started Box."""
 
     def __init__(self, box: Box, *, log: Callable[[str], None] = print,
-                 command_timeout_s: int = COMMAND_TIMEOUT_S) -> None:
+                 command_timeout_s: int = COMMAND_TIMEOUT_S, evidence_dir: Path | None = None) -> None:
         self.box = box
         self.log = log
         self.timeout = command_timeout_s
+        self.evidence_dir = evidence_dir  # where launch_gui screenshots go
+        self.launches = 0
 
     def rerun(self, cmd: ReplayCommand) -> RanCommand:
+        if cmd.tool == "launch_gui":
+            if not self.box.display:
+                raise BoxError("a GUI launch needs a box with a display")
+            self.launches += 1
+            tag = f"replay-{cmd.command_id}-{self.launches}"
+            result, shown, png = gui.launch(self.box, cmd.command, tag, cmd.wait_s or 30)
+            ran = self._ran(cmd, result)
+            ran.gui = shown.to_dict()
+            if png and self.evidence_dir is not None:
+                path = self.evidence_dir / f"{tag}.png"
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(png)
+                ran.screenshot = str(path)
+            return ran
         if cmd.tool == "run_background":
             wait = min(cmd.wait_s or 30, BACKGROUND_WAIT_S)
             result = self.box.exec(background_script(cmd.command, cmd.port, wait, f"replay-{cmd.command_id}",
