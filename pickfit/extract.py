@@ -47,7 +47,7 @@ MAX_CONSECUTIVE_ERRORS = 3
 MAX_ATTEMPTS = 2
 DEFAULT_CONCURRENCY = 4  # muse-spark-1.3 allows 3,000 RPM, the contributor model 150 RPM
 # Same instructions and schema on every call: one cache key lets Meta reuse that prefix.
-PROMPT_CACHE_KEY = "pickfit-extract-v1"
+PROMPT_CACHE_KEY = "pickfit-extract-v2"  # v2: the mcp section
 # call_meta has already retried these; one more try later often gets through.
 TRANSIENT_ERRORS = ("APIConnectionError", "APITimeoutError", "InternalServerError", "RateLimitError",
                     "APIStatusError")
@@ -75,6 +75,10 @@ words); its quote is the passage it is based on.
 6. Write every value in English, even when the sources are in another language: summary, \
 use_cases (short jobs such as "browse files on a remote host over SFTP"), alternatives_to, \
 runtimes, system_packages, api_keys and manual_steps. Quotes stay verbatim in the source language.
+7. mcp is only for a Model Context Protocol server: its transports, the command a client runs to \
+start it, client config snippets (a `claude mcp add` command or an mcpServers JSON entry) copied \
+verbatim, the environment variables it reads (API keys and tokens among them) and the names of its \
+tools. For any other software leave every mcp value null and every mcp list empty.
 """
 
 _SOURCE_TAG = re.compile(r"<(/?)(source)", re.I)
@@ -234,6 +238,21 @@ def check_quotes(result: ExtractionResult, sources: list[Source]
             smoke["expected_output"] = None
         kept_smoke.append(smoke)
     data["smoke_test_candidates"] = kept_smoke
+    mcp = data["mcp"]
+    kept_configs = []
+    for i, config in enumerate(mcp["client_configs"]):
+        if checker.found(config["snippet"]):
+            kept_configs.append(config)
+        else:
+            fail(f"/mcp/client_configs/{i}/snippet", config["snippet"])
+    mcp["client_configs"] = kept_configs
+    kept_env = []
+    for i, env in enumerate(mcp["env_vars"]):
+        if checker.found(env["name"]):
+            kept_env.append(env)
+        else:
+            fail(f"/mcp/env_vars/{i}/name", env["name"])
+    mcp["env_vars"] = kept_env
     # Re-validating drops list items whose value was just reset to null.
     return ExtractionResult.model_validate(data), failures, checker.checked
 
@@ -313,12 +332,13 @@ _LABEL_ORDER = {"tool": 0, "uncertain": 1}
 
 
 def select_candidates(db: PipelineDB, *, model: str, limit: int, repo_ids: list[str] | None = None,
-                      force: bool = False) -> list[dict[str, Any]]:
+                      force: bool = False, categories: list[str] | None = None) -> list[dict[str, Any]]:
     """Rule-passed candidates not yet extracted from the same sources by this model.
 
     Candidates the prescreen rejected are skipped unless asked for by id; unscreened ones still go.
 
-    Tools before uncertain ones, the two categories interleaved, most recently pushed first.
+    Tools before uncertain ones, the categories interleaved, most recently pushed first.
+    categories: only candidates whose discovery category is one of these.
     """
     if repo_ids:
         wanted = set(repo_ids)
@@ -330,6 +350,8 @@ def select_candidates(db: PipelineDB, *, model: str, limit: int, repo_ids: list[
     todo = []
     for c in pool:
         if not (c.get("readme") or "").strip():
+            continue
+        if categories and c["category"] not in categories:
             continue
         if not repo_ids and prescreen.get(c["repo_id"], {}).get("keep") is False:
             continue  # the open-weight prescreen (or its review) said this is not usable software
@@ -355,6 +377,7 @@ def select_candidates(db: PipelineDB, *, model: str, limit: int, repo_ids: list[
 
 def run_extract(*, limit: int, model: str = "dev", reasoning_effort: str = "minimal",
                 repo_ids: list[str] | None = None, force: bool = False,
+                categories: list[str] | None = None,
                 concurrency: int = 1, max_attempts: int = MAX_ATTEMPTS,
                 db_path: Path | None = None, client: Any = None, ledger: Ledger | None = None,
                 runs_dir: Path | str | None = None, cache: bool | None = None,
@@ -370,7 +393,8 @@ def run_extract(*, limit: int, model: str = "dev", reasoning_effort: str = "mini
     model_id = resolve_model(model)
     db = PipelineDB(db_path or pipeline_db_path())
     run_id = f"{STAGE}-" + taipei_now().strftime("%Y%m%d-%H%M%S")
-    todo = select_candidates(db, model=model_id, limit=limit, repo_ids=repo_ids, force=force)
+    todo = select_candidates(db, model=model_id, limit=limit, repo_ids=repo_ids, force=force,
+                             categories=categories)
     log(f"extract {run_id}: {len(todo)} candidates with {model_id} (effort {reasoning_effort}, "
         f"{concurrency} at a time, up to {max_attempts} attempts)")
     stop = threading.Event()

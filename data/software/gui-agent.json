@@ -1,0 +1,669 @@
+{
+  "schema_version": "software.v1",
+  "slug": "gui-agent",
+  "repo_id": "gh:1246655221",
+  "name": "gui-agent",
+  "summary": "FastMCP server for desktop computer use and GUI automation with mouse, keyboard, OCR and video.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": null,
+  "maturity": null,
+  "tags": [
+    "ai-agent",
+    "antigravity",
+    "automation",
+    "claude-code",
+    "computer-use",
+    "fastmcp",
+    "gui-automation",
+    "mcp",
+    "model-context-protocol",
+    "python"
+  ],
+  "use_cases": [],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://github.com/leandre755/gui_agent#readme",
+  "repo": {
+    "url": "https://github.com/leandre755/gui_agent",
+    "full_name": "leandre755/gui_agent",
+    "created_at": "2026-05-22T12:14:38Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "python 3.10+"
+    ],
+    "system_packages": [
+      "xdotool",
+      "wmctrl",
+      "ffmpeg",
+      "tesseract-ocr"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install gui-agent",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install gui-agent",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": null,
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "gui_only",
+    "checked_at": "2026-10-31T01:25:53.781566+08:00",
+    "runs": [
+      {
+        "id": "verify-gui-agent-20261031-012425-2fe6",
+        "level": "unverified",
+        "unverified_reason": "gui_only",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:25:53.781566+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "source",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/leandre755/gui_agent.git /tmp/gui_agent 2>&1 | tail -c 2000\nls /tmp/gui_agent 2>&1; echo \"---\"; ls /tmp/gui_agent/linux 2>&1 | head -n 50",
+            "purpose": "Clone repo source for local install"
+          },
+          {
+            "command": "rm -rf /tmp/gui_build && cp -r /tmp/gui_agent /tmp/gui_build && sed -i '/evdev>=/d' /tmp/gui_build/pyproject.toml && grep -n evdev /tmp/gui_build/pyproject.toml; echo \"patched\"; uv tool install /tmp/gui_build --force 2>&1",
+            "purpose": "Remove evdev dependency and install with uv tool"
+          }
+        ],
+        "smoke_tests": [],
+        "pitfalls": [
+          {
+            "readme_said": "uv tool install gui-agent",
+            "actually_needed": "PyPI package gui-agent 0.0.1 provides no executables; must install from git source instead",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "uv tool install git+https://github.com/leandre755/gui_agent.git",
+            "actually_needed": "remove the evdev>=1.7.0 line from pyproject.toml before install because evdev builds from source and needs kernel headers (linux/input.h) not present and not installable without root",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "launch command gui-agent speaks MCP over stdio",
+            "actually_needed": "a running X11 display is required; with DISPLAY=:0 and no X server the server exits during import with Xlib.error.DisplayConnectionError: Can't connect to display",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-gui-agent-20261031-012425-2fe6/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.153361
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "gui-agent",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add gui-agent -- gui-agent"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"gui-agent\": {\n      \"command\": \"gui-agent\",\n      \"args\": [],\n      \"env\": {\n        \"DISPLAY\": \":0\"\n      }\n    }\n  }\n}"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"gui-agent\": {\n      \"command\": \"uvx\",\n      \"args\": [\"--from\", \"gui-agent\", \"gui-agent\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "DISPLAY",
+        "required": null,
+        "purpose": null
+      }
+    ],
+    "tools": [
+      "get_app_state",
+      "perform_action",
+      "set_value",
+      "gui_start_video_recording",
+      "gui_stop_video_recording",
+      "gui_take_screenshot",
+      "gui_mouse_click",
+      "gui_mouse_drag",
+      "gui_mouse_scroll",
+      "gui_keyboard_press",
+      "gui_keyboard_type",
+      "execute_action_batch",
+      "process_run",
+      "process_list",
+      "activate_window"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:03:51+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 19.2,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": null,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 0,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 161,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 55.75
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "46c3dd6f8177a13cc10a8043083140e06d5b6fc7c5599d962cee3d568d460746",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Lightweight, ultra-fast FastMCP server for Computer Use & GUI automation on Linux and Windows (Mouse, Keyboard, OCR, Video, Web)."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Autonomous AI agents interacting with modern graphical user interfaces are frequently burdened by fragmented architectures"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Under Linux, install the native window management, OCR, multimedia, AT-SPI accessibility, and Rust build libraries:"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/leandre755/gui_agent/7a49514/linux/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "claude mcp add gui-agent -- gui-agent"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "\"env\": {\n        \"DISPLAY\": \":0\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "uv tool upgrade gui-agent"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "alt=\"License MIT\" /></a>\n  <a href=\"#\"><img src=\"https://img.shields.io/badge/platform-Linux%20%7C%20Windows-10B981"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/leandre755/gui_agent",
+      "fetched_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/leandre755/gui_agent/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:06:28+08:00"
+    },
+    {
+      "id": "release:v0.1.0",
+      "kind": "release",
+      "url": "https://github.com/leandre755/gui_agent/releases/tag/v0.1.0",
+      "fetched_at": "2026-10-31T01:06:28+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Monolithic FastMCP Server for Linux & Windows Desktop Computer Use",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Monolithic FastMCP Server for Linux & Windows Desktop Computer Use",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Lightweight, ultra-fast FastMCP server for Computer Use & GUI automation on Linux and Windows (Mouse, Keyboard, OCR, Video, Web).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": ">gui-agent</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Monolithic FastMCP Server for Linux & Windows Desktop Computer Use",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.10+",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "xdotool wmctrl spectacle ffmpeg xclip tesseract-ocr libgl1 libatspi-dev cargo rustc",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "xdotool wmctrl spectacle ffmpeg xclip tesseract-ocr libgl1 libatspi-dev cargo rustc",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/2",
+      "source_id": "readme",
+      "quote": "xdotool wmctrl spectacle ffmpeg xclip tesseract-ocr libgl1 libatspi-dev cargo rustc",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/3",
+      "source_id": "readme",
+      "quote": "xdotool wmctrl spectacle ffmpeg xclip tesseract-ocr libgl1 libatspi-dev cargo rustc",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "uv tool install gui-agent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "uv tool install gui-agent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "without external cloud vision dependencies or persistent background daemons.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Operating through a single, resilient standard input/output (stdio) FastMCP connection,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "\"command\": \"gui-agent\",",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add gui-agent -- gui-agent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"gui-agent\": {\n      \"command\": \"gui-agent\",\n      \"args\": [],\n      \"env\": {\n        \"DISPLAY\": \":0\"\n      }\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/2",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"gui-agent\": {\n      \"command\": \"uvx\",\n      \"args\": [\"--from\", \"gui-agent\", \"gui-agent\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "DISPLAY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`get_app_state`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`perform_action`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`set_value`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`gui_start_video_recording`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`gui_stop_video_recording`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`gui_take_screenshot`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`gui_mouse_click`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`gui_mouse_drag`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`gui_mouse_scroll`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`gui_keyboard_press`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`gui_keyboard_type`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`execute_action_batch`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "`process_run`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "`process_list`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/14",
+      "source_id": "readme",
+      "quote": "`activate_window`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:32+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:50+08:00",
+  "updated_at": "2026-10-31T02:03:51+08:00"
+}

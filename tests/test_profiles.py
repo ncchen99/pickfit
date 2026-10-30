@@ -253,3 +253,85 @@ def test_helpers() -> None:
     assert open_source_from_license("AGPL-3.0") is True
     assert open_source_from_license("BUSL-1.1") is False
     assert open_source_from_license(None) is None
+
+
+MCP_README = """# notes-mcp
+
+An MCP server that searches your Markdown notes.
+
+## Install
+
+```sh
+npm install -g notes-mcp
+```
+
+## Use with Claude Code
+
+```sh
+claude mcp add notes -- notes-mcp --root ~/notes
+```
+
+Set `NOTES_ROOT` to your notes folder. Transport: stdio.
+
+Tools: `search_notes`, `read_note`.
+"""
+
+
+def mcp_extraction(**mcp_overrides: Any) -> dict[str, Any]:
+    mcp = {
+        "transports": cited(["stdio"], "Transport: stdio."),
+        "launch_command": cited("notes-mcp --root ~/notes", "notes-mcp --root ~/notes"),
+        "client_configs": [
+            {"client": "claude_code", "snippet": "claude mcp add notes -- notes-mcp --root ~/notes"},
+            {"client": "generic_json", "snippet": '{"mcpServers": {"notes": {"command": "made-up"}}}'},
+        ],
+        "env_vars": [{"name": "NOTES_ROOT", "required": False, "purpose": "your  notes folder"},
+                     {"name": "INVENTED_KEY", "required": True, "purpose": None}],
+        "tools": [cited("search_notes", "`search_notes`"), cited("read_note", "`read_note`"),
+                  cited("delete_note", "`delete_note`")],
+    }
+    mcp.update(mcp_overrides)
+    return extraction(
+        name=cited("notes-mcp", "# notes-mcp"),
+        summary=cited("Searches Markdown notes over MCP.", "An MCP server that searches your Markdown notes."),
+        kind=cited("mcp_server_or_agent_plugin", "An MCP server"),
+        category=cited("mcp_server", "An MCP server that searches your Markdown notes."),
+        audience=cited("end_user", "npm install -g notes-mcp"),
+        processing=NULL, platforms=NULL,
+        prerequisites={"runtimes": [], "system_packages": [], "gpu": NULL, "apple_silicon_only": NULL,
+                       "min_ram_gb": NULL, "network": NULL, "api_keys": []},
+        install_methods=[{"method": "npm", "command": "npm install -g notes-mcp", "platforms": []}],
+        smoke_test_candidates=[], use_cases=[], alternatives_to=[], mcp=mcp)
+
+
+def test_mcp_server_gets_mcp_facts_its_sources_show(db: PipelineDB, tmp_path: Path) -> None:
+    from pickfit.extract import Source, check_quotes
+    from pickfit.schema import ExtractionResult
+
+    # The quote check drops a snippet and an env var name the README does not hold.
+    raw = ExtractionResult.model_validate(mcp_extraction())
+    cleaned, failures, _ = check_quotes(raw, [Source("readme", "readme", None, MCP_README)])
+    assert {f["path"] for f in failures} == {"/mcp/client_configs/1/snippet", "/mcp/env_vars/1/name",
+                                             "/mcp/tools/2"}
+    assert [c.client for c in cleaned.mcp.client_configs] == ["claude_code"]
+
+    add(db, 21, "someone/notes-mcp", cleaned.model_dump(mode="json"), category="mcp_server", readme=MCP_README)
+    out = tmp_path / "software"
+    assert write_profiles(db, model=MODEL, out_dir=out, now=NOW).written == ["notes-mcp"]
+    record = read(out, "notes-mcp")
+    assert record["category"] == "mcp_server"
+    assert record["mcp"] == {
+        "transports": ["stdio"], "launch_command": "notes-mcp --root ~/notes",
+        "client_configs": [{"client": "claude_code", "snippet": "claude mcp add notes -- notes-mcp --root ~/notes"}],
+        "env_vars": [{"name": "NOTES_ROOT", "required": False, "purpose": "your notes folder"}],
+        "tools": ["search_notes", "read_note"]}
+    fields = {e["field"] for e in record["evidence"]}
+    assert {"/mcp/transports", "/mcp/launch_command", "/mcp/client_configs/0", "/mcp/env_vars/0",
+            "/mcp/tools/1"} <= fields
+
+
+def test_only_mcp_servers_carry_mcp_facts(db: PipelineDB, tmp_path: Path) -> None:
+    add(db, 22, "someone/tinyq", extraction())
+    out = tmp_path / "software"
+    write_profiles(db, model=MODEL, out_dir=out, now=NOW)
+    assert "mcp" not in read(out, "tinyq")  # not even "mcp": null, so other records stay byte-identical

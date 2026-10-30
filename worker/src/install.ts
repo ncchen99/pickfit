@@ -6,6 +6,7 @@
 import { bestGuide, type Arch, type Catalog, type OS } from './catalog.ts';
 import { ranSentence } from './evidence.ts';
 import { newId, REC_ID } from './events.ts';
+import { clientConfig, type McpClientConfig } from './mcpconfig.ts';
 
 export interface InstallInput {
   slug: string;
@@ -55,6 +56,8 @@ export interface InstallOutput {
   first_task: string | null;
   first_task_setup: { command: string; run_in_background: boolean }[];
   known_issues: { readme_said: string; actually_needed: string; kind: PitfallKind | null }[];
+  /** MCP servers: how to add it to an MCP client, from the launch command the run started; null otherwise. */
+  mcp_client_config: McpClientConfig | null;
   warnings: string[];
   sources: string[];
 }
@@ -135,6 +138,7 @@ export function installGuide(catalog: Catalog, input: InstallInput): InstallOutp
       actually_needed: p.actually_needed,
       kind: PITFALL_KINDS.includes(p.kind as PitfallKind) ? (p.kind as PitfallKind) : null,
     })),
+    mcp_client_config: clientConfig(entry, guide),
     warnings,
     sources: entry.sources,
   };
