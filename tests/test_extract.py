@@ -240,6 +240,21 @@ def test_check_quotes_keeps_good_values_and_drops_unquotable_ones() -> None:
     assert checked >= 14
 
 
+def test_check_quotes_drops_a_feature_no_source_advertises() -> None:
+    result = ExtractionResult.model_validate(extraction(features=[
+        cited("query JSON Lines with a path", "A tiny jq-like query tool for JSON Lines."),
+        cited("edit YAML in place", "edits YAML files"),
+    ]))
+    cleaned, failures, _ = check_quotes(result, [Source("readme", "readme", None, README)])
+    assert [f["path"] for f in failures] == ["/features/1"]
+    assert [f.value for f in cleaned.features] == ["query JSON Lines with a path"]
+
+
+def test_instructions_ask_for_main_features_in_english() -> None:
+    assert "features are the 2-4 things the sources present" in INSTRUCTIONS
+    assert "use_cases" in INSTRUCTIONS and "features, alternatives_to" in INSTRUCTIONS
+
+
 def test_check_quotes_all_found() -> None:
     result = ExtractionResult.model_validate(extraction())
     _, failures, _ = check_quotes(result, [Source("readme", "readme", None, README)])

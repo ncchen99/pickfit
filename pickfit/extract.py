@@ -73,8 +73,12 @@ without a shell prompt such as "$ " and without comments.
 words); its quote is the passage it is based on.
 5. Prefer null to a guess. A missing fact is fine; a wrong fact is not.
 6. Write every value in English, even when the sources are in another language: summary, \
-use_cases (short jobs such as "browse files on a remote host over SFTP"), alternatives_to, \
+use_cases (short jobs such as "browse files on a remote host over SFTP"), features, alternatives_to, \
 runtimes, system_packages, api_keys and manual_steps. Quotes stay verbatim in the source language.
+7. features are the 2-4 things the sources present as the software's main capabilities (a feature \
+list, the headline, the first examples), most prominent first. Each is one capability a person could \
+try, such as "render a graph as ASCII art"; not how to install it, where it runs, its license or how \
+fast it is.
 """
 
 _SOURCE_TAG = re.compile(r"<(/?)(source)", re.I)

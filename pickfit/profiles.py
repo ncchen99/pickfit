@@ -343,6 +343,7 @@ def build_record(candidate: dict[str, Any], extraction: dict[str, Any], *, slug:
         "tags": tags,
         "use_cases": cited_list("/use_cases", result.use_cases),
         "alternatives_to": cited_list("/alternatives_to", result.alternatives_to),
+        "features": cited_list("/features", result.features),
         "why_worth_it": None,
         "homepage": homepage,
         "repo": {"url": repo.get("html_url") or f"https://github.com/{full_name}",
@@ -384,6 +385,64 @@ def _keep_verified_work(data: dict[str, Any], existing: dict[str, Any]) -> None:
     data["sources"] += [s for s in existing.get("sources") or [] if s["id"] in kept_runs]
     run_evidence = [e for e in existing.get("evidence") or [] if e.get("method") in ("sandbox", "human")]
     data["evidence"] += run_evidence
+
+
+def feature_update(candidate: dict[str, Any], extraction: dict[str, Any], existing: dict[str, Any]
+                   ) -> dict[str, Any] | None:
+    """The existing record with only its features (and their evidence) taken from `extraction`.
+
+    None when the extraction lists no feature a source the record cites still holds. Everything
+    else in the record stays as it is, so verification and scores are untouched.
+    """
+    result = ExtractionResult.model_validate(extraction["result"])
+    cited_ids = {s["id"] for s in existing.get("sources") or []}
+    source_ids = {"description": _API_SOURCE, "readme": "readme"}
+    release = next((s for s in build_sources(candidate) if s.id == "release"), None)
+    if release is not None:
+        source_ids["release"] = next((sid for sid in cited_ids if sid.startswith("release:")), "release")
+    source_ids = {k: v for k, v in source_ids.items() if v in cited_ids}
+    ev = _Evidence(build_sources(candidate), source_ids, extraction["model"], extraction["created_at"])
+    features: list[str] = []
+    for item in result.features:
+        if item.value and item.value not in features and ev.model_value(f"/features/{len(features)}", item.quote):
+            features.append(item.value)
+    if not features:
+        return None
+    data = json.loads(json.dumps(existing))
+    data["features"] = features
+    data["evidence"] = [e for e in data["evidence"] if not e["field"].startswith("/features/")] + ev.items
+    return data
+
+
+def write_features(db: PipelineDB, *, model: str, out_dir: Path = DEFAULT_OUT, slugs: list[str] | None = None,
+                   dry_run: bool = False, now: datetime | None = None,
+                   log: Callable[[str], None] | None = None) -> WriteSummary:
+    """Set `features` on existing records from the latest extraction by `model`; nothing else changes."""
+    log = log or (lambda line: None)
+    now = now or taipei_now()
+    summary = WriteSummary()
+    extractions = latest_extractions(db, model)
+    for repo_id, data in _existing_records(out_dir).items():
+        if slugs and data["slug"] not in slugs:
+            continue
+        extraction = extractions.get(repo_id)
+        if extraction is None:
+            summary.skipped[data["slug"]] = f"no extraction by {model}"
+            continue
+        updated = feature_update(db.candidate(repo_id), extraction, data)
+        if updated is None:
+            summary.skipped[data["slug"]] = "no quoted feature"
+            continue
+        if updated["features"] == data.get("features"):
+            summary.unchanged.append(data["slug"])
+            continue
+        updated["updated_at"] = now.isoformat(timespec="seconds")
+        record = SoftwareRecord.model_validate(updated)
+        if not dry_run:
+            (out_dir / f"{record.slug}.json").write_text(render(record), encoding="utf-8")
+        summary.written.append(record.slug)
+        log(f"  {'would set' if dry_run else 'set'} {len(record.features)} features on {record.slug}")
+    return summary
 
 
 def latest_extractions(db: PipelineDB, model: str) -> dict[str, dict[str, Any]]:

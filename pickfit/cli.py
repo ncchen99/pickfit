@@ -72,8 +72,14 @@ def _profiles(args: argparse.Namespace) -> int:
     from pickfit.discover.run import pipeline_db_path
     from pickfit.discover.store import PipelineDB
     from pickfit.meta import resolve_model
-    from pickfit.profiles import DEFAULT_CATEGORIES, DEFAULT_OUT, write_profiles
+    from pickfit.profiles import DEFAULT_CATEGORIES, DEFAULT_OUT, write_features, write_profiles
 
+    if args.features_only:
+        summary = write_features(PipelineDB(pipeline_db_path()), model=resolve_model(args.model),
+                                 out_dir=args.out or DEFAULT_OUT, slugs=args.slug, dry_run=args.dry_run,
+                                 log=lambda line: print(line, file=sys.stderr))
+        print(json.dumps(summary.to_dict(), ensure_ascii=False, indent=2))
+        return 0
     summary = write_profiles(PipelineDB(pipeline_db_path()), model=resolve_model(args.model),
                              out_dir=args.out or DEFAULT_OUT,
                              categories=tuple(args.category or DEFAULT_CATEGORIES),
@@ -135,6 +141,9 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
                    help="categories to write (repeatable; default dev_cli and local_ai)")
     p.add_argument("--out", type=Path, default=None, help="output directory (default data/software)")
     p.add_argument("--dry-run", action="store_true", help="build and validate, write nothing")
+    p.add_argument("--features-only", action="store_true",
+                   help="only set the advertised features (and their evidence) on existing records")
+    p.add_argument("--slug", action="append", help="--features-only: only this record (repeatable)")
     p.set_defaults(func=_profiles)
 
     f = sub.add_parser("funnel", help="counts, models and cost per funnel stage from runs/pipeline.db")
