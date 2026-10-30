@@ -39,6 +39,7 @@ PROBE_SOURCE = Path(__file__).with_name("mcp_probe.py")
 PROBE_RELPATH = ".pickfit/mcp_probe.py"  # under the box user's home
 PROBE_COMMAND = f"python3 ~/{PROBE_RELPATH}"
 MARKER = "pickfit-mcp: "
+INSTRUCTIONS_KEY = "(server instructions)"  # the probe's flags key for the server's own instructions
 
 _PROBE = re.compile(r"(?:^|[\s/])\.pickfit/mcp_probe\.py(?=\s|$)")
 # NAME=value where NAME names a credential: an API key, token, secret or password.
@@ -158,12 +159,16 @@ def pitfalls(check_stdout: str) -> list[Pitfall]:
     flags = summary.get("flags") if isinstance(summary.get("flags"), dict) else {}
     for tool, kinds in list(flags.items())[:5]:
         what = ", ".join(FLAG_TEXT.get(k, str(k)) for k in kinds if isinstance(k, str))[:150]
+        if tool == INSTRUCTIONS_KEY:
+            said = "The server sends its own instructions to the calling agent when a client connects"
+            where = "The server's instructions have"
+        else:
+            said = "The server's tools/list shows each tool's description to the calling agent as is"
+            where = f"Tool {str(tool)[:64]}'s description has"
         notes.append(Pitfall(
-            kind="note",
-            readme_said=f"The server's tools/list shows each tool's description to the calling agent as is"[:300],
-            actually_needed=(f"Tool {str(tool)[:64]}'s description has instruction-like text aimed at the agent "
-                             f"({what}). pickfit neither kept nor followed it; read the tool descriptions "
-                             "before enabling this server.")[:300]))
+            kind="note", readme_said=said,
+            actually_needed=(f"{where} instruction-like text aimed at the agent ({what}). pickfit neither kept "
+                             "nor followed it; read what the server sends before enabling it.")[:300]))
     noise = summary.get("noise")
     if isinstance(noise, int) and noise > 0:
         notes.append(Pitfall(

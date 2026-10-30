@@ -104,6 +104,8 @@ def test_handshake_and_notes_from_the_probe_output() -> None:
     assert [p.kind for p in notes] == ["note", "note"]
     assert "Tool add's description has instruction-like text" in notes[0].actually_needed
     assert "<IMPORTANT>-style tag" in notes[0].actually_needed and "2 other line(s)" in notes[1].actually_needed
+    server = pitfalls(summary(flags={"(server instructions)": ["override"]}))
+    assert server[0].actually_needed.startswith("The server's instructions have instruction-like text")
 
 
 def test_is_mcp_prefers_the_record_category() -> None:

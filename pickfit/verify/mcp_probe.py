@@ -5,10 +5,14 @@ Written into each verification box (stdlib only, Python 3.8+) and run there:
 
     python3 ~/.pickfit/mcp_probe.py [--timeout S] [--call TOOL --args JSON] -- COMMAND [ARG ...]
 
+It speaks both eras of the protocol: the legacy `initialize` handshake first (most servers),
+and, when a server rejects that with a JSON-RPC error, the stateless 2026-07-28 revision
+(`server/discover`, then requests that carry the protocol version in `_meta`).
+
 What it prints is all a model or a person sees of the server. Tool, argument and server names
 are cut down to safe characters. Tool descriptions never leave the box: the probe checks them
-for instruction-like text aimed at the calling agent ("tool poisoning") and prints only the
-names of the patterns that matched. The last line is `pickfit-mcp: <JSON>`, which pickfit
+for instruction-like text aimed at the calling agent ("tool poisoning"), and the server's own
+`instructions` too, and prints only the names of the patterns that matched. The last line is `pickfit-mcp: <JSON>`, which pickfit
 parses; every value in it is one of those reduced names, a count or a version string.
 
 Exit codes: 0 the handshake completed (and the tool call, when asked, returned no error);
@@ -28,7 +32,11 @@ import sys
 import threading
 import time
 
-PROTOCOL_VERSION = "2025-06-18"
+PROTOCOL_VERSION = "2025-11-25"  # the newest legacy revision; a server answers with the one it speaks
+MODERN_VERSION = "2026-07-28"
+UNSUPPORTED_VERSION = -32022
+INSTRUCTIONS_KEY = "(server instructions)"
+CLIENT_INFO = {"name": "pickfit-mcp-probe", "version": "1"}
 MARKER = "pickfit-mcp: "
 NAME_MAX = 64
 MAX_TOOLS_SHOWN = 200
@@ -112,6 +120,7 @@ class Probe:
         self.stderr_tail = b""
         self.stderr_bytes = 0
         self.next_id = 0
+        self.modern: str | None = None  # the modern protocol version in use, once chosen
         self.proc = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE, start_new_session=True)
         threading.Thread(target=self._read_stdout, daemon=True).start()
@@ -138,6 +147,10 @@ class Probe:
     def request(self, method: str, params: dict, timeout: float | None = None) -> dict:
         self.next_id += 1
         rid = self.next_id
+        if self.modern:
+            params = {**params, "_meta": {"io.modelcontextprotocol/protocolVersion": self.modern,
+                                          "io.modelcontextprotocol/clientInfo": CLIENT_INFO,
+                                          "io.modelcontextprotocol/clientCapabilities": {}}}
         self.send({"jsonrpc": "2.0", "id": rid, "method": method, "params": params})
         deadline = time.monotonic() + (timeout or self.timeout)
         while True:
@@ -165,7 +178,7 @@ class Probe:
                 continue  # a notification, or a stale answer
             if "error" in message:
                 error = message["error"] if isinstance(message["error"], dict) else {}
-                raise ProbeError(4, f"{method} returned error {error.get('code')}")
+                raise ProbeError(4, f"{method} returned error {error.get('code')}", error)
             result = message.get("result")
             if not isinstance(result, dict):
                 raise ProbeError(4, f"{method} returned no result object")
@@ -201,9 +214,54 @@ class Probe:
 
 
 class ProbeError(Exception):
-    def __init__(self, code: int, message: str) -> None:
+    def __init__(self, code: int, message: str, rpc_error: dict | None = None) -> None:
         super().__init__(message)
         self.code = code
+        self.rpc_error = rpc_error or {}
+
+
+def _supported(error: dict) -> list[str]:
+    data = error.get("data") if isinstance(error.get("data"), dict) else {}
+    return [v for v in data.get("supported") or [] if isinstance(v, str)]
+
+
+def handshake(probe: Probe, summary: dict) -> None:
+    """initialize, else the modern revision's server/discover; fills summary and prints one line."""
+    try:
+        init = probe.request("initialize", {"protocolVersion": PROTOCOL_VERSION, "capabilities": {},
+                                            "clientInfo": CLIENT_INFO})
+        info = init.get("serverInfo") if isinstance(init.get("serverInfo"), dict) else {}
+        summary.update(era="legacy", protocol=safe_version(init.get("protocolVersion")),
+                       server=safe_name(info.get("name")), version=safe_version(info.get("version")))
+        print(f"initialize: ok protocol={summary['protocol']} server={summary['server']} "
+              f"version={summary['version']}")
+        probe.send({"jsonrpc": "2.0", "method": "notifications/initialized"})
+        result = init
+    except ProbeError as err:
+        if err.code != 4:  # the server exited or timed out: nothing to fall back to
+            raise
+        print(f"initialize: rejected ({err}); trying the stateless {MODERN_VERSION} revision")
+        probe.modern = MODERN_VERSION
+        try:
+            result = probe.request("server/discover", {})
+        except ProbeError as again:
+            versions = [v for v in _supported(again.rpc_error) if v >= MODERN_VERSION]
+            if again.rpc_error.get("code") != UNSUPPORTED_VERSION or not versions:
+                raise
+            probe.modern = versions[0]
+            result = probe.request("server/discover", {})
+        meta = result.get("_meta") if isinstance(result.get("_meta"), dict) else {}
+        info = meta.get("io.modelcontextprotocol/serverInfo")
+        info = info if isinstance(info, dict) else {}
+        summary.update(era="modern", protocol=safe_version(probe.modern), server=safe_name(info.get("name")),
+                       version=safe_version(info.get("version")))
+        print(f"server/discover: ok protocol={summary['protocol']} server={summary['server']} "
+              f"version={summary['version']}")
+    instructions = result.get("instructions")
+    if isinstance(instructions, str):
+        found = flags_for({"description": instructions})
+        if found:
+            summary.setdefault("flags", {})[INSTRUCTIONS_KEY] = found
 
 
 def _summary_line(summary: dict) -> str:
@@ -221,14 +279,7 @@ def run(argv: list[str], *, timeout: float, call: str | None, call_args: dict) -
         return 2
     code = 0
     try:
-        init = probe.request("initialize", {"protocolVersion": PROTOCOL_VERSION, "capabilities": {},
-                                            "clientInfo": {"name": "pickfit-mcp-probe", "version": "1"}})
-        info = init.get("serverInfo") if isinstance(init.get("serverInfo"), dict) else {}
-        summary.update(protocol=safe_version(init.get("protocolVersion")), server=safe_name(info.get("name")),
-                       version=safe_version(info.get("version")))
-        print(f"initialize: ok protocol={summary['protocol']} server={summary['server']} "
-              f"version={summary['version']}")
-        probe.send({"jsonrpc": "2.0", "method": "notifications/initialized"})
+        handshake(probe, summary)
         tools: list[dict] = []
         cursor = None
         for _ in range(MAX_PAGES):
@@ -239,7 +290,7 @@ def run(argv: list[str], *, timeout: float, call: str | None, call_args: dict) -
                 break
         print(f"tools/list: ok count={len(tools)}")
         names = [safe_name(t.get("name")) for t in tools]
-        flags: dict[str, list[str]] = {}
+        flags: dict[str, list[str]] = dict(summary.get("flags") or {})
         for tool, name in zip(tools, names):
             found = flags_for(tool)
             if found:
@@ -258,7 +309,11 @@ def run(argv: list[str], *, timeout: float, call: str | None, call_args: dict) -
             content = [c for c in result.get("content") or [] if isinstance(c, dict)]
             kinds = ",".join(f"{safe_name(c.get('type'))}" for c in content) or "-"
             text = next((c.get("text") for c in content if isinstance(c.get("text"), str)), "")
-            if result.get("isError"):
+            if result.get("resultType") == "input_required":
+                print(f"tools/call: needs more input tool={safe_name(call)}")
+                summary["call_error"] = safe_name(call)
+                code = 5
+            elif result.get("isError"):
                 print(f"tools/call: error tool={safe_name(call)} content={kinds}")
                 summary["call_error"] = safe_name(call)
                 code = 5
