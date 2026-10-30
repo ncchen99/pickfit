@@ -59,28 +59,28 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-mi-lsp-20261030-004205-93c9",
+      "run_id": "verify-mi-lsp-20261031-024637-4ea4",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install-agent.sh -o /tmp/install-agent.sh && curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && ls -l /tmp/install*.sh && head -n 200 /tmp/install-agent.sh",
-          "purpose": "download install-agent.sh and install.sh"
+          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && echo DONE && wc -c /tmp/install.sh",
+          "purpose": "download install.sh to read before running"
         },
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/validate-worker-manifest.js && ls -l /tmp/install.sh /tmp/validate-worker-manifest.js",
-          "purpose": "download validate-worker-manifest.js beside install.sh"
+          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/validate-worker-manifest.js && echo DONE && wc -c /tmp/validate-worker-manifest.js && ls /tmp/*.sh /tmp/*.js",
+          "purpose": "download sibling validator required by install.sh"
         },
         {
-          "command": "sh /tmp/install.sh 2>&1",
-          "purpose": "install mi-lsp CLI plus worker via install.sh"
+          "command": "sh /tmp/install.sh",
+          "purpose": "run CLI-only install.sh for darwin-arm64"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mi-lsp version 2>&1",
-        "expected_signal": "version=0.16.6"
+        "command": "mi-lsp --help",
+        "expected_signal": "version for mi-lsp"
       },
-      "first_task": "export PATH=\"$HOME/.local/bin:$PATH\" && mi-lsp version 2>&1"
+      "first_task": "mi-lsp init . --name myapp --format toon"
     },
     "linux": {
       "basis": "replayed",
@@ -137,116 +137,8 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:42:30.351727+08:00",
+    "checked_at": "2026-10-31T03:03:10.154502+08:00",
     "runs": [
-      {
-        "id": "verify-mi-lsp-20261030-004205-93c9",
-        "level": "function",
-        "unverified_reason": null,
-        "os": "macos",
-        "arch": "arm64",
-        "method": "sandbox",
-        "runner": "tart-vz",
-        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
-        "checked_at": "2026-10-30T00:58:37.941641+08:00",
-        "tool_version": "0.16.6",
-        "install_method": "script",
-        "replayed": true,
-        "steps": [
-          {
-            "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install-agent.sh -o /tmp/install-agent.sh && curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && ls -l /tmp/install*.sh && head -n 200 /tmp/install-agent.sh",
-            "purpose": "download install-agent.sh and install.sh"
-          },
-          {
-            "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/validate-worker-manifest.js && ls -l /tmp/install.sh /tmp/validate-worker-manifest.js",
-            "purpose": "download validate-worker-manifest.js beside install.sh"
-          },
-          {
-            "command": "sh /tmp/install.sh 2>&1",
-            "purpose": "install mi-lsp CLI plus worker via install.sh"
-          }
-        ],
-        "smoke_tests": [
-          {
-            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mi-lsp version 2>&1",
-            "expected_signal": "version=0.16.6",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "mi-lsp version=0.16.6 revision=a226978c522d modified=false go=go1.26.9 os=darwin arch=arm64 protocol=mi-lsp-v1.1 rid=osx-arm64",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mkdir -p /tmp/myapp && printf '# demo app\\nprint(\"hello from myapp\")\\n' > /tmp/myapp/app.py && printf '# myapp notes\\nBilling retry logic lives here.\\n' > /tmp/myapp/notes.md && cd /tmp/myapp && mi-lsp init . --name myapp 2>&1",
-            "expected_signal": "workspace=myapp",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "workspace=myapp",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mi-lsp workspace which --format toon 2>&1; echo \"===\"; cd /tmp/myapp && mi-lsp workspace which --format toon 2>&1",
-            "expected_signal": "workspace: myapp",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "workspace: myapp",
-            "setup": [
-              {
-                "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mkdir -p /tmp/myapp && printf '# demo app\\nprint(\"hello from myapp\")\\n' > /tmp/myapp/app.py && printf '# myapp notes\\nBilling retry logic lives here.\\n' > /tmp/myapp/notes.md && cd /tmp/myapp && mi-lsp init . --name myapp 2>&1",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mi-lsp nav intent \"how does the daemon start\" --workspace myapp --format toon 2>&1",
-            "expected_signal": "backend: intent",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "backend: intent",
-            "setup": [
-              {
-                "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mkdir -p /tmp/myapp && printf '# demo app\\nprint(\"hello from myapp\")\\n' > /tmp/myapp/app.py && printf '# myapp notes\\nBilling retry logic lives here.\\n' > /tmp/myapp/notes.md && cd /tmp/myapp && mi-lsp init . --name myapp 2>&1",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          }
-        ],
-        "pitfalls": [
-          {
-            "readme_said": "curl -fsSL .../install-agent.sh | sh and curl -fsSL .../install.sh | sh",
-            "actually_needed": "Download validate-worker-manifest.js next to install.sh before running it (e.g. curl -fsSL .../validate-worker-manifest.js -o /tmp/validate-worker-manifest.js); otherwise install.sh fails with Error: Cannot find module '/tmp/validate-worker-manifest.js'.",
-            "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "install-agent.sh adds the CLI and the mi-lsp skill",
-            "actually_needed": "install-agent.sh does install the CLI (mi-lsp v0.16.6 at ~/.local/bin/mi-lsp) but its final skill step `npx skills add fgpaz/claude-skills` fails with authentication failure for that repo; use install.sh alone for a clean CLI-only install.",
-            "kind": "note"
-          }
-        ],
-        "blocking_error": null,
-        "judge": {
-          "verdict": "working",
-          "observed": "Screenshots show version 0.16.6 printed, workspace myapp initialized, and workspace which returning myapp twice.",
-          "model": "muse-spark-1.3"
-        },
-        "evidence": {
-          "trace_path": "runs/verify/verify-mi-lsp-20261030-004205-93c9/report.json",
-          "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-mi-lsp-20261030-004205-93c9/check-1-cmd6.judged.png",
-            "runs/verify/verify-mi-lsp-20261030-004205-93c9/check-2-cmd8.judged.png",
-            "runs/verify/verify-mi-lsp-20261030-004205-93c9/check-3-cmd9.judged.png"
-          ],
-          "evidence_url": null
-        },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.104168
-      },
       {
         "id": "verify-mi-lsp-20261031-013827-45c9",
         "level": "function",
@@ -410,7 +302,7 @@
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.106461,
+        "cost_usd": 0.110183,
         "features": [
           {
             "feature": "Find symbols by name",
@@ -444,6 +336,185 @@
           },
           {
             "feature": "Navigate canonical wiki and governance docs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows wiki search blocked with missing governance doc, not navigated docs."
+          }
+        ]
+      },
+      {
+        "id": "verify-mi-lsp-20261031-024637-4ea4",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-10-31T03:03:10.154502+08:00",
+        "tool_version": "0.16.7",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && echo DONE && wc -c /tmp/install.sh",
+            "purpose": "download install.sh to read before running"
+          },
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/validate-worker-manifest.js && echo DONE && wc -c /tmp/validate-worker-manifest.js && ls /tmp/*.sh /tmp/*.js",
+            "purpose": "download sibling validator required by install.sh"
+          },
+          {
+            "command": "sh /tmp/install.sh",
+            "purpose": "run CLI-only install.sh for darwin-arm64"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mi-lsp --help",
+            "expected_signal": "version for mi-lsp",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "-v, --version version for mi-lsp",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mi-lsp init . --name myapp --format toon",
+            "expected_signal": "workspace: myapp",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "workspace: myapp",
+            "setup": [
+              {
+                "command": "mkdir -p src/billing tests/billing .docs/wiki/05_requirements && cat > src/billing/retry.py <<'EOF'\n\"\"\"Billing retry logic sample.\"\"\"\nRETRY_LIMIT = 3\n\ndef billing_retry(order_id, attempts=RETRY_LIMIT):\n    \"\"\"Retry billing for order.\"\"\"\n    for i in range(attempts):\n        if charge(order_id):\n            return True\n    return False\n\ndef charge(order_id):\n    \"\"\"Charge order.\"\"\"\n    return True\nEOF\ncat > tests/billing/retry_test.py <<'EOF'\nfrom src.billing.retry import billing_retry\ndef test_billing_retry():\n    assert billing_retry(\"order-123\") is True\nEOF\ncat > .docs/wiki/05_requirements/RF-GPH-010.md <<'EOF'\n# RF-GPH-010 - Billing retry spec\nBilling retry governs how the daemon restarts failed charges.\nSee billing_retry symbol.\nEOF\necho SETUP_DONE && ls -R src tests .docs",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mi-lsp nav find billing_retry --workspace myapp --format toon",
+            "expected_signal": "billing_retry",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "src/billing/retry.py,\"\",function,4,billing_retry,catalog,module,\"def billing_retry(order_id, attempts=RETRY_LIMIT):\"",
+            "setup": [
+              {
+                "command": "mkdir -p src/billing tests/billing .docs/wiki/05_requirements && cat > src/billing/retry.py <<'EOF'\n\"\"\"Billing retry logic sample.\"\"\"\nRETRY_LIMIT = 3\n\ndef billing_retry(order_id, attempts=RETRY_LIMIT):\n    \"\"\"Retry billing for order.\"\"\"\n    for i in range(attempts):\n        if charge(order_id):\n            return True\n    return False\n\ndef charge(order_id):\n    \"\"\"Charge order.\"\"\"\n    return True\nEOF\ncat > tests/billing/retry_test.py <<'EOF'\nfrom src.billing.retry import billing_retry\ndef test_billing_retry():\n    assert billing_retry(\"order-123\") is True\nEOF\ncat > .docs/wiki/05_requirements/RF-GPH-010.md <<'EOF'\n# RF-GPH-010 - Billing retry spec\nBilling retry governs how the daemon restarts failed charges.\nSee billing_retry symbol.\nEOF\necho SETUP_DONE && ls -R src tests .docs",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mi-lsp init . --name myapp --format toon",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mi-lsp nav search \"billing_retry\" --workspace myapp --repo src --include-content --format toon",
+            "expected_signal": "def billing_retry(order_id, attempts=RETRY_LIMIT):",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "5,\"def billing_retry(order_id, attempts=RETRY_LIMIT):\",4,1,symbol,4,src/billing/retry.py,4,text,src,function,billing_retry,\"def billing_retry(order_id, attempts=RETRY_LIMIT):\"",
+            "setup": [
+              {
+                "command": "mkdir -p src/billing tests/billing .docs/wiki/05_requirements && cat > src/billing/retry.py <<'EOF'\n\"\"\"Billing retry logic sample.\"\"\"\nRETRY_LIMIT = 3\n\ndef billing_retry(order_id, attempts=RETRY_LIMIT):\n    \"\"\"Retry billing for order.\"\"\"\n    for i in range(attempts):\n        if charge(order_id):\n            return True\n    return False\n\ndef charge(order_id):\n    \"\"\"Charge order.\"\"\"\n    return True\nEOF\ncat > tests/billing/retry_test.py <<'EOF'\nfrom src.billing.retry import billing_retry\ndef test_billing_retry():\n    assert billing_retry(\"order-123\") is True\nEOF\ncat > .docs/wiki/05_requirements/RF-GPH-010.md <<'EOF'\n# RF-GPH-010 - Billing retry spec\nBilling retry governs how the daemon restarts failed charges.\nSee billing_retry symbol.\nEOF\necho SETUP_DONE && ls -R src tests .docs",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mi-lsp init . --name myapp --format toon",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mi-lsp nav multi-read src/billing/retry.py:1-20 tests/billing/retry_test.py:1-10 --workspace myapp --format toon",
+            "expected_signal": "src/billing/retry.py",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"\\\"\\\"\\\"Billing retry logic sample.\\\"\\\"\\\"\\nRETRY_LIMIT = 3\\n\\ndef billing_retry(order_id, attempts=RETRY_LIMIT):\\n \\\"\\\"\\\"Retry billing for order.\\\"\\\"\\\"\\n for i in range(attempts):\\n if charge(order_id):\\n return True\\n return False\\n\\ndef charge(order_id):\\n \\\"\\\"\\\"Charge order.\\\"\\\"\\\"\\n return True\",…",
+            "setup": [
+              {
+                "command": "mkdir -p src/billing tests/billing .docs/wiki/05_requirements && cat > src/billing/retry.py <<'EOF'\n\"\"\"Billing retry logic sample.\"\"\"\nRETRY_LIMIT = 3\n\ndef billing_retry(order_id, attempts=RETRY_LIMIT):\n    \"\"\"Retry billing for order.\"\"\"\n    for i in range(attempts):\n        if charge(order_id):\n            return True\n    return False\n\ndef charge(order_id):\n    \"\"\"Charge order.\"\"\"\n    return True\nEOF\ncat > tests/billing/retry_test.py <<'EOF'\nfrom src.billing.retry import billing_retry\ndef test_billing_retry():\n    assert billing_retry(\"order-123\") is True\nEOF\ncat > .docs/wiki/05_requirements/RF-GPH-010.md <<'EOF'\n# RF-GPH-010 - Billing retry spec\nBilling retry governs how the daemon restarts failed charges.\nSee billing_retry symbol.\nEOF\necho SETUP_DONE && ls -R src tests .docs",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mi-lsp init . --name myapp --format toon",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL .../install-agent.sh | sh installs directly",
+            "actually_needed": "download validate-worker-manifest.js next to install.sh before running install-agent.sh/install.sh (curl .../validate-worker-manifest.js -o /tmp/validate-worker-manifest.js)",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "install-agent.sh adds CLI plus mi-lsp skill",
+            "actually_needed": "CLI installs fine but the trailing `npx skills add fgpaz/claude-skills` step fails with authentication failure for that repo; CLI-only install.sh avoids it",
+            "kind": "note"
+          },
+          {
+            "readme_said": "mi-lsp nav search \"billing retry\" --include-content --workspace myapp",
+            "actually_needed": "on a container workspace add --repo <repo> to get inline content instead of a scope preview",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show successful init with workspace myapp, catalog find returning billing_retry, and help listing version for mi-lsp.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mi-lsp-20261031-024637-4ea4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mi-lsp-20261031-024637-4ea4/check-1-cmd9.judged.png",
+            "runs/verify/verify-mi-lsp-20261031-024637-4ea4/check-2-cmd10.judged.png",
+            "runs/verify/verify-mi-lsp-20261031-024637-4ea4/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.134759,
+        "features": [
+          {
+            "feature": "Find symbols by name",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Search text with matching code inline",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Read exact file ranges",
             "status": "checked",
             "smoke_tests": [
               4
@@ -451,6 +522,14 @@
             "reason": null,
             "failure": null,
             "note": null
+          },
+          {
+            "feature": "Navigate canonical wiki and governance docs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; blocked: missing .docs/wiki/00_governance.md in minimal workspace"
           }
         ]
       }
@@ -458,15 +537,15 @@
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T01:42:30+08:00",
+    "computed_at": "2026-10-31T03:03:10+08:00",
     "quality": {
-      "total": 73.3,
+      "total": 78.7,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6141,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -507,7 +586,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 50.72
+      "value": 54.46
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -806,5 +885,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-31T01:42:30.352713+08:00"
+  "updated_at": "2026-10-31T03:03:32.093626+08:00"
 }

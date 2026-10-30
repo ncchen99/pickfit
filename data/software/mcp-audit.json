@@ -56,20 +56,20 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-mcp-audit-20261029-235741-dccf",
+      "run_id": "verify-mcp-audit-20261031-023503-159a",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install mcp-audit-scanner 2>&1",
-          "purpose": "Install mcp-audit-scanner with uv tool install"
+          "purpose": "Install via uv tool"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "mcp-audit --help 2>&1",
-        "expected_signal": "discover List all detected MCP clients and server configurations."
+        "expected_signal": "Scan MCP configurations for security issues."
       },
-      "first_task": "mcp-audit version 2>&1"
+      "first_task": "mcp-audit discover 2>&1"
     },
     "linux": {
       "basis": "replayed",
@@ -103,107 +103,10 @@
     "url": "https://github.com/adudley78/mcp-audit/releases/tag/v0.22.0"
   },
   "verification": {
-    "level": "function",
+    "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:19:51.460701+08:00",
+    "checked_at": "2026-10-31T02:41:19.099453+08:00",
     "runs": [
-      {
-        "id": "verify-mcp-audit-20261029-235741-dccf",
-        "level": "function",
-        "unverified_reason": null,
-        "os": "macos",
-        "arch": "arm64",
-        "method": "sandbox",
-        "runner": "tart-vz",
-        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
-        "checked_at": "2026-10-30T00:00:25.347812+08:00",
-        "tool_version": "0.23.0",
-        "install_method": "uv",
-        "replayed": true,
-        "steps": [
-          {
-            "command": "uv tool install mcp-audit-scanner 2>&1",
-            "purpose": "Install mcp-audit-scanner with uv tool install"
-          }
-        ],
-        "smoke_tests": [
-          {
-            "command": "mcp-audit --help 2>&1",
-            "expected_signal": "discover List all detected MCP clients and server configurations.",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "│ discover List all detected MCP clients and server configurations. │",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "mcp-audit version 2>&1",
-            "expected_signal": "mcp-audit 0.23.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "mcp-audit 0.23.0",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "mcp-audit check 2>&1",
-            "expected_signal": "No MCP config files found on this machine.",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "No MCP config files found on this machine. Run mcp-audit discover to see where",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "mcp-audit scan 2>&1",
-            "expected_signal": "No security issues found",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "│ ✅ No security issues found │",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "mcp-audit discover 2>&1",
-            "expected_signal": "No MCP configurations found on this machine.",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "No MCP configurations found on this machine.",
-            "setup": [],
-            "offline": true
-          }
-        ],
-        "pitfalls": [
-          {
-            "readme_said": "Standard `--version` flag works",
-            "actually_needed": "Use `mcp-audit version` (subcommand) or `mcp-audit --help`; `--version` exits 2 with 'No such option: --version'.",
-            "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "`uv add mcp-audit-scanner` / `pip install mcp-audit-scanner`",
-            "actually_needed": "Used `uv tool install mcp-audit-scanner` for an isolated install exposing `mcp-audit` on PATH.",
-            "kind": "sandbox"
-          }
-        ],
-        "blocking_error": null,
-        "judge": {
-          "verdict": "working",
-          "observed": "Screenshots show --help listing the discover command, version reporting 0.23.0, and check reporting no MCP config files found.",
-          "model": "muse-spark-1.3"
-        },
-        "evidence": {
-          "trace_path": "runs/verify/verify-mcp-audit-20261029-235741-dccf/report.json",
-          "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-mcp-audit-20261029-235741-dccf/check-1-cmd3.judged.png",
-            "runs/verify/verify-mcp-audit-20261029-235741-dccf/check-2-cmd4.judged.png",
-            "runs/verify/verify-mcp-audit-20261029-235741-dccf/check-3-cmd5.judged.png"
-          ],
-          "evidence_url": null
-        },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.043701
-      },
       {
         "id": "verify-mcp-audit-20261031-011815-092b",
         "level": "function",
@@ -314,7 +217,7 @@
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.126081,
+        "cost_usd": 0.129451,
         "features": [
           {
             "feature": "Scan MCP server configurations for risks",
@@ -337,13 +240,11 @@
           },
           {
             "feature": "Detect dangerous cross-server combinations",
-            "status": "checked",
-            "smoke_tests": [
-              5
-            ],
-            "reason": null,
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
             "failure": null,
-            "note": null
+            "note": "its check passed, but the output does not show it: Output shows only aggregate counts and score with no mention of cross-server attack paths."
           },
           {
             "feature": "Open interactive attack graph dashboard",
@@ -352,6 +253,174 @@
             "reason": "other",
             "failure": null,
             "note": "no budget left to try dashboard --no-open"
+          }
+        ]
+      },
+      {
+        "id": "verify-mcp-audit-20261031-023503-159a",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-10-31T02:41:19.099453+08:00",
+        "tool_version": "0.25.1",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install mcp-audit-scanner 2>&1",
+            "purpose": "Install via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mcp-audit --help 2>&1",
+            "expected_signal": "Scan MCP configurations for security issues.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ scan Scan MCP configurations for security issues. │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mcp-audit discover 2>&1",
+            "expected_signal": "No MCP configurations found on this machine.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No MCP configurations found on this machine.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mcp-audit check --path /tmp/mcpdemo/mcp.json 2>&1",
+            "expected_signal": "Grade: F",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "Grade: F (Score: 16/100)",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/mcpdemo && cat > /tmp/mcpdemo/mcp.json <<'EOF'\n{\n  \"mcpServers\": {\n    \"filesystem\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@modelcontextprotocol/server-filesystem\", \"/tmp\"]\n    },\n    \"fetch\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@modelcontextprotocol/server-fetch\"]\n    }\n  }\n}\nEOF\ncat /tmp/mcpdemo/mcp.json && echo \"---written---\" && mkdir -p demo_test && cp /tmp/mcpdemo/mcp.json ./demo_test_mcp.json && ls -la demo_test_mcp.json",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mcp-audit scan --path /tmp/mcpdemo/mcp.json 2>&1",
+            "expected_signal": "File read + network exfiltration path",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "File read + network exfiltration path",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/mcpdemo && cat > /tmp/mcpdemo/mcp.json <<'EOF'\n{\n  \"mcpServers\": {\n    \"filesystem\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@modelcontextprotocol/server-filesystem\", \"/tmp\"]\n    },\n    \"fetch\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@modelcontextprotocol/server-fetch\"]\n    }\n  }\n}\nEOF\ncat /tmp/mcpdemo/mcp.json && echo \"---written---\" && mkdir -p demo_test && cp /tmp/mcpdemo/mcp.json ./demo_test_mcp.json && ls -la demo_test_mcp.json",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s -o /tmp/dash.html -w \"%{http_code} %{size_download}\\n\" http://127.0.0.1:8901/ && grep -i -o \"attack graph\\|mcp-audit\\|filesystem\\|fetch\" /tmp/dash.html | head -n 20; echo \"---\"; wc -c /tmp/dash.html",
+            "expected_signal": "Attack Graph",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Attack Graph",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/mcpdemo && cat > /tmp/mcpdemo/mcp.json <<'EOF'\n{\n  \"mcpServers\": {\n    \"filesystem\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@modelcontextprotocol/server-filesystem\", \"/tmp\"]\n    },\n    \"fetch\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@modelcontextprotocol/server-fetch\"]\n    }\n  }\n}\nEOF\ncat /tmp/mcpdemo/mcp.json && echo \"---written---\" && mkdir -p demo_test && cp /tmp/mcpdemo/mcp.json ./demo_test_mcp.json && ls -la demo_test_mcp.json",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mcp-audit dashboard --path /tmp/mcpdemo/mcp.json --no-open --port 8901",
+                "background": true,
+                "port": 8901
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "CLI help implies standard --version flag",
+            "actually_needed": "use `mcp-audit --help` or `mcp-audit version`; `--version` errors with No such option",
+            "kind": "note"
+          },
+          {
+            "readme_said": "mcp-audit check / mcp-audit scan with no args",
+            "actually_needed": "use --path /tmp/mcpdemo/mcp.json to scan a chosen file; bare scan/discover only check auto-discovered client paths",
+            "kind": "note"
+          },
+          {
+            "readme_said": "mcp-audit lock # Write mcp-lock.json",
+            "actually_needed": "add --offline to avoid online package version lookup so replay works with network off",
+            "kind": "note"
+          },
+          {
+            "readme_said": "mcp-audit dashboard # Open interactive attack graph dashboard",
+            "actually_needed": "use mcp-audit dashboard --path <config> --no-open --port <port> and query http://127.0.0.1:<port>/; server keeps running until stopped",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show help listing the scan description, discover reporting no configs, and check grading the demo config as F with 13 issues.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mcp-audit-20261031-023503-159a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mcp-audit-20261031-023503-159a/check-1-cmd3.judged.png",
+            "runs/verify/verify-mcp-audit-20261031-023503-159a/check-2-cmd5.judged.png",
+            "runs/verify/verify-mcp-audit-20261031-023503-159a/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.13303,
+        "features": [
+          {
+            "feature": "Scan MCP server configurations for risks",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Lock approved MCP servers to file",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; Locked 2 servers to mcp-lock.json"
+          },
+          {
+            "feature": "Detect dangerous cross-server combinations",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows single-server rules and score but no cross-server attack path combination."
+          },
+          {
+            "feature": "Open interactive attack graph dashboard",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
           }
         ]
       }
@@ -677,5 +746,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-31T01:19:51.461892+08:00"
+  "updated_at": "2026-10-31T03:03:28.028198+08:00"
 }
