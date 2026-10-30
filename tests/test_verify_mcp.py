@@ -296,3 +296,14 @@ def test_the_agent_gets_the_probe_the_guide_and_its_level_from_the_probe(tmp_pat
     assert "Launch command the README gives: notes-mcp --root ~/notes" in first
     assert "Environment variables the README names: NOTES_ROOT" in first
     assert "Tiny models for the inference check" not in first
+
+
+def test_http_only_mcp_servers_are_set_aside() -> None:
+    from pickfit.schema import ExtractionResult
+    from pickfit.verify.batch import not_in_box
+    from tests.test_profiles import mcp_extraction
+
+    http = ExtractionResult.model_validate(mcp_extraction(transports={"value": ["streamable_http"],
+                                                                      "quote": "Transport: stdio."}))
+    assert not_in_box(http) == "MCP over HTTP only (the probe speaks stdio)"
+    assert not_in_box(ExtractionResult.model_validate(mcp_extraction())) is None
