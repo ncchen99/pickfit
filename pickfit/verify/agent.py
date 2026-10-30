@@ -393,6 +393,12 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
             lines.append(f"- {t.command}{shown}")
     if is_mcp(task):
         lines += ["", MCP_GUIDE]
+        mcp = ex.mcp
+        if mcp.launch_command.value:
+            lines.append(f"Launch command the README gives: {mcp.launch_command.value}")
+        if mcp.env_vars:
+            named = ", ".join(f"{e.name}{' (required)' if e.required else ''}" for e in mcp.env_vars)
+            lines.append(f"Environment variables the README names: {named}")
     elif ex.category.value == "local_ai":
         lines += ["", TINY_MODELS]
     pre = ex.prerequisites

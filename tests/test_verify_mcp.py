@@ -255,3 +255,44 @@ def test_records_check_the_handshake() -> None:
     service = {**run, "level": "service", "mcp": {**run["mcp"], "called_tool": None}}
     with pytest.raises(ValueError, match="needs a tool call"):
         VerificationRun.model_validate(service)
+
+
+# ---------------------------------------------------------------- agent
+
+
+def test_the_agent_gets_the_probe_the_guide_and_its_level_from_the_probe(tmp_path: Path, monkeypatch) -> None:
+    import pickfit.env
+    from pickfit import meta
+    from pickfit.ledger import Caps, Ledger
+    from pickfit.schema import ExtractionResult
+    from pickfit.verify.agent import VerifyAgent
+    from tests.test_profiles import MCP_README, mcp_extraction
+    from verify_fakes import FakeBox, FakeServer, finish, response, run_cmd
+
+    monkeypatch.setattr(pickfit.env, "DOTENV_PATH", tmp_path / "missing.env")
+    for name in ("PICKFIT_MODE", "PICKFIT_CACHE", "MODEL_API_KEY"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("PICKFIT_LEDGER", str(tmp_path / "default-ledger.sqlite"))
+    monkeypatch.setattr(meta, "sleep", lambda s: None)
+    ex = ExtractionResult.model_validate(mcp_extraction())
+    task = VerifyTask(slug="notes-mcp", repo_url="https://github.com/someone/notes-mcp", readme=MCP_README,
+                      extraction=ex)
+    server = FakeServer(
+        response("r1", run_cmd("npm install -g notes-mcp")),
+        response("r2", run_cmd(PROBE)),
+        response("r3", finish(level="function", steps=[1], install_method="npm",
+                              smoke=[{"command_id": 2, "setup_ids": [], "expected_signal": "handshake: ok",
+                                      "expected_exit_code": 0, "observed_excerpt": "handshake: ok"}])),
+    )
+    box = FakeBox({"npm install": (0, "added 12 packages", ""), "mcp_probe.py": (0, summary(), "")})
+    ledger = Ledger(tmp_path / "ledger.sqlite", caps=Caps(total_usd=100.0, daily_usd=lambda d: 25.0))
+    agent = VerifyAgent(task, box, client=server.client(), ledger=ledger, runs_dir=tmp_path / "runs",
+                        log=lambda line: None, run_id="verify-notes-mcp-test")
+    report = agent.run()
+    assert report.verdict["level"] == "function" and report.verdict["agrees"]
+    assert box.files["/home/sbx/.pickfit/mcp_probe.py"].startswith(b"#!/usr/bin/env python3")
+    first = server.requests[0]["input"][0]["content"]
+    assert "This is an MCP (Model Context Protocol) server." in first
+    assert "Launch command the README gives: notes-mcp --root ~/notes" in first
+    assert "Environment variables the README names: NOTES_ROOT" in first
+    assert "Tiny models for the inference check" not in first
