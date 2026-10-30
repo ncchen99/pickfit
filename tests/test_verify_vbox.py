@@ -415,6 +415,24 @@ def vb_plan(claims):
     return rank_install_methods(claims, "windows")
 
 
+def test_needs_store_is_a_reason_the_agent_can_give_and_the_record_keeps() -> None:
+    from typing import get_args
+
+    from pickfit.schema import UnverifiedReason
+    from pickfit.verify.agent import FINISH_TOOL, FinishArgs
+    from pickfit.verify.failure import WRITTEN_REASONS
+
+    assert "needs_store" in get_args(UnverifiedReason.__value__)
+    enum = FINISH_TOOL["parameters"]["properties"]["unverified_reason"]
+    assert "needs_store" in json.dumps(enum)
+    assert FinishArgs.model_validate({"level": "unverified", "unverified_reason": "needs_store"}).unverified_reason \
+        == "needs_store"
+    assert "needs_store" in WRITTEN_REASONS  # it says something about the software on Windows
+    assert "reason needs_store" in VBoxBox.user_rule and "do not switch to another source" in VBoxBox.user_rule
+    schema = json.loads((Path(__file__).parents[1] / "schema" / "software.v1.json").read_text(encoding="utf-8"))
+    assert "needs_store" in schema["$defs"]["UnverifiedReason"]["enum"]
+
+
 def test_hardened_check_covers_the_ways_to_admin() -> None:
     for needle in ("S-1-5-32-544", "AutoAdminLogon", "DefaultPassword", "Panther", "fDenyTSConnections", "WinRM",
                    "pickfit\\run.ps1"):

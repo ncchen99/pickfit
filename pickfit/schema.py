@@ -85,6 +85,7 @@ type UnverifiedReason = Literal[
     "needs_root",
     "needs_container",
     "needs_more_resources",
+    "needs_store",  # the only Windows install path needs the Microsoft Store (the Windows box is LTSC, no Store)
     "suspected_tool_fault",
     "budget_exceeded",
     "other",

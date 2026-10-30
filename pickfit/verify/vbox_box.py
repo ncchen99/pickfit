@@ -565,8 +565,8 @@ class VBoxBox(Box):
                  r"installs into C:\Program Files, nothing written outside your profile (C:\Users\sbx) and "
                  r"the temp dir; installs need a user scope (winget --scope user, scoop, pip/uv/pipx, npm -g). "
                  "This Windows has no Microsoft Store: if the README's only Windows install needs the Store or "
-                 "winget's msstore source, finish unverified (reason other, and say needs_store in the summary); "
-                 "do not switch to another source and call that the README's path.")
+                 "winget's msstore source, finish unverified with reason needs_store; do not switch to another "
+                 "source and call that the README's path.")
     detach = ""  # run_background is PowerShell here; see background()
 
     def __init__(self, *, base: str = BASE_VM, router: str = ROUTER_VM, limits: BoxLimits = BoxLimits(),

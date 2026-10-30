@@ -87,7 +87,7 @@ _INT = {"type": "integer"}
 _LEVELS = ["function", "install", "service", "inference", "unverified", "failed"]
 _REASONS = ["needs_gpu", "apple_silicon_only", "macos_only", "windows_only", "gui_only",
             "needs_account", "model_too_large", "needs_toolchain", "needs_root", "needs_container",
-            "needs_more_resources", "other"]
+            "needs_more_resources", "needs_store", "other"]
 _METHODS = ["brew", "cargo", "pip", "pipx", "uv", "npm", "go", "binary", "docker", "script", "source", "other"]
 
 FINISH_TOOL = _fn(
