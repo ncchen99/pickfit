@@ -72,8 +72,10 @@ class BudgetExceeded(RuntimeError):
 
 
 def pipeline_daily_cap(day: date) -> float:
-    """$3 a day before 2026-10-29 (validation), $25 a day from then on (plan section 2)."""
-    return 3.0 if day < date(2026, 10, 29) else 25.0
+    """$3 a day before 2026-10-29 (validation), $25 from then on, $45 from 10/31 to 11/2 (plan section 2)."""
+    if day < date(2026, 10, 29):
+        return 3.0
+    return 45.0 if date(2026, 10, 31) <= day <= date(2026, 11, 2) else 25.0
 
 
 @dataclass(frozen=True)
@@ -82,7 +84,23 @@ class Caps:
     daily_usd: Callable[[date], float]
 
 
-PIPELINE_CAPS = Caps(total_usd=100.0, daily_usd=pipeline_daily_cap)
+PIPELINE_TOTAL_USD = 115.0
+PIPELINE_CAPS = Caps(total_usd=PIPELINE_TOTAL_USD, daily_usd=pipeline_daily_cap)
+
+
+def pipeline_caps() -> Caps:
+    """PIPELINE_CAPS, with the total lowered by PICKFIT_PIPELINE_TOTAL_CAP_USD when it is set.
+
+    The setting can only lower the total: a machine with its own ledger (the Windows host) gets a
+    small hard stop of its own, and nothing can raise the shared one.
+    """
+    raw = get_env("PICKFIT_PIPELINE_TOTAL_CAP_USD")
+    if raw is None:
+        return PIPELINE_CAPS
+    lowered = float(raw)  # a typo meant to lower the cap fails loudly instead of being ignored
+    if not 0 <= lowered <= PIPELINE_TOTAL_USD:
+        raise ValueError(f"PICKFIT_PIPELINE_TOTAL_CAP_USD must be between 0 and {PIPELINE_TOTAL_USD:g}")
+    return Caps(total_usd=lowered, daily_usd=pipeline_daily_cap)
 # Baseten's hackathon credits are separate from Meta's, so they get their own budget in the same
 # file. $100 of credits, $80 hard stop: the account has a card on file that is charged past them.
 BASETEN_CAPS = Caps(total_usd=80.0, daily_usd=lambda day: 25.0)
@@ -292,7 +310,7 @@ class Ledger:
 
 def default_ledger() -> Ledger:
     """The shared ledger: PICKFIT_LEDGER if set, else ~/.pickfit/ledger.sqlite."""
-    return Ledger(get_env("PICKFIT_LEDGER") or DEFAULT_PATH)
+    return Ledger(get_env("PICKFIT_LEDGER") or DEFAULT_PATH, caps=pipeline_caps())
 
 
 def baseten_ledger() -> Ledger:
