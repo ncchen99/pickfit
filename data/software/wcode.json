@@ -1,0 +1,631 @@
+{
+  "schema_version": "software.v1",
+  "slug": "wcode",
+  "repo_id": "gh:1343045682",
+  "name": "wcode",
+  "summary": "MCP control plane that helps coding assistants read repos, change code and run checks.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": null,
+  "maturity": null,
+  "tags": [
+    "agent",
+    "agentic",
+    "code",
+    "mcp",
+    "mcp-server",
+    "mcp-tools"
+  ],
+  "use_cases": [
+    "inspect repository changes",
+    "manage coding tasks",
+    "approve access requests",
+    "see which checks ran against current code"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://wcode.francis.run",
+  "repo": {
+    "url": "https://github.com/francis-du/wcode",
+    "full_name": "francis-du/wcode",
+    "created_at": "2026-08-22T17:56:11Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/francis-du/wcode/main/install.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "wcode --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-wcode-20261031-012049-3a94",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/francis-du/wcode/main/install.sh -o /tmp/wcode-install.sh && ls -l /tmp/wcode-install.sh && wc -c /tmp/wcode-install.sh",
+          "purpose": "Download install script for reading"
+        },
+        {
+          "command": "sh /tmp/wcode-install.sh",
+          "purpose": "Install wcode via install script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "wcode --version",
+        "expected_signal": "wcode 0.9.1"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://raw.githubusercontent.com/francis-du/wcode/main/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "wcode --version"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.9.1",
+    "published_at": "2026-10-23T14:29:56Z",
+    "url": "https://github.com/francis-du/wcode/releases/tag/v0.9.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:21:37.025757+08:00",
+    "runs": [
+      {
+        "id": "verify-wcode-20261031-012049-3a94",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:21:37.025757+08:00",
+        "tool_version": "0.9.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/francis-du/wcode/main/install.sh -o /tmp/wcode-install.sh && ls -l /tmp/wcode-install.sh && wc -c /tmp/wcode-install.sh",
+            "purpose": "Download install script for reading"
+          },
+          {
+            "command": "sh /tmp/wcode-install.sh",
+            "purpose": "Install wcode via install script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "wcode --version",
+            "expected_signal": "wcode 0.9.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "wcode 0.9.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- wcode mcp-stdio",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call workspace_info --args '{}' -- wcode mcp-stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=workspace_info content=text text_chars=16660",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 85 tools, successful workspace_info tool call, and wcode 0.9.1 version output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-wcode-20261031-012049-3a94/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-wcode-20261031-012049-3a94/check-1-cmd4.judged.png",
+            "runs/verify/verify-wcode-20261031-012049-3a94/check-2-cmd5.judged.png",
+            "runs/verify/verify-wcode-20261031-012049-3a94/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.043742,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "wcode",
+            "mcp-stdio"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "wcode",
+          "server_version": "0.9.1",
+          "tools": [
+            "workspace_info",
+            "design_status",
+            "acceptance_policy",
+            "convention_status",
+            "scope_status",
+            "design_init",
+            "software_graph",
+            "graph_provider_import",
+            "graph_provider_status",
+            "semantic_provider_status",
+            "semantic_provider_install",
+            "language_quality_status",
+            "language_quality_run",
+            "semantic_provider_refresh",
+            "semantic_navigation",
+            "graph_history",
+            "graph_query",
+            "graph_diff",
+            "traceability_status",
+            "drift_status",
+            "risk_status",
+            "impact_analysis",
+            "software_context",
+            "agent_context",
+            "execution_status",
+            "execution_policy_status",
+            "execution_propose",
+            "execution_steer",
+            "execution_handoff",
+            "worklist_status",
+            "worklist_update",
+            "worklist_claim",
+            "worklist_submit",
+            "semantic_status",
+            "semantic_query",
+            "semantic_record",
+            "semantic_confirm",
+            "semantic_retire",
+            "verification_plan",
+            "verification_claim",
+            "verification_submit",
+            "verification_executor_status",
+            "verification_execute_stages",
+            "verification_stage_submit",
+            "verification_approve",
+            "change_acceptance",
+            "verification_status",
+            "verification_history",
+            "evidence_status",
+            "reconciliation_plan",
+            "reconciliation_status",
+            "reconciliation_history",
+            "reconciliation_approve",
+            "reconciliation_execution_status",
+            "reconciliation_claim",
+            "reconciliation_submit",
+            "reconciliation_retry",
+            "project_context",
+            "review_changes",
+            "parallel_tools",
+            "verify_project",
+            "list_files",
+            "search_code",
+            "search_many",
+            "scan_patterns",
+            "search_syntax",
+            "file_outline",
+            "find_symbol",
+            "symbol_context",
+            "read_file",
+            "read_files",
+            "read_media",
+            "path_info",
+            "replace_text",
+            "apply_edits",
+            "write_file",
+            "create_directory",
+            "create_file",
+            "create_files",
+            "apply_file_edits",
+            "move_path",
+            "move_paths",
+            "delete_path",
+            "run_command",
+            "command_task"
+          ],
+          "tool_count": 85,
+          "called_tool": "workspace_info",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "sse",
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "wcode mcp-stdio",
+    "client_configs": [],
+    "env_vars": [],
+    "tools": []
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:03:51+08:00",
+    "quality": {
+      "total": 88.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 27.6,
+      "signals": {
+        "stars": 8,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 92,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 68,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 63.93
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "090a42e39d734375cb25ce94f5ca66a926e8d9a4f8c4dd7c50b0a553a7b7fb8d",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "**wcode helps coding assistants read repositories, change code and run checks.**"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/francis-du/wcode/main/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "wcode setup"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "wcode --show-config      # inspect resolved runtime settings"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "For an existing installation, run `wcode --version`, then `wcode update`"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "The Apache-2.0 Core and complete local product remain independently useful."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/francis-du/wcode",
+      "fetched_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/francis-du/wcode/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:05:56+08:00"
+    },
+    {
+      "id": "release:v0.9.1",
+      "kind": "release",
+      "url": "https://github.com/francis-du/wcode/releases/tag/v0.9.1",
+      "fetched_at": "2026-10-31T01:05:56+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "It works through MCP with the assistant you already use.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:04+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "It works through MCP with the assistant you already use.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:04+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**wcode helps coding assistants read repositories, change code and run checks.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:04+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<img src=\"docs/assets/wcode-logo.svg\" alt=\"wcode\" width=\"320\">",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:04+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Install on macOS or Linux:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:04+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.9.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:05:56+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "You can inspect changes, manage tasks, approve access and see which checks ran against the current code.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:04+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "You can inspect changes, manage tasks, approve access and see which checks ran against the current code.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:04+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "You can inspect changes, manage tasks, approve access and see which checks ran against the current code.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:04+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "You can inspect changes, manage tasks, approve access and see which checks ran against the current code.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:04+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/francis-du/wcode/main/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:04+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/francis-du/wcode/main/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:04+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://raw.githubusercontent.com/francis-du/wcode/main/install.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:04+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "The Apache-2.0 Core and complete local product remain independently useful.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:04+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "| Same machine | stdio | `wcode mcp-stdio` |\n| Remote, preferred | Streamable HTTP | `https://host/mcp` with OAuth |\n| Older remote client | SSE compatibility |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:04+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "let the host launch `wcode mcp-stdio`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:04+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:42+08:00",
+  "updated_at": "2026-10-31T02:03:51+08:00"
+}

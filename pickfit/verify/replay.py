@@ -26,7 +26,9 @@ from typing import TYPE_CHECKING, Any
 
 from pickfit.verify import gui
 from pickfit.verify.box import Box, BoxError, ExecResult, background_script
-from pickfit.verify.verdict import ResolvedCheck, evaluate_check, supported_level
+from pickfit.verify.task import prepare_box
+from pickfit.verify.mcp import is_mcp
+from pickfit.verify.verdict import MCP_KINDS, ResolvedCheck, evaluate_check, mcp_problems, supported_level
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import CommandRecord
@@ -192,7 +194,9 @@ class Replayer:
         ran = self.rerun(check.run)
         ok, problems = evaluate_check(ran, check.expected_exit_code, check.expected_signal,
                                       trusted_only=check.kind == "gui")
-        return ran, ok, problems
+        if check.kind in MCP_KINDS:
+            problems += mcp_problems(check.kind, ran.stdout)
+        return ran, ok and not problems, problems
 
     def run(self, plan: ReplayPlan, task: VerifyTask) -> ReplayResult:
         began = time.monotonic()
@@ -211,9 +215,7 @@ class Replayer:
     def _run(self, plan: ReplayPlan, task: VerifyTask, result: ReplayResult) -> None:
         box = self.box
         box.set_network(True)
-        box.write_file("README.md", task.readme)
-        for name, content in task.files.items():
-            box.write_file(name, content)
+        prepare_box(box, task)
         if not plan.steps:
             result.error = "no steps to replay"
             return
@@ -258,7 +260,7 @@ class Replayer:
             passed=c.passed, kind=c.kind) for c in result.checks]
         serves = any(c.passed and (set(by.setup_ids) & background or by.run.tool == "run_background")
                      for c, by in zip(result.checks, plan_checks))
-        result.level = supported_level(True, resolved, serves)
+        result.level = supported_level(True, resolved, serves, mcp=is_mcp(task))
         result.passed = result.level is not None
         passing = [c for c in result.checks if c.passed]
         result.offline = bool(passing) and all(c.offline for c in passing)

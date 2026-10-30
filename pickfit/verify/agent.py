@@ -42,7 +42,9 @@ from pickfit.verify import gui
 from pickfit.verify.box import Box, BoxError, ExecResult, background_script
 from pickfit.verify.plan import InstallPlan, plan_for
 from pickfit.verify.rules import RuleHit, error_signature, match_rules
-from pickfit.verify.task import VerifyTask
+from pickfit.verify.mcp import GUIDE as MCP_GUIDE
+from pickfit.verify.mcp import is_mcp
+from pickfit.verify.task import VerifyTask, prepare_box
 from pickfit.verify.verdict import LogVerdict, log_verdict
 
 HistoryMode = Literal["chain", "replay"]
@@ -424,7 +426,15 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
         for t in ex.smoke_test_candidates:
             shown = f" (README shows: {t.expected_output})" if t.expected_output else ""
             lines.append(f"- {t.command}{shown}")
-    if ex.category.value == "local_ai":
+    if is_mcp(task):
+        lines += ["", MCP_GUIDE]
+        mcp = ex.mcp
+        if mcp.launch_command.value:
+            lines.append(f"Launch command the README gives: {mcp.launch_command.value}")
+        if mcp.env_vars:
+            named = ", ".join(f"{e.name}{' (required)' if e.required else ''}" for e in mcp.env_vars)
+            lines.append(f"Environment variables the README names: {named}")
+    elif ex.category.value == "local_ai":
         lines += ["", TINY_MODELS]
     pre = ex.prerequisites
     stated = [*(r.value for r in pre.runtimes), *(s.value for s in pre.system_packages)]
@@ -581,9 +591,7 @@ class VerifyAgent:
         self._say(f"verify {self.task.slug} · run {self.run_id} · {self.model} · mode {self.mode} · "
                   f"{box.runner} {box.os}/{box.arch}")
         try:
-            box.write_file("README.md", self.task.readme)
-            for name, content in self.task.files.items():
-                box.write_file(name, content)
+            prepare_box(box, self.task)
             self._loop()
         except BoxError as err:
             self.report.stop_reason, self.report.error = "box_error", str(err)
@@ -732,7 +740,7 @@ class VerifyAgent:
             args.unverified_reason = "other"
         if args.level == "failed" and not args.blocking_error:
             args.blocking_error = args.summary.strip() or "not given"
-        verdict = log_verdict(args, self.report.commands)
+        verdict = log_verdict(args, self.report.commands, mcp=is_mcp(self.task))
         self.verdict = verdict
         self.report.finish = args.model_dump()
         self.report.verdict = verdict.to_dict()

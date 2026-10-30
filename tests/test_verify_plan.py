@@ -128,3 +128,42 @@ def test_error_signature_ignores_numbers_and_paths():
     assert a == b and a.startswith("exit 2:")
     assert error_signature(0, "fine", "") is None
     assert error_signature(1, "", "a") != error_signature(2, "", "a")
+
+
+def test_an_mcp_launch_command_that_fetches_a_package_becomes_an_install() -> None:
+    from pickfit.schema import ExtractionResult
+    from pickfit.verify.plan import _derived_from_mcp_launch as derived
+    from tests.test_profiles import mcp_extraction
+
+    assert [c[:2] for c in derived("npx -y @scope/notes-mcp --root x")] == [("npm", "npm install -g @scope/notes-mcp")]
+    assert [c[:2] for c in derived("uvx mcp-server-time")] == [("uv", "uv tool install mcp-server-time")]
+    assert [c[:2] for c in derived("uvx --from git+https://github.com/a/b b-mcp")] == [
+        ("uv", "uv tool install git+https://github.com/a/b")]
+    assert [c[:2] for c in derived("pipx run notes-mcp")] == [("pipx", "pipx install notes-mcp")]
+    assert derived("docker run -i --rm notes") == [] and derived("notes-mcp") == [] and derived(None) == []
+    # Only the README's client config: the derived install is the plan.
+    ex = ExtractionResult.model_validate(mcp_extraction(launch_command={"value": "npx -y notes-mcp",
+                                                                        "quote": "npx -y notes-mcp"}))
+    ex.install_methods = []
+    plan = plan_for(ex)
+    assert [(c.method, c.command, c.origin) for c in plan.candidates] == [("npm", "npm install -g notes-mcp", "derived")]
+    # The same install in the README is not listed twice.
+    ex = ExtractionResult.model_validate(mcp_extraction(launch_command={"value": "npx -y notes-mcp",
+                                                                        "quote": "npx -y notes-mcp"}))
+    assert [(c.command, c.origin) for c in plan_for(ex).candidates] == [("npm install -g notes-mcp", "readme")]
+
+
+
+def test_client_config_snippets_give_launch_commands_too() -> None:
+    from pickfit.verify.plan import mcp_launches
+    from tests.test_profiles import mcp_extraction
+
+    ex = ExtractionResult.model_validate(mcp_extraction(
+        launch_command={"value": None, "quote": None},
+        client_configs=[{"client": "generic_json",
+                         "snippet": '{"mcpServers": {"d": {"command": "npx", "args": ["-y", "agentdeals"]}}}'},
+                        {"client": "claude_code", "snippet": "claude mcp add t -- uvx mcp-thing --flag"},
+                        {"client": "generic_json", "snippet": '{"mcpServers": {"r": {"url": "https://x.dev/mcp"}}}'}]))
+    assert mcp_launches(ex) == ["npx -y agentdeals", "uvx mcp-thing --flag"]
+    ex.install_methods = []
+    assert [c.command for c in plan_for(ex).candidates] == ["uv tool install mcp-thing", "npm install -g agentdeals"]

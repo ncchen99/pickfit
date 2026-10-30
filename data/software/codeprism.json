@@ -1,0 +1,590 @@
+{
+  "schema_version": "software.v1",
+  "slug": "codeprism",
+  "repo_id": "gh:1334837974",
+  "name": "CodePrism",
+  "summary": "Builds a persistent code knowledge graph and exposes precise context to AI agents via MCP.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agents",
+    "knowledge-graph",
+    "mcp",
+    "mcp-server",
+    "mcp-servers",
+    "token-efficiency",
+    "token-optimization",
+    "token-usage"
+  ],
+  "use_cases": [
+    "get structured context for a function with callers and callees",
+    "scan proposed file changes for secrets before writing",
+    "analyze impact and blast radius before refactoring",
+    "track agent session reads and writes to avoid re-fetching"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/knight22-21/CodePrism",
+    "full_name": "knight22-21/CodePrism",
+    "created_at": "2026-08-15T06:08:47Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.12+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-codeprism-20261031-013958-f73d",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install codeprism-ai 2>&1",
+          "purpose": "install codeprism via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "codeprism --help",
+        "expected_signal": "Usage: codeprism"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "skill-v1.0.0",
+    "published_at": "2026-10-18T11:55:13Z",
+    "url": "https://github.com/knight22-21/CodePrism/releases/tag/skill-v1.0.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:41:19.309755+08:00",
+    "runs": [
+      {
+        "id": "verify-codeprism-20261031-013958-f73d",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:41:19.309755+08:00",
+        "tool_version": "0.1.11",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install codeprism-ai 2>&1",
+            "purpose": "install codeprism via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "codeprism --help",
+            "expected_signal": "Usage: codeprism",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: codeprism [OPTIONS] COMMAND [ARGS]...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- codeprism serve",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get_graph_stats --args '{}' -- codeprism serve /tmp/sampleproj",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_graph_stats content=text text_chars=246",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sampleproj && cat > /tmp/sampleproj/hello.py <<'PY'\ndef greet(name):\n    \"\"\"Greet someone.\"\"\"\n    return f\"hello {name}\"\n\ndef main():\n    print(greet(\"world\"))\n\nif __name__ == \"__main__\":\n    main()\nPY\ncat /tmp/sampleproj/hello.py && codeprism index /tmp/sampleproj 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 21 tools, successful get_graph_stats call returning file/function counts, and CLI help with Usage and commands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-codeprism-20261031-013958-f73d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-codeprism-20261031-013958-f73d/check-1-cmd4.judged.png",
+            "runs/verify/verify-codeprism-20261031-013958-f73d/check-2-cmd6.judged.png",
+            "runs/verify/verify-codeprism-20261031-013958-f73d/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.046717,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "codeprism",
+            "serve",
+            "/tmp/sampleproj"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "CodePrism",
+          "server_version": "4.1.4",
+          "tools": [
+            "index_project",
+            "update_file",
+            "get_graph_stats",
+            "get_context",
+            "get_module_summary",
+            "get_file_map",
+            "get_impact",
+            "get_callers",
+            "get_callees",
+            "get_data_flow",
+            "search_symbol",
+            "get_dependencies",
+            "get_dependents",
+            "scan_file",
+            "scan_diff",
+            "check_secret_exposure",
+            "check_dependencies_cve",
+            "record_read",
+            "record_write",
+            "get_session_context",
+            "undo_write"
+          ],
+          "tool_count": 21,
+          "called_tool": "get_graph_stats",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "sse",
+      "stdio"
+    ],
+    "launch_command": "codeprism serve",
+    "client_configs": [],
+    "env_vars": [],
+    "tools": [
+      "get_context",
+      "get_impact",
+      "scan_diff",
+      "record_write",
+      "get_graph_stats",
+      "get_file_map",
+      "search_symbol"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:03:51+08:00",
+    "quality": {
+      "total": 97.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.9375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 43.9,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": 1561,
+        "forks": 8,
+        "dependents": null,
+        "release_downloads": 0,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 76,
+      "packages": [
+        "pypi:codeprism-ai"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 54.47
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "2457ee1f3f6f81b104da6fe6644ba04b9edaf97d8a8fe108c23e16a6cfb31cf0",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Standalone Python package + MCP server that builds and maintains a persistent knowledge graph of any codebase, exposing precise, token-efficient context to AI coding agents."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "**Serves** all of the above via MCP to Claude Code, Cursor, and any MCP-compatible agent"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Python 3.12+ required."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install codeprism-ai"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "Agent: get_context(\"payments/processor.py\", \"charge_card\", depth=2)\n← 340 tokens: the function signature, its 3 callers, its 6 callees, the types it uses"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "languages = [\"python\", \"typescript\"]   # default: all ten supported languages"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Methods or class attributes with the same name in different classes of one Python file share"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "MIT — see [LICENSE](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/knight22-21/CodePrism",
+      "fetched_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/knight22-21/CodePrism/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:05:22+08:00"
+    },
+    {
+      "id": "release:skill-v1.0.0",
+      "kind": "release",
+      "url": "https://github.com/knight22-21/CodePrism/releases/tag/skill-v1.0.0",
+      "fetched_at": "2026-10-31T01:05:22+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Standalone Python package + MCP server that builds and maintains a persistent knowledge graph",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "pip install codeprism-ai",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "exposes it to any AI coding agent via the [Model Context Protocol (MCP)](https://modelcontextprotocol.io)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "CodePrism builds a persistent knowledge graph of your project — every function, class, import, and data-flow relationship",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# CodePrism",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.12+ required.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:skill-v1.0.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:05:22+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Agent: get_context(\"payments/processor.py\", \"charge_card\", depth=2)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Agent: scan_diff(original_content, proposed_content, \"auth/login.py\")",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Agent: get_impact(\"utils/hash.py\", \"compute_checksum\")",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Agent: get_session_context(\"sess_abc123\")",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Keep it free and open source",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "The SSE server listens on `127.0.0.1` only and has no built-in authentication",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Two transports are supported: **stdio** (local, default) and **SSE** (HTTP on `127.0.0.1`).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "codeprism serve                      # serves the project containing the current directory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "Your agent can now call tools like `get_context`, `get_impact`, `scan_diff`, and `record_write`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "Your agent can now call tools like `get_context`, `get_impact`, `scan_diff`, and `record_write`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "Your agent can now call tools like `get_context`, `get_impact`, `scan_diff`, and `record_write`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "Your agent can now call tools like `get_context`, `get_impact`, `scan_diff`, and `record_write`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "Ask `get_graph_stats`: `index_status` is `indexing`, then `ready`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`get_file_map(project_path=\"\", limit=200, offset=0)` returns file roles",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "The MCP `search_symbol` tool ranks substring matches",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:57+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:34+08:00",
+  "updated_at": "2026-10-31T02:03:51+08:00"
+}

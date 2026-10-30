@@ -272,7 +272,7 @@ test('the model may honestly answer that nothing fits', async () => {
   const out = await findSoftware({ need: 'edit videos with a timeline', os: 'linux' }, h.deps);
   assert.equal(out.matched_by, MATCH_MODEL);
   assert.deepEqual(out.picks, []);
-  assert.match(out.coverage_note ?? '', /None of the 5 verified tools/);
+  assert.match(out.coverage_note ?? '', /None of the 6 verified tools/);
 });
 
 test('best_free must be a free candidate', async () => {

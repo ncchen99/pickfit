@@ -66,6 +66,7 @@
       "enum": [
         "dev_cli",
         "local_ai",
+        "mcp_server",
         "other"
       ],
       "type": "string"
@@ -536,6 +537,247 @@
         "beta",
         "alpha",
         "prototype"
+      ],
+      "type": "string"
+    },
+    "McpClient": {
+      "enum": [
+        "claude_code",
+        "claude_desktop",
+        "cursor",
+        "vscode",
+        "generic_json",
+        "other"
+      ],
+      "type": "string"
+    },
+    "McpClientConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "client": {
+          "$ref": "#/$defs/McpClient"
+        },
+        "snippet": {
+          "description": "Verbatim from the sources.",
+          "maxLength": 1500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "client",
+        "snippet"
+      ],
+      "title": "McpClientConfig",
+      "type": "object"
+    },
+    "McpEnvVar": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,63}$",
+          "type": "string"
+        },
+        "purpose": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "McpEnvVar",
+      "type": "object"
+    },
+    "McpHandshake": {
+      "additionalProperties": false,
+      "description": "What pickfit's MCP probe saw when a fresh box started the server (the replay's check).\n\nNames come from the server and are untrusted: the probe keeps only safe characters, and\ntool descriptions never leave the box (only the probe's own pattern flags do).",
+      "properties": {
+        "called_tool": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "A tool tools/call ran without an error (level service)."
+        },
+        "launch": {
+          "description": "argv that started the server, as the replay ran it: the probe's own over stdio, the background setup's over HTTP.",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 40,
+          "minItems": 1,
+          "type": "array"
+        },
+        "offline": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "true: the handshake passed with the network off; false: only with it on."
+        },
+        "protocol_version": {
+          "anyOf": [
+            {
+              "maxLength": 40,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "server_name": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "server_version": {
+          "anyOf": [
+            {
+              "maxLength": 60,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "tool_count": {
+          "description": "Tools listed, also those past MCP_TOOLS_MAX.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "tools": {
+          "default": [],
+          "description": "Tool names from tools/list.",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 200,
+          "type": "array"
+        },
+        "transport": {
+          "$ref": "#/$defs/McpTransport"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "pattern": "^http://(127\\.0\\.0\\.1|localhost)(:\\d{1,5})?(/[A-Za-z0-9_./-]*)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "streamable_http: the local URL the probe posted to."
+        }
+      },
+      "required": [
+        "transport",
+        "launch",
+        "tool_count"
+      ],
+      "title": "McpHandshake",
+      "type": "object"
+    },
+    "McpServer": {
+      "additionalProperties": false,
+      "description": "How an AI client uses this MCP server, as the sources claim it (README, not run).\n\nWhat a box actually saw lives in verification.runs[].mcp; the index prefers that.",
+      "properties": {
+        "client_configs": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/McpClientConfig"
+          },
+          "maxItems": 3,
+          "type": "array"
+        },
+        "env_vars": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/McpEnvVar"
+          },
+          "maxItems": 10,
+          "type": "array"
+        },
+        "launch_command": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "tools": {
+          "default": [],
+          "description": "Tool names the sources list.",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 30,
+          "type": "array"
+        },
+        "transports": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/McpTransport"
+          },
+          "type": "array"
+        }
+      },
+      "title": "McpServer",
+      "type": "object"
+    },
+    "McpTransport": {
+      "enum": [
+        "stdio",
+        "streamable_http",
+        "sse"
       ],
       "type": "string"
     },
@@ -1665,6 +1907,18 @@
         "level": {
           "$ref": "#/$defs/VerificationLevel"
         },
+        "mcp": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/McpHandshake"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MCP servers: the handshake a fresh box completed; required for a passed run of one."
+        },
         "method": {
           "enum": [
             "sandbox",
@@ -1846,6 +2100,18 @@
           "type": "null"
         }
       ]
+    },
+    "mcp": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/McpServer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Only for category mcp_server: transport, launch command, client config, env vars, tools."
     },
     "name": {
       "maxLength": 100,

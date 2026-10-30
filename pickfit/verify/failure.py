@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING, Any, get_args
 from pickfit.schema import UnverifiedReason
 from pickfit.verify.box import Box, BoxError
 from pickfit.verify.replay import RanCommand, ReplayCommand, Replayer
+from pickfit.verify.task import prepare_box
 from pickfit.verify.verdict import masked_exit
 
 if TYPE_CHECKING:
@@ -481,9 +482,7 @@ def confirm_failure(box: Box, plan: FailurePlan, task: VerifyTask, *,
     replayer = Replayer(box, log=log)
     try:
         box.set_network(True)
-        box.write_file("README.md", task.readme)
-        for name, content in task.files.items():
-            box.write_file(name, content)
+        prepare_box(box, task)
         for step in (*plan.steps, *plan.setups):
             ran = replayer.rerun(step)
             result.steps.append(ran)

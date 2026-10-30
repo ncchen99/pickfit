@@ -8,7 +8,10 @@ whole build, so bad data never reaches a deploy.
 
 Only listed records are indexed, and only install guides that were actually
 run (basis "replayed" or "human") are kept: README claims never reach users as
-install steps.
+install steps. An MCP server's guide also carries the handshake its run saw
+(`mcp`: the launch argv a fresh box started, the tool names it listed), from
+which the Worker writes the client config; the README's own MCP facts (env
+vars, config snippets, tool names) ride along under the entry's `mcp`.
 """
 
 from __future__ import annotations
@@ -135,6 +138,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
             "works_offline": works_offline(run, guide.first_task),
             "pitfalls": [p.model_dump() for p in run.pitfalls],
             "run": _run_summary(run),
+            "mcp": run.mcp.model_dump() if run.mcp else None,
         }
     scores = record.scores
     return {
@@ -164,6 +168,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
             "passed_runs": [_run_summary(r) for r in record.verification.runs if is_passed(r.level)],
         },
         "install": install,
+        "mcp": record.mcp.model_dump() if record.mcp else None,
         "scores": {
             "quality": scores.quality.total,
             "popularity": scores.popularity.score,

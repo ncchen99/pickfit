@@ -1,0 +1,696 @@
+{
+  "schema_version": "software.v1",
+  "slug": "ac-infinity-mcp",
+  "repo_id": "gh:1244727678",
+  "name": "ac-infinity-mcp",
+  "summary": "MCP server linking AI assistants to AC Infinity controllers for climate monitoring and port control.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": "beta",
+  "tags": [
+    "ac-infinity",
+    "ai-agents",
+    "cannabis",
+    "claude",
+    "fastmcp",
+    "grow",
+    "grow-automation",
+    "growtent",
+    "home-automation",
+    "iot"
+  ],
+  "use_cases": [
+    "check VPD trend over last 7 days",
+    "read live temperature, humidity, VPD and port states",
+    "turn a controller port off",
+    "enable VPD automation with kPa target",
+    "apply grow stage template for VPD and climate targets"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://ober37.github.io/ac-infinity-mcp/",
+  "repo": {
+    "url": "https://github.com/ober37/ac-infinity-mcp",
+    "full_name": "ober37/ac-infinity-mcp",
+    "created_at": "2026-05-20T14:37:22Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.11+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "AC Infinity account email",
+      "AC Infinity account password"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": null,
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "needs_account",
+    "checked_at": "2026-10-31T01:53:11.107097+08:00",
+    "runs": [
+      {
+        "id": "verify-ac-infinity-mcp-20261031-015240-0eb6",
+        "level": "unverified",
+        "unverified_reason": "needs_account",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:53:11.107097+08:00",
+        "tool_version": null,
+        "install_method": "uv",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "uv tool install git+https://github.com/ober37/ac-infinity-mcp.git 2>&1",
+            "purpose": "Install via uv tool (candidate 2, on PATH)"
+          }
+        ],
+        "smoke_tests": [],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-ac-infinity-mcp-20261031-015240-0eb6/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.024227
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "uvx --from git+https://github.com/ober37/ac-infinity-mcp.git ac-infinity-mcp",
+    "client_configs": [
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"ac-infinity\": {\n      \"command\": \"/path/to/ac-infinity-mcp\",\n      \"env\": {\n        \"AC_INFINITY_EMAIL\": \"you@example.com\",\n        \"AC_INFINITY_PASSWORD\": \"yourpassword\"\n      }\n    }\n  }\n}"
+      },
+      {
+        "client": "cursor",
+        "snippet": "{\n  \"ac-infinity\": {\n    \"command\": \"/path/to/ac-infinity-mcp\",\n    \"env\": {\n      \"AC_INFINITY_EMAIL\": \"you@example.com\",\n      \"AC_INFINITY_PASSWORD\": \"yourpassword\"\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "AC_INFINITY_EMAIL",
+        "required": true,
+        "purpose": "Your AC Infinity account email"
+      },
+      {
+        "name": "AC_INFINITY_PASSWORD",
+        "required": true,
+        "purpose": "Your AC Infinity account password"
+      }
+    ],
+    "tools": [
+      "discover_devices",
+      "get_device_reading",
+      "get_all_device_readings",
+      "get_historical_readings",
+      "check_vpd_drift",
+      "get_environment_health",
+      "detect_environment_trends",
+      "get_port_activity_report",
+      "get_port_status",
+      "get_port_settings",
+      "set_port_speed",
+      "set_port_on",
+      "set_port_off",
+      "set_vpd_automation",
+      "set_temperature_automation",
+      "set_humidity_automation",
+      "set_port_mode",
+      "apply_grow_stage_template",
+      "list_advance_automations",
+      "get_advance_automation"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:03:51+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.5,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5143,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 31.6,
+      "signals": {
+        "stars": 9,
+        "monthly_downloads": null,
+        "forks": 5,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 163,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 47.2
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "75614608df22b32a4fa11af1a25b0a16cc5984fe91105521d051e38d3416b41a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "MCP server for AC Infinity grow controllers. AI agent integration for climate monitoring, port control, and grow automation"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requires Python 3.11+."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install git+https://github.com/ober37/ac-infinity-mcp.git"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "\"What's the VPD trend in my tent over the last 7 days?\""
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "\"AC_INFINITY_EMAIL\": \"you@example.com\","
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "## License\n\nMIT"
+        }
+      },
+      "unquoted": [
+        "who_it_is_for"
+      ]
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ober37/ac-infinity-mcp",
+      "fetched_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ober37/ac-infinity-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:06:24+08:00"
+    },
+    {
+      "id": "release:v1.0.0-beta.1",
+      "kind": "release",
+      "url": "https://github.com/ober37/ac-infinity-mcp/releases/tag/v1.0.0-beta.1",
+      "fetched_at": "2026-10-31T01:06:24+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "**ac-infinity-mcp** is an [MCP server](https://modelcontextprotocol.io) that connects Claude (and other AI assistants)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Control and monitor your AC Infinity grow environment through Claude and any MCP-compatible AI assistant.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "**ac-infinity-mcp** is an [MCP server](https://modelcontextprotocol.io) that connects Claude (and other AI assistants)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "MCP server for AC Infinity grow controllers. AI agent integration for climate monitoring, port control, and grow automation",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1 align=\"center\">ac-infinity-mcp</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires Python 3.11+.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Built with [FastMCP](https://github.com/jlowin/fastmcp) and the AC Infinity cloud API.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "| `AC_INFINITY_EMAIL` | Yes | Your AC Infinity account email |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/1",
+      "source_id": "readme",
+      "quote": "| `AC_INFINITY_PASSWORD` | Yes | Your AC Infinity account password |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "release:v1.0.0-beta.1",
+      "quote": "This is the first public beta — all 25 tools are live-tested and ready to use.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "*\"What's the VPD trend in my tent over the last 7 days?\"*",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "`get_device_reading` | Live temp, humidity, VPD, and port states for one device |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "`set_port_off` | Turn a port fully off (`dry_run=True` by default) |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "`set_vpd_automation` | Enable VPD mode with a kPa target using built-in sensors",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "`apply_grow_stage_template` | One-click VPD + temp + humidity automation for a named grow stage",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Built with [FastMCP](https://github.com/jlowin/fastmcp) and the AC Infinity cloud API.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "The container runs over stdio.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "uvx --from git+https://github.com/ober37/ac-infinity-mcp.git ac-infinity-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"ac-infinity\": {\n      \"command\": \"/path/to/ac-infinity-mcp\",\n      \"env\": {\n        \"AC_INFINITY_EMAIL\": \"you@example.com\",\n        \"AC_INFINITY_PASSWORD\": \"yourpassword\"\n      }\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"ac-infinity\": {\n    \"command\": \"/path/to/ac-infinity-mcp\",\n    \"env\": {\n      \"AC_INFINITY_EMAIL\": \"you@example.com\",\n      \"AC_INFINITY_PASSWORD\": \"yourpassword\"\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "AC_INFINITY_EMAIL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "AC_INFINITY_PASSWORD",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`discover_devices`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`get_device_reading`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`get_all_device_readings`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`get_historical_readings`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`check_vpd_drift`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`get_environment_health`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`detect_environment_trends`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`get_port_activity_report`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`get_port_status`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`get_port_settings`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`set_port_speed`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`set_port_on`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "`set_port_off`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "`set_vpd_automation`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/14",
+      "source_id": "readme",
+      "quote": "`set_temperature_automation`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/15",
+      "source_id": "readme",
+      "quote": "`set_humidity_automation`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/16",
+      "source_id": "readme",
+      "quote": "`set_port_mode`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/17",
+      "source_id": "readme",
+      "quote": "`apply_grow_stage_template`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/18",
+      "source_id": "readme",
+      "quote": "`list_advance_automations`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/19",
+      "source_id": "readme",
+      "quote": "`get_advance_automation`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:50+08:00",
+  "updated_at": "2026-10-31T02:03:51+08:00"
+}
