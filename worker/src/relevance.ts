@@ -4,8 +4,13 @@
  * with field weights. Used to choose which cards reach the model when more
  * than MAX_CARDS pass the hard filters, and by the rules fallback. Words are
  * English; Meta adds English keywords for the request first (expand.ts).
+ * Without those keywords (rules only, or the keyword call failed) the rules'
+ * own scorer, rulesRelevance, ranks instead: it reads Chinese words through a
+ * small dictionary, counts generic words for little and favors profiles that
+ * match more of what the request asks for.
  */
 import { OSES, type Entry } from './catalog.ts';
+import { GENERIC_WORDS, ZH_EN } from './lexicon.ts';
 
 const STOPWORDS = new Set(
   (
@@ -120,6 +125,83 @@ export function relevance(corpus: readonly Entry[], entries: readonly Entry[], q
       if (tf) score += (idf.get(term) ?? 0) * ((tf * (K1 + 1)) / (tf + norm));
     }
     scores.set(entry.slug, score);
+  }
+  return scores;
+}
+
+/** Generic words count this share of their IDF in rulesRelevance. */
+export const GENERIC_WEIGHT = 0.2;
+/** OS names are hard conditions, not the job, so they count as generic too. */
+const OS_WORDS = ['mac', 'macos', 'osx', 'linux', 'ubuntu', 'windows'];
+const GENERIC = new Set([...GENERIC_WORDS, ...OS_WORDS].flatMap(terms));
+const ZH_KEYS = Object.keys(ZH_EN).sort((a, b) => b.length - a.length);
+/** "without internet", "no cloud": the word after names a constraint, not what the tool should do. */
+const EN_NEGATED = /\b(without|no)\s+(?:(?:a|an|the|any|my|to|being|having)\s+)*[A-Za-z][\w-]*/gi;
+const ZH_NEGATIONS = ['不需要', '不用', '不要', '不必', '無需', '无需', '免'];
+
+/** English words for the Chinese words in a text: at each position the longest dictionary word wins; a negated word is skipped. */
+export function zhToEnglish(text: string): string {
+  const out: string[] = [];
+  let negated = false;
+  for (let i = 0; i < text.length; ) {
+    if (text.charCodeAt(i) < 0x2e80) {
+      if (!/[\w]/.test(text[i])) negated = false;
+      i++;
+      continue;
+    }
+    const neg = ZH_NEGATIONS.find((k) => text.startsWith(k, i));
+    if (neg) {
+      negated = true;
+      i += neg.length;
+      continue;
+    }
+    const key = ZH_KEYS.find((k) => text.startsWith(k, i));
+    if (key) {
+      if (!negated) out.push(ZH_EN[key]);
+      negated = false;
+      i += key.length;
+    } else {
+      if ('，。、；！？'.includes(text[i])) negated = false;
+      i++;
+    }
+  }
+  return out.join(' ');
+}
+
+/** The request's terms for rulesRelevance: its own English words (less negated ones) and the dictionary's English for its Chinese ones. */
+export const rulesTerms = (...texts: string[]) =>
+  queryTerms(...texts.map((t) => t.replace(EN_NEGATED, '$1 ')), ...texts.map(zhToEnglish));
+
+/**
+ * Relevance without the model: BM25 where a generic word ("tool", "terminal",
+ * "file") weighs GENERIC_WEIGHT of its IDF, times the share of the request's
+ * weight the profile matches, so a profile that matches the specific words of
+ * the request outranks one that repeats a generic word.
+ */
+export function rulesRelevance(corpus: readonly Entry[], entries: readonly Entry[], query: string[]): Map<string, number> {
+  const index = relevanceIndex(corpus);
+  const n = index.docs.size;
+  const weight = new Map(
+    query.map((term) => {
+      const df = index.df.get(term) ?? 0;
+      const idf = Math.log(1 + (n - df + 0.5) / (df + 0.5));
+      return [term, GENERIC.has(term) ? GENERIC_WEIGHT * idf : idf];
+    }),
+  );
+  const total = [...weight.values()].reduce((a, b) => a + b, 0);
+  const scores = new Map<string, number>();
+  for (const entry of entries) {
+    const doc = index.docs.get(entry.slug) ?? toDoc(entry);
+    const norm = K1 * (1 - B + (B * doc.length) / (index.avgLength || 1));
+    let score = 0;
+    let matched = 0;
+    for (const [term, w] of weight) {
+      const tf = doc.tf.get(term);
+      if (!tf) continue;
+      score += w * ((tf * (K1 + 1)) / (tf + norm));
+      matched += w;
+    }
+    scores.set(entry.slug, total > 0 ? score * (matched / total) : 0);
   }
   return scores;
 }

@@ -2,27 +2,24 @@
  * The fallback when the model is off, over budget or fails: rank by rules
  * and explain with template reasons built only from card fields.
  * Order: (find_alternatives only) the profile names the current tool in
- * alternatives_to, then relevance to the request (BM25, relevance.ts, in
- * tiers), then verification on the user's OS, then treasure value (quality
- * high, popularity low).
+ * alternatives_to, then relevance to the request (rulesRelevance,
+ * relevance.ts), then, for equal relevance, verification on the user's OS,
+ * then treasure value (quality high, popularity low).
  */
 import type { Entry, OS } from './catalog.ts';
 import type { Card } from './cards.ts';
 import type { ModelReason } from './prompt.ts';
 import { replacesCurrent, runsLocally } from './filter.ts';
 
-/** Relevance in quarters of the best match (4: within 25% of it), so close matches fall to OS and treasure. */
-export const RELEVANCE_TIERS = 4;
-const tier = (score: number, best: number) => (score > 0 && best > 0 ? Math.ceil((RELEVANCE_TIERS * score) / best) : 0);
+/** Scores this close count as equal, so OS verification and treasure decide. */
+const SAME_SCORE = 1e-6;
 
-/** relevance: BM25 of each entry against the request (hardFilter's), 0 or absent for no match. */
+/** relevance: rulesRelevance of each entry against the request, 0 or absent for no match. */
 export function rankByRules(entries: Entry[], relevance: Map<string, number>, os?: OS, current?: string): Entry[] {
-  const best = Math.max(0, ...entries.map((entry) => relevance.get(entry.slug) ?? 0));
   return entries
     .map((entry) => ({
       entry,
       replaces: replacesCurrent(entry, current),
-      tier: tier(relevance.get(entry.slug) ?? 0, best),
       score: relevance.get(entry.slug) ?? 0,
       onOs: os !== undefined && entry.install[os] !== undefined,
       treasure: entry.scores?.treasure_value ?? -1,
@@ -30,10 +27,9 @@ export function rankByRules(entries: Entry[], relevance: Map<string, number>, os
     .sort(
       (a, b) =>
         Number(b.replaces) - Number(a.replaces) ||
-        b.tier - a.tier ||
+        (Math.abs(b.score - a.score) > SAME_SCORE ? b.score - a.score : 0) ||
         Number(b.onOs) - Number(a.onOs) ||
         b.treasure - a.treasure ||
-        b.score - a.score ||
         a.entry.slug.localeCompare(b.entry.slug),
     )
     .map((item) => item.entry);
