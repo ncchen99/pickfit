@@ -40,7 +40,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 2. `reasoning_effort` 預設 `minimal` 或 `low`；只有驗證 agent 用 `medium`。
 3. 所有呼叫都走 `call_meta`（P1.4）：記 trace（model、token、花費）、硬上限、開發模式的回應快取（同一個請求不重複付費）。單元測試一律用錄好的 fixture，不打真的 API。
 4. **只有一本帳**：花費記在 repo 外、所有 worktree 共用的 `~/.pickfit/ledger.sqlite`（加鎖寫入）。上限照這本帳算，平行的 session 才不會各算各的。
-5. **上限分階段**：10/29 前每日 $3；10/29 起管線每日 $25，10/31–11/2 每日 $45；管線總額 $115 硬停（10/31 念誠同意由 $100 調高）。Worker 另計：每日 $3、評審期總額 $20（10/31 由 $40 調降，之前只花 $0.07）；評測部署總額 $10。Windows 主機有自己的帳本，用 `PICKFIT_PIPELINE_TOTAL_CAP_USD=5` 另設 $5 硬停（這個設定只能調低）。
+5. **上限分階段**：10/29 前每日 $3；10/29 起管線每日 $25，10/31 $80、11/1–11/2 每日 $45（念誠 10/31 同意，總額不變）；管線總額 $115 硬停（10/31 念誠同意由 $100 調高）。Worker 另計：每日 $3、評審期總額 $20（10/31 由 $40 調降，之前只花 $0.07）；評測部署總額 $10。Windows 主機有自己的帳本，用 `PICKFIT_PIPELINE_TOTAL_CAP_USD=5` 另設 $5 硬停（這個設定只能調低）。
 6. **先小後大**：新 prompt 先跑 1 筆，再 5 筆、30 筆；每一步看過 `usage` 才放大。
 7. **不要整份 `source .env`**：裡面有 `ANTHROPIC_API_KEY`，從那個 shell 啟動的 `claude` 會改用 API key 計費。spike 在 subshell 裡只帶需要的變數，例如 `(set -a; . ./.env; set +a; unset ANTHROPIC_API_KEY; python3 spikes/…)`；`pickfit` 程式自己從 `.env` 只讀它要的變數。
 8. Anthropic key 只給評測執行器與評分：先跑 2 題估單題花費，再跑全部。評測上限（10/29 事先登記）：第 1 次 $30、補充重跑 $60、Claude 評分 $20；看到結果後不追加。
@@ -244,3 +244,4 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | 10/31 01:06 | — | Meta 上限調整（merge `3011cad`，念誠同意）：管線總額 $100 → $115、10/31–11/2 每日 $25 → $45；Worker 評審期總額 $40 → $20（到目前只花 $0.07），重新發布（版本 `624e11a2`）。Windows 主機有自己的帳本，用只能調低的 `PICKFIT_PIPELINE_TOTAL_CAP_USD` 設 $5。最壞情況合計 $150。原因：四個 session 共用管線帳本，10/31 已花 $21.80；擴充資料到 242 筆已驗證（dev_cli 39 → 166、local_ai 28 → 76，每筆中位數約 $0.09），還要評分、MCP server、功能覆蓋、GUI 探測，約 $55 | 管線累計 $44.14（10/31 $21.80） |
 | 10/31 02:04 | P6.1 | 評測 B 題組凍結（`dec4cb9`，merge 進 main）：照 9.2 E，查詢條件與種子在抓資料前 commit（`111c4d3`）；候選池 3,834 則公開提問（GitHub Discussions 3,176、HN 561、SE 97），依種子順序讀 1,045 則、排除 1,033 則、收 12 則（開發者 CLI、本地 AI、MCP server 各 4 題）。念誠逐題審定：b01 維護期 12 個月、b07 手機記憶體 4 GB 以下、b08 保留開源條件。L2 測試資料與數字門檻在第一次開跑前 commit | — |
 | 10/31 02:24 | P2–P5 | MCP server 第三類併入 main（merge `1f715c5`）：發現 520 → 規則 471 → 初篩留 442 → 抽取 69 筆 → **49 筆驗證通過**（service 38：handshake＋一次不需帳號的 `tools/call`；function 11：`initialize`＋`tools/list`），46 筆斷網也通過；未驗證 10 筆有原因（`needs_account` 6 等），另 10 筆 README 只支援 Windows／macOS 或沒有安裝方式。install 等級不算 MCP server 通過；要金鑰才能啟動的一律未驗證，不用假金鑰。工具說明不離開沙盒，只檢查有沒有對 agent 下指令的字句（記成 note）。MCP server 有自己的熱門度參考（`npx -y` 每次啟動都下載，下載量偏高）。`get_install_guide` 回 `claude mcp add` 與 `mcpServers` 設定。655 個 Python、111 個 Worker 測試通過；Worker 重新發布（版本 `4174b58d`，165 筆），線上 MCP 需求由 muse-spark-1.3 配對、考慮 49 筆 | 這個 session：Meta $6.93、Baseten $1.92、Modal 約 $0.35 |
+| 10/31 02:29 | — | 10/31 的管線每日上限 $45 → $80（念誠同意，總額 $115 不變）：$45 在 02:25 用完，擴充資料與功能覆蓋都停下；剩下的工作約 $37、總額還剩 $47.67，提前用完讓兩個分支今天就能合併。11/1–11/2 維持每日 $45 | 管線累計約 $67.3 |
