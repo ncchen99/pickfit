@@ -51,7 +51,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-slivingdoc-20261031-015206-5d7a",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g slivingdoc 2>&1",
+          "purpose": "install slivingdoc globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "slivingdoc version 2>&1",
+        "expected_signal": "slivingdoc 1.3.1"
+      },
+      "first_task": "slivingdoc version 2>&1"
+    },
     "windows": null
   },
   "pricing": {
@@ -67,10 +83,108 @@
     "url": "https://github.com/baalimago/slivingdoc/releases/tag/v1.3.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:55:34.813955+08:00",
+    "runs": [
+      {
+        "id": "verify-slivingdoc-20261031-015206-5d7a",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:55:34.813955+08:00",
+        "tool_version": "1.3.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g slivingdoc 2>&1",
+            "purpose": "install slivingdoc globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "slivingdoc version 2>&1",
+            "expected_signal": "slivingdoc 1.3.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "slivingdoc 1.3.1",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "npx -y slivingdoc version",
+            "expected_signal": "slivingdoc 1.3.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "slivingdoc 1.3.1",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- slivingdoc serve 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx -y slivingdoc serve",
+            "actually_needed": "npm install -g slivingdoc then launch with `slivingdoc serve` so the binary is on PATH for offline replay",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "`--login never` turns off browser sign-in",
+            "actually_needed": "probe with default `--login auto` (`slivingdoc serve` with no flags); `--login never` refuses to start without a credential and cannot handshake offline",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show slivingdoc 1.3.1 printed via binary and npx, and MCP serve handshake ok with 2 tools.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-slivingdoc-20261031-015206-5d7a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-slivingdoc-20261031-015206-5d7a/check-1-cmd3.judged.png",
+            "runs/verify/verify-slivingdoc-20261031-015206-5d7a/check-2-cmd7.judged.png",
+            "runs/verify/verify-slivingdoc-20261031-015206-5d7a/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.048817,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "slivingdoc",
+            "serve"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "slivingdoc",
+          "server_version": "1.3.1",
+          "tools": [
+            "notes_commit",
+            "notes_pull"
+          ],
+          "tool_count": 2,
+          "called_tool": null,
+          "offline": false
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -344,5 +458,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:42+08:00",
-  "updated_at": "2026-10-31T01:25:33+08:00"
+  "updated_at": "2026-10-31T01:55:34.814840+08:00"
 }

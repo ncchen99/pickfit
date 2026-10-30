@@ -53,7 +53,20 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-kingdeemcp-20261031-015303-047c",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "ls -la ~/.pickfit/mcp_probe.py && uv tool install kingdee-mcp 2>&1",
+          "purpose": "Install kingdee-mcp with uv tool (persistent binary for offline replay)"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -69,10 +82,191 @@
     "url": "https://github.com/WaHaiLong/KingdeeMCP/releases/tag/v0.2.4"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:54:25.076402+08:00",
+    "runs": [
+      {
+        "id": "verify-kingdeemcp-20261031-015303-047c",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:54:25.076402+08:00",
+        "tool_version": "0.2.4",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "ls -la ~/.pickfit/mcp_probe.py && uv tool install kingdee-mcp 2>&1",
+            "purpose": "Install kingdee-mcp with uv tool (persistent binary for offline replay)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- kingdee-mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call kingdee_usage_stats --args '{}' -- kingdee-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=kingdee_usage_stats content=text text_chars=78",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Run with `uvx kingdee-mcp` launcher",
+            "actually_needed": "Installed with `uv tool install kingdee-mcp` and launched via installed `kingdee-mcp` binary so replay works with network off",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show initialize ok, 101 tools listed, handshake ok, and the usage_stats tool call succeeding.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-kingdeemcp-20261031-015303-047c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-kingdeemcp-20261031-015303-047c/check-1-cmd3.judged.png",
+            "runs/verify/verify-kingdeemcp-20261031-015303-047c/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.090287,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "kingdee-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "kingdee_mcp",
+          "server_version": "1.30.0",
+          "tools": [
+            "kingdee_usage_report",
+            "kingdee_usage_stats",
+            "kingdee_discover_tables",
+            "kingdee_discover_columns",
+            "kingdee_describe_table",
+            "kingdee_discover_metadata_candidates",
+            "kingdee_upload_attachment",
+            "kingdee_download_attachment",
+            "kingdee_query_bills",
+            "kingdee_view_bill",
+            "kingdee_query_purchase_orders",
+            "kingdee_query_purchase_order_progress",
+            "kingdee_query_sale_orders",
+            "kingdee_query_sale_quotations",
+            "kingdee_query_stock_bills",
+            "kingdee_query_inventory",
+            "kingdee_query_outsource_orders",
+            "kingdee_query_receipts",
+            "kingdee_query_materials",
+            "kingdee_query_partners",
+            "kingdee_save_bill",
+            "kingdee_validate_bill",
+            "kingdee_get_bill_template",
+            "kingdee_refresh_metadata",
+            "kingdee_submit_bills",
+            "kingdee_audit_bills",
+            "kingdee_unaudit_bills",
+            "kingdee_delete_bills",
+            "kingdee_cancel_bills",
+            "kingdee_void_bills",
+            "kingdee_close_bill",
+            "kingdee_unclose_bill",
+            "kingdee_forbid_bills",
+            "kingdee_enable_bills",
+            "kingdee_push_bill",
+            "kingdee_create_and_audit",
+            "kingdee_push_and_audit",
+            "kingdee_create_lx_billing",
+            "kingdee_query_user",
+            "kingdee_query_role",
+            "kingdee_query_permission",
+            "kingdee_query_sequence",
+            "kingdee_query_number_rule",
+            "kingdee_query_system_config",
+            "kingdee_list_forms",
+            "kingdee_get_fields",
+            "kingdee_query_pending_approvals",
+            "kingdee_query_workflow_status",
+            "kingdee_workflow_approve",
+            "kingdee_query_expense_reimburse",
+            "kingdee_query_loan_balance",
+            "kingdee_query_sales_outstock",
+            "kingdee_query_delivery_notice",
+            "kingdee_query_stock_in",
+            "kingdee_query_fixed_asset",
+            "kingdee_query_asset_card",
+            "kingdee_query_asset_depreciation",
+            "kingdee_save_asset",
+            "kingdee_query_asset_transfer",
+            "kingdee_query_asset_scrape",
+            "kingdee_query_purchase_requisitions",
+            "kingdee_query_quality_inspections",
+            "kingdee_query_stock_transfer_apply",
+            "kingdee_query_audit_log",
+            "kingdee_query_operation_logs",
+            "kingdee_query_change_log",
+            "kingdee_query_approval_flow",
+            "kingdee_query_permission_changes",
+            "kingdee_query_data_backup",
+            "kingdee_query_purchase_inquiry",
+            "kingdee_query_supplier_quotes",
+            "kingdee_query_misc_movement_detail",
+            "kingdee_query_transfer_pending_detail",
+            "kingdee_query_transfer_apply",
+            "kingdee_query_transfer_direct",
+            "kingdee_push_stock_transfer",
+            "kingdee_query_material_cost",
+            "kingdee_query_material_target_cost",
+            "kingdee_query_cost_calculation",
+            "kingdee_query_cost_centers",
+            "kingdee_query_cost_items",
+            "kingdee_query_product_standard_cost",
+            "kingdee_query_cost_adjustments",
+            "kingdee_save_cost_adjustment",
+            "kingdee_query_instant_cost_compare",
+            "kingdee_query_cost_trend",
+            "kingdee_query_finished_product_cost",
+            "kingdee_query_material_cost_usage",
+            "kingdee_query_production_orders",
+            "kingdee_query_production_pick_materials",
+            "kingdee_query_production_stock_in",
+            "kingdee_view_production_order",
+            "kingdee_save_production_order",
+            "kingdee_submit_production_orders",
+            "kingdee_audit_production_orders",
+            "kingdee_push_production_pick",
+            "kingdee_push_production_stock_in",
+            "kingdee_query_mrp_result",
+            "kingdee_query_production_plan",
+            "kingdee_query_production_report",
+            "kingdee_query_report"
+          ],
+          "tool_count": 101,
+          "called_tool": "kingdee_usage_stats",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -484,5 +678,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-10-31T01:25:33+08:00"
+  "updated_at": "2026-10-31T01:54:25.077013+08:00"
 }

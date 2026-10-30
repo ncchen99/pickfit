@@ -72,18 +72,21 @@
       "first_task": "bastra doctor"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-bastra-recall-20261031-014119-6f0b",
       "method": "npm",
       "steps": [
         {
-          "command": "npx bastra-recall install",
-          "purpose": null
+          "command": "npm install -g bastra-recall",
+          "purpose": "Install bastra-recall globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "bastra doctor"
+      "check": {
+        "command": "which bastra && bastra --version",
+        "expected_signal": "1.1.1"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -113,10 +116,126 @@
     "url": "https://github.com/n0mad-ai/bastra-recall/releases/tag/v1.1.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:47:38.498424+08:00",
+    "runs": [
+      {
+        "id": "verify-bastra-recall-20261031-014119-6f0b",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:47:38.498424+08:00",
+        "tool_version": "1.1.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g bastra-recall",
+            "purpose": "Install bastra-recall globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "which bastra && bastra --version",
+            "expected_signal": "1.1.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.1.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- node /home/sbx/.local/lib/node_modules/bastra-recall/node_modules/@bastra-recall/daemon/dist/mcp-forwarder.js",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /home/sbx/work/test-vault && BASTRA_VAULT_PATH=/home/sbx/work/test-vault python3 ~/.pickfit/mcp_probe.py --timeout 120 --call find_document --args '{\"query\":\"test\"}' -- node /home/sbx/.local/lib/node_modules/bastra-recall/node_modules/@bastra-recall/daemon/dist/mcp-forwarder.js",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=find_document content=text,text text_chars=56",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx bastra-recall install (no prior global install needed)",
+            "actually_needed": "npm install -g bastra-recall so `bastra` and the forwarder JS file persist on PATH for offline replay; the ranked-first `npx` launcher would re-fetch on each run",
+            "kind": "note"
+          },
+          {
+            "readme_said": "README documents install/doctor/map but no MCP launch command",
+            "actually_needed": "MCP stdio launch is `node /home/sbx/.local/lib/node_modules/bastra-recall/node_modules/@bastra-recall/daemon/dist/mcp-forwarder.js` (from FORWARDER_SCRIPT_PATH); no `bastra mcp` subcommand is documented",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "README examples assume an installed vault; probe calls need BASTRA_VAULT_PATH",
+            "actually_needed": "set BASTRA_VAULT_PATH to an existing directory (e.g. mkdir -p test-vault) before calling tools; bare `recall` with no vault returned a tools/call error, while `find_document` with the vault set returned hits:[]",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 15 tools, successful find_document call, and CLI version 1.1.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-bastra-recall-20261031-014119-6f0b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-bastra-recall-20261031-014119-6f0b/check-1-cmd13.judged.png",
+            "runs/verify/verify-bastra-recall-20261031-014119-6f0b/check-2-cmd15.judged.png",
+            "runs/verify/verify-bastra-recall-20261031-014119-6f0b/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.117938,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "node",
+            "/home/sbx/.local/lib/node_modules/bastra-recall/node_modules/@bastra-recall/daemon/dist/mcp-forwarder.js"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "bastra-recall-mcp",
+          "server_version": "1.1.1",
+          "tools": [
+            "recall",
+            "load_memory",
+            "save_memory",
+            "edit_memory",
+            "archive_memory",
+            "find_document",
+            "read_document",
+            "open_document",
+            "save_document",
+            "recategorize_document",
+            "move_document",
+            "save_product_doc",
+            "find_code",
+            "find_affected_files",
+            "review_draft"
+          ],
+          "tool_count": 15,
+          "called_tool": "find_document",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [],
@@ -399,5 +518,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:19+08:00",
-  "updated_at": "2026-10-31T01:25:33+08:00"
+  "updated_at": "2026-10-31T01:47:38.499042+08:00"
 }

@@ -77,18 +77,21 @@
       "first_task": "uvx exomem demo"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-exomem-20261031-013958-3f62",
       "method": "uv",
       "steps": [
         {
-          "command": "uvx exomem demo",
-          "purpose": null
+          "command": "uv tool install exomem 2>&1 && exomem --version --json 2>&1",
+          "purpose": "install exomem with uv tool install"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "uvx exomem demo"
+      "check": {
+        "command": "uv tool install exomem 2>&1 && exomem --version --json 2>&1",
+        "expected_signal": "0.151.1"
+      },
+      "first_task": "mkdir -p /dev/shm/exomem-tmp && TMPDIR=/dev/shm EXOMEM_DISABLE_EMBEDDINGS=1 exomem demo 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -118,10 +121,147 @@
     "url": "https://github.com/Artexis10/exomem/releases/tag/v0.151.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:41:46.876804+08:00",
+    "runs": [
+      {
+        "id": "verify-exomem-20261031-013958-3f62",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:41:46.876804+08:00",
+        "tool_version": "0.151.1",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install exomem 2>&1 && exomem --version --json 2>&1",
+            "purpose": "install exomem with uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "uv tool install exomem 2>&1 && exomem --version --json 2>&1",
+            "expected_signal": "0.151.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"version\": \"0.151.1\", \"python_executable\": \"/home/sbx/.local/share/uv/tools/exomem/bin/python\", \"install_source\": \"wheel\", \"local_profile\": \"lean\", \"managed_service_version\": null, \"managed_service_profile\": null, \"managed_service_target\": null, \"effective_route\": \"direct\", \"version_match\": null, …",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /dev/shm/exomem-tmp && TMPDIR=/dev/shm EXOMEM_DISABLE_EMBEDDINGS=1 exomem demo 2>&1",
+            "expected_signal": "demo PASS",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "demo PASS — total 3.72s. This is your proof: agents search files you own.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /dev/shm/exomem-vault && TMPDIR=/dev/shm EXOMEM_DISABLE_EMBEDDINGS=1 EXOMEM_VAULT_PATH=/dev/shm/exomem-vault python3 ~/.pickfit/mcp_probe.py -- exomem --transport stdio 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "mkdir -p /dev/shm/exomem-vault && TMPDIR=/dev/shm EXOMEM_DISABLE_EMBEDDINGS=1 EXOMEM_VAULT_PATH=/dev/shm/exomem-vault exomem init --vault /dev/shm/exomem-vault 2>&1; echo \"===\"; ls /dev/shm/exomem-vault 2>&1; ls \"/dev/shm/exomem-vault/Knowledge Base\" 2>&1 | head -n 20",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "uvx exomem demo works with no config on any Linux machine",
+            "actually_needed": "TMPDIR=/dev/shm (or other tmpfs) so temp vault copy lands on tmpfs, and EXOMEM_VAULT_PATH on tmpfs (e.g. /dev/shm/exomem-vault); e.g. TMPDIR=/dev/shm EXOMEM_DISABLE_EMBEDDINGS=1 exomem demo",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show exomem version 0.151.1, demo PASS with all sub-checks, and MCP handshake ok with 39 tools.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-exomem-20261031-013958-3f62/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-exomem-20261031-013958-3f62/check-1-cmd2.judged.png",
+            "runs/verify/verify-exomem-20261031-013958-3f62/check-2-cmd12.judged.png",
+            "runs/verify/verify-exomem-20261031-013958-3f62/check-3-cmd14.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.12211,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "exomem",
+            "--transport",
+            "stdio"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "exomem",
+          "server_version": "4.0.3",
+          "tools": [
+            "search_memory",
+            "recall_context",
+            "create_note",
+            "edit_note",
+            "supersede_note",
+            "capture_source",
+            "preserve_evidence",
+            "preserve_artifacts",
+            "transfer_artifact",
+            "bootstrap",
+            "change_settings",
+            "read_memory",
+            "browse_memory",
+            "prepare_note",
+            "change_observations",
+            "record_episode",
+            "read_episode",
+            "read_media",
+            "change_media",
+            "read_review",
+            "triage_memory",
+            "read_connections",
+            "change_connections",
+            "read_import",
+            "import_memory",
+            "check_memory",
+            "repair_memory",
+            "read_schema",
+            "change_schema",
+            "read_governance",
+            "change_governance",
+            "grant_session_access",
+            "change_session_access",
+            "manage_authorization_session",
+            "change_files",
+            "read_records",
+            "change_records",
+            "read_plans",
+            "change_plans"
+          ],
+          "tool_count": 39,
+          "called_tool": null,
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -668,5 +808,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:50:14+08:00",
-  "updated_at": "2026-10-31T01:25:33+08:00"
+  "updated_at": "2026-10-31T01:41:46.877588+08:00"
 }

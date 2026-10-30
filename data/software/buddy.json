@@ -67,13 +67,17 @@
       "first_task": null
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-buddy-20261031-014350-76a9",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/fiorastudio/buddy/master/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/fiorastudio/buddy/master/install.sh -o /tmp/install-buddy.sh && wc -c /tmp/install-buddy.sh && head -c 500 /tmp/install-buddy.sh",
+          "purpose": "download install.sh for inspection before running"
+        },
+        {
+          "command": "bash /tmp/install-buddy.sh --no-onboard",
+          "purpose": "install Buddy via official script with --no-onboard"
         }
       ],
       "manual_steps": [],
@@ -108,10 +112,128 @@
     "url": "https://github.com/fiorastudio/buddy/releases/tag/v1.0.6"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:45:48.359271+08:00",
+    "runs": [
+      {
+        "id": "verify-buddy-20261031-014350-76a9",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:45:48.359271+08:00",
+        "tool_version": "1.0.6",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/fiorastudio/buddy/master/install.sh -o /tmp/install-buddy.sh && wc -c /tmp/install-buddy.sh && head -c 500 /tmp/install-buddy.sh",
+            "purpose": "download install.sh for inspection before running"
+          },
+          {
+            "command": "bash /tmp/install-buddy.sh --no-onboard",
+            "purpose": "install Buddy via official script with --no-onboard"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ls ~/.buddy/server/dist/server/index.js && node --version && python3 ~/.pickfit/mcp_probe.py -- node /home/sbx/.buddy/server/dist/server/index.js",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call buddy_status --args '{}' -- node /home/sbx/.buddy/server/dist/server/index.js",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=buddy_status content=text text_chars=51",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call buddy_hatch --args '{\"name\":\"PickfitTest\"}' -- node /home/sbx/.buddy/server/dist/server/index.js",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=buddy_hatch content=text,text text_chars=1979",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Requires node 18+ and git",
+            "actually_needed": "Node 20+ is required; installer exits if major version <20 because better-sqlite3 dropped Node 18/19 support",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "curl ... | bash installs and auto-configures clients",
+            "actually_needed": "Symlink to /usr/local/bin fails without root; launch MCP server via full path: node ~/.buddy/server/dist/server/index.js",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "one-line curl|bash install",
+            "actually_needed": "Installer clones https://github.com/fiorastudio/buddy.git and runs npm install/build, fetching ~282 npm packages plus a prebuilt better-sqlite3 native binary at install time, which cannot be fully pre-read",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show Buddy MCP server initializing with 13 tools and successfully completing buddy_status and buddy_hatch tool calls.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-buddy-20261031-014350-76a9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-buddy-20261031-014350-76a9/check-1-cmd3.judged.png",
+            "runs/verify/verify-buddy-20261031-014350-76a9/check-2-cmd4.judged.png",
+            "runs/verify/verify-buddy-20261031-014350-76a9/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.086549,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "node",
+            "/home/sbx/.buddy/server/dist/server/index.js"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "buddy",
+          "server_version": "1.0.6",
+          "tools": [
+            "buddy_hatch",
+            "buddy_status",
+            "buddy_remember",
+            "buddy_dream",
+            "buddy_respawn",
+            "buddy_observe",
+            "buddy_pet",
+            "buddy_mute",
+            "buddy_unmute",
+            "buddy_mode",
+            "buddy_forget",
+            "buddy_reasoning_status",
+            "buddy_share"
+          ],
+          "tool_count": 13,
+          "called_tool": "buddy_status",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [],
@@ -439,5 +561,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:50:29+08:00",
-  "updated_at": "2026-10-31T01:25:33+08:00"
+  "updated_at": "2026-10-31T01:45:48.359877+08:00"
 }

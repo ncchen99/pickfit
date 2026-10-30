@@ -73,18 +73,21 @@
       "first_task": "BASE_DIR=/absolute/path/to/docs /absolute/path/to/uvx minirag-mcp status"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-minirag-mcp-20261031-014150-bb84",
       "method": "uv",
       "steps": [
         {
-          "command": "uvx minirag-mcp",
-          "purpose": null
+          "command": "uv tool install minirag-mcp 2>&1",
+          "purpose": "install minirag-mcp with uv tool"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "BASE_DIR=/absolute/path/to/docs /absolute/path/to/uvx minirag-mcp status"
+      "check": {
+        "command": "minirag-mcp --help 2>&1",
+        "expected_signal": "status"
+      },
+      "first_task": "mkdir -p /tmp/minirag-docs && printf '# Hello\\n\\nThis is a test document about pickfit verification.\\n' > /tmp/minirag-docs/hello.md && printf 'Second doc with error code E123 for keyword search test.\\n' > /tmp/minirag-docs/notes.txt && BASE_DIR=/tmp/minirag-docs minirag-mcp status 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -114,10 +117,135 @@
     "url": "https://github.com/sfrangulov/minirag-mcp/releases/tag/v1.0.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:43:50.501286+08:00",
+    "runs": [
+      {
+        "id": "verify-minirag-mcp-20261031-014150-bb84",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:43:50.501286+08:00",
+        "tool_version": "1.0.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install minirag-mcp 2>&1",
+            "purpose": "install minirag-mcp with uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "minirag-mcp --help 2>&1",
+            "expected_signal": "status",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ status Show index and configuration status. │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "minirag-mcp --version 2>&1",
+            "expected_signal": "1.0.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.0.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/minirag-docs && printf '# Hello\\n\\nThis is a test document about pickfit verification.\\n' > /tmp/minirag-docs/hello.md && printf 'Second doc with error code E123 for keyword search test.\\n' > /tmp/minirag-docs/notes.txt && BASE_DIR=/tmp/minirag-docs minirag-mcp status 2>&1",
+            "expected_signal": "version: 1.0.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "version: 1.0.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/minirag-docs && BASE_DIR=/tmp/minirag-docs python3 ~/.pickfit/mcp_probe.py --timeout 120 -- minirag-mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/minirag-docs && printf '# Hello\\n\\nThis is a test document about pickfit verification.\\n' > /tmp/minirag-docs/hello.md && printf 'Second doc with error code E123 for keyword search test.\\n' > /tmp/minirag-docs/notes.txt && BASE_DIR=/tmp/minirag-docs minirag-mcp status 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/minirag-docs && BASE_DIR=/tmp/minirag-docs python3 ~/.pickfit/mcp_probe.py --timeout 120 --call status --args '{}' -- minirag-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=status content=text text_chars=420",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/minirag-docs && printf '# Hello\\n\\nThis is a test document about pickfit verification.\\n' > /tmp/minirag-docs/hello.md && printf 'Second doc with error code E123 for keyword search test.\\n' > /tmp/minirag-docs/notes.txt && BASE_DIR=/tmp/minirag-docs minirag-mcp status 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show help listing the status command, version output 1.0.0, and status output with version 1.0.0 and index config.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-minirag-mcp-20261031-014150-bb84/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-minirag-mcp-20261031-014150-bb84/check-1-cmd3.judged.png",
+            "runs/verify/verify-minirag-mcp-20261031-014150-bb84/check-2-cmd4.judged.png",
+            "runs/verify/verify-minirag-mcp-20261031-014150-bb84/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.051259,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "minirag-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "minirag-mcp",
+          "server_version": "4.1.4",
+          "tools": [
+            "sync_start",
+            "sync_status",
+            "ingest_file",
+            "ingest_data",
+            "ingest_url",
+            "query_documents",
+            "read_chunk_neighbors",
+            "read_file",
+            "list_files",
+            "delete_file",
+            "status"
+          ],
+          "tool_count": 11,
+          "called_tool": "status",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [],
@@ -521,5 +649,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-10-31T01:25:33+08:00"
+  "updated_at": "2026-10-31T01:43:50.502026+08:00"
 }

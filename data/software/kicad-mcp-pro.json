@@ -56,18 +56,21 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-kicad-mcp-pro-20261031-014836-3268",
       "method": "uv",
       "steps": [
         {
-          "command": "uvx kicad-mcp-pro --help",
-          "purpose": null
+          "command": "uv tool install kicad-mcp-pro && kicad-mcp-pro --help",
+          "purpose": "Install kicad-mcp-pro with uv tool install"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "uvx kicad-mcp-pro --help"
+      "check": {
+        "command": "kicad-mcp-pro --help",
+        "expected_signal": "--help"
+      },
+      "first_task": null
     },
     "windows": null
   },
@@ -84,10 +87,131 @@
     "url": "https://github.com/oaslananka/kicad-mcp-pro/releases/tag/mcp-server-v4.4.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:49:43.742002+08:00",
+    "runs": [
+      {
+        "id": "verify-kicad-mcp-pro-20261031-014836-3268",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:49:43.742002+08:00",
+        "tool_version": "4.4.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install kicad-mcp-pro && kicad-mcp-pro --help",
+            "purpose": "Install kicad-mcp-pro with uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "kicad-mcp-pro --help",
+            "expected_signal": "--help",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ --help Show this message and exit. │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- kicad-mcp-pro --transport stdio",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call kicad_get_server_info --args '{}' -- kicad-mcp-pro --transport stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=kicad_get_server_info content=text text_chars=72108",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "uvx kicad-mcp-pro --transport stdio",
+            "actually_needed": "Use durable install `uv tool install kicad-mcp-pro` then launch `kicad-mcp-pro --transport stdio` so it works with network off; ephemeral `uvx` would refetch.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "--version or --help check",
+            "actually_needed": "`kicad-mcp-pro version` prints 4.4.0; `kicad-mcp-pro --version` exits 2 with `No such option: --version`.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 24 tools, successful kicad_get_server_info call, and full --help output with options and commands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-kicad-mcp-pro-20261031-014836-3268/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-kicad-mcp-pro-20261031-014836-3268/check-1-cmd5.judged.png",
+            "runs/verify/verify-kicad-mcp-pro-20261031-014836-3268/check-2-cmd6.judged.png",
+            "runs/verify/verify-kicad-mcp-pro-20261031-014836-3268/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.050628,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "kicad-mcp-pro",
+            "--transport",
+            "stdio"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "kicad-mcp-pro",
+          "server_version": "4.4.0",
+          "tools": [
+            "kicad_list_tool_categories",
+            "kicad_get_tools_in_category",
+            "kicad_set_project",
+            "kicad_get_project_info",
+            "project_design_workflow",
+            "project_get_next_action",
+            "kicad_get_version",
+            "pcb_get_board_summary",
+            "pcb_visual_qa",
+            "pcb_get_stackup",
+            "pcb_get_design_rules",
+            "sch_get_symbols",
+            "sch_get_bounding_boxes",
+            "sch_get_connectivity_graph",
+            "sch_visual_qa",
+            "lib_verify_component_contract",
+            "lib_get_bom_with_pricing",
+            "run_erc",
+            "run_drc",
+            "validate_design",
+            "project_quality_gate",
+            "validate_footprints_vs_schematic",
+            "dfm_run_manufacturer_check",
+            "kicad_get_server_info"
+          ],
+          "tool_count": 24,
+          "called_tool": "kicad_get_server_info",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -408,5 +532,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-10-31T01:25:33+08:00"
+  "updated_at": "2026-10-31T01:49:43.742769+08:00"
 }

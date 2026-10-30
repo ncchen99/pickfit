@@ -47,7 +47,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-memesh-20261031-014146-d082",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @pcircle/memesh && memesh doctor",
+          "purpose": "install memesh globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "memesh --help",
+        "expected_signal": "doctor [options]"
+      },
+      "first_task": "memesh doctor"
+    },
     "windows": null
   },
   "pricing": {
@@ -63,10 +79,122 @@
     "url": "https://github.com/PCIRCLE-AI/memesh/releases/tag/v4.11.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:42:53.623993+08:00",
+    "runs": [
+      {
+        "id": "verify-memesh-20261031-014146-d082",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:42:53.623993+08:00",
+        "tool_version": "4.11.5",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @pcircle/memesh && memesh doctor",
+            "purpose": "install memesh globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "memesh --help",
+            "expected_signal": "doctor [options]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "doctor [options] Verify local install health and show actionable",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "memesh doctor",
+            "expected_signal": "[PASS] Node runtime",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[PASS] Node runtime",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- node /home/sbx/.local/lib/node_modules/@pcircle/memesh/dist/mcp/server.js",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call user_patterns --args '{}' -- node /home/sbx/.local/lib/node_modules/@pcircle/memesh/dist/mcp/server.js",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=user_patterns content=text text_chars=300",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "MCP config starts ${CLAUDE_PLUGIN_ROOT}/dist/mcp/server.js (placeholder, not directly runnable)",
+            "actually_needed": "launch stdio server directly with: node /home/sbx/.local/lib/node_modules/@pcircle/memesh/dist/mcp/server.js (expanded CLAUDE_PLUGIN_ROOT)",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show memesh doctor passing with concerns, MCP server handshake ok with 12 tools, and --help listing the doctor command.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-memesh-20261031-014146-d082/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-memesh-20261031-014146-d082/check-1-cmd4.judged.png",
+            "runs/verify/verify-memesh-20261031-014146-d082/check-2-cmd5.judged.png",
+            "runs/verify/verify-memesh-20261031-014146-d082/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.050004,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "node",
+            "/home/sbx/.local/lib/node_modules/@pcircle/memesh/dist/mcp/server.js"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "memesh",
+          "server_version": "4.11.5",
+          "tools": [
+            "work_package",
+            "remember",
+            "recall",
+            "forget",
+            "export",
+            "import",
+            "learn",
+            "task_state",
+            "briefing",
+            "user_patterns",
+            "improvement",
+            "message"
+          ],
+          "tool_count": 12,
+          "called_tool": "user_patterns",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [],
@@ -361,5 +489,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:50:29+08:00",
-  "updated_at": "2026-10-31T01:25:33+08:00"
+  "updated_at": "2026-10-31T01:42:53.624605+08:00"
 }

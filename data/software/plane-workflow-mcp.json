@@ -55,7 +55,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-plane-workflow-mcp-20261031-014943-c2e4",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install plane-workflow-mcp",
+          "purpose": "Install plane-workflow-mcp via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "plane-workflow --help",
+        "expected_signal": "usage: plane-workflow"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -71,10 +87,128 @@
     "url": "https://github.com/amirhosseinkz/plane-workflow-mcp/releases/tag/v0.7.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:50:59.200643+08:00",
+    "runs": [
+      {
+        "id": "verify-plane-workflow-mcp-20261031-014943-c2e4",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:50:59.200643+08:00",
+        "tool_version": "0.7.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install plane-workflow-mcp",
+            "purpose": "Install plane-workflow-mcp via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "plane-workflow --help",
+            "expected_signal": "usage: plane-workflow",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: plane-workflow [-h] [--version] {setup,status,workspace,project,remove,backfill,mcp} ...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- plane-workflow mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call get_plane_workflow_setup_status --args '{}' -- plane-workflow mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_plane_workflow_setup_status content=text text_chars=183",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 33 tools, successful setup-status tool call, and CLI help listing commands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-plane-workflow-mcp-20261031-014943-c2e4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-plane-workflow-mcp-20261031-014943-c2e4/check-1-cmd3.judged.png",
+            "runs/verify/verify-plane-workflow-mcp-20261031-014943-c2e4/check-2-cmd4.judged.png",
+            "runs/verify/verify-plane-workflow-mcp-20261031-014943-c2e4/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.03602,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "plane-workflow",
+            "mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "Plane?Workflow",
+          "server_version": "3.4.11",
+          "tools": [
+            "get_plane_workflow_setup_status",
+            "list_configured_plane_workspaces",
+            "activate_plane_workspace",
+            "get_active_plane_context",
+            "list_plane_projects",
+            "activate_plane_project",
+            "get_project_workflow_context",
+            "get_project_workflow_profile",
+            "get_workflow_options",
+            "diagnose_plane_connection",
+            "validate_workflow_profile",
+            "save_project_workflow_profile",
+            "create_standardization_plan",
+            "get_standardization_plan",
+            "apply_standardization_plan",
+            "find_duplicate_candidates",
+            "find_work_items",
+            "list_work_items",
+            "get_project_briefing",
+            "get_work_item_relations",
+            "add_work_item_relation",
+            "add_work_item_evidence_links",
+            "upload_work_item_attachment",
+            "create_standard_work_item",
+            "start_standard_work_item",
+            "complete_standard_work_item",
+            "cancel_standard_work_item",
+            "update_standard_work_item",
+            "ensure_module",
+            "audit_work_items",
+            "export_work_items_report",
+            "plan_git_backfill",
+            "apply_git_backfill"
+          ],
+          "tool_count": 33,
+          "called_tool": "get_plane_workflow_setup_status",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -342,5 +476,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-10-31T01:25:33+08:00"
+  "updated_at": "2026-10-31T01:50:59.201278+08:00"
 }

@@ -53,7 +53,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-coursecode-20261031-013958-a822",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g coursecode",
+          "purpose": "install coursecode globally"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "coursecode --help",
+        "expected_signal": "Start MCP server for AI agent integration"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -69,10 +85,111 @@
     "url": "https://github.com/course-code-framework/coursecode/releases/tag/v0.2.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:41:50.164436+08:00",
+    "runs": [
+      {
+        "id": "verify-coursecode-20261031-013958-a822",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:41:50.164436+08:00",
+        "tool_version": "0.4.4",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g coursecode",
+            "purpose": "install coursecode globally"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "coursecode --help",
+            "expected_signal": "Start MCP server for AI agent integration",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mcp [options] Start MCP server for AI agent integration",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- coursecode mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call coursecode_workflow_status --args '{}' -- coursecode mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=coursecode_workflow_status content=text text_chars=1038",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 16 tools, successful workflow_status tool call, and help listing the MCP server command.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-coursecode-20261031-013958-a822/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-coursecode-20261031-013958-a822/check-1-cmd8.judged.png",
+            "runs/verify/verify-coursecode-20261031-013958-a822/check-2-cmd9.judged.png",
+            "runs/verify/verify-coursecode-20261031-013958-a822/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.054678,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "coursecode",
+            "mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "coursecode",
+          "server_version": "0.4.4",
+          "tools": [
+            "coursecode_state",
+            "coursecode_errors",
+            "coursecode_navigate",
+            "coursecode_interact",
+            "coursecode_assessment",
+            "coursecode_reset",
+            "coursecode_screenshot",
+            "coursecode_viewport",
+            "coursecode_workflow_status",
+            "coursecode_build",
+            "coursecode_css_catalog",
+            "coursecode_component_catalog",
+            "coursecode_interaction_catalog",
+            "coursecode_lint",
+            "coursecode_narration",
+            "coursecode_icon_catalog"
+          ],
+          "tool_count": 16,
+          "called_tool": "coursecode_workflow_status",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [],
@@ -306,5 +423,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:19+08:00",
-  "updated_at": "2026-10-31T01:25:33+08:00"
+  "updated_at": "2026-10-31T01:41:50.165221+08:00"
 }

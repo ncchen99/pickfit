@@ -59,7 +59,24 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-precis-mcp-20261031-015059-68bf",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install 'precis-mcp==8.35.1' 2>&1",
+          "purpose": "Install precis-mcp core via uv tool"
+        },
+        {
+          "command": "ls /home/sbx/.local/share/uv/tools/precis-mcp/bin/python* && /home/sbx/.local/share/uv/tools/precis-mcp/bin/python --version && uv pip install --python /home/sbx/.local/share/uv/tools/precis-mcp/bin/python 'mcp<2' 2>&1",
+          "purpose": "Pin mcp<2 in tool env to fix FastMCP import"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -75,10 +92,113 @@
     "url": "https://github.com/retospect/precis-mcp/releases/tag/v8.35.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:53:03.850824+08:00",
+    "runs": [
+      {
+        "id": "verify-precis-mcp-20261031-015059-68bf",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:53:03.850824+08:00",
+        "tool_version": "8.35.1",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install 'precis-mcp==8.35.1' 2>&1",
+            "purpose": "Install precis-mcp core via uv tool"
+          },
+          {
+            "command": "ls /home/sbx/.local/share/uv/tools/precis-mcp/bin/python* && /home/sbx/.local/share/uv/tools/precis-mcp/bin/python --version && uv pip install --python /home/sbx/.local/share/uv/tools/precis-mcp/bin/python 'mcp<2' 2>&1",
+            "purpose": "Pin mcp<2 in tool env to fix FastMCP import"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- precis serve",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get --args '{\"kind\":\"calc\",\"q\":\"2+3*4\"}' -- precis serve",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get content=text text_chars=76",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "uv tool install --python 3.13 'precis-mcp[all]'",
+            "actually_needed": "installed core only as `uv tool install 'precis-mcp==8.35.1'` with default Python 3.12; the README's `[all]` extra (~1.6 GB plus CUDA torch and GBs of models) was unnecessary for the MCP handshake and calc tool",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "pip/uv install of precis-mcp==8.35.1 resolves working dependencies",
+            "actually_needed": "downgraded the tool env with `uv pip install --python /home/sbx/.local/share/uv/tools/precis-mcp/bin/python 'mcp<2'` (got mcp==1.30.0); stock install pulled mcp==2.3.0 and `precis serve` crashed with ModuleNotFoundError: No module named 'mcp.server.fastmcp'",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "PRECIS_DATABASE_URL required and `precis serve` speaks MCP over stdio",
+            "actually_needed": "server boots with no PRECIS_DATABASE_URL and only kind `calc` live; DB-backed kinds (e.g. skill) return NotFound without a store",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake succeeding with 8 tools listed and calc get query returning 2+3*4 = 14.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-precis-mcp-20261031-015059-68bf/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-precis-mcp-20261031-015059-68bf/check-1-cmd8.judged.png",
+            "runs/verify/verify-precis-mcp-20261031-015059-68bf/check-2-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.126878,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "precis",
+            "serve"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "precis-mcp",
+          "server_version": "1.30.0",
+          "tools": [
+            "get",
+            "search",
+            "put",
+            "edit",
+            "delete",
+            "tag",
+            "link",
+            "more"
+          ],
+          "tool_count": 8,
+          "called_tool": "get",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -490,5 +610,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-10-31T01:25:33+08:00"
+  "updated_at": "2026-10-31T01:53:03.851434+08:00"
 }

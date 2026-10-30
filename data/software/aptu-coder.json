@@ -66,18 +66,25 @@
       "first_task": "aptu-coder --port 49200"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-aptu-coder-20261031-013958-02f7",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo binstall aptu-coder",
-          "purpose": null
+          "command": "cd /tmp && rm -f aptu-coder.tar.gz aptu-coder.sha256 && curl -fsSL -O https://github.com/clouatre-labs/aptu-coder/releases/download/v0.41.1/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz && curl -fsSL -O https://github.com/clouatre-labs/aptu-coder/releases/download/v0.41.1/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz.sha256 && sha256sum -c aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz.sha256 && tar tzf aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz",
+          "purpose": "download verified release tarball"
+        },
+        {
+          "command": "tar xzf /tmp/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz -C /tmp && install -m 755 /tmp/aptu-coder ~/.local/bin/aptu-coder && ~/.local/bin/aptu-coder --version",
+          "purpose": "extract and install binary to PATH"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "aptu-coder --port 49200"
+      "check": {
+        "command": "aptu-coder --help",
+        "expected_signal": "Usage: aptu-coder"
+      },
+      "first_task": null
     },
     "windows": null
   },
@@ -94,10 +101,112 @@
     "url": "https://github.com/clouatre-labs/aptu-coder/releases/tag/v0.41.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:41:05.230567+08:00",
+    "runs": [
+      {
+        "id": "verify-aptu-coder-20261031-013958-02f7",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:41:05.230567+08:00",
+        "tool_version": "0.41.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /tmp && rm -f aptu-coder.tar.gz aptu-coder.sha256 && curl -fsSL -O https://github.com/clouatre-labs/aptu-coder/releases/download/v0.41.1/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz && curl -fsSL -O https://github.com/clouatre-labs/aptu-coder/releases/download/v0.41.1/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz.sha256 && sha256sum -c aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz.sha256 && tar tzf aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz",
+            "purpose": "download verified release tarball"
+          },
+          {
+            "command": "tar xzf /tmp/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz -C /tmp && install -m 755 /tmp/aptu-coder ~/.local/bin/aptu-coder && ~/.local/bin/aptu-coder --version",
+            "purpose": "extract and install binary to PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "aptu-coder --help",
+            "expected_signal": "Usage: aptu-coder",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: aptu-coder [OPTIONS]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- aptu-coder",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call analyze_directory --args '{\"path\": \"/home/sbx/work\"}' -- aptu-coder",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=analyze_directory content=text text_chars=176",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo binstall aptu-coder (no Rust required) / cargo install aptu-coder",
+            "actually_needed": "downloaded and verified the prebuilt x86_64-unknown-linux-musl tarball from GitHub releases (v0.41.1) and installed the single 'aptu-coder' binary to ~/.local/bin; no Rust toolchain used",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 8 tools, successful analyze_directory call returning file summary, and --help usage output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-aptu-coder-20261031-013958-02f7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-aptu-coder-20261031-013958-02f7/check-1-cmd7.judged.png",
+            "runs/verify/verify-aptu-coder-20261031-013958-02f7/check-2-cmd8.judged.png",
+            "runs/verify/verify-aptu-coder-20261031-013958-02f7/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.053168,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "aptu-coder"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "aptu-coder",
+          "server_version": "0.41.1",
+          "tools": [
+            "analyze_directory",
+            "analyze_file",
+            "analyze_module",
+            "analyze_symbol",
+            "edit_overwrite",
+            "edit_replace",
+            "exec_command",
+            "verify_anchors"
+          ],
+          "tool_count": 8,
+          "called_tool": "analyze_directory",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -515,5 +624,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-10-31T01:25:33+08:00"
+  "updated_at": "2026-10-31T01:41:05.231559+08:00"
 }

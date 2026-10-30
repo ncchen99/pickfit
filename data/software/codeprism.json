@@ -50,7 +50,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-codeprism-20261031-013958-f73d",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install codeprism-ai 2>&1",
+          "purpose": "install codeprism via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "codeprism --help",
+        "expected_signal": "Usage: codeprism"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -66,10 +82,122 @@
     "url": "https://github.com/knight22-21/CodePrism/releases/tag/skill-v1.0.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:41:19.309755+08:00",
+    "runs": [
+      {
+        "id": "verify-codeprism-20261031-013958-f73d",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:41:19.309755+08:00",
+        "tool_version": "0.1.11",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install codeprism-ai 2>&1",
+            "purpose": "install codeprism via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "codeprism --help",
+            "expected_signal": "Usage: codeprism",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: codeprism [OPTIONS] COMMAND [ARGS]...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- codeprism serve",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get_graph_stats --args '{}' -- codeprism serve /tmp/sampleproj",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_graph_stats content=text text_chars=246",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sampleproj && cat > /tmp/sampleproj/hello.py <<'PY'\ndef greet(name):\n    \"\"\"Greet someone.\"\"\"\n    return f\"hello {name}\"\n\ndef main():\n    print(greet(\"world\"))\n\nif __name__ == \"__main__\":\n    main()\nPY\ncat /tmp/sampleproj/hello.py && codeprism index /tmp/sampleproj 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 21 tools, successful get_graph_stats call returning file/function counts, and CLI help with Usage and commands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-codeprism-20261031-013958-f73d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-codeprism-20261031-013958-f73d/check-1-cmd4.judged.png",
+            "runs/verify/verify-codeprism-20261031-013958-f73d/check-2-cmd6.judged.png",
+            "runs/verify/verify-codeprism-20261031-013958-f73d/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.046717,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "codeprism",
+            "serve"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "CodePrism",
+          "server_version": "4.1.4",
+          "tools": [
+            "index_project",
+            "update_file",
+            "get_graph_stats",
+            "get_context",
+            "get_module_summary",
+            "get_file_map",
+            "get_impact",
+            "get_callers",
+            "get_callees",
+            "get_data_flow",
+            "search_symbol",
+            "get_dependencies",
+            "get_dependents",
+            "scan_file",
+            "scan_diff",
+            "check_secret_exposure",
+            "check_dependencies_cve",
+            "record_read",
+            "record_write",
+            "get_session_context",
+            "undo_write"
+          ],
+          "tool_count": 21,
+          "called_tool": "get_graph_stats",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -362,5 +490,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:34+08:00",
-  "updated_at": "2026-10-31T01:25:33+08:00"
+  "updated_at": "2026-10-31T01:41:19.310399+08:00"
 }

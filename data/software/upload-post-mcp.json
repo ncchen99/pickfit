@@ -64,9 +64,67 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_account",
+    "checked_at": "2026-10-31T01:52:40.343188+08:00",
+    "runs": [
+      {
+        "id": "verify-upload-post-mcp-20261031-015148-e432",
+        "level": "unverified",
+        "unverified_reason": "needs_account",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:52:40.343188+08:00",
+        "tool_version": "0.17.2",
+        "install_method": "npm",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "npm install -g @upload-post/mcp",
+            "purpose": "install mcp server globally"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "upload-post-mcp --help",
+            "expected_signal": "Usage: upload-post-mcp",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: upload-post-mcp [--http] [--port <n>]",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "curl http://localhost:8080/healthz",
+            "expected_signal": "{\"ok\":true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"ok\":true,\"oauth\":false,\"sessions\":0}",
+            "setup": [
+              {
+                "command": "upload-post-mcp --http --port 8080",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-upload-post-mcp-20261031-015148-e432/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.043963
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -372,5 +430,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:50:13+08:00",
-  "updated_at": "2026-10-31T01:25:33+08:00"
+  "updated_at": "2026-10-31T01:52:40.345457+08:00"
 }
