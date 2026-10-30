@@ -503,6 +503,12 @@ POPULARITY_REFS: dict[str, dict[str, float]] = {
                 "registries_count": 1, "hn_top_score": 10, "star_velocity": 32.3},
     "local_ai": {"stars": 196.1, "forks": 26.0, "release_downloads": 4067.1, "monthly_downloads": 8947.1,
                  "registries_count": 1, "hn_top_score": 10, "star_velocity": 31.7},
+    # 2026-10-31, the same script over the 471 rule-passed mcp_server candidates (--registries). An MCP
+    # client that launches a server with `npx -y` fetches the package on every start, so downloads per
+    # user run high: the download P95 is 29,208 a month against dev_cli's 17,548, and dev_cli's refs
+    # would rank an ordinary MCP server as popular. Forks also run higher (28 against 17).
+    "mcp_server": {"stars": 165.5, "forks": 28.0, "release_downloads": 2832.0, "monthly_downloads": 29208.3,
+                   "registries_count": 1, "hn_top_score": 10, "star_velocity": 28.4},
 }
 REF_FLOORS = {"monthly_downloads": 100, "registries_count": 1, "hn_top_score": 10}
 VELOCITY_MIN_AGE_DAYS = 90
