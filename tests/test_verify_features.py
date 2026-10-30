@@ -276,3 +276,41 @@ def test_a_container_engine_the_box_lacks_is_named_as_such(tmp_path: Path):
     outcome, _ = verify(tmp_path, [*turns(REPORTED), judge_answer()], Boxes(script(**docker), script(**docker)))
     themes = by_name(outcome.run)["switch color themes"]
     assert (themes.status, themes.failure, themes.reason) == ("test_failed", "sandbox", "needs_container")
+
+
+def test_an_mcp_servers_feature_counts_only_through_a_probe_tool_call():
+    from pickfit.verify.agent import CommandRecord, FinishArgs
+    from pickfit.verify.features import resolve_features
+    from pickfit.verify.verdict import log_verdict
+
+    def rec(cid: int, command: str, out: str) -> CommandRecord:
+        return CommandRecord(turn=cid, tool="run_command", command=command, exit_code=0, seconds=0.1, stdout=out,
+                             command_id=cid)
+
+    probe = "python3 ~/.pickfit/mcp_probe.py"
+    summary = 'pickfit-mcp: {"probe": 1, "ok": true, "tools": ["get_current_time"], "count": 1%s}'
+    log = [rec(1, "uv tool install mcp-server-time", "Installed 1 executable"),
+           rec(2, f"{probe} -- mcp-server-time", "handshake: ok\n" + summary % ""),
+           rec(3, f"{probe} --call get_current_time --args '{{}}' -- mcp-server-time",
+               "tools/call: ok\n" + summary % ', "called": "get_current_time"'),
+           rec(4, "mcp-server-time --local-timezone UTC --help", "usage: mcp-server-time")]
+    smoke = [{"command_id": 2, "expected_signal": "handshake: ok"},
+             {"command_id": 3, "expected_signal": "tools/call: ok"},
+             {"command_id": 4, "expected_signal": "usage"}]
+    finish_args = FinishArgs.model_validate({
+        "level": "service", "steps": [{"command_id": 1, "purpose": "install"}],
+        "smoke_tests": [{"setup_ids": [], "expected_exit_code": 0, **t} for t in smoke]})
+    verdict = log_verdict(finish_args, log, mcp=True)
+    assert verdict.level == "service"
+    claims = [FinishFeature(feature=1, status="checked", command_ids=[3]),
+              FinishFeature(feature=2, status="checked", command_ids=[2]),
+              FinishFeature(feature=3, status="checked", command_ids=[4])]
+    resolved = resolve_features(["get the current time", "list the server's tools", "convert time zones"],
+                                claims, verdict, log, mcp=True)
+    assert [(f.status, f.command_ids) for f in resolved] == [("checked", [3]), ("not_checked", []),
+                                                             ("not_checked", [])]
+    assert "only a tool call through pickfit's probe" in resolved[1].problems[0]
+    task = graphtty()
+    mcp_task = dataclasses.replace(task, category="mcp_server")
+    text = render_task(mcp_task, plan_for(task.extraction, "linux"), FakeBox(), AgentLimits())
+    assert "Feature checks for an MCP server go through pickfit's probe" in text
