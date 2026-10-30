@@ -52,7 +52,31 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mica-20261031-003759-29e3",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "rm -rf Mica && git clone --depth 1 https://github.com/akivet/Mica",
+          "purpose": "clone Mica repository"
+        },
+        {
+          "command": "pip install -r Mica/v0.5/serving/requirements.txt",
+          "purpose": "install CUDA serving requirements (candidate 1)"
+        },
+        {
+          "command": "pip install pytest",
+          "purpose": "install pytest for README tests"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "cd Mica && python -m mica.server --help",
+        "expected_signal": "--gguf GGUF"
+      },
+      "first_task": "cd Mica && python -m pytest tests -q"
+    },
     "windows": null
   },
   "pricing": {
@@ -68,10 +92,88 @@
     "url": "https://github.com/akivet/Mica/releases/tag/vulkan-b11700-r1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:44:34.116828+08:00",
+    "runs": [
+      {
+        "id": "verify-mica-20261031-003759-29e3",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:44:34.116828+08:00",
+        "tool_version": null,
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf Mica && git clone --depth 1 https://github.com/akivet/Mica",
+            "purpose": "clone Mica repository"
+          },
+          {
+            "command": "pip install -r Mica/v0.5/serving/requirements.txt",
+            "purpose": "install CUDA serving requirements (candidate 1)"
+          },
+          {
+            "command": "pip install pytest",
+            "purpose": "install pytest for README tests"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd Mica && python -m mica.server --help",
+            "expected_signal": "--gguf GGUF",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: server.py [-h] --gguf GGUF --hf HF [--calibration CALIBRATION] --runtime RUNTIME",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd Mica && python -m pytest tests -q",
+            "expected_signal": "101 passed, 48 skipped",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "101 passed, 48 skipped in 8.08s",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "python -m pytest tests (requirements.txt / v0.5/serving/requirements.txt do not list pytest)",
+            "actually_needed": "pip install pytest before running tests",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "python -m mica.server --help",
+            "actually_needed": "run python -m mica.server --help from the cloned Mica/ directory (README clones then cds, examples assume that cwd)",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show pytest reporting 101 passed, 48 skipped and server --help listing --gguf GGUF.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mica-20261031-003759-29e3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mica-20261031-003759-29e3/check-1-cmd10.judged.png",
+            "runs/verify/verify-mica-20261031-003759-29e3/check-2-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.103348
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -282,5 +384,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:11+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:44:34.118130+08:00"
 }

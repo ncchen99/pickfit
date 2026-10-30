@@ -53,21 +53,29 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-kern-20261031-003759-c346",
       "method": "pip",
       "steps": [
         {
           "command": "pip install kern-llm==0.3.1",
-          "purpose": null
+          "purpose": "pip install python runtime"
+        },
+        {
+          "command": "curl -fsSL https://kern-baa.pages.dev/install.sh -o /tmp/kern-install.sh",
+          "purpose": "download install script"
+        },
+        {
+          "command": "sh /tmp/kern-install.sh",
+          "purpose": "run install script for kern binaries"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "kern --version",
-        "expected_signal": "kern 0.3.1 (<commit>, cuda 13.0)"
+        "expected_signal": "kern 0.3.1 (48e0709, cuda 13.0)"
       },
-      "first_task": "kern --version"
+      "first_task": "python3 -c \"import json; d=json.load(open('/tmp/kern-src/examples/minimal.json')); d.pop('chat',None); json.dump(d, open('/tmp/minimal-nochek.json','w'), indent=2)\" && kern verify /tmp/minimal-nochek.json"
     },
     "windows": null
   },
@@ -84,10 +92,113 @@
     "url": "https://github.com/pegainfer-project/kern/releases/tag/v0.3.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:40:03.014062+08:00",
+    "runs": [
+      {
+        "id": "verify-kern-20261031-003759-c346",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:40:03.014062+08:00",
+        "tool_version": "0.3.1",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pip install kern-llm==0.3.1",
+            "purpose": "pip install python runtime"
+          },
+          {
+            "command": "curl -fsSL https://kern-baa.pages.dev/install.sh -o /tmp/kern-install.sh",
+            "purpose": "download install script"
+          },
+          {
+            "command": "sh /tmp/kern-install.sh",
+            "purpose": "run install script for kern binaries"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "kern --version",
+            "expected_signal": "kern 0.3.1 (48e0709, cuda 13.0)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "kern 0.3.1 (48e0709, cuda 13.0)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "kern --help",
+            "expected_signal": "model-agnostic GPU runtime",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "model-agnostic GPU runtime: run a manifest, test a kernel swap, gather cubins, verify a manifest",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 -c \"import json; d=json.load(open('/tmp/kern-src/examples/minimal.json')); d.pop('chat',None); json.dump(d, open('/tmp/minimal-nochek.json','w'), indent=2)\" && kern verify /tmp/minimal-nochek.json",
+            "expected_signal": "does not fit the serving protocol",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "\u001b[31mERROR\u001b[0m /tmp/minimal-nochek.json: manifest does not fit the serving protocol:",
+            "setup": [
+              {
+                "command": "git clone --depth 1 https://github.com/pegainfer-project/kern /tmp/kern-src && ls /tmp/kern-src/examples/ && ls /tmp/kern-src/*.toml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install kern-llm==0.3.1 provides kern usage",
+            "actually_needed": "uv tool install fails with 'No executables are provided by package kern-llm'; use pip install for Python runtime and install.sh for binaries",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "pip install kern-llm gives kern command",
+            "actually_needed": "pip install kern-llm==0.3.1 installs only Python import and no kern binary; run sh /tmp/kern-install.sh to get kern 0.3.1 and kern-serve",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "needs cuBLAS 13 on the loader path",
+            "actually_needed": "script warns no cuBLAS 13 on loader path; verify and cut work without it",
+            "kind": "note"
+          },
+          {
+            "readme_said": "examples manifests verify with released binary",
+            "actually_needed": "examples from main branch fail verify on 0.3.1 binary with unknown field chat and unknown variant temperature",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show kern rejecting the manifest as not fitting the serving protocol and reporting version 0.3.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-kern-20261031-003759-c346/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-kern-20261031-003759-c346/check-1-cmd12.judged.png",
+            "runs/verify/verify-kern-20261031-003759-c346/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.120075
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -330,5 +441,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:30+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:40:03.015187+08:00"
 }
