@@ -70,17 +70,20 @@
       "first_task": "oara doctor"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-prometheus-20261031-005236-d68c",
       "method": "pip",
       "steps": [
         {
           "command": "pip install 'oara-prometheus[full]'",
-          "purpose": null
+          "purpose": "Install oara-prometheus full via pip"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "oara --version",
+        "expected_signal": "prometheus 0.9.17"
+      },
       "first_task": "oara doctor"
     },
     "windows": null
@@ -98,10 +101,94 @@
     "url": "https://github.com/OAraLabs/Prometheus/releases/tag/v0.9.17"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:55:09.989538+08:00",
+    "runs": [
+      {
+        "id": "verify-prometheus-20261031-005236-d68c",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:55:09.989538+08:00",
+        "tool_version": "0.9.17",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pip install 'oara-prometheus[full]'",
+            "purpose": "Install oara-prometheus full via pip"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "oara --version",
+            "expected_signal": "prometheus 0.9.17",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "◉ prometheus 0.9.17 · OAra Labs",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "oara --help",
+            "expected_signal": "Start always-on daemon",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "daemon Start always-on daemon",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "oara doctor",
+            "expected_signal": "RESULT: 3 error(s)",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "RESULT: 3 error(s), 4 warning(s)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8005/api/setup/status",
+            "expected_signal": "\"setup_mode\":true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"setup_mode\":true,\"configured\":false,\"pairing\":\"available\",\"version\":\"0.9.17\"}",
+            "setup": [
+              {
+                "command": "oara daemon --help; oara daemon",
+                "background": true,
+                "port": 8005
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "oara doctor runs diagnostics with expected non-zero exit, setup API returns setup_mode true, and --version prints prometheus 0.9.17.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-prometheus-20261031-005236-d68c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-prometheus-20261031-005236-d68c/check-1-cmd5.judged.png",
+            "runs/verify/verify-prometheus-20261031-005236-d68c/check-2-cmd11.judged.png",
+            "runs/verify/verify-prometheus-20261031-005236-d68c/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.142185
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -344,5 +431,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-30T23:54:32+08:00"
+  "updated_at": "2026-10-31T00:55:09.990374+08:00"
 }

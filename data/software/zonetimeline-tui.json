@@ -54,17 +54,24 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-zonetimeline-tui-20261031-004833-bf12",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo install --locked --git https://github.com/findyourexit/zonetimeline-tui",
-          "purpose": null
+          "command": "curl -fsSL -o /tmp/ztl.tar.gz https://github.com/findyourexit/zonetimeline-tui/releases/download/v0.4.1/ztl-0.4.1-x86_64-unknown-linux-gnu.tar.gz && tar tzf /tmp/ztl.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/ztl.tar.gz -C /tmp && ls -R /tmp/ztl* 2>&1; ls -l /tmp/*.tar.gz; find /tmp -maxdepth 3 -name \"ztl\" -type f -ls",
+          "purpose": "Download Linux x86_64 release tarball and extract"
+        },
+        {
+          "command": "install -m 755 /tmp/ztl-0.4.1-x86_64-unknown-linux-gnu/ztl ~/.local/bin/ztl && export PATH=\"$HOME/.local/bin:$PATH\" && ztl --version && ztl --help",
+          "purpose": "Install ztl binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "ztl --version",
+        "expected_signal": "ztl 0.4.1"
+      },
       "first_task": "ztl list"
     },
     "windows": {
@@ -95,10 +102,98 @@
     "url": "https://github.com/findyourexit/zonetimeline-tui/releases/tag/v0.4.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:49:27.196839+08:00",
+    "runs": [
+      {
+        "id": "verify-zonetimeline-tui-20261031-004833-bf12",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:49:27.196839+08:00",
+        "tool_version": "0.4.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/ztl.tar.gz https://github.com/findyourexit/zonetimeline-tui/releases/download/v0.4.1/ztl-0.4.1-x86_64-unknown-linux-gnu.tar.gz && tar tzf /tmp/ztl.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/ztl.tar.gz -C /tmp && ls -R /tmp/ztl* 2>&1; ls -l /tmp/*.tar.gz; find /tmp -maxdepth 3 -name \"ztl\" -type f -ls",
+            "purpose": "Download Linux x86_64 release tarball and extract"
+          },
+          {
+            "command": "install -m 755 /tmp/ztl-0.4.1-x86_64-unknown-linux-gnu/ztl ~/.local/bin/ztl && export PATH=\"$HOME/.local/bin:$PATH\" && ztl --version && ztl --help",
+            "purpose": "Install ztl binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ztl --version",
+            "expected_signal": "ztl 0.4.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ztl 0.4.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ztl --help",
+            "expected_signal": "Usage: ztl [OPTIONS] [COMMAND]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: ztl [OPTIONS] [COMMAND]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ztl list",
+            "expected_signal": "Europe/London",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Europe/London",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ztl --plain --zones UTC,Europe/London,America/New_York --time 07:30 --nhours 12",
+            "expected_signal": "America/New_York:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "America/New_York: 2026-10-30 03:30:00",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install --locked --git https://github.com/findyourexit/zonetimeline-tui (Requires Rust 1.88 or newer)",
+            "actually_needed": "Used pre-built Linux x86_64 tarball from GitHub Releases (ztl-0.4.1-x86_64-unknown-linux-gnu.tar.gz) extracted and installed to ~/.local/bin/ztl because the box has no Rust toolchain and installing one is not allowed",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show a long zone list, a three-zone 12-hour timeline with conversions, and version 0.4.1 printed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-zonetimeline-tui-20261031-004833-bf12/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-zonetimeline-tui-20261031-004833-bf12/check-1-cmd6.judged.png",
+            "runs/verify/verify-zonetimeline-tui-20261031-004833-bf12/check-2-cmd7.judged.png",
+            "runs/verify/verify-zonetimeline-tui-20261031-004833-bf12/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.043771
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -333,5 +428,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:22+08:00",
-  "updated_at": "2026-10-31T00:17:14+08:00"
+  "updated_at": "2026-10-31T00:49:27.197940+08:00"
 }

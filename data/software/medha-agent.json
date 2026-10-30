@@ -66,20 +66,29 @@
       "first_task": "medha --sessions"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-medha-agent-20261031-005119-589a",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://medha.manojavamlabs.com/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://medha.manojavamlabs.com/install.sh -o /tmp/medha-install.sh && ls -l /tmp/medha-install.sh && wc -c /tmp/medha-install.sh",
+          "purpose": "Download installer script for reading before running"
+        },
+        {
+          "command": "sh /tmp/medha-install.sh",
+          "purpose": "Install medha release binary via installer script"
+        },
+        {
+          "command": "curl -fsSL http://ftp.debian.org/debian/pool/main/d/dbus/libdbus-1-3_1.16.2-8_amd64.deb -o /tmp/libdbus.deb && dpkg-deb -x /tmp/libdbus.deb ~/.local/dbus-root && find ~/.local/dbus-root -name \"*.so*\" -ls && mkdir -p ~/.local/lib && cp -a ~/.local/dbus-root/usr/lib/x86_64-linux-gnu/libdbus-1.so* ~/.local/lib/ && ls -l ~/.local/lib/libdbus*",
+          "purpose": "Stage missing libdbus locally without root"
         }
       ],
-      "manual_steps": [
-        "On a Mac, confirm an app from the internet in System Settings under Privacy & Security with Open Anyway."
-      ],
-      "check": null,
-      "first_task": "medha --sessions"
+      "manual_steps": [],
+      "check": {
+        "command": "LD_LIBRARY_PATH=$HOME/.local/lib medha --version",
+        "expected_signal": "medha 0.1.12"
+      },
+      "first_task": "LD_LIBRARY_PATH=$HOME/.local/lib medha --sessions"
     },
     "windows": {
       "basis": "readme_claim",
@@ -111,10 +120,98 @@
     "url": "https://github.com/kashyaprajharsh/medha-agent/releases/tag/v0.1.12"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:52:36.573891+08:00",
+    "runs": [
+      {
+        "id": "verify-medha-agent-20261031-005119-589a",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:52:36.573891+08:00",
+        "tool_version": "0.1.12",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://medha.manojavamlabs.com/install.sh -o /tmp/medha-install.sh && ls -l /tmp/medha-install.sh && wc -c /tmp/medha-install.sh",
+            "purpose": "Download installer script for reading before running"
+          },
+          {
+            "command": "sh /tmp/medha-install.sh",
+            "purpose": "Install medha release binary via installer script"
+          },
+          {
+            "command": "curl -fsSL http://ftp.debian.org/debian/pool/main/d/dbus/libdbus-1-3_1.16.2-8_amd64.deb -o /tmp/libdbus.deb && dpkg-deb -x /tmp/libdbus.deb ~/.local/dbus-root && find ~/.local/dbus-root -name \"*.so*\" -ls && mkdir -p ~/.local/lib && cp -a ~/.local/dbus-root/usr/lib/x86_64-linux-gnu/libdbus-1.so* ~/.local/lib/ && ls -l ~/.local/lib/libdbus*",
+            "purpose": "Stage missing libdbus locally without root"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "LD_LIBRARY_PATH=$HOME/.local/lib medha --version",
+            "expected_signal": "medha 0.1.12",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "medha 0.1.12",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "LD_LIBRARY_PATH=$HOME/.local/lib medha --sessions",
+            "expected_signal": "No sessions yet in this workspace.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No sessions yet in this workspace.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "LD_LIBRARY_PATH=$HOME/.local/lib medha pulse",
+            "expected_signal": "No model configured",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✗ No model configured",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "One binary. No Python, no Node, no Docker daemon. SQLite is compiled in ... so there's nothing to resolve at startup.",
+            "actually_needed": "Binary is dynamically linked to libdbus-1.so.3, which is absent in this box; fetched libdbus-1-3_1.16.2-8_amd64.deb from ftp.debian.org, extracted with dpkg-deb to ~/.local/dbus-root, copied libdbus-1.so.3* to ~/.local/lib, and run every medha invocation as LD_LIBRARY_PATH=$HOME/.local/lib medha ...",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "curl -fsSL https://medha.manojavamlabs.com/install.sh | sh",
+            "actually_needed": "install.sh downloads a prebuilt medha-x86_64-unknown-linux-gnu.tar.gz binary plus its .sha256 at install time; that binary payload cannot be read before running the installer (checksum is verified by the script).",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show empty-session notice, pulse status reporting no model configured, and version 0.1.12.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-medha-agent-20261031-005119-589a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-medha-agent-20261031-005119-589a/check-1-cmd12.judged.png",
+            "runs/verify/verify-medha-agent-20261031-005119-589a/check-2-cmd13.judged.png",
+            "runs/verify/verify-medha-agent-20261031-005119-589a/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.080966
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -333,5 +430,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:52:36.575011+08:00"
 }

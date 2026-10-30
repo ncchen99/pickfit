@@ -84,9 +84,89 @@
   "last_release": null,
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_more_resources",
+    "checked_at": "2026-10-31T00:50:02.584942+08:00",
+    "runs": [
+      {
+        "id": "verify-shura-20261031-004833-dc3f",
+        "level": "unverified",
+        "unverified_reason": "needs_more_resources",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:50:02.584942+08:00",
+        "tool_version": null,
+        "install_method": "source",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/hikkian/shura.git /home/sbx/work/shura",
+            "purpose": "Clone Shura repo for ./scripts/shura check path"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "/home/sbx/work/shura/scripts/shura help",
+            "expected_signal": "shura check",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "shura check describe this machine and show what Shura would pick for it (installs nothing)",
+            "setup": [
+              {
+                "command": "git clone --depth 1 https://github.com/hikkian/shura.git /home/sbx/work/shura",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "/home/sbx/work/shura/scripts/shura check",
+            "expected_signal": "no model fits this machine",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "Result : no model fits this machine",
+            "setup": [
+              {
+                "command": "git clone --depth 1 https://github.com/hikkian/shura.git /home/sbx/work/shura",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/hikkian/shura/main/setup.sh | bash",
+            "actually_needed": "setup.sh requires working nvidia-smi/proprietary NVIDIA driver plus sudo and CUDA toolkit and 30-45 GB free; box has no GPU, no sudo and 2 GiB RAM so candidates 1 and 2 cannot proceed",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Prerequisites: Python 3.14, Node 24",
+            "actually_needed": "check/install --dry-run run on box Python 3.12.16 and Node v22.23.4",
+            "kind": "note"
+          },
+          {
+            "readme_said": "./scripts/shura check describes machine and shows what Shura would pick",
+            "actually_needed": "check and install --dry-run exit 1 reporting no model fits this machine on 2 GiB RAM box",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-shura-20261031-004833-dc3f/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.158322
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -307,5 +387,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:50:02.586355+08:00"
 }

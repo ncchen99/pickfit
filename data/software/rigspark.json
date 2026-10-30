@@ -67,17 +67,24 @@
       "first_task": "rigspark recommend"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-rigspark-20261031-005223-74b4",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo binstall rigspark-cli rigspark-gui",
-          "purpose": null
+          "command": "mkdir -p ~/.local/bin /tmp/rigspark-dl && curl -fL -o /tmp/rigspark-dl/rigspark.tar.gz https://github.com/shashankswe2020-ux/rigspark/releases/download/v3.0.3/rigspark-x86_64-unknown-linux-gnu.tar.gz && du -h /tmp/rigspark-dl/rigspark.tar.gz",
+          "purpose": "Download prebuilt Linux x86_64 archive"
+        },
+        {
+          "command": "tar -xzf /tmp/rigspark-dl/rigspark.tar.gz -C /tmp/rigspark-dl && cp /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/rigspark /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/llmup /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/rigspark-gui ~/.local/bin/ && chmod +x ~/.local/bin/rigspark ~/.local/bin/llmup ~/.local/bin/rigspark-gui && ls ~/.local/bin/rigspark",
+          "purpose": "Extract and install binaries to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "rigspark --version",
+        "expected_signal": "rigspark 3.0.3"
+      },
       "first_task": "rigspark recommend"
     },
     "windows": {
@@ -108,22 +115,104 @@
     "url": "https://github.com/shashankswe2020-ux/rigspark/releases/tag/v3.0.3"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:53:17.350654+08:00",
+    "runs": [
+      {
+        "id": "verify-rigspark-20261031-005223-74b4",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:53:17.350654+08:00",
+        "tool_version": "3.0.3",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/rigspark-dl && curl -fL -o /tmp/rigspark-dl/rigspark.tar.gz https://github.com/shashankswe2020-ux/rigspark/releases/download/v3.0.3/rigspark-x86_64-unknown-linux-gnu.tar.gz && du -h /tmp/rigspark-dl/rigspark.tar.gz",
+            "purpose": "Download prebuilt Linux x86_64 archive"
+          },
+          {
+            "command": "tar -xzf /tmp/rigspark-dl/rigspark.tar.gz -C /tmp/rigspark-dl && cp /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/rigspark /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/llmup /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/rigspark-gui ~/.local/bin/ && chmod +x ~/.local/bin/rigspark ~/.local/bin/llmup ~/.local/bin/rigspark-gui && ls ~/.local/bin/rigspark",
+            "purpose": "Extract and install binaries to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "rigspark --version",
+            "expected_signal": "rigspark 3.0.3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "rigspark 3.0.3",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rigspark recommend",
+            "expected_signal": "(ram-bound)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "❌ all-minilm:22m (ram-bound)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rigspark can-run llama3.1:8b",
+            "expected_signal": "llama3.1:8b: no",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "❌ llama3.1:8b: no — does not fit (ram-bound: not enough RAM)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rigspark catalog --all",
+            "expected_signal": "llama3.1:8b",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "llama3.1:8b 8B dense Q4_K_M 5.3 ram-bound 2024-07-23",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show expected output: recommend lists models as ram-bound, can-run reports llama3.1:8b does not fit, and version prints rigspark 3.0.3.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-rigspark-20261031-005223-74b4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-rigspark-20261031-005223-74b4/check-1-cmd5.judged.png",
+            "runs/verify/verify-rigspark-20261031-005223-74b4/check-2-cmd6.judged.png",
+            "runs/verify/verify-rigspark-20261031-005223-74b4/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.061978
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-30T23:55:13+08:00",
+    "computed_at": "2026-10-31T00:53:17+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 72.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.68,
           "weight": 40.0
         },
         "install_docs": {
@@ -166,7 +255,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 36.43
+      "value": 38.17
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -441,5 +530,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-30T23:55:13+08:00"
+  "updated_at": "2026-10-31T00:53:17.351427+08:00"
 }

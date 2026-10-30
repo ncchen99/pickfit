@@ -68,18 +68,25 @@
       "first_task": "LLAMA_GUI_HOST=0.0.0.0 LLAMA_GUI_PORT=5240 python server.py"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-llama-gui-20261031-005317-ae02",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/thomas9120/LLama-GUI/main/online_installers/install-online.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/thomas9120/LLama-GUI/main/online_installers/install-online.sh -o /tmp/install-online.sh && ls -l /tmp/install-online.sh && wc -l /tmp/install-online.sh",
+          "purpose": "download installer"
+        },
+        {
+          "command": "LLAMA_GUI_NO_START=1 sh /tmp/install-online.sh",
+          "purpose": "run installer no-start"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "LLAMA_GUI_HOST=0.0.0.0 LLAMA_GUI_PORT=5240 python server.py"
+      "check": {
+        "command": "curl -fsS http://127.0.0.1:5240/api/status",
+        "expected_signal": "platform_label"
+      },
+      "first_task": "curl -fsS http://127.0.0.1:5240/api/status"
     },
     "windows": {
       "basis": "readme_claim",
@@ -109,10 +116,75 @@
     "url": "https://github.com/thomas9120/LLama-GUI/releases/tag/v26.10.7"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:55:05.993730+08:00",
+    "runs": [
+      {
+        "id": "verify-llama-gui-20261031-005317-ae02",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:55:05.993730+08:00",
+        "tool_version": null,
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/thomas9120/LLama-GUI/main/online_installers/install-online.sh -o /tmp/install-online.sh && ls -l /tmp/install-online.sh && wc -l /tmp/install-online.sh",
+            "purpose": "download installer"
+          },
+          {
+            "command": "LLAMA_GUI_NO_START=1 sh /tmp/install-online.sh",
+            "purpose": "run installer no-start"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "curl -fsS http://127.0.0.1:5240/api/status",
+            "expected_signal": "platform_label",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"installed\": false, \"config_stale\": false, \"version\": null, \"backend\": null, \"official_install\": {\"backend\": null, \"tag\": null, \"version\": null, \"files_present\": false}, \"executables\": {\"llama-cli\": false, \"llama-server\": false, \"llama-bench\": false, \"llama-perplexity\": false, \"llama-quantize\": fa…",
+            "setup": [
+              {
+                "command": "cd /home/sbx/LLama-GUI && LLAMA_GUI_HOST=0.0.0.0 LLAMA_GUI_PORT=5240 .venv/bin/python server.py",
+                "background": true,
+                "port": 5240
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl installer piped to sh",
+            "actually_needed": "download script first then run with LLAMA_GUI_NO_START=1",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The /api/status endpoint returned JSON containing \"platform\": \"linux\" and \"platform_label\": \"Linux\" with backend list.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-llama-gui-20261031-005317-ae02/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-llama-gui-20261031-005317-ae02/check-1-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.158895
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -355,5 +427,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-10-31T00:37:22+08:00"
+  "updated_at": "2026-10-31T00:55:05.995443+08:00"
 }

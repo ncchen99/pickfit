@@ -76,20 +76,25 @@
       "first_task": "milk --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "script",
+      "basis": "replayed",
+      "run_id": "verify-milk-20261031-005143-2051",
+      "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/scoutme/milk/main/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/scoutme/milk/main/install.sh -o /tmp/milk-install.sh && ls -l /tmp/milk-install.sh && wc -l /tmp/milk-install.sh",
+          "purpose": "Download milk install script to read before running"
+        },
+        {
+          "command": "mkdir -p \"$HOME/.local/bin\" /tmp/milkdl && curl -fsSL https://github.com/scoutme/milk/releases/download/v0.8.5/milk-linux-amd64 -o /tmp/milkdl/milk-linux-amd64 && curl -fsSL https://github.com/scoutme/milk/releases/download/v0.8.5/milk-linux-amd64.sha256 -o /tmp/milkdl/milk-linux-amd64.sha256 && cd /tmp/milkdl && sha256sum -c milk-linux-amd64.sha256 && install -m 755 /tmp/milkdl/milk-linux-amd64 \"$HOME/.local/bin/milk\"",
+          "purpose": "Download verify and install milk binary"
         }
       ],
-      "manual_steps": [
-        "Enable virtualization in BIOS/UEFI for WSL2"
-      ],
-      "check": null,
-      "first_task": "milk --version"
+      "manual_steps": [],
+      "check": {
+        "command": "milk --version",
+        "expected_signal": "milk version v0.8.5"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -121,10 +126,78 @@
     "url": "https://github.com/scoutme/milk/releases/tag/v0.8.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:53:07.041772+08:00",
+    "runs": [
+      {
+        "id": "verify-milk-20261031-005143-2051",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:53:07.041772+08:00",
+        "tool_version": "v0.8.5",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/scoutme/milk/main/install.sh -o /tmp/milk-install.sh && ls -l /tmp/milk-install.sh && wc -l /tmp/milk-install.sh",
+            "purpose": "Download milk install script to read before running"
+          },
+          {
+            "command": "mkdir -p \"$HOME/.local/bin\" /tmp/milkdl && curl -fsSL https://github.com/scoutme/milk/releases/download/v0.8.5/milk-linux-amd64 -o /tmp/milkdl/milk-linux-amd64 && curl -fsSL https://github.com/scoutme/milk/releases/download/v0.8.5/milk-linux-amd64.sha256 -o /tmp/milkdl/milk-linux-amd64.sha256 && cd /tmp/milkdl && sha256sum -c milk-linux-amd64.sha256 && install -m 755 /tmp/milkdl/milk-linux-amd64 \"$HOME/.local/bin/milk\"",
+            "purpose": "Download verify and install milk binary"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "milk --version",
+            "expected_signal": "milk version v0.8.5",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "milk version v0.8.5 (commit f08bf0b56ff29b2fe78ddac9b2a7a45383f82759, built 2026-10-30T02:49:19Z)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "milk --help",
+            "expected_signal": "Available Commands:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Available Commands:",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/scoutme/milk/main/install.sh | sh",
+            "actually_needed": "install.sh exits 1 on Linux before downloading: detect_platform() ends with `[ \"$GOOS\" = \"windows\" ] && EXT=\".exe\"`, so the function returns 1 on Linux and `set -e` aborts in main(). Worked around by downloading milk-linux-amd64 + .sha256 for v0.8.5 directly, verifying with sha256sum -c, and instal…",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows milk --version printing milk version v0.8.5 with commit and build timestamp.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-milk-20261031-005143-2051/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-milk-20261031-005143-2051/check-1-cmd12.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.086312
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -375,5 +448,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:53:07.042518+08:00"
 }

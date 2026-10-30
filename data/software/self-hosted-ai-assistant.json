@@ -70,9 +70,116 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "suspected_tool_fault",
+    "checked_at": "2026-10-31T00:56:27.927757+08:00",
+    "runs": [
+      {
+        "id": "verify-self-hosted-ai-assistant-20261031-005422-0434",
+        "level": "unverified",
+        "unverified_reason": "suspected_tool_fault",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:56:27.927757+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "pip",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "cd Self-Hosted-AI-Assistant && cp .env.example .env && python3 -m pip install -r requirements.txt && python3 -m pip install -e .",
+            "purpose": "copy .env.example to .env and pip install requirements plus editable edith CLI"
+          },
+          {
+            "command": "cd Self-Hosted-AI-Assistant && mkdir -p storage/workspace storage/whatsapp_bridge storage/sessions && sed -i 's/^OLLAMA_MODEL=.*/OLLAMA_MODEL=smollm2:135m/' .env && grep OLLAMA_MODEL .env && ls -la storage/",
+            "purpose": "create storage/workspace dirs and set OLLAMA_MODEL for tiny model"
+          },
+          {
+            "command": "python3 -m pip install \"sqlalchemy[asyncio]\" greenlet && python3 -c \"import greenlet; print(greenlet.__version__)\"",
+            "purpose": "install missing greenlet / sqlalchemy[asyncio] dependency"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd Self-Hosted-AI-Assistant && PYTHONPATH=. edith --version",
+            "expected_signal": "EDITH, version 0.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "EDITH, version 0.1.0",
+            "setup": [
+              {
+                "command": "cd Self-Hosted-AI-Assistant && cp .env.example .env && python3 -m pip install -r requirements.txt && python3 -m pip install -e .",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "cd Self-Hosted-AI-Assistant && PYTHONPATH=. edith doctor",
+            "expected_signal": "EDITH System Diagnostic (Doctor)",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "EDITH System Diagnostic (Doctor)",
+            "setup": [
+              {
+                "command": "cd Self-Hosted-AI-Assistant && cp .env.example .env && python3 -m pip install -r requirements.txt && python3 -m pip install -e .",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd Self-Hosted-AI-Assistant && mkdir -p storage/workspace storage/whatsapp_bridge storage/sessions && sed -i 's/^OLLAMA_MODEL=.*/OLLAMA_MODEL=smollm2:135m/' .env && grep OLLAMA_MODEL .env && ls -la storage/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "cd Self-Hosted-AI-Assistant && PYTHONPATH=. python -c \"import database.repository\"",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "File \"/home/sbx/work/Self-Hosted-AI-Assistant/database/repository.py\", line 1172, in <module> arguments: dict[str, Any], ^^^ NameError: name 'Any' is not defined. Did you mean: 'any'?",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install -e . then `edith doctor` / `edith status`",
+            "actually_needed": "run all edith/python commands with PYTHONPATH=. from the repo root (e.g. `cd Self-Hosted-AI-Assistant && PYTHONPATH=. edith --version`); plain `edith --version` fails with ModuleNotFoundError: No module named 'config'",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "copy .env.example to .env and run edith doctor",
+            "actually_needed": "mkdir -p storage/workspace storage/whatsapp_bridge storage/sessions; otherwise `edith doctor` reports Storage Directory / Isolated Tool Workspace FAIL (Writable: False)",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "python -m pip install -r requirements.txt is sufficient",
+            "actually_needed": "python -m pip install \"sqlalchemy[asyncio]\" greenlet; requirements.txt lacks greenlet so main.py fails with ImportError about sqlalchemy asyncio/greenlet",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "ollama list / ollama serve as prerequisite",
+            "actually_needed": "ollama install script at /tmp/ollama-install.sh requires sudo/root (uses sudo install, useradd, systemd) and cannot complete as user sbx without sudo",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": "suspected tool fault, not proven: command 15 exits 1 with NameError: name 'Any' is not defined. Did you mean: 'any'?; fresh box: command 2 exited 1 before the failing command; NameError: name 'Any' is not defined in database/repository.py line 1172 (dict[str, Any] without `from typing import Any`), so `import database.repository` and `python main.py` crash.",
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-self-hosted-ai-assistant-20261031-005422-0434/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.216725
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -291,5 +398,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:59+08:00",
-  "updated_at": "2026-10-31T00:15:11+08:00"
+  "updated_at": "2026-10-31T00:56:27.929829+08:00"
 }

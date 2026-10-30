@@ -75,18 +75,21 @@
       "first_task": "switchyard"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-switchyard-20261031-005509-51a0",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo install --git https://github.com/ichikuruma22-star/switchyard switchyard",
-          "purpose": null
+          "command": "rm -f ~/.local/bin/switchyard && curl -sL -o /tmp/swyd.tar.gz https://github.com/ichikuruma22-star/switchyard/releases/download/v0.1.2/switchyard-0.1.2-x86_64-unknown-linux-gnu.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/swyd.tar.gz -C /tmp && cp /tmp/switchyard-0.1.2-x86_64-unknown-linux-gnu/switchyard ~/.local/bin/switchyard && chmod +x ~/.local/bin/switchyard",
+          "purpose": "Download Linux x64 binary and install to PATH"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "switchyard"
+      "check": {
+        "command": "switchyard version",
+        "expected_signal": "switchyard 0.1.2"
+      },
+      "first_task": "switchyard version"
     },
     "windows": {
       "basis": "readme_claim",
@@ -116,22 +119,163 @@
     "url": "https://github.com/ichikuruma22-star/switchyard/releases/tag/v0.1.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "inference",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:56:26.330818+08:00",
+    "runs": [
+      {
+        "id": "verify-switchyard-20261031-005509-51a0",
+        "level": "inference",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:56:26.330818+08:00",
+        "tool_version": "0.1.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -f ~/.local/bin/switchyard && curl -sL -o /tmp/swyd.tar.gz https://github.com/ichikuruma22-star/switchyard/releases/download/v0.1.2/switchyard-0.1.2-x86_64-unknown-linux-gnu.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/swyd.tar.gz -C /tmp && cp /tmp/switchyard-0.1.2-x86_64-unknown-linux-gnu/switchyard ~/.local/bin/switchyard && chmod +x ~/.local/bin/switchyard",
+            "purpose": "Download Linux x64 binary and install to PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "switchyard version",
+            "expected_signal": "switchyard 0.1.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "switchyard 0.1.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "switchyard --help",
+            "expected_signal": "switchyard <COMMAND>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "switchyard <COMMAND>",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "switchyard check --config /tmp/sytest/switchyard.toml",
+            "expected_signal": "is a valid configuration",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ok: /tmp/sytest/switchyard.toml is a valid configuration",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sytest && rm -f /tmp/sytest/switchyard.toml && switchyard init --config /tmp/sytest/switchyard.toml && cat /tmp/sytest/switchyard.toml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8317/healthz",
+            "expected_signal": "{\"status\":\"ok\"}",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"ok\"}",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sytest && rm -f /tmp/sytest/switchyard.toml && switchyard init --config /tmp/sytest/switchyard.toml && cat /tmp/sytest/switchyard.toml",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "switchyard serve --config /tmp/sytest/switchyard.toml",
+                "background": true,
+                "port": 8317
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "KEY=$(python3 -c \"import re; t=open('/tmp/sytest/switchyard.toml').read(); m=re.search(r'key\\s*=\\s*\\\"([^\\\"]+)\\\"',t); print(m.group(1))\") && curl -s http://127.0.0.1:8317/v1/models -H \"Authorization: Bearer $KEY\"",
+            "expected_signal": "mock-echo",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"object\":\"list\",\"data\":[{\"id\":\"mock-echo\",\"object\":\"model\",\"created\":0,\"owned_by\":\"switchyard\"},{\"id\":\"mock-error-401\",\"object\":\"model\",\"created\":0,\"owned_by\":\"switchyard\"},{\"id\":\"mock-error-429\",\"object\":\"model\",\"created\":0,\"owned_by\":\"switchyard\"},{\"id\":\"mock-error-500\",\"object\":\"model\",\"created…",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sytest && rm -f /tmp/sytest/switchyard.toml && switchyard init --config /tmp/sytest/switchyard.toml && cat /tmp/sytest/switchyard.toml",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "switchyard serve --config /tmp/sytest/switchyard.toml",
+                "background": true,
+                "port": 8317
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "KEY=$(python3 -c \"import re; t=open('/tmp/sytest/switchyard.toml').read(); m=re.search(r'key\\s*=\\s*\\\"([^\\\"]+)\\\"',t); print(m.group(1))\") && curl -s http://127.0.0.1:8317/v1/chat/completions -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -d '{\"model\":\"mock-echo\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}'",
+            "expected_signal": "\"content\":\"Hello\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":\"chatcmpl-mock-4ca8dcc6e4868724\",\"object\":\"chat.completion\",\"created\":1793379380,\"model\":\"mock-echo\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello\",\"refusal\":null},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":2,\"completion_tokens\":2,\"total_tokens\":4…",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sytest && rm -f /tmp/sytest/switchyard.toml && switchyard init --config /tmp/sytest/switchyard.toml && cat /tmp/sytest/switchyard.toml",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "switchyard serve --config /tmp/sytest/switchyard.toml",
+                "background": true,
+                "port": 8317
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install --git https://github.com/ichikuruma22-star/switchyard switchyard and cargo build --release -p switchyard (Rust 1.88+)",
+            "actually_needed": "Downloaded prebuilt Linux x86_64 glibc binary tarball switchyard-0.1.2-x86_64-unknown-linux-gnu.tar.gz from GitHub releases v0.1.2 and copied inner switchyard binary to ~/.local/bin, as documented in README Quick start alternative to cargo",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show config check valid, health endpoint returning status ok, and version 0.1.2 printed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-switchyard-20261031-005509-51a0/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-switchyard-20261031-005509-51a0/check-1-cmd7.judged.png",
+            "runs/verify/verify-switchyard-20261031-005509-51a0/check-2-cmd11.judged.png",
+            "runs/verify/verify-switchyard-20261031-005509-51a0/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.128506
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-30T23:55:13+08:00",
+    "computed_at": "2026-10-31T00:56:26+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 86.6,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -171,8 +315,8 @@
       "packages": []
     },
     "treasure": {
-      "is_treasure": false,
-      "value": 52.58
+      "is_treasure": true,
+      "value": 65.99
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -479,5 +623,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-30T23:55:13+08:00"
+  "updated_at": "2026-10-31T00:56:26.331752+08:00"
 }

@@ -69,18 +69,21 @@
       "first_task": "martty --demo"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-martty-20261031-005126-2337",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install --global martty",
-          "purpose": null
+          "command": "node --version && npm --version && npm install --global martty",
+          "purpose": "Install martty globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "martty --demo"
+      "check": {
+        "command": "martty --help",
+        "expected_signal": "martty — terminal-native ACP client UI"
+      },
+      "first_task": "martty --dump-frame"
     },
     "windows": {
       "basis": "readme_claim",
@@ -110,10 +113,94 @@
     "url": "https://github.com/openma-ai/Martty/releases/tag/v0.3.3"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:53:55.279147+08:00",
+    "runs": [
+      {
+        "id": "verify-martty-20261031-005126-2337",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:53:55.279147+08:00",
+        "tool_version": "martty 0.3.3",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "node --version && npm --version && npm install --global martty",
+            "purpose": "Install martty globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "martty --help",
+            "expected_signal": "martty — terminal-native ACP client UI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "martty — terminal-native ACP client UI",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "martty-cli --version",
+            "expected_signal": "martty 0.3.3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "martty 0.3.3",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "martty --dump-frame",
+            "expected_signal": "describe what you want to build",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│❯ describe what you want to build… │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "martty --demo-skin --dump-frame",
+            "expected_signal": "describe what you want to build",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│❯ describe what you want to build… │",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "martty --demo and martty --demo-skin just show the UI",
+            "actually_needed": "interactive martty --demo / --demo-skin need a TTY (/dev/tty); without one they exit 1 with 'No such device or address (os error 6)'. Headless equivalent martty --dump-frame (and martty --demo-skin --dump-frame) renders the same scripted demo frame as text and exits 0; under 'script -qec' with a pt…",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show both dump-frame outputs containing the build prompt and help output with the expected header.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-martty-20261031-005126-2337/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-martty-20261031-005126-2337/check-1-cmd6.judged.png",
+            "runs/verify/verify-martty-20261031-005126-2337/check-2-cmd8.judged.png",
+            "runs/verify/verify-martty-20261031-005126-2337/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.082818
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -340,5 +427,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:22+08:00",
-  "updated_at": "2026-10-31T00:17:14+08:00"
+  "updated_at": "2026-10-31T00:53:55.279945+08:00"
 }

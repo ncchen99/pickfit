@@ -54,7 +54,31 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-cache-commander-20261031-005111-f345",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -sL -o /tmp/ccmd.tar.gz https://github.com/juliensimon/cache-commander/releases/download/v0.4.3/ccmd-x86_64-unknown-linux-gnu.tar.gz && ls -lh /tmp/ccmd.tar.gz",
+          "purpose": "Download prebuilt Linux x86_64 tarball v0.4.3"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/ccmd.tar.gz -C /tmp && ls -lh /tmp/ && find /tmp -maxdepth 2 -name \"ccmd*\" -type f | head -20\n# note: listing tar contents separately is exploration but chained; the install step is below\n",
+          "purpose": "Extract tarball to /tmp"
+        },
+        {
+          "command": "rm -f ~/.local/bin/ccmd && cp /tmp/ccmd ~/.local/bin/ccmd && chmod +x ~/.local/bin/ccmd && ccmd --version",
+          "purpose": "Install binary to ~/.local/bin and verify version"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "cp /tmp/ccmd ~/.local/bin/ccmd && chmod +x ~/.local/bin/ccmd && ~/.local/bin/ccmd --version",
+        "expected_signal": "ccmd 0.4.3"
+      },
+      "first_task": "ccmd mcp <<'EOF'\n{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"test\",\"version\":\"1.0\"}}}\nEOF"
+    },
     "windows": null
   },
   "pricing": {
@@ -70,10 +94,112 @@
     "url": "https://github.com/juliensimon/cache-commander/releases/tag/v0.4.3"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:52:54.521385+08:00",
+    "runs": [
+      {
+        "id": "verify-cache-commander-20261031-005111-f345",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:52:54.521385+08:00",
+        "tool_version": "0.4.3",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sL -o /tmp/ccmd.tar.gz https://github.com/juliensimon/cache-commander/releases/download/v0.4.3/ccmd-x86_64-unknown-linux-gnu.tar.gz && ls -lh /tmp/ccmd.tar.gz",
+            "purpose": "Download prebuilt Linux x86_64 tarball v0.4.3"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/ccmd.tar.gz -C /tmp && ls -lh /tmp/ && find /tmp -maxdepth 2 -name \"ccmd*\" -type f | head -20\n# note: listing tar contents separately is exploration but chained; the install step is below\n",
+            "purpose": "Extract tarball to /tmp"
+          },
+          {
+            "command": "rm -f ~/.local/bin/ccmd && cp /tmp/ccmd ~/.local/bin/ccmd && chmod +x ~/.local/bin/ccmd && ccmd --version",
+            "purpose": "Install binary to ~/.local/bin and verify version"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cp /tmp/ccmd ~/.local/bin/ccmd && chmod +x ~/.local/bin/ccmd && ~/.local/bin/ccmd --version",
+            "expected_signal": "ccmd 0.4.3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ccmd 0.4.3",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ccmd --help",
+            "expected_signal": "Cache Commander — browse and manage cache directories",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Cache Commander — browse and manage cache directories",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ccmd mcp <<'EOF'\n{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"test\",\"version\":\"1.0\"}}}\nEOF",
+            "expected_signal": "\"name\":\"Cache Commander\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{\"tools\":{}},\"serverInfo\":{\"name\":\"Cache Commander\",\"title\":\"Cache Commander\",\"version\":\"0.4.3\",\"description\":\"Cache Commander MCP server. Browse developer caches, scan for vulnerabilities, check for outdated packages, …",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ccmd mcp <<'EOF'\n{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"test\",\"version\":\"1.0\"}}}\n{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}\n{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\",\"params\":{}}\nEOF",
+            "expected_signal": "\"name\":\"list_caches\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"tools\":[{\"name\":\"check_outdated\",\"description\":\"Check cached packages for available version updates. Returns outdated packages with current and latest versions.\",\"inputSchema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"properties\":{\"ecosystem\":{\"de…",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install ccmd / cargo install ccmd --features mcp / cargo binstall ccmd",
+            "actually_needed": "Used prebuilt Linux x86_64 tarball from GitHub Releases (ccmd-x86_64-unknown-linux-gnu.tar.gz v0.4.3) instead; copied binary to ~/.local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Downloaded script/binary should be read before running",
+            "actually_needed": "Prebuilt tarball contains a compiled binary that cannot be read with read_file before running",
+            "kind": "note"
+          },
+          {
+            "readme_said": "ccmd to browse all default cache locations",
+            "actually_needed": "Bare TUI needs an interactive terminal; without a TTY it exits 1 with Error: Os { code: 6, kind: Uncategorized, message: No such device or address }. Verified headless function via README MCP example ccmd mcp over stdio instead.",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP initialize returning Cache Commander server info, tools/list including list_caches, and --version printing ccmd 0.4.3.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-cache-commander-20261031-005111-f345/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-cache-commander-20261031-005111-f345/check-1-cmd12.judged.png",
+            "runs/verify/verify-cache-commander-20261031-005111-f345/check-2-cmd13.judged.png",
+            "runs/verify/verify-cache-commander-20261031-005111-f345/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.109386
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -300,5 +426,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:46+08:00",
-  "updated_at": "2026-10-31T00:17:14+08:00"
+  "updated_at": "2026-10-31T00:52:54.522140+08:00"
 }
