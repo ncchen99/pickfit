@@ -33,7 +33,7 @@ env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p "…" \
 
 | 工具 | 呼叫模型 | 寫 D1 | 重點 |
 |---|---|---|---|
-| `find_software` | `muse-spark-1.3` 一次（超預算或失敗退回規則） | `events`（find） | 見下節 |
+| `find_software` | `muse-spark-1.3` 一次；合格超過 60 款時先多一次小呼叫取英文關鍵字（超預算或失敗退回規則） | `events`（find） | 見下節 |
 | `find_alternatives` | 同上，同一條路徑 | `events`（alternatives） | 多送 `current_software`、`pain_points`、`must_keep`；回 `current`、`keep_current` |
 | `get_install_guide` | 不呼叫 | `events`（install_guide） | 只回實跑過的步驟；沿用或新發 `rec_id` |
 | `report_outcome` | 不呼叫 | `events`（outcome）、`reverify_queue` | 帶有效 `rec_id` 才計分；同一回報只記一次 |
@@ -46,10 +46,15 @@ GUI 桌面 app 的實跑另帶 `verification.gui`（`find_*` 的 pick 與 `get_i
 ### `find_software`、`find_alternatives` 怎麼配對（architecture F.2）
 
 1. **硬條件（程式）**：只留有實跑過安裝步驟的（`install.<os>` 的 basis 是 `replayed` 或 `human`）；類別、`budget: free_only` → `pricing = free`、`must_run_locally` → `processing = local`、不需網路、不需 API key；作業系統要在 `platforms` 或已驗證過。只在別的 OS 驗證過的留下，但卡片與回應都會標明。`verified_on_user_os` 要 OS 相同；請求有給 `arch` 時，跑的 CPU 架構也要相同，所以只在 arm64 Mac 跑過的，對 Intel Mac 是 `false`，並在取捨裡寫明。沒給 `arch` 就只看 OS，回應的 `verification.arch` 和 `get_install_guide` 的 note 會寫出實際跑的架構。`find_alternatives` 另外把使用者目前的工具（依 slug 或名稱比對到目錄裡的那筆）排除。
-2. **候選卡**：全部合格的卡（≤60 張，依 slug 排，不給模型看熱門度順序）。超過 60 張先取寶藏分數前 60（之後換 BM25）。
+2. **候選卡**：全部合格的卡（≤60 張，依 slug 排，不給模型看熱門度順序）。超過 60 張時（dev_cli、local_ai、不分類別幾乎都會）改成**先看相關度**（`src/filter.ts`、`src/relevance.ts`）：
+   - **英文關鍵字**（`src/expand.ts`）：先送一次小的 `muse-spark-1.3`（`store: false`、effort `minimal`、strict schema、最多 600 個輸出 token），把需求變成 6–15 個英文關鍵字：別的語言就是翻譯，英文就是同義詞。實測中位數 1.4 秒、約 $0.0012。最多等 5 秒；失敗、逾時、超預算、模型關掉都照用需求原本的字（純中文的需求就沒有字可比，等於原本的寶藏分數排序）。關鍵字只用來挑卡，模型讀到的仍是使用者原本的需求；不寫進 D1。
+   - **BM25**：需求原本的字加關鍵字，對卡片上的名稱（slug）、tags、summary、`alternatives_to`、use cases、`why_worth_it`、MCP 握手列出的工具名算 BM25（欄位加權：名稱 3、tags 2、summary 與 alternatives 1.5、其他 1；小寫、拆 camelCase／snake_case、去停用字、簡單去字尾）。
+   - **挑 60 張**：（`find_alternatives`）`alternatives_to` 提到目前工具的先放，再放 BM25 最高的，合計最多 50 張；剩下 10 張以上給其餘寶藏分數最高的，好的通用選項不會因為沒對到字就消失。沒有任何字對到就全照寶藏分數。硬條件完全不放寬。
+   - 回應的 `coverage_note` 說明幾張是因相關度、幾張是因寶藏分數；`events.need.shortlist` 記 `by_relevance`（張數）與關鍵字呼叫的結果（`ok`、`model_off`、`model_timeout`…），不記任何字。
+   - 量法：`scripts/shortlist_needs.py` 只從 `data/software` 產生檢查集（每筆驗證過的工具，用 Meta 模型把它的 summary 改寫成使用者的英文與中文需求），`bench/shortlist.ts` 算「自己那款有沒有進 60 張」；`bench/keywords.ts`、`bench/latency.ts` 量關鍵字呼叫與整體延遲（要花錢）。
 3. **一次 `muse-spark-1.3`**（Responses API、`store: false`、`reasoning.effort: low`、strict JSON schema；slug 欄位的 enum 就是這次的候選）：解析需求成條件、選 1–3 個、每個理由引用一個卡片欄位與原值、取捨、和知名工具比、最好的免費選項、「內建就夠」、不在資料裡的知名免費工具（`well_known_option`，見下）、最多 1 個追問。模型固定在程式裡，不能換成 `-contributor`（使用者需求是私人資料）。`find_alternatives` 用同一份 prompt，**後面加 4 條規則**（`ALTERNATIVES_RULES`：只選做同一件事、至少解決一個痛點、保留 `must_keep` 的；和目前的工具比較；`keep_current`；解析出的痛點）；`find_software` 的 prompt 與 schema 不變。
 4. **守門（程式）**：slug 必須在候選裡；理由引用的值要真的出現在該欄位；理由不能和卡片矛盾（離線、免費、開源、在某 OS 驗證過、不需 key、不需 GPU）。不合的理由丟掉，沒有理由的推薦丟掉。`well_known_option` 另有自己的檢查（見下）。
-5. **退回規則**：模型關掉、沒有 key、超出預算、逾時、HTTP 錯誤（重試一次後仍失敗，見下面「重試」）、輸出壞掉、或推薦全被守門擋掉 → 依「（`find_alternatives`）卡片的 `alternatives_to` 提到目前的工具 → 需求關鍵字命中 → 在使用者 OS 驗證過 → 寶藏分數」排序，理由用模板（只從欄位產生），標 `matched_by: "rules"`、`degraded: true`、`degraded_reason`。規則模式不判斷 `keep_current`（回 `null`）。
+5. **退回規則**：模型關掉、沒有 key、超出預算、逾時、HTTP 錯誤（重試一次後仍失敗，見下面「重試」）、輸出壞掉、或推薦全被守門擋掉 → 依「（`find_alternatives`）卡片的 `alternatives_to` 提到目前的工具 → 相關度（同一套 BM25，有關鍵字就含關鍵字；以最高分的四分之一為一級）→ 在使用者 OS 驗證過 → 寶藏分數」排序，理由用模板（只從欄位產生），標 `matched_by: "rules"`、`degraded: true`、`degraded_reason`。規則模式不判斷 `keep_current`（回 `null`）。
 
 `find_alternatives` 的 `current`：`matched_slug` 是目錄裡的那筆（有的話，且不會出現在 picks）；`known` 是「目錄有它，或某張卡的 `alternatives_to` 提到它」。`keep_current.recommended: true` 表示沒有一個候選明顯比較好，這時 picks 可能是空的。
 
@@ -111,8 +116,8 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 其他狀態不重試：`400`、`401`、`403`、路徑不對的 `404` 等。逾時、連線錯誤也不重試。Meta 已經回了答案的也不重試，不論輸出壞掉、`incomplete`，或推薦全被守門擋掉。
 
 - **等待**：200–800 ms 隨機。Meta 給的 `Retry-After`（或 `retry-after-ms`）在 5 秒以內就照它等；要求等更久就不重試，直接退回規則。
-- **時限**：兩次請求加上中間的等待都在 `META_TIMEOUT_MS` 之內。第二次的逾時是剩下的時間；剩不到 10 秒（一次配對約 6–8 秒）就不重試，照原本的方式退回規則。
-- **花費**：HTTP 錯誤沒有 usage，記 $0；只記有回 usage 的那次。整個 `find_*` 仍只寫一筆 `meta_budget`（`calls + 1`）。重試前不再查一次上限，因為失敗的那次沒有花到錢。
+- **時限**：兩次請求加上中間的等待都在 `META_TIMEOUT_MS` 之內；有關鍵字呼叫時，它用掉的時間也算在內，配對只拿剩下的。第二次的逾時是剩下的時間；剩不到 10 秒（一次配對約 6–8 秒）就不重試，照原本的方式退回規則。
+- **花費**：HTTP 錯誤沒有 usage，記 $0；只記有回 usage 的那次。配對呼叫只寫一筆 `meta_budget`（`calls + 1`）；有關鍵字呼叫時它另記一筆，`events.meta_cost_usd` 是兩者的和。重試前不再查一次上限，因為失敗的那次沒有花到錢。
 - **紀錄**：
   - `degraded_reason` 維持 `model_http`。
   - 回應多兩個欄位：`model_attempts`（送給 Meta 幾次；0 表示沒用模型，2 表示重試過）、`model_http_status`（`degraded_reason` 是 `model_http` 時，Meta 最後一次回的狀態碼）。

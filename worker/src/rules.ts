@@ -2,52 +2,38 @@
  * The fallback when the model is off, over budget or fails: rank by rules
  * and explain with template reasons built only from card fields.
  * Order: (find_alternatives only) the profile names the current tool in
- * alternatives_to, then keyword hits of the request on the profile, then
- * verification on the user's OS, then treasure value (quality high,
- * popularity low).
+ * alternatives_to, then relevance to the request (BM25, relevance.ts, in
+ * tiers), then verification on the user's OS, then treasure value (quality
+ * high, popularity low).
  */
 import type { Entry, OS } from './catalog.ts';
 import type { Card } from './cards.ts';
 import type { ModelReason } from './prompt.ts';
-import { runsLocally } from './filter.ts';
+import { replacesCurrent, runsLocally } from './filter.ts';
 
-const STOPWORDS = new Set(
-  'a an and any app are best but can for from get have help how its like need not offline free mac macos linux windows on one only or run runs that the this tool tools use want which with without work works'.split(
-    ' ',
-  ),
-);
+/** Relevance in quarters of the best match (4: within 25% of it), so close matches fall to OS and treasure. */
+export const RELEVANCE_TIERS = 4;
+const tier = (score: number, best: number) => (score > 0 && best > 0 ? Math.ceil((RELEVANCE_TIERS * score) / best) : 0);
 
-function words(text: string): string[] {
-  return (text.toLowerCase().match(/[a-z0-9][a-z0-9+.-]{2,}/g) ?? []).filter((w) => !STOPWORDS.has(w));
-}
-
-/** How many distinct request words appear in the profile's name, tags, use cases and summary. */
-export function keywordHits(entry: Entry, need: string): number {
-  const profile = new Set(
-    words([entry.name, entry.summary, entry.why_worth_it ?? '', ...entry.tags, ...entry.use_cases, ...entry.alternatives_to].join(' ')),
-  );
-  return new Set(words(need).filter((w) => profile.has(w))).size;
-}
-
-/** Tool names compared without case, spaces or punctuation ("LM Studio" = "lm-studio"). */
-export const nameKey = (text: string) => text.toLowerCase().replace(/[^a-z0-9]/g, '');
-
-export function rankByRules(entries: Entry[], need: string, os?: OS, current?: string): Entry[] {
-  const currentKey = current ? nameKey(current) : '';
+/** relevance: BM25 of each entry against the request (hardFilter's), 0 or absent for no match. */
+export function rankByRules(entries: Entry[], relevance: Map<string, number>, os?: OS, current?: string): Entry[] {
+  const best = Math.max(0, ...entries.map((entry) => relevance.get(entry.slug) ?? 0));
   return entries
     .map((entry) => ({
       entry,
-      replaces: currentKey !== '' && entry.alternatives_to.some((alt) => nameKey(alt) === currentKey),
-      hits: keywordHits(entry, need),
+      replaces: replacesCurrent(entry, current),
+      tier: tier(relevance.get(entry.slug) ?? 0, best),
+      score: relevance.get(entry.slug) ?? 0,
       onOs: os !== undefined && entry.install[os] !== undefined,
       treasure: entry.scores?.treasure_value ?? -1,
     }))
     .sort(
       (a, b) =>
         Number(b.replaces) - Number(a.replaces) ||
-        b.hits - a.hits ||
+        b.tier - a.tier ||
         Number(b.onOs) - Number(a.onOs) ||
         b.treasure - a.treasure ||
+        b.score - a.score ||
         a.entry.slug.localeCompare(b.entry.slug),
     )
     .map((item) => item.entry);
