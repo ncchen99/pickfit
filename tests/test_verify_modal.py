@@ -209,6 +209,8 @@ def test_limits_test_reports_each_probe():
         "bytearray": (137, "", ""),
         "https://1.1.1.1/": (0, "301", ""),
         "/proc/net/route": (0, "hosts: 172.20.0.1 172.21.0.1\n", ""),
+        "AF_VSOCK": (0, "closed 2 52 OSError 97\n", ""),
+        "io_uring": (0, "io_uring refused errno 1\n", ""),
     }
 
     class Box(FakeBox):
@@ -220,9 +222,10 @@ def test_limits_test_reports_each_probe():
             return result
 
     results = run_limits_test(Box(script), log=lambda s: None)
-    assert [r.name for r in results if not r.ok] == []
+    # A box with no root channel cannot run the controls those two probes need: undecided is a failure.
+    assert [r.name for r in results if not r.ok] == ["no_userns", "vsock_closed"]
     assert [r.name for r in results][-1] == "memory_cap"
-    assert len(results) == 21
+    assert len(results) == 22
     assert "no control" in next(r for r in results if r.name == "vsock_closed").detail
 
 

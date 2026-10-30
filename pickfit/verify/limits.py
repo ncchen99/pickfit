@@ -93,7 +93,15 @@ PICKFIT_PY"""
 
 
 VSOCK_PROBE = r"""/usr/local/bin/python3 -I -S - <<'PICKFIT_PY'
-import socket
+import os, socket
+for fd in sorted(os.listdir("/proc/self/fd"), key=int):
+    try:
+        s = socket.socket(fileno=int(fd))
+    except OSError:
+        continue
+    if s.family == getattr(socket, "AF_VSOCK", 40):
+        print("inherited vsock fd", fd)
+    s.detach()
 for cid in (1, 2):
     for port in (52, 1024, 5000, 9999, 10000):
         try:
@@ -104,6 +112,13 @@ for cid in (1, 2):
             print("OPEN", cid, port)
         except Exception as e:
             print("closed", cid, port, type(e).__name__, getattr(e, "errno", ""))
+PICKFIT_PY"""
+IO_URING_PROBE = r"""/usr/local/bin/python3 -I -S - <<'PICKFIT_PY'
+import ctypes
+libc = ctypes.CDLL(None, use_errno=True)
+params = ctypes.create_string_buffer(120)
+fd = libc.syscall(425, 4, params)
+print("io_uring fd", fd) if fd >= 0 else print("io_uring refused errno", ctypes.get_errno())
 PICKFIT_PY"""
 IP_HTTPS = "curl -sS -m 10 -o /dev/null -w '%{http_code}' https://1.1.1.1/"  # Cloudflare answers on its literal IP
 IPV6_PROBE = ("ip -6 -o addr show scope global; for u in 'https://[2606:4700:4700::1111]/' 'http://[fd00:ec2::254]/' "
@@ -172,17 +187,45 @@ def _box_user_processes(box: Box) -> str:
     return seen.stdout.strip()[-300:] or "?"
 
 
+def _hosts(stdout: str) -> list[str]:
+    line = next((line for line in stdout.splitlines() if line.startswith("hosts:")), "")
+    return line.split()[1:]
+
+
+def _refused_97(stdout: str) -> bool:
+    """Every connection the vsock probe tried failed with EAFNOSUPPORT (97), and it tried some."""
+    tries = [line.split() for line in stdout.splitlines() if line.startswith(("OPEN", "closed"))]
+    return bool(tries) and all(t[0] == "closed" and t[-1] == "97" for t in tries)
+
+
 def _vsock(box: Box) -> ProbeResult:
-    """No vsock connection for the box user; root's unfiltered try, where it can run, is the positive control."""
+    """The box user gets EAFNOSUPPORT for every vsock connection and inherits no vsock fd. Decided by root's
+    unfiltered try: a port root can open (the filter is what stops the box user), or EAFNOSUPPORT for root too
+    (the kernel has no vsock, as in gVisor). Without that control the probe fails."""
     result = box.exec(VSOCK_PROBE, 60)
+    user_ok = _refused_97(result.stdout) and "inherited vsock" not in result.stdout
     try:
         control = box.harness_exec(["/usr/bin/bash", "-c", VSOCK_PROBE], 60)
         opened = [line for line in control.stdout.splitlines() if line.startswith("OPEN")]
-        note = f"control as root: {', '.join(opened) or 'nothing open (no vsock here)'}"
+        decisive = bool(opened) or _refused_97(control.stdout)
+        note = f"control as root: {', '.join(opened) or ('no vsock in this kernel' if decisive else 'inconclusive')}"
     except BoxError:
-        note = "no control (this box has no root channel)"
-    return ProbeResult("vsock_closed", "OPEN" not in result.stdout, "the box user opens no vsock connection",
-                       result.exit_code, result.seconds, f"{note}; {_detail(result)}"[-300:])
+        decisive, note = False, "no control (this box has no root channel)"
+    return ProbeResult("vsock_closed", user_ok and decisive, "the box user opens no vsock connection (EAFNOSUPPORT) "
+                       "and inherits none; root's try decides", result.exit_code, result.seconds,
+                       f"{note}; {_detail(result)}"[-300:])
+
+
+def _userns(box: Box) -> ProbeResult:
+    """The box user cannot make a user namespace; the control is the sysctl root set (0)."""
+    result = box.exec("unshare -U true && echo made-U; unshare -Urn true && echo made-Urn; true", 20)
+    try:
+        limit = box.harness_exec(["/usr/bin/cat", "/proc/sys/user/max_user_namespaces"], 20).stdout.strip()
+    except BoxError:
+        limit = "unknown (no root channel)"
+    return ProbeResult("no_userns", "made" not in result.stdout and limit == "0",
+                       "the box user cannot make a user namespace; user.max_user_namespaces reads 0",
+                       result.exit_code, result.seconds, f"max_user_namespaces {limit}; {_detail(result)}"[-300:])
 
 
 def _not_admin(result: ExecResult) -> bool:
@@ -228,9 +271,10 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
                    lambda r: r.stdout.split()[:1] == ["1000"] and "CapEff:\t0000000000000000" in r.stdout))
         add(_probe(box, "no_kvm", "test -e /dev/kvm && echo present; true", 20, "no /dev/kvm",
                    lambda r: "present" not in r.stdout))
-        if getattr(box, "runtime", None) != "gvisor":  # gVisor's user namespaces live inside its own kernel
-            add(_probe(box, "no_userns", "unshare -U true && echo made-U; unshare -Urn true && echo made-Urn; true",
-                       20, "the box user cannot make a user namespace", lambda r: "made" not in r.stdout))
+        if getattr(box, "runtime", None) != "gvisor":  # gVisor's user namespaces and io_uring are its own
+            add(_userns(box))
+            add(_probe(box, "no_io_uring", IO_URING_PROBE, 20, "the box user cannot set up io_uring",
+                       lambda r: "io_uring refused" in r.stdout))
         add(_vsock(box))
     if box.display:
         add(_probe(box, "display_up", f"DISPLAY={box.display} /usr/bin/xdpyinfo", 20, f"Xvfb answers on {box.display}",
@@ -261,10 +305,12 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
                   f"\"height\": 700}}]}}\\n'; (/usr/bin/setsid /usr/bin/bash -c 'sleep 60' &); exit 3")
         launched, shown, png = gui.launch(box, forged, "limits-forged", 8)
         left = _box_user_processes(box)
-        add(ProbeResult("display_report_unforgeable", shown.tier != "window" and launched.exit_code != 0 and png is None
-                        and left == "{}", "a launch that prints a forged report and double-forks reaches no window "
-                        "and leaves nothing running", launched.exit_code, launched.seconds,
-                        " ".join(f"tier {shown.tier}; left {left}; {launched.stdout}".split())[-300:]))
+        ran = shown.alive and "sleep" in shown.processes  # the control: the double-forked child was running
+        add(ProbeResult("display_report_unforgeable", ran and shown.tier != "window" and launched.exit_code != 0
+                        and png is None and left == "{}", "a launch that prints a forged report and double-forks "
+                        "(its child seen running) reaches no window and leaves nothing running",
+                        launched.exit_code, launched.seconds,
+                        " ".join(f"tier {shown.tier}; child running {ran}; left {left}; {launched.stdout}".split())[-300:]))
     # The base image sets GPG_KEY (the public Python release key id); real secrets look like these.
     add(_probe(box, "no_secrets_in_env", "env | cut -d= -f1 | sort | tr '\\n' ' '", 20,
                "no API_KEY/TOKEN/SECRET/PASSWORD variables",
@@ -286,8 +332,8 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
                    not re.search(r"^(?!000 )\d{3} ", r.stdout, re.M)))
         add(_probe(box, "multicast_no_answer", MULTICAST_PROBE, 30, "no answer to mDNS, SSDP or broadcast",
                    lambda r: "answer from" not in r.stdout))
-        add(_probe(box, "gateway_ports_closed", GATEWAY_PROBE, 180, "no port answers on the gateway or the resolver",
-                   lambda r: "hosts:" in r.stdout and "open " not in r.stdout))
+        add(_probe(box, "gateway_ports_closed", GATEWAY_PROBE, 180, "no port answers on the gateway or the resolver "
+                   "(at least one of them found)", lambda r: _hosts(r.stdout) and "open " not in r.stdout))
         add(_probe(box, "metadata_blocked", "curl -sS -m 5 http://169.254.169.254/latest/meta-data/", 20,
                    "169.254.169.254 unreachable", lambda r: r.exit_code != 0))
         add(_probe(box, "private_blocked", "curl -sS -m 5 http://10.0.0.1/", 20,
