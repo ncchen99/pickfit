@@ -144,13 +144,27 @@ def box_fit(candidate: dict[str, Any]) -> tuple[int, list[str]]:
     return sum(w for _, w in signals), [f"{'+' if w > 0 else ''}{w}:{name}" for name, w in signals]
 
 
+def _screened_category(decision: dict[str, Any]) -> str | None:
+    final = decision.get("review") or decision.get("screen") or {}
+    result = final.get("result") or {}
+    return result.get("category") if isinstance(result, dict) else None
+
+
 def shortlist(db: PipelineDB, *, category: str, model: str = "muse-spark-1.3",
-              skip_repo_ids: set[str] | None = None) -> list[Ranked]:
-    """Rule-passed candidates of `category` with no finished extraction by `model`, best first."""
+              skip_repo_ids: set[str] | None = None, screened_as: str | None = None) -> list[Ranked]:
+    """Rule-passed candidates of `category` with no finished extraction by `model`, best first.
+
+    screened_as: only candidates the prescreen put in that category (a CLI tool found by an MCP
+    query, say, is left to its own category's queue).
+    """
     skip = set(skip_repo_ids or ())
     done = {e["repo_id"] for e in db.extractions() if e["model"] == model and e["status"] in DONE}
     ranked = []
-    dropped = {repo_id for repo_id, d in db.prescreen_decisions().items() if d.get("keep") is False}
+    decisions = db.prescreen_decisions()
+    dropped = {repo_id for repo_id, d in decisions.items() if d.get("keep") is False}
+    if screened_as:
+        skip |= {c["repo_id"] for c in db.candidates("WHERE rule_passed = 1 AND category = ?", (category,))
+                 if c["repo_id"] not in decisions or _screened_category(decisions[c["repo_id"]]) != screened_as}
     for c in db.candidates("WHERE rule_passed = 1 AND category = ?", (category,)):
         if c["repo_id"] in done or c["repo_id"] in skip or c["repo_id"] in dropped \
                 or not (c.get("readme") or "").strip():
@@ -182,9 +196,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--min-score", type=int, default=None, help="leave out candidates below this score")
     parser.add_argument("--db", type=Path, default=None, help="pipeline database (default runs/pipeline.db)")
     parser.add_argument("--ids-only", action="store_true", help="print only the repo ids")
+    parser.add_argument("--screened-as", choices=["dev_cli", "local_ai", "mcp_server", "other"], default=None,
+                        help="only candidates the prescreen put in this category")
     args = parser.parse_args(argv)
     db = PipelineDB(args.db or pipeline_db_path())
-    ranked = shortlist(db, category=args.category, skip_repo_ids=record_repo_ids(DEFAULT_OUT))
+    ranked = shortlist(db, category=args.category, skip_repo_ids=record_repo_ids(DEFAULT_OUT),
+                       screened_as=args.screened_as)
     if args.min_score is not None:
         ranked = [r for r in ranked if r.score >= args.min_score]
     for r in ranked[:args.limit]:

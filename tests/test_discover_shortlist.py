@@ -77,6 +77,19 @@ def test_shortlist_skips_extracted_and_known_repos(tmp_path: Path) -> None:
     assert [r.full_name for r in ranked] == ["a/cli", "a/app"]
     assert shortlist(db, category="dev_cli") == []
 
+    def screen(repo_id: str, category: str, keep: bool = True) -> None:
+        db.save_prescreen(repo_id=repo_id, run_id="p", role="screen", provider="baseten", model="m",
+                          reasoning_effort="low", status="ok", sources_sha="x", keep=keep, review_reason=None,
+                          result={"usable_software": keep, "kind": "cli_tool", "category": category,
+                                  "confidence": 0.9, "reason": "r"}, error=None, usage=None, cost_usd=0.0,
+                          latency_s=1.0)
+
+    screen("gh:1", "dev_cli")
+    screen("gh:2", "local_ai", keep=False)
+    assert [r.full_name for r in shortlist(db, category="local_ai", skip_repo_ids={"gh:4"})] == ["a/cli"]
+    assert shortlist(db, category="local_ai", screened_as="local_ai") == []  # gh:1 screened dev_cli; gh:4 unscreened
+    assert [r.full_name for r in shortlist(db, category="local_ai", screened_as="dev_cli")] == ["a/cli"]
+
 
 def test_description_about_local_models_counts_for_and_coding_agents_against() -> None:
     runner = candidate()
