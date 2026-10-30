@@ -56,8 +56,11 @@ print(out.decode(errors="replace"))
 PICKFIT_PY"""
 
 
-# Asks each resolver in resolv.conf for a name over UDP, then the system resolver; prints what answered.
-DNS_PROBE = r"""python3 -I - <<'PICKFIT_PY'
+# First tries to remove a root firewall rule as the box user (directly and from a user namespace, which
+# gives capabilities only over namespaces it owns), then asks each resolver in resolv.conf for a name over
+# UDP and the system resolver; prints what answered.
+DNS_PROBE = r"""for nft in /usr/sbin/nft; do test -x $nft && { $nft flush ruleset; unshare -Ur $nft flush ruleset; }; done 2>&1
+python3 -I - <<'PICKFIT_PY'
 import random, socket, struct
 def ask(server):
     pkt = struct.pack(">HHHHHH", random.randint(0, 65535), 0x0100, 1, 0, 0, 0)
