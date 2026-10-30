@@ -4,6 +4,7 @@ import * as z from 'zod/v4';
 import { CARD_FIELDS } from './cards.ts';
 import { findAlternatives, findSoftware, type Deps } from './find.ts';
 import { installGuide, PITFALL_KINDS, UnknownSlugError } from './install.ts';
+import { NOT_CHECKED_REASONS } from './features.ts';
 import { logEvent, logFailure } from './events.ts';
 import { ERROR_EXCERPT_MAX, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } from './outcome.ts';
 import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './submit.ts';
@@ -37,6 +38,26 @@ const reason = z.object({
   value: z.string(),
 });
 
+const features = z
+  .object({
+    recorded: z
+      .boolean()
+      .describe('false = the run behind these steps did not check features one by one (verified earlier, or none listed)'),
+    checked: z
+      .array(z.object({ feature: z.string(), check: z.string().describe('The command whose passing test exercised it') }))
+      .describe('Advertised features a passing test in the verification run exercised'),
+    not_checked: z
+      .array(
+        z.object({
+          feature: z.string(),
+          reason: z.enum(NOT_CHECKED_REASONS),
+          detail: z.string(),
+        }),
+      )
+      .describe('Advertised features pickfit did not see working, and why; do not present them as verified'),
+  })
+  .describe("The main features the README advertises, as pickfit's verification run covered them");
+
 const pick = z.object({
   slug: z.string(),
   name: z.string(),
@@ -62,6 +83,7 @@ const pick = z.object({
       .nullable()
       .describe('true = pickfit ran the install steps on your OS, and on your CPU architecture when arch was given; null = no os given'),
   }),
+  features,
   how_we_know: z.string(),
   evidence_url: z.string().nullable(),
   scores: z.object({
@@ -194,6 +216,7 @@ const installOutput = z.object({
   first_task_setup: z
     .array(z.object({ command: z.string(), run_in_background: z.boolean() }))
     .describe('Commands the first task needs first (an input file, a server), from the same run'),
+  features,
   known_issues: z.array(
     z.object({
       readme_said: z.string(),

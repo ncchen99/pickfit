@@ -12,6 +12,7 @@ import { bestGuide, verifiedOnUserSystem, type Arch, type Catalog, type Entry, t
 import { toCard, type Card } from './cards.ts';
 import { checkBudget, recordSpend } from './budget.ts';
 import { ranSentence } from './evidence.ts';
+import { featureSentence, featuresOut, type FeaturesOut } from './features.ts';
 import type { Settings } from './env.ts';
 import { logEvent, logFailure, newId, type Reporter } from './events.ts';
 import { hardFilter, MAX_CARDS, type Conditions } from './filter.ts';
@@ -70,6 +71,8 @@ export interface PickOut {
     checked_at: string | null;
     verified_on_user_os: boolean | null;
   };
+  /** Advertised features the run behind the shown guide exercised, and the ones it did not, with why. */
+  features: FeaturesOut;
   how_we_know: string;
   evidence_url: string | null;
   scores: { quality: number | null; popularity: number | null; treasure: boolean };
@@ -104,6 +107,8 @@ export interface AlternativesOutput extends FindOutput {
 function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, considered: number): string {
   const parts: string[] = [];
   if (guide) parts.push(ranSentence(guide));
+  const covered = featureSentence(featuresOut(entry, guide));
+  if (covered) parts.push(covered);
   if (entry.scores) {
     const q = entry.scores.quality === null ? 'n/a' : Math.round(entry.scores.quality);
     const p = entry.scores.popularity === null ? 'n/a' : Math.round(entry.scores.popularity);
@@ -176,6 +181,7 @@ function pickOut(
       checked_at: guide?.run.checked_at ?? null,
       verified_on_user_os: onUserOs,
     },
+    features: featuresOut(entry, guide),
     how_we_know: howWeKnow(entry, guide, matchedBy, considered),
     evidence_url: guide?.run.evidence_url ?? null,
     scores: {

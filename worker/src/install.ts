@@ -5,6 +5,7 @@
  */
 import { bestGuide, type Arch, type Catalog, type OS } from './catalog.ts';
 import { ranSentence } from './evidence.ts';
+import { featureSentence, featuresOut, type FeaturesOut } from './features.ts';
 import { newId, REC_ID } from './events.ts';
 
 export interface InstallInput {
@@ -54,6 +55,8 @@ export interface InstallOutput {
   verify: { command: string; expected_contains: string } | null;
   first_task: string | null;
   first_task_setup: { command: string; run_in_background: boolean }[];
+  /** Advertised features these steps' run exercised (with the check that did), and the ones it did not. */
+  features: FeaturesOut;
   known_issues: { readme_said: string; actually_needed: string; kind: PitfallKind | null }[];
   warnings: string[];
   sources: string[];
@@ -92,8 +95,10 @@ export function installGuide(catalog: Catalog, input: InstallInput): InstallOutp
     run_by: 'agent' as const,
     needs_sudo: /(^|[\s;&|])sudo\s/.test(step.command),
   }));
+  const features = featuresOut(entry, guide);
+  const covered = featureSentence(features);
   const howWeKnow = guide
-    ? `${ranSentence(guide)} These are the recorded steps of that run; no model wrote or changed them.`
+    ? `${ranSentence(guide)} These are the recorded steps of that run; no model wrote or changed them.${covered ? ` ${covered}` : ''}`
     : `pickfit has not run ${entry.name}'s install steps on any system yet.`;
   const warnings: string[] = [];
   if (steps.some((s) => PIPE_TO_SHELL.test(s.command))) {
@@ -129,6 +134,7 @@ export function installGuide(catalog: Catalog, input: InstallInput): InstallOutp
     verify: guide?.check ? { command: guide.check.command, expected_contains: guide.check.expected_signal } : null,
     first_task: guide?.first_task ?? null,
     first_task_setup: (guide?.first_task_setup ?? []).map((s) => ({ command: s.command, run_in_background: s.background })),
+    features,
     // Field by field, so whatever else the index carries never reaches the response.
     known_issues: (guide?.pitfalls ?? []).map((p) => ({
       readme_said: p.readme_said,

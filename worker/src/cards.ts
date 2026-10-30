@@ -3,7 +3,8 @@
  * Values are flat (string, number, boolean, string list) so the guard can
  * check every reason against the field it cites.
  */
-import { verifiedOn, verifiedOnUserSystem, type Arch, type Entry, type OS } from './catalog.ts';
+import { bestGuide, verifiedOn, verifiedOnUserSystem, type Arch, type Entry, type OS } from './catalog.ts';
+import { featuresOut } from './features.ts';
 
 export type CardValue = string | number | boolean | string[] | null;
 export type Card = Record<CardField, CardValue> & { slug: string };
@@ -18,6 +19,8 @@ export const CARD_FIELDS = [
   'maturity',
   'tags',
   'use_cases',
+  'features_checked',
+  'features_not_checked',
   'alternatives_to',
   'platforms',
   'verified_on',
@@ -51,6 +54,7 @@ function runLabel(entry: Entry, os: OS): string {
 export function toCard(entry: Entry, os?: OS, arch?: Arch): Card {
   const userGuide = os ? entry.install[os] : undefined;
   const pre = entry.prerequisites;
+  const features = featuresOut(entry, bestGuide(entry, os));
   return {
     slug: entry.slug,
     name: entry.name,
@@ -61,6 +65,8 @@ export function toCard(entry: Entry, os?: OS, arch?: Arch): Card {
     maturity: entry.maturity,
     tags: entry.tags,
     use_cases: entry.use_cases,
+    features_checked: features.checked.map((f) => f.feature),
+    features_not_checked: features.not_checked.map((f) => `${f.feature} (${f.reason})`),
     alternatives_to: entry.alternatives_to,
     platforms: entry.platforms,
     verified_on: verifiedOn(entry).map((name) => runLabel(entry, name)),
