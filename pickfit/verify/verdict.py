@@ -417,9 +417,12 @@ class LogVerdict:
         return {**asdict(self), "agrees": self.agrees}
 
 
-def evaluate_check(record: CommandRecord, expected_exit_code: int, expected_signal: str
-                   ) -> tuple[bool, list[str]]:
-    """Whether one recorded command shows a passing check; the reasons when not."""
+def evaluate_check(record: CommandRecord, expected_exit_code: int, expected_signal: str, *,
+                   trusted_only: bool = False) -> tuple[bool, list[str]]:
+    """Whether one recorded command shows a passing check; the reasons when not.
+
+    trusted_only (a GUI launch): the signal must be in stdout, pickfit's own lines; stderr is the app's output.
+    """
     problems: list[str] = []
     masked = masked_exit(record.command)
     if masked:
@@ -434,8 +437,9 @@ def evaluate_check(record: CommandRecord, expected_exit_code: int, expected_sign
     signal = _plain(expected_signal)
     if expected_exit_code != 0 and not signal:
         problems.append("a non-zero expected exit needs an expected_signal")
-    if signal and signal not in output:
-        problems.append(f"expected_signal not in the output: {expected_signal[:80]!r}")
+    if signal and signal not in (_plain(record.stdout) if trusted_only else output):
+        where = "pickfit's own lines about the launch" if trusted_only else "the output"
+        problems.append(f"expected_signal not in {where}: {expected_signal[:80]!r}")
     crash = _CRASH.search(_ANSI.sub("", f"{record.stdout}\n{record.stderr}"))
     if crash:
         problems.append(f"output shows a crash: {crash.group(0)!r}")
@@ -524,7 +528,8 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict
             elif setup.exit_code != 0 or setup.timed_out:
                 setup_ok = False
                 check.problems.append(f"setup {setup_id} exited {setup.exit_code}")
-        ok, why = evaluate_check(record, check.expected_exit_code, check.expected_signal)
+        ok, why = evaluate_check(record, check.expected_exit_code, check.expected_signal,
+                                 trusted_only=check.kind == "gui")
         check.problems += why
         check.passed = ok and setup_ok
         check.observed_excerpt = _excerpt(record, check.expected_signal)

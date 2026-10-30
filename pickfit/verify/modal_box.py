@@ -15,12 +15,16 @@
   missing name triggers the build. (`Image.from_name(...).hydrate()` is not
   supported by the client, so the name is resolved by Sandbox.create.)
 
-- runtime="vm" (a microVM with its own kernel) is the same box otherwise. Measured 2026-10-31: under both
-  runtimes Modal's resolver (172.21.0.1) still answers DNS with the allowlist empty, so "offline" resolves
-  names; in a VM, root adds an nftables rule that drops the box user's DNS while the network is off
-  (gVisor has no netfilter, so a gVisor box cannot close it). A VM gives 1 vCPU per requested core.
-- display=True adds GUI_PACKAGES to the image and starts Xvfb (gui.py) as the box user at start.
-  The display works under both runtimes (2026-10-31: Xvfb, headed Chromium, Electron and WebKitGTK apps).
+- runtime="vm" (a microVM with its own kernel) is the same box otherwise, hardened by root before the box
+  user runs anything (measured 2026-10-31): unprivileged user namespaces and io_uring are switched off; every
+  box-user command runs under a seccomp filter that refuses AF_VSOCK sockets (the host's vsock port 52
+  accepted the box user's connection); and while the network is off, an nftables rule drops the box user's
+  DNS (Modal's resolver 172.21.0.1 answers under both runtimes with an empty allowlist; gVisor has no
+  netfilter, so a gVisor box cannot close it). A VM gives 1 vCPU per requested core.
+- display=True adds GUI_PACKAGES to the image; root starts Xvfb as a separate uid (DISPLAY_UID), which the box
+  user can draw on but cannot kill or replace. Evidence (window list, screenshot, its hash and copy) is made by
+  root and DISPLAY_UID through harness_exec, by absolute path, in a directory the box user cannot open.
+- Commands name their programs by absolute path: the box user's ~/.local/bin comes first on its PATH.
 
 Credentials come from MODAL_TOKEN_ID / MODAL_TOKEN_SECRET in .env and go to
 an explicit modal.Client; nothing is put into the process environment, and the
@@ -53,7 +57,7 @@ from pickfit.verify.box import (
     _Capture,
     sandbox_image_tag,
 )
-from pickfit.verify.gui import DISPLAY, GUI_PACKAGES, xvfb_script
+from pickfit.verify.gui import DISPLAY, DISPLAY_UID, EVIDENCE_DIR, GUI_PACKAGES, HARNESS_PATH, xvfb_script
 
 APP_NAME = "pickfit-verify"
 READ_TIMEOUT_S = 20  # read_file: a FIFO or a device would block `head` forever
@@ -86,11 +90,33 @@ RUNTIMES = ("gvisor", "vm")
 VM_PACKAGES = ("nftables",)  # root's offline DNS rule (VM only: gVisor has no netfilter)
 # Drops the box user's DNS (to Modal's resolver or anywhere) while the network is off; root sets it.
 DNS_TABLE = "pickfit_offline"
-DNS_BLOCK = (f"nft add table inet {DNS_TABLE} && nft add chain inet {DNS_TABLE} out "
+DNS_BLOCK = (f"/usr/sbin/nft add table inet {DNS_TABLE} && /usr/sbin/nft add chain inet {DNS_TABLE} out "
              "'{ type filter hook output priority 0; policy accept; }' && "
-             f"nft add rule inet {DNS_TABLE} out meta skuid {BOX_UID} udp dport 53 drop && "
-             f"nft add rule inet {DNS_TABLE} out meta skuid {BOX_UID} tcp dport 53 drop")
-DNS_UNBLOCK = f"nft delete table inet {DNS_TABLE}"
+             f"/usr/sbin/nft add rule inet {DNS_TABLE} out meta skuid {BOX_UID} udp dport 53 drop && "
+             f"/usr/sbin/nft add rule inet {DNS_TABLE} out meta skuid {BOX_UID} tcp dport 53 drop")
+DNS_UNBLOCK = f"/usr/sbin/nft delete table inet {DNS_TABLE}"
+# Root, before the box user runs anything in a VM (gVisor keeps user namespaces inside its own kernel).
+VM_HARDEN = ("/usr/sbin/sysctl -qw user.max_user_namespaces=0 && "
+             "{ /usr/sbin/sysctl -qw kernel.io_uring_disabled=2 2>/dev/null || true; } && "
+             "/usr/bin/install -d -m 0755 /usr/local/lib/pickfit && "
+             "/usr/bin/install -m 0644 /dev/stdin /usr/local/lib/pickfit/no_vsock.py")
+NO_VSOCK = "/usr/local/lib/pickfit/no_vsock.py"
+# A seccomp filter (x86_64): socket(AF_VSOCK, ...) fails with EAFNOSUPPORT, other ABIs are killed; then exec.
+# Inherited by every child and cannot be removed; setpriv has already set no_new_privs.
+NO_VSOCK_SOURCE = r"""import ctypes, os, struct, sys
+LD, JEQ, JGE, RET = 0x20, 0x15, 0x35, 0x06
+ALLOW, ERRNO, KILL = 0x7FFF0000, 0x00050000, 0x80000000
+prog = [(LD, 0, 0, 4), (JEQ, 0, 7, 0xC000003E), (LD, 0, 0, 0), (JGE, 5, 0, 0x40000000), (JEQ, 0, 2, 41),
+        (LD, 0, 0, 16), (JEQ, 1, 0, 40), (RET, 0, 0, ALLOW), (RET, 0, 0, ERRNO | 97), (RET, 0, 0, KILL)]
+raw = b"".join(struct.pack("HBBI", *ins) for ins in prog)
+buf = ctypes.create_string_buffer(raw, len(raw))
+class Prog(ctypes.Structure):
+    _fields_ = [("len", ctypes.c_ushort), ("filter", ctypes.c_void_p)]
+libc = ctypes.CDLL(None, use_errno=True)
+if libc.prctl(38, 1, 0, 0, 0) or libc.prctl(22, 2, ctypes.byref(Prog(len(prog), ctypes.addressof(buf))), 0, 0):
+    sys.exit(f"pickfit: seccomp failed: {os.strerror(ctypes.get_errno())}")
+os.execv(sys.argv[1], sys.argv[1:])
+"""
 
 
 def image_layers(runtime: str = "gvisor", display: bool = False) -> tuple[str, tuple[str, ...]]:
@@ -147,15 +173,22 @@ def _missing_image(err: Exception) -> bool:
     return "notfound" in text.replace(" ", "") or "not found" in text
 
 
+def _drop_to(uid: int) -> list[str]:
+    return ["/usr/bin/setpriv", f"--reuid={uid}", f"--regid={uid}", "--clear-groups", "--inh-caps=-all",
+            "--no-new-privs", "--"]
+
+
 class ModalBox(Box):
     """A Modal Sandbox (gVisor, or a VM) driven like a DockerBox."""
 
     runner = "modal-gvisor"
     image = sandbox_image_tag()
+    detach = "/usr/bin/setsid /usr/bin/nohup"
 
     def __init__(self, *, limits: BoxLimits = BoxLimits(), tags: dict[str, str] | None = None,
                  app_name: str = APP_NAME, client: Any = None, gpu: str | None = None,
                  runtime: str = "gvisor", display: bool = False, log: Callable[[str], None] = print) -> None:
+        self.xvfb_pid: int | None = None
         if gpu is not None and gpu not in GPU_USD_PER_S:
             raise ValueError(f"gpu must be one of {sorted(GPU_USD_PER_S)}, got {gpu!r}")
         if runtime not in RUNTIMES:
@@ -219,16 +252,24 @@ class ModalBox(Box):
             raise BoxError(f"Modal sandbox create failed: {type(err).__name__}: {err}") from err
         self.sandbox_id = getattr(self.sandbox, "object_id", None)
         self.started = True
-        setup = self._exec_raw(["mkdir", "-p", BOX_WORKDIR, f"{BOX_HOME}/.local/bin"], 60, as_root=True)
-        chown = self._exec_raw(["chown", "-R", f"{BOX_UID}:{BOX_UID}", BOX_HOME], 60, as_root=True)
-        if setup.exit_code != 0 or chown.exit_code != 0:
+        steps: list[tuple[str, ExecResult]] = []
+        if self.runtime == "vm":
+            steps.append(("VM hardening", self._exec_raw(["/usr/bin/bash", "-c", VM_HARDEN], 60, as_root=True,
+                                                         stdin=NO_VSOCK_SOURCE.encode())))
+        steps.append(("box setup", self._exec_raw(["/usr/bin/mkdir", "-p", BOX_WORKDIR, f"{BOX_HOME}/.local/bin"], 60,
+                                                  as_root=True)))
+        steps.append(("box setup", self._exec_raw(["/usr/bin/chown", "-R", f"{BOX_UID}:{BOX_UID}", BOX_HOME], 60,
+                                                  as_root=True)))
+        if self.display:  # root starts it as DISPLAY_UID: the box user can draw on it, not kill or replace it
+            xvfb = self._exec_raw(["/usr/bin/bash", "-c", xvfb_script()], 60, as_root=True)
+            steps.append(("the virtual display", xvfb))
+            pid = next((line.split()[1] for line in xvfb.stdout.splitlines() if line.startswith("xvfb_pid ")), "")
+            self.xvfb_pid = int(pid) if pid.isdigit() else None
+        failed = next(((what, r) for what, r in steps if r.exit_code != 0), None)
+        if failed or (self.display and self.xvfb_pid is None):
             self.close()
-            raise BoxError(f"box setup failed: {(setup.stderr or chown.stderr).strip()[-500:]}")
-        if self.display:  # as the box user: the X server is no more privileged than the apps it shows
-            xvfb = self.exec(xvfb_script(self.detach), 30)
-            if xvfb.exit_code != 0:
-                self.close()
-                raise BoxError(f"the virtual display did not start: {(xvfb.stdout + xvfb.stderr).strip()[-500:]}")
+            what, r = failed or steps[-1]
+            raise BoxError(f"{what} failed: {(r.stdout + r.stderr).strip()[-500:]}")
         self.start_s = round(time.monotonic() - began, 2)
 
     def close(self) -> None:
@@ -254,10 +295,28 @@ class ModalBox(Box):
         """argv that runs `command` as the box user with the limits (separate so tests can check it)."""
         lim = self.limits
         guard = (f"ulimit -u {lim.pids} -n {lim.nofile} -f {lim.home_mb * 1024} && cd {shlex.quote(cwd)} && "
-                 f"exec timeout -s KILL {timeout_s} bash -c {shlex.quote(command)}")
+                 f"exec /usr/bin/timeout -s KILL {timeout_s} /usr/bin/bash -c {shlex.quote(command)}")
         env = [f"{key}={value}" for key, value in BOX_ENV.items()]
-        return ["setpriv", f"--reuid={BOX_UID}", f"--regid={BOX_UID}", "--clear-groups", "--inh-caps=-all",
-                "--no-new-privs", "--", "env", "-i", *env, "bash", "-c", guard]
+        seccomp = ["/usr/local/bin/python3", "-I", "-S", NO_VSOCK] if self.runtime == "vm" else []
+        return [*_drop_to(BOX_UID), *seccomp, "/usr/bin/env", "-i", *env, "/usr/bin/bash", "-c", guard]
+
+    def harness_exec(self, argv: list[str], timeout_s: int, *, as_uid: int | None = None,
+                     stdin: bytes | None = None) -> ExecResult:
+        """Run argv for pickfit itself: as root, or as `as_uid` with an empty environment (no box-user PATH)."""
+        self._require_started()
+        if as_uid is not None:
+            argv = [*_drop_to(as_uid), "/usr/bin/env", "-i", f"PATH={HARNESS_PATH}", f"HOME={EVIDENCE_DIR}",
+                    "LANG=C.UTF-8", *argv]
+        return self._exec_raw(argv, timeout_s, stdin=stdin, as_root=True)
+
+    def harness_read(self, path: str, max_bytes: int) -> bytes:
+        """A file as root reads it (pickfit's evidence), up to max_bytes; BoxError if it cannot."""
+        self._require_started()
+        code, out, err, gave_up = self._run(["/usr/bin/head", "-c", str(int(max_bytes)), "--", path],
+                                            READ_TIMEOUT_S, head=max_bytes, tail=0)
+        if code != 0 or gave_up:
+            raise BoxError(f"cannot read {path}: {err.text().strip()[-300:] or 'timed out'}")
+        return bytes(out.head)
 
     def _run(self, argv: list[str], timeout_s: int, *, stdin: bytes | None = None,
              head: int = OUTPUT_HEAD_BYTES, tail: int = OUTPUT_TAIL_BYTES) -> tuple[int, _Capture, _Capture, bool]:
@@ -334,15 +393,16 @@ class ModalBox(Box):
         self._require_started()
         data = content.encode("utf-8") if isinstance(content, str) else content
         # The path is passed as $1, never spliced into the script.
-        script = 'mkdir -p -- "$(dirname -- "$1")" && cat > "$1"'
-        argv = self.user_argv(f"sh -c {shlex.quote(script)} sh {shlex.quote(path)}", 60, self.workdir)
+        script = '/usr/bin/mkdir -p -- "$(/usr/bin/dirname -- "$1")" && /usr/bin/cat > "$1"'
+        argv = self.user_argv(f"/usr/bin/bash -c {shlex.quote(script)} sh {shlex.quote(path)}", 60, self.workdir)
         result = self._exec_raw(argv, 60, stdin=data)
         if result.exit_code != 0:
             raise BoxError(f"cannot write {path}: {result.stderr.strip()[-300:]}")
 
     def read_file(self, path: str, max_bytes: int = 64_000) -> bytes:
         self._require_started()
-        argv = self.user_argv(f"head -c {int(max_bytes)} -- {shlex.quote(path)}", READ_TIMEOUT_S, self.workdir)
+        argv = self.user_argv(f"/usr/bin/head -c {int(max_bytes)} -- {shlex.quote(path)}", READ_TIMEOUT_S,
+                              self.workdir)
         code, out, err, gave_up = self._run(argv, READ_TIMEOUT_S, head=max_bytes, tail=0)
         if code != 0 or gave_up:
             raise BoxError(f"cannot read {path}: {err.text().strip()[-300:] or 'timed out'}")
@@ -367,6 +427,6 @@ class ModalBox(Box):
             raise BoxError(f"modal network policy failed: {type(err).__name__}: {err}") from err
         self.network_enabled = enabled
         if self.runtime == "vm":  # Modal's resolver answers even with an empty allowlist; root closes it
-            rule = self._exec_raw(["bash", "-c", DNS_UNBLOCK if enabled else DNS_BLOCK], 30, as_root=True)
+            rule = self._exec_raw(["/usr/bin/bash", "-c", DNS_UNBLOCK if enabled else DNS_BLOCK], 30, as_root=True)
             if rule.exit_code != 0:
                 raise BoxError(f"offline DNS rule failed: {(rule.stdout + rule.stderr).strip()[-300:]}")

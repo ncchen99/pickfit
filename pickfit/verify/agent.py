@@ -170,8 +170,9 @@ TOOLS: list[dict[str, Any]] = [
 
 LAUNCH_GUI_TOOL = _fn(
     "launch_gui", "Start a GUI app on the box's virtual display and wait for a window of its own; pickfit then "
-    "takes a screenshot of the display and stops the app. Returns its command_id, the app's windows (title, "
-    "size), its processes and log tail. Uses one unit of the command budget.",
+    "takes a screenshot and stops every process of the box user (servers started with run_background too). "
+    "Returns its command_id, the app's windows (title, size), its processes and the app's own output. Uses one "
+    "unit of the command budget.",
     {"command": {"type": "string", "description": "The command that starts the app, as a user would run it."},
      "wait_s": {"type": "integer", "description": f"Seconds to wait for a window (max {gui.WAIT_MAX_S})."}},
     ["command", "wait_s"])
@@ -332,7 +333,9 @@ GUI apps: this box has a virtual display. For a desktop (GUI) app, install it as
 (an AppImage: chmod +x, then run it with --appimage-extract-and-run, or extract it once with --appimage-extract \
 and run squashfs-root/AppRun; a .deb: dpkg-deb -x into ~/apps; npm or pip as usual), then start it with \
 launch_gui, never with run_command or run_background. Cite that launch_gui as a smoke test with the window \
-title as expected_signal (`gui tier: window` when the window has no title). A GUI launch supports level install \
+title as expected_signal (`gui tier: window` when the window has no title): it must appear in pickfit's own \
+lines, not in the app's output. A launch stops every process of the box user, so start servers again after it. \
+A GUI launch supports level install \
 at most, whatever the window shows: pickfit's judge reads the screenshot itself, and a GUI app is never \
 function from a launch. Launch it even if it will ask for an account: the screenshot records the sign-in \
 screen. Add --no-sandbox only if the app fails without it, and record that as a sandbox pitfall. A Tkinter \
@@ -852,7 +855,7 @@ class VerifyAgent:
         wait = max(1, min(args.wait_s, gui.WAIT_MAX_S))
         self._say(f"  ▣ {_one_line(args.command, 200)}   [cmd {n}/{self.limits.max_commands}]")
         result, shown, png = gui.launch(self.box, args.command, n, wait,
-                                        timeout_s=self._timeout(wait + gui.SETTLE_S + 60))
+                                        timeout_s=self._timeout(wait + gui.SETTLE_S + 90))
         shot = None
         if png:
             path = self.runs_dir / "verify" / self.run_id / f"gui-{n}.png"

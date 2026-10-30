@@ -139,6 +139,15 @@ class Box(ABC):
     def read_file(self, path: str, max_bytes: int = 64_000) -> bytes:
         """The first `max_bytes` of a file; BoxError if it cannot be read."""
 
+    def harness_exec(self, argv: list[str], timeout_s: int, *, as_uid: int | None = None,
+                     stdin: bytes | None = None) -> ExecResult:
+        """Run argv for pickfit itself, out of the box user's reach: as root, or as `as_uid`."""
+        raise BoxError(f"{type(self).__name__} cannot run pickfit's own commands apart from the box user")
+
+    def harness_read(self, path: str, max_bytes: int) -> bytes:
+        """A file of pickfit's own (evidence the box user cannot touch), read as root."""
+        raise BoxError(f"{type(self).__name__} cannot read pickfit's own files apart from the box user")
+
     @abstractmethod
     def set_network(self, enabled: bool) -> None:
         """Turn outbound network on (install) or off (run examples offline)."""

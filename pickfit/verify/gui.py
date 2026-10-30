@@ -1,105 +1,159 @@
 """Launch a GUI app on the box's virtual display and record how far it got (Linux).
 
-A box with a display runs Xvfb as the box user (no window manager, no GPU).
-`launch_gui` starts the app detached in its own session with DISPLAY set,
-waits for a window of its own, lets it settle, takes a screenshot of the whole
-display and stops the app. A window counts as the app's only if the X server
-says the client that made it is one of the app's processes (the XRes extension
-reports client PIDs from the server side; _NET_WM_PID is set by the app and is
-not used).
+The app runs as the box user; everything that produces evidence does not.
+Root starts Xvfb as DISPLAY_UID (no window manager, no GPU, no TCP): the box
+user can draw on it but cannot kill or replace it. A launch is five steps,
+each its own command:
+
+1. DISPLAY_UID lists the box user's processes (the "before" set).
+2. The box user starts the app, detached, with DISPLAY set; its output goes to
+   a log in the box user's home (the app's own data, never parsed as a result).
+3. DISPLAY_UID runs the watcher (stdin, image python, absolute paths, empty
+   environment): it waits for a window whose X client the X server says is a
+   box-user process that was not in the "before" set (XRes client PIDs, not
+   _NET_WM_PID), lets it settle, checks that pickfit's own Xvfb is still the
+   server, screenshots the display into EVIDENCE_DIR (mode 0700) and prints
+   one report line tagged with a nonce only pickfit knows, on its own stdout.
+4. Root stops every box-user process (SIGSTOP, then SIGKILL, until none is
+   left): the app cannot survive by double-forking or leaving its session.
+5. Root copies the screenshot out and checks it against the size and hash
+   the watcher reported.
 
 Evidence tiers, weakest to strongest (see docs/brief.md; app stores stop at
 install, signing and malware checks):
 
   none           the app exited before showing anything
   process_alive  still running after the wait, but no window of its own
-  window         a mapped window of its own (title and size recorded)
-  ui_rendered    the screen judge read the screenshot and saw the app's own UI
-  accessibility  the accessibility tree shows its controls       (not checked yet)
-  action_state   one action changed checkable state              (not checked yet)
+  window         a mapped window of its own, at least MIN_WIDTH x MIN_HEIGHT on screen
+  ui_rendered    the screen judge read a crop of the app's windows and saw its own UI
 
-The launch itself reaches at most `window`; ui_rendered comes from the screen
-judge on the replay's screenshot. A GUI check supports level install at most:
-a GUI app is never labelled function unless one action changed checkable state.
+A launch reaches at most `window`; ui_rendered comes from the screen judge on
+the replay's screenshot. A GUI check supports level install only. Checking
+controls in the accessibility tree, or that an action changed checkable state,
+is not built; nothing claims those tiers.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import secrets
 import shlex
 from dataclasses import asdict, dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from pickfit.verify.box import ExecResult
+from pickfit.verify.box import BOX_HOME, ExecResult
 
 if TYPE_CHECKING:
     from pickfit.verify.box import Box
 
 DISPLAY = ":99"
 SCREEN = "1280x800x24"
+SCREEN_W, SCREEN_H = 1280, 800
 DISPLAY_NOTE = f"Xvfb {SCREEN}, no window manager, no GPU"
+DISPLAY_UID = 1001  # Xvfb and the watcher: not the box user (1000), not root
+EVIDENCE_DIR = "/var/lib/pickfit-gui"  # DISPLAY_UID's, mode 0700: the box user cannot list, read or write it
+HARNESS_PATH = "/usr/bin:/bin"  # root-owned directories only
+PYTHON = "/usr/local/bin/python3"
+APP_LOG_DIR = f"{BOX_HOME}/.pickfit-gui"
 # What the display needs, and the shared libraries Electron and Tauri apps load
 # (chromium brings GTK, NSS, GBM and ALSA). Installed on top of sandbox.Dockerfile.
 # python3-tk brings Debian's own /usr/bin/python3 with tkinter: the image's python3.12 has none.
 GUI_PACKAGES = ("xvfb", "x11-utils", "x11-apps", "xrestop", "imagemagick", "chromium",
                 "libwebkit2gtk-4.1-0", "fonts-dejavu-core", "python3-tk", "python3-venv")
-TIERS = ("none", "process_alive", "window", "ui_rendered", "accessibility", "action_state")
+TIERS = ("none", "process_alive", "window", "ui_rendered")
 WAIT_MAX_S = 60
 SETTLE_S = 6  # after the first window, so a page that loads after the window shows still renders
-MIN_WINDOW_PX = 2500  # 50x50: Electron and GTK make 1x1 and 10x10 helper windows
+MIN_WIDTH, MIN_HEIGHT = 150, 100  # on-screen size of a window that counts (helper and offscreen ones do not)
 SHOT_MAX_BYTES = 4_000_000
 SHOT_READS = 3  # a long read can come back short when the box's output stream is slow (2026-10-31)
-GUI_DIR = "/tmp/pickfit-gui"
-MARK = "PICKFIT_GUI_JSON "
+MARK = "PICKFIT_GUI_"
 
 
-def xvfb_script(detach: str = "setsid nohup") -> str:
-    """Start Xvfb as the box user unless it already answers; exits 0 once it does."""
-    return (f"export DISPLAY={DISPLAY}; xdpyinfo >/dev/null 2>&1 && exit 0; "
-            f"{detach} Xvfb {DISPLAY} -screen 0 {SCREEN} -nolisten tcp > /tmp/xvfb.log 2>&1 < /dev/null & "
-            "for i in $(seq 1 40); do xdpyinfo >/dev/null 2>&1 && exit 0; sleep 0.25; done; "
-            "cat /tmp/xvfb.log; exit 1")
+def xvfb_script() -> str:
+    """Root: the evidence directory, then Xvfb as DISPLAY_UID; prints `xvfb_pid N` once it answers."""
+    drop = (f"/usr/bin/setpriv --reuid={DISPLAY_UID} --regid={DISPLAY_UID} --clear-groups --inh-caps=-all "
+            f"--no-new-privs -- /usr/bin/env -i PATH={HARNESS_PATH} HOME={EVIDENCE_DIR}")
+    return (f"/usr/bin/install -d -m 0700 -o {DISPLAY_UID} -g {DISPLAY_UID} {EVIDENCE_DIR} && "
+            "/usr/bin/install -d -m 1777 -o root -g root /tmp/.X11-unix && "
+            f"{{ /usr/bin/setsid {drop} /usr/bin/Xvfb {DISPLAY} -screen 0 {SCREEN} -nolisten tcp "
+            f"< /dev/null > {EVIDENCE_DIR}/xvfb.log 2>&1 & }}; "
+            f"for i in $(/usr/bin/seq 1 40); do {drop} DISPLAY={DISPLAY} /usr/bin/xdpyinfo > /dev/null 2>&1 && "
+            f"{{ echo \"xvfb_pid $(/usr/bin/pgrep -u {DISPLAY_UID} -x Xvfb)\"; exit 0; }}; /usr/bin/sleep 0.25; done; "
+            f"/usr/bin/tail -5 {EVIDENCE_DIR}/xvfb.log; exit 1")
 
 
-# Runs in the box with the image's own python (-I: nothing imported from the work dir). argv: the app's
-# session leader pid, seconds to wait for a window, seconds to settle, the screenshot path.
-_WATCH = r"""
-import hashlib, json, os, re, subprocess, sys, time
-pid, wait_s, settle_s, shot = int(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3]), sys.argv[4]
-def run(cmd):
-    try:
-        return subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=20).stdout
-    except Exception:
-        return ""
+# Shared by the snapshot and the watcher: the box user's live processes as {pid: [starttime, comm]}.
+_PROCS = r"""
+import json, os, re, subprocess, sys, time, hashlib
+BOX_UID = "1000"
 def procs():
     out = {}
     for d in os.listdir("/proc"):
-        if d.isdigit():
-            try:
-                stat = open(f"/proc/{d}/stat").read()
-                comm = stat[stat.index("(") + 1:stat.rindex(")")]
-                rest = stat[stat.rindex(")") + 2:].split()
-                out[int(d)] = (int(rest[1]), int(rest[3]), rest[0], comm)
-            except (OSError, ValueError, IndexError):
-                pass
+        if not d.isdigit():
+            continue
+        try:
+            status = open(f"/proc/{d}/status").read()
+            stat = open(f"/proc/{d}/stat").read()
+        except OSError:
+            continue
+        fields = dict(line.split(":", 1) for line in status.splitlines() if ":" in line)
+        uids = fields.get("Uid", "").split()
+        if BOX_UID not in uids[:2] or fields.get("State", "").split()[:1] == ["Z"]:
+            continue
+        rest = stat[stat.rindex(")") + 2:].split()
+        out[d] = [rest[19], stat[stat.index("(") + 1:stat.rindex(")")]]
     return out
-def app_pids():
-    table = procs()
-    pids = {p for p, (_, sid, state, _) in table.items() if sid == pid and state != "Z"}
-    kids = {pid} if pid in table and table[pid][2] != "Z" else set()
-    while True:
-        more = {p for p, (pp, _, state, _) in table.items() if pp in kids and p not in kids and state != "Z"}
-        if not more:
-            break
-        kids |= more
-    return pids | kids, {p: table[p][3] for p in pids | kids}
+"""
+
+SNAPSHOT_PY = _PROCS + "\nprint(json.dumps(procs()))\n"
+
+# Root: stop every box-user process until none is left (zombies are already dead).
+KILL_PY = _PROCS + r"""
+import signal
+for round_ in range(200):
+    left = procs()
+    if not left:
+        print("PICKFIT_KILLED", round_)
+        break
+    for sig in (signal.SIGSTOP, signal.SIGKILL):
+        for pid in left:
+            try:
+                os.kill(int(pid), sig)
+            except OSError:
+                pass
+    time.sleep(0.05)
+else:
+    print("PICKFIT_KILL_FAILED", sorted(procs()))
+    sys.exit(1)
+"""
+
+# DISPLAY_UID: the watcher. Placeholders are filled in per launch (never from the app).
+_WATCH = r"""
+ENV = {"PATH": "/usr/bin:/bin", "DISPLAY": "@DISPLAY@", "LANG": "C.UTF-8"}
+BEFORE, XVFB, NONCE, SHOT = @BEFORE@, @XVFB@, "@NONCE@", "@SHOT@"
+WAIT_S, SETTLE_S, MIN_W, MIN_H, SW, SH = @WAIT@, @SETTLE@, @MIN_W@, @MIN_H@, @SW@, @SH@
+def run(argv):
+    try:
+        return subprocess.run(argv, capture_output=True, text=True, timeout=20, env=ENV).stdout
+    except Exception:
+        return ""
+def our_server():
+    try:
+        status = open(f"/proc/{XVFB}/status").read()
+    except OSError:
+        return False
+    fields = dict(line.split(":", 1) for line in status.splitlines() if ":" in line)
+    return fields.get("Name", "").strip() == "Xvfb" and fields.get("Uid", "").split()[:1] == ["@UID@"]
+def app():
+    now = procs()
+    return {p: v for p, v in now.items() if BEFORE.get(p, [None])[0] != v[0]}
 def clients():
     found, cur = [], None
-    for line in run("xrestop -b -m 1").splitlines():
+    for line in run(["/usr/bin/xrestop", "-b", "-m", "1"]).splitlines():
         head = re.match(r"^\d+ - (.*) \(\s*PID:\s*(\d*)\s*\):", line)
         if head:
-            cur = {"name": head.group(1), "pid": int(head.group(2)) if head.group(2) else None}
+            cur = {"name": head.group(1), "pid": head.group(2)}
             found.append(cur)
             continue
         kv = re.match(r"^\s*(res[_-]base|res[_-]mask)\s*:\s*(0x[0-9a-fA-F]+)", line)
@@ -108,80 +162,77 @@ def clients():
     return found
 def windows():
     found = []
-    for line in run("xwininfo -root -children").splitlines():
+    for line in run(["/usr/bin/xwininfo", "-root", "-children"]).splitlines():
         m = re.match(r'^\s+(0x[0-9a-f]+) (?:"([^"]*)"|\(has no name\)).*?\s(\d+)x(\d+)\+(-?\d+)\+(-?\d+)', line)
-        if not m:
+        if not m or "IsViewable" not in run(["/usr/bin/xwininfo", "-id", m.group(1)]):
             continue
-        info = run(f"xwininfo -id {m.group(1)}")
-        if "IsViewable" not in info:
-            continue
-        found.append({"id": m.group(1), "title": m.group(2) or "", "width": int(m.group(3)),
-                      "height": int(m.group(4))})
+        x, y, w, h = int(m.group(5)), int(m.group(6)), int(m.group(3)), int(m.group(4))
+        vw, vh = min(x + w, SW) - max(x, 0), min(y + h, SH) - max(y, 0)
+        found.append({"id": m.group(1), "title": (m.group(2) or "")[:200], "width": w, "height": h, "x": x, "y": y,
+                      "visible": vw >= MIN_W and vh >= MIN_H})
     return found
-def owner(win, cls):
-    wid = int(win["id"], 16)
-    for c in cls:
-        if "res_base" in c and "res_mask" in c and (wid & ~c["res_mask"]) == c["res_base"]:
-            return c
-    return None
 def look():
-    pids, names = app_pids()
+    mine = app()
     cls, own, other = clients(), [], []
     for w in windows():
-        c = owner(w, cls)
-        w["pid"] = c["pid"] if c else None
-        w["client"] = c["name"] if c else None
-        mine = c is not None and c["pid"] in pids and w["width"] * w["height"] >= MIN_PX
-        (own if mine else other).append(w)
-    return pids, names, own, other
-MIN_PX = int(os.environ.get("PICKFIT_MIN_WINDOW_PX", "2500"))
-began = time.time()
-first = None
-while True:
-    pids, names, own, other = look()
+        wid = int(w["id"], 16)
+        c = next((c for c in cls if "res_base" in c and "res_mask" in c and (wid & ~c["res_mask"]) == c["res_base"]),
+                 None)
+        w["pid"] = int(c["pid"]) if c and c["pid"] else None
+        w["client"] = c["name"][:80] if c else None
+        (own if c and c["pid"] in mine and w.pop("visible") else other).append(w)
+        w.pop("visible", None)
+    return mine, own, other
+problems = [] if our_server() else ["pickfit's X server was not running when the watch began"]
+began, first = time.time(), None
+while not problems:
+    mine, own, other = look()
     if own and first is None:
         first = time.time() - began
-    if first is not None and time.time() - began >= first + settle_s:
+    if first is not None and time.time() - began >= first + SETTLE_S:
         break
-    if not pids or time.time() - began >= wait_s + (settle_s if first is not None else 0):
+    if not mine or time.time() - began >= WAIT_S + (SETTLE_S if first is not None else 0):
         break
     time.sleep(1)
-pids, names, own, other = look()
-shot_ok = subprocess.run(f"xwd -root -silent | convert xwd:- png:{shot}", shell=True,
-                         capture_output=True, timeout=30).returncode == 0
-data = open(shot, "rb").read() if shot_ok else b""
-print("PICKFIT_GUI_JSON " + json.dumps({
-    "shot_bytes": len(data), "shot_sha256": hashlib.sha256(data).hexdigest(),
-    "seconds_to_window": None if first is None else round(first, 1), "alive": sorted(pids),
-    "processes": sorted(set(names.values()))[:12], "windows": own, "other_windows": other,
-    "screenshot": shot_ok, "watched_s": round(time.time() - began, 1)}))
-for p in pids:
-    try:
-        os.kill(p, 15)
-    except OSError:
-        pass
-time.sleep(2)
-for p in app_pids()[0]:
-    try:
-        os.kill(p, 9)
-    except OSError:
-        pass
+mine, own, other = look() if not problems else ({}, [], [])
+data = b""
+if not problems:
+    xwd = subprocess.Popen(["/usr/bin/xwd", "-root", "-silent"], stdout=subprocess.PIPE, env=ENV)
+    conv = subprocess.run(["/usr/bin/convert", "xwd:-", "png:" + SHOT], stdin=xwd.stdout, capture_output=True,
+                          timeout=60, env=ENV)
+    xwd.wait(timeout=60)
+    if conv.returncode == 0 and xwd.returncode == 0:
+        data = open(SHOT, "rb").read()
+    else:
+        problems.append("the screenshot failed")
+    if not our_server():  # a server the app started after killing or crashing ours could have lied
+        problems.append("pickfit's X server was gone when the watch ended")
+        own, data = [], b""
+print(MARK + NONCE + " " + json.dumps({
+    "seconds_to_window": None if first is None else round(first, 1), "alive": len(mine),
+    "processes": sorted({v[1] for v in mine.values()})[:12], "windows": own, "other_windows": other[:5],
+    "shot_bytes": len(data), "shot_sha256": hashlib.sha256(data).hexdigest() if data else None,
+    "problems": problems, "watched_s": round(time.time() - began, 1)}))
 """
 
 
-def launch_script(command: str, tag: str | int, wait_s: int, *, workdir: str, detach: str = "setsid nohup",
-                  settle_s: int = SETTLE_S) -> str:
-    """Bash that starts `command` on the display, watches it and prints one JSON line (MARK)."""
-    wait_s = max(1, min(int(wait_s), WAIT_MAX_S))
-    base = f"{GUI_DIR}/{tag}"
-    # The app's exit code lands in .exit; `bash -c` stays as the session leader, so its pid is the session id.
-    wrapped = f"{command}\necho $? > {base}.exit"
-    return (f"mkdir -p {GUI_DIR} && cd {shlex.quote(workdir)} || exit 1; export DISPLAY={DISPLAY}; "
-            f"rm -f {base}.exit {base}.png; "
-            f"{detach} bash -c {shlex.quote(wrapped)} > {base}.log 2>&1 < /dev/null & P=$!; "
-            f"PICKFIT_MIN_WINDOW_PX={MIN_WINDOW_PX} /usr/local/bin/python3 -I - $P {wait_s} {settle_s} "
-            f"{base}.png <<'PICKFIT_GUI_PY'\n{_WATCH}\nPICKFIT_GUI_PY\n"
-            f"echo \"exit_code $(cat {base}.exit 2>/dev/null)\"; echo '--- app log tail ---'; tail -n 30 {base}.log")
+def watcher_source(*, before: dict[str, Any], xvfb_pid: int, nonce: str, shot: str, wait_s: int,
+                   settle_s: int = SETTLE_S) -> str:
+    fill = {"@DISPLAY@": DISPLAY, "@BEFORE@": json.dumps(before), "@XVFB@": str(int(xvfb_pid)), "@NONCE@": nonce,
+            "@SHOT@": shot, "@WAIT@": str(int(wait_s)), "@SETTLE@": str(int(settle_s)), "@MIN_W@": str(MIN_WIDTH),
+            "@MIN_H@": str(MIN_HEIGHT), "@SW@": str(SCREEN_W), "@SH@": str(SCREEN_H), "@UID@": str(DISPLAY_UID)}
+    body = _WATCH
+    for key, value in fill.items():
+        body = body.replace(key, value)
+    return _PROCS + f"\nMARK = {MARK!r}\n" + body
+
+
+def start_script(command: str, tag: str | int, *, workdir: str, detach: str = "setsid nohup") -> str:
+    """Box user: start the app detached on the display; its output and exit code go to its own log."""
+    log = f"{APP_LOG_DIR}/{tag}"
+    wrapped = f"{command}\necho \"exit_code $?\""
+    return (f"/usr/bin/mkdir -p {APP_LOG_DIR} && cd {shlex.quote(workdir)} || exit 1; export DISPLAY={DISPLAY}; "
+            f"{detach} /usr/bin/bash -c {shlex.quote(wrapped)} > {log}.log 2>&1 < /dev/null & echo started")
 
 
 @dataclass
@@ -190,6 +241,8 @@ class GuiWindow:
     title: str
     width: int
     height: int
+    x: int = 0
+    y: int = 0
     pid: int | None = None
     client: str | None = None
 
@@ -200,15 +253,14 @@ class GuiLaunch:
 
     tier: str
     windows: list[GuiWindow] = field(default_factory=list)
-    other_windows: list[GuiWindow] = field(default_factory=list)  # mapped, but not the app's
+    other_windows: list[GuiWindow] = field(default_factory=list)  # mapped, but not the app's (or too small)
     processes: list[str] = field(default_factory=list)
     alive: bool = False
-    exit_code: int | None = None  # when the app exited before the watch ended
     seconds_to_window: float | None = None
     screenshot: str | None = None  # where pickfit saved the PNG (on the host)
-    shot_bytes: int | None = None  # the PNG's size and hash in the box, to check the copy
+    shot_bytes: int | None = None  # the PNG's size and hash as the watcher wrote it
     shot_sha256: str | None = None
-    log_tail: str = ""
+    log_tail: str = ""  # the app's own output: data, never a result
     error: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -222,66 +274,58 @@ class GuiLaunch:
         return max(self.windows, key=lambda w: w.width * w.height).title
 
 
-def parse_launch(stdout: str) -> GuiLaunch:
+def parse_report(stdout: str, nonce: str) -> GuiLaunch:
+    """The watcher's report: exactly one line tagged with this launch's nonce, or tier none."""
+    tag = f"{MARK}{nonce} "
+    lines = [line[len(tag):] for line in stdout.splitlines() if line.startswith(tag)]
     data: dict[str, Any] | None = None
-    exit_code: int | None = None
-    lines = stdout.splitlines()
-    for line in lines:
-        if line.startswith(MARK):
-            try:
-                data = json.loads(line[len(MARK):])
-            except json.JSONDecodeError:
-                data = None
-        elif line.startswith("exit_code "):
-            value = line[len("exit_code "):].strip()
-            exit_code = int(value) if value.lstrip("-").isdigit() else None
-    tail = stdout.split("--- app log tail ---\n", 1)[1] if "--- app log tail ---\n" in stdout else ""
-    if data is None:
-        return GuiLaunch(tier="none", exit_code=exit_code, log_tail=tail,
-                         error="pickfit's window watcher printed nothing (the display or the watcher failed)")
-    own = [GuiWindow(**w) for w in data.get("windows") or []]
+    if len(lines) == 1:
+        try:
+            data = json.loads(lines[0])
+        except json.JSONDecodeError:
+            data = None
+    if not isinstance(data, dict):
+        why = "no report" if not lines else f"{len(lines)} report lines" if len(lines) > 1 else "an unreadable report"
+        return GuiLaunch(tier="none", error=f"pickfit's window watcher gave {why}")
+    problems = [str(p) for p in data.get("problems") or []]
+    own = [] if problems else [GuiWindow(**w) for w in data.get("windows") or []]
     other = [GuiWindow(**w) for w in data.get("other_windows") or []]
     alive = bool(data.get("alive"))
-    tier = "window" if own else "process_alive" if alive else "none"
+    tier = "window" if own else "process_alive" if alive and not problems else "none"
     return GuiLaunch(tier=tier, windows=own, other_windows=other, processes=list(data.get("processes") or []),
-                     alive=alive, exit_code=None if alive else exit_code,
-                     seconds_to_window=data.get("seconds_to_window"), log_tail=tail,
+                     alive=alive, seconds_to_window=data.get("seconds_to_window"),
                      shot_bytes=data.get("shot_bytes"), shot_sha256=data.get("shot_sha256"),
-                     error=None if data.get("screenshot") else "the screenshot failed")
+                     error="; ".join(problems) or None)
 
 
 def observation(launch: GuiLaunch) -> str:
-    """The text the agent and the replay record as the launch's output."""
+    """pickfit's own lines about the launch: what the agent cites and the replay checks (stdout)."""
     meaning = {"window": "a window of the app's own process is shown",
                "process_alive": "the app is still running but showed no window of its own",
-               "none": "the app exited without showing a window"}[launch.tier]
+               "none": "the app showed no window and is not running"}[launch.tier]
     lines = [f"gui tier: {launch.tier} ({meaning})"]
     for w in launch.windows:
-        lines.append(f"window: \"{w.title}\" {w.width}x{w.height} (pid {w.pid})")
+        lines.append(f"window: \"{w.title}\" {w.width}x{w.height} at {w.x},{w.y} (pid {w.pid})")
     for w in launch.other_windows[:3]:
-        lines.append(f"other window, not the app's: \"{w.title}\" {w.width}x{w.height} ({w.client or 'unknown'})")
+        lines.append(f"other window, not counted: \"{w.title}\" {w.width}x{w.height} ({w.client or 'unknown client'})")
     if launch.seconds_to_window is not None:
         lines.append(f"first window after {launch.seconds_to_window}s")
-    if launch.tier == "none" and launch.exit_code is not None:
-        lines.append(f"the app exited with code {launch.exit_code}")
     if launch.processes:
         lines.append(f"processes: {', '.join(launch.processes)}")
     if launch.error:
         lines.append(f"note: {launch.error}")
-    lines.append("pickfit took a screenshot of the display and stopped the app.")
-    if launch.log_tail.strip():
-        lines += ["--- app log tail ---", launch.log_tail.rstrip()]
+    lines.append("pickfit took a screenshot and then stopped every process of the box user.")
     return "\n".join(lines)
 
 
 def read_shot(box: Box, path: str, shown: GuiLaunch) -> tuple[bytes | None, str | None]:
     """The screenshot, checked against the size and hash the watcher printed; (None, why) if no read matches."""
-    if not shown.shot_bytes or shown.shot_bytes > SHOT_MAX_BYTES:
+    if not shown.shot_bytes or not shown.shot_sha256 or shown.shot_bytes > SHOT_MAX_BYTES:
         return None, f"no usable screenshot ({shown.shot_bytes} bytes)"
     got = 0
     for _ in range(SHOT_READS):
         try:
-            data = box.read_file(path, SHOT_MAX_BYTES)
+            data = box.harness_read(path, SHOT_MAX_BYTES)
         except Exception as err:  # BoxError: the box or the file is gone
             return None, f"screenshot unreadable: {err}"
         got = len(data)
@@ -290,20 +334,50 @@ def read_shot(box: Box, path: str, shown: GuiLaunch) -> tuple[bytes | None, str 
     return None, f"screenshot copy incomplete after {SHOT_READS} reads ({got} of {shown.shot_bytes} bytes)"
 
 
+def stop_box_user(box: Box) -> ExecResult:
+    """Root: stop every process of the box user (the app, whatever it forked, and anything else of that uid)."""
+    return box.harness_exec([PYTHON, "-I", "-S", "-"], 60, stdin=KILL_PY.encode())
+
+
 def launch(box: Box, command: str, tag: str | int, wait_s: int, *, timeout_s: int | None = None
            ) -> tuple[ExecResult, GuiLaunch, bytes | None]:
     """Launch on the box's display; (the record to keep, what it showed, the screenshot PNG)."""
     wait_s = max(1, min(int(wait_s), WAIT_MAX_S))
-    script = launch_script(command, tag, wait_s, workdir=box.workdir, detach=box.detach)
-    raw = box.exec(script, timeout_s or wait_s + SETTLE_S + 60)
-    shown = parse_launch(raw.stdout)
+    xvfb_pid = getattr(box, "xvfb_pid", None)
+    if not box.display or not xvfb_pid:
+        raise ValueError("a GUI launch needs a box with pickfit's display")
+    nonce = secrets.token_hex(12)
+    shot = f"{EVIDENCE_DIR}/{tag}.png"
+    snap = box.harness_exec([PYTHON, "-I", "-S", "-"], 30, as_uid=DISPLAY_UID, stdin=SNAPSHOT_PY.encode())
+    try:
+        before = json.loads(snap.stdout.strip().splitlines()[-1]) if snap.exit_code == 0 else None
+    except (json.JSONDecodeError, IndexError):
+        before = None
+    started = box.exec(start_script(command, tag, workdir=box.workdir, detach=box.detach), 30)
+    seconds, timed_out = started.seconds, started.timed_out
+    if before is None or started.exit_code != 0:
+        shown = GuiLaunch(tier="none", error="the launch could not start: " +
+                          (started.stderr.strip()[-300:] if before is not None else "no process snapshot"))
+    else:
+        source = watcher_source(before=before, xvfb_pid=xvfb_pid, nonce=nonce, shot=shot, wait_s=wait_s)
+        watch = box.harness_exec([PYTHON, "-I", "-S", "-"], timeout_s or wait_s + SETTLE_S + 90,
+                                 as_uid=DISPLAY_UID, stdin=source.encode())
+        seconds, timed_out = round(seconds + watch.seconds, 2), watch.timed_out
+        shown = parse_report(watch.stdout, nonce)
+        if watch.exit_code != 0 and not shown.error:
+            shown.error = f"the watcher exited {watch.exit_code}: {watch.stderr.strip()[-300:]}"
+    stopped = stop_box_user(box)
+    if "PICKFIT_KILLED" not in stopped.stdout:
+        shown.error = "; ".join(filter(None, [shown.error, "box-user processes survived the stop"]))
     png: bytes | None = None
-    if raw.exit_code == 0 and not shown.error:
-        png, shown.error = read_shot(box, f"{GUI_DIR}/{tag}.png", shown)
-    if raw.timed_out:
-        shown.error = "the launch watcher timed out"
-    text = observation(shown)
-    code = 0 if shown.tier == "window" and not raw.timed_out else 1
-    result = ExecResult(command=command, exit_code=code, stdout=text, stderr=raw.stderr.strip()[-2000:],
-                        seconds=raw.seconds, timed_out=raw.timed_out, truncated=raw.truncated)
+    if shown.tier == "window":
+        png, why = read_shot(box, shot, shown)
+        if why:
+            shown.error = "; ".join(filter(None, [shown.error, why]))
+    log = box.exec(f"/usr/bin/tail -c 3000 -- {APP_LOG_DIR}/{tag}.log", 20)
+    shown.log_tail = log.stdout if log.exit_code == 0 else ""
+    code = 0 if shown.tier == "window" and png is not None and not timed_out else 1
+    result = ExecResult(command=command, exit_code=code, stdout=observation(shown),
+                        stderr=f"--- app output (the app's own, not pickfit's) ---\n{shown.log_tail}".rstrip(),
+                        seconds=seconds, timed_out=timed_out)
     return result, shown, png

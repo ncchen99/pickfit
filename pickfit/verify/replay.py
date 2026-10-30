@@ -9,6 +9,8 @@ the checks that passed, each as the exact command the agent ran. In a new box:
 4. cut the network and run every check: install online, smoke test offline;
 5. turn the network back on and rerun any check that failed offline; one that
    passes then is marked as needing the network.
+6. GUI launches run last, the same way (offline, then online for a failure):
+   each one stops every process of the box user, background setups included.
 
 The replay passes when every step succeeds and the passing checks still
 support a passed level; that level caps the run's level.
@@ -188,7 +190,8 @@ class Replayer:
 
     def _check(self, check: ReplayCheck) -> tuple[RanCommand, bool, list[str]]:
         ran = self.rerun(check.run)
-        ok, problems = evaluate_check(ran, check.expected_exit_code, check.expected_signal)
+        ok, problems = evaluate_check(ran, check.expected_exit_code, check.expected_signal,
+                                      trusted_only=check.kind == "gui")
         return ran, ok, problems
 
     def run(self, plan: ReplayPlan, task: VerifyTask) -> ReplayResult:
@@ -226,36 +229,48 @@ class Replayer:
             if not ran.ok:
                 result.error = f"setup {setup.command_id} exited {ran.exit_code}: {_one_line(setup.command)}"
                 return
-        box.set_network(False)
         known = {c.command_id: c for c in (*plan.setups, *(k.run for k in plan.checks))}
-        for check in plan.checks:
-            ran, ok, problems = self._check(check)
-            result.checks.append(CheckResult(
-                check.run.command_id, check.run.command, check.kind, check.expected_exit_code,
-                check.expected_signal, passed=ok, offline=ok, run=ran, problems=problems,
-                setup=[known[i] for i in check.setup_ids if i in known]))
-        failed = [c for c in result.checks if not c.passed]
-        if failed:
-            box.set_network(True)
-            by_id = {c.run.command_id: c for c in plan.checks}
-            for outcome in failed:
-                ran, ok, problems = self._check(by_id[outcome.command_id])
-                outcome.offline_problems, outcome.problems = outcome.problems, problems
-                outcome.run, outcome.passed = ran, ok
+        by_id = {c.run.command_id: c for c in plan.checks}
+        # GUI launches last: each stops every box-user process, background setups included.
+        for phase in ([c for c in plan.checks if c.kind != "gui"], [c for c in plan.checks if c.kind == "gui"]):
+            box.set_network(False)
+            outcomes = []
+            for check in phase:
+                ran, ok, problems = self._check(check)
+                outcomes.append(CheckResult(
+                    check.run.command_id, check.run.command, check.kind, check.expected_exit_code,
+                    check.expected_signal, passed=ok, offline=ok, run=ran, problems=problems,
+                    setup=[known[i] for i in check.setup_ids if i in known]))
+            failed = [c for c in outcomes if not c.passed]
+            if failed:
+                box.set_network(True)
+                for outcome in failed:
+                    ran, ok, problems = self._check(by_id[outcome.command_id])
+                    outcome.offline_problems, outcome.problems = outcome.problems, problems
+                    outcome.run, outcome.passed = ran, ok
+            result.checks += outcomes
         box.set_network(True)
+        plan_checks = sorted(plan.checks, key=lambda c: c.kind == "gui")  # the order result.checks has
         background = {s.command_id for s in plan.setups if s.tool == "run_background"}
         resolved = [ResolvedCheck(
             command_id=c.command_id, command=c.command, tool="", setup_ids=[], expected_signal=c.expected_signal,
             expected_exit_code=c.expected_exit_code, exit_code=c.run.exit_code if c.run else None,
             passed=c.passed, kind=c.kind) for c in result.checks]
         serves = any(c.passed and (set(by.setup_ids) & background or by.run.tool == "run_background")
-                     for c, by in zip(result.checks, plan.checks))
+                     for c, by in zip(result.checks, plan_checks))
         result.level = supported_level(True, resolved, serves)
         result.passed = result.level is not None
         passing = [c for c in result.checks if c.passed]
         result.offline = bool(passing) and all(c.offline for c in passing)
         if not result.passed:
             result.error = "no check passed in the replay"
+
+
+def judged_launch(checks: list[CheckResult]) -> CheckResult | None:
+    """The GUI launch a run stands on: the first that passed, else the last that ran (the judge and the record
+    both use this one)."""
+    launches = [c for c in checks if c.kind == "gui" and c.run is not None]
+    return next((c for c in launches if c.passed), launches[-1] if launches else None)
 
 
 def _one_line(text: str, limit: int = 100) -> str:
