@@ -62,7 +62,7 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-seo-audit-20261031-014931-139a",
+      "run_id": "verify-seo-audit-20261031-030526-895d",
       "method": "npm",
       "steps": [
         {
@@ -91,10 +91,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:52:06.938033+08:00",
+    "checked_at": "2026-10-31T03:08:28.395637+08:00",
     "runs": [
       {
-        "id": "verify-seo-audit-20261031-014931-139a",
+        "id": "verify-seo-audit-20261031-030526-895d",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -102,7 +102,7 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:52:06.938033+08:00",
+        "checked_at": "2026-10-31T03:08:28.395637+08:00",
         "tool_version": "0.5.1",
         "install_method": "npm",
         "replayed": true,
@@ -114,7 +114,7 @@
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- seo-audit-console",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- seo-audit-console",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -123,49 +123,63 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call list_checks --args '{}' -- seo-audit-console",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call seo_audit_help --args '{}' -- seo-audit-console",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=seo_audit_help content=text text_chars=5561",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call list_checks --args '{}' -- seo-audit-console",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "tools/call: ok tool=list_checks content=text text_chars=9",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call normalize_url --args '{\"url\":\"https://example.com/Page?utm_source=x\"}' -- seo-audit-console",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=normalize_url content=text text_chars=24",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "npx -y @houtini/seo-audit-console@0.5.1",
-            "actually_needed": "npm install -g @houtini/seo-audit-console@0.5.1 so seo-audit-console is on PATH and works with network off",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "GOOGLE_APPLICATION_CREDENTIALS alone is the whole core audit (required first line)",
-            "actually_needed": "server starts with no GOOGLE_APPLICATION_CREDENTIALS set, logs GSC disabled, and still answers initialize/tools/list plus local tools like list_checks",
+            "readme_said": "launch via npx -y @houtini/seo-audit-console@0.5.1",
+            "actually_needed": "npm install -g @houtini/seo-audit-console@0.5.1 then launch as seo-audit-console for PATH persistence and offline replay",
             "kind": "note"
           },
           {
-            "readme_said": "seo-audit-console --help shows help",
-            "actually_needed": "seo-audit-console starts an MCP stdio server and waits on stdin instead of printing help and exiting",
+            "readme_said": "--help prints help",
+            "actually_needed": "seo-audit-console --help starts the MCP server on stdio (log: running on stdio, GSC disabled — no credentials) instead of printing help; use MCP probe handshake instead",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both probes show successful MCP handshake with 48 tools listed and list_checks returning 93 checks.",
+          "observed": "Screenshots show MCP handshake with 48 tools and successful seo_audit_help and list_checks calls returning content.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-seo-audit-20261031-014931-139a/report.json",
+          "trace_path": "runs/verify/verify-seo-audit-20261031-030526-895d/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-seo-audit-20261031-014931-139a/check-1-cmd4.judged.png",
-            "runs/verify/verify-seo-audit-20261031-014931-139a/check-2-cmd5.judged.png"
+            "runs/verify/verify-seo-audit-20261031-030526-895d/check-1-cmd4.judged.png",
+            "runs/verify/verify-seo-audit-20261031-030526-895d/check-2-cmd5.judged.png",
+            "runs/verify/verify-seo-audit-20261031-030526-895d/check-3-cmd6.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.043772,
+        "cost_usd": 0.082468,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -226,9 +240,35 @@
             "track_ranks"
           ],
           "tool_count": 48,
-          "called_tool": "list_checks",
+          "called_tool": "seo_audit_help",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "merge Search Console data with crawl",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs GSC service-account key and property access; README requires GOOGLE_APPLICATION_CREDENTIALS"
+          },
+          {
+            "feature": "run prioritised technical SEO audit",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "run_audit needs prior GSC sync/crawl data which needs account; list_checks only lists registry"
+          },
+          {
+            "feature": "generate paste-ready SEO fixes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "fix_finding needs audit findings from GSC-backed audit"
+          }
+        ]
       }
     ]
   },
@@ -281,15 +321,15 @@
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:03:51+08:00",
+    "computed_at": "2026-10-31T03:08:28+08:00",
     "quality": {
-      "total": 82.6,
+      "total": 89.0,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.7225,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -332,7 +372,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 17.68
+      "value": 19.05
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -719,5 +759,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:50:13+08:00",
-  "updated_at": "2026-10-31T02:36:02+08:00"
+  "updated_at": "2026-10-31T03:08:28.396632+08:00"
 }

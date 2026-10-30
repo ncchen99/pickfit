@@ -77,17 +77,17 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-lain-20261031-012317-5fa6",
+      "run_id": "verify-lain-20261031-025344-eafc",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g @spuentesp/lain-mcp",
-          "purpose": "Install Lain via npm global"
+          "purpose": "Install Lain via npm"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "lain --version",
+        "command": "lain --version && which lain && ls ~/.pickfit/",
         "expected_signal": "lain 0.14.0"
       },
       "first_task": null
@@ -122,10 +122,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:24:25.695364+08:00",
+    "checked_at": "2026-10-31T02:55:13.917809+08:00",
     "runs": [
       {
-        "id": "verify-lain-20261031-012317-5fa6",
+        "id": "verify-lain-20261031-025344-eafc",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -133,19 +133,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:24:25.695364+08:00",
+        "checked_at": "2026-10-31T02:55:13.917809+08:00",
         "tool_version": "0.14.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g @spuentesp/lain-mcp",
-            "purpose": "Install Lain via npm global"
+            "purpose": "Install Lain via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "lain --version",
+            "command": "lain --version && which lain && ls ~/.pickfit/",
             "expected_signal": "lain 0.14.0",
             "exit_code": 0,
             "passed": true,
@@ -154,14 +154,14 @@
             "offline": false
           },
           {
-            "command": "cd /tmp/lain-demo && python3 ~/.pickfit/mcp_probe.py --timeout 120 -- lain mcp",
+            "command": "cd /tmp/lain-demo && python3 ~/.pickfit/mcp_probe.py -- lain mcp",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
             "setup": [
               {
-                "command": "mkdir -p /tmp/lain-demo && cd /tmp/lain-demo && git init -q 2>&1 && printf 'def validate_token(token):\\n    return token == \"secret\"\\n\\ndef helper_a():\\n    return validate_token(\"x\")\\n' > auth.py && git add auth.py && git -c user.email=test@test.com -c user.name=test commit -qm init && pwd && ls -la && git log --oneline",
+                "command": "mkdir -p /tmp/lain-demo && cd /tmp/lain-demo && git init -q && git config user.email \"test@test.com\" && git config user.name \"test\" && cat > auth.py <<'EOF'\ndef validate_token(token):\n    \"\"\"Validate an auth token.\"\"\"\n    return token == \"secret\"\n\ndef helper_a(x):\n    return validate_token(x)\n\ndef entry(y):\n    return helper_a(y)\nEOF\ncat > main.py <<'EOF'\nfrom auth import entry\nif __name__ == \"__main__\":\n    print(entry(\"secret\"))\nEOF\ngit add . && git commit -qm init && git log --oneline && ls -la",
                 "background": false,
                 "port": null
               }
@@ -169,14 +169,44 @@
             "offline": false
           },
           {
-            "command": "cd /tmp/lain-demo && python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get_health --args '{}' -- lain mcp",
+            "command": "cd /tmp/lain-demo && python3 ~/.pickfit/mcp_probe.py --call get_blast_radius --args '{\"symbol\":\"validate_token\"}' -- lain mcp",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=get_health content=text text_chars=1306",
+            "observed_excerpt": "tools/call: ok tool=get_blast_radius content=text text_chars=338",
             "setup": [
               {
-                "command": "mkdir -p /tmp/lain-demo && cd /tmp/lain-demo && git init -q 2>&1 && printf 'def validate_token(token):\\n    return token == \"secret\"\\n\\ndef helper_a():\\n    return validate_token(\"x\")\\n' > auth.py && git add auth.py && git -c user.email=test@test.com -c user.name=test commit -qm init && pwd && ls -la && git log --oneline",
+                "command": "mkdir -p /tmp/lain-demo && cd /tmp/lain-demo && git init -q && git config user.email \"test@test.com\" && git config user.name \"test\" && cat > auth.py <<'EOF'\ndef validate_token(token):\n    \"\"\"Validate an auth token.\"\"\"\n    return token == \"secret\"\n\ndef helper_a(x):\n    return validate_token(x)\n\ndef entry(y):\n    return helper_a(y)\nEOF\ncat > main.py <<'EOF'\nfrom auth import entry\nif __name__ == \"__main__\":\n    print(entry(\"secret\"))\nEOF\ngit add . && git commit -qm init && git log --oneline && ls -la",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "cd /tmp/lain-demo && python3 ~/.pickfit/mcp_probe.py --call get_call_chain --args '{\"from\":\"entry\",\"to\":\"helper_a\"}' -- lain mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_call_chain content=text text_chars=50",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/lain-demo && cd /tmp/lain-demo && git init -q && git config user.email \"test@test.com\" && git config user.name \"test\" && cat > auth.py <<'EOF'\ndef validate_token(token):\n    \"\"\"Validate an auth token.\"\"\"\n    return token == \"secret\"\n\ndef helper_a(x):\n    return validate_token(x)\n\ndef entry(y):\n    return helper_a(y)\nEOF\ncat > main.py <<'EOF'\nfrom auth import entry\nif __name__ == \"__main__\":\n    print(entry(\"secret\"))\nEOF\ngit add . && git commit -qm init && git log --oneline && ls -la",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "cd /tmp/lain-demo && python3 ~/.pickfit/mcp_probe.py --call find_symbol --args '{\"name\":\"validate_token\"}' -- lain mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=find_symbol content=text text_chars=188",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/lain-demo && cd /tmp/lain-demo && git init -q && git config user.email \"test@test.com\" && git config user.name \"test\" && cat > auth.py <<'EOF'\ndef validate_token(token):\n    \"\"\"Validate an auth token.\"\"\"\n    return token == \"secret\"\n\ndef helper_a(x):\n    return validate_token(x)\n\ndef entry(y):\n    return helper_a(y)\nEOF\ncat > main.py <<'EOF'\nfrom auth import entry\nif __name__ == \"__main__\":\n    print(entry(\"secret\"))\nEOF\ngit add . && git commit -qm init && git log --oneline && ls -la",
                 "background": false,
                 "port": null
               }
@@ -184,31 +214,25 @@
             "offline": false
           }
         ],
-        "pitfalls": [
-          {
-            "readme_said": "Lain walks up from the working directory to find .git and serves the repository over stdio",
-            "actually_needed": "lain mcp must be launched from inside a git checkout (or with --workspace PATH / LAIN_WORKSPACE); outside a repo it exits 'no workspace resolved — pass `--workspace PATH`'",
-            "kind": "note"
-          }
-        ],
+        "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show lain MCP handshake with 22 tools, successful get_health call reporting Operational, and version 0.14.0 output.",
+          "observed": "Screenshots show lain 0.14.0 installed, MCP handshake with 22 tools, and successful get_blast_radius call for validate_token.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-lain-20261031-012317-5fa6/report.json",
+          "trace_path": "runs/verify/verify-lain-20261031-025344-eafc/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-lain-20261031-012317-5fa6/check-1-cmd5.judged.png",
-            "runs/verify/verify-lain-20261031-012317-5fa6/check-2-cmd6.judged.png",
-            "runs/verify/verify-lain-20261031-012317-5fa6/check-3-cmd2.judged.png"
+            "runs/verify/verify-lain-20261031-025344-eafc/check-1-cmd2.judged.png",
+            "runs/verify/verify-lain-20261031-025344-eafc/check-2-cmd4.judged.png",
+            "runs/verify/verify-lain-20261031-025344-eafc/check-3-cmd5.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.039247,
+        "cost_usd": 0.047343,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -244,9 +268,41 @@
             "get_audit_log"
           ],
           "tool_count": 22,
-          "called_tool": "get_health",
+          "called_tool": "get_blast_radius",
           "offline": false
-        }
+        },
+        "features": [
+          {
+            "feature": "analyze blast radius of code changes",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "trace call chains between functions",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "search code by name or meaning",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -288,15 +344,15 @@
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:03:51+08:00",
+    "computed_at": "2026-10-31T02:55:13+08:00",
     "quality": {
-      "total": 86.6,
+      "total": 94.1,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -339,7 +395,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 42.0
+      "value": 45.64
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -758,5 +814,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-10-31T02:36:02+08:00"
+  "updated_at": "2026-10-31T02:55:13.920622+08:00"
 }

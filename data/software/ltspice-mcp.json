@@ -82,16 +82,19 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-ltspice-mcp-20261031-012349-4494",
+      "run_id": "verify-ltspice-mcp-20261031-025820-3c29",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install ltspice-mcp && ltspice-mcp --help",
-          "purpose": "install ltspice-mcp via uv tool install"
+          "command": "uv tool install ltspice-mcp 2>&1",
+          "purpose": "Install ltspice-mcp via uv tool"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "ltspice-mcp --help 2>&1",
+        "expected_signal": "LTSpice MCP Server"
+      },
       "first_task": null
     },
     "windows": {
@@ -122,10 +125,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:24:35.425706+08:00",
+    "checked_at": "2026-10-31T03:00:43.860364+08:00",
     "runs": [
       {
-        "id": "verify-ltspice-mcp-20261031-012349-4494",
+        "id": "verify-ltspice-mcp-20261031-025820-3c29",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -133,19 +136,28 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:24:35.425706+08:00",
+        "checked_at": "2026-10-31T03:00:43.860364+08:00",
         "tool_version": "0.7.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install ltspice-mcp && ltspice-mcp --help",
-            "purpose": "install ltspice-mcp via uv tool install"
+            "command": "uv tool install ltspice-mcp 2>&1",
+            "purpose": "Install ltspice-mcp via uv tool"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- ltspice-mcp",
+            "command": "ltspice-mcp --help 2>&1",
+            "expected_signal": "LTSpice MCP Server",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "LTSpice MCP Server",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- ltspice-mcp 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -154,33 +166,90 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call inspect --args '{\"queries\": [{\"kind\": \"guide\"}]}' -- ltspice-mcp",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call verify_circuit --args '{\"path\": \"circuits/rc.cir\"}' -- ltspice-mcp 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=inspect content=text text_chars=13",
-            "setup": [],
+            "observed_excerpt": "tools/call: ok tool=verify_circuit content=text,text text_chars=212",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/circuits && cat > /home/sbx/work/circuits/rc.cir <<'EOF'\n* RC low-pass\nV1 in 0 AC 1\nR1 in out 1k\nC1 out 0 159.155n\n.ac dec 50 1 1Meg\n.end\nEOF\ncat circuits/rc.cir",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call run_experiments --args '{\"circuits\": [{\"path\": \"circuits/rc.cir\"}]}' -- ltspice-mcp 2>&1",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"run_experiments\", \"count\": 8, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"ltspice-mcp\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"ltspice-mcp\", \"tools\": [\"plot_waveform\", \"analyze_results\", \"run_experiments\", \"jobs\", \"inspect\", …",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/circuits && cat > /home/sbx/work/circuits/rc.cir <<'EOF'\n* RC low-pass\nV1 in 0 AC 1\nR1 in out 1k\nC1 out 0 159.155n\n.ac dec 50 1 1Meg\n.end\nEOF\ncat circuits/rc.cir",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call edit_schematic --args '{\"target\": \"circuits/created.asc\", \"ops\": [{\"op\": \"create\", \"width\": 800, \"height\": 600}], \"dry_run\": true}' -- ltspice-mcp 2>&1",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"edit_schematic\", \"count\": 8, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"ltspice-mcp\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"ltspice-mcp\", \"tools\": [\"plot_waveform\", \"analyze_results\", \"run_experiments\", \"jobs\", \"inspect\", \"…",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call run_experiments --args '{\"circuits\": [{\"path\": \"circuits/rc.cir\"}], \"variations\": [{\"kind\": \"assign\", \"assign\": {\"R1\": [\"1k\", \"2k\"]}}]}' -- ltspice-mcp 2>&1",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"run_experiments\", \"count\": 8, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"ltspice-mcp\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"ltspice-mcp\", \"tools\": [\"plot_waveform\", \"analyze_results\", \"run_experiments\", \"jobs\", \"inspect\", …",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/circuits && cat > /home/sbx/work/circuits/rc.cir <<'EOF'\n* RC low-pass\nV1 in 0 AC 1\nR1 in out 1k\nC1 out 0 159.155n\n.ac dec 50 1 1Meg\n.end\nEOF\ncat circuits/rc.cir",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "server finds an installed simulator automatically",
+            "actually_needed": "simulations via run_experiments require ngspice or LTspice installed; box has neither so those calls return isError",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Create and edit `.asc` schematics: place, move, wire, label",
+            "actually_needed": "schematic editing uses LTspice symbol libraries; Linux box without LTspice cannot fully exercise edit_schematic",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 8 tools listed and a successful inspect guide tool call.",
+          "observed": "Screenshots show help title, successful MCP handshake with 8 tools, and successful verify_circuit call reporting no problems.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-ltspice-mcp-20261031-012349-4494/report.json",
+          "trace_path": "runs/verify/verify-ltspice-mcp-20261031-025820-3c29/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-ltspice-mcp-20261031-012349-4494/check-1-cmd2.judged.png",
-            "runs/verify/verify-ltspice-mcp-20261031-012349-4494/check-2-cmd3.judged.png"
+            "runs/verify/verify-ltspice-mcp-20261031-025820-3c29/check-1-cmd2.judged.png",
+            "runs/verify/verify-ltspice-mcp-20261031-025820-3c29/check-2-cmd3.judged.png",
+            "runs/verify/verify-ltspice-mcp-20261031-025820-3c29/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.03194,
+        "cost_usd": 0.176596,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -201,9 +270,49 @@
             "run_code"
           ],
           "tool_count": 8,
-          "called_tool": "inspect",
+          "called_tool": "verify_circuit",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "design, simulate, and analyze SPICE circuits",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows verify_circuit reporting no problems, with no simulation run or analysis results."
+          },
+          {
+            "feature": "run LTspice and ngspice simulations",
+            "status": "test_failed",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "run_experiments single run returned isError; no ngspice/LTspice in box"
+          },
+          {
+            "feature": "create and edit LTspice .asc schematics",
+            "status": "test_failed",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "edit_schematic dry-run with guessed op returned error; needs LTspice libs"
+          },
+          {
+            "feature": "run sweeps and Monte Carlo analyses",
+            "status": "test_failed",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "run_experiments sweep returned isError; no simulator in box"
+          }
+        ]
       }
     ]
   },
@@ -236,15 +345,15 @@
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:03:51+08:00",
+    "computed_at": "2026-10-31T03:00:43+08:00",
     "quality": {
-      "total": 86.0,
+      "total": 72.1,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -287,7 +396,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 26.83
+      "value": 22.5
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -692,5 +801,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:50:13+08:00",
-  "updated_at": "2026-10-31T02:36:02+08:00"
+  "updated_at": "2026-10-31T03:00:43.864403+08:00"
 }

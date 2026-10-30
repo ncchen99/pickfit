@@ -62,16 +62,19 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-recall-20261031-012049-ce5f",
+      "run_id": "verify-recall-20261031-025223-889a",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install polign-recall 2>&1",
-          "purpose": "Install polign-recall via uv tool"
+          "purpose": "install polign-recall with uv tool"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "recall --version 2>&1",
+        "expected_signal": "0.24.0"
+      },
       "first_task": null
     },
     "windows": null
@@ -91,10 +94,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:21:24.814842+08:00",
+    "checked_at": "2026-10-31T02:53:44.169158+08:00",
     "runs": [
       {
-        "id": "verify-recall-20261031-012049-ce5f",
+        "id": "verify-recall-20261031-025223-889a",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -102,19 +105,28 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:21:24.814842+08:00",
+        "checked_at": "2026-10-31T02:53:44.169158+08:00",
         "tool_version": "0.24.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install polign-recall 2>&1",
-            "purpose": "Install polign-recall via uv tool"
+            "purpose": "install polign-recall with uv tool"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- recall mcp -write",
+            "command": "recall --version 2>&1",
+            "expected_signal": "0.24.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.24.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- recall mcp -write 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -123,7 +135,25 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call history --args '{\"question\": \"which editor do I use\"}' -- recall mcp -write",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call remember --args '{\"text\": \"I use zed as my editor\"}' -- recall mcp -write 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=remember content=text text_chars=183",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call recall --args '{\"question\": \"which editor do I use\"}' -- recall mcp -write 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=recall content=text text_chars=82",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call history --args '{\"question\": \"which editor do I use\"}' -- recall mcp -write 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
@@ -136,20 +166,21 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show successful MCP handshake with 5 tools listed and a successful history tool call returning empty history.",
+          "observed": "All three screenshots show version 0.24.0, MCP handshake ok with 5 tools, and successful remember tool call.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-recall-20261031-012049-ce5f/report.json",
+          "trace_path": "runs/verify/verify-recall-20261031-025223-889a/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-recall-20261031-012049-ce5f/check-1-cmd5.judged.png",
-            "runs/verify/verify-recall-20261031-012049-ce5f/check-2-cmd6.judged.png"
+            "runs/verify/verify-recall-20261031-025223-889a/check-1-cmd2.judged.png",
+            "runs/verify/verify-recall-20261031-025223-889a/check-2-cmd3.judged.png",
+            "runs/verify/verify-recall-20261031-025223-889a/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.036108,
+        "cost_usd": 0.055734,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -169,9 +200,47 @@
             "diff"
           ],
           "tool_count": 5,
-          "called_tool": "history",
+          "called_tool": "remember",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "store durable memory with rule-based corrections",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "read memory history with as-of queries",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "resume crashed agents from working-state records",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "mcp -write server lists only remember/recall/forget/history/diff, no agent_resume or state tools"
+          },
+          {
+            "feature": "serve memory as MCP tools and HTTP",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: history result is empty and no HTTP serving is shown."
+          }
+        ]
       }
     ]
   },
@@ -649,5 +718,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:50:13+08:00",
-  "updated_at": "2026-10-31T02:36:02+08:00"
+  "updated_at": "2026-10-31T02:53:44.170616+08:00"
 }

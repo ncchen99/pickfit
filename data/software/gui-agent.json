@@ -101,10 +101,10 @@
   "verification": {
     "level": "unverified",
     "unverified_reason": "gui_only",
-    "checked_at": "2026-10-31T01:25:53.781566+08:00",
+    "checked_at": "2026-10-31T03:00:54.101007+08:00",
     "runs": [
       {
-        "id": "verify-gui-agent-20261031-012425-2fe6",
+        "id": "verify-gui-agent-20261031-025944-6ced",
         "level": "unverified",
         "unverified_reason": "gui_only",
         "os": "linux",
@@ -112,48 +112,78 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:25:53.781566+08:00",
+        "checked_at": "2026-10-31T03:00:54.101007+08:00",
         "tool_version": "0.1.0",
         "install_method": "source",
         "replayed": false,
         "steps": [
           {
-            "command": "git clone --depth 1 https://github.com/leandre755/gui_agent.git /tmp/gui_agent 2>&1 | tail -c 2000\nls /tmp/gui_agent 2>&1; echo \"---\"; ls /tmp/gui_agent/linux 2>&1 | head -n 50",
-            "purpose": "Clone repo source for local install"
+            "command": "git clone --depth 1 https://github.com/leandre755/gui_agent.git /tmp/gui_agent 2>&1 && echo CLONED && ls /tmp/gui_agent && cat /tmp/gui_agent/pyproject.toml 2>&1",
+            "purpose": "Clone repo to inspect and patch build"
           },
           {
-            "command": "rm -rf /tmp/gui_build && cp -r /tmp/gui_agent /tmp/gui_build && sed -i '/evdev>=/d' /tmp/gui_build/pyproject.toml && grep -n evdev /tmp/gui_build/pyproject.toml; echo \"patched\"; uv tool install /tmp/gui_build --force 2>&1",
-            "purpose": "Remove evdev dependency and install with uv tool"
+            "command": "cp -r /tmp/gui_agent /tmp/gui_fix && grep -n evdev /tmp/gui_fix/pyproject.toml\nsed -i 's/.*evdev.*/# evdev removed for sandbox (no kernel headers)/' /tmp/gui_fix/pyproject.toml && grep -n evdev /tmp/gui_fix/pyproject.toml; echo ---; cat /tmp/gui_fix/pyproject.toml | grep -A2 -B2 dependencies -m1",
+            "purpose": "Remove evdev dep needing kernel headers"
+          },
+          {
+            "command": "uv tool install /tmp/gui_fix --force 2>&1",
+            "purpose": "Install gui-agent via uv tool"
           }
         ],
-        "smoke_tests": [],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- gui-agent 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 2,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"error\": \"the server closed stdout before answering initialize\", \"exit\": 1, \"launch\": [\"gui-agent\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"transport\": \"stdio\", \"url\": null}",
+            "setup": [
+              {
+                "command": "git clone --depth 1 https://github.com/leandre755/gui_agent.git /tmp/gui_agent 2>&1 && echo CLONED && ls /tmp/gui_agent && cat /tmp/gui_agent/pyproject.toml 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cp -r /tmp/gui_agent /tmp/gui_fix && grep -n evdev /tmp/gui_fix/pyproject.toml\nsed -i 's/.*evdev.*/# evdev removed for sandbox (no kernel headers)/' /tmp/gui_fix/pyproject.toml && grep -n evdev /tmp/gui_fix/pyproject.toml; echo ---; cat /tmp/gui_fix/pyproject.toml | grep -A2 -B2 dependencies -m1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "uv tool install /tmp/gui_fix --force 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
         "pitfalls": [
           {
             "readme_said": "uv tool install gui-agent",
-            "actually_needed": "PyPI package gui-agent 0.0.1 provides no executables; must install from git source instead",
+            "actually_needed": "PyPI gui-agent 0.0.1 installs but provides no executables; must install from git URL",
             "kind": "readme_wrong"
           },
           {
             "readme_said": "uv tool install git+https://github.com/leandre755/gui_agent.git",
-            "actually_needed": "remove the evdev>=1.7.0 line from pyproject.toml before install because evdev builds from source and needs kernel headers (linux/input.h) not present and not installable without root",
+            "actually_needed": "remove/replace evdev dependency or install linux-headers via apt (needs root); evdev has no wheel and its build fails without kernel headers",
             "kind": "sandbox"
           },
           {
-            "readme_said": "launch command gui-agent speaks MCP over stdio",
-            "actually_needed": "a running X11 display is required; with DISPLAY=:0 and no X server the server exits during import with Xlib.error.DisplayConnectionError: Can't connect to display",
+            "readme_said": "gui-agent launches as stdio MCP server",
+            "actually_needed": "running X server with DISPLAY set; import of pyautogui/mouseinfo crashes without /tmp/.X11-unix socket",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": null,
         "evidence": {
-          "trace_path": "runs/verify/verify-gui-agent-20261031-012425-2fe6/report.json",
+          "trace_path": "runs/verify/verify-gui-agent-20261031-025944-6ced/report.json",
           "log_path": null,
           "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.153361
+        "cost_usd": 0.110378
       }
     ]
   },
@@ -703,5 +733,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-10-31T02:36:02+08:00"
+  "updated_at": "2026-10-31T03:00:54.101768+08:00"
 }

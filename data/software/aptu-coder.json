@@ -72,22 +72,18 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-aptu-coder-20261031-013958-02f7",
+      "run_id": "verify-aptu-coder-20261031-024743-4793",
       "method": "binary",
       "steps": [
         {
-          "command": "cd /tmp && rm -f aptu-coder.tar.gz aptu-coder.sha256 && curl -fsSL -O https://github.com/clouatre-labs/aptu-coder/releases/download/v0.41.1/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz && curl -fsSL -O https://github.com/clouatre-labs/aptu-coder/releases/download/v0.41.1/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz.sha256 && sha256sum -c aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz.sha256 && tar tzf aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz",
-          "purpose": "download verified release tarball"
-        },
-        {
-          "command": "tar xzf /tmp/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz -C /tmp && install -m 755 /tmp/aptu-coder ~/.local/bin/aptu-coder && ~/.local/bin/aptu-coder --version",
-          "purpose": "extract and install binary to PATH"
+          "command": "mkdir -p ~/.local/bin && curl -fsSL -o /tmp/aptu2.tar.gz https://github.com/clouatre-labs/aptu-coder/releases/download/v0.41.1/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/aptu2.tar.gz -C /tmp && cp /tmp/aptu-coder ~/.local/bin/aptu-coder && chmod +x ~/.local/bin/aptu-coder",
+          "purpose": "Install binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "aptu-coder --help",
-        "expected_signal": "Usage: aptu-coder"
+        "command": "cp /tmp/aptu-coder ~/.local/bin/aptu-coder && chmod +x ~/.local/bin/aptu-coder && aptu-coder --version",
+        "expected_signal": "aptu-coder 0.41.1"
       },
       "first_task": null
     },
@@ -108,10 +104,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:41:05.230567+08:00",
+    "checked_at": "2026-10-31T02:49:34.081404+08:00",
     "runs": [
       {
-        "id": "verify-aptu-coder-20261031-013958-02f7",
+        "id": "verify-aptu-coder-20261031-024743-4793",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -119,27 +115,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:41:05.230567+08:00",
+        "checked_at": "2026-10-31T02:49:34.081404+08:00",
         "tool_version": "0.41.1",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "cd /tmp && rm -f aptu-coder.tar.gz aptu-coder.sha256 && curl -fsSL -O https://github.com/clouatre-labs/aptu-coder/releases/download/v0.41.1/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz && curl -fsSL -O https://github.com/clouatre-labs/aptu-coder/releases/download/v0.41.1/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz.sha256 && sha256sum -c aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz.sha256 && tar tzf aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz",
-            "purpose": "download verified release tarball"
-          },
-          {
-            "command": "tar xzf /tmp/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz -C /tmp && install -m 755 /tmp/aptu-coder ~/.local/bin/aptu-coder && ~/.local/bin/aptu-coder --version",
-            "purpose": "extract and install binary to PATH"
+            "command": "mkdir -p ~/.local/bin && curl -fsSL -o /tmp/aptu2.tar.gz https://github.com/clouatre-labs/aptu-coder/releases/download/v0.41.1/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/aptu2.tar.gz -C /tmp && cp /tmp/aptu-coder ~/.local/bin/aptu-coder && chmod +x ~/.local/bin/aptu-coder",
+            "purpose": "Install binary to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "aptu-coder --help",
-            "expected_signal": "Usage: aptu-coder",
+            "command": "cp /tmp/aptu-coder ~/.local/bin/aptu-coder && chmod +x ~/.local/bin/aptu-coder && aptu-coder --version",
+            "expected_signal": "aptu-coder 0.41.1",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Usage: aptu-coder [OPTIONS]",
+            "observed_excerpt": "aptu-coder 0.41.1",
             "setup": [],
             "offline": true
           },
@@ -153,40 +145,81 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call analyze_directory --args '{\"path\": \"/home/sbx/work\"}' -- aptu-coder",
+            "command": "cd /tmp/sampleproj && python3 ~/.pickfit/mcp_probe.py --call analyze_directory --args '{\"path\": \".\"}' -- aptu-coder",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=analyze_directory content=text text_chars=176",
-            "setup": [],
+            "observed_excerpt": "tools/call: ok tool=analyze_directory content=text text_chars=168",
+            "setup": [
+              {
+                "command": "ls ~/.pickfit/mcp_probe.py && mkdir -p /tmp/sampleproj && cat > /tmp/sampleproj/demo.py <<'EOF'\n\"\"\"Sample module for aptu-coder probe.\"\"\"\nimport os\nimport sys\n\nclass Greeter:\n    \"\"\"Greeter class.\"\"\"\n    def hello(self, name: str) -> str:\n        return self._format(name)\n\n    def _format(self, name: str) -> str:\n        return f\"hello {name}\"\n\ndef greet(name: str) -> str:\n    g = Greeter()\n    return g.hello(name)\n\ndef main() -> None:\n    print(greet(\"world\"))\n\nif __name__ == \"__main__\":\n    main()\nEOF\necho created && ls -la /tmp/sampleproj/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/sampleproj && python3 ~/.pickfit/mcp_probe.py --call analyze_file --args '{\"path\": \"demo.py\"}' -- aptu-coder",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=analyze_file content=text text_chars=144",
+            "setup": [
+              {
+                "command": "ls ~/.pickfit/mcp_probe.py && mkdir -p /tmp/sampleproj && cat > /tmp/sampleproj/demo.py <<'EOF'\n\"\"\"Sample module for aptu-coder probe.\"\"\"\nimport os\nimport sys\n\nclass Greeter:\n    \"\"\"Greeter class.\"\"\"\n    def hello(self, name: str) -> str:\n        return self._format(name)\n\n    def _format(self, name: str) -> str:\n        return f\"hello {name}\"\n\ndef greet(name: str) -> str:\n    g = Greeter()\n    return g.hello(name)\n\ndef main() -> None:\n    print(greet(\"world\"))\n\nif __name__ == \"__main__\":\n    main()\nEOF\necho created && ls -la /tmp/sampleproj/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/sampleproj && python3 ~/.pickfit/mcp_probe.py --call analyze_symbol --args '{\"path\": \".\", \"symbol\": \"greet\"}' -- aptu-coder",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=analyze_symbol content=text text_chars=356",
+            "setup": [
+              {
+                "command": "ls ~/.pickfit/mcp_probe.py && mkdir -p /tmp/sampleproj && cat > /tmp/sampleproj/demo.py <<'EOF'\n\"\"\"Sample module for aptu-coder probe.\"\"\"\nimport os\nimport sys\n\nclass Greeter:\n    \"\"\"Greeter class.\"\"\"\n    def hello(self, name: str) -> str:\n        return self._format(name)\n\n    def _format(self, name: str) -> str:\n        return f\"hello {name}\"\n\ndef greet(name: str) -> str:\n    g = Greeter()\n    return g.hello(name)\n\ndef main() -> None:\n    print(greet(\"world\"))\n\nif __name__ == \"__main__\":\n    main()\nEOF\necho created && ls -la /tmp/sampleproj/",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "cargo binstall aptu-coder (no Rust required) / cargo install aptu-coder",
-            "actually_needed": "downloaded and verified the prebuilt x86_64-unknown-linux-musl tarball from GitHub releases (v0.41.1) and installed the single 'aptu-coder' binary to ~/.local/bin; no Rust toolchain used",
+            "readme_said": "cargo binstall aptu-coder / cargo install aptu-coder",
+            "actually_needed": "downloaded x86_64-unknown-linux-musl tarball from GitHub releases v0.41.1 and copied aptu-coder to ~/.local/bin; both ranked cargo candidates need a Rust toolchain which the box does not have and must not install",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "tools take a path argument",
+            "actually_needed": "run probe from the analyzed directory (cd /tmp/sampleproj) and pass relative paths ('.', 'demo.py'); absolute paths outside cwd fail with 'path is outside the working directory'",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 8 tools, successful analyze_directory call returning file summary, and --help usage output.",
+          "observed": "Screenshots show MCP handshake succeeding, analyze_directory returning a file summary, and --version printing 0.41.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-aptu-coder-20261031-013958-02f7/report.json",
+          "trace_path": "runs/verify/verify-aptu-coder-20261031-024743-4793/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-aptu-coder-20261031-013958-02f7/check-1-cmd7.judged.png",
-            "runs/verify/verify-aptu-coder-20261031-013958-02f7/check-2-cmd8.judged.png",
-            "runs/verify/verify-aptu-coder-20261031-013958-02f7/check-3-cmd6.judged.png"
+            "runs/verify/verify-aptu-coder-20261031-024743-4793/check-1-cmd6.judged.png",
+            "runs/verify/verify-aptu-coder-20261031-024743-4793/check-2-cmd12.judged.png",
+            "runs/verify/verify-aptu-coder-20261031-024743-4793/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.053168,
+        "cost_usd": 0.119221,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -209,7 +242,39 @@
           "tool_count": 8,
           "called_tool": "analyze_directory",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Map directory trees with symbol counts",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Extract functions, classes and imports",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Trace call graphs for named symbols",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -278,15 +343,15 @@
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:03:51+08:00",
+    "computed_at": "2026-10-31T02:49:34+08:00",
     "quality": {
-      "total": 86.6,
+      "total": 80.3,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -327,7 +392,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 61.49
+      "value": 57.01
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -746,5 +811,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-10-31T02:36:02+08:00"
+  "updated_at": "2026-10-31T02:49:34.083072+08:00"
 }

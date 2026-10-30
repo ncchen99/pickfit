@@ -60,18 +60,18 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-obsidian-mcp-server-20261031-012317-8166",
+      "run_id": "verify-obsidian-mcp-server-20261031-025255-bb13",
       "method": "npm",
       "steps": [
         {
-          "command": "mkdir -p /tmp/test-vault && printf '# Hello\\n\\nThis is a test note with tag #test.\\n\\nSee [[Other]].\\n' > /tmp/test-vault/Hello.md && printf '# Other\\n\\nLinked back from Hello.\\n' > /tmp/test-vault/Other.md && ls -la /tmp/test-vault && npm install -g @smith-and-web/obsidian-mcp-server",
-          "purpose": "create test vault and npm install -g package"
+          "command": "npm install -g @smith-and-web/obsidian-mcp-server mcp-remote",
+          "purpose": "Install packages globally"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "curl http://localhost:3001/health",
-        "expected_signal": "\"status\":\"ok\""
+        "command": "ls ~/.local/bin/ | grep -i -E \"obsidian|mcp-remote|mcp\"; which obsidian-mcp-server; which mcp-remote; mcp-remote --help",
+        "expected_signal": "Usage: mcp-remote"
       },
       "first_task": "curl http://localhost:3001/health"
     },
@@ -92,10 +92,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:24:52.221689+08:00",
+    "checked_at": "2026-10-31T02:59:44.495782+08:00",
     "runs": [
       {
-        "id": "verify-obsidian-mcp-server-20261031-012317-8166",
+        "id": "verify-obsidian-mcp-server-20261031-025255-bb13",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -103,26 +103,40 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:24:52.221689+08:00",
+        "checked_at": "2026-10-31T02:59:44.495782+08:00",
         "tool_version": "1.12.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "mkdir -p /tmp/test-vault && printf '# Hello\\n\\nThis is a test note with tag #test.\\n\\nSee [[Other]].\\n' > /tmp/test-vault/Hello.md && printf '# Other\\n\\nLinked back from Hello.\\n' > /tmp/test-vault/Other.md && ls -la /tmp/test-vault && npm install -g @smith-and-web/obsidian-mcp-server",
-            "purpose": "create test vault and npm install -g package"
+            "command": "npm install -g @smith-and-web/obsidian-mcp-server mcp-remote",
+            "purpose": "Install packages globally"
           }
         ],
         "smoke_tests": [
+          {
+            "command": "ls ~/.local/bin/ | grep -i -E \"obsidian|mcp-remote|mcp\"; which obsidian-mcp-server; which mcp-remote; mcp-remote --help",
+            "expected_signal": "Usage: mcp-remote",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: mcp-remote <https://server-url> [callback-port] [--debug]",
+            "setup": [],
+            "offline": true
+          },
           {
             "command": "curl http://localhost:3001/health",
             "expected_signal": "\"status\":\"ok\"",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "{\"status\":\"ok\",\"vault\":\"/tmp/test-vault\",\"auth\":\"disabled\",\"semanticSearch\":\"disabled\"}",
+            "observed_excerpt": "{\"status\":\"ok\",\"vault\":\"/home/sbx/work/vault\",\"auth\":\"disabled\",\"semanticSearch\":\"disabled\"}",
             "setup": [
               {
-                "command": "VAULT_PATH=/tmp/test-vault PORT=3001 obsidian-mcp-server",
+                "command": "mkdir -p /home/sbx/work/vault && cat > /home/sbx/work/vault/welcome.md <<'EOF'\n---\ntags: [demo, test]\ntitle: Welcome\n---\n# Welcome\n\nThis is a sample note with searchable content about pickfit verification.\n\nSee also [[other-note]] and #inline-tag.\n\n## Section One\n\nDetails under section one.\nEOF\ncat > /home/sbx/work/vault/other-note.md <<'EOF'\n# Other Note\n\nContent linking back to [[welcome]] with unique word zyxwvu123.\nEOF\nls -la /home/sbx/work/vault/ && cat /home/sbx/work/vault/welcome.md",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "VAULT_PATH=/home/sbx/work/vault PORT=3001 obsidian-mcp-server",
                 "background": true,
                 "port": 3001
               }
@@ -130,14 +144,19 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --url http://127.0.0.1:3001/sse",
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- mcp-remote http://127.0.0.1:3001/sse",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
             "setup": [
               {
-                "command": "VAULT_PATH=/tmp/test-vault PORT=3001 obsidian-mcp-server",
+                "command": "mkdir -p /home/sbx/work/vault && cat > /home/sbx/work/vault/welcome.md <<'EOF'\n---\ntags: [demo, test]\ntitle: Welcome\n---\n# Welcome\n\nThis is a sample note with searchable content about pickfit verification.\n\nSee also [[other-note]] and #inline-tag.\n\n## Section One\n\nDetails under section one.\nEOF\ncat > /home/sbx/work/vault/other-note.md <<'EOF'\n# Other Note\n\nContent linking back to [[welcome]] with unique word zyxwvu123.\nEOF\nls -la /home/sbx/work/vault/ && cat /home/sbx/work/vault/welcome.md",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "VAULT_PATH=/home/sbx/work/vault PORT=3001 obsidian-mcp-server",
                 "background": true,
                 "port": 3001
               }
@@ -145,14 +164,59 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call list-vault --args '{}' --url http://127.0.0.1:3001/sse",
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 --call read-note --args '{\"path\":\"welcome.md\"}' -- mcp-remote http://127.0.0.1:3001/sse",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=list-vault content=text text_chars=91",
+            "observed_excerpt": "tools/call: ok tool=read-note content=text text_chars=269",
             "setup": [
               {
-                "command": "VAULT_PATH=/tmp/test-vault PORT=3001 obsidian-mcp-server",
+                "command": "mkdir -p /home/sbx/work/vault && cat > /home/sbx/work/vault/welcome.md <<'EOF'\n---\ntags: [demo, test]\ntitle: Welcome\n---\n# Welcome\n\nThis is a sample note with searchable content about pickfit verification.\n\nSee also [[other-note]] and #inline-tag.\n\n## Section One\n\nDetails under section one.\nEOF\ncat > /home/sbx/work/vault/other-note.md <<'EOF'\n# Other Note\n\nContent linking back to [[welcome]] with unique word zyxwvu123.\nEOF\nls -la /home/sbx/work/vault/ && cat /home/sbx/work/vault/welcome.md",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "VAULT_PATH=/home/sbx/work/vault PORT=3001 obsidian-mcp-server",
+                "background": true,
+                "port": 3001
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 --call search-vault --args '{\"query\":\"pickfit\"}' -- mcp-remote http://127.0.0.1:3001/sse",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search-vault content=text text_chars=934",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/vault && cat > /home/sbx/work/vault/welcome.md <<'EOF'\n---\ntags: [demo, test]\ntitle: Welcome\n---\n# Welcome\n\nThis is a sample note with searchable content about pickfit verification.\n\nSee also [[other-note]] and #inline-tag.\n\n## Section One\n\nDetails under section one.\nEOF\ncat > /home/sbx/work/vault/other-note.md <<'EOF'\n# Other Note\n\nContent linking back to [[welcome]] with unique word zyxwvu123.\nEOF\nls -la /home/sbx/work/vault/ && cat /home/sbx/work/vault/welcome.md",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "VAULT_PATH=/home/sbx/work/vault PORT=3001 obsidian-mcp-server",
+                "background": true,
+                "port": 3001
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 --call list-tags --args '{}' -- mcp-remote http://127.0.0.1:3001/sse",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list-tags content=text text_chars=248",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/vault && cat > /home/sbx/work/vault/welcome.md <<'EOF'\n---\ntags: [demo, test]\ntitle: Welcome\n---\n# Welcome\n\nThis is a sample note with searchable content about pickfit verification.\n\nSee also [[other-note]] and #inline-tag.\n\n## Section One\n\nDetails under section one.\nEOF\ncat > /home/sbx/work/vault/other-note.md <<'EOF'\n# Other Note\n\nContent linking back to [[welcome]] with unique word zyxwvu123.\nEOF\nls -la /home/sbx/work/vault/ && cat /home/sbx/work/vault/welcome.md",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "VAULT_PATH=/home/sbx/work/vault PORT=3001 obsidian-mcp-server",
                 "background": true,
                 "port": 3001
               }
@@ -162,37 +226,41 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "VAULT_PATH=/path/to/your/vault npx @smith-and-web/obsidian-mcp-server and 'obsidian-mcp-server --help' style checks",
-            "actually_needed": "Use global install 'npm install -g @smith-and-web/obsidian-mcp-server' then run 'VAULT_PATH=/tmp/test-vault PORT=3001 obsidian-mcp-server'; npx fetch would fail with network off on replay. The binary 'obsidian-mcp-server' has no --help/--version: running it with --help starts the server instead of …",
-            "kind": "sandbox"
+            "readme_said": "VAULT_PATH=/path/to/your/vault npx @smith-and-web/obsidian-mcp-server and npx -y mcp-remote http://localhost:3001/sse",
+            "actually_needed": "npm install -g @smith-and-web/obsidian-mcp-server mcp-remote, then run installed obsidian-mcp-server with VAULT_PATH/PORT; stdio clients/probe connect via mcp-remote http://127.0.0.1:PORT/sse",
+            "kind": "note"
+          },
+          {
+            "readme_said": "no --help/--version documented; server starts in foreground",
+            "actually_needed": "obsidian-mcp-server --help starts the SSE server instead of printing help; use mcp-remote --help or the probe handshake to verify",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Health returns status ok, MCP handshake lists 31 tools, and list-vault call returns Hello.md and Other.md.",
+          "observed": "All three checks succeed: health endpoint returns status ok, MCP probe handshakes with 31 tools, and binaries show mcp-remote usage.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-obsidian-mcp-server-20261031-012317-8166/report.json",
+          "trace_path": "runs/verify/verify-obsidian-mcp-server-20261031-025255-bb13/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-obsidian-mcp-server-20261031-012317-8166/check-1-cmd5.judged.png",
-            "runs/verify/verify-obsidian-mcp-server-20261031-012317-8166/check-2-cmd6.judged.png",
-            "runs/verify/verify-obsidian-mcp-server-20261031-012317-8166/check-3-cmd7.judged.png"
+            "runs/verify/verify-obsidian-mcp-server-20261031-025255-bb13/check-1-cmd8.judged.png",
+            "runs/verify/verify-obsidian-mcp-server-20261031-025255-bb13/check-2-cmd9.judged.png",
+            "runs/verify/verify-obsidian-mcp-server-20261031-025255-bb13/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.054911,
+        "cost_usd": 0.104833,
         "mcp": {
-          "transport": "streamable_http",
+          "transport": "stdio",
           "launch": [
-            "VAULT_PATH=/tmp/test-vault",
-            "PORT=3001",
-            "obsidian-mcp-server"
+            "mcp-remote",
+            "http://127.0.0.1:3001/sse"
           ],
-          "url": "http://127.0.0.1:3001/sse",
+          "url": null,
           "protocol_version": "2024-11-05",
           "server_name": "obsidian-mcp",
           "server_version": "1.12.0",
@@ -230,9 +298,49 @@
             "find-replace"
           ],
           "tool_count": 31,
-          "called_tool": "list-vault",
+          "called_tool": "read-note",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Create, read, update and delete notes",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Search notes with full-text search",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Manage tags and frontmatter metadata",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Search notes by semantic meaning",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "semantic tools absent (31 tools, no semantic-search); needs DATABASE_URL Postgres+pgvector and Ollama"
+          }
+        ]
       }
     ]
   },
@@ -814,5 +922,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:50:21+08:00",
-  "updated_at": "2026-10-31T02:36:02+08:00"
+  "updated_at": "2026-10-31T02:59:44.498289+08:00"
 }

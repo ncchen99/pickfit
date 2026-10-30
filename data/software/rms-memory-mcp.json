@@ -79,21 +79,21 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-rms-memory-mcp-20261031-014105-8874",
+      "run_id": "verify-rms-memory-mcp-20261031-024934-80d8",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/max-ramas/rms-memory-mcp/master/scripts/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -l /tmp/install.sh",
-          "purpose": "Download install script for inspection"
+          "command": "curl -fsSL https://raw.githubusercontent.com/max-ramas/rms-memory-mcp/master/scripts/install.sh -o /tmp/rms-install.sh && ls -l /tmp/rms-install.sh && wc -l /tmp/rms-install.sh",
+          "purpose": "Download install script only"
         },
         {
-          "command": "bash /tmp/install.sh",
-          "purpose": "Run install script to install binary to ~/.local/bin"
+          "command": "bash /tmp/rms-install.sh",
+          "purpose": "Run install script for rms-memory"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "rms-memory --version && rms-memory --help",
+        "command": "rms-memory --version",
         "expected_signal": "rms-memory 1.3.2"
       },
       "first_task": null
@@ -128,10 +128,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:41:55.244093+08:00",
+    "checked_at": "2026-10-31T02:52:26.669204+08:00",
     "runs": [
       {
-        "id": "verify-rms-memory-mcp-20261031-014105-8874",
+        "id": "verify-rms-memory-mcp-20261031-024934-80d8",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -139,23 +139,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:41:55.244093+08:00",
+        "checked_at": "2026-10-31T02:52:26.669204+08:00",
         "tool_version": "1.3.2",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/max-ramas/rms-memory-mcp/master/scripts/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -l /tmp/install.sh",
-            "purpose": "Download install script for inspection"
+            "command": "curl -fsSL https://raw.githubusercontent.com/max-ramas/rms-memory-mcp/master/scripts/install.sh -o /tmp/rms-install.sh && ls -l /tmp/rms-install.sh && wc -l /tmp/rms-install.sh",
+            "purpose": "Download install script only"
           },
           {
-            "command": "bash /tmp/install.sh",
-            "purpose": "Run install script to install binary to ~/.local/bin"
+            "command": "bash /tmp/rms-install.sh",
+            "purpose": "Run install script for rms-memory"
           }
         ],
         "smoke_tests": [
           {
-            "command": "rms-memory --version && rms-memory --help",
+            "command": "rms-memory --version",
             "expected_signal": "rms-memory 1.3.2",
             "exit_code": 0,
             "passed": true,
@@ -164,7 +164,7 @@
             "offline": true
           },
           {
-            "command": "RMS_MEMORY_NO_UPDATE_CHECK=1 python3 ~/.pickfit/mcp_probe.py -- rms-memory serve",
+            "command": "cd /home/sbx/work && RMS_MEMORY_NO_UPDATE_CHECK=1 python3 ~/.pickfit/mcp_probe.py -- rms-memory serve",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -173,34 +173,96 @@
             "offline": true
           },
           {
-            "command": "RMS_MEMORY_NO_UPDATE_CHECK=1 python3 ~/.pickfit/mcp_probe.py --call rms_projects --args '{}' -- rms-memory serve",
+            "command": "cd /home/sbx/work && RMS_MEMORY_NO_UPDATE_CHECK=1 python3 ~/.pickfit/mcp_probe.py --call rms_projects --args '{}' -- rms-memory serve",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=rms_projects content=text text_chars=2",
-            "setup": [],
+            "observed_excerpt": "tools/call: ok tool=rms_projects content=text text_chars=12",
+            "setup": [
+              {
+                "command": "RMS_MEMORY_NO_UPDATE_CHECK=1 rms-memory config --vault-path /home/sbx/.rms-memory/vaults && cd /home/sbx/work && RMS_MEMORY_NO_UPDATE_CHECK=1 rms-memory init && RMS_MEMORY_NO_UPDATE_CHECK=1 rms-memory projects list",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work && RMS_MEMORY_NO_UPDATE_CHECK=1 python3 ~/.pickfit/mcp_probe.py --call rms_search --args '{\"query\":\"local-first vault architecture decision\",\"project\":\"work\",\"limit\":3}' -- rms-memory serve",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=rms_search content=text text_chars=389",
+            "setup": [
+              {
+                "command": "RMS_MEMORY_NO_UPDATE_CHECK=1 rms-memory config --vault-path /home/sbx/.rms-memory/vaults && cd /home/sbx/work && RMS_MEMORY_NO_UPDATE_CHECK=1 rms-memory init && RMS_MEMORY_NO_UPDATE_CHECK=1 rms-memory projects list",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /home/sbx/work && RMS_MEMORY_NO_UPDATE_CHECK=1 python3 ~/.pickfit/mcp_probe.py --call rms_write --args '{\"project\":\"work\",\"path\":\"decisions/pickfit-test.md\",\"content\":\"# Pickfit Test\\n\\nPersistent memory stores architecture decision: use local-first vault for agents.\\n\",\"mode\":\"create\",\"confidence\":0.9,\"source\":\"human\"}' -- rms-memory serve",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /home/sbx/work && RMS_MEMORY_NO_UPDATE_CHECK=1 python3 ~/.pickfit/mcp_probe.py --call rms_sync --args '{\"project\":\"work\"}' -- rms-memory serve",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work && RMS_MEMORY_NO_UPDATE_CHECK=1 python3 ~/.pickfit/mcp_probe.py --call rms_code_search --args '{\"query\":\"vault registry\",\"project\":\"work\",\"limit\":3}' -- rms-memory serve",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=rms_code_search content=text text_chars=72",
+            "setup": [
+              {
+                "command": "RMS_MEMORY_NO_UPDATE_CHECK=1 rms-memory config --vault-path /home/sbx/.rms-memory/vaults && cd /home/sbx/work && RMS_MEMORY_NO_UPDATE_CHECK=1 rms-memory init && RMS_MEMORY_NO_UPDATE_CHECK=1 rms-memory projects list",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL .../scripts/install.sh | bash",
+            "actually_needed": "install.sh downloads a prebuilt binary tarball rms_memory_mcp_<version>_<target>.tar.gz which cannot be read as text before running",
+            "kind": "note"
+          },
+          {
+            "readme_said": "rms-memory config then rms-memory init registers a project",
+            "actually_needed": "set global vault path with rms-memory config --vault-path <PATH> before rms-memory init, otherwise init asks to set it first",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "curl ... install.sh | bash installs binary",
+            "actually_needed": "install.sh automatically runs rms-memory install at the end (found no IDE configs here)",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 19 tools, successful rms_projects tool call returning [], and CLI version 1.3.2 with full help.",
+          "observed": "Screenshots show MCP handshake with 19 tools, successful rms_projects call returning work, and version 1.3.2 output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-rms-memory-mcp-20261031-014105-8874/report.json",
+          "trace_path": "runs/verify/verify-rms-memory-mcp-20261031-024934-80d8/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-rms-memory-mcp-20261031-014105-8874/check-1-cmd4.judged.png",
-            "runs/verify/verify-rms-memory-mcp-20261031-014105-8874/check-2-cmd5.judged.png",
-            "runs/verify/verify-rms-memory-mcp-20261031-014105-8874/check-3-cmd3.judged.png"
+            "runs/verify/verify-rms-memory-mcp-20261031-024934-80d8/check-1-cmd4.judged.png",
+            "runs/verify/verify-rms-memory-mcp-20261031-024934-80d8/check-2-cmd8.judged.png",
+            "runs/verify/verify-rms-memory-mcp-20261031-024934-80d8/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.042294,
+        "cost_usd": 0.128581,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -235,7 +297,37 @@
           "tool_count": 19,
           "called_tool": "rms_projects",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "provide persistent local memory for AI agents",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "search memory with hybrid vector retrieval",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "index source code semantically across languages",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Code search returned no_hits with empty results."
+          }
+        ]
       }
     ]
   },
@@ -270,15 +362,15 @@
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:03:51+08:00",
+    "computed_at": "2026-10-31T02:52:26+08:00",
     "quality": {
-      "total": 96.1,
+      "total": 88.6,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -321,7 +413,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 31.81
+      "value": 29.33
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -724,5 +816,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:42+08:00",
-  "updated_at": "2026-10-31T02:36:02+08:00"
+  "updated_at": "2026-10-31T02:52:26.672555+08:00"
 }

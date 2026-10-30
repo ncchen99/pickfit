@@ -71,10 +71,10 @@
   "verification": {
     "level": "unverified",
     "unverified_reason": "needs_account",
-    "checked_at": "2026-10-31T01:52:40.343188+08:00",
+    "checked_at": "2026-10-31T03:08:29.408990+08:00",
     "runs": [
       {
-        "id": "verify-upload-post-mcp-20261031-015148-e432",
+        "id": "verify-upload-post-mcp-20261031-030733-f5bf",
         "level": "unverified",
         "unverified_reason": "needs_account",
         "os": "linux",
@@ -82,19 +82,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:52:40.343188+08:00",
-        "tool_version": "0.17.2",
-        "install_method": "npm",
+        "checked_at": "2026-10-31T03:08:29.408990+08:00",
+        "tool_version": "0.17.3",
+        "install_method": "source",
         "replayed": false,
         "steps": [
           {
-            "command": "npm install -g @upload-post/mcp",
-            "purpose": "install mcp server globally"
+            "command": "git clone https://github.com/Upload-Post/upload-post-mcp.git /tmp/upm && ls /tmp/upm | head -n 50; cat /tmp/upm/package.json | head -n 80",
+            "purpose": "Clone https://github.com/Upload-Post/upload-post-mcp to /tmp/upm"
+          },
+          {
+            "command": "cd /tmp/upm && npm install && npm run build && ls dist/index.js && node dist/index.js --help",
+            "purpose": "npm install and npm run build in cloned repo"
           }
         ],
         "smoke_tests": [
           {
-            "command": "upload-post-mcp --help",
+            "command": "cd /tmp/upm && node dist/index.js --help",
             "expected_signal": "Usage: upload-post-mcp",
             "exit_code": 0,
             "passed": true,
@@ -103,14 +107,14 @@
             "offline": null
           },
           {
-            "command": "curl http://localhost:8080/healthz",
-            "expected_signal": "{\"ok\":true",
+            "command": "curl -s http://localhost:8080/healthz",
+            "expected_signal": "\"ok\":true",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "{\"ok\":true,\"oauth\":false,\"sessions\":0}",
             "setup": [
               {
-                "command": "upload-post-mcp --http --port 8080",
+                "command": "cd /tmp/upm && node dist/index.js --http --port 8080",
                 "background": true,
                 "port": 8080
               }
@@ -122,13 +126,13 @@
         "blocking_error": null,
         "judge": null,
         "evidence": {
-          "trace_path": "runs/verify/verify-upload-post-mcp-20261031-015148-e432/report.json",
+          "trace_path": "runs/verify/verify-upload-post-mcp-20261031-030733-f5bf/report.json",
           "log_path": null,
           "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.043963
+        "cost_usd": 0.072214
       }
     ]
   },
@@ -563,5 +567,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:50:13+08:00",
-  "updated_at": "2026-10-31T02:36:02+08:00"
+  "updated_at": "2026-10-31T03:08:29.413319+08:00"
 }

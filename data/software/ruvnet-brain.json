@@ -77,20 +77,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-ruvnet-brain-20261031-012317-3799",
+      "run_id": "verify-ruvnet-brain-20261031-025505-8675",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g ruvnet-brain@latest",
-          "purpose": "Install ruvnet-brain globally via npm"
+          "purpose": "global npm install of ruvnet-brain package"
+        },
+        {
+          "command": "ruvnet-brain --yes --no-nightly-prompt --no-telemetry --no-stack --no-enhance --no-statusline --no-selfcheck",
+          "purpose": "run installer to fetch signed knowledge bundle and models"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "which ruvnet-brain && ruvnet-brain --help",
+        "command": "ruvnet-brain --help",
         "expected_signal": "It is safe to re-run at any time"
       },
-      "first_task": null
+      "first_task": "ruvnet-brain --doctor"
     },
     "windows": {
       "basis": "readme_claim",
@@ -120,32 +124,36 @@
     "url": "https://github.com/stuinfla/ruvnet-brain/releases/tag/v4.7.23"
   },
   "verification": {
-    "level": "function",
+    "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:25:13.900090+08:00",
+    "checked_at": "2026-10-31T02:58:50.525280+08:00",
     "runs": [
       {
-        "id": "verify-ruvnet-brain-20261031-012317-3799",
-        "level": "function",
+        "id": "verify-ruvnet-brain-20261031-025505-8675",
+        "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:25:13.900090+08:00",
+        "checked_at": "2026-10-31T02:58:50.525280+08:00",
         "tool_version": "4.7.23",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g ruvnet-brain@latest",
-            "purpose": "Install ruvnet-brain globally via npm"
+            "purpose": "global npm install of ruvnet-brain package"
+          },
+          {
+            "command": "ruvnet-brain --yes --no-nightly-prompt --no-telemetry --no-stack --no-enhance --no-statusline --no-selfcheck",
+            "purpose": "run installer to fetch signed knowledge bundle and models"
           }
         ],
         "smoke_tests": [
           {
-            "command": "which ruvnet-brain && ruvnet-brain --help",
+            "command": "ruvnet-brain --help",
             "expected_signal": "It is safe to re-run at any time",
             "exit_code": 0,
             "passed": true,
@@ -161,42 +169,70 @@
             "observed_excerpt": "handshake: ok",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "ruvnet-brain --doctor",
+            "expected_signal": "Grounding PROVEN",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[32m✓ Grounding PROVEN.\u001b[0m It answered from \u001b[1mruvnet-brain/kb/package.json\u001b[0m — a passage that",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search_ruvnet --args '{\"query\": \"I need persistent memory for my agents. Which RuvNet options fit?\"}' -- node /home/sbx/.local/lib/node_modules/ruvnet-brain/plugin/mcp/server.mjs",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search_ruvnet content=text text_chars=1123",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search_ruvnet --args '{\"query\": \"How does RVF store and query vectors? Show the source implementation\"}' -- node /home/sbx/.local/lib/node_modules/ruvnet-brain/plugin/mcp/server.mjs",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search_ruvnet content=text text_chars=23090",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "npx ruvnet-brain@latest",
-            "actually_needed": "npm install -g ruvnet-brain@latest so node plugin/mcp/server.mjs is on disk for stdio probe offline; npx launcher would need network on replay",
+            "readme_said": "npx ruvnet-brain@latest installs in one step",
+            "actually_needed": "run installer after npm install: ruvnet-brain --yes --no-nightly-prompt --no-telemetry --no-stack --no-enhance --no-statusline (fetches 1.5GB KB + 257MB models); until then --doctor reports brain not found",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "installer exits 0 after successful install",
+            "actually_needed": "add --no-selfcheck for exit 0 on a machine with no Claude Code/Codex plugin; without it installer exits 1 with no-plugin hooks violation even though Knowledge checks are green",
             "kind": "sandbox"
           },
           {
-            "readme_said": "ruvnet-brain --doctor to inspect actual installation",
-            "actually_needed": "ruvnet-brain --doctor exits 1 in a box with no Claude Code/Codex hosts (no-plugin hooks self-check FAILING) and before bundle install reports brain not found; MCP handshake still passes without the bundle",
-            "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "--version prints tool version",
-            "actually_needed": "ruvnet-brain --version expects a release tag argument and exits 1; installed version read via npm list -g ruvnet-brain (4.7.23)",
-            "kind": "readme_wrong"
+            "readme_said": "standard --version prints tool version",
+            "actually_needed": "ruvnet-brain --version requires a release tag (e.g. --version vX.Y.Z) and exits 1; use ruvnet-brain --help / --doctor and read version 4.7.23 from package.json",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "MCP probe handshakes with 4 tools listed and ruvnet-brain help prints installer usage ending with safe re-run notice.",
+          "observed": "Screenshots show MCP handshake ok with 4 tools, doctor reporting Grounding proven and Healthy, and help ending with safe re-run note.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-ruvnet-brain-20261031-012317-3799/report.json",
+          "trace_path": "runs/verify/verify-ruvnet-brain-20261031-025505-8675/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-ruvnet-brain-20261031-012317-3799/check-1-cmd7.judged.png",
-            "runs/verify/verify-ruvnet-brain-20261031-012317-3799/check-2-cmd3.judged.png"
+            "runs/verify/verify-ruvnet-brain-20261031-025505-8675/check-1-cmd7.judged.png",
+            "runs/verify/verify-ruvnet-brain-20261031-025505-8675/check-2-cmd9.judged.png",
+            "runs/verify/verify-ruvnet-brain-20261031-025505-8675/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.098287,
+        "cost_usd": 0.099317,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -214,9 +250,37 @@
             "ruvnet_cli_run"
           ],
           "tool_count": 4,
-          "called_tool": null,
+          "called_tool": "search_ruvnet",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Discover RuvNet capabilities in plain language",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Search source code with repository citations",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only a repo search header with no code body visible."
+          },
+          {
+            "feature": "Retain useful project context for recall",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no project memory db; doctor says persisted opt-in required, no recall tool listed"
+          }
+        ]
       }
     ]
   },
@@ -231,15 +295,15 @@
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-31T02:03:51+08:00",
+    "computed_at": "2026-10-31T02:58:50+08:00",
     "quality": {
-      "total": 70.0,
+      "total": 82.0,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.578,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -282,7 +346,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 11.9
+      "value": 13.94
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -613,5 +677,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:19+08:00",
-  "updated_at": "2026-10-31T02:36:02+08:00"
+  "updated_at": "2026-10-31T02:58:50.526759+08:00"
 }

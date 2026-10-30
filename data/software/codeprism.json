@@ -58,18 +58,18 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-codeprism-20261031-013958-f73d",
+      "run_id": "verify-codeprism-20261031-024743-22f0",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install codeprism-ai 2>&1",
-          "purpose": "install codeprism via uv tool"
+          "purpose": "install codeprism-ai with uv tool"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "codeprism --help",
-        "expected_signal": "Usage: codeprism"
+        "command": "codeprism --help 2>&1",
+        "expected_signal": "CodePrism"
       },
       "first_task": null
     },
@@ -90,10 +90,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:41:19.309755+08:00",
+    "checked_at": "2026-10-31T02:50:00.220164+08:00",
     "runs": [
       {
-        "id": "verify-codeprism-20261031-013958-f73d",
+        "id": "verify-codeprism-20261031-024743-22f0",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -101,20 +101,20 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:41:19.309755+08:00",
+        "checked_at": "2026-10-31T02:50:00.220164+08:00",
         "tool_version": "0.1.11",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install codeprism-ai 2>&1",
-            "purpose": "install codeprism via uv tool"
+            "purpose": "install codeprism-ai with uv tool"
           }
         ],
         "smoke_tests": [
           {
-            "command": "codeprism --help",
-            "expected_signal": "Usage: codeprism",
+            "command": "codeprism --help 2>&1",
+            "expected_signal": "CodePrism",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "Usage: codeprism [OPTIONS] COMMAND [ARGS]...",
@@ -122,23 +122,74 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- codeprism serve",
+            "command": "cd demo_proj && python3 ~/.pickfit/mcp_probe.py --timeout 120 -- codeprism serve . 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
-            "setup": [],
+            "setup": [
+              {
+                "command": "mkdir -p demo_proj && cat > demo_proj/processor.py <<'PY'\n\"\"\"Demo payment processor for CodePrism smoke test.\"\"\"\nimport hashlib\n\ndef compute_checksum(data: str) -> str:\n    return hashlib.sha256(data.encode()).hexdigest()\n\ndef process_payment(amount: float, card: str) -> str:\n    checksum = compute_checksum(card)\n    return charge_card(amount, checksum)\n\ndef charge_card(amount: float, token: str) -> str:\n    return f\"charged {amount} with {token[:8]}\"\n\nclass PaymentService:\n    def refund(self, tx: str) -> str:\n        return self._reverse(tx)\n\n    def _reverse(self, tx: str) -> str:\n        return f\"reversed {tx}\"\nPY\ncat > demo_proj/auth.py <<'PY'\n\"\"\"Auth module.\"\"\"\nimport os\n\ndef login(user: str, password: str) -> bool:\n    return check_password(user, password)\n\ndef check_password(user: str, password: str) -> bool:\n    return len(password) > 0\nPY\nls -la demo_proj && cat demo_proj/processor.py",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get_graph_stats --args '{}' -- codeprism serve /tmp/sampleproj",
+            "command": "cd demo_proj && python3 ~/.pickfit/mcp_probe.py --timeout 120 --call index_project --args '{\"path\":\".\"}' -- codeprism serve . 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=get_graph_stats content=text text_chars=246",
+            "observed_excerpt": "tools/call: ok tool=index_project content=text text_chars=102",
             "setup": [
               {
-                "command": "mkdir -p /tmp/sampleproj && cat > /tmp/sampleproj/hello.py <<'PY'\ndef greet(name):\n    \"\"\"Greet someone.\"\"\"\n    return f\"hello {name}\"\n\ndef main():\n    print(greet(\"world\"))\n\nif __name__ == \"__main__\":\n    main()\nPY\ncat /tmp/sampleproj/hello.py && codeprism index /tmp/sampleproj 2>&1",
+                "command": "mkdir -p demo_proj && cat > demo_proj/processor.py <<'PY'\n\"\"\"Demo payment processor for CodePrism smoke test.\"\"\"\nimport hashlib\n\ndef compute_checksum(data: str) -> str:\n    return hashlib.sha256(data.encode()).hexdigest()\n\ndef process_payment(amount: float, card: str) -> str:\n    checksum = compute_checksum(card)\n    return charge_card(amount, checksum)\n\ndef charge_card(amount: float, token: str) -> str:\n    return f\"charged {amount} with {token[:8]}\"\n\nclass PaymentService:\n    def refund(self, tx: str) -> str:\n        return self._reverse(tx)\n\n    def _reverse(self, tx: str) -> str:\n        return f\"reversed {tx}\"\nPY\ncat > demo_proj/auth.py <<'PY'\n\"\"\"Auth module.\"\"\"\nimport os\n\ndef login(user: str, password: str) -> bool:\n    return check_password(user, password)\n\ndef check_password(user: str, password: str) -> bool:\n    return len(password) > 0\nPY\nls -la demo_proj && cat demo_proj/processor.py",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd demo_proj && python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get_callees --args '{\"file\":\"processor.py\",\"function\":\"process_payment\"}' -- codeprism serve . 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_callees content=text text_chars=404",
+            "setup": [
+              {
+                "command": "mkdir -p demo_proj && cat > demo_proj/processor.py <<'PY'\n\"\"\"Demo payment processor for CodePrism smoke test.\"\"\"\nimport hashlib\n\ndef compute_checksum(data: str) -> str:\n    return hashlib.sha256(data.encode()).hexdigest()\n\ndef process_payment(amount: float, card: str) -> str:\n    checksum = compute_checksum(card)\n    return charge_card(amount, checksum)\n\ndef charge_card(amount: float, token: str) -> str:\n    return f\"charged {amount} with {token[:8]}\"\n\nclass PaymentService:\n    def refund(self, tx: str) -> str:\n        return self._reverse(tx)\n\n    def _reverse(self, tx: str) -> str:\n        return f\"reversed {tx}\"\nPY\ncat > demo_proj/auth.py <<'PY'\n\"\"\"Auth module.\"\"\"\nimport os\n\ndef login(user: str, password: str) -> bool:\n    return check_password(user, password)\n\ndef check_password(user: str, password: str) -> bool:\n    return len(password) > 0\nPY\nls -la demo_proj && cat demo_proj/processor.py",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd demo_proj && python3 ~/.pickfit/mcp_probe.py --timeout 120 --call scan_diff --args '{\"original\":\"\",\"proposed\":\"x = 1\\n\",\"file\":\"test.py\"}' -- codeprism serve . 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=scan_diff content=text text_chars=46",
+            "setup": [
+              {
+                "command": "mkdir -p demo_proj && cat > demo_proj/processor.py <<'PY'\n\"\"\"Demo payment processor for CodePrism smoke test.\"\"\"\nimport hashlib\n\ndef compute_checksum(data: str) -> str:\n    return hashlib.sha256(data.encode()).hexdigest()\n\ndef process_payment(amount: float, card: str) -> str:\n    checksum = compute_checksum(card)\n    return charge_card(amount, checksum)\n\ndef charge_card(amount: float, token: str) -> str:\n    return f\"charged {amount} with {token[:8]}\"\n\nclass PaymentService:\n    def refund(self, tx: str) -> str:\n        return self._reverse(tx)\n\n    def _reverse(self, tx: str) -> str:\n        return f\"reversed {tx}\"\nPY\ncat > demo_proj/auth.py <<'PY'\n\"\"\"Auth module.\"\"\"\nimport os\n\ndef login(user: str, password: str) -> bool:\n    return check_password(user, password)\n\ndef check_password(user: str, password: str) -> bool:\n    return len(password) > 0\nPY\nls -la demo_proj && cat demo_proj/processor.py",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd demo_proj && python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get_context --args '{\"file\":\"processor.py\",\"symbol\":\"process_payment\"}' -- codeprism serve . 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_context content=text text_chars=1327",
+            "setup": [
+              {
+                "command": "mkdir -p demo_proj && cat > demo_proj/processor.py <<'PY'\n\"\"\"Demo payment processor for CodePrism smoke test.\"\"\"\nimport hashlib\n\ndef compute_checksum(data: str) -> str:\n    return hashlib.sha256(data.encode()).hexdigest()\n\ndef process_payment(amount: float, card: str) -> str:\n    checksum = compute_checksum(card)\n    return charge_card(amount, checksum)\n\ndef charge_card(amount: float, token: str) -> str:\n    return f\"charged {amount} with {token[:8]}\"\n\nclass PaymentService:\n    def refund(self, tx: str) -> str:\n        return self._reverse(tx)\n\n    def _reverse(self, tx: str) -> str:\n        return f\"reversed {tx}\"\nPY\ncat > demo_proj/auth.py <<'PY'\n\"\"\"Auth module.\"\"\"\nimport os\n\ndef login(user: str, password: str) -> bool:\n    return check_password(user, password)\n\ndef check_password(user: str, password: str) -> bool:\n    return len(password) > 0\nPY\nls -la demo_proj && cat demo_proj/processor.py",
                 "background": false,
                 "port": null
               }
@@ -150,27 +201,27 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 21 tools, successful get_graph_stats call returning file/function counts, and CLI help with Usage and commands.",
+          "observed": "Screenshots show CodePrism help text, MCP server handshake with 21 tools, and successful index_project call indexing 2 files.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-codeprism-20261031-013958-f73d/report.json",
+          "trace_path": "runs/verify/verify-codeprism-20261031-024743-22f0/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-codeprism-20261031-013958-f73d/check-1-cmd4.judged.png",
-            "runs/verify/verify-codeprism-20261031-013958-f73d/check-2-cmd6.judged.png",
-            "runs/verify/verify-codeprism-20261031-013958-f73d/check-3-cmd3.judged.png"
+            "runs/verify/verify-codeprism-20261031-024743-22f0/check-1-cmd3.judged.png",
+            "runs/verify/verify-codeprism-20261031-024743-22f0/check-2-cmd5.judged.png",
+            "runs/verify/verify-codeprism-20261031-024743-22f0/check-3-cmd6.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.046717,
+        "cost_usd": 0.070883,
         "mcp": {
           "transport": "stdio",
           "launch": [
             "codeprism",
             "serve",
-            "/tmp/sampleproj"
+            "."
           ],
           "url": null,
           "protocol_version": "2025-11-25",
@@ -200,9 +251,51 @@
             "undo_write"
           ],
           "tool_count": 21,
-          "called_tool": "get_graph_stats",
+          "called_tool": "index_project",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "build persistent knowledge graph of codebase",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "answer callers, callees and impact queries",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "scan writes for security issues",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "serve codebase context via MCP",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -624,5 +717,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:34+08:00",
-  "updated_at": "2026-10-31T02:36:02+08:00"
+  "updated_at": "2026-10-31T02:50:00.221404+08:00"
 }

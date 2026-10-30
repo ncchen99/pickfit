@@ -74,17 +74,17 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-termcp-20261031-012724-a2db",
+      "run_id": "verify-termcp-20261031-030455-d85a",
       "method": "npm",
       "steps": [
         {
           "command": "npm i -g @open-mcp-ai/termcp",
-          "purpose": "Install termcp via npm global"
+          "purpose": "install termcp globally via npm"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "termcp -version",
+        "command": "termcp --version",
         "expected_signal": "termcp v0.2.8"
       },
       "first_task": null
@@ -119,10 +119,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:28:55.212204+08:00",
+    "checked_at": "2026-10-31T03:07:18.721452+08:00",
     "runs": [
       {
-        "id": "verify-termcp-20261031-012724-a2db",
+        "id": "verify-termcp-20261031-030455-d85a",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -130,19 +130,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:28:55.212204+08:00",
+        "checked_at": "2026-10-31T03:07:18.721452+08:00",
         "tool_version": "v0.2.8",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm i -g @open-mcp-ai/termcp",
-            "purpose": "Install termcp via npm global"
+            "purpose": "install termcp globally via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "termcp -version",
+            "command": "termcp --version",
             "expected_signal": "termcp v0.2.8",
             "exit_code": 0,
             "passed": true,
@@ -151,7 +151,7 @@
             "offline": false
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- termcp daemon stdio",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- termcp daemon stdio",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -160,11 +160,38 @@
             "offline": false
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call term --args '{}' -- termcp daemon stdio",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call term --args '{\"cmd\":\"ls ext\"}' -- termcp daemon stdio",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=term content=text text_chars=4148",
+            "observed_excerpt": "tools/call: ok tool=term content=text text_chars=54",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call term --args '{\"cmd\":\"help create\"}' -- termcp daemon stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=term content=text text_chars=2215",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call term --args '{\"cmd\":\"help connect\"}' -- termcp daemon stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=term content=text text_chars=738",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call term --args '{\"cmd\":\"help call\"}' -- termcp daemon stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=term content=text text_chars=2260",
             "setup": [],
             "offline": false
           }
@@ -173,21 +200,21 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show termcp v0.2.8 printed, MCP stdio handshake succeeding, and term tool call returning 200 OK.",
+          "observed": "Screenshots show MCP handshake succeeding, term tool call returning output, and termcp v0.2.8 version printed.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-termcp-20261031-012724-a2db/report.json",
+          "trace_path": "runs/verify/verify-termcp-20261031-030455-d85a/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-termcp-20261031-012724-a2db/check-1-cmd3.judged.png",
-            "runs/verify/verify-termcp-20261031-012724-a2db/check-2-cmd4.judged.png",
-            "runs/verify/verify-termcp-20261031-012724-a2db/check-3-cmd9.judged.png"
+            "runs/verify/verify-termcp-20261031-030455-d85a/check-1-cmd3.judged.png",
+            "runs/verify/verify-termcp-20261031-030455-d85a/check-2-cmd7.judged.png",
+            "runs/verify/verify-termcp-20261031-030455-d85a/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.068581,
+        "cost_usd": 0.091116,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -205,7 +232,41 @@
           "tool_count": 1,
           "called_tool": "term",
           "offline": false
-        }
+        },
+        "features": [
+          {
+            "feature": "install and use MCP servers dynamically",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows 'no extensions installed' rather than installing and using an MCP server."
+          },
+          {
+            "feature": "write and hot-load own MCP server",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only help text for 'create' rather than writing and hot-loading a server."
+          },
+          {
+            "feature": "manage hosts over SSH collaboratively",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only help text for 'connect' rather than managing a host over SSH."
+          },
+          {
+            "feature": "call MCP servers across machines over SSH",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only help text for 'call' rather than calling an MCP server across machines."
+          }
+        ]
       }
     ]
   },
@@ -613,5 +674,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:34+08:00",
-  "updated_at": "2026-10-31T02:36:02+08:00"
+  "updated_at": "2026-10-31T03:07:18.723164+08:00"
 }

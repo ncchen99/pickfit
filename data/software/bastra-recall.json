@@ -79,20 +79,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-bastra-recall-20261031-014119-6f0b",
+      "run_id": "verify-bastra-recall-20261031-024952-eddf",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g bastra-recall",
+          "command": "node --version && npm --version && npm install -g bastra-recall",
           "purpose": "Install bastra-recall globally via npm"
+        },
+        {
+          "command": "ln -sf \"$HOME/.local/lib/node_modules/bastra-recall/node_modules/@bastra-recall/daemon/dist/mcp-forwarder.js\" \"$HOME/.local/bin/bastra-recall-mcp\" && chmod +x \"$HOME/.local/bin/bastra-recall-mcp\" && ls -l ~/.local/bin/bastra-recall-mcp && ls ~/.pickfit/mcp_probe.py",
+          "purpose": "Expose MCP forwarder on PATH"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "which bastra && bastra --version",
+        "command": "ls ~/.local/lib/node_modules/bastra-recall/node_modules/@bastra-recall/ 2>&1; ls ~/.local/lib/node_modules/bastra-recall/node_modules/.bin/ 2>&1; which bastra && bastra --version",
         "expected_signal": "1.1.1"
       },
-      "first_task": null
+      "first_task": "bastra doctor 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -124,10 +128,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:47:38.498424+08:00",
+    "checked_at": "2026-10-31T02:58:35.689068+08:00",
     "runs": [
       {
-        "id": "verify-bastra-recall-20261031-014119-6f0b",
+        "id": "verify-bastra-recall-20261031-024952-eddf",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -135,19 +139,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:47:38.498424+08:00",
+        "checked_at": "2026-10-31T02:58:35.689068+08:00",
         "tool_version": "1.1.1",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g bastra-recall",
+            "command": "node --version && npm --version && npm install -g bastra-recall",
             "purpose": "Install bastra-recall globally via npm"
+          },
+          {
+            "command": "ln -sf \"$HOME/.local/lib/node_modules/bastra-recall/node_modules/@bastra-recall/daemon/dist/mcp-forwarder.js\" \"$HOME/.local/bin/bastra-recall-mcp\" && chmod +x \"$HOME/.local/bin/bastra-recall-mcp\" && ls -l ~/.local/bin/bastra-recall-mcp && ls ~/.pickfit/mcp_probe.py",
+            "purpose": "Expose MCP forwarder on PATH"
           }
         ],
         "smoke_tests": [
           {
-            "command": "which bastra && bastra --version",
+            "command": "ls ~/.local/lib/node_modules/bastra-recall/node_modules/@bastra-recall/ 2>&1; ls ~/.local/lib/node_modules/bastra-recall/node_modules/.bin/ 2>&1; which bastra && bastra --version",
             "expected_signal": "1.1.1",
             "exit_code": 0,
             "passed": true,
@@ -156,7 +164,7 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- node /home/sbx/.local/lib/node_modules/bastra-recall/node_modules/@bastra-recall/daemon/dist/mcp-forwarder.js",
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- bastra-recall-mcp",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -165,55 +173,63 @@
             "offline": true
           },
           {
-            "command": "mkdir -p /home/sbx/work/test-vault && BASTRA_VAULT_PATH=/home/sbx/work/test-vault python3 ~/.pickfit/mcp_probe.py --timeout 120 --call find_document --args '{\"query\":\"test\"}' -- node /home/sbx/.local/lib/node_modules/bastra-recall/node_modules/@bastra-recall/daemon/dist/mcp-forwarder.js",
+            "command": "bastra doctor 2>&1",
+            "expected_signal": "semantic recall",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "→ semantic recall",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/bastra-vault && BASTRA_VAULT_PATH=/tmp/bastra-vault python3 ~/.pickfit/mcp_probe.py --call recall --args '{\"query\":\"test\"}' --timeout 120 -- bastra-recall-mcp",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=find_document content=text,text text_chars=56",
+            "observed_excerpt": "tools/call: ok tool=recall content=text,text text_chars=205",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "npx bastra-recall install (no prior global install needed)",
-            "actually_needed": "npm install -g bastra-recall so `bastra` and the forwarder JS file persist on PATH for offline replay; the ranked-first `npx` launcher would re-fetch on each run",
+            "readme_said": "npx bastra-recall install with no prior global install",
+            "actually_needed": "npm install -g bastra-recall so bastra is on PATH for offline replay; npx fetch would fail with network off",
             "kind": "note"
           },
           {
-            "readme_said": "README documents install/doctor/map but no MCP launch command",
-            "actually_needed": "MCP stdio launch is `node /home/sbx/.local/lib/node_modules/bastra-recall/node_modules/@bastra-recall/daemon/dist/mcp-forwarder.js` (from FORWARDER_SCRIPT_PATH); no `bastra mcp` subcommand is documented",
-            "kind": "readme_wrong"
+            "readme_said": "MCP forwarder launch command on PATH",
+            "actually_needed": "symlink daemon dist/mcp-forwarder.js to ~/.local/bin/bastra-recall-mcp; only bastra is on PATH after install",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "README examples assume an installed vault; probe calls need BASTRA_VAULT_PATH",
-            "actually_needed": "set BASTRA_VAULT_PATH to an existing directory (e.g. mkdir -p test-vault) before calling tools; bare `recall` with no vault returned a tools/call error, while `find_document` with the vault set returned hits:[]",
-            "kind": "note"
+            "readme_said": "MCP tools work with no setup",
+            "actually_needed": "BASTRA_VAULT_PATH=/tmp/bastra-vault with pre-created dir, otherwise recall/save_memory return tools/call error",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 15 tools, successful find_document call, and CLI version 1.1.1.",
+          "observed": "Screenshots show MCP handshake with 15 tools, bastra doctor reporting semantic recall status, and CLI version 1.1.1 installed.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-bastra-recall-20261031-014119-6f0b/report.json",
+          "trace_path": "runs/verify/verify-bastra-recall-20261031-024952-eddf/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-bastra-recall-20261031-014119-6f0b/check-1-cmd13.judged.png",
-            "runs/verify/verify-bastra-recall-20261031-014119-6f0b/check-2-cmd15.judged.png",
-            "runs/verify/verify-bastra-recall-20261031-014119-6f0b/check-3-cmd3.judged.png"
+            "runs/verify/verify-bastra-recall-20261031-024952-eddf/check-1-cmd4.judged.png",
+            "runs/verify/verify-bastra-recall-20261031-024952-eddf/check-2-cmd7.judged.png",
+            "runs/verify/verify-bastra-recall-20261031-024952-eddf/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.117938,
+        "cost_usd": 0.165627,
         "mcp": {
           "transport": "stdio",
           "launch": [
-            "node",
-            "/home/sbx/.local/lib/node_modules/bastra-recall/node_modules/@bastra-recall/daemon/dist/mcp-forwarder.js"
+            "bastra-recall-mcp"
           ],
           "url": null,
           "protocol_version": "2025-11-25",
@@ -237,9 +253,43 @@
             "review_draft"
           ],
           "tool_count": 15,
-          "called_tool": "find_document",
+          "called_tool": "recall",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "keep preferences, decisions and lessons across sessions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "save_memory not retried with vault before turn limit"
+          },
+          {
+            "feature": "retrieve relevant memories before starting work",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Recall call succeeded but returned vault_size 0 and hits [], so no relevant memory retrieval is demonstrated."
+          },
+          {
+            "feature": "share same vault across AI tools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "no dedicated vault-sharing tool call before turn limit"
+          },
+          {
+            "feature": "browse memories in local vault map",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "vault map is browser UI, no MCP tool tried before turn limit"
+          }
+        ]
       }
     ]
   },
@@ -651,5 +701,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:19+08:00",
-  "updated_at": "2026-10-31T02:36:02+08:00"
+  "updated_at": "2026-10-31T02:58:35.690602+08:00"
 }

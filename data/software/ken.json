@@ -122,10 +122,10 @@
   "verification": {
     "level": "unverified",
     "unverified_reason": "suspected_tool_fault",
-    "checked_at": "2026-10-31T01:23:49.980470+08:00",
+    "checked_at": "2026-10-31T02:56:14.457993+08:00",
     "runs": [
       {
-        "id": "verify-ken-20261031-012317-cd3d",
+        "id": "verify-ken-20261031-025513-6e20",
         "level": "unverified",
         "unverified_reason": "suspected_tool_fault",
         "os": "linux",
@@ -133,50 +133,48 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:23:49.980470+08:00",
+        "checked_at": "2026-10-31T02:56:14.457993+08:00",
         "tool_version": null,
         "install_method": "binary",
         "replayed": false,
         "steps": [
           {
-            "command": "uname -m && curl -L -o /tmp/ken.tar.gz https://github.com/townsendmerino/ken/releases/download/v1.12.1/ken_1.12.1_linux_amd64.tar.gz && tar tzf /tmp/ken.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/ken.tar.gz -C /tmp/ && ls -la /tmp/*.tar.gz /tmp/ken* 2>&1; ls -la /tmp/",
-            "purpose": "Download prebuilt linux_amd64 ken tarball and extract ken and ken-mcp binaries"
+            "command": "uname -m && mkdir -p /tmp/ken-rel && curl -sL -o /tmp/ken-rel/ken.tar.gz https://github.com/townsendmerino/ken/releases/download/v1.12.1/ken_1.12.1_linux_amd64.tar.gz && tar tzf /tmp/ken-rel/ken.tar.gz",
+            "purpose": "Download Linux release tarball"
+          },
+          {
+            "command": "install -m 755 /tmp/ken-rel/ken /tmp/ken-rel/ken-mcp \"$HOME/.local/bin/\" && ls \"$HOME/.local/bin/ken\" \"$HOME/.local/bin/ken-mcp\"",
+            "purpose": "Install ken and ken-mcp to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
             "command": "ken --help",
-            "expected_signal": "ken download-model fetches",
+            "expected_signal": "ken",
             "exit_code": 2,
             "passed": false,
-            "observed_excerpt": "ken download-model fetches the three files Model2Vec needs (model.safetensors,",
-            "setup": [
-              {
-                "command": "uname -m && curl -L -o /tmp/ken.tar.gz https://github.com/townsendmerino/ken/releases/download/v1.12.1/ken_1.12.1_linux_amd64.tar.gz && tar tzf /tmp/ken.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/ken.tar.gz -C /tmp/ && ls -la /tmp/*.tar.gz /tmp/ken* 2>&1; ls -la /tmp/",
-                "background": false,
-                "port": null
-              }
-            ],
+            "observed_excerpt": "ken — code search",
+            "setup": [],
             "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "go install github.com/townsendmerino/ken/cmd/ken@latest and go install github.com/townsendmerino/ken/cmd/ken-mcp@latest",
-            "actually_needed": "Go toolchain is not installed in the box and must not be installed per rules, so go install candidates cannot be used; used prebuilt linux_amd64 tarball from GitHub releases instead",
+            "readme_said": "go install github.com/townsendmerino/ken/cmd/ken@latest and ken-mcp@latest",
+            "actually_needed": "download ken_1.12.1_linux_amd64.tar.gz from GitHub releases and install ken and ken-mcp to ~/.local/bin (Go toolchain not available and must not be installed)",
             "kind": "sandbox"
           }
         ],
-        "blocking_error": "suspected tool fault, not proven: nothing checked further (install step 2 did not succeed); ken --help / ken --version / ken version all exit 2 while printing help text to stderr (repeated across command_ids 3, 4, 5, 6); --version/--help never exited 0 so PATH check and MCP probe could not be completed",
+        "blocking_error": "suspected tool fault, not proven: command 6 exits 2 (command 6 shows no error of the tool's own code); fresh box: command 4 exited 1 before the failing command; ken --help and ken --version both exit 2 while printing help text to stderr (tail shows download-model / rerank help), so no --version/--help check passes",
         "judge": null,
         "evidence": {
-          "trace_path": "runs/verify/verify-ken-20261031-012317-cd3d/report.json",
+          "trace_path": "runs/verify/verify-ken-20261031-025513-6e20/report.json",
           "log_path": null,
           "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.058874
+        "cost_usd": 0.069579
       }
     ]
   },
@@ -778,5 +776,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-10-31T02:36:02+08:00"
+  "updated_at": "2026-10-31T02:56:14.462931+08:00"
 }

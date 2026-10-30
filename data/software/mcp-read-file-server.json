@@ -82,12 +82,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-mcp-read-file-server-20261031-013958-d53d",
+      "run_id": "verify-mcp-read-file-server-20261031-024743-5265",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g mcp-read-file-server",
-          "purpose": "Install MCP server globally via npm"
+          "purpose": "global install package"
         }
       ],
       "manual_steps": [],
@@ -126,10 +126,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:43:51.102851+08:00",
+    "checked_at": "2026-10-31T02:52:32.481562+08:00",
     "runs": [
       {
-        "id": "verify-mcp-read-file-server-20261031-013958-d53d",
+        "id": "verify-mcp-read-file-server-20261031-024743-5265",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -137,19 +137,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:43:51.102851+08:00",
+        "checked_at": "2026-10-31T02:52:32.481562+08:00",
         "tool_version": "2.1.5",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g mcp-read-file-server",
-            "purpose": "Install MCP server globally via npm"
+            "purpose": "global install package"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- mcp-read-file-server",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- mcp-read-file-server",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -158,54 +158,85 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call check_status --args '{}' -- mcp-read-file-server",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call read_file --args '{\"path\":\"/home/sbx/work/probe_hello.txt\"}' -- mcp-read-file-server",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=check_status content=text text_chars=30",
+            "observed_excerpt": "tools/call: ok tool=read_file content=text text_chars=71",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/probe_hello.txt <<'EOF'\nHello from mcp-read-file-server probe\nline2 searchme-xyz-123\nline3 end\nEOF\ncat /home/sbx/work/probe_hello.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call write_file --args '{\"path\":\"/home/sbx/work/probe_write.txt\",\"content\":\"write test 123\\n\"}' -- mcp-read-file-server",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=write_file content=text text_chars=62",
             "setup": [],
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call list_directory --args '{\"path\": \"/home/sbx/work\"}' -- mcp-read-file-server",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call edit_file --args '{\"path\":\"/home/sbx/work/probe_edit.txt\",\"oldString\":\"original line two to replace\",\"newString\":\"edited line two OK\"}' -- mcp-read-file-server",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=list_directory content=text text_chars=14",
-            "setup": [],
+            "observed_excerpt": "tools/call: ok tool=edit_file content=text text_chars=78",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/probe_edit.txt <<'EOF'\noriginal line one\noriginal line two to replace\noriginal line three\nEOF\ncat /home/sbx/work/probe_edit.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search_files --args '{\"path\":\"/home/sbx/work\",\"pattern\":\"searchme-xyz-123\"}' -- mcp-read-file-server",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search_files content=text text_chars=74",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/probe_hello.txt <<'EOF'\nHello from mcp-read-file-server probe\nline2 searchme-xyz-123\nline3 end\nEOF\ncat /home/sbx/work/probe_hello.txt",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "npx -y mcp-read-file-server",
-            "actually_needed": "Use globally installed launch command `mcp-read-file-server` (from `npm install -g mcp-read-file-server`); the README's `npx -y mcp-read-file-server` fetches the package over the network on each run and fails with the network off.",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "README gives no --version/--help flag for the server binary",
-            "actually_needed": "The server is stdio-only and has no --version/--help output: running it directly blocks waiting for MCP stdio input, so verify it with the MCP probe instead.",
+            "readme_said": "npx -y mcp-read-file-server starts the server",
+            "actually_needed": "run server only via MCP stdio probe (python3 ~/.pickfit/mcp_probe.py -- mcp-read-file-server); invoking the binary directly with --help or no args starts the stdio server and waits for input instead of exiting",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP server initializing, listing 18 tools, and successfully executing check_status and list_directory calls.",
+          "observed": "MCP server handshaked with 18 tools and both read_file and write_file tool calls returned ok with content.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-mcp-read-file-server-20261031-013958-d53d/report.json",
+          "trace_path": "runs/verify/verify-mcp-read-file-server-20261031-024743-5265/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-mcp-read-file-server-20261031-013958-d53d/check-1-cmd3.judged.png",
-            "runs/verify/verify-mcp-read-file-server-20261031-013958-d53d/check-2-cmd4.judged.png",
-            "runs/verify/verify-mcp-read-file-server-20261031-013958-d53d/check-3-cmd5.judged.png"
+            "runs/verify/verify-mcp-read-file-server-20261031-024743-5265/check-1-cmd3.judged.png",
+            "runs/verify/verify-mcp-read-file-server-20261031-024743-5265/check-2-cmd6.judged.png",
+            "runs/verify/verify-mcp-read-file-server-20261031-024743-5265/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.055845,
+        "cost_usd": 0.077863,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -236,9 +267,51 @@
             "inspect_write_strategy"
           ],
           "tool_count": 18,
-          "called_tool": "check_status",
+          "called_tool": "read_file",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "read encrypted files as plaintext",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "write files with transactional safety",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "edit files with precise replacement",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "search file contents recursively",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -890,5 +963,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:42+08:00",
-  "updated_at": "2026-10-31T02:36:02+08:00"
+  "updated_at": "2026-10-31T02:52:32.482794+08:00"
 }

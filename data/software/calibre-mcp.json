@@ -81,12 +81,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-calibre-mcp-20261031-014332-58b3",
+      "run_id": "verify-calibre-mcp-20261031-025740-2fc2",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g calibre-mcp",
-          "purpose": "Install calibre-mcp package globally"
+          "command": "npm install -g calibre-mcp 2>&1",
+          "purpose": "Install calibre-mcp globally via npm"
         }
       ],
       "manual_steps": [],
@@ -125,10 +125,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:50:13.341348+08:00",
+    "checked_at": "2026-10-31T02:59:52.717951+08:00",
     "runs": [
       {
-        "id": "verify-calibre-mcp-20261031-014332-58b3",
+        "id": "verify-calibre-mcp-20261031-025740-2fc2",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -136,19 +136,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:50:13.341348+08:00",
+        "checked_at": "2026-10-31T02:59:52.717951+08:00",
         "tool_version": "0.11.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g calibre-mcp",
-            "purpose": "Install calibre-mcp package globally"
+            "command": "npm install -g calibre-mcp 2>&1",
+            "purpose": "Install calibre-mcp globally via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- calibre-mcp",
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- calibre-mcp 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -159,32 +159,32 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "launch with npx -y calibre-mcp",
-            "actually_needed": "npm install -g calibre-mcp so the `calibre-mcp` binary is on PATH; the README launch `npx -y calibre-mcp` fetches the package at runtime and fails with network off",
+            "readme_said": "npx -y calibre-mcp",
+            "actually_needed": "npm install -g calibre-mcp then launch as calibre-mcp so no network fetch is needed; README launch npx -y calibre-mcp fetches on every run",
             "kind": "sandbox"
           },
           {
-            "readme_said": "--help/--version check",
-            "actually_needed": "`calibre-mcp --help` starts the MCP server listening on stdio and never exits (had to be killed); use the MCP probe handshake instead of --help/--version",
+            "readme_said": "--version or --help",
+            "actually_needed": "server starts on stdio and waits; --help does not print usage (timed out after 30s). Use MCP probe handshake instead.",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows calibre-mcp v0.11.0 initializing, listing 14 tools, and reporting handshake ok.",
+          "observed": "Screenshot shows MCP probe initializing calibre-mcp 0.11.0, listing 14 tools, and completing handshake successfully.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-calibre-mcp-20261031-014332-58b3/report.json",
+          "trace_path": "runs/verify/verify-calibre-mcp-20261031-025740-2fc2/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-calibre-mcp-20261031-014332-58b3/check-1-cmd4.judged.png"
+            "runs/verify/verify-calibre-mcp-20261031-025740-2fc2/check-1-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.044061,
+        "cost_usd": 0.05411,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -213,7 +213,41 @@
           "tool_count": 14,
           "called_tool": null,
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "search ebook library by meaning",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs running Calibre Content Server; ping without it errors"
+          },
+          {
+            "feature": "read book text and figures",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs running Calibre Content Server with a book"
+          },
+          {
+            "feature": "edit library metadata and books",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "write tools hidden by default and need Calibre server with local-write enabled"
+          },
+          {
+            "feature": "find duplicates and audit metadata",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs running Calibre Content Server library to audit"
+          }
+        ]
       }
     ]
   },
@@ -850,5 +884,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-10-31T02:36:02+08:00"
+  "updated_at": "2026-10-31T02:59:52.723359+08:00"
 }
