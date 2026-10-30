@@ -199,7 +199,8 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
             ex = ExtractionResult.model_validate_json(row["result"])
             extra = features.get(row["repo_id"])
             if extra is not None and (not ex.features or extra["id"] > row["id"]):
-                ex = ex.model_copy(update={"features": ExtractedFeatures.model_validate_json(extra["result"]).features})
+                listed = json.loads(extra["result"] or "{}").get("features") or []
+                ex = ex.model_copy(update={"features": ExtractedFeatures.model_validate({"features": listed}).features})
         except ValidationError as err:
             skipped.append({**note, "reason": f"extraction does not validate: {str(err)[:120]}"})
             continue
