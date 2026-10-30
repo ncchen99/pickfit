@@ -71,7 +71,7 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-longhand-20261031-011830-a9e7",
+      "run_id": "verify-longhand-20261031-023617-b71e",
       "method": "uv",
       "steps": [
         {
@@ -81,8 +81,8 @@
       ],
       "manual_steps": [],
       "check": {
-        "command": "longhand --version 2>&1",
-        "expected_signal": "longhand 1.3.0"
+        "command": "longhand --help 2>&1",
+        "expected_signal": "recall"
       },
       "first_task": null
     },
@@ -103,10 +103,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:19:26.168319+08:00",
+    "checked_at": "2026-10-31T02:39:52.417144+08:00",
     "runs": [
       {
-        "id": "verify-longhand-20261031-011830-a9e7",
+        "id": "verify-longhand-20261031-023617-b71e",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -114,7 +114,7 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:19:26.168319+08:00",
+        "checked_at": "2026-10-31T02:39:52.417144+08:00",
         "tool_version": "1.3.0",
         "install_method": "uv",
         "replayed": true,
@@ -126,16 +126,16 @@
         ],
         "smoke_tests": [
           {
-            "command": "longhand --version 2>&1",
-            "expected_signal": "longhand 1.3.0",
+            "command": "longhand --help 2>&1",
+            "expected_signal": "recall",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "longhand 1.3.0",
+            "observed_excerpt": "╭─ Recall ─────────────────────────────────────────────────────────────────────────────────────────╮",
             "setup": [],
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- longhand mcp-server 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- longhand mcp-server 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -144,11 +144,38 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get_stats --args '{}' -- longhand mcp-server 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call get_stats --args '{}' -- longhand mcp-server 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "tools/call: ok tool=get_stats content=text text_chars=315",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call recall --args '{\"query\":\"that stripe webhook bug from last week\"}' -- longhand mcp-server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=recall content=text text_chars=358",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search --args '{\"query\":\"test\"}' -- longhand mcp-server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search content=text text_chars=2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call replay_file --args '{\"session_id\":\"fake\",\"file_path\":\"/tmp/fake.ts\"}' -- longhand mcp-server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=replay_file content=text text_chars=25",
             "setup": [],
             "offline": true
           }
@@ -157,21 +184,21 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show version 1.3.0, MCP handshake with 13 tools, and successful get_stats tool call.",
+          "observed": "Screenshots show longhand help listing recall commands, MCP server handshake with 13 tools, and successful get_stats tool call.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-longhand-20261031-011830-a9e7/report.json",
+          "trace_path": "runs/verify/verify-longhand-20261031-023617-b71e/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-longhand-20261031-011830-a9e7/check-1-cmd3.judged.png",
-            "runs/verify/verify-longhand-20261031-011830-a9e7/check-2-cmd5.judged.png",
-            "runs/verify/verify-longhand-20261031-011830-a9e7/check-3-cmd6.judged.png"
+            "runs/verify/verify-longhand-20261031-023617-b71e/check-1-cmd2.judged.png",
+            "runs/verify/verify-longhand-20261031-023617-b71e/check-2-cmd3.judged.png",
+            "runs/verify/verify-longhand-20261031-023617-b71e/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.039214,
+        "cost_usd": 0.075984,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -200,7 +227,49 @@
           "tool_count": 13,
           "called_tool": "get_stats",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Store sessions verbatim locally",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Recall past work with fuzzy questions",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Search every event semantically",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Replay past file states",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -615,5 +684,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:50:13+08:00",
-  "updated_at": "2026-10-31T02:36:02+08:00"
+  "updated_at": "2026-10-31T02:39:52.418321+08:00"
 }
