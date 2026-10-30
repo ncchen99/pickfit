@@ -71,18 +71,21 @@
       "first_task": null
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-reika-20261030-234837-cca4",
       "method": "npm",
       "steps": [
         {
-          "command": "npm i -g @alexwkleung/reika",
-          "purpose": null
+          "command": "node --version && npm --version && npm i -g @alexwkleung/reika",
+          "purpose": "Install Reika via npm global"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": null
+      "check": {
+        "command": "reika --version",
+        "expected_signal": "0.7.0"
+      },
+      "first_task": "cd /tmp/proj && REIKA_MODEL=test-model REIKA_BASE_URL=http://127.0.0.1:9931/v1 REIKA_CONTEXT_WINDOW=32768 reika -p \"Say hello in five words or less.\""
     },
     "windows": null
   },
@@ -99,10 +102,95 @@
     "url": "https://github.com/alexwkleung/reika/releases/tag/v0.7.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:50:01.131668+08:00",
+    "runs": [
+      {
+        "id": "verify-reika-20261030-234837-cca4",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:50:01.131668+08:00",
+        "tool_version": "0.7.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "node --version && npm --version && npm i -g @alexwkleung/reika",
+            "purpose": "Install Reika via npm global"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "reika --version",
+            "expected_signal": "0.7.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.7.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "reika --help",
+            "expected_signal": "usage: reika",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: reika start the interactive TUI in the current directory",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/proj && REIKA_MODEL=test-model REIKA_BASE_URL=http://127.0.0.1:9931/v1 REIKA_CONTEXT_WINDOW=32768 reika -p \"Say hello in five words or less.\"",
+            "expected_signal": "Hello from mock model. Reika headless test succeeded.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Hello from mock model. Reika headless test succeeded.",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/mock /tmp/proj && cat > /tmp/mock/server.py <<'PY'\nimport json\nfrom http.server import BaseHTTPRequestHandler, HTTPServer\nclass H(BaseHTTPRequestHandler):\n    def log_message(self, *a): pass\n    def do_GET(self):\n        if self.path.endswith(\"/models\"):\n            body = json.dumps({\"data\":[{\"id\":\"test-model\",\"max_model_len\":32768}]}).encode()\n            self.send_response(200); self.send_header(\"Content-Type\",\"application/json\"); self.send_header(\"Content-Length\",str(len(body))); self.end_headers(); self.wfile.write(body)\n        else:\n            self.send_response(404); self.end_headers()\n    def do_POST(self):\n        length = int(self.headers.get(\"Content-Length\",\"0\"))\n        raw = self.rfile.read(length) if length else b\"{}\"\n        try: req = json.loads(raw)\n        except: req = {}\n        print(\"REQUEST:\", json.dumps(req)[:2000], flush=True)\n        stream = req.get(\"stream\", False)\n        model = req.get(\"model\",\"test-model\")\n        text = \"Hello from mock model. Reika headless test succeeded.\"\n        if stream:\n            chunks = [\n                {\"id\":\"chatcmpl-mock\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":model,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":None}]},\n                {\"id\":\"chatcmpl-mock\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":model,\"choices\":[{\"index\":0,\"delta\":{\"content\":text},\"finish_reason\":None}]},\n                {\"id\":\"chatcmpl-mock\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":model,\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":12,\"total_tokens\":22}},\n            ]\n            self.send_response(200); self.send_header(\"Content-Type\",\"text/event-stream\"); self.send_header(\"Cache-Control\",\"no-cache\"); self.send_header(\"Connection\",\"close\"); self.end_headers()\n            for c in chunks:\n                line = \"data: \" + json.dumps(c) + \"\\n\\n\"\n                self.wfile.write(line.encode()); self.wfile.flush()\n            self.wfile.write(b\"data: [DONE]\\n\\n\"); self.wfile.flush()\n        else:\n            body = json.dumps({\"id\":\"chatcmpl-mock\",\"object\":\"chat.completion\",\"created\":1,\"model\":model,\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":text},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":12,\"total_tokens\":22}}).encode()\n            self.send_response(200); self.send_header(\"Content-Type\",\"application/json\"); self.send_header(\"Content-Length\",str(len(body))); self.end_headers(); self.wfile.write(body)\nHTTPServer((\"127.0.0.1\",9931),H).serve_forever()\nPY\ncat /tmp/mock/server.py && echo OK && mkdir -p /tmp/proj && echo \"hello\" > /tmp/proj/notes.txt && ls -la /tmp/proj/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /tmp/mock/server.py",
+                "background": true,
+                "port": 9931
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Serve a model with llama-server then `export REIKA_MODEL=model && cd your-project && reika`",
+            "actually_needed": "Headless run needs REIKA_MODEL and REIKA_BASE_URL pointing at an OpenAI-compatible server; in the box a local stub on 127.0.0.1:9931 serving GET /models and POST /chat/completions with SSE chunks plus data: [DONE] was enough for `reika -p` to reply.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show expected outputs: mock model greeting and version 0.7.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-reika-20261030-234837-cca4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-reika-20261030-234837-cca4/check-1-cmd11.judged.png",
+            "runs/verify/verify-reika-20261030-234837-cca4/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.072369
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -337,5 +425,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:24+08:00",
-  "updated_at": "2026-10-30T23:44:10+08:00"
+  "updated_at": "2026-10-30T23:50:01.132769+08:00"
 }

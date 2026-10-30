@@ -54,17 +54,20 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-fitllm-engine-20261030-234458-62a1",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install fitllm-engine",
-          "purpose": null
+          "command": "npm install -g fitllm-engine",
+          "purpose": "Install fitllm-engine globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "fitllm --help",
+        "expected_signal": "usage:"
+      },
       "first_task": "npx fitllm \"Gemma 4 12b\" --gpu \"RTX 4090\""
     },
     "windows": {
@@ -95,10 +98,94 @@
     "url": "https://github.com/click6067-ship-it/fitllm-engine/releases/tag/v2.22.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:45:50.821020+08:00",
+    "runs": [
+      {
+        "id": "verify-fitllm-engine-20261030-234458-62a1",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:45:50.821020+08:00",
+        "tool_version": "2.22.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g fitllm-engine",
+            "purpose": "Install fitllm-engine globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "fitllm --help",
+            "expected_signal": "usage:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "npx fitllm \"Gemma 4 12b\" --gpu \"RTX 4090\"",
+            "expected_signal": "✓ FITS — Gemma 4 12b on RTX 4090",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ FITS — Gemma 4 12b on RTX 4090 (24GB) @ Q4_K_M, 8K tokens",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "npx fitllm --top --gpu 4090",
+            "expected_signal": "Qwen 3.8 27B",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "3. Qwen 3.8 27B 27.781B Q4_K_M △ 22.9/24 GB max ctx ~7K tokens",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "npx fitllm scan",
+            "expected_signal": "No supported runtime answered on this machine.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No supported runtime answered on this machine.",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "README shows usage via npx fitllm without documenting --version/--help flags.",
+            "actually_needed": "Use `fitllm --help` (or `npx fitllm --help`); `fitllm --version` exits 2 with 'unknown model' and is not supported.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show FitLLM Engine printing the FITS estimate, the ranked top-models list, and help usage with exit code 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-fitllm-engine-20261030-234458-62a1/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-fitllm-engine-20261030-234458-62a1/check-1-cmd4.judged.png",
+            "runs/verify/verify-fitllm-engine-20261030-234458-62a1/check-2-cmd5.judged.png",
+            "runs/verify/verify-fitllm-engine-20261030-234458-62a1/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.068622
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -317,5 +404,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-30T23:44:10+08:00"
+  "updated_at": "2026-10-30T23:45:50.821651+08:00"
 }

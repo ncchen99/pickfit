@@ -53,7 +53,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-pocketllm-20261030-234458-69c6",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone --depth 1 https://github.com/lvyufeng/PocketLLM.git /tmp/PocketLLM 2>&1 && ls /tmp/PocketLLM/ && cat /tmp/PocketLLM/pyproject.toml 2>&1",
+          "purpose": "clone PocketLLM source from GitHub"
+        },
+        {
+          "command": "pip install --user /tmp/PocketLLM 2>&1 && python3 -m pocketllm --help 2>&1",
+          "purpose": "pip install PocketLLM from cloned source"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "python3 -m pocketllm --help 2>&1",
+        "expected_signal": "usage: pocketllm"
+      },
+      "first_task": "python3 -m pocketllm devices 2>&1"
+    },
     "windows": null
   },
   "pricing": {
@@ -69,10 +89,103 @@
     "url": "https://github.com/lvyufeng/PocketLLM/releases/tag/v0.1.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:47:13.871124+08:00",
+    "runs": [
+      {
+        "id": "verify-pocketllm-20261030-234458-69c6",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:47:13.871124+08:00",
+        "tool_version": "0.2.0.dev0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/lvyufeng/PocketLLM.git /tmp/PocketLLM 2>&1 && ls /tmp/PocketLLM/ && cat /tmp/PocketLLM/pyproject.toml 2>&1",
+            "purpose": "clone PocketLLM source from GitHub"
+          },
+          {
+            "command": "pip install --user /tmp/PocketLLM 2>&1 && python3 -m pocketllm --help 2>&1",
+            "purpose": "pip install PocketLLM from cloned source"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 -m pocketllm --help 2>&1",
+            "expected_signal": "usage: pocketllm",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: pocketllm [-h] {devices,backends,architectures,run,serve,ops} ...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 -m pocketllm devices 2>&1",
+            "expected_signal": "this process opens one device",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "this process opens one device; the kinds it knows are auto, ascend, cpu, cuda, horizon, mps, qnn",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 -m pocketllm backends 2>&1",
+            "expected_signal": "Correctness oracle: numpy, host memory, every op",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Correctness oracle: numpy, host memory, every op",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 -m pocketllm architectures 2>&1",
+            "expected_signal": "A tiny embedding + SwiGLU block",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "toy A tiny embedding + SwiGLU block; the executor's own smoke test",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install pocketllm then `pocketllm devices`",
+            "actually_needed": "clone the GitHub tree and run `pip install --user /tmp/PocketLLM`, then invoke as `python3 -m pocketllm devices` (no `pocketllm` executable is shipped; pyproject.toml defines no [project.scripts])",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "pip install pocketllm installs the documented tool",
+            "actually_needed": "PyPI pocketllm 0.1.1 fails to build in isolation: setup.py defines `class BuildExtensions(BuildExtension)` with BuildExtension=None when torch is absent, raising `TypeError: NoneType takes no arguments`; the current GitHub tree (0.2.0.dev0, numpy-only, no ext_modules) installs cleanly",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three commands printed their expected listings for help, devices, and backends with no errors.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-pocketllm-20261030-234458-69c6/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-pocketllm-20261030-234458-69c6/check-1-cmd13.judged.png",
+            "runs/verify/verify-pocketllm-20261030-234458-69c6/check-2-cmd10.judged.png",
+            "runs/verify/verify-pocketllm-20261030-234458-69c6/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.151097
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -275,5 +388,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:43+08:00",
-  "updated_at": "2026-10-30T23:44:10+08:00"
+  "updated_at": "2026-10-30T23:47:13.871728+08:00"
 }

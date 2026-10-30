@@ -69,18 +69,21 @@
       "first_task": "alter-zero"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-alter-zero-20261030-234800-9a63",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g @linuztx/alter-zero",
-          "purpose": null
+          "purpose": "Install alter-zero via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "alter-zero"
+      "check": {
+        "command": "alter-zero --version",
+        "expected_signal": "alter-zero 0.17.0"
+      },
+      "first_task": "alter-zero mcp list"
     },
     "windows": null
   },
@@ -97,10 +100,87 @@
     "url": "https://github.com/linuztx/alter-zero/releases/tag/v0.17.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:48:37.743088+08:00",
+    "runs": [
+      {
+        "id": "verify-alter-zero-20261030-234800-9a63",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:48:37.743088+08:00",
+        "tool_version": "0.17.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @linuztx/alter-zero",
+            "purpose": "Install alter-zero via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "alter-zero --version",
+            "expected_signal": "alter-zero 0.17.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "alter-zero 0.17.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "alter-zero --help",
+            "expected_signal": "Usage: alter-zero [OPTIONS] [PROMPT]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: alter-zero [OPTIONS] [PROMPT]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "alter-zero mcp --help",
+            "expected_signal": "alter-zero mcp",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "alter-zero mcp",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "alter-zero mcp list",
+            "expected_signal": "No MCP servers",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No MCP servers in /home/sbx/.alter-zero/mcp.json",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show expected outputs: empty MCP server list message and alter-zero 0.17.0 version.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-alter-zero-20261030-234800-9a63/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-alter-zero-20261030-234800-9a63/check-1-cmd5.judged.png",
+            "runs/verify/verify-alter-zero-20261030-234800-9a63/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.031691
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -335,5 +415,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-10-30T23:44:10+08:00"
+  "updated_at": "2026-10-30T23:48:37.743762+08:00"
 }

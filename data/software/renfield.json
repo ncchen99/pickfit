@@ -62,9 +62,52 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_container",
+    "checked_at": "2026-10-30T23:48:00.428600+08:00",
+    "runs": [
+      {
+        "id": "verify-renfield-20261030-234708-3480",
+        "level": "unverified",
+        "unverified_reason": "needs_container",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:48:00.428600+08:00",
+        "tool_version": null,
+        "install_method": "source",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "git clone https://github.com/ebongard/renfield.git && ls renfield | head -n 50; echo ---; ls renfield/backend 2>&1 | head -n 50",
+            "purpose": "clone renfield source"
+          },
+          {
+            "command": "cp renfield/.env.example renfield/.env && ls -l renfield/.env && head -n 20 renfield/.env",
+            "purpose": "copy example env config"
+          }
+        ],
+        "smoke_tests": [],
+        "pitfalls": [
+          {
+            "readme_said": "cp .env.example .env; docker compose up -d; docker exec -it renfield-ollama ollama pull qwen3:8b",
+            "actually_needed": "Docker engine is not installed (docker: command not found) so 'docker compose up -d' and 'docker exec ollama pull' cannot run here; backend also requires postgres+redis+Ollama services from compose",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-renfield-20261030-234708-3480/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.089919
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -227,5 +270,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-30T23:44:10+08:00"
+  "updated_at": "2026-10-30T23:48:00.430664+08:00"
 }

@@ -74,18 +74,25 @@
       "first_task": "saige update --check"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-saige-20261030-234830-2625",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/urmzd/saige/main/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/urmzd/saige/main/install.sh -o /tmp/saige-install.sh && ls -l /tmp/saige-install.sh && wc -l /tmp/saige-install.sh",
+          "purpose": "Download install script for review"
+        },
+        {
+          "command": "bash /tmp/saige-install.sh",
+          "purpose": "Install saige binary via script"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "saige update --check"
+      "check": {
+        "command": "saige --help",
+        "expected_signal": "Available Commands:"
+      },
+      "first_task": null
     },
     "windows": null
   },
@@ -102,10 +109,81 @@
     "url": "https://github.com/urmzd/saige/releases/tag/v0.41.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:49:41.434427+08:00",
+    "runs": [
+      {
+        "id": "verify-saige-20261030-234830-2625",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:49:41.434427+08:00",
+        "tool_version": "0.42.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/urmzd/saige/main/install.sh -o /tmp/saige-install.sh && ls -l /tmp/saige-install.sh && wc -l /tmp/saige-install.sh",
+            "purpose": "Download install script for review"
+          },
+          {
+            "command": "bash /tmp/saige-install.sh",
+            "purpose": "Install saige binary via script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "saige --version",
+            "expected_signal": "saige version 0.42.0",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "saige version 0.43.0",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "saige --help",
+            "expected_signal": "Available Commands:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Available Commands:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "saige update --check",
+            "expected_signal": "update available",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "already up to date",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows saige --help output listing Available Commands and Flags with exit code 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-saige-20261030-234830-2625/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-saige-20261030-234830-2625/check-1-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.035616
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -348,5 +426,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-30T23:44:10+08:00"
+  "updated_at": "2026-10-30T23:49:41.435001+08:00"
 }

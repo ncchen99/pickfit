@@ -71,17 +71,20 @@
       "first_task": "tokenix index ."
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-tokenix-20261030-234458-a88b",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o tokenix",
-          "purpose": null
+          "command": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o /home/sbx/.local/bin/tokenix && chmod +x /home/sbx/.local/bin/tokenix && ls -lh /home/sbx/.local/bin/tokenix",
+          "purpose": "Download tokenix Linux x86_64 binary to ~/.local/bin and make executable"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "tokenix --version",
+        "expected_signal": "tokenix 1.0.1"
+      },
       "first_task": "tokenix index ."
     },
     "windows": {
@@ -112,10 +115,108 @@
     "url": "https://github.com/juninmd/tokenix/releases/tag/v1.0.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:45:42.843136+08:00",
+    "runs": [
+      {
+        "id": "verify-tokenix-20261030-234458-a88b",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:45:42.843136+08:00",
+        "tool_version": "1.0.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o /home/sbx/.local/bin/tokenix && chmod +x /home/sbx/.local/bin/tokenix && ls -lh /home/sbx/.local/bin/tokenix",
+            "purpose": "Download tokenix Linux x86_64 binary to ~/.local/bin and make executable"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "tokenix --version",
+            "expected_signal": "tokenix 1.0.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tokenix 1.0.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tokenix --help",
+            "expected_signal": "Index a repository (chunks and symbol graph)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "index [path] Index a repository (chunks and symbol graph)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tokenix index .",
+            "expected_signal": "Files: 1 indexed, 0 skipped, 0 errors",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Files: 1 indexed, 0 skipped, 0 errors",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tokenix doctor",
+            "expected_signal": "bundled: 534 filters",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "bundled: 534 filters · 1167 embedded golden cases",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tokenix gain",
+            "expected_signal": "No hook events found in this project.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No hook events found in this project.",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "chmod +x tokenix && sudo mv tokenix /usr/local/bin/tokenix",
+            "actually_needed": "Install to ~/.local/bin (already on PATH) with chmod +x and run from there; no sudo / no write to /usr/local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o tokenix",
+            "actually_needed": "Prebuilt binary asset cannot be read with read_file; installed directly after download without script audit",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks succeeded, showing indexed file counts, doctor with 534 bundled filters, and version 1.0.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tokenix-20261030-234458-a88b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tokenix-20261030-234458-a88b/check-1-cmd4.judged.png",
+            "runs/verify/verify-tokenix-20261030-234458-a88b/check-2-cmd5.judged.png",
+            "runs/verify/verify-tokenix-20261030-234458-a88b/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.035523
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -350,5 +451,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-30T23:44:10+08:00"
+  "updated_at": "2026-10-30T23:45:42.843940+08:00"
 }

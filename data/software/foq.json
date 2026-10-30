@@ -70,18 +70,21 @@
       "first_task": "foq setup"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "pip",
+      "basis": "replayed",
+      "run_id": "verify-foq-20261030-234542-d45b",
+      "method": "uv",
       "steps": [
         {
-          "command": "pip install foq",
-          "purpose": null
+          "command": "uv tool install foq 2>&1",
+          "purpose": "Install foq via uv tool"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "foq setup"
+      "check": {
+        "command": "foq --help 2>&1",
+        "expected_signal": "serve"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -111,10 +114,70 @@
     "url": "https://github.com/yohanargentina-oss/Foq/releases/tag/v1.0.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:47:08.982988+08:00",
+    "runs": [
+      {
+        "id": "verify-foq-20261030-234542-d45b",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:47:08.982988+08:00",
+        "tool_version": "1.0.5",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install foq 2>&1",
+            "purpose": "Install foq via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "foq --help 2>&1",
+            "expected_signal": "serve",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: foq [-h] {serve,setup,benchmark,inspect,demo} ...",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "README lists foq subcommands without documenting version flag behavior.",
+            "actually_needed": "Use `foq --help`; `--version` exits 2 with 'unrecognized arguments: --version'.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Quickstart runs `foq setup`, `foq serve`, `foq demo`, `foq inspect ...`.",
+            "actually_needed": "Full README flow (`foq setup` downloads 2.2 GB foq-reflex-8b-pq2_0.gguf plus adapter, then needs the custom Foq llama-server build in ~/.local/bin/foq-llama/); `foq inspect` without that server only prints the not-started warning and `foq serve`/`demo`/`benchmark` also require the running server, s…",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows foq --help listing serve, setup, benchmark, inspect and demo commands with exit code 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-foq-20261030-234542-d45b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-foq-20261030-234542-d45b/check-1-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.101213
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -365,5 +428,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:05+08:00",
-  "updated_at": "2026-10-30T23:44:10+08:00"
+  "updated_at": "2026-10-30T23:47:08.983793+08:00"
 }

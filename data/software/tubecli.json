@@ -80,17 +80,28 @@
       "first_task": "tubecli info"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "script",
+      "basis": "replayed",
+      "run_id": "verify-tubecli-20261030-234730-f6de",
+      "method": "source",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/tubecreate/tubecli/main/install.sh | bash",
-          "purpose": null
+          "command": "git clone --depth=1 https://github.com/tubecreate/tubecli.git ~/tubecli && ls ~/tubecli/pyproject.toml",
+          "purpose": "Clone TubeCLI repo for pip install"
+        },
+        {
+          "command": "cd ~/tubecli && pip install -e . --break-system-packages",
+          "purpose": "Install tubecli editable via pip"
+        },
+        {
+          "command": "tubecli --version",
+          "purpose": "First run warming browser deps and workspace"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "tubecli --version",
+        "expected_signal": "tubecli, version 2026.08.09.223"
+      },
       "first_task": "tubecli info"
     },
     "windows": {
@@ -117,10 +128,121 @@
   "processing": "hybrid",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:49:43.832184+08:00",
+    "runs": [
+      {
+        "id": "verify-tubecli-20261030-234730-f6de",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:49:43.832184+08:00",
+        "tool_version": "2026.08.09.223",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --depth=1 https://github.com/tubecreate/tubecli.git ~/tubecli && ls ~/tubecli/pyproject.toml",
+            "purpose": "Clone TubeCLI repo for pip install"
+          },
+          {
+            "command": "cd ~/tubecli && pip install -e . --break-system-packages",
+            "purpose": "Install tubecli editable via pip"
+          },
+          {
+            "command": "tubecli --version",
+            "purpose": "First run warming browser deps and workspace"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "tubecli --version",
+            "expected_signal": "tubecli, version 2026.08.09.223",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tubecli, version 2026.08.09.223",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tubecli --help",
+            "expected_signal": "Manage agents, skills, and workflows",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Manage agents, skills, and workflows from the command line. AI agents can",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tubecli info",
+            "expected_signal": "TubeCLI is installed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "TubeCLI is installed",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tubecli agent list",
+            "expected_signal": "Orchestrator",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ 06ae4bc8-bd… │ Orchestrator │ Main coordination agent — analyzes requests │ default │ 14 │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tubecli skill list",
+            "expected_signal": "Content Video",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ 9cb4d71c-a6… │ 🎬 Content Video │ Extension Skill │ Turn what this agent has │ 0 │",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install -e .",
+            "actually_needed": "pip install -e . --break-system-packages on this Debian box (externally-managed Python 3.12)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "tubecli init --lang en --port 5295 initializes workspace before use",
+            "actually_needed": "first tubecli invocation auto-created the workspace/agents and npm-installed browser automation dependencies with no explicit init; agent/skill/info examples then worked directly",
+            "kind": "tool_handled"
+          },
+          {
+            "readme_said": "Prerequisites: Python 3.10+, Node.js 18+, ffmpeg, Git",
+            "actually_needed": "ffmpeg/ffprobe absent and no sudo to install them; pip install plus info/agent/skill examples still succeeded",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show tubecli info confirming installation, agent list containing Orchestrator and other agents, and version 2026.08.09.223.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tubecli-20261030-234730-f6de/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tubecli-20261030-234730-f6de/check-1-cmd8.judged.png",
+            "runs/verify/verify-tubecli-20261030-234730-f6de/check-2-cmd9.judged.png",
+            "runs/verify/verify-tubecli-20261030-234730-f6de/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.103992
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -429,5 +551,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-30T23:44:10+08:00"
+  "updated_at": "2026-10-30T23:49:43.832783+08:00"
 }

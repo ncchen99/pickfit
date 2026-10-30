@@ -74,20 +74,25 @@
       "first_task": "nimbus --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-nimbus-20261030-234541-1a29",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://github.com/nimbus-agent/Nimbus/releases/latest/download/install.sh | sh -s -- --yes",
-          "purpose": null
+          "command": "curl -fsSL https://github.com/nimbus-agent/Nimbus/releases/latest/download/install.sh -o /tmp/nimbus-install.sh && ls -l /tmp/nimbus-install.sh && wc -l /tmp/nimbus-install.sh",
+          "purpose": "Download install script only"
+        },
+        {
+          "command": "sh /tmp/nimbus-install.sh --yes && export PATH=\"$HOME/.local/bin:$PATH\" && nimbus --version && which nimbus && ls -l ~/.local/bin/nimbus*",
+          "purpose": "Run installer then check version"
         }
       ],
-      "manual_steps": [
-        "Unlock OS keychain/keystore before running"
-      ],
-      "check": null,
-      "first_task": "nimbus --version"
+      "manual_steps": [],
+      "check": {
+        "command": "nimbus --version",
+        "expected_signal": "10.11.0"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -119,10 +124,88 @@
     "url": "https://github.com/nimbus-agent/Nimbus/releases/tag/v10.8.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:46:47.146091+08:00",
+    "runs": [
+      {
+        "id": "verify-nimbus-20261030-234541-1a29",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:46:47.146091+08:00",
+        "tool_version": "10.11.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/nimbus-agent/Nimbus/releases/latest/download/install.sh -o /tmp/nimbus-install.sh && ls -l /tmp/nimbus-install.sh && wc -l /tmp/nimbus-install.sh",
+            "purpose": "Download install script only"
+          },
+          {
+            "command": "sh /tmp/nimbus-install.sh --yes && export PATH=\"$HOME/.local/bin:$PATH\" && nimbus --version && which nimbus && ls -l ~/.local/bin/nimbus*",
+            "purpose": "Run installer then check version"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nimbus --version",
+            "expected_signal": "10.11.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "10.11.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nimbus --help",
+            "expected_signal": "Full reference: docs/cli-reference.md",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Full reference: docs/cli-reference.md",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL .../install.sh | sh -s -- --yes",
+            "actually_needed": "Downloaded install.sh to /tmp/nimbus-install.sh with curl -o, read it with read_file, then ran sh /tmp/nimbus-install.sh --yes; installer fetched + installed nimbus 10.11.0 and nimbus-gateway binaries that cannot be read (opaque release tarball).",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Linux prerequisites libsecret-tools and bubblewrap via sudo apt; .deb resolves them automatically",
+            "actually_needed": "Installer only warned WARNING: bubblewrap (bwrap) was not found and continued; nimbus init / nimbus doctor then fail with secret-tool not found / Vault check fail. Both prerequisites need sudo apt (libsecret-tools, bubblewrap) plus an unlocked OS keyring, unavailable to non-root headless box user.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Installer verifies release signature before installing",
+            "actually_needed": "Installed after SHA-256 verification only with message SIGNATURE NOT CHECKED because gpg is not installed in the box.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows nimbus --version printing 10.11.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nimbus-20261030-234541-1a29/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nimbus-20261030-234541-1a29/check-1-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.071778
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -381,5 +464,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-30T23:44:10+08:00"
+  "updated_at": "2026-10-30T23:46:47.147646+08:00"
 }

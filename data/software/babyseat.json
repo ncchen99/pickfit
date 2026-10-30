@@ -50,7 +50,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-babyseat-20261030-234646-2c6d",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install babyseat 2>&1",
+          "purpose": "install babyseat via uv tool install babyseat"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "membrane --help 2>&1",
+        "expected_signal": "membrane CLI -- one entry point for every membrane surface."
+      },
+      "first_task": "membrane doctor 2>&1"
+    },
     "windows": null
   },
   "pricing": {
@@ -66,10 +82,80 @@
     "url": "https://github.com/chedim/babyseat/releases/tag/v0.7.3"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:47:30.039627+08:00",
+    "runs": [
+      {
+        "id": "verify-babyseat-20261030-234646-2c6d",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:47:30.039627+08:00",
+        "tool_version": "0.7.3",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install babyseat 2>&1",
+            "purpose": "install babyseat via uv tool install babyseat"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "membrane --help 2>&1",
+            "expected_signal": "membrane CLI -- one entry point for every membrane surface.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "membrane CLI -- one entry point for every membrane surface.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "membrane doctor 2>&1",
+            "expected_signal": "entity field: MEMBRANE_EFIELD=on on FileBackend",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "entity field: MEMBRANE_EFIELD=on on FileBackend; events none; entities none",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "membrane stats",
+            "actually_needed": "on a fresh project membrane stats exits 1 with FileNotFoundError: .membrane/serve-msgs.json (no seat has run yet)",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "membrane state",
+            "actually_needed": "membrane state and membrane state --help both exit 2 and print the top-level usage (no state subcommand listed)",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show membrane --help header and doctor output with FileBackend entity field, both matching expected signals.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-babyseat-20261030-234646-2c6d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-babyseat-20261030-234646-2c6d/check-1-cmd3.judged.png",
+            "runs/verify/verify-babyseat-20261030-234646-2c6d/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.059916
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -264,5 +350,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:54+08:00",
-  "updated_at": "2026-10-30T23:44:10+08:00"
+  "updated_at": "2026-10-30T23:47:30.040111+08:00"
 }

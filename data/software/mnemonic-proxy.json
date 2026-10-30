@@ -49,7 +49,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mnemonic-proxy-20261030-234713-d3eb",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install mnemonic-proxy 2>&1",
+          "purpose": "install via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mnemonic-proxy --version 2>&1",
+        "expected_signal": "mnemonic-proxy 0.3.19"
+      },
+      "first_task": "mnemonic-proxy demo 2>&1"
+    },
     "windows": null
   },
   "pricing": {
@@ -65,10 +81,79 @@
     "url": "https://github.com/lastreload/mnemonic-proxy/releases/tag/v0.3.18"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:47:44.677041+08:00",
+    "runs": [
+      {
+        "id": "verify-mnemonic-proxy-20261030-234713-d3eb",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:47:44.677041+08:00",
+        "tool_version": "0.3.19",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install mnemonic-proxy 2>&1",
+            "purpose": "install via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mnemonic-proxy --version 2>&1",
+            "expected_signal": "mnemonic-proxy 0.3.19",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mnemonic-proxy 0.3.19",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mnemonic-proxy --help 2>&1",
+            "expected_signal": "mnemonic-proxy demo",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mnemonic-proxy demo offline demo (no model, no GPU): archive, masking, recall -> PASS/FAIL",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mnemonic-proxy demo 2>&1",
+            "expected_signal": "PASS in 0.6 s",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PASS in 0.6 s",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show version 0.3.19, help with demo subcommand, and offline demo ending in PASS in 0.6 s.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mnemonic-proxy-20261030-234713-d3eb/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mnemonic-proxy-20261030-234713-d3eb/check-1-cmd2.judged.png",
+            "runs/verify/verify-mnemonic-proxy-20261030-234713-d3eb/check-2-cmd3.judged.png",
+            "runs/verify/verify-mnemonic-proxy-20261030-234713-d3eb/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.024784
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -247,5 +332,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-30T23:44:10+08:00"
+  "updated_at": "2026-10-30T23:47:44.677689+08:00"
 }
