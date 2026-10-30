@@ -34,6 +34,12 @@
     "LM Studio",
     "Ollama"
   ],
+  "features": [
+    "chat with local models with streaming replies",
+    "run coding agent that edits files",
+    "generate images, video and music locally",
+    "chat against own files with citations"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -74,20 +80,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-localm-20261029-011619-a444",
+      "run_id": "verify-localm-20261031-012050-51ac",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install localm 2>&1",
-          "purpose": "Install localm via uv tool install"
+          "purpose": "Install localm via uv tool"
+        },
+        {
+          "command": "export LOCALM_HOME=/home/sbx/localm-data && localm setup-llama --backend cpu 2>&1",
+          "purpose": "Provision CPU llama backend"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "localm --version 2>&1",
-        "expected_signal": "localm, version 0.3.1"
+        "expected_signal": "localm, version 0.3.2"
       },
-      "first_task": "localm doctor 2>&1"
+      "first_task": "export LOCALM_HOME=/home/sbx/localm-data && mkdir -p \"$LOCALM_HOME\" && localm doctor 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -117,50 +127,45 @@
     "url": "https://github.com/Matlan1/localm/releases/tag/v0.3.1"
   },
   "verification": {
-    "level": "function",
+    "level": "inference",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:17:50.440607+08:00",
+    "checked_at": "2026-10-31T01:24:03.413536+08:00",
     "runs": [
       {
-        "id": "verify-localm-20261029-011619-a444",
-        "level": "function",
+        "id": "verify-localm-20261031-012050-51ac",
+        "level": "inference",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T01:17:50.440607+08:00",
-        "tool_version": "0.3.1",
+        "checked_at": "2026-10-31T01:24:03.413536+08:00",
+        "tool_version": "0.3.2",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install localm 2>&1",
-            "purpose": "Install localm via uv tool install"
+            "purpose": "Install localm via uv tool"
+          },
+          {
+            "command": "export LOCALM_HOME=/home/sbx/localm-data && localm setup-llama --backend cpu 2>&1",
+            "purpose": "Provision CPU llama backend"
           }
         ],
         "smoke_tests": [
           {
             "command": "localm --version 2>&1",
-            "expected_signal": "localm, version 0.3.1",
+            "expected_signal": "localm, version 0.3.2",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "localm, version 0.3.1",
+            "observed_excerpt": "localm, version 0.3.2",
             "setup": [],
             "offline": true
           },
           {
-            "command": "localm --help 2>&1",
-            "expected_signal": "doctor Check system requirements and report any issues.",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "doctor Check system requirements and report any issues.",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "localm doctor 2>&1",
+            "command": "export LOCALM_HOME=/home/sbx/localm-data && mkdir -p \"$LOCALM_HOME\" && localm doctor 2>&1",
             "expected_signal": "Python 3.12",
             "exit_code": 0,
             "passed": true,
@@ -169,48 +174,180 @@
             "offline": true
           },
           {
-            "command": "localm info 2>&1",
+            "command": "export LOCALM_HOME=/home/sbx/localm-data && localm info 2>&1",
             "expected_signal": "plugins_enabled",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "plugins_enabled ['chat']",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "export LOCALM_HOME=/home/sbx/localm-data && localm run stories260K --prompt \"What is 42?\" 2>&1",
+            "expected_signal": "tok/s",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1916 tokens 57.9 tok/s (load 0.2s, gen 33.1s)",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/models && curl -fL -o /home/sbx/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf 2>&1 && ls -lh /home/sbx/models/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "export LOCALM_HOME=/home/sbx/localm-data && localm add /home/sbx/models/stories260K.gguf 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8642/health 2>&1; echo \"---HTTP-HEALTH-DONE---\"; curl -s http://127.0.0.1:8642/v1/models 2>&1",
+            "expected_signal": "\"status\":\"ok\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"ok\",\"model\":\"stories260K\",\"loaded\":true}---HTTP-HEALTH-DONE---",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/models && curl -fL -o /home/sbx/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf 2>&1 && ls -lh /home/sbx/models/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "export LOCALM_HOME=/home/sbx/localm-data && localm add /home/sbx/models/stories260K.gguf 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "export LOCALM_HOME=/home/sbx/localm-data && localm serve stories260K --port 8642",
+                "background": true,
+                "port": 8642
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8642/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\":\"stories260K\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hi\"}],\"temperature\":0,\"max_tokens\":16,\"stream\":false}' 2>&1",
+            "expected_signal": "completion_tokens",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":\"chatcmpl-d736dc7e72c9\",\"object\":\"chat.completion\",\"created\":1793381037,\"model\":\"stories260K\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\\\"Here,\\\" said the manb. \\\"It'\",\"reasoning_content\":null,\"tool_calls\":null,\"untrusted_spans\":null},\"logprobs\":null,\"finish_reason\":\"leng…",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/models && curl -fL -o /home/sbx/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf 2>&1 && ls -lh /home/sbx/models/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "export LOCALM_HOME=/home/sbx/localm-data && localm add /home/sbx/models/stories260K.gguf 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "export LOCALM_HOME=/home/sbx/localm-data && localm serve stories260K --port 8642",
+                "background": true,
+                "port": 8642
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "export LOCALM_HOME=/home/sbx/localm-data && localm plugin status 2>&1",
+            "expected_signal": "coder - Offline AI coding agent",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "+ coder - Offline AI coding agent: agentic loop, tool use, project map (CLI + GUI).",
+            "setup": [],
+            "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "`pip install localm` then `localm setup-llama`",
+            "actually_needed": "use isolated `uv tool install localm`; set LOCALM_HOME=/home/sbx/localm-data and run `localm setup-llama --backend cpu` before any run/serve",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "docs say API served over HTTPS with built-in certificate",
+            "actually_needed": "plain `http://127.0.0.1:8642/health` and `/v1/models` work; `https://` fails with curl exit 35 SSL connect error",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "SET LOCALM_HOME once in shell profile",
+            "actually_needed": "`export LOCALM_HOME=...` on every command or version/doctor warn about contained default inside the uv tool venv",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "localm prints version 0.3.1, shows extensive help with many commands, and doctor reports Python 3.12 with system checks.",
+          "observed": "Screenshots show version 0.3.2 printed, doctor reporting Python 3.12, and info listing plugins_enabled.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-localm-20261029-011619-a444/report.json",
+          "trace_path": "runs/verify/verify-localm-20261031-012050-51ac/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-localm-20261029-011619-a444/check-1-cmd3.judged.png",
-            "runs/verify/verify-localm-20261029-011619-a444/check-2-cmd4.judged.png",
-            "runs/verify/verify-localm-20261029-011619-a444/check-3-cmd5.judged.png"
+            "runs/verify/verify-localm-20261031-012050-51ac/check-1-cmd2.judged.png",
+            "runs/verify/verify-localm-20261031-012050-51ac/check-2-cmd3.judged.png",
+            "runs/verify/verify-localm-20261031-012050-51ac/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.050357
+        "cost_usd": 0.140792,
+        "features": [
+          {
+            "feature": "chat with local models with streaming replies",
+            "status": "checked",
+            "smoke_tests": [
+              3,
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "run coding agent that edits files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "coder plugin available but agentic file-edit run needs capable instruct model and extra steps; no budget left"
+          },
+          {
+            "feature": "generate images, video and music locally",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "image/music/video need GB native/ComfyUI weights, over 300 MB limit"
+          },
+          {
+            "feature": "chat against own files with citations",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "rag plugin available but indexing+chat needs embeddings and extra steps; no budget left"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:42:07+08:00",
+    "computed_at": "2026-10-31T01:24:03+08:00",
     "quality": {
-      "total": 82.2,
+      "total": 72.9,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.8,
+          "score": 0.6141,
           "weight": 40.0
         },
         "install_docs": {
@@ -252,8 +389,8 @@
       ]
     },
     "treasure": {
-      "is_treasure": true,
-      "value": 51.62
+      "is_treasure": false,
+      "value": 45.78
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -565,8 +702,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-28T23:52:22+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Chat - streaming replies, markdown, syntax-highlighted code",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:20:43+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Coder - an agent that edits files, runs your tests, and verifies before it stops",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:20:43+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Images, video and music generate out of the box with the built-in **native backends**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:20:43+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Attach files or index whole folders and chat against them with citations (Knowledge)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:20:43+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-29T14:42:07+08:00"
+  "updated_at": "2026-10-31T01:24:03.414621+08:00"
 }
