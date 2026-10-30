@@ -8,7 +8,16 @@
  * and its pain points too, drops the current tool from the candidates, and
  * may advise keeping it.
  */
-import { bestGuide, verifiedOnUserSystem, type Arch, type Catalog, type Entry, type InstallGuide, type OS } from './catalog.ts';
+import {
+  bestGuide,
+  verifiedOnUserSystem,
+  type Arch,
+  type Catalog,
+  type Entry,
+  type GuiEvidence,
+  type InstallGuide,
+  type OS,
+} from './catalog.ts';
 import { toCard, type Card } from './cards.ts';
 import { checkBudget, recordSpend } from './budget.ts';
 import { ranSentence } from './evidence.ts';
@@ -69,6 +78,8 @@ export interface PickOut {
     replayed: boolean;
     checked_at: string | null;
     verified_on_user_os: boolean | null;
+    /** A GUI app's launch as pickfit saw it (level stays install); null for anything else. */
+    gui: GuiEvidence | null;
   };
   how_we_know: string;
   evidence_url: string | null;
@@ -175,6 +186,7 @@ function pickOut(
       replayed: guide?.run.replayed ?? false,
       checked_at: guide?.run.checked_at ?? null,
       verified_on_user_os: onUserOs,
+      gui: guide?.run.gui ?? null,
     },
     how_we_know: howWeKnow(entry, guide, matchedBy, considered),
     evidence_url: guide?.run.evidence_url ?? null,

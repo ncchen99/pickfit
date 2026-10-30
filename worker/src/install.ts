@@ -3,7 +3,7 @@
  * sandbox, or done by hand on a real machine). No model call. README claims
  * that were never run are not in the index, so they cannot leak out here.
  */
-import { bestGuide, type Arch, type Catalog, type OS } from './catalog.ts';
+import { bestGuide, type Arch, type Catalog, type GuiEvidence, type OS } from './catalog.ts';
 import { ranSentence } from './evidence.ts';
 import { newId, REC_ID } from './events.ts';
 import { clientConfig, type McpClientConfig } from './mcpconfig.ts';
@@ -39,6 +39,8 @@ export interface InstallOutput {
     evidence_url: string | null;
     /** true: its checks passed again with the network off after install; false: they needed it. */
     works_offline: boolean | null;
+    /** A GUI app's launch as pickfit saw it (level stays install); null for anything else. */
+    gui: GuiEvidence | null;
   };
   applies_to_user_system: {
     match: 'exact' | 'same_os_other_arch' | 'other_os' | 'none';
@@ -125,6 +127,7 @@ export function installGuide(catalog: Catalog, input: InstallInput): InstallOutp
       tool_version: run?.tool_version ?? null,
       evidence_url: run?.evidence_url ?? null,
       works_offline: guide?.works_offline ?? null,
+      gui: run?.gui ?? null,
     },
     applies_to_user_system: { match, note },
     steps,

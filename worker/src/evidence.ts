@@ -1,5 +1,5 @@
 /** how_we_know text, built by code from the verification record (never by the model). */
-import type { InstallGuide } from './catalog.ts';
+import type { GuiEvidence, InstallGuide } from './catalog.ts';
 
 const LEVEL_TEXT: Record<string, string> = {
   install: 'the install finished and the tool started',
@@ -17,6 +17,27 @@ function mcpText(guide: InstallGuide): string | null {
   return m.called_tool ? `${listed}${offline}, and a call to ${m.called_tool} returned a result` : `${listed}${offline}`;
 }
 
+const SCREEN_TEXT: Record<GuiEvidence['screen'], string> = {
+  main_ui: 'its main screen rendered',
+  first_run: 'its first-run (setup) screen rendered',
+  sign_in_wall: 'it showed a sign-in screen, and nothing past it was checked',
+  crash_or_error: 'it showed an error',
+  blank_or_loading: 'the window was still blank or loading',
+  other: 'it showed something other than its own UI',
+};
+
+/** A GUI app's launch: what opened, what the screen judge saw, and that no feature was exercised. */
+function guiText(guide: InstallGuide): string | null {
+  const g = guide.run.gui;
+  if (!g) return null;
+  const offline = g.launch_offline ? ', and the launch passed again with the network off' : '';
+  return (
+    `the app opened a window of its own on a virtual display (${g.display}) and a separate model, ` +
+    `reading a screenshot of that window, judged that ${SCREEN_TEXT[g.screen]}${offline}. ` +
+    'That shows it installs and starts; pickfit did not use any of its features'
+  );
+}
+
 /** "pickfit installed it in a fresh linux/x86_64 sandbox (...) on 2026-10-28; a smoke test ... passed." */
 export function ranSentence(guide: InstallGuide): string {
   const r = guide.run;
@@ -25,5 +46,5 @@ export function ranSentence(guide: InstallGuide): string {
     r.method === 'sandbox'
       ? `installed it in a fresh ${r.os}/${r.arch} sandbox${runner} and replayed the steps from scratch`
       : `installed it by hand on ${r.os}/${r.arch}${runner}`;
-  return `pickfit ${where} on ${r.checked_at.slice(0, 10)}; ${mcpText(guide) ?? LEVEL_TEXT[r.level] ?? r.level}.`;
+  return `pickfit ${where} on ${r.checked_at.slice(0, 10)}; ${mcpText(guide) ?? guiText(guide) ?? LEVEL_TEXT[r.level] ?? r.level}.`;
 }
