@@ -1,0 +1,561 @@
+{
+  "schema_version": "software.v1",
+  "slug": "darkubectl",
+  "repo_id": "gh:1290409082",
+  "name": "darkubectl",
+  "summary": "Terminal CLI to list, inspect, tail logs, shell into and create Darkube apps.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "cloud",
+    "command-line-tool",
+    "containers",
+    "darkube",
+    "deployment",
+    "developer-tools",
+    "devops",
+    "golang",
+    "hamravesh"
+  ],
+  "use_cases": [
+    "list apps from the terminal",
+    "tail app logs",
+    "open interactive shell in app",
+    "find orphaned Helm releases",
+    "create app from Docker image"
+  ],
+  "alternatives_to": [
+    "kubectl"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://pkg.go.dev/github.com/rahacloud/darkubectl",
+  "repo": {
+    "url": "https://github.com/rahacloud/darkubectl",
+    "full_name": "rahacloud/darkubectl",
+    "created_at": "2026-07-05T23:22:31Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "Darkube API key"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install rahacloud/tap/darkubectl",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Create Darkube API key in console",
+        "Log in with email, password and TOTP"
+      ],
+      "check": null,
+      "first_task": "darkubectl completion bash"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-darkubectl-20261031-002549-bbc7",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -sSfL https://github.com/rahacloud/darkubectl/releases/download/v0.13.0/darkubectl_0.13.0_linux_amd64.tar.gz -o /tmp/darkubectl.tar.gz",
+          "purpose": "Download v0.13.0 linux amd64 tarball"
+        },
+        {
+          "command": "tar xzf /tmp/darkubectl.tar.gz -C /tmp && mkdir -p ~/.local/bin && install /tmp/darkubectl ~/.local/bin/darkubectl",
+          "purpose": "Extract tarball and install binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "darkubectl version",
+        "expected_signal": "darkubectl 0.13.0"
+      },
+      "first_task": "darkubectl version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/rahacloud/darkubectl@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Create Darkube API key in console",
+        "Log in with email, password and TOTP"
+      ],
+      "check": null,
+      "first_task": "darkubectl completion bash"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "GPL-3.0",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v0.13.0",
+    "published_at": "2026-10-18T19:02:01Z",
+    "url": "https://github.com/rahacloud/darkubectl/releases/tag/v0.13.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:26:52.097720+08:00",
+    "runs": [
+      {
+        "id": "verify-darkubectl-20261031-002549-bbc7",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:26:52.097720+08:00",
+        "tool_version": "0.13.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sSfL https://github.com/rahacloud/darkubectl/releases/download/v0.13.0/darkubectl_0.13.0_linux_amd64.tar.gz -o /tmp/darkubectl.tar.gz",
+            "purpose": "Download v0.13.0 linux amd64 tarball"
+          },
+          {
+            "command": "tar xzf /tmp/darkubectl.tar.gz -C /tmp && mkdir -p ~/.local/bin && install /tmp/darkubectl ~/.local/bin/darkubectl",
+            "purpose": "Extract tarball and install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "darkubectl version",
+            "expected_signal": "darkubectl 0.13.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "darkubectl 0.13.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "darkubectl --help",
+            "expected_signal": "COMMANDS:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "COMMANDS:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "darkubectl completion bash",
+            "expected_signal": "complete -o bashdefault -o default -F __darkubectl_bash_autocomplete darkubectl",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "complete -o bashdefault -o default -F __darkubectl_bash_autocomplete darkubectl",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go install github.com/rahacloud/darkubectl@latest",
+            "actually_needed": "Skipped ranked candidates 1 (go install) and 2 (git clone + go build) because the box has no Go toolchain and installing one is forbidden; used the README's Binaries tarball method instead (pinned v0.13.0 linux amd64).",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "sudo install darkubectl /usr/local/bin/",
+            "actually_needed": "Installed to ~/.local/bin (on PATH) via `install /tmp/darkubectl ~/.local/bin/darkubectl` instead of `sudo install darkubectl /usr/local/bin/` which needs root.",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show the bash completion script ending with the expected complete line and version printing darkubectl 0.13.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-darkubectl-20261031-002549-bbc7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-darkubectl-20261031-002549-bbc7/check-1-cmd7.judged.png",
+            "runs/verify/verify-darkubectl-20261031-002549-bbc7/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.058392
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:11:57+08:00",
+    "quality": {
+      "total": 84.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 25.0,
+      "signals": {
+        "stars": 6,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 98,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 116,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 63.53
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "6eb1ab197e41a0c7cccadaf60251a8b6f3e5fee96b931e677571989ff48c9b01",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "kubectl-like CLI for the Hamravesh Darkube platform — list, describe, tail logs, shell into and create apps from your terminal"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "so a coding agent can run it as a tool and manage Darkube for you."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Go, no client-go, no runtime deps."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install rahacloud/tap/darkubectl"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "darkubectl get apps"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export DARKUBE_TOKEN=<api-key> DARKUBE_ORG=<org-slug>"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "A multi-port spec is not proven to work."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Linux, macOS and Windows on amd64 and arm64."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/rahacloud/darkubectl",
+      "fetched_at": "2026-10-30T23:45:51+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/rahacloud/darkubectl/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:06:15+08:00"
+    },
+    {
+      "id": "release:v0.13.0",
+      "kind": "release",
+      "url": "https://github.com/rahacloud/darkubectl/releases/tag/v0.13.0",
+      "fetched_at": "2026-10-31T00:06:15+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "kubectl-like CLI for the Hamravesh Darkube platform — list, describe, tail logs, shell into and create apps from your terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:47+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "**Your [Darkube](https://hamravesh.com/darkube) apps, from the terminal.** List, inspect, tail, shell into and create apps",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:47+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "`darkubectl` is that missing CLI. It speaks the Hamravesh API (`https://api.hamravesh.com`) and its websockets directly",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:47+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**Your [Darkube](https://hamravesh.com/darkube) apps, from the terminal.** List, inspect, tail, shell into and create apps",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:47+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "darkubectl — kubectl-like access to the Hamravesh Darkube platform",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:47+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Linux, macOS and Windows on amd64 and arm64.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:47+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "export DARKUBE_TOKEN=<api-key> DARKUBE_ORG=<org-slug>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:47+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:45:51+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:45:51+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:45:51+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:45:51+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:45:51+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.13.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:06:15+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "darkubectl get apps -o wide          # instead of five clicks",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:47+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "darkubectl logs app api -f           # instead of the log panel",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:47+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "darkubectl terminal app api          # instead of the web terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:47+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "darkubectl get orphans               # something the console cannot tell you at all",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:47+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "darkubectl create app my-api --namespace <ns> --plan 1 --image nginx:latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:47+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "`get`, `describe`, `logs`, `exec`, `create`, `delete` — the kubectl muscle memory carries over.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:47+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install rahacloud/tap/darkubectl",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:47+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/rahacloud/darkubectl@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:47+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/rahacloud/darkubectl@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:47+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "It speaks the Hamravesh API (`https://api.hamravesh.com`) and its websockets directly",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:47+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:42:22+08:00",
+  "updated_at": "2026-10-31T02:11:57+08:00"
+}

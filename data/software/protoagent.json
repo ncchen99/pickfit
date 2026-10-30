@@ -1,0 +1,484 @@
+{
+  "schema_version": "software.v1",
+  "slug": "protoagent",
+  "repo_id": "gh:1264451768",
+  "name": "protoagent_",
+  "summary": "Local-first coding agent with Rust terminal UI and Python core for workspace tasks.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-client-protocol",
+    "ai-agents",
+    "cli",
+    "developer-tools",
+    "local-llm",
+    "mcp",
+    "ollama",
+    "protolink",
+    "python",
+    "rust"
+  ],
+  "use_cases": [
+    "browse workspace files without a model",
+    "explain authentication flow and propose safer change",
+    "design regression cases and run approved checks"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://nmaroulis.github.io/protoagent/",
+  "repo": {
+    "url": "https://github.com/nMaroulis/protoagent",
+    "full_name": "nMaroulis/protoagent",
+    "created_at": "2026-06-09T22:36:14Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.12"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": [
+      "BRAVE_SEARCH_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-protoagent-20261031-004449-46d2",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "rm -rf protoagent-src && git clone --depth 1 https://github.com/nMaroulis/protoagent.git protoagent-src",
+          "purpose": "clone source for pip install"
+        },
+        {
+          "command": "python3 -m pip install -e ./protoagent-src/core --no-deps && python3 -m pip install protolink[http,mcp,openai,anthropic,gemini,huggingface,deepseek,grok,ollama,openai-compatible,lmstudio,vllm,llama-cpp-server]>=0.8.2",
+          "purpose": "install protoagent-core without llama build plus protolink deps"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "python3 -c \"import protoagent_core; print(protoagent_core.__version__)\"",
+        "expected_signal": "0.3.1"
+      },
+      "first_task": "python3 -c \"import protoagent_core; print(protoagent_core.__version__)\""
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v.0.3.1",
+    "published_at": "2026-10-19T12:46:25Z",
+    "url": "https://github.com/nMaroulis/protoagent/releases/tag/v.0.3.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:47:22.882905+08:00",
+    "runs": [
+      {
+        "id": "verify-protoagent-20261031-004449-46d2",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:47:22.882905+08:00",
+        "tool_version": "0.3.1",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf protoagent-src && git clone --depth 1 https://github.com/nMaroulis/protoagent.git protoagent-src",
+            "purpose": "clone source for pip install"
+          },
+          {
+            "command": "python3 -m pip install -e ./protoagent-src/core --no-deps && python3 -m pip install protolink[http,mcp,openai,anthropic,gemini,huggingface,deepseek,grok,ollama,openai-compatible,lmstudio,vllm,llama-cpp-server]>=0.8.2",
+            "purpose": "install protoagent-core without llama build plus protolink deps"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 -c \"import protoagent_core; print(protoagent_core.__version__)\"",
+            "expected_signal": "0.3.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.3.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 -c \"import json; from protoagent_core.agent_engine import get_agent_settings; d=json.loads(get_agent_settings()); print(sorted([a['name'] for a in d['agents']]))\"",
+            "expected_signal": "architect",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "['architect', 'coder', 'explorer', 'mcp', 'scout', 'tester', 'verifier']",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 -c \"import json; from protoagent_core.agent_engine import doctor; d=json.loads(doctor(workspace='/tmp')); print(d['python']); print(d['active_provider']); print(d['component_versions'][1]['version'])\"",
+            "expected_signal": "ollama",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ollama",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "python -m pip install -e core (pulls protolink[http,llms,mcp] including llama-cpp-python)",
+            "actually_needed": "install core with --no-deps then install protolink without llama-cpp-local: python3 -m pip install protolink[http,mcp,openai,anthropic,gemini,huggingface,deepseek,grok,ollama,openai-compatible,lmstudio,vllm,llama-cpp-server]>=0.8.2",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "cargo run --locked --manifest-path cli/Cargo.toml -- version/check/agents",
+            "actually_needed": "called the same logic via Python: component_versions() for version, get_agent_settings() for agents, doctor() for check",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.3.1, agent list containing architect, and doctor reporting python 3.12.16 with active provider ollama.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-protoagent-20261031-004449-46d2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-protoagent-20261031-004449-46d2/check-1-cmd11.judged.png",
+            "runs/verify/verify-protoagent-20261031-004449-46d2/check-2-cmd12.judged.png",
+            "runs/verify/verify-protoagent-20261031-004449-46d2/check-3-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.180842
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 76.9,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 30.6,
+      "signals": {
+        "stars": 11,
+        "monthly_downloads": null,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 140,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 53.37
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "c89dd2db628990a9ad69ff6b8515cb59ae0089dfb65d0e255e580bbf3181dd0b",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "ProtoAgent is a local-first coding agent built around a fast Rust terminal UI"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requirements:\n\n- Python 3.12 or newer\n- Rust toolchain with Cargo 1.85 or newer\n- a supported local or API model provider"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "git clone https://github.com/nMaroulis/protoagent.git"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "cargo run --locked --manifest-path cli/Cargo.toml -- version"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Brave search uses `BRAVE_SEARCH_API_KEY`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "ProtoAgent is available under the [MIT License](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/nMaroulis/protoagent",
+      "fetched_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/nMaroulis/protoagent/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:34:09+08:00"
+    },
+    {
+      "id": "release:v.0.3.1",
+      "kind": "release",
+      "url": "https://github.com/nMaroulis/protoagent/releases/tag/v.0.3.1",
+      "fetched_at": "2026-10-29T02:34:09+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Proto-CLI is the Rust terminal frontend for ProtoAgent.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:01+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Start the TUI from the repository root:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:01+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "ProtoAgent is a local-first coding agent built around a fast Rust terminal UI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:01+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "ProtoAgent is a local-first coding agent built around a fast Rust terminal UI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:01+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# protoagent_",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:01+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.12 or newer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:01+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "enabling Scout sends search/fetch requests to public internet services.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:01+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "Brave search uses `BRAVE_SEARCH_API_KEY`; DuckDuckGo is keyless",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:01+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v.0.3.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:34:09+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Browse files without a model using `/ls`, `/browse`, `/open FILE` and `/cat FILE`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:01+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "\"explain the authentication flow and propose a safer change\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:01+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Tester designs regression cases; Verifier runs approved checks",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:01+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "API providers send model inputs to their configured endpoint, and",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:01+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}

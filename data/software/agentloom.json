@@ -1,0 +1,437 @@
+{
+  "schema_version": "software.v1",
+  "slug": "agentloom",
+  "repo_id": "gh:1195909599",
+  "name": "AgentLoom",
+  "summary": "Composable C++20 agent runtime with gateway, persona sessions, memory, vision, and local inference.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": "alpha",
+  "tags": [
+    "cpp20",
+    "llama-cpp",
+    "llm-agents"
+  ],
+  "use_cases": [
+    "run ONNX Runtime BERT emotion inference",
+    "run streaming and sync VLM inference",
+    "serve unified HTTP/WebSocket gateway with auth"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/Orange20000922/AgentLoom",
+    "full_name": "Orange20000922/AgentLoom",
+    "created_at": "2026-03-30T07:23:24Z",
+    "archived": false
+  },
+  "platforms": [
+    "windows",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "bash linux/scripts/bootstrap_toolchain.sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "cmake --version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": ".\\windows\\scripts\\prepare_deps.ps1",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "cmake --version"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.0.1",
+    "published_at": "2026-04-04T14:05:12Z",
+    "url": "https://github.com/Orange20000922/AgentLoom/releases/tag/v0.0.1"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "needs_root",
+    "checked_at": "2026-10-31T00:43:36.036410+08:00",
+    "runs": [
+      {
+        "id": "verify-agentloom-20261031-004250-4927",
+        "level": "unverified",
+        "unverified_reason": "needs_root",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:43:36.036410+08:00",
+        "tool_version": null,
+        "install_method": null,
+        "replayed": false,
+        "steps": [],
+        "smoke_tests": [],
+        "pitfalls": [
+          {
+            "readme_said": "bash linux/scripts/bootstrap_toolchain.sh builds Core/SDK Release toolchain",
+            "actually_needed": "script exits immediately with '[linux-build] error: required command not found: sudo' (command_id 2); box user sbx has no sudo and cmake is not installed (cmake --version -> 127 command not found), so apt-based toolchain setup cannot proceed here",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "same bootstrap script continues to rustup/cargo and python venv setup",
+            "actually_needed": "even with sudo, the script would apt-install build toolchain and then pipe https://sh.rustup.rs into sh to install Rust stable/cargo plus create a python venv; Rust/Go toolchains must not be installed in this box and a piped remote installer cannot be pre-read, so the ranked method cannot be comple…",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-agentloom-20261031-004250-4927/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.044039
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:11:57+08:00",
+    "quality": {
+      "total": 67.6,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.56,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 22.0,
+      "signals": {
+        "stars": 6,
+        "monthly_downloads": null,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": 2,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 212,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 52.73
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "dc91008bafbb0c8370bcaf5f1d573fb5bcc5eb772ba20f56b87bd9a062b3e4b5",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "AgentLoom 是一个面向服务端智能体的 C++20 Runtime。"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "适合用于二次开发、系统集成和面向生产的工程验证"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Visual Studio 2026/v145（Windows），或 GCC 11+/Clang 14+（Linux）"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": ".\\windows\\scripts\\prepare_deps.ps1"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "build\\x64-Release\\Release\\agent_gateway_server.exe `"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Gateway 样例默认要求 `AGENT_LLM_API_KEY`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "AgentLoom 使用 [MIT License](LICENSE)。"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Orange20000922/AgentLoom",
+      "fetched_at": "2026-10-30T23:48:24+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Orange20000922/AgentLoom/blob/master/README.md",
+      "fetched_at": "2026-10-29T02:30:57+08:00"
+    },
+    {
+      "id": "release:v0.0.1",
+      "kind": "release",
+      "url": "https://github.com/Orange20000922/AgentLoom/releases/tag/v0.0.1",
+      "fetched_at": "2026-10-29T02:30:57+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "HTTP/WebSocket Gateway，组合 Persona、认证、记忆、文档、Skill 与静态前端",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "也可以作为独立 Server 部署。",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "BERT/VLM Inference in C++20",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Composable Agent Infrastructure — HTTP/WebSocket Gateway, Persona Runtime, Semantic Memory, Real-time Vision, and BERT/VLM Inference in C++20",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# AgentLoom",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Visual Studio 2026/v145（Windows），或 GCC 11+/Clang 14+（Linux）",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:24+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:24+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:24+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:24+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.0.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:30:57+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "接口仍在活跃开发中",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "ONNX Runtime BERT 情绪推理",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "基于 llama.cpp/mtmd 的流式与同步 VLM 推理",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "统一 HTTP/WebSocket 入口、JWT/cookie 认证、静态文件托管、请求过滤、背压和运行时维护任务。",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "bash linux/scripts/bootstrap_toolchain.sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": ".\\windows\\scripts\\prepare_deps.ps1",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "agent_gateway_server  <---->  OpenAI-compatible / local LLM",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:03+08:00",
+  "updated_at": "2026-10-31T02:11:57+08:00"
+}

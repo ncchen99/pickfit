@@ -1,0 +1,547 @@
+{
+  "schema_version": "software.v1",
+  "slug": "voxagent",
+  "repo_id": "gh:1200433100",
+  "name": "voxagent",
+  "summary": "Voice terminal agent that records speech, transcribes locally, and answers via Ollama.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "decibri",
+    "llm",
+    "ollama",
+    "speech-to-text",
+    "terminal",
+    "voice",
+    "voice-agent",
+    "voice-agent-framework",
+    "voice-agents"
+  ],
+  "use_cases": [
+    "ask a spoken question from the terminal",
+    "answer one question recorded in an audio file",
+    "ask follow-up questions with conversation memory",
+    "list available audio input devices"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://voxagent.run",
+  "repo": {
+    "url": "https://github.com/analyticsinmotion/voxagent",
+    "full_name": "analyticsinmotion/voxagent",
+    "created_at": "2026-04-03T12:07:13Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js 18.3 or later, except Node.js 19"
+    ],
+    "system_packages": [
+      "libvulkan1 libgomp1 libasound2t64"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g voxagent",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Connect a microphone for voice input"
+      ],
+      "check": null,
+      "first_task": "voxagent --help"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-voxagent-20261031-001540-cadc",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g voxagent",
+          "purpose": "Install voxagent via npm global"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "voxagent --help",
+        "expected_signal": "Voice-powered terminal agent."
+      },
+      "first_task": "voxagent --file question.wav --device default"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g voxagent",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Connect a microphone for voice input"
+      ],
+      "check": null,
+      "first_task": "voxagent --help"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.3.0",
+    "published_at": "2026-10-20T10:28:55Z",
+    "url": "https://github.com/analyticsinmotion/voxagent/releases/tag/v0.3.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:16:41.607747+08:00",
+    "runs": [
+      {
+        "id": "verify-voxagent-20261031-001540-cadc",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:16:41.607747+08:00",
+        "tool_version": "0.3.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g voxagent",
+            "purpose": "Install voxagent via npm global"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "voxagent --help",
+            "expected_signal": "Voice-powered terminal agent.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Voice-powered terminal agent.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "voxagent --version",
+            "expected_signal": "0.3.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.3.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "voxagent --file question.wav --device default",
+            "expected_signal": "cannot be combined",
+            "exit_code": 2,
+            "passed": true,
+            "observed_excerpt": "\u001b[31mError: Options '--file' and '--device' cannot be combined.\u001b[0m",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "On Debian and Ubuntu, `sudo apt install libvulkan1 libgomp1 libasound2t64`",
+            "actually_needed": "In this box (no root, no apt) libasound.so.2 is missing, so `voxagent --file /tmp/does-not-exist.wav` exits 1 with 'A native module could not load because a library it needs is missing ... install it with: sudo apt install libasound2t64' instead of a file-read error; --help and --file/--device vali…",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show the --file/--device cannot-be-combined error and help containing Voice-powered terminal agent.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-voxagent-20261031-001540-cadc/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-voxagent-20261031-001540-cadc/check-1-cmd4.judged.png",
+            "runs/verify/verify-voxagent-20261031-001540-cadc/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.032405
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 92.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 33.0,
+      "signals": {
+        "stars": 6,
+        "monthly_downloads": 124,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 208,
+      "packages": [
+        "npm:voxagent"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 61.77
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "9e7008e721a0e378641c03f24195cbb18b2483792af02b37dc3b21b849e7ef2d",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "voxagent is a voice agent for the terminal. It records a spoken question with decibri"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "voxagent runs on the three platforms below, with Node.js and Ollama on the same machine."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npm install -g voxagent"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "voxagent v0.3.0 - voice-powered terminal"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Apart from the model download, voxagent connects only to the Ollama server on your machine, and it needs no API key or account."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Apache 2.0"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/analyticsinmotion/voxagent",
+      "fetched_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/analyticsinmotion/voxagent/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:34:01+08:00"
+    },
+    {
+      "id": "release:v0.3.0",
+      "kind": "release",
+      "url": "https://github.com/analyticsinmotion/voxagent/releases/tag/v0.3.0",
+      "fetched_at": "2026-10-29T02:34:01+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "voxagent is a voice agent for the terminal.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:55+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "npm install -g voxagent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:55+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "voxagent is a voice agent for the terminal.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:55+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "voxagent is a voice agent for the terminal. It records a spoken question with decibri, transcribes it on your machine with whisper.cpp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:55+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# voxagent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:55+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "voxagent runs on the three platforms below, with Node.js and Ollama on the same machine.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:55+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "18.3 or later, except Node.js 19",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:55+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "sudo apt install libvulkan1 libgomp1 libasound2t64",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:55+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Apart from the model download, voxagent connects only to the Ollama server on your machine",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:55+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.3.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:34:01+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Press Enter at the prompt and ask your question out loud.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:55+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Answer one question recorded in an audio file, then exit",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:55+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Keep the conversation for follow-up questions until voxagent exits",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:55+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "List the available input devices and exit",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:55+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g voxagent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:55+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g voxagent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:55+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g voxagent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:55+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "github_api",
+      "quote": "Voice-powered terminal agent. Fully offline. Speak commands, get answers.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:55+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}

@@ -1,0 +1,543 @@
+{
+  "schema_version": "software.v1",
+  "slug": "sivtr",
+  "repo_id": "gh:1215961903",
+  "name": "sivtr",
+  "summary": "Unified local workspace to search terminal outputs and agent sessions.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent",
+    "cli",
+    "dsh-plugin",
+    "dsh-plugins",
+    "output",
+    "rust",
+    "search",
+    "sivtr",
+    "workspace"
+  ],
+  "use_cases": [
+    "fix recent terminal failure without pasting logs",
+    "retrieve yesterday's test output or build error",
+    "generate timeline of today's agent work",
+    "save search results as named memory variable for reuse",
+    "jump from summary back to original command output"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://sivtr.pages.dev/",
+  "repo": {
+    "url": "https://github.com/Ariestar/sivtr",
+    "full_name": "Ariestar/sivtr",
+    "created_at": "2026-04-20T12:31:22Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo binstall sivtr",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "sivtr sync"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-sivtr-20261031-000542-b3e9",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/Ariestar/sivtr/main/install.sh -o /tmp/install_sivtr.sh && ls -l /tmp/install_sivtr.sh && wc -c /tmp/install_sivtr.sh",
+          "purpose": "Download install script for reading before running"
+        },
+        {
+          "command": "sh /tmp/install_sivtr.sh",
+          "purpose": "Install sivtr via reviewed install.sh to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "sivtr --version",
+        "expected_signal": "sivtr 0.8.2"
+      },
+      "first_task": "sivtr sync"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://raw.githubusercontent.com/Ariestar/sivtr/main/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "sivtr sync"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.8.2",
+    "published_at": "2026-10-09T08:37:27Z",
+    "url": "https://github.com/Ariestar/sivtr/releases/tag/v0.8.2"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:06:30.568083+08:00",
+    "runs": [
+      {
+        "id": "verify-sivtr-20261031-000542-b3e9",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:06:30.568083+08:00",
+        "tool_version": "0.8.2",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/Ariestar/sivtr/main/install.sh -o /tmp/install_sivtr.sh && ls -l /tmp/install_sivtr.sh && wc -c /tmp/install_sivtr.sh",
+            "purpose": "Download install script for reading before running"
+          },
+          {
+            "command": "sh /tmp/install_sivtr.sh",
+            "purpose": "Install sivtr via reviewed install.sh to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "sivtr --version",
+            "expected_signal": "sivtr 0.8.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "sivtr 0.8.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sivtr --help",
+            "expected_signal": "Usage: sivtr [OPTIONS] [COMMAND]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: sivtr [OPTIONS] [COMMAND]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sivtr sync",
+            "expected_signal": "archive synced: 0 changed in 1 ms",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "info: archive synced: 0 changed in 1 ms",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sivtr usage daily",
+            "expected_signal": "total: $0.00",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "total: $0.00 · 0 requests · 0 priced · 0 unpriced",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sivtr stats",
+            "expected_signal": "sessions: 0 · records: 0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "sessions: 0 · records: 0 · starred: 0 · active days: 0 · duration: 0s",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show expected outputs: sync completed, zero usage total, and version 0.8.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-sivtr-20261031-000542-b3e9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-sivtr-20261031-000542-b3e9/check-1-cmd5.judged.png",
+            "runs/verify/verify-sivtr-20261031-000542-b3e9/check-2-cmd6.judged.png",
+            "runs/verify/verify-sivtr-20261031-000542-b3e9/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.044893
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 92.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 83.2,
+      "signals": {
+        "stars": 253,
+        "monthly_downloads": 155,
+        "forks": 24,
+        "dependents": null,
+        "release_downloads": 478,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 193,
+      "packages": [
+        "crates:sivtr"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 15.49
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "6a949502ec7d4be7679029859047599a876492a3d558fec70d266feff008f755",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A unified agent memory workspace for human and agent | 一个统一的agent记忆工作空间"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "一个面向智能体和人的统一的记忆空间"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "安装预编译 CLI（无需 Rust 工具链）："
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/Ariestar/sivtr/main/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "sivtr sync"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "[theme] mode = auto|dark|light"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "sivtr update"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Windows（PowerShell）："
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Ariestar/sivtr",
+      "fetched_at": "2026-10-30T23:40:46+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Ariestar/sivtr/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:59:58+08:00"
+    },
+    {
+      "id": "release:v0.8.2",
+      "kind": "release",
+      "url": "https://github.com/Ariestar/sivtr/releases/tag/v0.8.2",
+      "fetched_at": "2026-10-30T23:59:58+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "安装预编译 CLI（无需 Rust 工具链）：",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:50+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "cargo binstall sivtr",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:50+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "记录 Bash、Zsh、PowerShell、Nushell 里的命令、stdout/stderr、退出码、目录和耗时",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:50+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A unified agent memory workspace for human and agent | 一个统一的agent记忆工作空间",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:50+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1 align=\"center\">sivtr</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:50+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/Ariestar/sivtr/main/install.sh | sh   # Linux/macOS/WSL 一行安装",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:50+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:40:46+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:40:46+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:40:46+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:40:46+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:40:46+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.8.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:59:58+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "让 Agent 修复最近一次失败，而不用自己粘贴日志",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:50+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "几秒钟找回昨天的测试输出、构建报错或关键决策",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:50+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "sivtr s agent --since today --sort oldest -f timeline",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:50+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "把一组有用结果保存成 `@failures` 这样的变量，在下一条命令里继续用",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:50+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "从摘要跳回当时那条命令输出或 Agent 回复",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:50+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "cargo binstall sivtr",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:50+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/Ariestar/sivtr/main/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:50+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://raw.githubusercontent.com/Ariestar/sivtr/main/install.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:50+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "统一本地 archive",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:50+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:40:46+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}

@@ -1,0 +1,561 @@
+{
+  "schema_version": "software.v1",
+  "slug": "python-ai-agent-ollama",
+  "repo_id": "gh:1426100153",
+  "name": "MAZHARMIK/python-ai-agent-ollama",
+  "summary": "Local Python AI agent using Ollama with memory and multi-step tool calling.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "prototype",
+  "tags": [
+    "ai-agent",
+    "function-calling",
+    "llm",
+    "local-llm",
+    "ollama",
+    "open-ai-api",
+    "python",
+    "qwen3",
+    "tool-calling"
+  ],
+  "use_cases": [
+    "Returns the current local date and time",
+    "One-line weather from the free wttr.in service",
+    "find your city, then fetch the weather for that city"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://www.youtube.com/watch?v=f0HBW-47wwU&list=PLGSKQmIKK2zQ",
+  "repo": {
+    "url": "https://github.com/MAZHARMIK/python-ai-agent-ollama",
+    "full_name": "MAZHARMIK/python-ai-agent-ollama",
+    "created_at": "2026-10-19T19:49:07Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.10"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "ollama pull qwen3:4b",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "install and run Ollama"
+      ],
+      "check": null,
+      "first_task": "python simple_ai_assistant.py"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-python-ai-agent-ollama-20261031-004015-7391",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "rm -rf repo && git clone https://github.com/MAZHARMIK/python-ai-agent-ollama.git repo",
+          "purpose": "clone repo code"
+        },
+        {
+          "command": "cd repo && pip install -r requirements.txt",
+          "purpose": "pip install requirements"
+        },
+        {
+          "command": "cd repo && cp .env.example .env",
+          "purpose": "create .env from example"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "python3 --version",
+        "expected_signal": "Python 3.12.16"
+      },
+      "first_task": "cd repo && python simple_ai_assistant.py <<'EOF'\nHello\nexit\nEOF"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "ollama pull qwen3:4b",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "install and run Ollama"
+      ],
+      "check": null,
+      "first_task": "python simple_ai_assistant.py"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": null,
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:42:20.747360+08:00",
+    "runs": [
+      {
+        "id": "verify-python-ai-agent-ollama-20261031-004015-7391",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:42:20.747360+08:00",
+        "tool_version": null,
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf repo && git clone https://github.com/MAZHARMIK/python-ai-agent-ollama.git repo",
+            "purpose": "clone repo code"
+          },
+          {
+            "command": "cd repo && pip install -r requirements.txt",
+            "purpose": "pip install requirements"
+          },
+          {
+            "command": "cd repo && cp .env.example .env",
+            "purpose": "create .env from example"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 --version",
+            "expected_signal": "Python 3.12.16",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Python 3.12.16",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd repo && python simple_ai_assistant.py <<'EOF'\nHello\nexit\nEOF",
+            "expected_signal": "Hello! I am a stub model answering locally.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "👦🏻 MIK: 🤖 Assistant: Hello! I am a stub model answering locally.",
+            "setup": [
+              {
+                "command": "cat > /tmp/stub_ollama.py <<'PY'\nimport json\nfrom http.server import BaseHTTPRequestHandler, HTTPServer\n\nclass H(BaseHTTPRequestHandler):\n    def log_message(self, *a): pass\n    def do_GET(self):\n        if self.path in (\"/v1/models\", \"/api/tags\", \"/health\"):\n            body = json.dumps({\"object\":\"list\",\"data\":[{\"id\":\"qwen3:4b\",\"object\":\"model\"}]}).encode()\n            self.send_response(200); self.send_header(\"Content-Type\",\"application/json\"); self.send_header(\"Content-Length\",str(len(body))); self.end_headers(); self.wfile.write(body)\n        else:\n            self.send_response(404); self.end_headers()\n    def do_POST(self):\n        length = int(self.headers.get(\"Content-Length\",0) or 0)\n        try: self.rfile.read(length)\n        except: pass\n        if self.path in (\"/v1/chat/completions\",\"/chat/completions\"):\n            # streaming SSE with plain text answer, no tool calls\n            self.send_response(200)\n            self.send_header(\"Content-Type\",\"text/event-stream\")\n            self.send_header(\"Cache-Control\",\"no-cache\")\n            self.send_header(\"Connection\",\"keep-alive\")\n            self.end_headers()\n            chunks = [\n                {\"id\":\"chatcmpl-stub\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"qwen3:4b\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":None}]},\n                {\"id\":\"chatcmpl-stub\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"qwen3:4b\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Hello! I am a stub model answering locally.\"},\"finish_reason\":None}]},\n                {\"id\":\"chatcmpl-stub\",\"object\":\"chat.completion.chunk\",\"created\":1,\"model\":\"qwen3:4b\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]},\n            ]\n            for c in chunks:\n                line = (\"data: \"+json.dumps(c)+\"\\n\\n\").encode()\n                self.wfile.write(line); self.wfile.flush()\n            self.wfile.write(b\"data: [DONE]\\n\\n\"); self.wfile.flush()\n        else:\n            self.send_response(404); self.end_headers()\n\nHTTPServer((\"127.0.0.1\",11434),H).serve_forever()\nPY\ncat /tmp/stub_ollama.py",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /tmp/stub_ollama.py",
+                "background": true,
+                "port": 11434
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd repo && python -c \"from tools import get_current_time, get_user_city, TOOLS; print(get_current_time()); print(get_user_city()); print([t['function']['name'] for t in TOOLS])\"",
+            "expected_signal": "Bangalore",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Bangalore",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "ollama pull qwen3:4b with real Ollama serving BASE_URL=http://127.0.0.1:11434/v1",
+            "actually_needed": "started a local stub OpenAI-compatible server on 127.0.0.1:11434 implementing POST /v1/chat/completions (streaming SSE) and GET /v1/models returning qwen3:4b; no Ollama binary and no 2.5GB qwen3:4b download",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "python simple_ai_assistant.py (interactive prompt)",
+            "actually_needed": "ran with heredoc input (Hello then exit) so the interactive chat loop exits non-interactively",
+            "kind": "note"
+          },
+          {
+            "readme_said": "python -m venv .venv, activate, then pip install; no version flag documented",
+            "actually_needed": "pip install -r requirements.txt directly without creating/activating .venv; tool has no --version/--help so python3 --version used for prerequisite check",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show expected outputs: stub assistant reply, Bangalore tool result, and Python 3.12.16 version.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-python-ai-agent-ollama-20261031-004015-7391/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-python-ai-agent-ollama-20261031-004015-7391/check-1-cmd7.judged.png",
+            "runs/verify/verify-python-ai-agent-ollama-20261031-004015-7391/check-2-cmd8.judged.png",
+            "runs/verify/verify-python-ai-agent-ollama-20261031-004015-7391/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.114883
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 62.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.68,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.45,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 45.2,
+      "signals": {
+        "stars": 36,
+        "monthly_downloads": null,
+        "forks": 5,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 8,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 34.36
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "63c8b2c37bdd7f953b61cd8a6321e11d15668e94fb0f4e910b61f62d940804ff",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A local AI agent built from scratch in Python with Ollama: conversation memory, system prompts, and multi-step tool calling."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**Prerequisites:** Python 3.10+ and [Ollama](https://ollama.com/download) installed and running."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "# Windows:    .venv\\Scripts\\activate\n# Mac/Linux:  source .venv/bin/activate"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "python simple_ai_assistant.py"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `BASE_URL` | OpenAI-compatible endpoint. For Ollama: `http://127.0.0.1:11434/v1` |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "- Memory is kept in RAM and is lost when the program exits."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "<sub>Licensed under <a href=\"LICENSE\">MIT</a></sub>"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/MAZHARMIK/python-ai-agent-ollama",
+      "fetched_at": "2026-10-30T23:47:28+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/MAZHARMIK/python-ai-agent-ollama/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:30:43+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "simple_ai_assistant.py    chat loop, memory and the agent loop",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:18+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "python simple_ai_assistant.py",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:18+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "It talks to a model running on [Ollama](https://ollama.com) through the OpenAI-compatible API",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:18+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A **local AI agent built from scratch in Python**.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:18+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "github_api",
+      "quote": "name: MAZHARMIK/python-ai-agent-ollama",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:18+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "# Windows:    .venv\\Scripts\\activate\n# Mac/Linux:  source .venv/bin/activate",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:18+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Prerequisites:** Python 3.10+ and [Ollama](https://ollama.com/download) installed and running.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:18+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "The weather tool needs internet, and `wttr.in` is a free service that can be slow or down.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:18+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:47:28+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:47:28+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:47:28+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:47:28+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:47:28+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "This project is in its early phase.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:18+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Returns the current local date and time",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:18+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "One-line weather from the free `wttr.in` service",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:18+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "it first finds your city, then fetches the weather for that city.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:18+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "ollama pull qwen3:4b",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:18+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "ollama pull qwen3:4b",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:18+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "ollama pull qwen3:4b",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:18+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "so there is **no paid key and no framework** hiding the logic.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:18+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "An+AI+agent+that+runs+100%25+on+your+laptop+%F0%9F%92%BB",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:18+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:27:46+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}

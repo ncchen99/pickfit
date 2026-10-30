@@ -1,0 +1,555 @@
+{
+  "schema_version": "software.v1",
+  "slug": "generator-assets",
+  "repo_id": "gh:1346619550",
+  "name": "Generator Assets",
+  "summary": "Local headless pipeline that generates game assets, AI video, and music loops with Vulkan GGUF engines.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-game-assets",
+    "ai-music",
+    "audio-generation",
+    "blender",
+    "esrgan",
+    "flux-dev",
+    "game-development",
+    "gguf",
+    "godot",
+    "godot-4"
+  ],
+  "use_cases": [
+    "Generate PBR texture pack for Godot",
+    "Convert 2D image to volumetric 3D model",
+    "Generate seamless background music loops",
+    "Upscale images to 4K with ESRGAN",
+    "Generate 360-degree skybox environments"
+  ],
+  "alternatives_to": [
+    "ComfyUI",
+    "Automatic1111"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/laurentvv/generator-assets",
+    "full_name": "laurentvv/generator-assets",
+    "created_at": "2026-08-25T20:51:12Z",
+    "archived": false
+  },
+  "platforms": [
+    "windows",
+    "linux",
+    "macos"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.12+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "bash scripts/install_unix.sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "uv run python main.py -w material3d \"runic ancient dungeon stone floor\" -s 1024"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-generator-assets-20261031-004833-609a",
+      "method": "script",
+      "steps": [
+        {
+          "command": "rm -rf generator-assets && git clone https://github.com/laurentvv/generator-assets.git generator-assets",
+          "purpose": "Clone real repo laurentvv/generator-assets"
+        },
+        {
+          "command": "cd generator-assets && bash scripts/install_unix.sh --skip-models --skip-check --engines ffmpeg",
+          "purpose": "Run unix installer with ffmpeg only, models and check skipped"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "cd generator-assets && uv run python main.py --help",
+        "expected_signal": "3D & 2D Workflow Examples:"
+      },
+      "first_task": "cd generator-assets && uv run python main.py -w flowmap \"molten lava river\" --angle 45"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "powershell -ExecutionPolicy Bypass -File scripts\\install_windows.ps1",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "uv run python main.py -w material3d \"runic ancient dungeon stone floor\" -s 1024"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": null,
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:51:19.669619+08:00",
+    "runs": [
+      {
+        "id": "verify-generator-assets-20261031-004833-609a",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:51:19.669619+08:00",
+        "tool_version": null,
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf generator-assets && git clone https://github.com/laurentvv/generator-assets.git generator-assets",
+            "purpose": "Clone real repo laurentvv/generator-assets"
+          },
+          {
+            "command": "cd generator-assets && bash scripts/install_unix.sh --skip-models --skip-check --engines ffmpeg",
+            "purpose": "Run unix installer with ffmpeg only, models and check skipped"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd generator-assets && uv run python main.py --help",
+            "expected_signal": "3D & 2D Workflow Examples:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "3D & 2D Workflow Examples:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd generator-assets && uv run python main.py -w flowmap \"molten lava river\" --angle 45",
+            "expected_signal": "Flowmap pack ready for Godot 4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "🎉 [FLOWMAP] Flowmap pack ready for Godot 4 in 'output/':",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "git clone https://github.com/votre-compte/generator-assets.git",
+            "actually_needed": "Clone https://github.com/laurentvv/generator-assets.git (task title URL); README quickstart uses https://github.com/votre-compte/generator-assets.git which does not exist",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "bash scripts/install_unix.sh with default packs base,onnx,upscalers and 5 engines",
+            "actually_needed": "bash scripts/install_unix.sh --skip-models --skip-check --engines ffmpeg (syncs Python deps + only 150 MB ffmpeg; skipped 10+ GB base/onnx/upscalers model packs and sd-cli/llama.cpp/audio.cpp/trellis.cpp Vulkan binaries requiring GPU, disk and time beyond the box)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "uv run python main.py -w material3d \"runic ancient dungeon stone floor\" -s 1024",
+            "actually_needed": "Procedural README workflow flowmap exactly as table writes it: uv run python main.py -w flowmap \"molten lava river\" --angle 45 (pure numpy/Pillow, offline, ~2 s). Headline material3d example needs Flux.1 Dev Q6_K + sd-cli Vulkan GPU and was not run here.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Pinned engines verified by sha256",
+            "actually_needed": "Installer prints No known sha256 for ffmpeg BtbN latest asset and skips integrity verification (moving direct URL).",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show flowmap generation completing with Godot 4 pack outputs and help text listing 3D & 2D Workflow Examples.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-generator-assets-20261031-004833-609a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-generator-assets-20261031-004833-609a/check-1-cmd10.judged.png",
+            "runs/verify/verify-generator-assets-20261031-004833-609a/check-2-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.161665
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:11:57+08:00",
+    "quality": {
+      "total": 58.5,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.578,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.6,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 23.5,
+      "signals": {
+        "stars": 9,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 65,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 44.75
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "a51557397ac70257ca71e8352e8ea7d797e03caebfb46ac1e89a63bff47c530e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Headless, modular local AI pipeline: 2D/3D Godot & Blender assets (Flux.1, SDXL, ESRGAN)"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "designed to produce engine-ready game and video assets in seconds:"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Pure C++ Vulkan & GGUF for AMD Radeon, Intel Arc & NVIDIA"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "# Windows (PowerShell):\npowershell -ExecutionPolicy Bypass -File scripts\\install_windows.ps1\n\n# Linux / macOS (bash):\nbash scripts/install_unix.sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "uv run python main.py -w material3d \"runic ancient dungeon stone floor\" -s 1024"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "✅ **100% Local & Free forever**: zero network dependencies, zero API keys, runs completely offline on your workstation."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "This project is open-source under the **[MIT License](LICENSE)**."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/laurentvv/generator-assets",
+      "fetched_at": "2026-10-30T23:48:39+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/laurentvv/generator-assets/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:55:41+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "uv run python main.py -w <workflow_name> [options]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Clone the repository and run the setup script for your OS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "100% Local & Free forever",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Headless, modular local AI pipeline: 2D/3D Godot & Blender assets (Flux.1, SDXL, ESRGAN), AI video generation (Wan 2.1/2.2, LTX-2.5, MiniMax-H3) with 4K YouTube masters, and AI music loops (MiniMax-Music3 via audio.cpp) — 100% Vulkan/GGUF, no CUDA, no cloud.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# ⚔️ Generator Assets",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "# Windows (PowerShell):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.12+",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "100% Local & Free forever`: zero network dependencies",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:39+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:39+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:39+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:39+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Complete PBR texture pack (Albedo, Normal, ORM, Height) + Godot `.tres`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "AI 2D image → volumetric closed 3D model (.glb)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Seamless AI music loops (−30 LUFS bed + automatic sidechain ducking command)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "4K AI Super-Resolution (ESRGAN Vulkan) with 100% alpha transparency preservation",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "360° panoramic equirectangular sky + Godot `WorldEnvironment.tres` (IBL)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Most AI generation frameworks (ComfyUI, Automatic1111) rely on heavy Python stacks",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "Most AI generation frameworks (ComfyUI, Automatic1111) rely on heavy Python stacks",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "bash scripts/install_unix.sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "bash scripts/install_unix.sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "powershell -ExecutionPolicy Bypass -File scripts\\install_windows.ps1",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "100% Local & Free forever",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "runs completely offline on your workstation.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:06+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:11+08:00",
+  "updated_at": "2026-10-31T02:11:57+08:00"
+}

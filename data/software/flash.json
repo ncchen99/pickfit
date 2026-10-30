@@ -1,0 +1,529 @@
+{
+  "schema_version": "software.v1",
+  "slug": "flash",
+  "repo_id": "gh:1228366920",
+  "name": "FLASH CLI",
+  "summary": "Local-first agent shell that chats with Ollama models via CLI and web UI with tools.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-harness",
+    "agent-shell",
+    "ai",
+    "ai-agent",
+    "ai-agents",
+    "ai-coding",
+    "ai-coding-assistant",
+    "ai-shell",
+    "autonomous-agents",
+    "cli"
+  ],
+  "use_cases": [
+    "chat with local Ollama models from the terminal",
+    "execute shell commands with ! prefix",
+    "send a local image to a vision model"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://flashproject.dev",
+  "repo": {
+    "url": "https://github.com/Natuworkguy/Flash",
+    "full_name": "Natuworkguy/Flash",
+    "created_at": "2026-05-03T23:54:49Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/Natuworkguy/Flash/main/install.sh | bash",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "flash"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-flash-20261031-001936-2917",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone --depth 1 https://github.com/Natuworkguy/Flash Flash",
+          "purpose": "Clone repo (manual step 1, prerequisite for pip)"
+        },
+        {
+          "command": "pip install -r Flash/requirements.txt --break-system-packages",
+          "purpose": "Install dependencies via pip requirements"
+        },
+        {
+          "command": "pip install ./Flash --break-system-packages",
+          "purpose": "Install flash package entry point"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "flash --version",
+        "expected_signal": "Flash CLI v0.5.12"
+      },
+      "first_task": "flash --extension-list"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.5.12",
+    "published_at": "2026-09-30T02:51:13Z",
+    "url": "https://github.com/Natuworkguy/Flash/releases/tag/v0.5.12"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:21:38.683851+08:00",
+    "runs": [
+      {
+        "id": "verify-flash-20261031-001936-2917",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:21:38.683851+08:00",
+        "tool_version": "0.5.12",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/Natuworkguy/Flash Flash",
+            "purpose": "Clone repo (manual step 1, prerequisite for pip)"
+          },
+          {
+            "command": "pip install -r Flash/requirements.txt --break-system-packages",
+            "purpose": "Install dependencies via pip requirements"
+          },
+          {
+            "command": "pip install ./Flash --break-system-packages",
+            "purpose": "Install flash package entry point"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flash --version",
+            "expected_signal": "Flash CLI v0.5.12",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Flash CLI v0.5.12",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "flash --help",
+            "expected_signal": "FLASH (Fast Local Agent SHell) CLI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "FLASH (Fast Local Agent SHell) CLI",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "flash --extension-list",
+            "expected_signal": "No extensions installed.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No extensions installed. /extension install github@owner/repo adds one.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 Flash/run.py --help",
+            "expected_signal": "usage: flash",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: flash [-h] [-V] [--register-url-scheme] [--unregister-url-scheme] [--update] [--force]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install -r requirements.txt",
+            "actually_needed": "add --break-system-packages to pip invocations on this Debian box (externally-managed-environment)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "pip install -r requirements.txt then python3 run.py",
+            "actually_needed": "also run pip install ./Flash to provide the flash entry point on PATH; pip install -r requirements.txt alone only installs dependencies and the manual path documents python3 run.py",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show the extension list reporting no extensions installed and the version command reporting Flash CLI v0.5.12.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-flash-20261031-001936-2917/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-flash-20261031-001936-2917/check-1-cmd11.judged.png",
+            "runs/verify/verify-flash-20261031-001936-2917/check-2-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.100042
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:11:57+08:00",
+    "quality": {
+      "total": 89.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 34.7,
+      "signals": {
+        "stars": 17,
+        "monthly_downloads": null,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 179,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 58.31
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "843edadd27f480ccdfa1b661685ff66827b14fd98ec1f4f4b3c739761c35d937",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "FLASH (**F**ast **L**ocal **A**gent **SH**ell) CLI is an AI-powered command-line interface"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Flash talks to an [Ollama](https://ollama.com) server. Install Ollama, start it, and pull a model that supports tool calling:"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/Natuworkguy/Flash/main/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "python3 run.py"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "MODEL=llama3.1\nOLLAMA_HOST=http://localhost:11434"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/Natuworkguy/Flash/main/install.sh | bash -s -- --uninstall"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "are MIT licensed. See [LICENSE](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Natuworkguy/Flash",
+      "fetched_at": "2026-10-30T23:52:01+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Natuworkguy/Flash/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:57:01+08:00"
+    },
+    {
+      "id": "release:v0.5.12",
+      "kind": "release",
+      "url": "https://github.com/Natuworkguy/Flash/releases/tag/v0.5.12",
+      "fetched_at": "2026-10-30T23:57:01+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "FLASH (**F**ast **L**ocal **A**gent **SH**ell) CLI is an AI-powered command-line interface",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:23+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Once installed, run it with:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:23+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "directly from your terminal.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:23+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A local-first autonomous agent harness with a web UI, live charts and buttons in its answers",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:23+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# FLASH CLI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:23+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "On Linux\n`sounddevice` also needs PortAudio from the system (`apt install\nlibportaudio2`); the macOS and Windows wheels bundle it.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:23+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "release:v0.5.12",
+      "quote": "three.js ships with Flash, so it works offline",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:23+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:52:01+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:52:01+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:52:01+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:52:01+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:52:01+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.5.12",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:57:01+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Chat with local or self-hosted models served by Ollama, directly from your terminal.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:23+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Manually execute shell commands using the `!` prefix.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:23+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Send a local image to a vision-capable model with `/image <path> [prompt]`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:23+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/Natuworkguy/Flash/main/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:23+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/Natuworkguy/Flash/main/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:23+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "are MIT licensed.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:23+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Point Flash at `localhost` or any remote Ollama server via a single config option.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:23+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-31T02:11:57+08:00"
+}

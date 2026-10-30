@@ -1,0 +1,602 @@
+{
+  "schema_version": "software.v1",
+  "slug": "alysiscode",
+  "repo_id": "gh:1233295735",
+  "name": "Alysis Code",
+  "summary": "Open-source multi-model agent for coding, research, and everyday terminal workflows.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent",
+    "ai-agent",
+    "ai-assistant",
+    "ai-coding-agent",
+    "anthropic",
+    "claude",
+    "cli",
+    "code-generation",
+    "coding-agent",
+    "developer-tools"
+  ],
+  "use_cases": [
+    "Fix failing tests in a project",
+    "Summarize folder notes into a project brief",
+    "Research a question with built-in web search",
+    "Execute planned tasks with verification"
+  ],
+  "alternatives_to": [
+    "Claude Code",
+    "Codex CLI",
+    "OpenCode",
+    "Command Code",
+    "Kilo Code"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://alysiscode.com/",
+  "repo": {
+    "url": "https://github.com/AlysisAi/AlysisCode",
+    "full_name": "AlysisAi/AlysisCode",
+    "created_at": "2026-05-08T20:02:23Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.11+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": [
+      "Provider API key from OpenAI, Anthropic, DeepSeek, Gemini, OpenRouter and more"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install alysis-code",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Approve the code in your browser to use Alysis credits"
+      ],
+      "check": null,
+      "first_task": "alysis sandbox doctor --smoke"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-alysiscode-20261030-234731-f1d8",
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install alysis-code 2>&1",
+          "purpose": "pipx install alysis-code first ranked candidate"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "alysis-code --version",
+        "expected_signal": "0.15.2"
+      },
+      "first_task": "alysis sandbox doctor --smoke 2>&1"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install alysis-code",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Approve the code in your browser to use Alysis credits"
+      ],
+      "check": null,
+      "first_task": "alysis sandbox doctor --smoke"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.15.2",
+    "published_at": "2026-10-21T11:35:34Z",
+    "url": "https://github.com/AlysisAi/AlysisCode/releases/tag/v0.15.2"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:48:30.408316+08:00",
+    "runs": [
+      {
+        "id": "verify-alysiscode-20261030-234731-f1d8",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:48:30.408316+08:00",
+        "tool_version": "0.15.2",
+        "install_method": "pipx",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pipx install alysis-code 2>&1",
+            "purpose": "pipx install alysis-code first ranked candidate"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "alysis-code --version",
+            "expected_signal": "0.15.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.15.2 (commit: unknown, built: unknown, dirty: yes, source: dev-default)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "alysis-code --help 2>&1",
+            "expected_signal": "sandbox Sandbox setup and diagnostics.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ sandbox Sandbox setup and diagnostics. │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "alysis sandbox doctor --smoke 2>&1",
+            "expected_signal": "Status: not ready",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "Status: not ready",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "alysis sandbox doctor --smoke",
+            "actually_needed": "In this box with no bubblewrap and no Docker, the command prints a diagnostic table with Status: not ready and exits 1; this is the validator correctly reporting a missing backend, not a tool crash. Installing a backend requires root (bubblewrap via package manager) or Docker, neither available to …",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Help lists sandbox command, sandbox doctor reports 'not ready' with missing backends, and --version prints 0.15.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-alysiscode-20261030-234731-f1d8/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-alysiscode-20261030-234731-f1d8/check-1-cmd3.judged.png",
+            "runs/verify/verify-alysiscode-20261030-234731-f1d8/check-2-cmd4.judged.png",
+            "runs/verify/verify-alysiscode-20261030-234731-f1d8/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.038977
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-30T23:55:13+08:00",
+    "quality": {
+      "total": 93.3,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.9375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.55,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 84.8,
+      "signals": {
+        "stars": 187,
+        "monthly_downloads": 2660,
+        "forks": 24,
+        "dependents": null,
+        "release_downloads": 62,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 172,
+      "packages": [
+        "pypi:alysis-code"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 14.18
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:55:13.257428+08:00",
+      "sources_sha": "774b726c32419237e8fa147d92278e67a4fb4ff323bbf1821e1dec23b182fef6",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Open-source, multi-model agent for coding, research, and everyday workflows."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Build software, research a question,"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Alysis Code requires **Python 3.11+** and runs on macOS, Linux, and Windows."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -LsSf https://raw.githubusercontent.com/AlysisAi/AlysisCode/main/scripts/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "alysis-code chat                            # interactive agent session"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export ALYSIS_API_KEY=\"YOUR_KEY\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "Already installed? Run `alysis update` to get the latest release."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Apache-2.0. You're free to use, modify, and distribute this code"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/AlysisAi/AlysisCode",
+      "fetched_at": "2026-10-30T23:43:01+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/AlysisAi/AlysisCode/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:34:05+08:00"
+    },
+    {
+      "id": "release:v0.15.2",
+      "kind": "release",
+      "url": "https://github.com/AlysisAi/AlysisCode/releases/tag/v0.15.2",
+      "fetched_at": "2026-10-29T02:34:05+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "An open-source agent for coding, research, and everyday workflows.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "cd your-project\nalysis-code chat                            # interactive agent session",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Comparing current terminal agents: **Claude Code, Codex CLI, OpenCode, Command Code, and Kilo Code**.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "An open-source agent for coding, research, and everyday workflows.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "alt=\"Alysis Code — Everyone's Coding Agent\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "requires **Python 3.11+** and runs on macOS, Linux, and Windows.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Alysis Code requires **Python 3.11+** and runs on macOS, Linux, and Windows.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "To run fully offline, point Alysis Code at a local endpoint (Ollama, LM Studio, vLLM) from the",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "Choose **Use an API key**, connect a provider\n(OpenAI, Anthropic, DeepSeek, Gemini, OpenRouter, and more)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:43:01+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:43:01+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:43:01+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:43:01+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:43:01+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.15.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:34:05+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "alysis-code run \"Fix the failing tests\"     # coding task",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "alysis-code run \"Summarize the notes in this folder into a project brief\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "research with [built-in web search](docs/web-search.md), turn notes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "execute tasks in dependency order,\n  retain verification and review evidence, and resume interrupted runs.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Comparing current terminal agents: **Claude Code, Codex CLI, OpenCode, Command Code, and Kilo Code**.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "Comparing current terminal agents: **Claude Code, Codex CLI, OpenCode, Command Code, and Kilo Code**.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "Comparing current terminal agents: **Claude Code, Codex CLI, OpenCode, Command Code, and Kilo Code**.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "Comparing current terminal agents: **Claude Code, Codex CLI, OpenCode, Command Code, and Kilo Code**.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/alternatives_to/4",
+      "source_id": "readme",
+      "quote": "Comparing current terminal agents: **Claude Code, Codex CLI, OpenCode, Command Code, and Kilo Code**.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "pipx install alysis-code",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "pipx install alysis-code",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "pipx install alysis-code",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "You're free to use, modify, and distribute this code, including commercially, as long as",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "use OpenAI, Anthropic,\n  Gemini, DeepSeek, Qwen, Mistral, OpenRouter, xAI, and more. Connect your own key without an Alysis",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:57+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-30T23:55:13+08:00"
+}

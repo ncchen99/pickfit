@@ -1,0 +1,526 @@
+{
+  "schema_version": "software.v1",
+  "slug": "omk",
+  "repo_id": "gh:1225139405",
+  "name": "OMK",
+  "summary": "Open-source terminal coding CLI to switch models mid-session and complete goals only when checks pass.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-orchestration",
+    "ai-agent-cli",
+    "ai-agents",
+    "ai-coding",
+    "claude-code-alternative",
+    "cli",
+    "code-review",
+    "coding-agent",
+    "coding-assistant",
+    "developer-tools"
+  ],
+  "use_cases": [
+    "switch models mid-session and resume later",
+    "complete a goal only when a chosen verification command passes",
+    "read files, edit code, and run commands in a repository"
+  ],
+  "alternatives_to": [
+    "Claude Code"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/dmae97/omk",
+    "full_name": "dmae97/omk",
+    "created_at": "2026-04-30T01:41:12Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js 22.19 or newer"
+    ],
+    "system_packages": [
+      "bubblewrap"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "subscription or API key"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/dmae97/omk/releases/latest/download/install.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Sign in with a subscription or an API key on first run"
+      ],
+      "check": null,
+      "first_task": "omk doctor"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-omk-20261031-002536-a5d9",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "node --version && npm --version && which bwrap; bwrap --version; echo \"---\"; npm install -g open-multi-agent-kit --ignore-scripts",
+          "purpose": "Install OMK via npm global per README"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "omk --version",
+        "expected_signal": "1.5.10"
+      },
+      "first_task": "omk doctor"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v1.5.10",
+    "published_at": "2026-10-27T02:12:27Z",
+    "url": "https://github.com/dmae97/omk/releases/tag/v1.5.10"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:26:46.822422+08:00",
+    "runs": [
+      {
+        "id": "verify-omk-20261031-002536-a5d9",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:26:46.822422+08:00",
+        "tool_version": "1.5.10",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "node --version && npm --version && which bwrap; bwrap --version; echo \"---\"; npm install -g open-multi-agent-kit --ignore-scripts",
+            "purpose": "Install OMK via npm global per README"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "omk --version",
+            "expected_signal": "1.5.10",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.5.10",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "omk --help",
+            "expected_signal": "Built-in Tool Names:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Built-in Tool Names:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "omk doctor",
+            "expected_signal": "✓ runtime",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "✓ runtime OMK 1.5.10 · node 22.23.4 · linux-x64",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "omk doctor checks the runtime, credentials, model and sandbox and prints the fix",
+            "actually_needed": "omk doctor exits 1 when checks fail (no credentials, no bwrap) while still printing all check results and fixes; this is its intended validator behavior, not an install failure",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show omk doctor passing the runtime check with OMK 1.5.10 details and omk --version printing 1.5.10.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-omk-20261031-002536-a5d9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-omk-20261031-002536-a5d9/check-1-cmd4.judged.png",
+            "runs/verify/verify-omk-20261031-002536-a5d9/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.025837
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 92.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 81.5,
+      "signals": {
+        "stars": 152,
+        "monthly_downloads": 3330,
+        "forks": 18,
+        "dependents": null,
+        "release_downloads": 28,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 183,
+      "packages": [
+        "npm:open-multi-agent-kit"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 17.06
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "f0171bd0e1eea4f8502d0204287690d44214b6c7b0cf7254618ff33282b6da8f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Open-source multi-agent coding CLI for the terminal (TypeScript, MIT). Switch models mid-session; finish goals only when your test passes."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "to help other developers find it."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requires Node.js 22.19 or newer:"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npm install -g open-multi-agent-kit --ignore-scripts"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "cd your-project\nomk"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "The first run opens `/login` (subscription, API key, or local model)."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "`omk doctor` checks the runtime, credentials, the model a first session would"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "OMK is a lightweight, MIT-licensed AI coding agent for your terminal, written in"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/dmae97/omk",
+      "fetched_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/dmae97/omk/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:00:38+08:00"
+    },
+    {
+      "id": "release:v1.5.10",
+      "kind": "release",
+      "url": "https://github.com/dmae97/omk/releases/tag/v1.5.10",
+      "fetched_at": "2026-10-31T00:00:38+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "An open-source multi-agent coding CLI for your terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:53+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "An open-source multi-agent coding CLI for your terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:53+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "An open-source multi-agent coding CLI for your terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:53+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "An open-source multi-agent coding CLI for your terminal: switch models in one\n  session and finish a goal only when your test passes.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:53+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1 align=\"center\">OMK</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:53+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "which needs no Node.js (macOS, Linux):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:53+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires Node.js 22.19 or newer:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:53+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "sudo apt install bubblewrap",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:53+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "sign in with a subscription or an\n   API key.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:53+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.5.10",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:00:38+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Switch with `/model` mid-conversation; resume later with `/resume` or `omk -c`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:53+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "/goal verify <command>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:53+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "It reads files, edits code, and runs commands in your repository.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:53+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "can serve as an open-source alternative to a single-provider agent such as\nClaude Code.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:53+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://github.com/dmae97/omk/releases/latest/download/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:53+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://github.com/dmae97/omk/releases/latest/download/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:53+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "OMK is a lightweight, MIT-licensed AI coding agent for your terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:53+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "supports\n[subscription providers, API keys, and local models]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:53+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:40:55+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}
