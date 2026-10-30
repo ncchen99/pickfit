@@ -189,6 +189,101 @@
       ],
       "type": "string"
     },
+    "FeatureCheck": {
+      "additionalProperties": false,
+      "description": "Whether a run exercised one of the tool's advertised features, and with which smoke tests.\n\nchecked: a smoke test it cites passed (the run's smoke tests are the fresh-box replay's).\nnot_checked: nothing exercised it here; reason says why. test_failed: its test ran and failed\nwhile the tool otherwise worked; failure says whether only this box explains it (sandbox) or\nthe tool's own error does (tool: suspected, as a user would hit it, never a failed verdict).",
+      "properties": {
+        "failure": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FeatureFailure"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "test_failed only. sandbox: only this box explains it (no GPU, network, display, service); tool: the tool's own error, which a user following the README would hit too."
+        },
+        "feature": {
+          "description": "The feature's label.",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FeatureGap"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "not_checked: why not; test_failed with failure sandbox: the box's limit, if known."
+        },
+        "smoke_tests": {
+          "default": [],
+          "description": "Indexes into the run's smoke_tests that exercise it.",
+          "items": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "status": {
+          "$ref": "#/$defs/FeatureStatus"
+        }
+      },
+      "required": [
+        "feature",
+        "status"
+      ],
+      "title": "FeatureCheck",
+      "type": "object"
+    },
+    "FeatureFailure": {
+      "enum": [
+        "sandbox",
+        "tool"
+      ],
+      "type": "string"
+    },
+    "FeatureGap": {
+      "enum": [
+        "needs_account",
+        "needs_gpu",
+        "needs_display",
+        "needs_hardware",
+        "needs_service",
+        "needs_more_resources",
+        "other_os",
+        "not_attempted",
+        "other"
+      ],
+      "type": "string"
+    },
+    "FeatureStatus": {
+      "enum": [
+        "checked",
+        "not_checked",
+        "test_failed"
+      ],
+      "type": "string"
+    },
     "FieldEvidence": {
       "additionalProperties": false,
       "description": "Where one field's value came from.",
@@ -1542,6 +1637,15 @@
         "evidence": {
           "$ref": "#/$defs/RunEvidence"
         },
+        "features": {
+          "default": [],
+          "description": "Which advertised features this run exercised. Empty: none recorded (the tool lists none, or it was verified before pickfit checked features).",
+          "items": {
+            "$ref": "#/$defs/FeatureCheck"
+          },
+          "maxItems": 4,
+          "type": "array"
+        },
         "id": {
           "$ref": "#/$defs/RunId"
         },
@@ -1710,6 +1814,17 @@
       "items": {
         "$ref": "#/$defs/FieldEvidence"
       },
+      "type": "array"
+    },
+    "features": {
+      "default": [],
+      "description": "The main features the sources advertise (quotes in evidence); verification.runs[].features says which a run exercised.",
+      "items": {
+        "maxLength": 80,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 4,
       "type": "array"
     },
     "first_seen_at": {

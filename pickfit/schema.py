@@ -90,6 +90,21 @@ type UnverifiedReason = Literal[
     "other",
 ]
 type PitfallKind = Literal["readme_wrong", "sandbox", "tool_handled", "note"]
+type FeatureStatus = Literal["checked", "not_checked", "test_failed"]
+# Why a feature was not exercised: mostly what the box lacks, as for unverified runs.
+type FeatureGap = Literal[
+    "needs_account",
+    "needs_gpu",
+    "needs_display",
+    "needs_hardware",
+    "needs_service",
+    "needs_more_resources",
+    "other_os",
+    "not_attempted",
+    "other",
+]
+# Who a failed feature test points at, as pitfall kinds do: only this box, or the tool itself.
+type FeatureFailure = Literal["sandbox", "tool"]
 type CapReason = Literal["archived", "verification_failed", "not_a_tool", "unverified"]
 type SourceKind = Literal[
     "github_api", "readme", "release", "manifest", "package_registry",
@@ -139,6 +154,9 @@ QUOTE_MAX = 300
 COMMAND_MAX = 500
 # A smoke test's setup may write a whole input file with a heredoc.
 SETUP_MAX = 4000
+# Main advertised features: at most this many per tool, each a short label.
+FEATURES_MAX = 4
+FEATURE_MAX = 80
 
 # --- Constrained strings ----------------------------------------------------
 
@@ -372,6 +390,15 @@ class ExtractionResult(_Model):
     alternatives_to: CitedList = Field(
         description="Well-known tools the sources compare it to or replace."
     )
+    features: CitedList = Field(
+        default=[],
+        description=(
+            "The 2-4 main features the sources advertise, most prominent first: what a user can do "
+            "with it, each a short English label (at most 8 words, e.g. 'convert CSV files to JSON') "
+            "quoting the passage that advertises it. Not install methods, platforms, license or "
+            "speed claims."
+        ),
+    )
 
     @model_validator(mode="after")
     def _drop_unusable_commands(self) -> ExtractionResult:
@@ -380,6 +407,8 @@ class ExtractionResult(_Model):
         self.smoke_test_candidates = [
             c for c in self.smoke_test_candidates if _usable_command(c.command)
         ]
+        # A label is the model's own words: one too long to show is dropped, not cut.
+        self.features = [f for f in self.features if len(f.value) <= FEATURE_MAX][:FEATURES_MAX]
         return self
 
 
@@ -514,6 +543,44 @@ class Pitfall(_Model):
     )
 
 
+class FeatureCheck(_Model):
+    """Whether a run exercised one of the tool's advertised features, and with which smoke tests.
+
+    checked: a smoke test it cites passed (the run's smoke tests are the fresh-box replay's).
+    not_checked: nothing exercised it here; reason says why. test_failed: its test ran and failed
+    while the tool otherwise worked; failure says whether only this box explains it (sandbox) or
+    the tool's own error does (tool: suspected, as a user would hit it, never a failed verdict).
+    """
+
+    feature: str = Field(min_length=1, max_length=FEATURE_MAX, description="The feature's label.")
+    status: FeatureStatus
+    smoke_tests: list[Annotated[int, Field(ge=0)]] = Field(
+        default=[], description="Indexes into the run's smoke_tests that exercise it."
+    )
+    reason: FeatureGap | None = Field(
+        default=None,
+        description="not_checked: why not; test_failed with failure sandbox: the box's limit, if known.",
+    )
+    failure: FeatureFailure | None = Field(
+        default=None,
+        description=(
+            "test_failed only. sandbox: only this box explains it (no GPU, network, display, service); "
+            "tool: the tool's own error, which a user following the README would hit too."
+        ),
+    )
+    note: str | None = Field(default=None, max_length=300)
+
+    @model_validator(mode="after")
+    def _status_fields(self) -> FeatureCheck:
+        if self.status == "checked" and (self.reason or self.failure):
+            raise ValueError("a checked feature has no reason or failure")
+        if self.status == "not_checked" and (self.reason is None or self.failure):
+            raise ValueError("a feature not checked needs a reason and no failure")
+        if self.status == "test_failed" and (self.failure is None or not self.smoke_tests):
+            raise ValueError("a failed feature test needs its failure and the smoke tests that failed")
+        return self
+
+
 class Judge(_Model):
     """Separate model call that reads the screenshot and log."""
 
@@ -582,6 +649,28 @@ class VerificationRun(_Model):
         exclude_if=lambda value: value is None,
         description="A check of the published package by hand: the only ground for a failed sandbox run.",
     )
+    features: list[FeatureCheck] = Field(
+        default=[],
+        max_length=FEATURES_MAX,
+        exclude_if=lambda value: not value,
+        description=(
+            "Which advertised features this run exercised. Empty: none recorded (the tool lists none, "
+            "or it was verified before pickfit checked features)."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _check_features(self) -> VerificationRun:
+        """A feature is checked exactly when a passing smoke test of this run covers it."""
+        if len({f.feature for f in self.features}) != len(self.features):
+            raise ValueError("feature labels must be unique within a run")
+        for f in self.features:
+            if any(i >= len(self.smoke_tests) for i in f.smoke_tests):
+                raise ValueError(f"feature {f.feature!r} cites a smoke test the run does not have")
+            covered = any(self.smoke_tests[i].passed for i in f.smoke_tests)
+            if covered != (f.status == "checked"):
+                raise ValueError(f"feature {f.feature!r} is checked exactly when a passing smoke test covers it")
+        return self
 
     @model_validator(mode="after")
     def _check_outcome(self) -> VerificationRun:
@@ -899,6 +988,15 @@ class SoftwareRecord(_Model):
     tags: list[Tag] = []
     use_cases: list[str] = []
     alternatives_to: list[str] = []
+    features: list[Annotated[str, StringConstraints(min_length=1, max_length=FEATURE_MAX)]] = Field(
+        default=[],
+        max_length=FEATURES_MAX,
+        exclude_if=lambda value: not value,
+        description=(
+            "The main features the sources advertise (quotes in evidence); verification.runs[].features "
+            "says which a run exercised."
+        ),
+    )
     why_worth_it: str | None = Field(default=None, max_length=200)
     homepage: WebUrl | None
     repo: Repo
