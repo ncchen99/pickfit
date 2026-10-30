@@ -40,8 +40,9 @@ SCREEN = "1280x800x24"
 DISPLAY_NOTE = f"Xvfb {SCREEN}, no window manager, no GPU"
 # What the display needs, and the shared libraries Electron and Tauri apps load
 # (chromium brings GTK, NSS, GBM and ALSA). Installed on top of sandbox.Dockerfile.
+# python3-tk brings Debian's own /usr/bin/python3 with tkinter: the image's python3.12 has none.
 GUI_PACKAGES = ("xvfb", "x11-utils", "x11-apps", "xrestop", "imagemagick", "chromium",
-                "libwebkit2gtk-4.1-0", "fonts-dejavu-core")
+                "libwebkit2gtk-4.1-0", "fonts-dejavu-core", "python3-tk", "python3-venv")
 TIERS = ("none", "process_alive", "window", "ui_rendered", "accessibility", "action_state")
 WAIT_MAX_S = 60
 SETTLE_S = 6  # after the first window, so a page that loads after the window shows still renders

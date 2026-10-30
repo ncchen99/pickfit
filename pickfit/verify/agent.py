@@ -335,7 +335,9 @@ launch_gui, never with run_command or run_background. Cite that launch_gui as a 
 title as expected_signal (`gui tier: window` when the window has no title). A GUI launch supports level install \
 at most, whatever the window shows: pickfit's judge reads the screenshot itself, and a GUI app is never \
 function from a launch. Launch it even if it will ask for an account: the screenshot records the sign-in \
-screen. Add --no-sandbox only if the app fails without it, and record that as a sandbox pitfall."""
+screen. Add --no-sandbox only if the app fails without it, and record that as a sandbox pitfall. A Tkinter \
+app needs /usr/bin/python3 (it has tkinter; python3.12 on PATH does not): make its venv with \
+/usr/bin/python3 -m venv."""
 
 # Public models small enough for an inference check, licenses and URLs checked 2026-10-29.
 # stories260K: karpathy/tinyllamas weights (MIT), GGUF by ggml-org. SmolLM2-135M-Instruct:
