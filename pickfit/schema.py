@@ -522,6 +522,29 @@ class Judge(_Model):
     model: str
 
 
+type GuiTier = Literal["none", "process_alive", "window", "ui_rendered", "accessibility", "action_state"]
+type GuiScreen = Literal["main_ui", "first_run", "sign_in_wall", "crash_or_error", "blank_or_loading", "other"]
+# A GUI launch counts toward a passed level from here up (C.3).
+GUI_PASSED_TIERS: tuple[str, ...] = ("window", "ui_rendered", "accessibility", "action_state")
+
+
+class GuiCheck(_Model):
+    """How far a GUI app got on the box's virtual display (Linux, Xvfb, no window manager).
+
+    Tiers, weakest first: none (exited), process_alive (no window of its own), window (a mapped window
+    whose X client is one of the app's processes, per the X server), ui_rendered (the screen judge saw
+    the app's own interface: its main screen or its first-run screen; `screen` says which),
+    accessibility (controls in the accessibility tree), action_state (one action changed checkable
+    state). Only action_state can support more than install.
+    """
+
+    tier: GuiTier
+    screen: GuiScreen | None = Field(description="What the screen judge saw; null when it did not run.")
+    command: str = Field(min_length=1, max_length=COMMAND_MAX, description="How the app was started.")
+    window_title: str | None = Field(default=None, max_length=200)
+    display: str = Field(max_length=120, description="e.g. Xvfb 1280x800x24, no window manager, no GPU.")
+
+
 class ArtifactCheck(_Model):
     """A check of the published package file itself, made by hand, not by a box.
 
@@ -582,6 +605,11 @@ class VerificationRun(_Model):
         exclude_if=lambda value: value is None,
         description="A check of the published package by hand: the only ground for a failed sandbox run.",
     )
+    gui: GuiCheck | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="A GUI app's launch on a virtual display: the strongest evidence tier it reached.",
+    )
 
     @model_validator(mode="after")
     def _check_outcome(self) -> VerificationRun:
@@ -595,6 +623,10 @@ class VerificationRun(_Model):
                 raise ValueError("a passed run needs the judge's verdict to be 'working'")
             if self.level != "install" and not any(t.passed for t in self.smoke_tests):
                 raise ValueError(f"a {self.level!r} run needs at least one passing smoke test")
+            if self.gui and self.gui.tier not in GUI_PASSED_TIERS:
+                raise ValueError(f"a passed run's GUI launch must reach a window, not {self.gui.tier!r}")
+            if self.gui and self.level != "install" and self.gui.tier != "action_state":
+                raise ValueError("a GUI launch supports install only, until an action changes checkable state")
         if self.level == "failed" and not self.blocking_error:
             raise ValueError("a failed run must record blocking_error")
         if self.level == "failed" and self.method == "sandbox" and self.artifact_check is None:
@@ -932,6 +964,16 @@ class SoftwareRecord(_Model):
                 raise ValueError(f"evidence {item.field} cites unknown source {item.source_id!r}")
             if item.field.split("/")[1] not in type(self).model_fields:
                 raise ValueError(f"evidence points to unknown field {item.field}")
+        return self
+
+    @model_validator(mode="after")
+    def _check_gui_app_levels(self) -> SoftwareRecord:
+        if self.kind == "desktop_app":
+            for run in self.verification.runs:
+                if run.level in ("function", "service", "inference") and \
+                        (run.gui is None or run.gui.tier != "action_state"):
+                    raise ValueError(f"run {run.id}: a desktop app is {run.level} only once one action changed "
+                                     "checkable state (gui.tier action_state); a launch supports install")
         return self
 
     @model_validator(mode="after")

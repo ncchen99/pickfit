@@ -37,9 +37,11 @@ from pickfit.env import REPO_ROOT
 from pickfit.ledger import taipei_now
 from pickfit.schema import (
     COMMAND_MAX,
+    GUI_PASSED_TIERS,
     PASSED_LEVELS,
     SETUP_MAX,
     Check,
+    GuiCheck,
     InstallGuide,
     InstallStep,
     Judge,
@@ -63,6 +65,7 @@ from pickfit.verify.failure import (
     structural_defect,
     tool_command,
 )
+from pickfit.verify.gui import DISPLAY_NOTE as GUI_DISPLAY
 from pickfit.verify.verdict import split_last, unread_scripts, weaker
 
 if TYPE_CHECKING:
@@ -140,10 +143,12 @@ def _record_check(command: str) -> tuple[str, list[SetupStep]] | None:
 def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeResult | None, *,
               evidence_dir: Path, screenshots: list[Path] | None = None,
               judge_cost_usd: float = 0.0, confirm: FailureCheck | None = None,
-              checked_at: datetime | None = None) -> tuple[VerificationRun, list[str]]:
+              checked_at: datetime | None = None, gui_app: bool = False) -> tuple[VerificationRun, list[str]]:
     """The VerificationRun for one verification, plus notes on why the level was lowered.
 
-    checked_at is when its last box ran; it defaults to now, right after the boxes ran.
+    checked_at is when its last box ran; it defaults to now, right after the boxes ran. A GUI app
+    (gui_app) stays at install whatever else passed: function needs an action that changed checkable
+    state, which nothing checks yet.
     """
     notes: list[str] = []
     verdict = report.verdict or {}
@@ -263,6 +268,13 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
     if is_passed(level) and level != "install" and not any(t.passed for t in smoke):
         level = "install"
         notes.append("no passing smoke test fits the record")
+    gui = gui_check(report, replay, judge)
+    if is_passed(level) and level != "install" and (gui_app or gui) and not (gui and gui.tier == "action_state"):
+        notes.append(f"a GUI app's {level} needs an action that changed checkable state; recorded as install")
+        level = "install"
+    if is_passed(level) and gui and gui.tier not in GUI_PASSED_TIERS:
+        notes.append(f"the GUI launch reached only {gui.tier}")
+        level, reason = "unverified", "other"
     if level == "unverified" and notes and not blocking:
         blocking = "; ".join(notes)
 
@@ -301,8 +313,32 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         if judge else None,
         evidence=RunEvidence(trace_path=_rel(evidence_dir / "report.json"),
                              screenshot_paths=[p for p in map(_rel, screenshots or []) if p]),
-        actor_model=report.model, cost_usd=round(report.cost_usd + judge_cost_usd, 6))
+        actor_model=report.model, cost_usd=round(report.cost_usd + judge_cost_usd, 6), gui=gui)
     return run, notes
+
+
+def gui_check(report: VerifyReport, replay: ReplayResult | None, judge: JudgeResult | None) -> GuiCheck | None:
+    """The GUI launch's tier: the replay's launch when it ran one (judged), else the agent's last one."""
+    launch: dict[str, Any] | None = None
+    command = None
+    for c in (replay.checks if replay else []):
+        if c.kind == "gui" and c.run is not None and c.run.gui is not None and (launch is None or c.passed):
+            launch, command = c.run.gui, c.command
+    judged = launch is not None
+    if launch is None:
+        last = next((c for c in reversed(report.commands) if c.tool == "launch_gui" and c.gui), None)
+        if last is None:
+            return None
+        launch, command = last.gui, last.command
+    tier = launch.get("tier") or "none"
+    screen = judge.screen if judge is not None and judged else None
+    if tier == "window" and screen in ("main_ui", "first_run"):
+        tier = "ui_rendered"
+    windows = launch.get("windows") or []
+    title = max(windows, key=lambda w: w.get("width", 0) * w.get("height", 0)).get("title") if windows else None
+    fitted = _clip(command, COMMAND_MAX)
+    return GuiCheck(tier=tier, screen=screen, command=fitted or "-", window_title=_clip(title, 200),
+                    display=GUI_DISPLAY)
 
 
 def _excerpt(stdout: str, stderr: str, signal: str) -> str:
@@ -325,7 +361,9 @@ def save_run(run: VerificationRun, evidence_dir: Path) -> Path:
 
 def install_guide(run: VerificationRun) -> InstallGuide:
     """The Linux install guide a passed, replayed run supports."""
-    passing = [t for t in run.smoke_tests if t.passed and t.expected_signal]
+    # A GUI launch shows a window, not text in the terminal: it is a first task, never the check.
+    launch = run.gui.command if run.gui else None
+    passing = [t for t in run.smoke_tests if t.passed and t.expected_signal and t.command != launch]
     check = next((t for t in passing if t.exit_code == 0), passing[0] if passing else None)
     examples = [t for t in run.smoke_tests
                 if t.passed and not re.search(r"--?(?:version|help)\b|^\S+\s+-[Vh]$", t.command)]
