@@ -67,9 +67,10 @@ FINISH_FEATURES = {
 }
 
 GUIDE = """\
-Feature checks: the task lists the tool's main advertised features (F1, F2, ...). After the install \
-check, exercise each one with one run_command that uses it: its README example as written, or the smallest \
-input that uses it. Plan these from the README, which is free to read, not from --help runs. Let each \
+Feature checks: the task lists the tool's main advertised features (F1, F2, ...). They are what the \
+smoke tests are for: after one --version or --help check (not both, and not again), spend the commands \
+on one check per feature, its README example as written or the smallest input that uses it; a README \
+example that uses no listed feature can wait. Plan these from the README, which is free to read, not from --help runs. Let each \
 check print its result to stdout (it is shown to you); do not send it to a file to read back. Write an \
 input file in a run_command of its own (a heredoc that exits 0) and cite it in setup_ids of every check \
 and server that reads it: a fresh box runs only the cited commands. Checks that do not depend on each \
