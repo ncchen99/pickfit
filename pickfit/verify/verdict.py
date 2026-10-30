@@ -311,16 +311,18 @@ def masked_exit(command: str) -> str | None:
             return f"`{_first_word(text)}` decides the exit code itself"
     if not parts:
         return None
-    # The exit code is the last list's: everything after the last `;`, `&` or newline.
+    # The exit code is the last list's: everything after the last `;`, `&` or newline. Within that
+    # list it is the last pipeline's last command, since `&&`/`||` yield their final command's code
+    # (so `cat x && tool y` is tool y's result, not cat's).
     cut = max((k for k, (op, _) in enumerate(parts) if op in (";", "&", "\n")), default=0)
     tail = parts[cut:]
-    if cut and _first_word(tail[0][1]) in _TRIVIAL:
-        return f"the last command is `{_first_word(tail[0][1])}`, so it hides the exit code before it"
-    # Within that list, the exit code is the last pipeline's last command.
     start = max(k for k, (op, _) in enumerate(tail) if op != "|")
     pipeline = tail[start:]
-    if len(pipeline) > 1 and _first_word(pipeline[-1][1]) in _FILTERS:
-        return f"piping into `{_first_word(pipeline[-1][1])}` hides the exit code of the command before it"
+    last = _first_word(pipeline[-1][1])
+    if cut and last in _TRIVIAL:
+        return f"the last command is `{last}`, so it hides the exit code before it"
+    if len(pipeline) > 1 and last in _FILTERS:
+        return f"piping into `{last}` hides the exit code of the command before it"
     return None
 
 

@@ -21,6 +21,11 @@ from pickfit.verify.verdict import check_kind, log_verdict, masked_exit, split_l
     "cat > graph.json <<'EOF'\n{\"nodes\": [\"a\"]; \"x\": 1 || 2}\nEOF\ngraphtty graph.json",
     "python3 -c 'import sys; sys.exit(0)' && tool --help",
     "tool --format=\"a|b\" input.txt",
+    # A `&&`/`||` chain after a separator: the result is the chain's final command, not its first
+    # (the bug that dropped shep's `shep start` step and left its `shep flock` check unrun).
+    "echo hi\ncat /tmp/x && false",
+    "printf go; cat /tmp/Flockfile.toml && shep start /tmp/Flockfile.toml",
+    "ls; make && echo keep | cat && tool run",
 ])
 def test_honest_commands_are_not_masked(command: str):
     assert masked_exit(command) is None

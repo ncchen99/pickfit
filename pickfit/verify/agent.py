@@ -255,7 +255,7 @@ class FinishArgs(BaseModel):
 # ---------------------------------------------------------------- prompt
 
 INSTRUCTIONS = """\
-You are pickfit's verification agent. Inside a disposable Linux sandbox ("the box") you check that a \
+You are pickfit's verification agent. Inside a disposable {box_kind} ("the box") you check that a \
 piece of software installs and works the way its README says, and you record the exact steps that worked.
 
 How to work:
@@ -301,7 +301,7 @@ the result.
 actually worked as a pitfall.
 - Budget: {max_commands} commands (run_command and run_background), {max_turns} turns, {minutes} minutes. \
 Combine steps with && when safe. list_dir and read_file do not use the command budget but do use turns.
-- You are not root: no sudo, no apt-get, nothing written outside $HOME and /tmp. Do not install language \
+- {box_rule} Do not install language \
 toolchains (Rust, Go); pick another candidate. Do not pipe a downloaded script into a shell unread: \
 download it with a run_command that only downloads it (cite that as a step too), read it with read_file, \
 then run it. Before you run it, also read every script it will run, or download and run; one you cannot \
@@ -362,10 +362,7 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
     lines = [
         f"Verify {_cited(ex.name) or task.slug} ({task.repo_url}).",
         "",
-        f"Box: Debian-based Linux {box.arch}, user sbx (uid 1000, not root, no sudo), HOME={box.home}, "
-        f"work dir {box.workdir}. PATH starts with ~/.local/bin. Installed: python3.12 with pip, uv, pipx; "
-        "node 22 with npm (global prefix ~/.local); git, curl, unzip, xz, zstd. Network: on. No API keys, "
-        "no accounts, no GUI.",
+        box.describe(),
         f"The README is saved in the work dir as README.md ({len(task.readme)} characters).",
     ]
     if box.gpu:
@@ -515,7 +512,8 @@ class VerifyAgent:
         self.plan = plan_for(task.extraction, box.os)
         self.instructions = INSTRUCTIONS.format(max_commands=limits.max_commands, max_turns=limits.max_turns,
                                                 minutes=round(limits.max_seconds / 60),
-                                                stdout_chars=f"{STDOUT_CHARS:,}")
+                                                stdout_chars=f"{STDOUT_CHARS:,}", box_kind=box.kind,
+                                                box_rule=box.user_rule)
         self.commands_used = 0
         self.finish_retries = 0
         self.verdict: LogVerdict | None = None
@@ -800,7 +798,8 @@ class VerifyAgent:
         n = self.commands_used
         wait = max(0, min(args.wait_s, BACKGROUND_WAIT_S))
         self._say(f"  & {_one_line(args.command, 200)}   [cmd {n}/{self.limits.max_commands}]")
-        result = self.box.exec(background_script(args.command, args.port, wait, n), self._timeout(wait + 15))
+        script = background_script(args.command, args.port, wait, n, detach=self.box.detach)
+        result = self.box.exec(script, self._timeout(wait + 15))
         hints = match_rules(args.command, result.exit_code, result.stdout, result.stderr)
         self._record(turn, "run_background", args.command, result, hints, port=args.port, wait_s=wait)
         self._note_error(result)

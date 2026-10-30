@@ -3,9 +3,10 @@
 Candidates come from the pipeline database (runs/pipeline.db, or --db), opened
 read-only: a candidate that passed the rules and has a finished extraction
 (muse-spark-1.3 preferred over the contributor model). Before any box starts,
-the program sets aside what a Linux box cannot verify (GUI apps, browser
-extensions, GPU or Apple Silicon only, no install path the box can run) with
-the reason, and skips slugs that already have a run unless --force.
+the program sets aside what the box cannot verify (GUI apps, browser
+extensions, GPU only, another OS only, Apple Silicon only in a Linux box, no
+install path the box can run) with the reason, and skips slugs that already
+have a run on the same runner unless --force.
 
 The rest are ranked demo-first: tools a user runs (CLI, TUI, local server)
 that process locally, need no API key and are free come first. Each runs the
@@ -86,8 +87,8 @@ def demo_priority(ex: ExtractionResult) -> int:
     return score
 
 
-def not_in_box(ex: ExtractionResult, *, gpu: bool = False) -> str | None:
-    """Why a Linux box (with an NVIDIA GPU when `gpu`) cannot verify this at all, or None."""
+def not_in_box(ex: ExtractionResult, *, gpu: bool = False, os: str = "linux") -> str | None:
+    """Why a box running `os` (with an NVIDIA GPU when `gpu`) cannot verify this at all, or None."""
     kind = ex.kind.value
     if kind in NOT_IN_BOX_KINDS:
         return NOT_IN_BOX_KINDS[kind]
@@ -96,13 +97,13 @@ def not_in_box(ex: ExtractionResult, *, gpu: bool = False) -> str | None:
     pre = ex.prerequisites
     if pre.gpu.value == "required" and not gpu:
         return "needs a GPU"
-    if pre.apple_silicon_only.value:
+    if pre.apple_silicon_only.value and os != "macos":
         return "Apple Silicon only"
     platforms = ex.platforms.value
-    if platforms and "linux" not in platforms:
+    if platforms and os not in platforms:
         return f"platforms {'/'.join(platforms)} only"
-    if not plan_for(ex).candidates:
-        return "no install path the Linux box can run"
+    if not plan_for(ex, os).candidates:
+        return f"no install path the {'macOS' if os == 'macos' else 'Linux'} box can run"
     return None
 
 
@@ -153,12 +154,13 @@ def recheck_slugs(data_dir: Path, runs_dir: Path) -> set[str]:
 
 def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
                     categories: list[str] | None = None, skip_slugs: set[str] | None = None,
-                    known_slugs: dict[str, str] | None = None,
-                    gpu: bool = False) -> tuple[list[BatchItem], list[dict[str, Any]]]:
+                    known_slugs: dict[str, str] | None = None, gpu: bool = False,
+                    os: str = "linux") -> tuple[list[BatchItem], list[dict[str, Any]]]:
     """Ranked batch items (at most `limit`) and the candidates set aside, with reasons.
 
     known_slugs (repo_id -> slug, from record_slugs) wins over a slug made from the name.
     gpu: the boxes have an NVIDIA GPU, so tools that require one are not set aside.
+    os: what the boxes run (linux, or macos for TartBox).
     """
     skip_slugs = skip_slugs or set()
     known_slugs = known_slugs or {}
@@ -189,7 +191,7 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
         except ValidationError as err:
             skipped.append({**note, "reason": f"extraction does not validate: {str(err)[:120]}"})
             continue
-        why = not_in_box(ex, gpu=gpu)
+        why = not_in_box(ex, gpu=gpu, os=os)
         if why:
             skipped.append({**note, "reason": why})
             continue
@@ -236,10 +238,12 @@ def last_attempts(runs_dir: Path) -> dict[str, datetime]:
     return latest
 
 
-def verified_slugs(runs_dir: Path, since: str | None = None) -> set[str]:
+def verified_slugs(runs_dir: Path, since: str | None = None, runner: str | None = None) -> set[str]:
     """Slugs that already have an outcome under runs/verify/, from runs started at `since` or later.
 
     `since` is Taipei time as in run ids, YYYYmmdd-HHMMSS (a prefix such as 20261029-01 works).
+    `runner` (e.g. tart-vz) keeps only outcomes from that runner, so a Linux run does not stand in
+    for a macOS one.
     """
     slugs = set()
     for path in (runs_dir / "verify").glob("*/outcome.json"):
@@ -247,9 +251,12 @@ def verified_slugs(runs_dir: Path, since: str | None = None) -> set[str]:
         if since and (not m or m.group(1) < since):
             continue
         try:
-            slugs.add(json.loads(path.read_text(encoding="utf-8"))["slug"])
-        except (OSError, ValueError, KeyError):
+            outcome = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
             continue
+        if "slug" not in outcome or (runner and outcome.get("runner") != runner):
+            continue
+        slugs.add(outcome["slug"])
     return slugs
 
 
