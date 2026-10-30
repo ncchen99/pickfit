@@ -366,3 +366,35 @@ def test_the_feature_judge_reads_the_readme_quote_and_the_fresh_box_output():
     assert "F1. render a graph" in text and "Turn any directed graph into ASCII art" in text
     assert "a ──▶ b" in text and NEON not in text
     assert "When unsure, choose does_not_show" in INSTRUCTIONS
+
+
+def test_runs_checked_before_the_feature_judge_are_judged_from_their_evidence(tmp_path: Path):
+    from pickfit.verify.feature_judge import rejudge_record
+
+    record = json.loads((FIXTURES / "software_example.json").read_text())
+    run = record["verification"]["runs"][0]
+    run["features"] = [{"feature": "follow a JSON log", "status": "checked", "smoke_tests": [1]},
+                       {"feature": "filter by level", "status": "checked", "smoke_tests": [1]}]
+    record["features"] = ["follow a JSON log", "filter by level"]
+    path = tmp_path / "frobtail.json"
+    path.write_text(json.dumps(record))
+    evidence = tmp_path / "runs" / "verify" / run["id"]
+    evidence.mkdir(parents=True)
+    (evidence / "report.json").write_text(json.dumps({"features": [
+        {"feature": "follow a JSON log", "status": "checked", "command_ids": [7]},
+        {"feature": "filter by level", "status": "checked", "command_ids": [7]}]}))
+    (evidence / "replay.json").write_text(json.dumps({"result": {"checks": [
+        {"command_id": 7, "command": "frobtail sample.jsonl --level warn", "passed": True,
+         "run": {"stdout": "12:00:03 WARN disk usage at 91%", "stderr": "", "exit_code": 0}}]}}))
+    ledger = Ledger(tmp_path / "l.sqlite", caps=Caps(total_usd=100.0, daily_usd=lambda d: 25.0))
+    server = FakeServer(feature_answer("does_not_show", "shows_it_working"))
+    row = rejudge_record(path, tmp_path / "runs", client=server.client(), ledger=ledger, log=lambda line: None)
+    assert (row["judged"], row["lowered"]) == (2, 1) and row["cost_usd"] > 0
+    saved = SoftwareRecord.model_validate_json(path.read_text())
+    features = {f.feature: f for f in saved.verification.runs[0].features}
+    assert (features["follow a JSON log"].status, features["follow a JSON log"].reason) == ("not_checked", "not_shown")
+    assert features["filter by level"].status == "checked"
+    assert (evidence / "feature_judge.json").exists()
+    assert "12:00:03 WARN disk usage" in server.requests[0]["input"][0]["content"][0]["text"]
+    again = rejudge_record(path, tmp_path / "runs", client=FakeServer().client(), ledger=ledger, log=lambda line: None)
+    assert again["judged"] == 0 and again["skipped"] == [f"{run['id']}: already judged"]

@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field
 
 from pickfit.meta import call_meta, resolve_model
 from pickfit.schema import meta_strict_schema
+from pickfit.verify.features import judge_items
 
 if TYPE_CHECKING:
     from pickfit.verify.replay import CheckResult
@@ -129,3 +130,93 @@ def judge_features(name: str, items: list[tuple[str, str, list[CheckResult]]], *
     log(f"  feature judge · {out.model} · {out.latency_s:.1f}s · ${out.cost_usd:.4f} · "
         f"{shown} of {len(items)} shown working")
     return out
+
+
+# ---------------------------------------------------------------- runs checked before the feature judge
+
+
+def _replay_checks(replay: dict[str, Any]) -> list[Any]:
+    """The replay's checks from replay.json, as objects judge_items and build_input read."""
+    from types import SimpleNamespace
+
+    checks = []
+    for c in (replay.get("result") or {}).get("checks") or []:
+        run = c.get("run")
+        checks.append(SimpleNamespace(command_id=c["command_id"], command=c["command"], passed=c["passed"],
+                                      run=SimpleNamespace(**{k: run.get(k) for k in ("stdout", "stderr", "exit_code")})
+                                      if run else None))
+    return checks
+
+
+def rejudge_record(path: Any, runs_dir: Any, *, model: str | None = None, force: bool = False,
+                   log: Callable[[str], None] = print, **call_kwargs: Any) -> dict[str, Any]:
+    """Judge the checked features of a record's runs that were verified before the feature judge.
+
+    Reads each run's evidence under runs_dir/verify/<run id>/ (report.json for the resolved features,
+    replay.json for the fresh box's output), asks the feature judge, and lowers each checked feature it
+    does not confirm to not_checked (not_shown), as a new run would. Writes the record when that changes
+    it. A run whose evidence is not on this machine, or that was already judged, is left alone.
+    """
+    import json
+    import os
+    from pathlib import Path
+
+    from pickfit.ledger import taipei_now
+    from pickfit.schema import SoftwareRecord
+    from pickfit.score import refresh_scores
+
+    path, runs_dir = Path(path), Path(runs_dir)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    labels = data.get("features") or []
+    by_field = {e["field"]: e.get("quote") or "" for e in data.get("evidence") or []}
+    quote_of = {label: by_field.get(f"/features/{i}", "") for i, label in enumerate(labels)}
+    row: dict[str, Any] = {"slug": data["slug"], "judged": 0, "lowered": 0, "cost_usd": 0.0, "skipped": []}
+    changed = False
+    for run in data["verification"]["runs"]:
+        checked = [f for f in run.get("features") or [] if f["status"] == "checked"]
+        if not checked:
+            continue
+        evidence = runs_dir / "verify" / run["id"]
+        if not (evidence / "report.json").exists() or not (evidence / "replay.json").exists():
+            row["skipped"].append(f"{run['id']}: no evidence here")
+            continue
+        if (evidence / "feature_judge.json").exists() and not force:
+            row["skipped"].append(f"{run['id']}: already judged")
+            continue
+        report = json.loads((evidence / "report.json").read_text(encoding="utf-8"))
+        replay = json.loads((evidence / "replay.json").read_text(encoding="utf-8"))
+        names = {f["feature"] for f in checked}
+        resolved = [r for r in report.get("features") or [] if r["feature"] in names]
+        items = judge_items(resolved, quote_of, _replay_checks(replay))
+        try:
+            judged = judge_features(data["name"], items, model=model, run_id=run["id"],
+                                    scope=f"verify:{data['slug']}", log=log, **call_kwargs) if items else None
+        except Exception as err:  # budget or API failure: leave the record for another try
+            row["skipped"].append(f"{run['id']}: feature judge failed: {type(err).__name__}: {err}")
+            continue
+        verdicts = judged.verdicts if judged else {}
+        if judged:
+            (evidence / "feature_judge.json").write_text(json.dumps(judged.to_dict(), ensure_ascii=False, indent=2)
+                                                         + "\n", encoding="utf-8")
+            row["cost_usd"] += judged.cost_usd
+            run["cost_usd"] = round((run.get("cost_usd") or 0.0) + judged.cost_usd, 6)
+        row["judged"] += len(checked)
+        for feature in checked:
+            verdict, why = verdicts.get(feature["feature"], ("", "the feature judge gave no verdict"))
+            if verdict == "shows_it_working":
+                continue
+            note = f"its check passed, but the output does not show it: {why}"
+            feature.update(status="not_checked", reason="not_shown", failure=None, smoke_tests=[],
+                           note=note if len(note) <= 300 else note[:299] + "…")
+            row["lowered"] += 1
+        changed = True
+    if changed:
+        now = taipei_now()
+        data["updated_at"] = now.isoformat()
+        refresh_scores(data, now)
+        record = SoftwareRecord.model_validate(data)
+        tmp = path.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(record.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n",
+                       encoding="utf-8")
+        os.replace(tmp, path)
+    return row

@@ -38,6 +38,9 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--keep-box", action="store_true", help="Docker: leave the agent's container running")
     v.add_argument("--write-back", action="store_true",
                    help="record a passed, replayed run in data/software/<slug>.json")
+    v.add_argument("--rejudge-features", action="store_true",
+                   help="no box: run the feature judge on records' runs checked before it (from runs/verify evidence)")
+    v.add_argument("--slug", action="append", help="--rejudge-features: only this record (repeatable)")
     v.add_argument("--limits-test", action="store_true",
                    help="no model: check the box's limits (user, metadata, network cut, memory, disk, pids)")
     v.add_argument("--prepare-base", action="store_true",
@@ -81,6 +84,8 @@ def run(args: argparse.Namespace) -> int:
 
         prepare_base()
         return 0
+    if args.rejudge_features:
+        return _rejudge(args)
     if args.limits_test:
         from pickfit.verify.agent import _runs_dir
         from pickfit.verify.limits import limits_test
@@ -108,6 +113,29 @@ def run(args: argparse.Namespace) -> int:
                           limits=limits, write=args.write_back, keep_agent_box=args.keep_box)
     print(json.dumps(outcome.summary(), ensure_ascii=False, indent=2))
     return 0 if outcome.passed else 1
+
+
+def _rejudge(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from pickfit.verify.agent import _runs_dir
+    from pickfit.verify.feature_judge import rejudge_record
+    from pickfit.verify.result import DATA_DIR
+
+    data_dir = Path(args.data_dir) if args.data_dir else DATA_DIR
+    rows = []
+    for path in sorted(data_dir.glob("*.json")):
+        if args.slug and path.stem not in args.slug:
+            continue
+        row = rejudge_record(path, _runs_dir(None), model=args.model, force=args.force,
+                             log=lambda line, s=path.stem: print(f"[{s}] {line}"))
+        if row["judged"] or row["skipped"]:
+            rows.append(row)
+    print(json.dumps({"records": len(rows), "features_judged": sum(r["judged"] for r in rows),
+                      "lowered": sum(r["lowered"] for r in rows),
+                      "cost_usd": round(sum(r["cost_usd"] for r in rows), 4),
+                      "rows": rows}, ensure_ascii=False, indent=2))
+    return 0
 
 
 def _batch(args: argparse.Namespace, make_box, limits) -> int:
