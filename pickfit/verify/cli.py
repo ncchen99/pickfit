@@ -116,7 +116,14 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
     from pickfit.discover.run import pipeline_db_path
     from pickfit.meta import resolve_model
     from pickfit.verify.agent import DEFAULT_MODE, _runs_dir
-    from pickfit.verify.batch import load_candidates, recheck_slugs, record_slugs, run_batch, verified_slugs
+    from pickfit.verify.batch import (
+        load_candidates,
+        recheck_slugs,
+        record_categories,
+        record_slugs,
+        run_batch,
+        verified_slugs,
+    )
     from pickfit.verify.pipeline import verify_task
     from pickfit.verify.result import DATA_DIR
 
@@ -136,7 +143,8 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
         print(f"pickfit verify: no records in {data_dir}")
         return 2
     items, skipped = load_candidates(db, limit=args.batch, repos=repos, categories=args.category,
-                                     skip_slugs=skip, known_slugs=known, gpu=bool(args.gpu),
+                                     skip_slugs=skip, known_slugs=known,
+                                     known_categories=record_categories(data_dir), gpu=bool(args.gpu),
                                      os="macos" if args.runner == "tart" else "linux")
     print(f"batch · {len(items)} to verify · {len(skipped)} set aside · {args.runner}"
           f"{' + ' + args.gpu if args.gpu else ''} · "

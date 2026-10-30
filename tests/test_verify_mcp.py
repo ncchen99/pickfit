@@ -319,3 +319,29 @@ def test_http_only_mcp_servers_are_verified_too() -> None:
     v6 = summary(transport="streamable_http", url="http://[::1]:8765/mcp")
     assert handshake(v6, f"{PROBE_COMMAND} --url http://[::1]:8765/mcp", offline=True, background=["notes-mcp"]) is None
     assert probe_kind(f"{PROBE_COMMAND} --call x --args '{{}}' --url {url}") == "mcp_call"
+
+
+def test_a_records_own_category_decides_the_batch(tmp_path: Path) -> None:
+    from pickfit.discover.github import normalize_repo
+    from pickfit.discover.store import PipelineDB
+    from pickfit.verify.batch import load_candidates
+    from tests.test_discover import repo_item
+    from tests.test_profiles import MCP_README, extraction, mcp_extraction
+
+    db = PipelineDB(tmp_path / "pipeline.db")
+    for rid, name, result in ((1, "a/notes-mcp", mcp_extraction()), (2, "a/tinyq", extraction()),
+                              (3, "a/was-cli", mcp_extraction())):
+        db.upsert_repo(normalize_repo(repo_item(rid, name)), category="mcp_server", query_id="mcp_server:mcp")
+        db.save_details(f"gh:{rid}", {"readme": MCP_README, "readme_path": "README.md", "files": ["src/main.rs"],
+                                      "files_truncated": False, "manifests": {}, "releases": []},
+                        pushed_at="2026-10-20T00:00:00Z")
+        db.save_rules(f"gh:{rid}", label="tool", passed=True, reasons=[], version="test")
+        db.save_extraction(repo_id=f"gh:{rid}", run_id="x", model="muse-spark-1.3", reasoning_effort="minimal",
+                           status="ok", sources_sha="x", result=result, quote_failures=[], quotes_checked=1,
+                           error=None, usage=None, cost_usd=0.0, cache_hit=False, response_id=None, latency_s=1.0)
+    # gh:3's extraction now says mcp_server, but its record was verified as a CLI tool.
+    items, _ = load_candidates(tmp_path / "pipeline.db", limit=10, categories=["mcp_server"],
+                               known_slugs={"gh:3": "was-cli"}, known_categories={"gh:3": "dev_cli"})
+    by_slug = {i.task.slug: i.task for i in items}
+    assert {s: t.category for s, t in by_slug.items()} == {"notes-mcp": "mcp_server", "tinyq": "dev_cli"}
+    assert is_mcp(by_slug["notes-mcp"]) and not is_mcp(by_slug["tinyq"])

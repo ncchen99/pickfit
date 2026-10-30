@@ -117,6 +117,18 @@ def _connect_ro(db: Path) -> sqlite3.Connection:
     return conn
 
 
+def record_categories(data_dir: Path) -> dict[str, str]:
+    """repo_id -> category of the records already in data/software: a record's category wins."""
+    found: dict[str, str] = {}
+    for path in sorted(data_dir.glob("*.json")):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            found[data["repo_id"]] = data["category"]
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+    return found
+
+
 def record_slugs(data_dir: Path) -> dict[str, str]:
     """repo_id -> slug of the records already in data/software, so write-back finds its file."""
     slugs: dict[str, str] = {}
@@ -154,11 +166,13 @@ def recheck_slugs(data_dir: Path, runs_dir: Path) -> set[str]:
 
 def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
                     categories: list[str] | None = None, skip_slugs: set[str] | None = None,
-                    known_slugs: dict[str, str] | None = None, gpu: bool = False,
+                    known_slugs: dict[str, str] | None = None, known_categories: dict[str, str] | None = None,
+                    gpu: bool = False,
                     os: str = "linux") -> tuple[list[BatchItem], list[dict[str, Any]]]:
     """Ranked batch items (at most `limit`) and the candidates set aside, with reasons.
 
-    known_slugs (repo_id -> slug, from record_slugs) wins over a slug made from the name.
+    known_slugs (repo_id -> slug, from record_slugs) wins over a slug made from the name, and
+    known_categories (from record_categories) over the extraction's category.
     gpu: the boxes have an NVIDIA GPU, so tools that require one are not set aside.
     os: what the boxes run (linux, or macos for TartBox).
     """
@@ -187,10 +201,13 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
         except ValidationError as err:
             ex = None
             invalid = f"extraction does not validate: {str(err)[:120]}"
-        # The record's category: the extraction's, else the discovery query's (as profiles.py decides).
-        category = (ex.category.value if ex else None) or row["category"]
-        if categories and row["category"] not in categories and category not in categories:
-            continue
+        # The record's category: the record's own, else the extraction's, else the discovery query's (as
+        # profiles.py decides). A record verified as a CLI tool is not checked as an MCP server.
+        category = (known_categories or {}).get(row["repo_id"]) or (ex.category.value if ex else None) \
+            or row["category"]
+        recorded = row["repo_id"] in (known_categories or {})
+        if categories and category not in categories and (recorded or row["category"] not in categories):
+            continue  # a record's own category decides; without one, the query's may match too
         slug = known_slugs.get(row["repo_id"]) or slug_for(row["full_name"], taken)
         note = {"repo_id": row["repo_id"], "full_name": row["full_name"], "slug": slug}
         if ex is None:
