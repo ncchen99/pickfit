@@ -103,7 +103,7 @@ def not_in_box(ex: ExtractionResult, *, gpu: bool = False, os: str = "linux") ->
     if platforms and os not in platforms:
         return f"platforms {'/'.join(platforms)} only"
     if not plan_for(ex, os).candidates:
-        return f"no install path the {'macOS' if os == 'macos' else 'Linux'} box can run"
+        return f"no install path the {({'macos': 'macOS', 'windows': 'Windows'}).get(os, 'Linux')} box can run"
     return None
 
 

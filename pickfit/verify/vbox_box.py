@@ -63,7 +63,9 @@ SNAPSHOT = "clean"
 INTNET = "pickfit-net"
 ROUTER_IP = "10.99.0.1"
 WIN_USER = "sbx"
-ADMIN_USER = "pfadmin"
+# The built-in Administrator (RID 500): UAC does not filter its token, so guestcontrol gets a full admin
+# for the harness's checks and probes. Its password is random, made on the host, and never in the guest.
+ADMIN_USER = "Administrator"
 WIN_HOME = r"C:\Users\sbx"
 WIN_WORKDIR = r"C:\Users\sbx\work"
 HARNESS_DIR = r"C:\ProgramData\pickfit"  # Administrators and SYSTEM may write; sbx may only read and run
@@ -152,6 +154,14 @@ def encode_ps(command: str) -> str:
 
 def ps_quote(text: str) -> str:
     return "'" + text.replace("'", "''") + "'"
+
+
+def with_exit_code(command: str) -> str:
+    """Make pwsh exit like bash: with the last command's status. In PowerShell 7 a native command's
+    non-zero exit sets $? to false and $LASTEXITCODE to the code; a failed cmdlet sets only $?. An explicit
+    `exit N` in the command ends the script before this tail runs."""
+    return (f"$global:LASTEXITCODE = 0\n{command}\n"
+            "$__pf_ok = $?\nif ($__pf_ok) { exit 0 } elseif ($LASTEXITCODE) { exit $LASTEXITCODE } else { exit 1 }")
 
 
 # ---------------------------------------------------------------- guest-side harness scripts
@@ -724,7 +734,7 @@ class VBoxBox(Box):
             args += ["--putenv", f"{key}={value}"]
         return [*args, "--", "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
                 "-File", RUN_PS1, "-Timeout", str(int(timeout_s)), "-Cwd", cwd, "-Nonce", nonce,
-                "-Enc", encode_ps(command)]
+                "-Enc", encode_ps(with_exit_code(command))]
 
     def _run(self, user: str, command: str, timeout_s: int, cwd: str, *,
              head: int | None = None) -> tuple[int, str, str, bool, bool, float]:
@@ -796,6 +806,10 @@ class VBoxBox(Box):
         if code != 0 or m is None:
             raise BoxError(f"cannot read {path}: {(err or out).strip()[-300:]}")
         return base64.b64decode(m.group(1))[:max_bytes]
+
+    def list_command(self, path: str) -> str:
+        return (f"Get-ChildItem -Force -LiteralPath {ps_quote(path)} | "
+                "Format-Table Mode, LastWriteTime, Length, Name -AutoSize | Out-String -Width 160")
 
     def background(self, command: str, port: int | None, wait_s: int, tag: int | str) -> str:
         """PowerShell for run_background: start detached with output in a log, wait for the port or a few
@@ -1069,6 +1083,238 @@ def prepare_router(*, iso: Path | None = None, name: str = ROUTER_VM, vboxmanage
                 "build_id": secrets.token_hex(6), "prepared_at": taipei_now().isoformat(timespec="seconds")}
     manifest_path(name, state).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     log(f"vbox: router {name} ready in {time.monotonic() - began:.0f}s (rules {rules})")
+    return manifest
+
+
+# ---------------------------------------------------------------- building the Windows base
+
+
+WIN_MEMORY_MB = 4096
+WIN_CPUS = 4
+WIN_DISK_MB = 65536  # Windows 11 setup requires 64 GB; the VDI is dynamic (about 25 GB used)
+
+PROVISION_SYSTEM = r"""
+$ErrorActionPreference = 'Continue'
+powercfg /hibernate off; powercfg /change standby-timeout-ac 0; powercfg /change monitor-timeout-ac 0
+$wu = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU'
+New-Item $wu -Force | Out-Null
+Set-ItemProperty $wu NoAutoUpdate 1 -Type DWord
+Stop-Service wuauserv -Force -ErrorAction SilentlyContinue
+Set-Service wuauserv -StartupType Disabled
+$st = 'HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore'
+New-Item $st -Force | Out-Null
+Set-ItemProperty $st AutoDownload 2 -Type DWord
+Set-ItemProperty 'HKLM:\System\CurrentControlSet\Control\Terminal Server' fDenyTSConnections 1 -Type DWord
+Stop-Service WinRM -ErrorAction SilentlyContinue
+Set-Service WinRM -StartupType Disabled
+cscript //nologo "$env:SystemRoot\System32\slmgr.vbs" /ato
+cscript //nologo "$env:SystemRoot\System32\slmgr.vbs" /dli
+"build=$([Environment]::OSVersion.Version.Build).$((Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').UBR)"
+"display=$((Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').DisplayVersion)"
+"edition=$((Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').EditionID)"
+"""
+
+# sbx and the harness directory; {pw} is replaced by a single-quoted PowerShell literal.
+PROVISION_USERS = r"""
+$ErrorActionPreference = 'Stop'
+if (-not (Get-LocalUser sbx -ErrorAction SilentlyContinue)) {
+  New-LocalUser sbx -Password (ConvertTo-SecureString {pw} -AsPlainText -Force) -PasswordNeverExpires `
+    -AccountNeverExpires -FullName 'pickfit sandbox' | Out-Null
+  Add-LocalGroupMember -SID S-1-5-32-545 -Member sbx
+}
+$d = 'C:\ProgramData\pickfit'
+New-Item -ItemType Directory -Force $d | Out-Null
+icacls $d /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' | Out-Null
+[IO.File]::WriteAllText("$d\run.ps1", [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{run}')))
+[IO.File]::WriteAllText("$d\probe.ps1", [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{probe}')))
+icacls $d /reset /T | Out-Null
+icacls $d /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' | Out-Null
+'users-ok'
+"""
+
+# Machine-wide tools (as Administrator) from winget's community repository.
+PROVISION_TOOLS = r"""
+$ErrorActionPreference = 'Continue'
+$w = Get-Command winget -ErrorAction SilentlyContinue
+if (-not $w) { 'winget missing'; exit 3 }
+$common = '--exact', '--scope', 'machine', '--silent', '--source', 'winget', '--accept-package-agreements',
+          '--accept-source-agreements', '--disable-interactivity'
+foreach ($id in 'Microsoft.PowerShell', 'Git.Git', 'OpenJS.NodeJS.LTS') {
+  winget install --id $id @common; "winget $id -> $LASTEXITCODE"
+}
+winget install --id Python.Python.3.12 @common --override '/quiet InstallAllUsers=1 PrependPath=1 Include_test=0'
+"winget Python.Python.3.12 -> $LASTEXITCODE"
+& 'C:\Program Files\Python312\python.exe' -m pip install --no-input --disable-pip-version-check uv pipx
+"pip uv pipx -> $LASTEXITCODE"
+"""
+
+# As sbx: create the profile, put user-level bin dirs on PATH, and report versions.
+PROVISION_SBX = r"""
+$ErrorActionPreference = 'Continue'
+$local = Join-Path $env:USERPROFILE '.local\bin'
+New-Item -ItemType Directory -Force $local, (Join-Path $env:APPDATA 'npm') | Out-Null
+$user = [Environment]::GetEnvironmentVariable('Path', 'User')
+foreach ($p in $local, (Join-Path $env:APPDATA 'npm')) { if (($user -split ';') -notcontains $p) { $user = "$p;$user" } }
+[Environment]::SetEnvironmentVariable('Path', $user.Trim(';'), 'User')
+$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + $user
+"pwsh=$(& 'C:\Program Files\PowerShell\7\pwsh.exe' -NoProfile -Command '$PSVersionTable.PSVersion.ToString()')"
+"python=$((python --version) -replace 'Python ','')"
+"uv=$((uv --version) -replace 'uv ','' -replace ' .*','')"
+"pipx=$(pipx --version)"
+"node=$(node --version)"
+"npm=$(npm --version)"
+"git=$((git --version) -replace 'git version ','')"
+"winget=$(try { winget --version } catch { 'unavailable' })"
+"""
+
+# Last, as Administrator: no auto logon, no stored password, no answer files or install logs.
+HARDEN = r"""
+$wl = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
+Set-ItemProperty $wl AutoAdminLogon '0'
+Remove-ItemProperty $wl DefaultPassword -ErrorAction SilentlyContinue
+Remove-ItemProperty $wl AutoLogonCount -ErrorAction SilentlyContinue
+foreach ($f in 'C:\Windows\Panther\unattend.xml','C:\Windows\Panther\Autounattend.xml',
+               'C:\Windows\System32\Sysprep\unattend.xml','C:\Unattend.xml','C:\vboxpostinstall.log') {
+  Remove-Item -Force $f -ErrorAction SilentlyContinue }
+Get-ChildItem C:\Windows\Panther -Filter *.xml -Recurse -ErrorAction SilentlyContinue |
+  Where-Object { (Get-Content $_.FullName -Raw -ErrorAction SilentlyContinue) -match '<Password>|AdministratorPassword' } |
+  Remove-Item -Force -ErrorAction SilentlyContinue
+'hardened-ok'
+"""
+
+
+def _raw_ps(vbox: VBox, vm: str, user: str, pwfile: Path, script: str, timeout_s: int = 600,
+            exe: str = WINPS) -> tuple[int, str, str]:
+    """Bootstrap command before the harness scripts exist: powershell -EncodedCommand, no sentinel, so the
+    exit code is VBoxManage's mapped one turned back (exact for 0..93)."""
+    proc = vbox("guestcontrol", vm, "run", "--username", user, "--passwordfile", str(pwfile), "--exe", exe,
+                "--timeout", str(timeout_s * 1000), "--wait-stdout", "--wait-stderr", "--",
+                "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+                "-EncodedCommand", encode_ps(script), timeout_s=timeout_s + 60, check=False)
+    code = proc.returncode
+    guest = 0 if code == 0 else code - 32 if 33 <= code <= 125 else -1
+    return guest, proc.stdout, proc.stderr
+
+
+def _kv(text: str) -> dict[str, str]:
+    return {m.group(1): m.group(2).strip() for m in re.finditer(r"^(\w+)=(.*)$", text, re.M)}
+
+
+def _wait_guest(vbox: VBox, vm: str, pwfile: Path, timeout_s: float = ADDITIONS_WAIT_S,
+                log: Callable[[str], None] = print) -> None:
+    deadline = time.monotonic() + timeout_s
+    while time.monotonic() < deadline:
+        if vbox.state(vm) != "running":
+            raise BoxError(f"{vm} is not running ({vbox.state(vm)})")
+        if "Value:" in vbox("guestproperty", "get", vm, "/VirtualBox/GuestAdd/Version", check=False).stdout:
+            code, out, _ = _raw_ps(vbox, vm, ADMIN_USER, pwfile, "'ready'", 60)
+            if "ready" in out:
+                return
+        time.sleep(10)
+    raise BoxError(f"{vm}: Guest Additions did not answer within {timeout_s:.0f}s")
+
+
+def create_base_vm(vbox: VBox, name: str, state: Path) -> None:
+    vms = state / "vms"
+    disk = vms / name / f"{name}.vdi"
+    vbox("createvm", "--name", name, "--ostype", "Windows11_64", "--basefolder", str(vms), "--register")
+    vbox("modifyvm", name, "--memory", str(WIN_MEMORY_MB), "--cpus", str(WIN_CPUS), "--firmware", "efi",
+         "--tpm-type", "2.0", "--graphicscontroller", "vboxsvga", "--vram", "128", "--audio-enabled", "off",
+         "--usb-ohci", "off", "--usb-ehci", "off", "--usb-xhci", "off", "--mouse", "ps2", "--keyboard", "ps2",
+         "--clipboard-mode", "disabled", "--drag-and-drop", "disabled", "--vrde", "off",
+         "--nic1", "intnet", "--intnet1", INTNET, "--nictype1", "82540EM", "--cable-connected1", "on")
+    for step in (["inituefivarstore"], ["enrollmssignatures"], ["enrollorclpk"], ["secureboot", "--enable"]):
+        vbox("modifynvram", name, *step)
+    vbox("createmedium", "disk", "--filename", str(disk), "--size", str(WIN_DISK_MB), "--format", "VDI")
+    vbox("storagectl", name, "--name", "SATA", "--add", "sata", "--controller", "IntelAhci", "--portcount", "4")
+    vbox("storageattach", name, "--storagectl", "SATA", "--port", "0", "--device", "0", "--type", "hdd",
+         "--medium", str(disk))
+
+
+def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = ROUTER_VM,
+                 vboxmanage: Sequence[str] | str | None = None, state_dir: Path | None = None,
+                 resume: bool = False, log: Callable[[str], None] = print) -> dict[str, Any]:
+    """Install Windows 11 Enterprise Evaluation unattended, activate it online (through the router),
+    install pwsh/git/node/python/uv/pipx machine-wide, create sbx and the harness, harden, boot once more to
+    check it like every box will, and take the powered-off `clean` snapshot. Hours, mostly the install.
+
+    resume: continue on an existing, installed VM (after a failure in provisioning) instead of refusing.
+    """
+    vbox = VBox(vboxmanage)
+    state = state_dir or STATE_DIR
+    iso = iso or next(iter(sorted((state / "iso").glob("*Enterprise*.iso"))), None)
+    if iso is None or not Path(iso).exists():
+        raise BoxError("give the Windows 11 Enterprise evaluation ISO (--iso) or put it in ~/.pickfit/vbox/iso")
+    router_manifest = load_manifest(router, state, "; build the router first")
+    pw = {user: state / f"{name}.{user}.pw" for user in (ADMIN_USER, WIN_USER)}
+    exists = vbox("showvminfo", name, check=False).returncode == 0
+    if exists and not resume:
+        raise BoxError(f"{name!r} already exists; `VBoxManage unregistervm {name} --delete` to rebuild it "
+                       "(or resume=True to continue provisioning it)")
+    manifest_path(name, state).unlink(missing_ok=True)
+    began = time.monotonic()
+    Router(vbox, name=router, state_dir=state, log=log).reset(host_public_ipv4(), router_manifest)
+    if not exists:
+        for path in pw.values():
+            path.write_text(secrets.token_urlsafe(18), encoding="utf-8")
+        create_base_vm(vbox, name, state)
+        additions = Path(find_vboxmanage()).with_name("VBoxGuestAdditions.iso")
+        vbox("unattended", "install", name, f"--iso={iso}", f"--user={ADMIN_USER}",
+             f"--user-password-file={pw[ADMIN_USER]}", f"--full-user-name={ADMIN_USER}", "--install-additions",
+             f"--additions-iso={additions}", "--locale=en_US", "--country=TW", "--time-zone=Taipei Standard Time",
+             "--hostname=pickfit-win.local", "--start-vm=headless", timeout_s=300)
+        log(f"vbox: {name}: unattended Windows install started (this takes a long time on Hyper-V)")
+    _wait_guest(vbox, name, pw[ADMIN_USER], timeout_s=4 * 3600, log=log)
+    log(f"vbox: {name}: Guest Additions answer after {time.monotonic() - began:.0f}s; provisioning")
+    manifest: dict[str, Any] = {"base": name, "iso": Path(iso).name, "arch": "x86_64", "user": WIN_USER,
+                                "virtualbox": vbox("--version").stdout.strip()}
+
+    def admin(step: str, script: str, timeout_s: int, ok: Callable[[int, str], bool]) -> str:
+        code, out, err = _raw_ps(vbox, name, ADMIN_USER, pw[ADMIN_USER], script, timeout_s)
+        log(f"vbox: {name}: {step} -> {code}")
+        if not ok(code, out):
+            raise BoxError(f"{step} failed ({code}): {(out + err).strip()[-800:]}")
+        return out
+
+    out = admin("system settings + activation", PROVISION_SYSTEM, 600, lambda c, o: "build=" in o)
+    info = _kv(out)
+    if not re.search(r"License Status: Licensed", out):
+        raise BoxError(f"Windows did not activate: {out.strip()[-600:]}")
+    manifest.update(windows=f"{info.get('display', '?')} (build {info.get('build', '?')})",
+                    edition=info.get("edition"))
+    sbx_pw = pw[WIN_USER].read_text(encoding="utf-8").strip()
+    users = (PROVISION_USERS.replace("{pw}", ps_quote(sbx_pw))
+             .replace("{run}", base64.b64encode(RUN_SCRIPT.encode()).decode())
+             .replace("{probe}", base64.b64encode(PROBE_SCRIPT.encode()).decode()))
+    admin("sbx and harness", users, 300, lambda c, o: "users-ok" in o)
+    admin("tools (winget)", PROVISION_TOOLS, 3600, lambda c, o: "pip uv pipx -> 0" in o)
+    code, out, err = _raw_ps(vbox, name, WIN_USER, pw[WIN_USER], PROVISION_SBX, 600)
+    versions = _kv(out)
+    log(f"vbox: {name}: sbx tools {versions}")
+    if not versions.get("pwsh") or not versions.get("python"):
+        raise BoxError(f"tools missing for sbx: {(out + err).strip()[-600:]}")
+    manifest.update({k: v for k, v in versions.items() if v and v != "unavailable"})
+    admin("hardening", HARDEN, 300, lambda c, o: "hardened-ok" in o)
+    admin("shutdown", "shutdown.exe /s /t 5 /f; 'bye'", 60, lambda c, o: True)
+    vbox.poweroff(name, 300)
+    for port in range(1, 4):  # the install ISO, the additions and the auxiliary (answer file) ISO
+        vbox("storageattach", name, "--storagectl", "SATA", "--port", str(port), "--device", "0",
+             "--medium", "none", check=False)
+    # Boot once more, as a box will, and run the same check every box runs.
+    vbox("startvm", name, "--type", "headless", timeout_s=180)
+    _wait_guest(vbox, name, pw[ADMIN_USER], log=log)
+    check_box = VBoxBox(base=name, router=router, vboxmanage=vbox.argv0, state_dir=state, log=log)
+    code, out, err = check_box._admin(HARDENED_CHECK, 120)
+    if code != 0:
+        raise BoxError(f"the hardened base fails its check: {(out + err).strip()[-400:]}")
+    admin("shutdown", "shutdown.exe /s /t 5 /f; 'bye'", 60, lambda c, o: True)
+    vbox.poweroff(name, 300)
+    vbox("snapshot", name, "take", SNAPSHOT, "--description", "pickfit Windows base, powered off")
+    manifest.update(hardened=True, build_id=secrets.token_hex(6),
+                    prepared_at=taipei_now().isoformat(timespec="seconds"))
+    manifest_path(name, state).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    Router(vbox, name=router, state_dir=state, log=log).stop()
+    log(f"vbox: base {name} ready in {time.monotonic() - began:.0f}s · {image_label(manifest, router_manifest)}")
     return manifest
 
 

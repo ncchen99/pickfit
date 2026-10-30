@@ -8,7 +8,8 @@ capped. No model is called. Measured 2026-10-29: Docker kills only the process
 that goes over the memory limit; Modal kills the whole sandbox. A macOS box has
 no /proc and no per-process memory cap (the VM's RAM is the cap), so it checks
 instead that the box user is not an admin, cannot sudo or change the firewall,
-and cannot reach the host.
+and cannot reach the host. A Windows box checks the same kind of things in
+PowerShell, plus that exit codes survive VBoxManage's mapping.
 """
 
 from __future__ import annotations
@@ -75,6 +76,55 @@ def _not_admin(result: ExecResult) -> bool:
     return lines[:1] != ["0"] and "admin" not in groups and "sudo=0" not in result.stdout
 
 
+WIN_IS_ADMIN = ("([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent())"
+                ".IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator); whoami /groups /fo csv | "
+                "Select-String 'S-1-5-32-544|S-1-16-12288'")
+WIN_HARNESS_WRITE = ("foreach ($p in 'C:\\ProgramData\\pickfit\\run.ps1','C:\\ProgramData\\pickfit\\probe.ps1') { "
+                     "try { [IO.File]::AppendAllText($p, '#'); \"writable $p\" } catch { \"locked $p\" } }; "
+                     "try { New-Item -ItemType File C:\\ProgramData\\pickfit\\x.ps1 -ErrorAction Stop | Out-Null; "
+                     "'writable dir' } catch { 'locked dir' }")
+WIN_LOGON_SECRETS = ("$w = Get-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon'; "
+                     "\"autologon=$($w.AutoAdminLogon) password=$([bool]$w.DefaultPassword)\"; "
+                     "Test-Path C:\\Windows\\Panther\\unattend.xml")
+
+
+def _windows_probes(box: Box, add: Callable[[ProbeResult], None]) -> None:
+    """A Windows box: the user is not an administrator, cannot change the harness, finds no stored logon
+    password, and the network policy (outside the guest) holds with positive controls. Windows has no
+    per-user process, file-size or memory cap; the VM's own RAM and disk are the caps."""
+    add(_probe(box, "non_admin", WIN_IS_ADMIN, 60, "not an administrator, not elevated",
+               lambda r: r.stdout.strip().splitlines()[:1] == ["False"] and "S-1-" not in r.stdout))
+    add(_probe(box, "harness_locked", WIN_HARNESS_WRITE, 60, "the box user cannot change the harness scripts",
+               lambda r: "writable" not in r.stdout and r.stdout.count("locked") == 3))
+    add(_probe(box, "no_logon_secret", WIN_LOGON_SECRETS, 60, "no auto logon, no stored password, no answer file",
+               lambda r: "autologon=1" not in r.stdout and "password=True" not in r.stdout
+               and r.stdout.strip().splitlines()[-1:] == ["False"]))
+    add(_probe(box, "no_secrets_in_env", "(Get-ChildItem env:).Name -join ' '", 60,
+               "no API_KEY/TOKEN/SECRET/PASSWORD variables",
+               lambda r: not re.search(r"API_KEY|TOKEN|SECRET|PASSWORD", r.stdout)))
+    try:
+        for name, ok, expect, detail in box.validate_containment():
+            add(ProbeResult(name, ok, expect, None, 0.0, detail))
+    except BoxError as err:
+        add(ProbeResult("containment_check_ran", False, "the containment check completes", None, 0.0, str(err)))
+    box.exec(box.background("python -m http.server 8765 --bind 127.0.0.1", 8765, 20, "limits-http"), 40)
+    box.set_network(False)
+    try:
+        add(_probe(box, "offline_localhost",
+                   "curl.exe -sS -m 5 -o NUL -w '%{http_code}' http://127.0.0.1:8765/", 30,
+                   "localhost still answers with the network off", lambda r: r.stdout.strip() == "200"))
+    finally:
+        box.set_network(True)
+    add(_probe(box, "online_again", "curl.exe -sS -I -m 15 -o NUL -w '%{http_code}' https://pypi.org/simple/pip/",
+               40, "PyPI answers again after the network is back", lambda r: r.stdout.strip() == "200"))
+    timed = box.exec("Start-Sleep 30", 3)
+    add(ProbeResult("command_timeout", timed.timed_out and timed.seconds < 25, "Start-Sleep 30 killed at 3 s",
+                    timed.exit_code, timed.seconds, _detail(timed)))
+    for code in (0, 1, 3, 93, 94, 1603):  # VBoxManage maps codes; the harness must report the real one
+        add(_probe(box, f"exit_code_{code}", f"cmd /c exit {code}", 30, f"exit code {code} comes back as {code}",
+                   lambda r, code=code: r.exit_code == code))
+
+
 def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeResult]:
     """Run every probe in a started box; restores the network before returning."""
     results: list[ProbeResult] = []
@@ -84,6 +134,9 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
         log(f"  {'ok  ' if result.ok else 'FAIL'} {result.name}: {result.expect} · exit {result.exit_code} · "
             f"{result.seconds:.1f}s · {result.detail[:140]}")
 
+    if box.os == "windows":
+        _windows_probes(box, add)
+        return results
     macos = box.os == "macos"
     if macos:
         add(_probe(box, "non_admin", "id -u; id -Gn; sudo -n true 2>&1; echo sudo=$?", 20,

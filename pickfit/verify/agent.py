@@ -24,7 +24,6 @@ from __future__ import annotations
 import json
 import re
 import secrets
-import shlex
 import time
 from collections import Counter
 from collections.abc import Callable
@@ -38,7 +37,7 @@ from pickfit.env import REPO_ROOT, get_env
 from pickfit.ledger import BudgetExceeded, taipei_now
 from pickfit.meta import MetaResult, ToolCall, call_meta, resolve_model
 from pickfit.schema import InstallMethod, PitfallKind, UnverifiedReason, VerificationLevel, is_passed
-from pickfit.verify.box import Box, BoxError, ExecResult, background_script
+from pickfit.verify.box import Box, BoxError, ExecResult
 from pickfit.verify.plan import InstallPlan, plan_for
 from pickfit.verify.rules import RuleHit, error_signature, match_rules
 from pickfit.verify.task import VerifyTask
@@ -166,6 +165,21 @@ TOOLS: list[dict[str, Any]] = [
         ["command", "port", "wait_s"]),
     FINISH_TOOL,
 ]
+
+
+def tools_for(box: Box) -> list[dict[str, Any]]:
+    """TOOLS with run_command naming the box's shell (bash, or pwsh in the Windows box)."""
+    if box.shell == "bash":
+        return TOOLS
+    tools = json.loads(json.dumps(TOOLS))
+    for tool in tools:
+        if tool.get("name") == "run_command":
+            tool["description"] = tool["description"].replace(
+                "bash command", f"{box.shell} (PowerShell 7) command").replace(
+                "`; echo $?`", "`; echo $LASTEXITCODE`")
+        if tool.get("name") == "list_dir":
+            tool["description"] = tool["description"].replace("(ls -la)", "(Get-ChildItem -Force)")
+    return tools
 
 
 class _ListDirArgs(BaseModel):
@@ -578,7 +592,7 @@ class VerifyAgent:
             turn += 1
             # prompt_cache_key keeps one run's growing history on the same prefix cache (a hint).
             body: dict[str, Any] = {"instructions": self.instructions,
-                                    "tools": [FINISH_TOOL] if wrap_up else TOOLS,
+                                    "tools": [FINISH_TOOL] if wrap_up else tools_for(self.box),
                                     "reasoning": {"summary": "auto"}, "prompt_cache_key": self.run_id}
             if self.mode == "chain":
                 body["input"] = pending
@@ -738,7 +752,7 @@ class VerifyAgent:
         return f"error: unknown tool {call.name!r}"
 
     def _list_dir(self, args: _ListDirArgs, turn: int) -> str:
-        result = self.box.exec(f"ls -la -- {shlex.quote(args.path)}", 20)
+        result = self.box.exec(self.box.list_command(args.path), 20)
         self._record(turn, "list_dir", args.path, result)
         self._say(f"  · list_dir {args.path} → exit {result.exit_code}")
         body = _tail(result.stdout or result.stderr, LIST_DIR_CHARS)
@@ -798,7 +812,7 @@ class VerifyAgent:
         n = self.commands_used
         wait = max(0, min(args.wait_s, BACKGROUND_WAIT_S))
         self._say(f"  & {_one_line(args.command, 200)}   [cmd {n}/{self.limits.max_commands}]")
-        script = background_script(args.command, args.port, wait, n, detach=self.box.detach)
+        script = self.box.background(args.command, args.port, wait, n)
         result = self.box.exec(script, self._timeout(wait + 15))
         hints = match_rules(args.command, result.exit_code, result.stdout, result.stderr)
         self._record(turn, "run_background", args.command, result, hints, port=args.port, wait_s=wait)
