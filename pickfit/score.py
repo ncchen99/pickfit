@@ -314,10 +314,13 @@ def readme_fixes(pitfalls: list[Pitfall]) -> int:
 
 
 # How much of the tool a passed run proved (C.3). A dev CLI is fully checked once a README example
-# runs; a local AI tool once a tiny model generates text, and a one-shot CLI run proves less.
+# runs; a local AI tool once a tiny model generates text, and a one-shot CLI run proves less. An MCP
+# server's function run is its handshake (it starts and lists its tools); only a tool call (service)
+# shows it does its job. Install never passes an MCP server (verify/mcp.py), so its entry is unused.
 VERIFICATION_DEPTH: dict[str, dict[str, float]] = {
     "dev_cli": {"install": 0.6, "function": 1.0, "service": 1.0, "inference": 1.0},
     "local_ai": {"install": 0.6, "function": 0.8, "service": 0.9, "inference": 1.0},
+    "mcp_server": {"install": 0.6, "function": 0.8, "service": 1.0, "inference": 1.0},
 }
 README_FIX_FACTOR = 0.85
 

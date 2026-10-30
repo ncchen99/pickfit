@@ -9,7 +9,7 @@ import { ERROR_EXCERPT_MAX, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } 
 import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './submit.ts';
 
 const ABOUT =
-  'pickfit recommends lesser-known software that it has installed and tested in a sandbox. Scope today: developer CLI tools and local AI/LLM tools. ' +
+  'pickfit recommends lesser-known software that it has installed and tested in a sandbox. Scope: dev CLI tools, local AI/LLM tools, MCP servers. ' +
   'well_known_option is not verified by pickfit; say so. ';
 const RULES = 'Ask at most 1-2 questions first (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars.';
 
@@ -75,7 +75,7 @@ const pick = z.object({
 
 /** The user's conditions, shared by find_software and find_alternatives. */
 const conditions = {
-  category: z.enum(['dev_cli', 'local_ai', 'any']).optional().describe('Default any'),
+  category: z.enum(['dev_cli', 'local_ai', 'mcp_server', 'any']).optional().describe('Default any; mcp_server = an MCP server to add to an AI client'),
   os: os.optional(),
   arch: arch.optional(),
   budget: z.enum(['free_only', 'free_or_paid']).optional(),
@@ -205,6 +205,29 @@ const installOutput = z.object({
         .describe('readme_wrong = following the README hits it; sandbox = only the sandbox needed it; tool_handled = the tool did it itself; note = nothing to fix'),
     }),
   ),
+  mcp_client_config: z
+    .object({
+      transport: z.literal('stdio'),
+      command: z.string(),
+      args: z.array(z.string()),
+      claude_code: z.string().describe('A `claude mcp add` line for Claude Code'),
+      json: z.string().describe('An mcpServers entry (JSON text) for Claude Desktop, Cursor and other clients'),
+      env: z.array(
+        z.object({
+          name: z.string(),
+          required: z.boolean().nullable(),
+          purpose: z.string().nullable(),
+          placeholder: z.string().describe('Replace with the user\'s own value; pickfit never had one'),
+        }),
+      ),
+      tools: z.array(z.string()).describe('Tool names the server listed in the sandbox handshake'),
+      tool_count: z.number().int(),
+      called_tool: z.string().nullable().describe('A tool pickfit called without an error; null = only the handshake was checked'),
+      works_offline: z.boolean().nullable().describe('true = the handshake also completed with the network off'),
+      note: z.string().nullable(),
+    })
+    .nullable()
+    .describe('MCP servers only: how to add it to an MCP client, from the launch command a fresh sandbox started; null for other software'),
   warnings: z.array(z.string()),
   sources: z.array(z.string()),
 });
@@ -282,7 +305,7 @@ export function buildServer(deps: Deps): McpServer {
         'Before calling, ask at most one or two questions, and only if unknown: which OS, and whether it must be free or run fully offline. ' +
         'Returns up to 3 lesser-known tools whose install pickfit actually ran, ranked by fit (not popularity), each with reasons tied to its verified profile, trade-offs, verification evidence and separate quality/popularity scores, plus the best free option. ' +
         'If a well-known free tool pickfit does not list may fit better, well_known_option names it: tell the user pickfit has not verified it. ' +
-        'If clarifying_question is set, ask it and call again. Next: get_install_guide(slug, os, rec_id). Coverage: developer CLI tools and local AI/LLM tools.',
+        'If clarifying_question is set, ask it and call again. Next: get_install_guide(slug, os, rec_id). Coverage: developer CLI tools, local AI/LLM tools and MCP servers.',
       inputSchema: findInput,
       outputSchema: findOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },
@@ -313,6 +336,7 @@ export function buildServer(deps: Deps): McpServer {
       description:
         'Use after the user picks a tool from find_software or find_alternatives. Returns install steps pickfit actually ran (replayed in a fresh sandbox, or done by hand), with the OS, date and evidence, ' +
         'the steps only the user can do (permissions, accounts), a command to verify the install and a first task to try. ' +
+        'For an MCP server, mcp_client_config gives the `claude mcp add` line and the mcpServers JSON for the launch command pickfit started, with placeholders for keys the user must supply. ' +
         'Show each command to the user before running it, and ask before any step that needs sudo or pipes a script into a shell. ' +
         'If applies_to_user_system.match is not "exact", tell the user the steps were checked on a different system.' +
         (readonly ? '' : ' After the user tries it, call report_outcome with the rec_id.'),
@@ -384,7 +408,7 @@ export function buildServer(deps: Deps): McpServer {
       description:
         'Use only when the user asks to add a software project to pickfit, often their own. Takes the GitHub repository URL. ' +
         "pickfit's pipeline reads it with Meta's Muse Spark, tries the install in a sandbox and lists it if it works; this takes minutes, so call again with the same url to check the status. " +
-        'Developer CLI tools and local AI/LLM tools are verified today; other software may be rejected or listed unverified. Nothing is published under the user\'s name.',
+        'Developer CLI tools, local AI/LLM tools and MCP servers are verified today; other software may be rejected or listed unverified. Nothing is published under the user\'s name.',
       inputSchema: submitInput,
       outputSchema: submitOutput,
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
