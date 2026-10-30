@@ -41,6 +41,8 @@ env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p "…" \
 
 每個推薦與安裝指南都帶 `rec_id`、`matched_by`、`how_we_know`、`evidence_url`（`find_*` 在每個 pick 上；`get_install_guide` 在頂層，`matched_by` 固定是 `rules`，因為步驟是錄下來的實跑紀錄，沒經過模型）。這些欄位都由程式從資料產生。
 
+GUI 桌面 app 的實跑另帶 `verification.gui`（`find_*` 的 pick 與 `get_install_guide` 都有；其他軟體是 `null`）：`tier`（`window`＝出現 app 自己行程的視窗；`ui_rendered`＝另一個模型看截圖判定 app 自己的介面畫出來了）、`screen`（模型看到的畫面：主畫面、首次設定畫面、登入牆等）、`display`（虛擬螢幕）、`launch_offline`（新沙盒重播時斷網也啟動成功）。`how_we_know` 會照實寫出看到了什麼，並註明沒用過任何功能；`level` 一律維持 `install`，啟動成功不算 function。視窗標題是 app 自己設定的文字，不進索引。
+
 ### `find_software`、`find_alternatives` 怎麼配對（architecture F.2）
 
 1. **硬條件（程式）**：只留有實跑過安裝步驟的（`install.<os>` 的 basis 是 `replayed` 或 `human`）；類別、`budget: free_only` → `pricing = free`、`must_run_locally` → `processing = local`、不需網路、不需 API key；作業系統要在 `platforms` 或已驗證過。只在別的 OS 驗證過的留下，但卡片與回應都會標明。`verified_on_user_os` 要 OS 相同；請求有給 `arch` 時，跑的 CPU 架構也要相同，所以只在 arm64 Mac 跑過的，對 Intel Mac 是 `false`，並在取捨裡寫明。沒給 `arch` 就只看 OS，回應的 `verification.arch` 和 `get_install_guide` 的 note 會寫出實際跑的架構。`find_alternatives` 另外把使用者目前的工具（依 slug 或名稱比對到目錄裡的那筆）排除。

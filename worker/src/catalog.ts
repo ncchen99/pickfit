@@ -16,6 +16,22 @@ export interface RunSummary {
   checked_at: string;
   tool_version: string | null;
   evidence_url: string | null;
+  /** A GUI app's launch on pickfit's virtual display; absent or null for anything else. */
+  gui?: GuiEvidence | null;
+}
+
+/**
+ * What pickfit saw when a GUI app launched on a virtual display (verification.runs[].gui). The window
+ * title is the app's own text and is not in the index. A launch supports level install only.
+ */
+export interface GuiEvidence {
+  /** window: a window of the app's own process (per the X server); ui_rendered: the screen judge saw the app's own UI. */
+  tier: 'window' | 'ui_rendered';
+  /** What a separate model saw in a screenshot of the app's own windows. */
+  screen: 'main_ui' | 'first_run' | 'sign_in_wall' | 'crash_or_error' | 'blank_or_loading' | 'other';
+  display: string;
+  /** The launch passed again with the network off in the fresh-sandbox replay. */
+  launch_offline: boolean | null;
 }
 
 /** What a fresh sandbox saw when pickfit's MCP probe started the server (verification.runs[].mcp). */

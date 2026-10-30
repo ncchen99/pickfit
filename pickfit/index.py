@@ -11,7 +11,10 @@ run (basis "replayed" or "human") are kept: README claims never reach users as
 install steps. An MCP server's guide also carries the handshake its run saw
 (`mcp`: the launch argv a fresh box started, the tool names it listed), from
 which the Worker writes the client config; the README's own MCP facts (env
-vars, config snippets, tool names) ride along under the entry's `mcp`.
+vars, config snippets, tool names) ride along under the entry's `mcp`. A GUI
+app's run carries what pickfit saw of its launch (`gui`: tier, the screen the
+judge read, the display, whether the launch passed offline); the window title
+is the app's own text and stays out of the index.
 """
 
 from __future__ import annotations
@@ -84,6 +87,15 @@ def _iso(value: datetime | None) -> str | None:
     return value.isoformat().replace("+00:00", "Z") if value else None
 
 
+def _gui(run: VerificationRun) -> dict[str, Any] | None:
+    """A GUI app's launch as pickfit saw it; never the window title, which the app chooses."""
+    if run.gui is None:
+        return None
+    launch = next((t for t in run.smoke_tests if t.command == run.gui.command and t.passed), None)
+    return {"tier": run.gui.tier, "screen": run.gui.screen, "display": run.gui.display,
+            "launch_offline": launch.offline if launch else None}
+
+
 def _run_summary(run: VerificationRun) -> dict[str, Any]:
     return {
         "id": run.id,
@@ -96,6 +108,7 @@ def _run_summary(run: VerificationRun) -> dict[str, Any]:
         "checked_at": _iso(run.checked_at),
         "tool_version": run.tool_version,
         "evidence_url": run.evidence.evidence_url,
+        "gui": _gui(run),
     }
 
 
