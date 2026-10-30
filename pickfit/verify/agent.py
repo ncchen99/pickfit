@@ -396,6 +396,10 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
     if box.gpu:
         lines.insert(3, f"GPU: one NVIDIA {box.gpu} (driver and nvidia-smi present, no CUDA toolkit), so GPU "
                         "examples can run here; use the smallest model the tool supports.")
+    if box.display and ex.kind.value == "desktop_app":
+        lines.insert(3, "This is a desktop (GUI) app: install the app itself (a release build if there is one for "
+                        "Linux; an AppImage runs with --appimage-extract-and-run, no FUSE needed), then start it "
+                        "with launch_gui and cite that launch. A test suite or a helper tool is not the app.")
     if task.files:
         names = ", ".join(sorted(task.files))
         lines.append(f"The work dir is also a sample project to try the tool on, with these files: {names}. "

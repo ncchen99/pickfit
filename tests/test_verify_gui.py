@@ -217,6 +217,20 @@ def test_a_rendered_gui_launch_is_install_with_tier_ui_rendered(tmp_path: Path):
     assert guide.check is None and guide.first_task == LAUNCH
 
 
+def test_a_desktop_app_on_a_display_box_is_told_to_launch_the_app_itself():
+    from pickfit.verify.agent import AgentLimits, render_task
+    from pickfit.verify.plan import plan_for
+
+    task = load_fixture(FIXTURES / "verify" / "graphtty.json", fetch=lambda url: "# demo\n")
+    assert "This is a desktop (GUI) app" not in render_task(task, plan_for(task.extraction, "linux"), GuiBox(),
+                                                             AgentLimits())
+    task.extraction.kind.value = "desktop_app"
+    text = render_task(task, plan_for(task.extraction, "linux"), GuiBox(), AgentLimits())
+    assert "This is a desktop (GUI) app" in text and "--appimage-extract-and-run" in text
+    assert "This is a desktop (GUI) app" not in render_task(task, plan_for(task.extraction, "linux"), FakeBox(),
+                                                             AgentLimits())
+
+
 def test_a_crash_dialog_or_a_missing_window_keeps_it_unverified(tmp_path: Path):
     outcome = verify(tmp_path, FakeServer(*gui_turns("install"), gui_judge_answer("crash_or_error")), Boxes())
     assert outcome.run.level == "unverified" and outcome.run.judge.verdict == "error_visible"
