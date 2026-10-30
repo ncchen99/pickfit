@@ -99,9 +99,11 @@ def _strings(node: object, depth: int = 0) -> list[str]:
     return []
 
 
-# "When using the send_email tool, ...": shadowing when that tool is not one of this server's own.
+# "When using the send_email tool, ...": shadowing when that tool is not one of this server's own. Only a
+# name that looks like a tool's (send_email, mail.send, or quoted) counts, not prose ("before calling this tool").
 _NAMED_TOOL = re.compile(r"\b(?:before|after|instead of|when)\s+(?:calling|using|you (?:call|use))\s+(?:the\s+)?"
-                         r"[`'\"]?(?P<name>[A-Za-z0-9_.:/-]+)[`'\"]?\s+tool\b", re.I)
+                         r"(?:[`'\"](?P<quoted>[A-Za-z0-9_.:/-]+)[`'\"]|(?P<name>[A-Za-z0-9]+[_.:/-][A-Za-z0-9_.:/-]*))"
+                         r"\s+tool\b", re.I)
 
 
 def flags_for(tool: dict, own_names: set[str] | None = None) -> list[str]:
@@ -114,7 +116,7 @@ def flags_for(tool: dict, own_names: set[str] | None = None) -> list[str]:
     text = "\n".join(texts)
     found = [label for label, pattern in FLAGS if pattern.search(text)]
     if "other_tools" not in found and own_names is not None and any(
-            m.group("name") not in own_names for m in _NAMED_TOOL.finditer(text)):
+            (m.group("quoted") or m.group("name")) not in own_names for m in _NAMED_TOOL.finditer(text)):
         found.append("other_tools")
     if "hidden_unicode" not in found and FLAGS[-1][1].search(raw_name):
         found.append("hidden_unicode")
