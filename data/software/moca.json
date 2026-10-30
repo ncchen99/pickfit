@@ -84,16 +84,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-moca-20261031-002420-24fc",
+      "run_id": "verify-moca-20261031-032009-7513",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/adeotek/moca/main/install.sh -o /tmp/moca-install.sh",
-          "purpose": "Download moca install script"
+          "command": "curl -fsSL https://raw.githubusercontent.com/adeotek/moca/main/install.sh -o /tmp/moca-install.sh && echo DOWNLOAD_OK && wc -c /tmp/moca-install.sh",
+          "purpose": "Download installer script for inspection"
         },
         {
           "command": "bash /tmp/moca-install.sh",
-          "purpose": "Install moca via install script"
+          "purpose": "Install moca via installer script"
         }
       ],
       "manual_steps": [],
@@ -133,10 +133,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:25:42.960087+08:00",
+    "checked_at": "2026-10-31T03:21:43.302360+08:00",
     "runs": [
       {
-        "id": "verify-moca-20261031-002420-24fc",
+        "id": "verify-moca-20261031-032009-7513",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -144,18 +144,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:25:42.960087+08:00",
+        "checked_at": "2026-10-31T03:21:43.302360+08:00",
         "tool_version": "v0.7.12",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/adeotek/moca/main/install.sh -o /tmp/moca-install.sh",
-            "purpose": "Download moca install script"
+            "command": "curl -fsSL https://raw.githubusercontent.com/adeotek/moca/main/install.sh -o /tmp/moca-install.sh && echo DOWNLOAD_OK && wc -c /tmp/moca-install.sh",
+            "purpose": "Download installer script for inspection"
           },
           {
             "command": "bash /tmp/moca-install.sh",
-            "purpose": "Install moca via install script"
+            "purpose": "Install moca via installer script"
           }
         ],
         "smoke_tests": [
@@ -169,20 +169,11 @@
             "offline": true
           },
           {
-            "command": "moca --help",
-            "expected_signal": "moca — a coding agent for the terminal",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "moca — a coding agent for the terminal",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "moca config sample",
-            "expected_signal": "\"log\": { \"level\": \"info\" }",
+            "expected_signal": "\"web\": {",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "\"log\": { \"level\": \"info\" } // \"info\" | \"debug\" | \"off\"",
+            "observed_excerpt": "\"web\": {",
             "setup": [],
             "offline": true
           },
@@ -197,33 +188,94 @@
           },
           {
             "command": "moca update --check",
-            "expected_signal": "is up to date",
+            "expected_signal": "moca v0.7.12 is up to date",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "moca v0.7.12 is up to date (latest release v0.7.12).",
             "setup": [],
             "offline": false
+          },
+          {
+            "command": "moca acp --help",
+            "expected_signal": "usage: moca acp",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: moca acp [--model <provider/model>] [--effort <level>] [--mode default|auto|yolo|plan] [--approve | --no-approve]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "moca mcp index --help",
+            "expected_signal": "no MCP servers configured",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no MCP servers configured",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "moca mcp import --help",
+            "expected_signal": "no Claude Code, OpenCode or Pi MCP configs found",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no Claude Code, OpenCode or Pi MCP configs found",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three checks show expected outputs: sample config with log level info, config check reporting no issues, and version v0.7.12.",
+          "observed": "Screenshots show config sample printing defaults, config check reporting no issues, and version reporting moca v0.7.12.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-moca-20261031-002420-24fc/report.json",
+          "trace_path": "runs/verify/verify-moca-20261031-032009-7513/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-moca-20261031-002420-24fc/check-1-cmd5.judged.png",
-            "runs/verify/verify-moca-20261031-002420-24fc/check-2-cmd6.judged.png",
-            "runs/verify/verify-moca-20261031-002420-24fc/check-3-cmd3.judged.png"
+            "runs/verify/verify-moca-20261031-032009-7513/check-1-cmd4.judged.png",
+            "runs/verify/verify-moca-20261031-032009-7513/check-2-cmd5.judged.png",
+            "runs/verify/verify-moca-20261031-032009-7513/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.045159
+        "cost_usd": 0.079818,
+        "features": [
+          {
+            "feature": "Edit code with eight frozen tools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Eight agent tools only run inside a model session requiring a provider API key."
+          },
+          {
+            "feature": "Drive agent from editors via ACP",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; moca acp --help prints ACP usage with model/effort/mode flags."
+          },
+          {
+            "feature": "Use MCP servers without prompt bloat",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; mcp index and mcp import run keyless with sensible empty-state output."
+          },
+          {
+            "feature": "Search and fetch web keyless",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Web tool is agent-driven so invoking it needs a model API key despite keyless search."
+          }
+        ]
       }
     ]
   },
@@ -625,5 +677,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:20+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:21:43.303423+08:00"
 }

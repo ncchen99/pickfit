@@ -64,12 +64,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-loci-20261031-000913-51e8",
+      "run_id": "verify-loci-20261031-032327-27f4",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install loci-rag 2>&1",
-          "purpose": "install loci-rag with uv tool"
+          "purpose": "install loci via uv tool"
         }
       ],
       "manual_steps": [],
@@ -96,10 +96,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:10:19.196393+08:00",
+    "checked_at": "2026-10-31T03:24:28.158265+08:00",
     "runs": [
       {
-        "id": "verify-loci-20261031-000913-51e8",
+        "id": "verify-loci-20261031-032327-27f4",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -107,14 +107,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:10:19.196393+08:00",
+        "checked_at": "2026-10-31T03:24:28.158265+08:00",
         "tool_version": "0.9.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install loci-rag 2>&1",
-            "purpose": "install loci-rag with uv tool"
+            "purpose": "install loci via uv tool"
           }
         ],
         "smoke_tests": [
@@ -128,49 +128,75 @@
             "offline": true
           },
           {
-            "command": "loci --help 2>&1",
-            "expected_signal": "loci — Q&A over your personal knowledge base",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "loci — Q&A over your personal knowledge base",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "loci demo 2>&1",
-            "expected_signal": "6 files · 35 chunks",
+            "expected_signal": "projects/aurora/decisions.md > ADR-001",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "6 files · 35 chunks, just copied and safe to edit",
+            "observed_excerpt": "[1] projects/aurora/decisions.md > ADR-001: SHT45 over BME280 for temperature and humidity (bm25 1.00)",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "pip install loci-rag",
-            "actually_needed": "used `uv tool install loci-rag` (isolated env) to avoid PEP 668 / read-only system python",
-            "kind": "sandbox"
+            "readme_said": "loci search / ask / serve-http examples with no mention of required keys in quick-start snippet",
+            "actually_needed": "loci demo works with no config, key or network; loci search/ask/serve-http exit 1 demanding config.toml sources plus BRAIN_LLM_API_KEY and BRAIN_EMBED_API_KEY",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show version 0.9.0, help with Q&A tagline, and demo indexing 6 files with example search results.",
+          "observed": "loci --version prints loci 0.9.0 and loci demo indexes demo notes and shows BM25 search examples.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-loci-20261031-000913-51e8/report.json",
+          "trace_path": "runs/verify/verify-loci-20261031-032327-27f4/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-loci-20261031-000913-51e8/check-1-cmd2.judged.png",
-            "runs/verify/verify-loci-20261031-000913-51e8/check-2-cmd3.judged.png",
-            "runs/verify/verify-loci-20261031-000913-51e8/check-3-cmd4.judged.png"
+            "runs/verify/verify-loci-20261031-032327-27f4/check-1-cmd2.judged.png",
+            "runs/verify/verify-loci-20261031-032327-27f4/check-2-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.037476
+        "cost_usd": 0.054083,
+        "features": [
+          {
+            "feature": "hybrid search across notes",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "ask questions with cited answers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only search hit lists, not a synthesized answer citing source sections."
+          },
+          {
+            "feature": "discover AI coding agent memories",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "loci harness needs BRAIN_LLM/EMBED_API_KEY; crashed with Missing credentials"
+          },
+          {
+            "feature": "manage knowledge base in web console",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "loci serve-http refused to start without config/sources and API keys"
+          }
+        ]
       }
     ]
   },
@@ -534,5 +560,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:24:28.159166+08:00"
 }

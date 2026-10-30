@@ -67,24 +67,24 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-nedster-20261030-235631-67ea",
+      "run_id": "verify-nedster-20261031-031701-3a92",
       "method": "source",
       "steps": [
         {
-          "command": "git clone --depth 1 https://github.com/unrealumanga/Nedster.git /tmp/Nedster && ls -la /tmp/Nedster && cat /tmp/Nedster/install.sh",
-          "purpose": "Clone Nedster repo for install.sh source"
+          "command": "git clone https://github.com/unrealumanga/Nedster.git /tmp/Nedster2",
+          "purpose": "Download Nedster source with installer script"
         },
         {
-          "command": "uv tool install --force /tmp/Nedster && uv tool update-shell && echo INSTALLED",
-          "purpose": "Install nedster via uv like install.sh does"
+          "command": "uv tool install --force /tmp/Nedster2",
+          "purpose": "Install nedster via installer payload (uv tool install, same as install.sh)"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "nedster --version",
+        "command": "export PATH=\"$HOME/.local/bin:$PATH\" && nedster --version",
         "expected_signal": "Nedster 4.0.0a1"
       },
-      "first_task": "nedster doctor"
+      "first_task": "export PATH=\"$HOME/.local/bin:$PATH\" && nedster doctor"
     },
     "windows": null
   },
@@ -99,10 +99,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-30T23:58:00.364371+08:00",
+    "checked_at": "2026-10-31T03:18:44.749722+08:00",
     "runs": [
       {
-        "id": "verify-nedster-20261030-235631-67ea",
+        "id": "verify-nedster-20261031-031701-3a92",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -110,23 +110,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-30T23:58:00.364371+08:00",
-        "tool_version": "4.0.0a1",
+        "checked_at": "2026-10-31T03:18:44.749722+08:00",
+        "tool_version": "Nedster 4.0.0a1",
         "install_method": "source",
         "replayed": true,
         "steps": [
           {
-            "command": "git clone --depth 1 https://github.com/unrealumanga/Nedster.git /tmp/Nedster && ls -la /tmp/Nedster && cat /tmp/Nedster/install.sh",
-            "purpose": "Clone Nedster repo for install.sh source"
+            "command": "git clone https://github.com/unrealumanga/Nedster.git /tmp/Nedster2",
+            "purpose": "Download Nedster source with installer script"
           },
           {
-            "command": "uv tool install --force /tmp/Nedster && uv tool update-shell && echo INSTALLED",
-            "purpose": "Install nedster via uv like install.sh does"
+            "command": "uv tool install --force /tmp/Nedster2",
+            "purpose": "Install nedster via installer payload (uv tool install, same as install.sh)"
           }
         ],
         "smoke_tests": [
           {
-            "command": "nedster --version",
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && nedster --version",
             "expected_signal": "Nedster 4.0.0a1",
             "exit_code": 0,
             "passed": true,
@@ -135,17 +135,8 @@
             "offline": true
           },
           {
-            "command": "nedster --help",
-            "expected_signal": "Nedster — a local coding agent for Ollama",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Nedster — a local coding agent for Ollama (works alone or as a token-saving worker for Claude Code",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "nedster doctor",
-            "expected_signal": "inference-ready NOT READY",
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && nedster doctor",
+            "expected_signal": "Ollama not reachable",
             "exit_code": 3,
             "passed": true,
             "observed_excerpt": "inference-ready NOT READY · Ollama not reachable at http://127.0.0.1:11434",
@@ -153,54 +144,86 @@
             "offline": true
           },
           {
-            "command": "nedster models recommend",
-            "expected_signal": "qwen3.5:9b-q4_K_M",
-            "exit_code": 0,
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && cd /tmp/nedproj && nedster run --brief brief.md --json",
+            "expected_signal": "Ollama request failed",
+            "exit_code": 1,
             "passed": true,
-            "observed_excerpt": "worker qwen3.5:9b-q4_K_M",
-            "setup": [],
+            "observed_excerpt": "{\"outcome\": \"failed\", \"reasons\": [\"model transport failed: Ollama request failed: All connection attempts failed\"], \"changed_paths\": [], \"validated_at\": null, \"answer\": \"---\\nOutcome: failed\\nChanged files: none\\nEvidence: none - no tool call succeeded, so this answer is not verified against the pr…",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/nedproj/tests && cat > /tmp/nedproj/calc.py <<'PY'\ndef add(a, b):\n    return a + b\nPY\ncat > /tmp/nedproj/tests/test_calc.py <<'PY'\nfrom calc import add\ndef test_add():\n    assert add(1, 2) == 3\nPY\ncat > /tmp/nedproj/brief.md <<'MD'\nFix calc.py so tests pass.\n\nExact changes:\n1. calc.py: ensure add(a, b) returns a + b.\n2. Test: [\"python\", \"-m\", \"pytest\", \"-q\", \"tests/test_calc.py\"]. Run it.\n\nDo not change: tests/. Do not delete or move any file.\nMD\nls -R /tmp/nedproj",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           },
           {
-            "command": "nedster config show",
-            "expected_signal": "models.ollama_url",
+            "command": "timeout 10 nedster",
+            "expected_signal": "usage: nedster",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "models.ollama_url = http://127.0.0.1:11434 [default]",
+            "observed_excerpt": "usage: nedster [-h] [--project PROJECT] [--config CONFIG] [--json] [--plain] [--no-tui] [--color]",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "./install.sh puts nedster on PATH and runs nedster setup",
-            "actually_needed": "Ran only the install portion (uv tool install --force /tmp/Nedster); skipped the trailing `nedster setup` which installs Ollama and pulls ~10GB of models (models recommend shows 10.3GB) and needs GPU/VRAM.",
+            "readme_said": "./install.sh installs nedster and runs nedster setup to ready state",
+            "actually_needed": "uv tool install portion succeeds and provides nedster; nedster setup aborts because the bundled Ollama installer requires root and no Ollama server/model exists on the 2GB CPU-only box",
             "kind": "sandbox"
           },
           {
-            "readme_said": "nedster doctor must say: inference ready, execution ready",
-            "actually_needed": "nedster doctor exits 3 with NOT READY reports when Ollama/model and sandbox are absent; this is the correct not-ready exit per the README exit-code table, not a failure.",
-            "kind": "note"
+            "readme_said": "nedster opens the TUI: chat",
+            "actually_needed": "bare nedster with stdin closed and no TTY printed argparse usage (exit 0) instead of opening the full-screen TUI",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show doctor reporting NOT READY statuses, models recommend listing the balanced worker model, and version printing Nedster 4.0.0a1.",
+          "observed": "Screenshots show doctor reporting Ollama not reachable, run failing with Ollama request failed JSON, and --version printing Nedster 4.0.0a1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-nedster-20261030-235631-67ea/report.json",
+          "trace_path": "runs/verify/verify-nedster-20261031-031701-3a92/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-nedster-20261030-235631-67ea/check-1-cmd7.judged.png",
-            "runs/verify/verify-nedster-20261030-235631-67ea/check-2-cmd8.judged.png",
-            "runs/verify/verify-nedster-20261030-235631-67ea/check-3-cmd5.judged.png"
+            "runs/verify/verify-nedster-20261031-031701-3a92/check-1-cmd4.judged.png",
+            "runs/verify/verify-nedster-20261031-031701-3a92/check-2-cmd6.judged.png",
+            "runs/verify/verify-nedster-20261031-031701-3a92/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.101101
+        "cost_usd": 0.134171,
+        "features": [
+          {
+            "feature": "run read-edit-test loop locally",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "attempted in smoke test 6: run returned failed/Ollama request failed, no loop without Ollama server and model"
+          },
+          {
+            "feature": "return JSON outcome backed by test runs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "attempted in smoke test 6: JSON shape returned but validated_at null, no test run without Ollama"
+          },
+          {
+            "feature": "chat in terminal coding UI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "bare nedster in non-TTY printed usage instead of opening TUI; TUI also needs Ollama model"
+          }
+        ]
       }
     ]
   },
@@ -586,5 +609,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:59+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:18:44.752114+08:00"
 }

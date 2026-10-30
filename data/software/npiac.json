@@ -62,24 +62,24 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-npiac-20261031-003740-b340",
+      "run_id": "verify-npiac-20261031-031606-c94f",
       "method": "source",
       "steps": [
         {
-          "command": "git clone https://github.com/dRafaleD/NPIAC.git /tmp/NPIAC",
-          "purpose": "Clone NPIAC source for install"
+          "command": "git clone https://github.com/dRafaleD/NPIAC.git /tmp/NPIAC && ls /tmp/NPIAC",
+          "purpose": "Clone NPIAC source for pip install"
         },
         {
-          "command": "python3 -m pip install /tmp/NPIAC",
-          "purpose": "Install NPIAC via pip from source"
+          "command": "cd /tmp/NPIAC && python3 -m pip install .",
+          "purpose": "Install NPIAC with pip from source"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "npiac --help",
-        "expected_signal": "Generate deterministic repository context for coding agents."
+        "expected_signal": "usage: npiac"
       },
-      "first_task": "cd /tmp/NPIAC && npiac . --stdout"
+      "first_task": "npiac /tmp/sample-api --stdout"
     },
     "windows": null
   },
@@ -94,10 +94,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:38:48.263106+08:00",
+    "checked_at": "2026-10-31T03:17:01.220998+08:00",
     "runs": [
       {
-        "id": "verify-npiac-20261031-003740-b340",
+        "id": "verify-npiac-20261031-031606-c94f",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -105,48 +105,63 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:38:48.263106+08:00",
+        "checked_at": "2026-10-31T03:17:01.220998+08:00",
         "tool_version": "0.6.0",
         "install_method": "source",
         "replayed": true,
         "steps": [
           {
-            "command": "git clone https://github.com/dRafaleD/NPIAC.git /tmp/NPIAC",
-            "purpose": "Clone NPIAC source for install"
+            "command": "git clone https://github.com/dRafaleD/NPIAC.git /tmp/NPIAC && ls /tmp/NPIAC",
+            "purpose": "Clone NPIAC source for pip install"
           },
           {
-            "command": "python3 -m pip install /tmp/NPIAC",
-            "purpose": "Install NPIAC via pip from source"
+            "command": "cd /tmp/NPIAC && python3 -m pip install .",
+            "purpose": "Install NPIAC with pip from source"
           }
         ],
         "smoke_tests": [
           {
             "command": "npiac --help",
-            "expected_signal": "Generate deterministic repository context for coding agents.",
+            "expected_signal": "usage: npiac",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Generate deterministic repository context for coding agents.",
+            "observed_excerpt": "usage: npiac [-h] [--output OUTPUT] [--stdout] [--force] [--budget BUDGET] [--ai] [--debug-ai]",
             "setup": [],
             "offline": true
           },
           {
-            "command": "cd /tmp/NPIAC && npiac . --stdout",
-            "expected_signal": "CLI `npiac`: `src/npiac/cli.py`",
+            "command": "npiac /tmp/sample-api --stdout",
+            "expected_signal": "# Repository Context",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "- CLI `npiac`: `src/npiac/cli.py`",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "cd /tmp/npiac-demo && rm -f CONTEXT.md && npiac . --budget 20000",
-            "expected_signal": "Generated /tmp/npiac-demo/CONTEXT.md",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Generated /tmp/npiac-demo/CONTEXT.md",
+            "observed_excerpt": "# Repository Context",
             "setup": [
               {
-                "command": "mkdir -p /tmp/npiac-demo/src/sample && cat > /tmp/npiac-demo/pyproject.toml <<'EOF'\n[project]\nname = \"sample-api\"\nversion = \"0.1.0\"\nrequires-python = \">=3.11\"\ndependencies = [\"fastapi\"]\n\n[project.scripts]\nsample-api = \"sample.main:main\"\nEOF\ncat > /tmp/npiac-demo/src/sample/main.py <<'EOF'\ndef main():\n    print(\"hello\")\nEOF\ncd /tmp/npiac-demo && npiac . && echo \"---CONTEXT.md head---\" && cat CONTEXT.md",
+                "command": "mkdir -p /tmp/sample-api/src/sample && cat > /tmp/sample-api/pyproject.toml <<'EOF'\n[project]\nname = \"sample-api\"\nversion = \"0.1.0\"\ndependencies = [\"fastapi\", \"uvicorn\"]\n\n[project.scripts]\nsample-api = \"sample.main:main\"\nEOF\ncat > /tmp/sample-api/src/sample/main.py <<'EOF'\nfrom fastapi import FastAPI\napp = FastAPI()\n\n@app.get(\"/\")\ndef read_root():\n    return {\"hello\": \"world\"}\n\ndef main():\n    import uvicorn\n    uvicorn.run(app)\nEOF\ncat > /tmp/sample-api/requirements.txt <<'EOF'\nfastapi\nuvicorn\nEOF\nls -R /tmp/sample-api",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "npiac /tmp/NPIAC --stdout",
+            "expected_signal": "Entry Points",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "## Entry Points",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "npiac /tmp/sample-api --stdout --budget 20000",
+            "expected_signal": "# Repository Context",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "# Repository Context",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sample-api/src/sample && cat > /tmp/sample-api/pyproject.toml <<'EOF'\n[project]\nname = \"sample-api\"\nversion = \"0.1.0\"\ndependencies = [\"fastapi\", \"uvicorn\"]\n\n[project.scripts]\nsample-api = \"sample.main:main\"\nEOF\ncat > /tmp/sample-api/src/sample/main.py <<'EOF'\nfrom fastapi import FastAPI\napp = FastAPI()\n\n@app.get(\"/\")\ndef read_root():\n    return {\"hello\": \"world\"}\n\ndef main():\n    import uvicorn\n    uvicorn.run(app)\nEOF\ncat > /tmp/sample-api/requirements.txt <<'EOF'\nfastapi\nuvicorn\nEOF\nls -R /tmp/sample-api",
                 "background": false,
                 "port": null
               }
@@ -158,21 +173,57 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show npiac printing repository context to stdout, generating CONTEXT.md, and displaying its help description.",
+          "observed": "Screenshots show NPIAC generating Repository Context for both repos and printing help usage.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-npiac-20261031-003740-b340/report.json",
+          "trace_path": "runs/verify/verify-npiac-20261031-031606-c94f/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-npiac-20261031-003740-b340/check-1-cmd5.judged.png",
-            "runs/verify/verify-npiac-20261031-003740-b340/check-2-cmd8.judged.png",
-            "runs/verify/verify-npiac-20261031-003740-b340/check-3-cmd4.judged.png"
+            "runs/verify/verify-npiac-20261031-031606-c94f/check-1-cmd5.judged.png",
+            "runs/verify/verify-npiac-20261031-031606-c94f/check-2-cmd7.judged.png",
+            "runs/verify/verify-npiac-20261031-031606-c94f/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.053705
+        "cost_usd": 0.052866,
+        "features": [
+          {
+            "feature": "generate AI-ready repository context briefing",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "detect languages, frameworks, and entry points",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows entry points but no languages or frameworks section."
+          },
+          {
+            "feature": "add local Ollama architecture enrichment",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Requires local Ollama server at localhost:11434 and model qwen3:14b which is not present and too large to pull here"
+          },
+          {
+            "feature": "limit context size with budget",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output is identical briefing with no evidence of size limiting."
+          }
+        ]
       }
     ]
   },
@@ -510,5 +561,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:17:01.224829+08:00"
 }

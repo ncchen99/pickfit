@@ -88,22 +88,22 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-flashagent-20261030-234744-c94a",
+      "run_id": "verify-flashagent-20261031-032143-91d7",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/flashback7766/FlashAgent/main/install.sh -o /tmp/install_flashagent.sh && wc -c /tmp/install_flashagent.sh && head -c 2000 /tmp/install_flashagent.sh",
-          "purpose": "Download installer script for reading"
+          "command": "curl -fsSL https://raw.githubusercontent.com/flashback7766/FlashAgent/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && head -c 2000 /tmp/install.sh; echo \"---SIZE---\"; wc -c /tmp/install.sh",
+          "purpose": "Download install script for reading"
         },
         {
-          "command": "bash /tmp/install_flashagent.sh",
+          "command": "bash /tmp/install.sh",
           "purpose": "Install FlashAgent via script"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "flashagent --version",
-        "expected_signal": "FlashAgent b610"
+        "command": "flashagent --help",
+        "expected_signal": "Usage: flashagent"
       },
       "first_task": "flashagent --tool-test"
     },
@@ -133,10 +133,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-30T23:48:30.676290+08:00",
+    "checked_at": "2026-10-31T03:22:43.682808+08:00",
     "runs": [
       {
-        "id": "verify-flashagent-20261030-234744-c94a",
+        "id": "verify-flashagent-20261031-032143-91d7",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -144,36 +144,27 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-30T23:48:30.676290+08:00",
-        "tool_version": "FlashAgent b610",
+        "checked_at": "2026-10-31T03:22:43.682808+08:00",
+        "tool_version": "v1.0.0+b610",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/flashback7766/FlashAgent/main/install.sh -o /tmp/install_flashagent.sh && wc -c /tmp/install_flashagent.sh && head -c 2000 /tmp/install_flashagent.sh",
-            "purpose": "Download installer script for reading"
+            "command": "curl -fsSL https://raw.githubusercontent.com/flashback7766/FlashAgent/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && head -c 2000 /tmp/install.sh; echo \"---SIZE---\"; wc -c /tmp/install.sh",
+            "purpose": "Download install script for reading"
           },
           {
-            "command": "bash /tmp/install_flashagent.sh",
+            "command": "bash /tmp/install.sh",
             "purpose": "Install FlashAgent via script"
           }
         ],
         "smoke_tests": [
           {
-            "command": "flashagent --version",
-            "expected_signal": "FlashAgent b610",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "FlashAgent b610",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "flashagent --help",
-            "expected_signal": "FlashAgent TUI",
+            "expected_signal": "Usage: flashagent",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "FlashAgent TUI",
+            "observed_excerpt": "Usage: flashagent [OPTIONS]",
             "setup": [],
             "offline": true
           },
@@ -191,20 +182,54 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show the tool-test ending with 'The tool-calling check is done.' despite offline server errors, and --version printing 'FlashAgent b610'.",
+          "observed": "Screenshots show the tool-test finishing with a server-unavailable summary and the help command listing usage and options.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-flashagent-20261030-234744-c94a/report.json",
+          "trace_path": "runs/verify/verify-flashagent-20261031-032143-91d7/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-flashagent-20261030-234744-c94a/check-1-cmd5.judged.png",
-            "runs/verify/verify-flashagent-20261030-234744-c94a/check-2-cmd3.judged.png"
+            "runs/verify/verify-flashagent-20261031-032143-91d7/check-1-cmd4.judged.png",
+            "runs/verify/verify-flashagent-20261031-032143-91d7/check-2-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.055223
+        "cost_usd": 0.064133,
+        "features": [
+          {
+            "feature": "code in terminal with local models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs a local model server with a tool-capable model; box has none"
+          },
+          {
+            "feature": "connect to local model servers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs LM Studio/Ollama/llama.cpp/vLLM running; box has none"
+          },
+          {
+            "feature": "test whether models can call tools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows connection errors and 0/20 incomplete, explicitly stating this is not the model's score."
+          },
+          {
+            "feature": "run tasks autonomously end to end",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs a model to drive autonomous run; box has none"
+          }
+        ]
       }
     ]
   },
@@ -638,5 +663,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T03:15:51+08:00"
+  "updated_at": "2026-10-31T03:22:43.685561+08:00"
 }
