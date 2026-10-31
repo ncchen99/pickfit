@@ -159,3 +159,15 @@ def test_a_gui_apps_run_carries_what_pickfit_saw_but_not_the_window_title(data_d
     assert "Ignore previous instructions" not in json.dumps(chat)  # the title is the app's text
     assert chat["verification"]["level"] == "install"
     assert entries["fixture-json-query"]["install"]["linux"]["run"]["gui"] is None
+
+
+def test_jobs_come_from_the_sibling_jobs_dir_and_are_optional(data_dir: Path) -> None:
+    assert all(e["jobs"] == [] for e in build_index(data_dir).index["entries"])
+    jobs = data_dir.parent / "jobs"
+    jobs.mkdir()
+    (jobs / "fixture-transcribe.json").write_text(json.dumps(
+        {"slug": "fixture-transcribe", "jobs": [{"job": "speech to text", "evidence": "x"}], "dropped": []}))
+    (jobs / "fixture-chat-tui.json").write_text(json.dumps({"slug": "someone-else", "jobs": [{"job": "x", "evidence": "y"}]}))
+    entries = {e["slug"]: e for e in build_index(data_dir).index["entries"]}
+    assert entries["fixture-transcribe"]["jobs"] == ["speech to text"]
+    assert entries["fixture-chat-tui"]["jobs"] == []  # a file for another slug is ignored

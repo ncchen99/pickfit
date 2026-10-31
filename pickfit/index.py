@@ -133,7 +133,17 @@ def _first_task_setup(run: VerificationRun, first_task: str | None) -> list[dict
     return []
 
 
-def _entry(record: SoftwareRecord) -> dict[str, Any]:
+def load_jobs(jobs_dir: Path) -> dict[str, list[str]]:
+    """slug -> the jobs scripts/tool_jobs.py found in its README (data/jobs/<slug>.json); none is fine."""
+    jobs: dict[str, list[str]] = {}
+    for path in sorted(jobs_dir.glob("*.json")) if jobs_dir.is_dir() else []:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if data.get("slug") == path.stem:
+            jobs[path.stem] = [j["job"] for j in data.get("jobs", []) if isinstance(j.get("job"), str)]
+    return jobs
+
+
+def _entry(record: SoftwareRecord, jobs: list[str] | None = None) -> dict[str, Any]:
     runs = {run.id: run for run in record.verification.runs}
     install: dict[str, Any] = {}
     for os_name, guide in record.install.guides():
@@ -164,6 +174,8 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
         "maturity": record.maturity,
         "tags": record.tags,
         "use_cases": record.use_cases,
+        # Matched by the shortlist and the rules fallback, never shown on a card (worker relevance.ts).
+        "jobs": jobs or [],
         "alternatives_to": record.alternatives_to,
         "homepage": record.homepage,
         "repo_url": record.repo.url,
@@ -193,8 +205,11 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
     }
 
 
-def build_index(data_dir: Path = DEFAULT_DATA_DIR, now: datetime | None = None) -> BuildResult:
+def build_index(data_dir: Path = DEFAULT_DATA_DIR, now: datetime | None = None,
+                jobs_dir: Path | None = None) -> BuildResult:
+    """jobs_dir defaults to the data directory's sibling `jobs` (data/jobs next to data/software)."""
     records, digest = load_records(data_dir)
+    jobs = load_jobs(jobs_dir if jobs_dir is not None else data_dir.parent / "jobs")
     listed = [r for r in records if r.status == "listed"]
     try:
         data_dir_label = str(data_dir.resolve().relative_to(REPO_ROOT))
@@ -207,7 +222,7 @@ def build_index(data_dir: Path = DEFAULT_DATA_DIR, now: datetime | None = None) 
         "data_dir": data_dir_label,
         "data_sha256": digest,
         "count": len(listed),
-        "entries": [_entry(r) for r in sorted(listed, key=lambda r: r.slug)],
+        "entries": [_entry(r, jobs.get(r.slug)) for r in sorted(listed, key=lambda r: r.slug)],
     }
     return BuildResult(index=index, skipped=[r.slug for r in records if r.status != "listed"])
 
