@@ -224,6 +224,8 @@ interface Choice {
   matchQuality?: MatchQuality;
   /** Rules only, partial or none: the request's words to name as missing. */
   gaps?: string[];
+  /** Rules only, none: the gaps are missing from every pick, not only the top one. */
+  gapsInAll?: boolean;
   /** Rules only, partial: the highest-ranked partial pick, whose gaps the note names. */
   closest?: string;
   /** Rules only, none: some tool past the picks reaches partial, so the note speaks of the picks only. */
@@ -321,6 +323,7 @@ function fromRules(
     wellKnown: NO_WELL_KNOWN, // rules know only pickfit's data
     matchQuality: best ? (best.quality === 'good' ? 'good' : 'partial') : 'none',
     gaps: (best ? best.missing : unmentioned.length ? unmentioned : (fits[0]?.missing ?? [])).slice(0, 5),
+    gapsInAll: unmentioned.length > 0,
     closest: best ? top[fits.indexOf(best)].slug : undefined,
     fitsBeyond: !best && ranked.slice(limit).some((entry) => fitFor(entry).quality !== 'weak'),
   };
@@ -476,11 +479,12 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     notes.push(`None of the ${candidates.length} verified tools that meet the conditions fits this request.`);
   } else if (choice.matchQuality === 'none') {
     // Labels only: the picks stay listed; the note says how far they are from the request, not to drop them.
-    const gaps = choice.gaps?.length ? choice.gaps.join(', ') : 'the specific parts of the request';
+    const gaps = choice.gaps?.length ? choice.gaps.join(', ') : '';
+    const miss = !gaps ? 'none of them covers enough of the request' : choice.gapsInAll ? `none of them mentions ${gaps}` : `each mentions only part of it (the top one does not mention ${gaps})`;
     notes.push(
       choice.fitsBeyond
-        ? `None of the listed ${what}s clearly does this job: judging by their profiles, they do not mention ${gaps}. They are listed as the top-ranked ${what}s; each pick's match says what it covers.`
-        : `pickfit has no verified ${what} that clearly does this job. Judging by their profiles, the listed ${what}s are the closest it has, but they do not mention ${gaps}; each pick's match says what it covers. ` +
+        ? `None of the listed ${what}s clearly does this job: judging by their profiles, ${miss}. They are listed as the top-ranked ${what}s; each pick's match says what it covers.`
+        : `pickfit has no verified ${what} that clearly does this job. Judging by their profiles, the listed ${what}s are the closest it has, but ${miss}; each pick's match says what it covers. ` +
             'pickfit lists only lesser-known tools, so a well-known one may still fit.',
     );
   } else if (choice.matchQuality === 'partial') {

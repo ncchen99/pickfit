@@ -93,7 +93,7 @@ test('no pick reaches partial: the picks stay listed, and the note names what th
   assert.equal(out.picks.length, 3);
   assert.ok(out.picks.every((p) => p.match?.quality === 'weak'));
   assert.ok(out.best_free);
-  assert.match(out.coverage_note ?? '', /^pickfit has no verified tool that clearly does this job\. .*the listed tools are the closest it has, but they do not mention jira; each pick's match says what it covers\./);
+  assert.match(out.coverage_note ?? '', /^pickfit has no verified tool that clearly does this job\. .*the listed tools are the closest it has, but none of them mentions jira; each pick's match says what it covers\./);
   assert.doesNotMatch(out.coverage_note ?? '', /do not use|don't use|ignore|drop/i);
   assert.equal(out.well_known_option, null);
   const row = h.sqlite.prepare('SELECT need, results FROM events').get() as any;
@@ -112,7 +112,7 @@ test('the best pick is partial: the note names its gaps; a closer tool past the 
   assert.equal(fitNote({ quality: 'weak', covers: [], missing: ['jira'] }), 'Weak match: its profile mentions none of jira.');
   const one = await findSoftware({ need: 'search, edit and sync my Notion notes in a vault with a regex', limit: 1 }, h.deps);
   assert.deepEqual([one.picks.map((p) => p.slug), one.match_quality], [['vault'], 'none']);
-  assert.match(one.coverage_note ?? '', /^None of the listed tools clearly does this job: judging by their profiles, they do not mention sync, notion, regex\./);
+  assert.match(one.coverage_note ?? '', /^None of the listed tools clearly does this job: judging by their profiles, none of them mentions sync, notion, regex\./);
 });
 
 test('find_alternatives: a tool that names the current one is a good fit, whatever the pain points say', async () => {
