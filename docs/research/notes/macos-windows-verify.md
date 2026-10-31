@@ -408,7 +408,12 @@ GitHub Actions 沒有採用。改在念誠的 Windows 11 Home 筆電（i5-1135G7
 
 **VM 實測的 3 件事**
 
-- a. HGCM：sbx 打得開 `\\.\VBoxGuest`（Guest Additions 的驅動程式沒有擋一般使用者）。用 guestcontrol 直接執行 VBoxControl 的嘗試，sbx 與 Administrator 都在 guestcontrol 層失敗（VBOX_E_IPRT_ERROR），所以 sbx 能否以 HGCM 連上 guest control service、攔到 harness 帶的 Administrator 憑證或偽造 admin 輸出，**沒有驗證到**。這是開放的風險：Administrator 的憑證只在 host 與 VBoxService 之間傳；VBoxService（SYSTEM）從開機就佔著 master 角色。要排除，需要另外寫一支 HGCM client 實測。
+- a. HGCM：sbx 打得開 `\\.\VBoxGuest`（Guest Additions 的驅動程式沒有擋一般使用者）。用 guestcontrol 直接執行 VBoxControl 的嘗試，sbx 與 Administrator 都在 guestcontrol 層失敗（VBOX_E_IPRT_ERROR），所以 sbx 能否以 HGCM 連上 guest control service、攔到 harness 帶的 Administrator 憑證或偽造 admin 輸出，**沒有驗證到**。這是開放的風險：Administrator 的憑證只在 host 與 VBoxService 之間傳；VBoxService（SYSTEM）從開機就佔著 master 角色。
+  - **試過把裝置鎖起來，做不到（10/31 晚）**：Guest Additions 的 VBox 裝置有 `VBoxGuest` 與 `VBoxMiniRdrDN`（共用資料夾的 redirector），sbx 都打得開。
+    - 用 PnP 的裝置安全性（SPDRP_SECURITY_SDS）設成只給 SYSTEM 與 Administrators：設定讀得回來，但重開機後是空的，sbx 照樣打得開。
+    - 改在執行時直接改裝置物件的 DACL（WRITE_DAC 開 handle，SetSecurityInfo）：鎖得住（Administrator 仍打得開）。但之後所有 sbx 的 guestcontrol 指令都失敗（"Error starting guest session"）。
+    - 原因：VirtualBox 每個 guest session 是一個以**該使用者身分**執行的 VBoxService 程序（實測：`VBoxService.exe guestsession --session-id=1 … --user Administrator`，擁有者是 `PICKFIT-WIN\Administrator`）。這個程序要開 `\\.\VBoxGuest` 才能和 host 說話。所以只要模型指令以 sbx 的 guestcontrol session 執行，sbx 就一定開得了這個裝置；這是 VirtualBox 的設計，不是設定問題。
+  - 要真的關掉這個風險，得改架構：模型指令改由 Administrator 的 guest session 代為以 sbx 身分啟動（例如 CreateProcessWithLogonW），sbx 自己不開 guestcontrol session，裝置才能只給 SYSTEM 與 Administrators。這要重新驗證 MSIX pwsh 與 winget 在那種登入下能不能用，賽期內沒做。另一條路是寫一支 HGCM client，直接測 sbx 能不能拿到 master 角色或別的 session 的訊息。
 - b. guest property：sbx 與 Administrator 都沒能用 VBoxControl 寫入（host 讀不到 `/pickfit/*`）；快照還原後，host 端的 `LoggedInUsersList` 也變成沒有值（transient 屬性在還原時清掉）。harness 只讀 `GuestAdd/Version` 與 `LoggedInUsersList`，而且之後一定再以 sbx 實際跑一條指令確認，不只憑屬性。
 - c. 工作目錄：Administrator 的指令實測在 `C:\ProgramData\pickfit`，sbx 寫不進去；舊的 `C:\Windows\Temp` sbx 寫得進去，所以原本的 DLL 搜尋順序植入疑慮成立，現在已移開。
 
@@ -419,8 +424,25 @@ GitHub Actions 沒有採用。改在念誠的 Windows 11 Home 筆電（i5-1135G7
   - `non_admin`：sbx 的 BUILTIN 只有 S-1-5-32-545、Medium integrity、沒有危險權限；對照：Administrator 被判出。
   - `no_encoded_commands_in_log`：events=214、encoded=0；對照：encoded=8。
   - `egress_ip_in_router_block`：39.14.65.90 在 router 的 drop set 裡；80／443／445 經 router 都逾時。
-- frugon 與 agent-database-cli 在新 base 上重新驗證：都達 function、斷網重播通過、judge working（verify-frugon-20261031-183954-0b4c、verify-agent-database-cli-20261031-184831-4b85）。5.9 節其他 7 款是在修正前的 base（`42796005b373`）上驗證的。
-- 這台 Meta 累計 $0.146。
+- 9 款都在這個 base 上重新驗證，等級、版本、裝法都和 5.9 節相同，全部在全新 box 斷網重播通過，judge 都判 working。以下這組是要審的紀錄：
+
+  | 工具 | 等級 | 版本 | 裝法 | run |
+  |---|---|---|---|---|
+  | frugon | function | 0.2.6 | uv | verify-frugon-20261031-183954-0b4c |
+  | agent-database-cli | function | 0.4.1 | npm | verify-agent-database-cli-20261031-184831-4b85 |
+  | agent-history | function | 0.16.0 | uv | verify-agent-history-20261031-191020-7e22 |
+  | nlm-memory | function | 0.21.20 | npm | verify-nlm-memory-20261031-191851-82d8 |
+  | akm | function | 0.10.261022 | npm | verify-akm-20261031-192719-4f7e |
+  | martty | function | 0.3.3 | npm | verify-martty-20261031-193416-dbcb |
+  | aria-code | install | 0.165.0 | npm | verify-aria-code-20261031-194610-8332 |
+  | alysiscode | function | 0.15.2 | pipx | verify-alysiscode-20261031-200759-440a |
+  | labelize | function | 1.10.0 | npm（wasm） | verify-labelize-20261031-201458-f906 |
+
+  - 兩款第一次沒過，第二次才過，原因都是模型這次的做法不同，不是 harness：
+    - alysiscode（195338）：smoke 全過（`--version` → 0.15.2），但截圖裡 `--version` 那張看不到輸出（前面的 PATH 前綴很長），judge 判 inconclusive。
+    - labelize（200028）：agent 這次改從 GitHub release 下載官方的 Windows 執行檔，但 replay 的 setup 沒有引用產生 `label.png` 的 `convert`，重播在 `Copy-Item label.png logo.png` 失敗。
+    - 這兩筆都保留當證據。
+- 這台 Meta 累計 $0.270。
 
 **途中發現的問題**：改成 Windows PowerShell 跑探測後，.NET Framework 的 `TcpClient.ConnectAsync` 在斷網時可能直接丟例外，而不是回傳失敗的 task，那個目標就沒有結果，box 判「探測沒跑完」而停下（方向安全，但兩款工具的重播因此失敗）。68e5c30 改成把立即的例外也記成 `unreachable:<code>`，在主機的 Windows PowerShell 上驗證過 refused／timeout／open／error 四種結果都會輸出。
 
