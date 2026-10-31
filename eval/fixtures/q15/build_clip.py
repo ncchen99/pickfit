@@ -226,22 +226,23 @@ def squeeze(samples: array.array, start: int):
         if b - a > LONG_PAUSE_FRAMES * FRAME - FRAME:  # longer than 0.50 s
             half = PAUSE_TO // 2
             out.extend(samples[cursor:a + half])
-            cuts.append((len(out), "long"))
+            cuts.append((len(out), "long", a + half))
             shortened.append({"source_start": round(a / RATE, 3), "source_end": round(b / RATE, 3),
                               "seconds": round((b - a) / RATE, 3), "new_seconds": PAUSE_TO / RATE,
                               "clip_at": round((len(out) - half) / RATE, 3)})
             cursor = b - half
         elif b - a >= CUT_PAUSE_FRAMES * FRAME:
-            cuts.append((len(out) + (a + b) // 2 - cursor, "short"))
+            cuts.append((len(out) + (a + b) // 2 - cursor, "short", (a + b) // 2))
         if len(out) + (a - cursor) > int(CLIP_SECONDS * RATE) + RATE:
             break
     total = int(CLIP_SECONDS * RATE)
-    fits = [(c, kind) for c, kind in cuts if c <= total and (kind == "short" or c <= len(out))]
-    long_cuts = [c for c, kind in fits if kind == "long" and total - c <= MAX_PAD_SECONDS * RATE]
+    fits = [(c, kind, at) for c, kind, at in cuts if c <= total and (kind == "short" or c <= len(out))]
+    long_cuts = [(c, at) for c, kind, at in fits if kind == "long" and total - c <= MAX_PAD_SECONDS * RATE]
     if long_cuts:
-        cut, kind = long_cuts[-1], "long"
+        (cut, cut_at), kind = long_cuts[-1], "long"
     else:
-        cut, kind = max(c for c, k in fits if k == "short"), "short"
+        cut, cut_at = max((c, at) for c, k, at in fits if k == "short")
+        kind = "short"
     if cut > len(out):
         out.extend(samples[cursor:cursor + cut - len(out)])
     clip = out[:cut]
@@ -250,7 +251,8 @@ def squeeze(samples: array.array, start: int):
     info = {"threshold_dbfs": round(20 * math.log10(thr / 32768.0), 2), "frame_ms": FRAME * 1000 // RATE,
             "long_pause_over_seconds": (LONG_PAUSE_FRAMES - 1) * FRAME / RATE, "pause_to_seconds": PAUSE_TO / RATE,
             "shortened": done, "removed_seconds": round(sum(p["seconds"] - p["new_seconds"] for p in done), 3),
-            "cut_kind": kind, "cut_clip_seconds": round(cut / RATE, 3), "padding_seconds": round((total - cut) / RATE, 3)}
+            "cut_kind": kind, "cut_clip_seconds": round(cut / RATE, 3), "cut_source_seconds": round(cut_at / RATE, 3),
+            "padding_seconds": round((total - cut) / RATE, 3)}
     return clip, info
 
 
