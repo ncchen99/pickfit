@@ -258,5 +258,78 @@ class NoTorchTest(unittest.TestCase):
             self.assertEqual(self.run_check(d).returncode, 1)
 
 
+def runs_of_zero(samples):
+    """Lengths in samples of the runs of exact zeros (the synthetic silences)."""
+    out, n = [], 0
+    for x in list(samples) + [1]:
+        if x == 0:
+            n += 1
+        elif n:
+            out.append(n)
+            n = 0
+    return out
+
+
+class SqueezeTest(unittest.TestCase):
+    R = build_clip.RATE
+    # a lead pause of 2.14 s (like the one the real clip starts in), then tones split by pauses of 0.2, 0.5, 0.52 and 1.0 s
+    PATTERN = [(2.0, 0.2), (1.0, 0.5), (1.5, 1.0), (0.8, 0.52), (2.2, 0.3)]
+
+    def source(self):
+        out = array.array("h", [0] * int(2.14 * self.R))
+        while len(out) < 90 * self.R:
+            for sec, gap in self.PATTERN:
+                out.extend(tone(sec, lead=0, tail=gap, amp=8000, freq=500))
+        return out
+
+    def test_long_pauses_shortened_and_speech_untouched(self):
+        src = self.source()
+        clip, info = build_clip.squeeze(src, 0)
+        self.assertEqual(len(clip), 60 * self.R)
+        self.assertEqual({p["seconds"] for p in info["shortened"]} - {2.14}, {0.52, 1.0})
+        self.assertTrue(all(p["new_seconds"] == 0.3 for p in info["shortened"]))
+        cut = int(round(info["cut_clip_seconds"] * self.R))
+        body = clip[:cut]
+        # pauses of 0.5 s and below are kept as they are; longer ones are 0.3 s; nothing else changed
+        lengths = {round(n / self.R, 2) for n in runs_of_zero(body)[1:-1] if n >= build_clip.FRAME}
+        self.assertTrue(lengths <= {0.2, 0.5, 0.3}, lengths)
+        self.assertIn(0.5, lengths)
+        self.assertIn(0.2, lengths)
+        nonzero = [x for x in body if x]
+        self.assertEqual(nonzero, [x for x in src if x][:len(nonzero)])
+        self.assertTrue(all(x == 0 for x in clip[cut:]))
+        self.assertGreater(info["padding_seconds"], 0)
+
+    def test_end_cut_prefers_a_long_pause_within_2_5_s(self):
+        z = lambda sec: array.array("h", [0] * int(sec * self.R))  # noqa: E731
+        near = tone(58.0, lead=0, tail=0) + z(1.0) + tone(5.0, lead=0, tail=0)
+        clip, info = build_clip.squeeze(near, 0)
+        self.assertEqual((info["cut_kind"], info["cut_clip_seconds"], info["padding_seconds"]), ("long", 58.15, 1.85))
+        far = tone(50.0, lead=0, tail=0) + z(1.0) + tone(9.0, lead=0, tail=0) + z(0.2) + tone(5.0, lead=0, tail=0)
+        clip, info = build_clip.squeeze(far, 0)
+        self.assertEqual((info["cut_kind"], info["cut_clip_seconds"]), ("short", 59.4))  # 50 + 0.3 + 9, then the middle of the 0.2 s pause
+        self.assertEqual(len(clip), 60 * self.R)
+
+    def test_two_builds_are_identical(self):
+        with tempfile.TemporaryDirectory() as d:
+            wav = os.path.join(d, "src.wav")
+            build_clip.write_wav(wav, self.source())
+            text = os.path.join(d, "t.txt")
+            with open(text, "w", encoding="utf-8") as fh:
+                fh.write("第一句。\n")
+            for n in (1, 2):
+                build_clip.main(["squeeze", "--wav", wav, "--start", "0", "--text-file", text,
+                                 "--out-dir", os.path.join(d, "o%d" % n)])
+            clips = []
+            for n in (1, 2):
+                with open(os.path.join(d, "o%d" % n, "clip.wav"), "rb") as fh:
+                    clips.append(fh.read())
+            self.assertEqual(clips[0], clips[1])
+            with open(os.path.join(d, "o1", "SOURCE.json"), encoding="utf-8") as fh:
+                src = json.load(fh)
+            self.assertEqual(src["mode"], "squeeze")
+            self.assertGreater(src["stats"]["speech_seconds"], 0)
+
+
 if __name__ == "__main__":
     unittest.main()
