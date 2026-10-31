@@ -138,7 +138,7 @@ def _windows_probes(box: Box, add: Callable[[ProbeResult], None]) -> None:
                "optical drive", _no_logon_secret))
     add(_as_admin(box, "no_logon_secret_control_admin", win_logon_secrets(),
                   "the administrator can read the LSA secret the box user is denied",
-                  lambda r: re.search(r"^lsa=readable len=[1-9]\d*$", r.stdout, re.M) is not None))
+                  lambda r: re.search(r"^lsa=readable len=[1-9]\d*\r?$", r.stdout, re.M) is not None))
     _as_admin(box, "plant", f"Set-ItemProperty {WIN_WINLOGON} DefaultPassword '{WIN_NEGATIVE_PASSWORD}'",
               "", lambda r: True)
     try:

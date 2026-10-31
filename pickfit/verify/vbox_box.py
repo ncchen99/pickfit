@@ -143,7 +143,10 @@ def parse_sentinel(stdout: str, nonce: str, vbm_code: int) -> tuple[str, int | N
         return stdout, None, None
     last = matches[-1]
     code = int(last.group(1))
-    cleaned = stdout[:last.start()] + stdout[last.end():].lstrip("\r\n")
+    # run.ps1 starts the line with a newline of its own (output like curl's `-w '%{http_code}'` has none).
+    head = stdout[:last.start()]
+    head = head[:-2] if head.endswith("\r\n") else head[:-1] if head.endswith("\n") else head
+    cleaned = head + stdout[last.end():].lstrip("\r\n")
     if expected_vbm_code(code) != vbm_code:
         return cleaned, None, (f"[pickfit: the exit-code line said {code} but VBoxManage exited {vbm_code}; "
                                "not trusted]")
@@ -188,7 +191,7 @@ $null = $p.Handle
 if ($p.WaitForExit($Timeout * 1000)) { $p.WaitForExit(); $rc = $p.ExitCode }
 else { & taskkill.exe /T /F /PID $p.Id *> $null; $rc = 137 }
 [Console]::Out.Flush()
-[Console]::Out.WriteLine("__PF_RC_${Nonce}=$rc")
+[Console]::Out.WriteLine("`n__PF_RC_${Nonce}=$rc")
 [Console]::Out.Flush()
 exit $rc
 """
@@ -819,6 +822,7 @@ class VBoxBox(Box):
 
     def _admin(self, script: str, timeout_s: int = 60) -> tuple[int, str, str]:
         """Harness-only administrator command (checks, probes); never used for model commands."""
+        script = "$ProgressPreference = 'SilentlyContinue'\n" + script  # no progress CLIXML on stderr
         code, out, err, _, _, _ = self._run(ADMIN_USER, script, timeout_s, r"C:\Windows\Temp")
         return code, out, err
 

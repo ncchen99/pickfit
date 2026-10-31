@@ -205,6 +205,13 @@ def test_sentinel_that_disagrees_with_vboxmanage_is_not_trusted() -> None:
     assert code is None and "not trusted" in warning
 
 
+def test_output_without_a_final_newline_keeps_its_last_line() -> None:
+    # curl -w '%{http_code}' prints "200" with no newline; run.ps1 puts the sentinel on a line of its own
+    assert parse_sentinel("200\n__PF_RC_n=0\n", "n", 0)[:2] == ("200", 0)
+    assert parse_sentinel("line\r\n\r\n__PF_RC_n=0\r\n", "n", 0)[:2] == ("line\r\n", 0)
+    assert "`n__PF_RC_" in vb.RUN_SCRIPT
+
+
 def test_other_nonce_is_ignored() -> None:
     assert parse_sentinel("__PF_RC_other=0\n", "mine", 0)[1] is None
 
