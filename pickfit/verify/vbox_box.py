@@ -72,7 +72,9 @@ HARNESS_DIR = r"C:\ProgramData\pickfit"  # Administrators and SYSTEM may write; 
 RUN_PS1 = HARNESS_DIR + r"\run.ps1"
 PROBE_PS1 = HARNESS_DIR + r"\probe.ps1"
 WINPS = r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
-PWSH = r"C:\Program Files\PowerShell\7\pwsh.exe"
+# PowerShell 7 from winget is an MSIX package now: pwsh.exe lives in its versioned WindowsApps folder and sbx
+# gets no app alias for it. Provisioning writes the path to HARNESS_DIR\pwsh.path (sbx may read it, not change
+# it), and run.ps1 starts that.
 # Only non-secret settings; nothing from the host environment is passed through (guestcontrol builds the
 # rest from the sbx profile: USERPROFILE, APPDATA, the machine and user PATH).
 WIN_ENV = {
@@ -172,7 +174,7 @@ RUN_SCRIPT = r"""param([int]$Timeout, [string]$Cwd, [string]$Nonce, [string]$Enc
 $utf8 = New-Object System.Text.UTF8Encoding $false
 [Console]::OutputEncoding = $utf8
 $psi = New-Object System.Diagnostics.ProcessStartInfo
-$psi.FileName = 'C:\Program Files\PowerShell\7\pwsh.exe'
+$psi.FileName = [IO.File]::ReadAllText('C:\ProgramData\pickfit\pwsh.path').Trim()
 $psi.Arguments = '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand ' + $Enc
 $psi.WorkingDirectory = $Cwd
 $psi.UseShellExecute = $false
@@ -842,7 +844,7 @@ class VBoxBox(Box):
         seconds, print the pid and the log tail; exit 0 only if the process came up."""
         log = f"$HOME\\.pickfit-bg\\{tag}.log"
         start = (f"New-Item -ItemType Directory -Force $HOME\\.pickfit-bg | Out-Null; "
-                 f"$p = Start-Process -FilePath {ps_quote(PWSH)} -ArgumentList '-NoLogo','-NoProfile',"
+                 f"$p = Start-Process -FilePath (Get-Process -Id $PID).Path -ArgumentList '-NoLogo','-NoProfile',"
                  f"'-NonInteractive','-EncodedCommand','{encode_ps(command)}' -RedirectStandardOutput \"{log}\" "
                  f"-RedirectStandardError \"{log}.err\" -WindowStyle Hidden -PassThru; \"pid $($p.Id)\"; $ok = $false; ")
         if port:
@@ -1216,6 +1218,27 @@ winget install --id Python.Python.3.12 @common --override '/quiet InstallAllUser
 "winget Python.Python.3.12 -> $LASTEXITCODE"
 & 'C:\Program Files\Python312\python.exe' -m pip install --no-input --disable-pip-version-check uv pipx
 "pip uv pipx -> $LASTEXITCODE"
+$pp = Get-AppxPackage -AllUsers Microsoft.PowerShell | Sort-Object Version -Descending | Select-Object -First 1
+$exe = if ($pp) { Join-Path $pp.InstallLocation 'pwsh.exe' }
+if ($exe -and (Test-Path $exe)) { [IO.File]::WriteAllText('C:\ProgramData\pickfit\pwsh.path', $exe); "pwsh_path=$exe" }
+else { 'pwsh missing' }
+"""
+
+# Provisioned MSIX packages (winget, PowerShell 7) are registered for a user only at an interactive logon,
+# and AppX deployment refuses a guestcontrol session (0x80073D19). So sbx logs on once, as a person would;
+# HARDEN turns auto logon off again and removes the stored password. {pw} as in PROVISION_USERS.
+SBX_LOGON = r"""
+$wl = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
+Set-ItemProperty $wl AutoAdminLogon '1'
+Set-ItemProperty $wl DefaultUserName 'sbx'
+Set-ItemProperty $wl DefaultDomainName '.'
+Set-ItemProperty $wl DefaultPassword {pw}
+Remove-ItemProperty $wl AutoLogonCount -ErrorAction SilentlyContinue
+shutdown.exe /r /t 5 /f
+'logon-set'
+"""
+SBX_APPS = r"""
+& "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe" --version
 """
 
 # As sbx: create the profile, put user-level bin dirs on PATH, and report versions.
@@ -1227,14 +1250,14 @@ $user = [Environment]::GetEnvironmentVariable('Path', 'User')
 foreach ($p in $local, (Join-Path $env:APPDATA 'npm')) { if (($user -split ';') -notcontains $p) { $user = "$p;$user" } }
 [Environment]::SetEnvironmentVariable('Path', $user.Trim(';'), 'User')
 $env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + $user
-"pwsh=$(& 'C:\Program Files\PowerShell\7\pwsh.exe' -NoProfile -Command '$PSVersionTable.PSVersion.ToString()')"
+"pwsh=$(& ([IO.File]::ReadAllText('C:\ProgramData\pickfit\pwsh.path').Trim()) -NoProfile -NonInteractive -Command '$PSVersionTable.PSVersion.ToString()' 2>$null)"
 "python=$((python --version) -replace 'Python ','')"
 "uv=$((uv --version) -replace 'uv ','' -replace ' .*','')"
 "pipx=$(pipx --version)"
 "node=$(node --version)"
 "npm=$(npm --version)"
 "git=$((git --version) -replace 'git version ','')"
-"winget=$(try { winget --version } catch { 'unavailable' })"
+"winget=$(try { & "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe" --version } catch { 'unavailable' })"
 """
 
 # Last, as Administrator: no auto logon, no stored password, no answer files or install logs.
@@ -1382,11 +1405,20 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
                                     "winget": got.get("winget"), "bundle_signer": got.get("bundle_signer"),
                                     "sha256": {k.removeprefix("sha256_"): v for k, v in got.items()
                                                if k.startswith("sha256_")}}
-    admin("tools (winget)", PROVISION_TOOLS, 3600, lambda c, o: "pip uv pipx -> 0" in o)
+    admin("tools (winget)", PROVISION_TOOLS, 3600, lambda c, o: "pip uv pipx -> 0" in o and "pwsh_path=" in o)
+    admin("sbx first logon", SBX_LOGON.replace("{pw}", ps_quote(sbx_pw)), 120, lambda c, o: "logon-set" in o)
+    time.sleep(30)  # the reboot is under way before the guest is asked again
+    _wait_guest(vbox, name, pw[ADMIN_USER], log=log)
+    deadline = time.monotonic() + 900
+    while not re.search(r"v\d+\.\d+", _raw_ps(vbox, name, WIN_USER, pw[WIN_USER], SBX_APPS, 120)[1]):
+        if time.monotonic() > deadline:
+            raise BoxError("sbx did not get winget from its first logon within 15 minutes")
+        time.sleep(15)
+    log(f"vbox: {name}: sbx logged on once; winget and pwsh are registered for it")
     code, out, err = _raw_ps(vbox, name, WIN_USER, pw[WIN_USER], PROVISION_SBX, 600)
     versions = _kv(out)
     log(f"vbox: {name}: sbx tools {versions}")
-    if not versions.get("pwsh") or not versions.get("python"):
+    if not versions.get("pwsh") or not versions.get("python") or not versions.get("winget", "").startswith("v"):
         raise BoxError(f"tools missing for sbx: {(out + err).strip()[-600:]}")
     manifest.update({k: v for k, v in versions.items() if v and v != "unavailable"})
     admin("hardening", HARDEN, 300, lambda c, o: "hardened-ok" in o)
