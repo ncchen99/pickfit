@@ -13,19 +13,19 @@
   172.21.0.1 still answers with an empty allowlist (both runtimes), and a
   running box cannot be switched to Modal's blocked mode, so each runtime
   closes DNS itself (below).
-- gVisor (measured 2026-10-31): root has neither CAP_NET_ADMIN nor CAP_SYS_ADMIN and gVisor has no netfilter, so
-  no rule, route or link change can close the resolver. Instead the box user never touches the box's own network:
-  NET_UID makes a user and network namespace at start (root writes its maps: NET_UID is root inside it, the box user
-  is itself, nothing else is mapped, so NET_UID has no power over root's or the display uid's files and processes),
-  and every box-user command runs in it. Its only way out is slirp4netns, run as NET_UID (seccomp on, no route to
-  the box's loopback, MTU 65520 on both ends: a tap left at 1500 stalls TCP); it carries the box user's traffic, DNS included, through the box's network and
-  Modal's allowlist. set_network(False) kills every NET_UID process except the namespace's holder and checks that
-  the uplink's device is gone and the holder holds nothing but its standard streams: the box user then has loopback
-  only, so localhost servers, including ones started
+- gVisor (measured 2026-10-31): root has neither CAP_NET_ADMIN nor CAP_SYS_ADMIN and gVisor has no netfilter, so no
+  rule, route or link change can close the resolver. Instead the box user never touches the box's own network:
+  NET_UID makes a user and network namespace at start (root writes its maps: NET_UID is root inside it, the box
+  user is itself, nothing else is mapped, so NET_UID has no power over root's or the display uid's files and
+  processes), and every box-user command runs in it. Its only way out is slirp4netns, run as NET_UID (seccomp on,
+  no route to the box's loopback, MTU 65520 on both ends: a tap left at 1500 stalls TCP); it carries the box user's
+  traffic, DNS included, through the box's network and Modal's allowlist. set_network(False) kills every NET_UID
+  process except the namespace's holder and checks that the uplink's device is gone and the holder holds nothing
+  but its standard streams: the box user then has loopback only, so localhost servers, including ones started
   online, still answer. The box user cannot enter another network namespace, change a route or signal NET_UID's
   processes. Downloads through it ran at the box's direct speed (CDNs 80-190 MB/s, a slow far server 1.2 MB/s
-  either way). Xvfb and the watcher stay outside (display uid):
-  the box user's apps reach Xvfb by its socket file, which a network namespace does not hide.
+  either way). Xvfb and the watcher stay outside (display uid): the box user's apps reach Xvfb by its socket file,
+  which a network namespace does not hide.
 - Image: built once from sandbox.Dockerfile and published as
   `pickfit-sbx:<Dockerfile hash>`; boxes start from that name, and only a
   missing name triggers the build. (`Image.from_name(...).hydrate()` is not
