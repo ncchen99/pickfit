@@ -308,8 +308,10 @@ def live_data_sha(worker_dir: Path) -> Callable[[], str | None]:
     def fetch() -> str | None:
         if not host:
             return None
+        # Cloudflare answers Python's default user agent with 403.
+        request = urllib.request.Request(f"https://{host}/", headers={"User-Agent": "pickfit-watch"})
         try:
-            with urllib.request.urlopen(f"https://{host}/", timeout=10) as response:
+            with urllib.request.urlopen(request, timeout=10) as response:
                 return json.loads(response.read(100_000)).get("data_sha256")
         except (OSError, ValueError):
             return None

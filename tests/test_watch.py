@@ -546,3 +546,22 @@ def test_a_gui_app_gets_a_display_box_when_there_is_one(env: dict[str, Any]) -> 
     [job] = run_once(env, pipeline)
     assert "verify" in pipeline.calls and job.result == "ready"
     assert pipeline.verify.tasks[0].extraction.kind.value == "desktop_app"
+
+
+def test_the_live_sha_is_read_with_a_user_agent(env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    import io
+    import urllib.request
+
+    from pickfit.watch import live_data_sha
+
+    seen: list[Any] = []
+
+    def urlopen(request: Any, timeout: float) -> Any:
+        seen.append(request)
+        if not request.get_header("User-agent"):
+            raise urllib.error.HTTPError(request.full_url, 403, "Forbidden", {}, None)  # what Cloudflare does
+        return io.BytesIO(b'{"data_sha256": "abc"}')
+
+    monkeypatch.setattr(urllib.request, "urlopen", urlopen)
+    assert live_data_sha(env["worker"])() == "abc"
+    assert seen[0].full_url == "https://pickfit-mcp.ncchen99.workers.dev/"
