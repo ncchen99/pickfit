@@ -1,0 +1,569 @@
+{
+  "schema_version": "software.v1",
+  "slug": "onsystem",
+  "repo_id": "gh:1407852734",
+  "name": "onsystem",
+  "summary": "Checks React UI edits and pull requests against design-system components and tokens with fixes.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "accessibility",
+    "agent-guardrails",
+    "ai-agents",
+    "claude-code",
+    "claude-code-plugin",
+    "cursor",
+    "design-system",
+    "design-system-lint",
+    "design-tokens",
+    "linter"
+  ],
+  "use_cases": [],
+  "alternatives_to": [
+    "@shadcn/lint"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://onsystem.vercel.app",
+  "repo": {
+    "url": "https://github.com/dgesteves/onsystem",
+    "full_name": "dgesteves/onsystem",
+    "created_at": "2026-10-06T19:52:51Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js 20.19 or later"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npx -y onsystem inspect",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "npx -y onsystem inspect"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-onsystem-20261101-001003-2e9d",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g onsystem",
+          "purpose": "install onsystem globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "onsystem --help",
+        "expected_signal": "Show this help"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npx -y onsystem inspect",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "npx -y onsystem inspect"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.12.1",
+    "published_at": "2026-10-30T21:13:39Z",
+    "url": "https://github.com/dgesteves/onsystem/releases/tag/v0.12.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:11:24.693205+08:00",
+    "runs": [
+      {
+        "id": "verify-onsystem-20261101-001003-2e9d",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:11:24.693205+08:00",
+        "tool_version": "0.12.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g onsystem",
+            "purpose": "install onsystem globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "onsystem --help",
+            "expected_signal": "Show this help",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "onsystem help Show this help",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "onsystem --version",
+            "expected_signal": "0.12.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.12.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- onsystem",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call check_ui --args '{\"code\":\"<button>hi</button>\",\"path\":\"/tmp/proj/src/app/page.tsx\"}' -- onsystem",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=check_ui content=text text_chars=201",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/proj/src/app && echo '{\"name\":\"test\",\"version\":\"1.0.0\"}' > /tmp/proj/package.json && ls /tmp/proj/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx -y onsystem starts MCP server with no path",
+            "actually_needed": "tool calls need absolute path argument pointing to a project folder; otherwise server returns isError with guidance to pass path or --root",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "MCP handshake succeeds, check_ui tool returns analysis, and CLI help displays.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-onsystem-20261101-001003-2e9d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-onsystem-20261101-001003-2e9d/check-1-cmd5.judged.png",
+            "runs/verify/verify-onsystem-20261101-001003-2e9d/check-2-cmd12.judged.png",
+            "runs/verify/verify-onsystem-20261101-001003-2e9d/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.084735,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "onsystem"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "onsystem",
+          "server_version": "0.12.1",
+          "tools": [
+            "list_components",
+            "get_component",
+            "search_components",
+            "get_tokens",
+            "check_ui"
+          ],
+          "tool_count": 5,
+          "called_tool": "check_ui",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "npx -y onsystem",
+    "client_configs": [],
+    "env_vars": [],
+    "tools": [
+      "check_ui"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 94.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 76.6,
+      "signals": {
+        "stars": 165,
+        "monthly_downloads": 2758,
+        "forks": 4,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 24,
+      "packages": [
+        "npm:onsystem"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 22.02
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "543fe5332e526923e4437b208c6f5694ed12c43f07582d68e33e1d9070da15b4",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Keeps coding agents on your design system: catches palette colors, native elements and APIs your system lacks, at every edit and pull request, with the fix."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Built for design-system and platform teams with a React design-system package; a shadcn/ui app is the zero-config demo."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Run it from the app's folder or from the monorepo root, with Node.js 20.19 or later:"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npm install --save-dev onsystem"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "npx -y onsystem inspect   # what it found; --explain says why"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "npx -y onsystem init      # write the config, and offer a baseline"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "[MCP tools](https://onsystem.vercel.app/docs/tools) and [Troubleshooting](https://onsystem.vercel.app/docs/troubleshooting)"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[MIT](LICENSE) © Diogo Esteves"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/dgesteves/onsystem",
+      "fetched_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/dgesteves/onsystem/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:44:22+08:00"
+    },
+    {
+      "id": "release:v0.12.1",
+      "kind": "release",
+      "url": "https://github.com/dgesteves/onsystem/releases/tag/v0.12.1",
+      "fetched_at": "2026-10-31T13:44:22+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Run `npx -y onsystem` as a stdio server.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Run it from the app's folder or from the monorepo root, with Node.js 20.19 or later:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Run `npx -y onsystem` as a stdio server.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "catches palette colors, native elements and APIs your system lacks, at every edit and pull request, with the fix.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# onsystem",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Linux, macOS and Windows: CI runs the tests and the pack test on each",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "with Node.js 20.19 or later:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.12.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:44:22+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Runs locally and works alongside [@shadcn/lint](https://github.com/shadcn-ui/lint).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npx -y onsystem inspect",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npx -y onsystem inspect",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npx -y onsystem inspect",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Runs locally and works alongside [@shadcn/lint](https://github.com/shadcn-ui/lint).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Run `npx -y onsystem` as a stdio server.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "Run `npx -y onsystem` as a stdio server.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "an agent drafts a settings card, `check_ui` finds 11 problems with a fix each, and the agent applies them.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:37:52+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

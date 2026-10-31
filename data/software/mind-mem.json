@@ -1,0 +1,625 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mind-mem",
+  "repo_id": "gh:1160652179",
+  "name": "MIND-Mem",
+  "summary": "Governed replayable memory layer for AI agents with hybrid recall and audit evidence.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-memory",
+    "ai-agents",
+    "ai-memory",
+    "bm25",
+    "claude-code",
+    "claude-desktop",
+    "cursor",
+    "governance",
+    "hybrid-search",
+    "local-first"
+  ],
+  "use_cases": [
+    "recall past decisions with hybrid BM25F search",
+    "detect drift and contradictions in memory"
+  ],
+  "alternatives_to": [
+    "Mem0",
+    "claude-mem",
+    "Zep"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://mindlang.dev",
+  "repo": {
+    "url": "https://github.com/star-ga/mind-mem",
+    "full_name": "star-ga/mind-mem",
+    "created_at": "2026-02-18T07:52:21Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mind-mem-20261101-005546-bd98",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install \"mind-mem[mcp]\" 2>&1",
+          "purpose": "install mind-mem[mcp] via uv tool install"
+        },
+        {
+          "command": "rm -rf ~/my-workspace2 && mind-mem-init ~/my-workspace2 2>&1",
+          "purpose": "initialize workspace at ~/my-workspace2 for MCP server"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v5.0.3",
+    "published_at": "2026-09-15T00:14:17Z",
+    "url": "https://github.com/star-ga/mind-mem/releases/tag/v5.0.3"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:57:23.220057+08:00",
+    "runs": [
+      {
+        "id": "verify-mind-mem-20261101-005546-bd98",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:57:23.220057+08:00",
+        "tool_version": "5.0.3",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install \"mind-mem[mcp]\" 2>&1",
+            "purpose": "install mind-mem[mcp] via uv tool install"
+          },
+          {
+            "command": "rm -rf ~/my-workspace2 && mind-mem-init ~/my-workspace2 2>&1",
+            "purpose": "initialize workspace at ~/my-workspace2 for MCP server"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "MIND_MEM_WORKSPACE=/home/sbx/my-workspace2 python3 ~/.pickfit/mcp_probe.py -- mind-mem-mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "MIND_MEM_WORKSPACE=/home/sbx/my-workspace2 python3 ~/.pickfit/mcp_probe.py --call index_stats --args '{}' -- mind-mem-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=index_stats content=text text_chars=598",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show successful MCP initialize, 107 tools listed, handshake ok, and index_stats returning data.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mind-mem-20261101-005546-bd98/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mind-mem-20261101-005546-bd98/check-1-cmd9.judged.png",
+            "runs/verify/verify-mind-mem-20261101-005546-bd98/check-2-cmd10.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.122579,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "mind-mem-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "mind-mem",
+          "server_version": "4.1.4",
+          "tools": [
+            "pack_recall_budget",
+            "recall_with_axis",
+            "hybrid_search",
+            "find_similar",
+            "intent_classify",
+            "retrieval_diagnostics",
+            "prefetch",
+            "check_guardrails",
+            "recall_with_guardrails",
+            "resume_brief",
+            "check_dead_ends",
+            "verify_merkle",
+            "mind_mem_verify",
+            "verify_chain",
+            "list_evidence",
+            "anchor_root",
+            "anchor_history",
+            "build_core",
+            "load_core",
+            "export_core",
+            "unload_core",
+            "list_cores",
+            "plan_consolidation",
+            "propagate_staleness",
+            "project_profile",
+            "dream_cycle",
+            "ontology_load",
+            "ontology_validate",
+            "agent_inject",
+            "vault_scan",
+            "vault_sync",
+            "stream_status",
+            "graph_add_edge",
+            "propose_edge",
+            "approve_edge",
+            "reject_edge",
+            "list_edge_proposals",
+            "propose_entity_merge",
+            "list_entity_merge_proposals",
+            "approve_entity_merge",
+            "reverse_entity_merge",
+            "entity_add_observation",
+            "entity_observations",
+            "graph_query",
+            "graph_stats",
+            "traverse_graph",
+            "observe_signal",
+            "signal_stats",
+            "propose_update",
+            "propose_slot_update",
+            "scan",
+            "list_contradictions",
+            "approve_apply",
+            "reject_proposal",
+            "rollback_proposal",
+            "memory_evolution",
+            "arch_baseline",
+            "arch_delta",
+            "arch_history",
+            "arch_check_rules",
+            "arch_session_start",
+            "arch_session_end",
+            "arch_metric_explain",
+            "encrypt_file",
+            "decrypt_file",
+            "governance_health_bench",
+            "category_summary",
+            "index_stats",
+            "reindex",
+            "delete_memory_item",
+            "export_memory",
+            "get_block",
+            "memory_health",
+            "compact",
+            "stale_blocks",
+            "list_mind_kernels",
+            "get_mind_kernel",
+            "compiled_truth_load",
+            "compiled_truth_add_evidence",
+            "compiled_truth_contradictions",
+            "calibration_feedback",
+            "calibration_stats",
+            "report_outcome",
+            "outcome_stats",
+            "audit_model_tool",
+            "sign_model_tool",
+            "verify_model_tool",
+            "mic_convert_tool",
+            "mic_inspect_tool",
+            "compile_truth_walkthrough",
+            "recall_with_persona",
+            "pipeline_status",
+            "reindex_dirty",
+            "validate_block",
+            "lint",
+            "lint_autofix",
+            "block_lineage",
+            "add_block_edge",
+            "chat_with_memory",
+            "similar_trajectories",
+            "recall",
+            "staged_change",
+            "memory_verify",
+            "graph",
+            "core",
+            "kernels",
+            "compiled_truth"
+          ],
+          "tool_count": 107,
+          "called_tool": "index_stats",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": null,
+    "client_configs": [],
+    "env_vars": [
+      {
+        "name": "MIND_MEM_LOG_LEVEL",
+        "required": null,
+        "purpose": "log level"
+      }
+    ],
+    "tools": [
+      "mic_convert_tool",
+      "mic_inspect_tool"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:57:23+08:00",
+    "quality": {
+      "total": 89.1,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 50.5,
+      "signals": {
+        "stars": 19,
+        "monthly_downloads": 1010,
+        "forks": 4,
+        "dependents": null,
+        "release_downloads": 39,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 254,
+      "packages": [
+        "pypi:mind-mem"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 44.1
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "0d3c7c170e95c0944528fb0002f42b1e1c78d6e5b3ec1e858f43e2241162e0c7",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Replayable memory for AI agents. Governed recall with canonical, hash-anchored audit evidence."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Persistent AI memory for Claude Code, OpenClaw, and any MCP-compatible agent."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Core requires only Python 3.10+ stdlib."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install mind-mem"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "[1.204] D-20260215-001 (decision) — Use async/await for all API endpoints"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Controlled via `MIND_MEM_LOG_LEVEL` env var."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 0,
+          "quote": null
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/star-ga/mind-mem",
+      "fetched_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/star-ga/mind-mem/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:43:18+08:00"
+    },
+    {
+      "id": "release:v5.0.3",
+      "kind": "release",
+      "url": "https://github.com/star-ga/mind-mem/releases/tag/v5.0.3",
+      "fetched_at": "2026-10-31T13:43:18+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Full [Model Context Protocol](https://modelcontextprotocol.io/) server with 107 distinct tools",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:45+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "pip install mind-mem",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:45+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Full [Model Context Protocol](https://modelcontextprotocol.io/) server with 107 distinct tools",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:45+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Replayable memory for AI agents. Governed recall with canonical, hash-anchored audit evidence.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:45+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "MIND-Mem",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:45+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v5.0.3",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:43:18+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "mind-mem-recall -q \"API decisions\" --workspace ~/my-workspace  # Hybrid BM25F search",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:45+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "mind-mem-scan ~/my-workspace        # Detect drift & contradictions",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:45+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "**MM** MIND-Mem · **M0** [Mem0](https://github.com/mem0ai/mem0) · **SM** [Supermemory](https://supermemory.ai)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:45+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "**CM** [claude-mem](https://github.com/thedotmack/claude-mem) · **Le** [Letta](https://www.letta.com)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:45+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "**Zep** [Zep](https://www.getzep.com) · **LM** [LangMem](https://github.com/langchain-ai/langmem)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:45+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "The default retrieval path stores data locally.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:45+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "HTTP and stdio transports",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:45+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "MIND_MEM_LOG_LEVEL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:45+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "v3.8.11 added `mic_convert_tool` / `mic_inspect_tool` (MIC/MAP wire format)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:45+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "v3.8.11 added `mic_convert_tool` / `mic_inspect_tool` (MIC/MAP wire format)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:45+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:37:45+08:00",
+  "updated_at": "2026-11-01T00:57:23.221543+08:00"
+}

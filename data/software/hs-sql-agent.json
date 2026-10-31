@@ -1,0 +1,491 @@
+{
+  "schema_version": "software.v1",
+  "slug": "hs-sql-agent",
+  "repo_id": "gh:1200271184",
+  "name": "hs-sql-agent",
+  "summary": "Turns engineer-defined SQL into governed MCP tools with validation and audit.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "accuracy",
+    "admin-panel",
+    "ai-safety",
+    "ai-safety-design",
+    "anti-hallucination",
+    "firebird",
+    "mcp",
+    "mcp-server",
+    "mcp-servers",
+    "mysql"
+  ],
+  "use_cases": [
+    "Publish parameterized SQL as typed MCP tools",
+    "Query PostgreSQL, MySQL, SQL Server, Oracle, SQLite and Firebird",
+    "Approve DML mutations with preview and revalidation"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://sql-agent.net",
+  "repo": {
+    "url": "https://github.com/tse-wei-chen/hs-sql-agent",
+    "full_name": "tse-wei-chen/hs-sql-agent",
+    "created_at": "2026-04-03T08:10:29Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v3.0.0",
+    "published_at": "2026-10-25T06:25:13Z",
+    "url": "https://github.com/tse-wei-chen/hs-sql-agent/releases/tag/v3.0.0"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "needs_more_resources",
+    "checked_at": "2026-11-01T00:35:40.086445+08:00",
+    "runs": [
+      {
+        "id": "verify-hs-sql-agent-20261101-003424-f9eb",
+        "level": "unverified",
+        "unverified_reason": "needs_more_resources",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:35:40.086445+08:00",
+        "tool_version": null,
+        "install_method": "other",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh && head -n 30 /tmp/dotnet-install.sh && wc -l /tmp/dotnet-install.sh",
+            "purpose": "download dotnet-install script"
+          },
+          {
+            "command": "rm -rf $HOME/.dotnet && bash /tmp/dotnet-install.sh --channel 8.0 --install-dir $HOME/.dotnet 2>&1 | tail -n 5\nls -lh $HOME/.dotnet/dotnet; du -sh $HOME/.dotnet\nexport PATH=$HOME/.dotnet:$PATH; export DOTNET_ROOT=$HOME/.dotnet; $HOME/.dotnet/dotnet --version; echo ok:$?",
+            "purpose": "install .NET SDK 8.0.427 to ~/.dotnet"
+          }
+        ],
+        "smoke_tests": [],
+        "pitfalls": [
+          {
+            "readme_said": "docker compose up -d runs the server or dotnet add package embeds it",
+            "actually_needed": "dotnet SDK install hits box file-size limit (SIGXFSZ, exit 153) on dotnet --version; dotnet --info/--list-sdks works via prlimit but building/running the MCP server exceeds budget and would need cloning and full build",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-hs-sql-agent-20261101-003424-f9eb/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.097189
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "streamable_http"
+    ],
+    "launch_command": null,
+    "client_configs": [],
+    "env_vars": [
+      {
+        "name": "HMAC_KEY",
+        "required": null,
+        "purpose": "secret for HMAC"
+      },
+      {
+        "name": "JWT_KEY",
+        "required": null,
+        "purpose": "secret for JWT"
+      },
+      {
+        "name": "DB_ENCRYPTION_KEY",
+        "required": null,
+        "purpose": "database password protection"
+      },
+      {
+        "name": "DML_ENCRYPTION_KEY",
+        "required": null,
+        "purpose": "DML protection"
+      },
+      {
+        "name": "DML_FINGERPRINT_KEY",
+        "required": null,
+        "purpose": "DML protection"
+      },
+      {
+        "name": "MCP_PUBLIC_ENDPOINT",
+        "required": null,
+        "purpose": "externally reachable MCP URL"
+      }
+    ],
+    "tools": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 68.8,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 29.3,
+      "signals": {
+        "stars": 10,
+        "monthly_downloads": null,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 210,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 48.64
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "0a8446621e6aa031c63215276a93874cbbfdae39d90a866518f78124f27c0d38",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "`hs-sql-agent` is an open-source **SQL-to-MCP tool factory and governed SQL execution boundary**."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Turn trusted SQL into governed MCP tools for AI agents."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "docker compose up -d"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "docker compose up -d"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "# Set HMAC_KEY and JWT_KEY to unique secrets of at least 32 bytes."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "It supports **PostgreSQL, MySQL, SQL Server, Oracle, SQLite, and Firebird**"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/tse-wei-chen/hs-sql-agent",
+      "fetched_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/tse-wei-chen/hs-sql-agent/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:41:00+08:00"
+    },
+    {
+      "id": "release:v3.0.0",
+      "kind": "release",
+      "url": "https://github.com/tse-wei-chen/hs-sql-agent/releases/tag/v3.0.0",
+      "fetched_at": "2026-10-31T13:41:00+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": ".NET SQL Agent MCP server featuring raw SQL input",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:45+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "docker compose up -d",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:45+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": ".NET SQL Agent MCP server featuring raw SQL input",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:45+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Turn trusted SQL into governed MCP tools for AI agents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:45+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# hs-sql-agent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:45+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v3.0.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:41:00+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Define parameterized SQL in the Admin UI, publish it as a typed MCP tool",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:45+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "It supports **PostgreSQL, MySQL, SQL Server, Oracle, SQLite, and Firebird**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:45+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "requires explicit human approval, and revalidates inside the commit transaction before applying the mutation.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:45+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "`hs-sql-agent` is an open-source **SQL-to-MCP tool factory and governed SQL execution boundary**.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:45+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "configuration for **Claude Desktop, Cursor, Visual Studio Code, and generic Streamable HTTP clients**.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:45+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "HMAC_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:45+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "JWT_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:45+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "DB_ENCRYPTION_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:45+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "DML_ENCRYPTION_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:45+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "DML_FINGERPRINT_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:45+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/5",
+      "source_id": "readme",
+      "quote": "MCP_PUBLIC_ENDPOINT",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:45+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:34+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

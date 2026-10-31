@@ -1,0 +1,758 @@
+{
+  "schema_version": "software.v1",
+  "slug": "rosetta",
+  "repo_id": "gh:1192992480",
+  "name": "rosetta",
+  "summary": "MCP server providing searchable MikroTik RouterOS docs, commands, and hardware specs via SQLite.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "bun",
+    "claude-code",
+    "copilot",
+    "mcp",
+    "mcp-server",
+    "mikrotik",
+    "routeros",
+    "typescript"
+  ],
+  "use_cases": [
+    "Look up DHCP server properties in RouterOS",
+    "Find setup steps for a bridge VLAN",
+    "Check command availability in a RouterOS version",
+    "Show warnings about hardware offloading",
+    "Compare MikroTik routers by specs, benchmarks, and cost"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://tikoci.github.io/p/rosetta",
+  "repo": {
+    "url": "https://github.com/tikoci/rosetta",
+    "full_name": "tikoci/rosetta",
+    "created_at": "2026-03-26T19:07:40Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Bun"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "bunx @tikoci/rosetta --setup",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Enable container device-mode with physical power cycle or button press"
+      ],
+      "check": null,
+      "first_task": "bunx @tikoci/rosetta browse --once .routeros_search \"vrrp\" limit=5"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-rosetta-20261101-001725-ae6c",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @tikoci/rosetta 2>&1",
+          "purpose": "Install rosetta globally via npm (provides rosetta binary)"
+        },
+        {
+          "command": "curl -fsSL https://bun.sh/install | bash",
+          "purpose": "Install Bun runtime required by rosetta (bun:sqlite)"
+        },
+        {
+          "command": "export PATH=\"$HOME/.bun/bin:$PATH\" && rosetta --setup",
+          "purpose": "Download rosetta SQLite database via rosetta --setup"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "export PATH=\"$HOME/.bun/bin:$PATH\" && rosetta --help",
+        "expected_signal": "rosetta 0.12.0 — MCP server for RouterOS documentation"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.12.0",
+    "published_at": "2026-10-30T21:37:57Z",
+    "url": "https://github.com/tikoci/rosetta/releases/tag/v0.12.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:18:45.268997+08:00",
+    "runs": [
+      {
+        "id": "verify-rosetta-20261101-001725-ae6c",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:18:45.268997+08:00",
+        "tool_version": "0.12.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @tikoci/rosetta 2>&1",
+            "purpose": "Install rosetta globally via npm (provides rosetta binary)"
+          },
+          {
+            "command": "curl -fsSL https://bun.sh/install | bash",
+            "purpose": "Install Bun runtime required by rosetta (bun:sqlite)"
+          },
+          {
+            "command": "export PATH=\"$HOME/.bun/bin:$PATH\" && rosetta --setup",
+            "purpose": "Download rosetta SQLite database via rosetta --setup"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "export PATH=\"$HOME/.bun/bin:$PATH\" && rosetta --help",
+            "expected_signal": "rosetta 0.12.0 — MCP server for RouterOS documentation",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "rosetta 0.12.0 — MCP server for RouterOS documentation",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && python3 ~/.pickfit/mcp_probe.py -- rosetta 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && python3 ~/.pickfit/mcp_probe.py --call routeros_stats --args '{}' -- rosetta 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=routeros_stats content=text text_chars=3262",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm install provides working rosetta (launch via bunx @tikoci/rosetta)",
+            "actually_needed": "The npm package's bin/rosetta.js has shebang #!/usr/bin/env bun and delegates to bun; without Bun installed it fails with 'env: bun: No such file or directory' and requires separate Bun install via curl -fsSL https://bun.sh/install | bash",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "bunx @tikoci/rosetta fetches package on demand",
+            "actually_needed": "For offline replay, installed globally with npm install -g @tikoci/rosetta so launch command 'rosetta' is on PATH without network, then verified via MCP probe -- rosetta",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "install step 2 runs https://bun.sh/install straight from the network",
+            "actually_needed": "nothing to change; a note: the box ran it without saving or reading it first, so pickfit did not inspect it",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show rosetta 0.12.0 MCP handshake with 14 tools, successful routeros_stats call, and full --help output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-rosetta-20261101-001725-ae6c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-rosetta-20261101-001725-ae6c/check-1-cmd7.judged.png",
+            "runs/verify/verify-rosetta-20261101-001725-ae6c/check-2-cmd8.judged.png",
+            "runs/verify/verify-rosetta-20261101-001725-ae6c/check-3-cmd12.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.067068,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "rosetta"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "rosetta",
+          "server_version": "0.12.0",
+          "tools": [
+            "routeros_search",
+            "routeros_get_page",
+            "routeros_lookup_property",
+            "routeros_explain_command",
+            "routeros_command_tree",
+            "routeros_stats",
+            "routeros_search_changelogs",
+            "routeros_dude_search",
+            "routeros_dude_get_page",
+            "routeros_command_version_check",
+            "routeros_command_diff",
+            "routeros_device_lookup",
+            "routeros_search_tests",
+            "routeros_current_versions"
+          ],
+          "tool_count": 14,
+          "called_tool": "routeros_stats",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "bunx @tikoci/rosetta",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add rosetta -- bunx @tikoci/rosetta"
+      },
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"rosetta\": {\n      \"command\": \"bunx\",\n      \"args\": [\"@tikoci/rosetta\"]\n    }\n  }\n}"
+      },
+      {
+        "client": "cursor",
+        "snippet": "{\n  \"mcpServers\": {\n    \"rosetta\": {\n      \"command\": \"bunx\",\n      \"args\": [\"@tikoci/rosetta\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "routeros_search",
+      "routeros_get_page",
+      "routeros_lookup_property",
+      "routeros_explain_command",
+      "routeros_command_tree",
+      "routeros_search_changelogs",
+      "routeros_command_version_check",
+      "routeros_command_diff",
+      "routeros_device_lookup",
+      "routeros_search_tests",
+      "routeros_dude_search",
+      "routeros_dude_get_page",
+      "routeros_stats",
+      "routeros_current_versions"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 82.3,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7225,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.9,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 66.9,
+      "signals": {
+        "stars": 51,
+        "monthly_downloads": 1797,
+        "forks": 4,
+        "dependents": null,
+        "release_downloads": 1284,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 218,
+      "packages": [
+        "npm:@tikoci/rosetta"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 27.24
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "1760a43110525bb32eefaf4d9e7e0acbde7e0f03511d3e43349dfa6b4d9b1730",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "MCP Server with RouterOS docs + commands + products + changelogs, using SQLite-as-RAG, sourced from MikroTik"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "MCP server that gives AI assistants searchable access to MikroTik RouterOS documentation"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**Requirements:** RouterOS 7.22+, x86 or ARM64 architecture (CCR, RB5009, hAP ax series, CHR, etc.)"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "bunx @tikoci/rosetta --setup"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "bunx @tikoci/rosetta browse"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "No API keys, no vector database — just a single SQLite file that searches in milliseconds."
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "The `auto-update: true` setting pulls the latest image on each boot."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "**Requirements:** RouterOS 7.22+, x86 or ARM64 architecture (CCR, RB5009, hAP ax series, CHR, etc.)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/tikoci/rosetta",
+      "fetched_at": "2026-10-31T13:38:49+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/tikoci/rosetta/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:41:49+08:00"
+    },
+    {
+      "id": "release:v0.12.0",
+      "kind": "release",
+      "url": "https://github.com/tikoci/rosetta/releases/tag/v0.12.0",
+      "fetched_at": "2026-10-31T13:41:49+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "MCP server that gives AI assistants searchable access",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Install rosetta once as a container on your router",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "MCP server that gives AI assistants searchable access",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "MCP server that gives AI assistants searchable access to MikroTik RouterOS documentation, CLI Reference fields, versioned command trees, hardware specs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# rosetta",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "# macOS / Linux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Run rosetta on your workstation using [Bun](https://bun.sh/).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:49+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:49+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:49+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:49+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:49+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.12.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:41:49+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "\"What are the DHCP server properties in RouterOS?\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "\"How do I set up a bridge VLAN?\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "\"Is the /container command available in RouterOS 7.12?\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "\"Show me warnings about hardware offloading\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "\"Which MikroTik routers have L3HW offload, and more than 8 ports of 48V PoE? Include cost.\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "bunx @tikoci/rosetta --setup",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "bunx @tikoci/rosetta --setup",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "No API keys, no vector database — just a single SQLite file",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "The MCP server runs over stdio — no network configuration needed.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add rosetta -- bunx @tikoci/rosetta",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add rosetta -- bunx @tikoci/rosetta",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"rosetta\": {\n      \"command\": \"bunx\",\n      \"args\": [\"@tikoci/rosetta\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/2",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"rosetta\": {\n      \"command\": \"bunx\",\n      \"args\": [\"@tikoci/rosetta\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`routeros_search`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`routeros_get_page`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`routeros_lookup_property`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`routeros_explain_command`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`routeros_command_tree`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`routeros_search_changelogs`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`routeros_command_version_check`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`routeros_command_diff`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`routeros_device_lookup`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`routeros_search_tests`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`routeros_dude_search`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`routeros_dude_get_page`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "`routeros_stats`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "`routeros_current_versions`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:05+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:37:25+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

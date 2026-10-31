@@ -1,0 +1,605 @@
+{
+  "schema_version": "software.v1",
+  "slug": "grooveseek",
+  "repo_id": "gh:1215200742",
+  "name": "GrooveSeek",
+  "summary": "MCP server for hybrid semantic and full-text search over Markdown knowledge bases.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "embedding",
+    "mcp",
+    "rag",
+    "rust",
+    "semantic-search",
+    "sqlite-vec"
+  ],
+  "use_cases": [
+    "index a Markdown knowledge base",
+    "search indexed knowledge base chunks"
+  ],
+  "alternatives_to": [
+    "QMD"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/alphabet-h/grooveseek",
+    "full_name": "alphabet-h/grooveseek",
+    "created_at": "2026-04-19T16:01:29Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Rust 1.89 or later"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-grooveseek-20261101-001928-ca7f",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "cd /tmp && curl -fL -o grooveseek-x86_64-unknown-linux-gnu.tar.xz https://github.com/alphabet-h/grooveseek/releases/download/v1.23.0/grooveseek-x86_64-unknown-linux-gnu.tar.xz && curl -fL -o grooveseek-x86_64-unknown-linux-gnu.tar.xz.sha256 https://github.com/alphabet-h/grooveseek/releases/download/v1.23.0/grooveseek-x86_64-unknown-linux-gnu.tar.xz.sha256 && sha256sum -c grooveseek-x86_64-unknown-linux-gnu.tar.xz.sha256",
+          "purpose": "download prebuilt Linux x86_64 binary and verify SHA256"
+        },
+        {
+          "command": "cd /tmp && tar -xf grooveseek-x86_64-unknown-linux-gnu.tar.xz && install -m755 grooveseek-x86_64-unknown-linux-gnu/groove ~/.local/bin/groove",
+          "purpose": "extract archive and install groove to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "groove --version",
+        "expected_signal": "groove 1.23.0"
+      },
+      "first_task": "groove search \"semantic chunking\" --kb-path /tmp/kb --limit 3"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v1.22.0",
+    "published_at": "2026-10-31T03:28:33Z",
+    "url": "https://github.com/alphabet-h/grooveseek/releases/tag/v1.22.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:20:46.367460+08:00",
+    "runs": [
+      {
+        "id": "verify-grooveseek-20261101-001928-ca7f",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:20:46.367460+08:00",
+        "tool_version": "1.23.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /tmp && curl -fL -o grooveseek-x86_64-unknown-linux-gnu.tar.xz https://github.com/alphabet-h/grooveseek/releases/download/v1.23.0/grooveseek-x86_64-unknown-linux-gnu.tar.xz && curl -fL -o grooveseek-x86_64-unknown-linux-gnu.tar.xz.sha256 https://github.com/alphabet-h/grooveseek/releases/download/v1.23.0/grooveseek-x86_64-unknown-linux-gnu.tar.xz.sha256 && sha256sum -c grooveseek-x86_64-unknown-linux-gnu.tar.xz.sha256",
+            "purpose": "download prebuilt Linux x86_64 binary and verify SHA256"
+          },
+          {
+            "command": "cd /tmp && tar -xf grooveseek-x86_64-unknown-linux-gnu.tar.xz && install -m755 grooveseek-x86_64-unknown-linux-gnu/groove ~/.local/bin/groove",
+            "purpose": "extract archive and install groove to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "groove --version",
+            "expected_signal": "groove 1.23.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "groove 1.23.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- groove serve --kb-path /tmp/kb",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/kb && cat > /tmp/kb/intro.md <<'EOF'\n---\ntitle: \"Introduction to Semantic Chunking\"\ndate: 2024-01-01\ntopic: \"AI\"\ndepth: 1\ntags: [\"ai\", \"nlp\"]\n---\n\n# Introduction\n\nSemantic chunking is a technique for splitting documents into coherent units.\n\n## Why it matters\n\nIt improves retrieval by keeping related sentences together.\n\n# Conclusion\n\nSearch benefits from good chunking.\nEOF\ncat /tmp/kb/intro.md\ngroove index --kb-path /tmp/kb 2>&1 | tail -20; echo \"index exit:$?\"\ngroove status --kb-path /tmp/kb 2>&1 | tail -20\nls -lh /tmp/kb/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search --args '{\"query\": \"semantic chunking\"}' -- groove serve --kb-path /tmp/kb",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search content=text text_chars=1145",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/kb && cat > /tmp/kb/intro.md <<'EOF'\n---\ntitle: \"Introduction to Semantic Chunking\"\ndate: 2024-01-01\ntopic: \"AI\"\ndepth: 1\ntags: [\"ai\", \"nlp\"]\n---\n\n# Introduction\n\nSemantic chunking is a technique for splitting documents into coherent units.\n\n## Why it matters\n\nIt improves retrieval by keeping related sentences together.\n\n# Conclusion\n\nSearch benefits from good chunking.\nEOF\ncat /tmp/kb/intro.md\ngroove index --kb-path /tmp/kb 2>&1 | tail -20; echo \"index exit:$?\"\ngroove status --kb-path /tmp/kb 2>&1 | tail -20\nls -lh /tmp/kb/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "groove search \"semantic chunking\" --kb-path /tmp/kb --limit 3",
+            "expected_signal": "Introduction to Semantic Chunking",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"title\": \"Introduction to Semantic Chunking\",",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/kb && cat > /tmp/kb/intro.md <<'EOF'\n---\ntitle: \"Introduction to Semantic Chunking\"\ndate: 2024-01-01\ntopic: \"AI\"\ndepth: 1\ntags: [\"ai\", \"nlp\"]\n---\n\n# Introduction\n\nSemantic chunking is a technique for splitting documents into coherent units.\n\n## Why it matters\n\nIt improves retrieval by keeping related sentences together.\n\n# Conclusion\n\nSearch benefits from good chunking.\nEOF\ncat /tmp/kb/intro.md\ngroove index --kb-path /tmp/kb 2>&1 | tail -20; echo \"index exit:$?\"\ngroove status --kb-path /tmp/kb 2>&1 | tail -20\nls -lh /tmp/kb/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo build --release needs Rust 1.89+",
+            "actually_needed": "used prebuilt binary grooveseek-x86_64-unknown-linux-gnu.tar.xz from GitHub releases; no Rust toolchain required",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 6 tools, successful search returning intro.md, and version 1.23.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-grooveseek-20261101-001928-ca7f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-grooveseek-20261101-001928-ca7f/check-1-cmd8.judged.png",
+            "runs/verify/verify-grooveseek-20261101-001928-ca7f/check-2-cmd9.judged.png",
+            "runs/verify/verify-grooveseek-20261101-001928-ca7f/check-3-cmd12.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.115794,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "groove",
+            "serve",
+            "--kb-path",
+            "/tmp/kb"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "grooveseek",
+          "server_version": "1.23.0",
+          "tools": [
+            "get_best_practice",
+            "get_connection_graph",
+            "get_document",
+            "list_topics",
+            "rebuild_index",
+            "search"
+          ],
+          "tool_count": 6,
+          "called_tool": "search",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": null,
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"ai-knowledge\": {\n      \"command\": \"/path/to/groove\",\n      \"args\": [\"serve\", \"--kb-path\", \"/path/to/knowledge-base\"],\n      \"type\": \"stdio\"\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "search",
+      "get_document",
+      "list_topics",
+      "get_connection_graph",
+      "get_best_practice",
+      "rebuild_index"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 77.6,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 35.0,
+      "signals": {
+        "stars": 10,
+        "monthly_downloads": null,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": 396,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 194,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 50.44
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "1d510d895b586b35678fdddb0677eb246ef913525541ec84f4b7aac116b5a24f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "MCP server for hybrid (semantic + full-text) search over a knowledge base of"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "ONNX runtime and SQLite are statically linked into the binary, so no extra DLLs are required."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "cargo build --release"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "groove index --kb-path /path/to/knowledge-base"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Out of the box — no config file, default model — it indexes English Markdown"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Dual-licensed under [MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE), at"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/alphabet-h/grooveseek",
+      "fetched_at": "2026-10-31T13:38:42+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/alphabet-h/grooveseek/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:41:33+08:00"
+    },
+    {
+      "id": "release:v1.22.0",
+      "kind": "release",
+      "url": "https://github.com/alphabet-h/grooveseek/releases/tag/v1.22.0",
+      "fetched_at": "2026-10-31T13:41:33+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "MCP server for hybrid (semantic + full-text) search over a knowledge base",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "place `groove` (or `groove.exe` on Windows) somewhere on `PATH`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "MCP server for hybrid (semantic + full-text) search over a knowledge base",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "MCP server for semantic hybrid search (sqlite-vec + FTS5 with optional cross-encoder reranking) over a Markdown / plain-text knowledge base",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# GrooveSeek",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "| Linux x86_64 (glibc 2.38+ / Ubuntu 24.04+ / Debian 13+ / RHEL 9.5+) | `grooveseek-x86_64-unknown-linux-gnu.tar.xz` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Building needs Rust 1.89 or later",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "embedding models (ONNX) are downloaded from HuggingFace on first run",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:42+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:42+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:42+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:42+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.22.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:41:33+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "groove index --kb-path /path/to/knowledge-base",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "groove search \"semantic chunking\" --kb-path /path/to/knowledge-base --limit 3",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "A third-party benchmark against QMD on a 57-document synthetic corpus",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "generates embeddings with FastEmbed by default (BGE-small-en-v1.5, or BGE-M3 for multilingual/Japanese knowledge bases)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "via stdio (default, 1 client) or Streamable HTTP (many clients) transport.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"ai-knowledge\": {\n      \"command\": \"/path/to/groove\",\n      \"args\": [\"serve\", \"--kb-path\", \"/path/to/knowledge-base\"],\n      \"type\": \"stdio\"\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "Six tools — `search`, `get_document`, `list_topics`, `get_connection_graph`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "Six tools — `search`, `get_document`, `list_topics`, `get_connection_graph`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "Six tools — `search`, `get_document`, `list_topics`, `get_connection_graph`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "Six tools — `search`, `get_document`, `list_topics`, `get_connection_graph`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`get_best_practice`, `rebuild_index` — four prompts, and the knowledge base",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`get_best_practice`, `rebuild_index` — four prompts, and the knowledge base",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:39+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:50:29+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

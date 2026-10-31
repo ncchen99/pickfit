@@ -1,0 +1,539 @@
+{
+  "schema_version": "software.v1",
+  "slug": "ai",
+  "repo_id": "gh:1176973105",
+  "name": "Contentrain AI",
+  "summary": "Repo-native content governance that extracts app copy into Git-stored JSON and Markdown for review.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "astro",
+    "claude-code",
+    "cli",
+    "content-as-code",
+    "content-governance",
+    "contentrain",
+    "cursor",
+    "developer-tools",
+    "git"
+  ],
+  "use_cases": [
+    "Rescue hardcoded strings into structured translatable content",
+    "Start new projects with a structured content layer",
+    "Serve same JSON and Markdown content across web, docs, mobile and backend"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://ai.contentrain.io",
+  "repo": {
+    "url": "https://github.com/Contentrain/ai",
+    "full_name": "Contentrain/ai",
+    "created_at": "2026-03-09T15:08:35Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-ai-20261101-000948-35cc",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g contentrain",
+          "purpose": "install contentrain globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "contentrain --version",
+        "expected_signal": "0.18.24"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "contentrain@0.18.22",
+    "published_at": "2026-10-30T16:17:26Z",
+    "url": "https://github.com/Contentrain/ai/releases/tag/contentrain%400.18.22"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:11:59.751170+08:00",
+    "runs": [
+      {
+        "id": "verify-ai-20261101-000948-35cc",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:11:59.751170+08:00",
+        "tool_version": "0.18.24",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g contentrain",
+            "purpose": "install contentrain globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "contentrain --version",
+            "expected_signal": "0.18.24",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[log] 0.18.24",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/mcp-test && python3 ~/.pickfit/mcp_probe.py --timeout 30 -- contentrain serve --stdio 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/mcp-test && mkdir -p /tmp/mcp-test && cd /tmp/mcp-test && git init -q -b master && git config user.email \"test@test.com\" && git config user.name \"test\" && echo \"hello\" > README.md && git add . && git commit -qm \"initial\" && contentrain init --yes 2>&1; echo \"EXIT:$?\"; ls -la .contentrain/ 2>&1 | head -n 50",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/mcp-test && python3 ~/.pickfit/mcp_probe.py --timeout 30 --call contentrain_status --args '{}' -- contentrain serve --stdio 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=contentrain_status content=text text_chars=990",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/mcp-test && mkdir -p /tmp/mcp-test && cd /tmp/mcp-test && git init -q -b master && git config user.email \"test@test.com\" && git config user.name \"test\" && echo \"hello\" > README.md && git add . && git commit -qm \"initial\" && contentrain init --yes 2>&1; echo \"EXIT:$?\"; ls -la .contentrain/ 2>&1 | head -n 50",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx contentrain init creates .contentrain workspace",
+            "actually_needed": "must be inside a git repo with a master branch and at least one commit; add --yes to avoid interactive prompt or init hangs and exits 1 with 'not a valid object name: master'",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "npx contentrain serve --stdio launches MCP server",
+            "actually_needed": "server only works when run from directory containing initialized .contentrain workspace; global install (npm install -g contentrain) provides 'contentrain serve --stdio' on PATH for offline replay instead of npx fetcher",
+            "kind": "note"
+          },
+          {
+            "readme_said": "An MCP server over stdio writes only JSON-RPC messages to stdout",
+            "actually_needed": "This server wrote 1 other line(s) to stdout during the handshake; strict MCP clients may reject them.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 22 tools, successful contentrain_status tool call, and CLI version 0.18.24.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ai-20261101-000948-35cc/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ai-20261101-000948-35cc/check-1-cmd8.judged.png",
+            "runs/verify/verify-ai-20261101-000948-35cc/check-2-cmd9.judged.png",
+            "runs/verify/verify-ai-20261101-000948-35cc/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.083286,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "contentrain",
+            "serve",
+            "--stdio"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "contentrain-mcp",
+          "server_version": "3.11.22",
+          "tools": [
+            "contentrain_status",
+            "contentrain_describe",
+            "contentrain_describe_format",
+            "contentrain_init",
+            "contentrain_scaffold",
+            "contentrain_model_save",
+            "contentrain_model_delete",
+            "contentrain_content_save",
+            "contentrain_content_delete",
+            "contentrain_content_list",
+            "contentrain_vocabulary_save",
+            "contentrain_vocabulary_delete",
+            "contentrain_validate",
+            "contentrain_submit",
+            "contentrain_merge",
+            "contentrain_branch_list",
+            "contentrain_branch_delete",
+            "contentrain_reconcile",
+            "contentrain_scan",
+            "contentrain_apply",
+            "contentrain_bulk",
+            "contentrain_doctor"
+          ],
+          "tool_count": 22,
+          "called_tool": "contentrain_status",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "npx contentrain serve --stdio",
+    "client_configs": [],
+    "env_vars": [],
+    "tools": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 78.8,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 38.7,
+      "signals": {
+        "stars": 6,
+        "monthly_downloads": 10258,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 235,
+      "packages": [
+        "npm:contentrain"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 48.3
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "c983c9270cf7b88c2d648b60314fded8fef24b811e1528f8260ad5318646548e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "**Extract, govern, and ship structured content from your codebase.**"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Contentrain is a content governance ecosystem for teams and AI agents."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "no account, no cloud, no proprietary content format."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "npx contentrain init        # create .contentrain/ workspace"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "npx contentrain serve       # open the local review UI"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "npx contentrain setup        # configure the MCP server and rules for your IDE"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Contentrain/ai",
+      "fetched_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Contentrain/ai/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:40:01+08:00"
+    },
+    {
+      "id": "release:contentrain@0.18.22",
+      "kind": "release",
+      "url": "https://github.com/Contentrain/ai/releases/tag/contentrain%400.18.22",
+      "fetched_at": "2026-10-31T13:40:01+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "27 MCP tools + stdio / HTTP transport + Local / GitHub / GitLab providers",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:21+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "npx contentrain init        # create .contentrain/ workspace",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:21+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "MCP engine — 27 tools (22 core + 5 media) over stdio or HTTP transport",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:21+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Extract, govern, and ship structured content from your codebase.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:21+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Contentrain AI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:21+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:contentrain@0.18.22",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:40:01+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "**Rescuing hardcoded strings** from existing apps and turning them into structured, translatable content",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:21+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "**Starting new projects with a real content layer** instead of scattering copy across components",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:21+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "**Serving the same content across web, docs, mobile, and backend systems** from plain JSON and Markdown in Git",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:21+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "This repository holds its open-source tools (MIT, no account needed)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:21+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "no account, no cloud, no proprietary content format.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:21+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "27 MCP tools + stdio / HTTP transport + Local / GitHub / GitLab providers",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:21+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "npx contentrain serve --stdio # MCP over stdio for IDE agents",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:21+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:11+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

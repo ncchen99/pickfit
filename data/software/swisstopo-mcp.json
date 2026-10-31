@@ -1,0 +1,611 @@
+{
+  "schema_version": "software.v1",
+  "slug": "swisstopo-mcp",
+  "repo_id": "gh:1203505784",
+  "name": "malkreide/swisstopo-mcp",
+  "summary": "MCP server exposing Swiss federal geodata via Swisstopo APIs for geocoding, elevation, maps and cadastre.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": null,
+  "maturity": null,
+  "tags": [
+    "ai",
+    "claude",
+    "geocoding",
+    "geodata",
+    "gis",
+    "mcp",
+    "model-context-protocol",
+    "open-data",
+    "python",
+    "swiss-public-data-mcp"
+  ],
+  "use_cases": [
+    "geocode Swiss address Bahnhofstrasse 1 Zurich to coordinates",
+    "get elevation above sea level at Uetliberg summit",
+    "generate shareable map.geo.admin.ch URL for Bern",
+    "search STAC catalog for orthophoto datasets to download",
+    "resolve postal code 8001 to commune, BFS number and canton"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/malkreide/swisstopo-mcp",
+    "full_name": "malkreide/swisstopo-mcp",
+    "created_at": "2026-04-07T05:16:44Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "python 3.11+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.5.0",
+    "published_at": "2026-09-26T12:03:34Z",
+    "url": "https://github.com/malkreide/swisstopo-mcp/releases/tag/v0.5.0"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "not_run",
+    "checked_at": null,
+    "runs": []
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "python -m swisstopo_mcp.server",
+    "client_configs": [
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"swisstopo\": {\n      \"command\": \"python\",\n      \"args\": [\"-m\", \"swisstopo_mcp.server\"]\n    }\n  }\n}"
+      },
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"swisstopo\": {\n      \"command\": \"uvx\",\n      \"args\": [\"swisstopo-mcp\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "SWISSTOPO_SESSION_IDLE_TIMEOUT",
+        "required": null,
+        "purpose": "idle session timeout seconds"
+      }
+    ],
+    "tools": [
+      "swisstopo_map_query",
+      "swisstopo_zoning_at",
+      "swisstopo_municipality_at",
+      "swisstopo_geocode",
+      "swisstopo_reverse_geocode",
+      "swisstopo_get_height",
+      "swisstopo_elevation_profile",
+      "swisstopo_convert_coordinates",
+      "swisstopo_search_geodata",
+      "swisstopo_get_collection",
+      "swisstopo_map_url",
+      "swisstopo_get_egrid",
+      "swisstopo_get_oereb_extract",
+      "swisstopo_list_available_layers",
+      "swisstopo_query_geodata",
+      "swisstopo_query_osm_features",
+      "swisstopo_lookup_postal_code",
+      "swisstopo_find_commune",
+      "swisstopo_search_address"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 42.8,
+      "signals": {
+        "stars": 12,
+        "monthly_downloads": 246,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 207,
+      "packages": [
+        "pypi:swisstopo-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 39.47
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "312a24b14041b87e92bd43eee1216a26412be9c8d07b2f871c7c93fc6848a45a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "MCP server for Swiss federal geodata -- maps, elevation, geocoding, cadastral extracts, and downloadable datasets via Swisstopo APIs"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "`swisstopo-mcp` gives AI assistants access to Switzerland's official geodata infrastructure through 20 tools"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- Python 3.11+"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "pip install -e ."
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "python -m swisstopo_mcp.server"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "**No API key required** for all tools (OEREB extract needs a supported canton)"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/malkreide/swisstopo-mcp",
+      "fetched_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/malkreide/swisstopo-mcp/blob/master/README.md",
+      "fetched_at": "2026-10-31T13:45:08+08:00"
+    },
+    {
+      "id": "release:v0.5.0",
+      "kind": "release",
+      "url": "https://github.com/malkreide/swisstopo-mcp/releases/tag/v0.5.0",
+      "fetched_at": "2026-10-31T13:45:08+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "MCP server for Swiss federal geodata (Swisstopo APIs) — 13 tools for geocoding, height, STAC, WMTS, ÖREB and more",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "MCP server for Swiss federal geodata -- maps, elevation, geocoding, cadastral extracts, and downloadable datasets via Swisstopo APIs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "MCP server for Swiss federal geodata -- maps, elevation, geocoding, cadastral extracts, and downloadable datasets via Swisstopo APIs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "github_api",
+      "quote": "name: malkreide/swisstopo-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.11+",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "│   Claude / AI   │────▶│  swisstopo-mcp               │────▶│  Swisstopo REST API      │",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.5.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:45:08+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "*\"Where is Bahnhofstrasse 1, Zurich?\"* | `swisstopo_geocode`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "*\"What is the elevation at the Uetliberg summit?\"* | `swisstopo_get_height`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "*\"Show me a map of Bern at zoom level 10\"* | `swisstopo_map_url`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "*\"Find orthophoto datasets for download\"* | `swisstopo_search_geodata`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "*\"Which commune and canton does postal code 8001 belong to?\"* | `swisstopo_lookup_postal_code`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "🔓 **No API key required** for all tools (OEREB extract needs a supported canton)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "☁️ **Dual transport** -- stdio (Claude Desktop) + Streamable HTTP (cloud)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "python -m swisstopo_mcp.server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"swisstopo\": {\n      \"command\": \"python\",\n      \"args\": [\"-m\", \"swisstopo_mcp.server\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"swisstopo\": {\n      \"command\": \"uvx\",\n      \"args\": [\"swisstopo-mcp\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "SWISSTOPO_SESSION_IDLE_TIMEOUT",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`swisstopo_map_query` | The national map catalogue (api3.geo.admin.ch). One `operation` per call — see the five below",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`swisstopo_zoning_at` | Harmonised building zone at a coordinate — one call, no layer lookup (not legally binding)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`swisstopo_municipality_at` | Municipality, canton and official BFS number at a coordinate",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`swisstopo_geocode` | Convert Swiss addresses, place names, or postal codes to coordinates",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`swisstopo_reverse_geocode` | Find the nearest address for given coordinates",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`swisstopo_get_height` | Get elevation above sea level (m a.s.l.) at a coordinate",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`swisstopo_elevation_profile` | Compute an elevation profile along a line",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`swisstopo_convert_coordinates` | Official WGS84 ↔ LV95 conversion via the swisstopo REFRAME service",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`swisstopo_search_geodata` | Search the STAC catalog for downloadable geodatasets",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`swisstopo_get_collection` | Get details and download links for a STAC collection",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`swisstopo_map_url` | Generate a map.geo.admin.ch URL for browser display",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`swisstopo_get_egrid` | Resolve a cadastral property ID (EGRID) from coordinates",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "`swisstopo_get_oereb_extract` | Retrieve public-law land-use restrictions (OEREB) for a parcel",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "`swisstopo_list_available_layers` | Discover layer keys for `swisstopo_query_geodata`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/14",
+      "source_id": "readme",
+      "quote": "`swisstopo_query_geodata` | Query a chosen layer by `point` / `bbox` / `commune`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/15",
+      "source_id": "readme",
+      "quote": "`swisstopo_query_osm_features` | OpenStreetMap POIs (schools, playgrounds, pharmacies, …) around a point via Overpass",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/16",
+      "source_id": "readme",
+      "quote": "`swisstopo_lookup_postal_code` | Resolve a Swiss postal code → locality, commune (+**BFS number**), district, canton",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/17",
+      "source_id": "readme",
+      "quote": "`swisstopo_find_commune` | Resolve a commune both directions (`name` ↔ `bfs_number`) or list all communes of a `canton` / `district`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/18",
+      "source_id": "readme",
+      "quote": "`swisstopo_search_address` | Full-text search over Swiss streets and localities, returning commune + BFS number per hit",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:28+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:38:28+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

@@ -1,0 +1,615 @@
+{
+  "schema_version": "software.v1",
+  "slug": "nepa-mcp",
+  "repo_id": "gh:1331141764",
+  "name": "PermitAI NEPA MCP Toolkit",
+  "summary": "MCP server toolkit giving AI agents structured access to federal environmental and regulatory data for NEPA screening.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "ai-agents",
+    "energy-infrastructure",
+    "environmental-data",
+    "environmental-permitting",
+    "environmental-review",
+    "fastmcp",
+    "federal-permitting",
+    "geospatial-data",
+    "geospatial-screening",
+    "geothermal"
+  ],
+  "use_cases": [
+    "compose project-area data into interactive HTML map or GeoJSON export",
+    "search permitting projects by title, state, sector and agency",
+    "retrieve tracked agency reviews and milestones timetable for a project",
+    "find upcoming, completed or past-target permitting milestones"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://pnnl.github.io/nepa-mcp/",
+  "repo": {
+    "url": "https://github.com/pnnl/nepa-mcp",
+    "full_name": "pnnl/nepa-mcp",
+    "created_at": "2026-08-11T16:39:21Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.12 or newer"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "CENSUS_API_KEY",
+      "EPA_AQS_EMAIL",
+      "EPA_AQS_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-nepa-mcp-20261101-003625-9631",
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install nepa-mcp 2>&1",
+          "purpose": "install nepa-mcp via pipx"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "nepa-mcp --help 2>&1; echo \"---\"; nepa-mcp --version 2>&1; echo \"---\"; nepa-mcp doctor 2>&1",
+        "expected_signal": "nepa-mcp version: 0.1.6"
+      },
+      "first_task": "nepa-mcp list-servers 2>&1"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "BSD-3-Clause",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.1.6",
+    "published_at": "2026-09-06T03:13:10Z",
+    "url": "https://github.com/pnnl/nepa-mcp/releases/tag/v0.1.6"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:38:38.755699+08:00",
+    "runs": [
+      {
+        "id": "verify-nepa-mcp-20261101-003625-9631",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:38:38.755699+08:00",
+        "tool_version": "0.1.6",
+        "install_method": "pipx",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pipx install nepa-mcp 2>&1",
+            "purpose": "install nepa-mcp via pipx"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nepa-mcp --help 2>&1; echo \"---\"; nepa-mcp --version 2>&1; echo \"---\"; nepa-mcp doctor 2>&1",
+            "expected_signal": "nepa-mcp version: 0.1.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "nepa-mcp version: 0.1.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nepa-mcp list-servers 2>&1",
+            "expected_signal": "cfr",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "cfr none CFR, Federal Register, and executive-order lookup",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- nepa-mcp server cfr 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- nepa-mcp server gis 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 --call calculate_roi_area --args '{\"latitude\": 38.8951, \"longitude\": -77.0364, \"buffer_miles\": 1}' -- nepa-mcp server gis 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=calculate_roi_area content=text text_chars=155",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show help/version/doctor reporting version 0.1.6, server list containing cfr, and successful MCP handshake for cfr-server with 7 tools.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nepa-mcp-20261101-003625-9631/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nepa-mcp-20261101-003625-9631/check-1-cmd2.judged.png",
+            "runs/verify/verify-nepa-mcp-20261101-003625-9631/check-2-cmd3.judged.png",
+            "runs/verify/verify-nepa-mcp-20261101-003625-9631/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.04949,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "nepa-mcp",
+            "server",
+            "gis"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "gis-server",
+          "server_version": "3.4.4",
+          "tools": [
+            "summarize_roi_buffer",
+            "get_roi_geojson",
+            "calculate_roi_area"
+          ],
+          "tool_count": 3,
+          "called_tool": "calculate_roi_area",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": null,
+    "client_configs": [],
+    "env_vars": [
+      {
+        "name": "CENSUS_API_KEY",
+        "required": true,
+        "purpose": "Census API credentials"
+      },
+      {
+        "name": "EPA_AQS_EMAIL",
+        "required": true,
+        "purpose": "EPA AQS account email"
+      },
+      {
+        "name": "EPA_AQS_API_KEY",
+        "required": true,
+        "purpose": "EPA AQS API key"
+      }
+    ],
+    "tools": [
+      "search_permitting_projects",
+      "get_project_permitting_timetable",
+      "find_permitting_milestones"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 93.8,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.9375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.6,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 57.3,
+      "signals": {
+        "stars": 22,
+        "monthly_downloads": 214,
+        "forks": 8,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 80,
+      "packages": [
+        "pypi:nepa-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 40.05
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "079cbdda4edb0f9dc5e1f100d1d094636b4ba9c01db060dc5dfa404b53c83f7a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "NEPA MCP is the Model Context Protocol (MCP) server layer of the PermitAI"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "It gives AI agents structured access to federal environmental,"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- Python 3.12 or newer\n- [`pipx`](https://pipx.pypa.io/) for an isolated installation"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pipx install nepa-mcp"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "nepa-mcp doctor\n```\n\n`doctor` should report `Installed servers: 23`."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `census` | `CENSUS_API_KEY` |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "If `pipx upgrade` keeps an older version that was originally installed from a"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "[BSD 3-Clause License](https://github.com/pnnl/nepa-mcp/blob/main/LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/pnnl/nepa-mcp",
+      "fetched_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/pnnl/nepa-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:06:32+08:00"
+    },
+    {
+      "id": "release:v0.1.6",
+      "kind": "release",
+      "url": "https://github.com/pnnl/nepa-mcp/releases/tag/v0.1.6",
+      "fetched_at": "2026-10-31T01:06:32+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "NEPA MCP is the Model Context Protocol (MCP) server layer of the PermitAI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Install the stable package from PyPI:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "NEPA MCP is the Model Context Protocol (MCP) server layer of the PermitAI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "It gives AI agents structured access to federal environmental,\nregulatory, biological, cultural, socioeconomic, and jurisdictional data used\nin NEPA screening and permitting research.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "github_api",
+      "quote": "PermitAI NEPA MCP Toolkit: MCP servers for federal environmental data, regulatory research, and geospatial screening to support permitting workflows.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.12 or newer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "queries\npublic GIS services from eight federal data publishers at request time.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "| `census` | `CENSUS_API_KEY` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/1",
+      "source_id": "readme",
+      "quote": "| `epa_aqs` | `EPA_AQS_EMAIL`, `EPA_AQS_API_KEY` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/2",
+      "source_id": "readme",
+      "quote": "| `epa_aqs` | `EPA_AQS_EMAIL`, `EPA_AQS_API_KEY` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.1.6",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:06:32+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "Install the stable package from PyPI:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "`map_composer` turns project-area data into an interactive HTML map or a\ncombined GeoJSON file for QGIS, ArcGIS, and other geospatial workflows.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "release:v0.1.6",
+      "quote": "`search_permitting_projects` searches dashboard-listed projects by title, state, sector, lead agency, category, and reported status.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "release:v0.1.6",
+      "quote": "`get_project_permitting_timetable` groups a project's tracked agency reviews and milestones while preserving baseline, target, alternative, and actual dates.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "release:v0.1.6",
+      "quote": "`find_permitting_milestones` finds upcoming, recently completed, or past-target incomplete milestones with bounded date and project filters.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "queries\npublic GIS services from eight federal data publishers at request time.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "CENSUS_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "EPA_AQS_EMAIL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "EPA_AQS_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "release:v0.1.6",
+      "quote": "`search_permitting_projects` searches dashboard-listed projects by title, state, sector, lead agency, category, and reported status.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "release:v0.1.6",
+      "quote": "`get_project_permitting_timetable` groups a project's tracked agency reviews and milestones while preserving baseline, target, alternative, and actual dates.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "release:v0.1.6",
+      "quote": "`find_permitting_milestones` finds upcoming, recently completed, or past-target incomplete milestones with bounded date and project filters.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:10+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:50+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

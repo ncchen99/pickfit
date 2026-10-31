@@ -1,0 +1,678 @@
+{
+  "schema_version": "software.v1",
+  "slug": "scoped-mcp",
+  "repo_id": "gh:1212640506",
+  "name": "scoped-mcp",
+  "summary": "Per-agent scoped MCP tool proxy with credential isolation, resource scoping, and audit logging.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agents",
+    "ai-agents",
+    "audit-logging",
+    "claude-code",
+    "credential-isolation",
+    "fastmcp",
+    "mcp",
+    "model-context-protocol",
+    "multi-agent",
+    "python"
+  ],
+  "use_cases": [
+    "load only the tools an agent is allowed to use",
+    "enforce resource boundaries between agents",
+    "hold backend credentials so agents never see them",
+    "log every tool call to a structured audit trail"
+  ],
+  "alternatives_to": [
+    "Aggregation gateways",
+    "Access control proxies",
+    "Credential proxies",
+    "Enterprise gateways"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://tadmstr.github.io/scoped-mcp/",
+  "repo": {
+    "url": "https://github.com/TadMSTR/scoped-mcp",
+    "full_name": "TadMSTR/scoped-mcp",
+    "created_at": "2026-04-16T15:24:41Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-scoped-mcp-20261101-002748-756c",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install scoped-mcp 2>&1",
+          "purpose": "install scoped-mcp via uv tool install"
+        },
+        {
+          "command": "mkdir -p /tmp/scoped_test/base manifests && cat > manifests/research-agent.yml <<'YML'\nagent_type: research\ndescription: \"test agent\"\nmodules:\n  filesystem:\n    mode: read\n    config:\n      base_path: /tmp/scoped_test/base\nYML\n",
+          "purpose": "create minimal manifest manifests/research-agent.yml"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "scoped-mcp --help",
+        "expected_signal": "Per-agent scoped MCP tool proxy"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.19.3",
+    "published_at": "2026-10-28T16:32:51Z",
+    "url": "https://github.com/TadMSTR/scoped-mcp/releases/tag/v1.19.3"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:29:37.435998+08:00",
+    "runs": [
+      {
+        "id": "verify-scoped-mcp-20261101-002748-756c",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:29:37.435998+08:00",
+        "tool_version": "1.19.3",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install scoped-mcp 2>&1",
+            "purpose": "install scoped-mcp via uv tool install"
+          },
+          {
+            "command": "mkdir -p /tmp/scoped_test/base manifests && cat > manifests/research-agent.yml <<'YML'\nagent_type: research\ndescription: \"test agent\"\nmodules:\n  filesystem:\n    mode: read\n    config:\n      base_path: /tmp/scoped_test/base\nYML\n",
+            "purpose": "create minimal manifest manifests/research-agent.yml"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "scoped-mcp --help",
+            "expected_signal": "Per-agent scoped MCP tool proxy",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Per-agent scoped MCP tool proxy with credential isolation and audit logging.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "AGENT_ID=research-01 AGENT_TYPE=research python3 ~/.pickfit/mcp_probe.py -- scoped-mcp --manifest manifests/research-agent.yml",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "AGENT_ID=research-01 AGENT_TYPE=research python3 ~/.pickfit/mcp_probe.py --call filesystem_list_dir --args '{}' -- scoped-mcp --manifest manifests/research-agent.yml",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=filesystem_list_dir content=- text_chars=0",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake succeeding with 3 tools, filesystem_list_dir call succeeding, and --help describing the per-agent proxy.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-scoped-mcp-20261101-002748-756c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-scoped-mcp-20261101-002748-756c/check-1-cmd14.judged.png",
+            "runs/verify/verify-scoped-mcp-20261101-002748-756c/check-2-cmd15.judged.png",
+            "runs/verify/verify-scoped-mcp-20261101-002748-756c/check-3-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.132705,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "scoped-mcp",
+            "--manifest",
+            "manifests/research-agent.yml"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "scoped-mcp/research-01",
+          "server_version": "3.4.11",
+          "tools": [
+            "scoped_mcp_status",
+            "filesystem_list_dir",
+            "filesystem_read_file"
+          ],
+          "tool_count": 3,
+          "called_tool": "filesystem_list_dir",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "scoped-mcp --manifest manifests/research-agent.yml",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"tools\": {\n      \"command\": \"scoped-mcp\",\n      \"args\": [\"--manifest\", \"manifests/research-agent.yml\"],\n      \"env\": {\n        \"AGENT_ID\": \"research-01\",\n        \"AGENT_TYPE\": \"research\"\n      }\n    }\n  }\n}"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"tools\": {\n      \"type\": \"http\",\n      \"url\": \"http://127.0.0.1:9200/mcp\",\n      \"headers\": { \"Authorization\": \"Bearer ${SCOPED_MCP_BEARER_TOKEN}\" }\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "AGENT_ID",
+        "required": true,
+        "purpose": "unique agent instance identity"
+      },
+      {
+        "name": "AGENT_TYPE",
+        "required": true,
+        "purpose": "agent role for manifest mapping"
+      },
+      {
+        "name": "SCOPED_MCP_BEARER_TOKEN",
+        "required": true,
+        "purpose": "bearer token for http transport"
+      }
+    ],
+    "tools": [
+      "scoped_mcp_status",
+      "filesystem_read_file",
+      "filesystem_list_dir",
+      "sqlite_query",
+      "ntfy_send",
+      "filesystem_write_file",
+      "filesystem_delete_file",
+      "sqlite_execute",
+      "slack_send"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 84.4,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 34.9,
+      "signals": {
+        "stars": 7,
+        "monthly_downloads": 510,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 0,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 197,
+      "packages": [
+        "pypi:scoped-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 54.94
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "902d0edfcd11411c68ab121fc0290bb8b9950d2d33a83180baeee138e84b5da9",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Per-agent scoped MCP tool proxy — credential isolation, resource scoping, and audit logging for AI agent deployments"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Multi-agent setups (Claude Code subagents, parallel workers, role-based agents) share the same MCP servers."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "pip install scoped-mcp"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "scoped-mcp --manifest manifests/research-agent.yml"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export SCOPED_MCP_BEARER_TOKEN=\"$(openssl rand -hex 32)\"   # required for http"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "License: MIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/TadMSTR/scoped-mcp",
+      "fetched_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/TadMSTR/scoped-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:06:19+08:00"
+    },
+    {
+      "id": "release:v1.19.3",
+      "kind": "release",
+      "url": "https://github.com/TadMSTR/scoped-mcp/releases/tag/v1.19.3",
+      "fetched_at": "2026-10-31T01:06:19+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Per-agent scoped MCP tool proxy.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "pip install scoped-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "\"mcpServers\": {\n    \"tools\": {\n      \"command\": \"scoped-mcp\",",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Per-agent scoped MCP tool proxy — credential isolation, resource scoping, and audit logging for AI agent deployments",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# scoped-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.19.3",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:06:19+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "loads only the tools that agent is allowed to use",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "enforces resource boundaries between agents",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "holds credentials so agents never see them",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "logs every tool call to a structured audit trail.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "- **Aggregation gateways** — combine servers, no scoping",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "- **Access control proxies** — filter tools per agent, no resource scoping",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "- **Credential proxies** — isolate credentials, no tool management",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "- **Enterprise gateways** — governance and auth, but cloud and team-oriented",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "`scoped-mcp run` supports two transports via `--transport` (default `stdio`, unchanged):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "scoped-mcp --manifest manifests/research-agent.yml",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"tools\": {\n      \"command\": \"scoped-mcp\",\n      \"args\": [\"--manifest\", \"manifests/research-agent.yml\"],\n      \"env\": {\n        \"AGENT_ID\": \"research-01\",\n        \"AGENT_TYPE\": \"research\"\n      }\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"tools\": {\n      \"type\": \"http\",\n      \"url\": \"http://127.0.0.1:9200/mcp\",\n      \"headers\": { \"Authorization\": \"Bearer ${SCOPED_MCP_BEARER_TOKEN}\" }\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "AGENT_ID",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "AGENT_TYPE",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "SCOPED_MCP_BEARER_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`scoped_mcp_status` is always registered regardless of manifest content.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "TR1[\"filesystem_read_file\"]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "TR2[\"filesystem_list_dir\"]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "TR3[\"sqlite_query\"]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "TR4[\"ntfy_send\"]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "TB3[\"filesystem_write_file\"]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "TB4[\"filesystem_delete_file\"]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "TB6[\"sqlite_execute\"]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "TB8[\"slack_send\"]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:50+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

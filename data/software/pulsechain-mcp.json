@@ -1,0 +1,583 @@
+{
+  "schema_version": "software.v1",
+  "slug": "pulsechain-mcp",
+  "repo_id": "gh:1312454171",
+  "name": "pulsechain-mcp",
+  "summary": "MCP server letting AI agents read PulseChain data and use encrypted wallets.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-wallets",
+    "defi",
+    "hex",
+    "mcp",
+    "mcp-server",
+    "mcp-servers",
+    "model-context-protocol",
+    "model-context-protocol-mcp",
+    "model-context-protocol-server",
+    "pulsechain"
+  ],
+  "use_cases": [
+    "Check which pHEX stakes end in the next 30 days",
+    "Check PulseX buy and burn status and PLSX in dead address",
+    "Check if a Pump.tires coin is on the curve or graduated",
+    "Get swap quotes and execute swaps"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/DavidFeder/pulsechain-mcp",
+    "full_name": "DavidFeder/pulsechain-mcp",
+    "created_at": "2026-07-26T03:01:17Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js 24.22.1"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-pulsechain-mcp-20261101-003116-47e1",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone https://github.com/DavidFeder/pulsechain-mcp.git && ls -la pulsechain-mcp/",
+          "purpose": "clone repo"
+        },
+        {
+          "command": "cd pulsechain-mcp && npm install",
+          "purpose": "npm install (also builds)"
+        },
+        {
+          "command": "cd pulsechain-mcp && npm install -g . && which pulsechain-mcp && ls -la dist/index.js",
+          "purpose": "npm install -g for PATH"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.0.13",
+    "published_at": "2026-10-21T21:32:56Z",
+    "url": "https://github.com/DavidFeder/pulsechain-mcp/releases/tag/v1.0.13"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:34:44.510800+08:00",
+    "runs": [
+      {
+        "id": "verify-pulsechain-mcp-20261101-003116-47e1",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:34:44.510800+08:00",
+        "tool_version": "1.0.13",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/DavidFeder/pulsechain-mcp.git && ls -la pulsechain-mcp/",
+            "purpose": "clone repo"
+          },
+          {
+            "command": "cd pulsechain-mcp && npm install",
+            "purpose": "npm install (also builds)"
+          },
+          {
+            "command": "cd pulsechain-mcp && npm install -g . && which pulsechain-mcp && ls -la dist/index.js",
+            "purpose": "npm install -g for PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- pulsechain-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call pulsechain_health --args '{}' -- pulsechain-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=pulsechain_health content=text text_chars=680",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 80 tools listed and successful pulsechain_health tool call returning chain data.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-pulsechain-mcp-20261101-003116-47e1/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-pulsechain-mcp-20261101-003116-47e1/check-1-cmd6.judged.png",
+            "runs/verify/verify-pulsechain-mcp-20261101-003116-47e1/check-2-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.043618,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "pulsechain-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "pulsechain-mcp",
+          "server_version": "1.0.13",
+          "tools": [
+            "pulsechain_health",
+            "pulsechain_status",
+            "get_rpc_health",
+            "get_balance",
+            "get_token_balance",
+            "get_portfolio",
+            "get_transaction",
+            "get_transaction_history",
+            "get_token_transfers",
+            "get_gas_price",
+            "estimate_gas",
+            "get_block",
+            "read_contract",
+            "prepare_transaction",
+            "pulsex_quote",
+            "prepare_swap",
+            "get_token_allowance",
+            "get_token_price",
+            "get_token_info",
+            "get_token_history",
+            "get_top_tokens",
+            "get_top_pairs",
+            "get_market_overview",
+            "get_token_safety",
+            "get_token_liquidity",
+            "get_honeypots",
+            "get_bridge_stats",
+            "get_holder_leagues",
+            "check_address_risk",
+            "get_deployer_reputation",
+            "get_scam_alerts",
+            "get_smart_money_feed",
+            "get_recent_swaps",
+            "get_wallet_balances",
+            "get_wallet_swaps",
+            "get_funding_tree",
+            "get_holder_rank",
+            "dexscreener_search",
+            "dexscreener_pair",
+            "dexscreener_token_pairs",
+            "dexscreener_tokens",
+            "dexscreener_boosts_latest",
+            "dexscreener_profiles_latest",
+            "phiat_dashboard",
+            "piteas_accumulation_plan",
+            "blockscout_token_overview",
+            "blockscout_contract_abi",
+            "blockscout_address_activity",
+            "blockscout_event_logs",
+            "defillama_pulsechain_tvl",
+            "defillama_pulsechain_protocols",
+            "pulseswap_quote",
+            "piteas_quote",
+            "piteas_prepare_swap",
+            "switch_quote",
+            "switch_prepare_swap",
+            "pulsex_factory",
+            "pulsex_dex_day_data",
+            "pulsex_lp_events",
+            "hex_global_state",
+            "hex_stakes_for_address",
+            "hex_stake_summary",
+            "liquid_loans_system",
+            "liquid_loans_vault",
+            "liquid_loans_position",
+            "pulsex_buy_and_burn",
+            "pump_tires_coin",
+            "pulsex_subgraph_meta",
+            "pulsex_token",
+            "pulsex_pair",
+            "pulsex_swaps",
+            "pulsex_token_day_data",
+            "pulsex_pair_day_data",
+            "pulsex_top_tokens",
+            "pulsex_top_pairs",
+            "agent_wallet_status",
+            "inspect_tx_intent",
+            "agent_wallet_check_policy",
+            "get_agent_wallet_info",
+            "list_agent_wallets"
+          ],
+          "tool_count": 80,
+          "called_tool": "pulsechain_health",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": null,
+    "client_configs": [],
+    "env_vars": [],
+    "tools": [
+      "hex_stake_summary",
+      "pulsex_buy_and_burn",
+      "pump_tires_coin"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 90.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 39.7,
+      "signals": {
+        "stars": 12,
+        "monthly_downloads": null,
+        "forks": 9,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 96,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 54.39
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "169080828aa82f22289589cf1b7ceb3907cc2404e645f8a5f861a27f4c3671d2",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "An MCP server that lets AI agents work with **PulseChain** and encrypted agent wallets."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "PulseChain MCP server for AI agents: chain reads, markets, swap quotes, and encrypted wallets"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Install **Node.js 24.22.1** (Active LTS) or a newer build on a supported line"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "git clone https://github.com/DavidFeder/pulsechain-mcp.git && cd pulsechain-mcp && npm install && npm run build"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "- pHEX: \"Which of my pHEX stakes end in the next 30 days?\" `hex_stake_summary` is a read-only estimate, not an endStake payout or financial advice."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Never print or paste master keys."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "git pull\nnpm install\nnpm run build"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "MIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/DavidFeder/pulsechain-mcp",
+      "fetched_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/DavidFeder/pulsechain-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:05:19+08:00"
+    },
+    {
+      "id": "release:v1.0.13",
+      "kind": "release",
+      "url": "https://github.com/DavidFeder/pulsechain-mcp/releases/tag/v1.0.13",
+      "fetched_at": "2026-10-31T01:05:19+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "An MCP server that lets AI agents work with **PulseChain**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:49+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Clone this repo and open it in your AI app (Cursor, Claude, Grok, Codex, …) or have your agent do it.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:49+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "An MCP server that lets AI agents work with **PulseChain**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:49+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "An MCP server that lets AI agents work with **PulseChain** and encrypted agent wallets.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:49+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# pulsechain-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:49+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Install **Node.js 24.22.1** (Active LTS)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:49+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.0.13",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:05:19+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "\"Which of my pHEX stakes end in the next 30 days?\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:49+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "\"Is PulseX buy and burn running, and how much PLSX is in the dead address?\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:49+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "\"Is this Pump.tires coin still on the curve, or has it graduated?\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:49+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Swap quotes/prices and executions",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:49+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "github_api",
+      "quote": "stdio",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:49+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`hex_stake_summary` is a read-only estimate",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:49+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`pulsex_buy_and_burn` is a contract read",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:49+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`pump_tires_coin` is read-only",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:49+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:34+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

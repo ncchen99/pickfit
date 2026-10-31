@@ -1,0 +1,840 @@
+{
+  "schema_version": "software.v1",
+  "slug": "renovate-mcp",
+  "repo_id": "gh:1218250144",
+  "name": "renovate-mcp",
+  "summary": "MCP server to read, validate, preview and save Renovate configs interactively.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "mcp",
+    "mcp-server",
+    "renovate"
+  ],
+  "use_cases": [
+    "expand extends presets and trace which preset set each field",
+    "validate a Renovate config against schema",
+    "dry-run Renovate to preview which PRs would open",
+    "preview custom manager regex against local repo",
+    "validate and atomically write config to disk"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/tibuntu/renovate-mcp",
+    "full_name": "tibuntu/renovate-mcp",
+    "created_at": "2026-04-22T17:26:53Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js ≥ 24.11"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g renovate-mcp",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "claude mcp list"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-renovate-mcp-20261101-002826-3be1",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL https://nodejs.org/dist/v24.11.0/node-v24.11.0-linux-x64.tar.xz -o /tmp/node.tar.xz && mkdir -p /tmp/node24 && tar -xJf /tmp/node.tar.xz -C /tmp/node24 --strip-components=1 && /tmp/node24/bin/node --version && echo ok",
+          "purpose": "download Node.js 24.11.0 tarball required by README"
+        },
+        {
+          "command": "mkdir -p $HOME/.local/node24 && tar -xJf /tmp/node.tar.xz -C $HOME/.local/node24 --strip-components=1 && $HOME/.local/node24/bin/node --version\n# make it available via PATH: symlink into ~/.local/bin which is already on PATH\nln -sf $HOME/.local/node24/bin/node $HOME/.local/bin/node\nln -sf $HOME/.local/node24/bin/npm $HOME/.local/bin/npm\nln -sf $HOME/.local/node24/bin/npx $HOME/.local/bin/npx\nnode --version; npm --version",
+          "purpose": "extract Node 24.11 to ~/.local/node24 and symlink to ~/.local/bin"
+        },
+        {
+          "command": "npm install -g renovate-mcp",
+          "purpose": "npm install -g renovate-mcp"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v1.7.1",
+    "published_at": "2026-10-30T15:38:31Z",
+    "url": "https://github.com/tibuntu/renovate-mcp/releases/tag/v1.7.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:31:16.143124+08:00",
+    "runs": [
+      {
+        "id": "verify-renovate-mcp-20261101-002826-3be1",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:31:16.143124+08:00",
+        "tool_version": "1.7.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://nodejs.org/dist/v24.11.0/node-v24.11.0-linux-x64.tar.xz -o /tmp/node.tar.xz && mkdir -p /tmp/node24 && tar -xJf /tmp/node.tar.xz -C /tmp/node24 --strip-components=1 && /tmp/node24/bin/node --version && echo ok",
+            "purpose": "download Node.js 24.11.0 tarball required by README"
+          },
+          {
+            "command": "mkdir -p $HOME/.local/node24 && tar -xJf /tmp/node.tar.xz -C $HOME/.local/node24 --strip-components=1 && $HOME/.local/node24/bin/node --version\n# make it available via PATH: symlink into ~/.local/bin which is already on PATH\nln -sf $HOME/.local/node24/bin/node $HOME/.local/bin/node\nln -sf $HOME/.local/node24/bin/npm $HOME/.local/bin/npm\nln -sf $HOME/.local/node24/bin/npx $HOME/.local/bin/npx\nnode --version; npm --version",
+            "purpose": "extract Node 24.11 to ~/.local/node24 and symlink to ~/.local/bin"
+          },
+          {
+            "command": "npm install -g renovate-mcp",
+            "purpose": "npm install -g renovate-mcp"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- renovate-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call get_version --args '{}' -- renovate-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_version content=text text_chars=233",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Requires Node.js ≥ 24.11",
+            "actually_needed": "Box has Node 22.23.4 — had to download and install Node 24.11.0 tarball to ~/.local/node24 and symlink into ~/.local/bin",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show successful MCP handshake with 18 tools and get_version returning 1.7.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-renovate-mcp-20261101-002826-3be1/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-renovate-mcp-20261101-002826-3be1/check-1-cmd8.judged.png",
+            "runs/verify/verify-renovate-mcp-20261101-002826-3be1/check-2-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.063261,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "renovate-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "renovate-mcp",
+          "server_version": "1.7.1",
+          "tools": [
+            "check_setup",
+            "read_config",
+            "resolve_config",
+            "explain_config",
+            "resolve_config_diff",
+            "suggest_presets",
+            "preview_custom_manager",
+            "validate_config",
+            "lint_config",
+            "dry_run",
+            "dry_run_diff",
+            "test_package_rules",
+            "annotate_dry_run",
+            "explain_dependency",
+            "explain_schedule",
+            "migrate_config",
+            "write_config",
+            "get_version"
+          ],
+          "tool_count": 18,
+          "called_tool": "get_version",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "renovate-mcp",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add renovate -s user -- renovate-mcp"
+      },
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"renovate\": {\n      \"command\": \"/Users/you/.nvm/versions/node/v24.14.1/bin/node\",\n      \"args\": [\"/Users/you/.nvm/versions/node/v24.14.1/lib/node_modules/renovate-mcp/dist/index.js\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "GITHUB_COM_TOKEN",
+        "required": false,
+        "purpose": "authenticates github.com datasource lookups"
+      },
+      {
+        "name": "GITHUB_TOKEN",
+        "required": false,
+        "purpose": "dry_run against GitHub"
+      },
+      {
+        "name": "GITLAB_TOKEN",
+        "required": false,
+        "purpose": "dry_run against GitLab"
+      },
+      {
+        "name": "RENOVATE_TOKEN",
+        "required": false,
+        "purpose": "platform token"
+      },
+      {
+        "name": "RENOVATE_PLATFORM",
+        "required": false,
+        "purpose": "platform selection"
+      },
+      {
+        "name": "RENOVATE_ENDPOINT",
+        "required": false,
+        "purpose": "self-hosted endpoint"
+      },
+      {
+        "name": "RENOVATE_BIN",
+        "required": false,
+        "purpose": "override bundled binary"
+      }
+    ],
+    "tools": [
+      "check_setup",
+      "get_version",
+      "read_config",
+      "suggest_presets",
+      "resolve_config",
+      "explain_config",
+      "resolve_config_diff",
+      "test_package_rules",
+      "preview_custom_manager",
+      "validate_config",
+      "lint_config",
+      "dry_run",
+      "dry_run_diff",
+      "annotate_dry_run",
+      "explain_dependency",
+      "explain_schedule",
+      "migrate_config",
+      "write_config"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 83.0,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.9375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 46.3,
+      "signals": {
+        "stars": 11,
+        "monthly_downloads": 2011,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 190,
+      "packages": [
+        "npm:renovate-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 44.57
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "1f01f2050759bbc643ad3f1b8b8eae8d0d5fda59c7deafd15ec3cab394ab803a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "An MCP server for designing Renovate configurations interactively"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Point it at a local repo and let an LLM help you read, validate, preview, and save `renovate.json`."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Needs Node.js ≥ 24.11 on Linux or macOS."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npm install -g renovate-mcp"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "claude mcp list   # renovate should show as connected"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "`RENOVATE_BIN` / `RENOVATE_CONFIG_VALIDATOR_BIN` — override the bundled binaries."
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "Upgrade with `npm install -g renovate-mcp@latest` and restart your client."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/tibuntu/renovate-mcp",
+      "fetched_at": "2026-10-31T00:18:11+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/tibuntu/renovate-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:03:48+08:00"
+    },
+    {
+      "id": "release:v1.7.1",
+      "kind": "release",
+      "url": "https://github.com/tibuntu/renovate-mcp/releases/tag/v1.7.1",
+      "fetched_at": "2026-10-31T01:03:48+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "An MCP server for designing [Renovate](https://github.com/renovatebot/renovate) configurations interactively.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "npm install -g renovate-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "An MCP server for designing [Renovate](https://github.com/renovatebot/renovate) configurations interactively.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "An MCP server for designing [Renovate](https://github.com/renovatebot/renovate) configurations interactively.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# renovate-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Needs Node.js ≥ 24.11 on Linux or macOS.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Needs Node.js ≥ 24.11 on Linux or macOS.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:11+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:11+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:11+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:11+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.7.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:03:48+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "expand every `extends` preset offline, and trace which preset set each field.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Run `renovate-config-validator` against a file or inline object.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Run Renovate with `--dry-run` and return the structured JSON report.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Preview a `customManagers` entry (regex or JSONata) against a local repo. Offline.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Validate, then atomically write a config to disk.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g renovate-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g renovate-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Dry-run** against a local checkout or a remote GitHub/GitLab — see exactly which PRs Renovate would open.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Any other client that can launch a stdio MCP server works with the same command.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add renovate -s user -- renovate-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add renovate -s user -- renovate-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"renovate\": {\n      \"command\": \"/Users/you/.nvm/versions/node/v24.14.1/bin/node\",\n      \"args\": [\"/Users/you/.nvm/versions/node/v24.14.1/lib/node_modules/renovate-mcp/dist/index.js\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "GITHUB_COM_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "GITHUB_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "GITLAB_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "RENOVATE_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "RENOVATE_PLATFORM",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/5",
+      "source_id": "readme",
+      "quote": "RENOVATE_ENDPOINT",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/6",
+      "source_id": "readme",
+      "quote": "RENOVATE_BIN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`check_setup`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`get_version`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`read_config`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`suggest_presets`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`resolve_config`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`explain_config`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`resolve_config_diff`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`test_package_rules`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`preview_custom_manager`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`validate_config`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`lint_config`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`dry_run`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "`dry_run_diff`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "`annotate_dry_run`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/14",
+      "source_id": "readme",
+      "quote": "`explain_dependency`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/15",
+      "source_id": "readme",
+      "quote": "`explain_schedule`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/16",
+      "source_id": "readme",
+      "quote": "`migrate_config`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/17",
+      "source_id": "readme",
+      "quote": "`write_config`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:11+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

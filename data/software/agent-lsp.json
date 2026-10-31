@@ -1,0 +1,785 @@
+{
+  "schema_version": "software.v1",
+  "slug": "agent-lsp",
+  "repo_id": "gh:1203023842",
+  "name": "agent-lsp",
+  "summary": "MCP server that orchestrates language servers into agent workflows for code intelligence.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agentskills",
+    "ai-agents",
+    "ai-tooling",
+    "claude",
+    "claude-code",
+    "code-intelligence",
+    "code-quality",
+    "coding-agent",
+    "developer-tools",
+    "go"
+  ],
+  "use_cases": [
+    "Building agentic code generation systems",
+    "Automating refactors across large codebases",
+    "CI tooling that needs programmatic code intelligence",
+    "Workflows where sequential LSP calls are too slow or complex"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "http://www.agent-lsp.com/",
+  "repo": {
+    "url": "https://github.com/blackwell-systems/agent-lsp",
+    "full_name": "blackwell-systems/agent-lsp",
+    "created_at": "2026-04-06T16:38:40Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install blackwell-systems/tap/agent-lsp",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "agent-lsp doctor"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-agent-lsp-20261101-002058-787c",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install agent-lsp 2>&1",
+          "purpose": "install agent-lsp via uv tool install"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "agent-lsp --version 2>&1",
+        "expected_signal": "0.23.6"
+      },
+      "first_task": "agent-lsp doctor 2>&1"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @blackwell-systems/agent-lsp",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "agent-lsp doctor"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.23.6",
+    "published_at": "2026-10-31T03:26:26Z",
+    "url": "https://github.com/blackwell-systems/agent-lsp/releases/tag/v0.23.6"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:21:58.501640+08:00",
+    "runs": [
+      {
+        "id": "verify-agent-lsp-20261101-002058-787c",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:21:58.501640+08:00",
+        "tool_version": "0.23.6",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install agent-lsp 2>&1",
+            "purpose": "install agent-lsp via uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "agent-lsp --version 2>&1",
+            "expected_signal": "0.23.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.23.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- agent-lsp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call set_log_level --args '{\"level\":\"info\"}' -- agent-lsp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=set_log_level content=text text_chars=23",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "agent-lsp doctor 2>&1",
+            "expected_signal": "Summary: 0 ok, 0 failed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Summary: 0 ok, 0 failed",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.23.6, successful MCP handshake listing 65 tools, and successful set_log_level tool call.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-agent-lsp-20261101-002058-787c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-agent-lsp-20261101-002058-787c/check-1-cmd13.judged.png",
+            "runs/verify/verify-agent-lsp-20261101-002058-787c/check-2-cmd14.judged.png",
+            "runs/verify/verify-agent-lsp-20261101-002058-787c/check-3-cmd15.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.101175,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "agent-lsp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "agent-lsp",
+          "server_version": "0.23.6",
+          "tools": [
+            "activate_skill",
+            "add_workspace_folder",
+            "apply_edit",
+            "blast_radius",
+            "callers",
+            "close_document",
+            "commit_session",
+            "create_simulation_session",
+            "deactivate_skill",
+            "destroy_session",
+            "detect_changes",
+            "detect_lsp_servers",
+            "did_change_watched_files",
+            "discard_session",
+            "evaluate_session",
+            "execute_command",
+            "explore",
+            "explore_symbol",
+            "export_cache",
+            "find_callers",
+            "find_references",
+            "find_symbol",
+            "format_document",
+            "format_range",
+            "get_completions",
+            "get_cross_repo_references",
+            "get_diagnostics",
+            "get_document_highlights",
+            "get_inlay_hints",
+            "get_semantic_tokens",
+            "get_server_capabilities",
+            "get_signature_help",
+            "get_skill_phase",
+            "get_symbol_documentation",
+            "get_symbol_source",
+            "get_tests_for_file",
+            "go_to_declaration",
+            "go_to_definition",
+            "go_to_implementation",
+            "go_to_symbol",
+            "go_to_type_definition",
+            "import_cache",
+            "insert_after_symbol",
+            "insert_before_symbol",
+            "inspect_symbol",
+            "list_symbols",
+            "list_workspace_folders",
+            "open_document",
+            "prepare_rename",
+            "preview_edit",
+            "remove_workspace_folder",
+            "rename_symbol",
+            "replace_symbol_body",
+            "restart_lsp_server",
+            "run_build",
+            "run_tests",
+            "safe_apply_edit",
+            "safe_delete_symbol",
+            "safe_edit",
+            "set_log_level",
+            "simulate_chain",
+            "simulate_edit",
+            "start_lsp",
+            "suggest_fixes",
+            "type_hierarchy"
+          ],
+          "tool_count": 65,
+          "called_tool": "set_log_level",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "sse",
+      "stdio"
+    ],
+    "launch_command": "agent-lsp",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"lsp\": {\n      \"type\": \"stdio\",\n      \"command\": \"agent-lsp\",\n      \"args\": [\n        \"go:gopls\",\n        \"typescript:typescript-language-server,--stdio\",\n        \"python:pyright-langserver,--stdio\"\n      ]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "AGENT_LSP_TOKEN",
+        "required": null,
+        "purpose": "bearer token auth"
+      },
+      {
+        "name": "AGENT_LSP_OUTPUT_FORMAT",
+        "required": null,
+        "purpose": "revert output to JSON"
+      }
+    ],
+    "tools": [
+      "blast_radius",
+      "simulate_edit",
+      "start_lsp",
+      "preview_edit",
+      "simulate_chain",
+      "go_to_implementation",
+      "apply_edit",
+      "safe_apply_edit",
+      "replace_symbol_body",
+      "find_callers",
+      "find_references",
+      "prepare_rename",
+      "find_symbol",
+      "get_diagnostics"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 96.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.9667,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 87.1,
+      "signals": {
+        "stars": 166,
+        "monthly_downloads": 4740,
+        "forks": 20,
+        "dependents": null,
+        "release_downloads": 1788,
+        "hn_top_score": 0,
+        "registries_count": 2
+      },
+      "age_days": 207,
+      "packages": [
+        "npm:@blackwell-systems/agent-lsp",
+        "pypi:agent-lsp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 12.41
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "03567618b2cef4657d290e7e1c5a9221a9d1f832a3068bc7d6f4220827c54c8a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "agent-lsp is an **MCP server** that orchestrates existing LSP servers (gopls, rust-analyzer, jdtls, etc.) into agent-native workflows."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "- Building agentic code generation systems"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Install the servers for your stack. Common ones:"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/blackwell-systems/agent-lsp/main/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "agent-lsp doctor"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export AGENT_LSP_OUTPUT_FORMAT=json"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "`agent-lsp uninstall` removes them."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "## License\n\nMIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/blackwell-systems/agent-lsp",
+      "fetched_at": "2026-10-31T13:38:49+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/blackwell-systems/agent-lsp/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:41:51+08:00"
+    },
+    {
+      "id": "release:v0.23.6",
+      "kind": "release",
+      "url": "https://github.com/blackwell-systems/agent-lsp/releases/tag/v0.23.6",
+      "fetched_at": "2026-10-31T13:41:51+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "agent-lsp is an **MCP server** that orchestrates existing LSP servers",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/blackwell-systems/agent-lsp/main/install.sh | sh && agent-lsp init",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "agent-lsp is an **MCP server** that orchestrates existing LSP servers",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**Code intelligence infrastructure for AI agents.** 65 tools, 32 CI-verified languages, 24 agent workflows. Single Go binary.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<img src=\"assets/banner.png\" alt=\"agent-lsp\" width=\"820\">",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "release:v0.23.6",
+      "quote": "assets: agent-lsp_darwin_amd64.tar.gz, agent-lsp_darwin_arm64.tar.gz, agent-lsp_linux_amd64.tar.gz",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:49+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:49+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:49+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:49+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:49+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.23.6",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:41:51+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Building agentic code generation systems",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Automating refactors across large codebases",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "CI tooling that needs programmatic code intelligence",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Any workflow where sequential LSP calls are too slow or complex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install blackwell-systems/tap/agent-lsp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g @blackwell-systems/agent-lsp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g @blackwell-systems/agent-lsp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | stdio | `agent-lsp init` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "\"command\": \"agent-lsp\",",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"lsp\": {\n      \"type\": \"stdio\",\n      \"command\": \"agent-lsp\",\n      \"args\": [\n        \"go:gopls\",\n        \"typescript:typescript-language-server,--stdio\",\n        \"python:pyright-langserver,--stdio\"\n      ]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "AGENT_LSP_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "AGENT_LSP_OUTPUT_FORMAT",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`blast_radius` → one call returns all exports + all callers",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`simulate_edit` → preview changes in memory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "start_lsp(root_dir=\"/your/project\")",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`preview_edit` previews the diagnostic impact of any edit.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`simulate_chain` evaluates a sequence of dependent edits",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`go_to_implementation` (type-checked interface satisfaction",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "Calling `apply_edit` during blast-radius analysis",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`safe_apply_edit` combines preview + apply in one call",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "Symbol edit tools (`replace_symbol_body`, `insert_after_symbol`, `insert_before_symbol`, `safe_delete_symbol`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`find_callers` with `cross_concurrent: true` traces call chains",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "Calling `apply_edit` during blast-radius analysis",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`prepare_rename` safety gate, preview all sites, confirm, apply atomically",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "release:v0.23.6",
+      "quote": "`find_symbol` has no file argument to route by",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "separate `get_diagnostics` call.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:42+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:37:25+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

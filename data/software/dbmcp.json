@@ -1,0 +1,746 @@
+{
+  "schema_version": "software.v1",
+  "slug": "dbmcp",
+  "repo_id": "gh:1181567531",
+  "name": "Database MCP",
+  "summary": "Single-binary MCP server connecting AI assistants to MySQL, PostgreSQL, and SQLite.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "ai-agents",
+    "database",
+    "mariadb",
+    "mcp",
+    "mcp-server",
+    "mysql",
+    "postgres",
+    "sql",
+    "sqlite"
+  ],
+  "use_cases": [],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://dbmcp.haymon.ai",
+  "repo": {
+    "url": "https://github.com/haymon-ai/dbmcp",
+    "full_name": "haymon-ai/dbmcp",
+    "created_at": "2026-03-14T10:15:58Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://dbmcp.haymon.ai/install.sh | bash",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-dbmcp-20261101-003128-8660",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://dbmcp.haymon.ai/install.sh -o /tmp/install.sh && ls -lh /tmp/install.sh && wc -l /tmp/install.sh",
+          "purpose": "download install.sh"
+        },
+        {
+          "command": "bash /tmp/install.sh",
+          "purpose": "install dbmcp via install.sh"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://dbmcp.haymon.ai/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.15.2",
+    "published_at": "2026-10-26T17:27:42Z",
+    "url": "https://github.com/haymon-ai/dbmcp/releases/tag/v0.15.2"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:34:24.500881+08:00",
+    "runs": [
+      {
+        "id": "verify-dbmcp-20261101-003128-8660",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:34:24.500881+08:00",
+        "tool_version": "0.15.2",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://dbmcp.haymon.ai/install.sh -o /tmp/install.sh && ls -lh /tmp/install.sh && wc -l /tmp/install.sh",
+            "purpose": "download install.sh"
+          },
+          {
+            "command": "bash /tmp/install.sh",
+            "purpose": "install dbmcp via install.sh"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "DBMCP_DB_BACKEND=sqlite DBMCP_DB_NAME=/tmp/test.db python3 ~/.pickfit/mcp_probe.py -- dbmcp stdio",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "launch command is `dbmcp`",
+            "actually_needed": "binary requires subcommand `dbmcp stdio` (and `dbmcp http`); plain `dbmcp` exits with usage and probe fails",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "The server's tools/list shows each tool's description to the calling agent as is",
+            "actually_needed": "Tool listDatabases's description has instruction-like text aimed at the agent (text about how to use other tools). pickfit neither kept nor followed it; read what the server sends before enabling it.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows MCP probe initializing dbmcp 0.15.2, listing 8 tools, and reporting handshake: ok.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-dbmcp-20261101-003128-8660/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-dbmcp-20261101-003128-8660/check-1-cmd15.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.122619,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "dbmcp",
+            "stdio"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "dbmcp",
+          "server_version": "0.15.2",
+          "tools": [
+            "explainQuery",
+            "listDatabases",
+            "listFunctions",
+            "listProcedures",
+            "listTables",
+            "listTriggers",
+            "listViews",
+            "readQuery"
+          ],
+          "tool_count": 8,
+          "called_tool": null,
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "dbmcp",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"dbmcp\": {\n      \"command\": \"dbmcp\",\n      \"env\": {\n        \"DBMCP_DB_BACKEND\": \"mysql\",\n        \"DBMCP_DB_HOST\": \"127.0.0.1\",\n        \"DBMCP_DB_PORT\": \"3306\",\n        \"DBMCP_DB_USER\": \"root\",\n        \"DBMCP_DB_PASSWORD\": \"secret\",\n        \"DBMCP_DB_NAME\": \"mydb\"\n      }\n    }\n  }\n}"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"dbmcp\": {\n      \"type\": \"http\",\n      \"url\": \"http://127.0.0.1:9001/mcp\"\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "DBMCP_DB_BACKEND",
+        "required": null,
+        "purpose": "database backend selection"
+      },
+      {
+        "name": "DBMCP_DB_HOST",
+        "required": null,
+        "purpose": "database host"
+      },
+      {
+        "name": "DBMCP_DB_USER",
+        "required": null,
+        "purpose": "database user"
+      },
+      {
+        "name": "DBMCP_DB_PASSWORD",
+        "required": null,
+        "purpose": "database password"
+      },
+      {
+        "name": "DBMCP_DB_NAME",
+        "required": null,
+        "purpose": "database name"
+      },
+      {
+        "name": "DBMCP_TRANSPORT",
+        "required": null,
+        "purpose": "transport selection"
+      },
+      {
+        "name": "DBMCP_HTTP_AUTH_TOKEN",
+        "required": null,
+        "purpose": "HTTP bearer token"
+      }
+    ],
+    "tools": [
+      "listDatabases",
+      "listTables",
+      "listViews",
+      "listTriggers",
+      "listFunctions",
+      "listProcedures",
+      "listMaterializedViews",
+      "readQuery",
+      "writeQuery",
+      "createDatabase",
+      "dropDatabase",
+      "dropTable",
+      "explainQuery"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 70.4,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.68,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.4,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 57.1,
+      "signals": {
+        "stars": 33,
+        "monthly_downloads": 35,
+        "forks": 8,
+        "dependents": null,
+        "release_downloads": 456,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 230,
+      "packages": [
+        "crates:dbmcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 30.2
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "ecfab174668625e4c614ed00c2f0c97bdf644dd9d85f6ce33f238ae45cdee642",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A single-binary [MCP](https://modelcontextprotocol.io/) server for SQL databases."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Connect your AI assistant to MySQL/MariaDB, PostgreSQL, or SQLite with zero runtime dependencies."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "**Single binary** — ~7 MB, no Python/Node/Docker needed"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://dbmcp.haymon.ai/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "DBMCP_DB_BACKEND=mysql DBMCP_DB_HOST=localhost DBMCP_DB_USER=root DBMCP_DB_NAME=mydb dbmcp"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Every setting has a `DBMCP_*` environment variable and a YAML key."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/haymon-ai/dbmcp",
+      "fetched_at": "2026-10-31T13:37:52+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/haymon-ai/dbmcp/blob/master/README.md",
+      "fetched_at": "2026-10-31T13:44:01+08:00"
+    },
+    {
+      "id": "release:v0.15.2",
+      "kind": "release",
+      "url": "https://github.com/haymon-ai/dbmcp/releases/tag/v0.15.2",
+      "fetched_at": "2026-10-31T13:44:01+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A single-binary [MCP](https://modelcontextprotocol.io/) server for SQL databases.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Connect your AI assistant to MySQL/MariaDB, PostgreSQL, or SQLite with zero runtime dependencies.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A single-binary [MCP](https://modelcontextprotocol.io/) server for SQL databases.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A single-binary [MCP](https://modelcontextprotocol.io/) server for SQL databases. Connect your AI assistant to MySQL/MariaDB, PostgreSQL, or SQLite",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Database MCP",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "**macOS, Linux, WSL**:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:37:52+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:37:52+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:37:52+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:37:52+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:37:52+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.15.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:44:01+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://dbmcp.haymon.ai/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://dbmcp.haymon.ai/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://dbmcp.haymon.ai/install.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Multiple transports** — stdio (for Claude Desktop, Cursor) and HTTP (for remote/multi-client)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "DBMCP_DB_BACKEND=sqlite DBMCP_DB_NAME=./data.db dbmcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"dbmcp\": {\n      \"command\": \"dbmcp\",\n      \"env\": {\n        \"DBMCP_DB_BACKEND\": \"mysql\",\n        \"DBMCP_DB_HOST\": \"127.0.0.1\",\n        \"DBMCP_DB_PORT\": \"3306\",\n        \"DBMCP_DB_USER\": \"root\",\n        \"DBMCP_DB_PASSWORD\": \"secret\",\n        \"DBMCP_DB_NAME\": \"mydb\"\n      }\n    ",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"dbmcp\": {\n      \"type\": \"http\",\n      \"url\": \"http://127.0.0.1:9001/mcp\"\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "DBMCP_DB_BACKEND",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "DBMCP_DB_HOST",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "DBMCP_DB_USER",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "DBMCP_DB_PASSWORD",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "DBMCP_DB_NAME",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/5",
+      "source_id": "readme",
+      "quote": "DBMCP_TRANSPORT",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/6",
+      "source_id": "readme",
+      "quote": "DBMCP_HTTP_AUTH_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "### listDatabases",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "### listTables",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "### listViews",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "### listTriggers",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "### listFunctions",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "### listProcedures",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "### listMaterializedViews",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "### readQuery",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "### writeQuery",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "### createDatabase",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "### dropDatabase",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "### dropTable",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "### explainQuery",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:18+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:37:52+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

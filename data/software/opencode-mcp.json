@@ -1,0 +1,782 @@
+{
+  "schema_version": "software.v1",
+  "slug": "opencode-mcp",
+  "repo_id": "gh:1152853395",
+  "name": "opencode-mcp",
+  "summary": "MCP server that delegates coding work to OpenCode from MCP clients.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": null,
+  "maturity": null,
+  "tags": [
+    "ai",
+    "ai-coding",
+    "ai-tools",
+    "claude",
+    "claude-desktop",
+    "coding-assistant",
+    "cursor",
+    "developer-tools",
+    "headless-api",
+    "llm"
+  ],
+  "use_cases": [
+    "ask questions and implement features via OpenCode",
+    "run coding tasks in background and monitor them",
+    "review code changes and conversations"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://www.npmjs.com/package/opencode-mcp",
+  "repo": {
+    "url": "https://github.com/AlaeddineMessadi/opencode-mcp",
+    "full_name": "AlaeddineMessadi/opencode-mcp",
+    "created_at": "2026-02-08T14:40:25Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js 22 or newer"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-opencode-mcp-20261101-002927-5b15",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g opencode-mcp",
+          "purpose": "install opencode-mcp globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v3.1.0",
+    "published_at": "2026-10-29T01:29:15Z",
+    "url": "https://github.com/AlaeddineMessadi/opencode-mcp/releases/tag/v3.1.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:31:42.911565+08:00",
+    "runs": [
+      {
+        "id": "verify-opencode-mcp-20261101-002927-5b15",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:31:42.911565+08:00",
+        "tool_version": "3.1.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g opencode-mcp",
+            "purpose": "install opencode-mcp globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- opencode-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call opencode_job_list --args '{\"limit\": 5}' -- opencode-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=opencode_job_list content=text text_chars=2",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "launch via npx -y opencode-mcp",
+            "actually_needed": "install globally with npm install -g opencode-mcp so launch command persists offline",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "tools work against OpenCode server",
+            "actually_needed": "most tools return fetch failed when server not running; local tools opencode_job_list, opencode_setup, opencode_project_init still succeed without server",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "MCP server initialized with 87 tools and opencode_job_list call returned empty list successfully.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-opencode-mcp-20261101-002927-5b15/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-opencode-mcp-20261101-002927-5b15/check-1-cmd13.judged.png",
+            "runs/verify/verify-opencode-mcp-20261101-002927-5b15/check-2-cmd14.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.091345,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "opencode-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "opencode-mcp",
+          "server_version": "3.1.0",
+          "tools": [
+            "opencode_health",
+            "opencode_config_get",
+            "opencode_config_update",
+            "opencode_config_providers",
+            "opencode_project_list",
+            "opencode_project_init",
+            "opencode_project_current",
+            "opencode_session_list",
+            "opencode_session_create",
+            "opencode_session_get",
+            "opencode_session_delete",
+            "opencode_session_update",
+            "opencode_session_children",
+            "opencode_session_status",
+            "opencode_session_todo",
+            "opencode_session_init",
+            "opencode_session_abort",
+            "opencode_session_fork",
+            "opencode_session_share",
+            "opencode_session_unshare",
+            "opencode_session_diff",
+            "opencode_session_summarize",
+            "opencode_session_revert",
+            "opencode_session_unrevert",
+            "opencode_permission_list",
+            "opencode_session_permission",
+            "opencode_session_search",
+            "opencode_message_list",
+            "opencode_message_get",
+            "opencode_message_send",
+            "opencode_message_send_async",
+            "opencode_command_execute",
+            "opencode_shell_execute",
+            "opencode_find_text",
+            "opencode_find_file",
+            "opencode_find_symbol",
+            "opencode_file_list",
+            "opencode_file_read",
+            "opencode_file_status",
+            "opencode_provider_list",
+            "opencode_provider_models",
+            "opencode_provider_auth_methods",
+            "opencode_provider_oauth_authorize",
+            "opencode_provider_oauth_callback",
+            "opencode_auth_set",
+            "opencode_path_get",
+            "opencode_vcs_info",
+            "opencode_instance_dispose",
+            "opencode_agent_list",
+            "opencode_command_list",
+            "opencode_lsp_status",
+            "opencode_formatter_status",
+            "opencode_mcp_status",
+            "opencode_mcp_add",
+            "opencode_tool_ids",
+            "opencode_tool_list",
+            "opencode_log",
+            "opencode_setup",
+            "opencode_ask",
+            "opencode_reply",
+            "opencode_conversation",
+            "opencode_sessions_overview",
+            "opencode_context",
+            "opencode_wait",
+            "opencode_review_changes",
+            "opencode_provider_test",
+            "opencode_run",
+            "opencode_fire",
+            "opencode_check",
+            "opencode_status",
+            "opencode_tui_append_prompt",
+            "opencode_tui_submit_prompt",
+            "opencode_tui_clear_prompt",
+            "opencode_tui_execute_command",
+            "opencode_tui_show_toast",
+            "opencode_tui_open_help",
+            "opencode_tui_open_sessions",
+            "opencode_tui_open_models",
+            "opencode_tui_open_themes",
+            "opencode_events_poll",
+            "opencode_question_list",
+            "opencode_question_reply",
+            "opencode_question_reject",
+            "opencode_job_get",
+            "opencode_job_cancel",
+            "opencode_job_list",
+            "opencode_job_input"
+          ],
+          "tool_count": 87,
+          "called_tool": "opencode_job_list",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": "npx -y opencode-mcp",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add opencode -- npx -y opencode-mcp"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"opencode\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"opencode-mcp\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "OPENCODE_BASE_URL",
+        "required": null,
+        "purpose": "Server endpoint"
+      },
+      {
+        "name": "OPENCODE_SERVER_USERNAME",
+        "required": null,
+        "purpose": "server HTTP authentication"
+      },
+      {
+        "name": "OPENCODE_SERVER_PASSWORD",
+        "required": null,
+        "purpose": "server HTTP authentication"
+      },
+      {
+        "name": "OPENCODE_SERVER_TOKEN",
+        "required": null,
+        "purpose": "bearer token"
+      },
+      {
+        "name": "OPENCODE_DEFAULT_PROVIDER",
+        "required": null,
+        "purpose": "Default prompt provider"
+      },
+      {
+        "name": "OPENCODE_DEFAULT_MODEL",
+        "required": null,
+        "purpose": "Default prompt model"
+      },
+      {
+        "name": "OPENCODE_TOOL_PROFILE",
+        "required": null,
+        "purpose": "tool set"
+      },
+      {
+        "name": "OPENCODE_TASK_STORE",
+        "required": null,
+        "purpose": "directory for persisted job records"
+      },
+      {
+        "name": "OPENCODE_AUTO_SERVE",
+        "required": null,
+        "purpose": "launching a local server"
+      }
+    ],
+    "tools": [
+      "opencode_setup",
+      "opencode_context",
+      "opencode_provider_models",
+      "opencode_ask",
+      "opencode_reply",
+      "opencode_run",
+      "opencode_fire",
+      "opencode_check",
+      "opencode_wait",
+      "opencode_job_list"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 88.7,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7643,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 87.3,
+      "signals": {
+        "stars": 159,
+        "monthly_downloads": 79567,
+        "forks": 29,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 264,
+      "packages": [
+        "npm:opencode-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 11.26
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "a281b650f8567efe5d33d6e0a1864e32004b7fa85b6d8139e45d801864396ab3",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "opencode-mcp connects Claude, Cursor, VS Code, and other MCP clients to OpenCode's headless API."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Quick question or follow-up"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Version 3.x requires **Node.js 22 or newer** and works with **OpenCode 1.x**"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "claude mcp add opencode -- npx -y opencode-mcp"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "opencode serve --hostname 127.0.0.1 --port 4096"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "`OPENCODE_BASE_URL` | Server endpoint; defaults to `http://127.0.0.1:4096`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "An observation timeout returns current progress; it does not mean the task failed or was cancelled."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "[MIT license](LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/AlaeddineMessadi/opencode-mcp",
+      "fetched_at": "2026-10-31T13:39:16+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/AlaeddineMessadi/opencode-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:05:32+08:00"
+    },
+    {
+      "id": "release:v3.1.0",
+      "kind": "release",
+      "url": "https://github.com/AlaeddineMessadi/opencode-mcp/releases/tag/v3.1.0",
+      "fetched_at": "2026-10-31T01:05:32+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "MCP server for OpenCode AI — 70 tools, 10 resources, 5 prompts.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "opencode-mcp connects Claude, Cursor, VS Code, and other MCP clients to OpenCode's headless API.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "opencode-mcp connects Claude, Cursor, VS Code, and other MCP clients to OpenCode's headless API.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "github_api",
+      "quote": "name: AlaeddineMessadi/opencode-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Version 3.x requires **Node.js 22 or newer**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:16+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:16+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:16+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:16+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:16+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v3.1.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:05:32+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Ask questions, implement features, monitor background work",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Work in the background | `opencode_fire`, then `opencode_check` or `opencode_wait`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Review the result | `opencode_review_changes`, `opencode_conversation`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add opencode -- npx -y opencode-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add opencode -- npx -y opencode-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"opencode\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"opencode-mcp\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "OPENCODE_BASE_URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "OPENCODE_SERVER_USERNAME",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "OPENCODE_SERVER_PASSWORD",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "OPENCODE_SERVER_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "OPENCODE_DEFAULT_PROVIDER",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/5",
+      "source_id": "readme",
+      "quote": "OPENCODE_DEFAULT_MODEL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/6",
+      "source_id": "readme",
+      "quote": "OPENCODE_TOOL_PROFILE",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/7",
+      "source_id": "readme",
+      "quote": "OPENCODE_TASK_STORE",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/8",
+      "source_id": "readme",
+      "quote": "OPENCODE_AUTO_SERVE",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`opencode_setup`, `opencode_context`, `opencode_provider_models`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`opencode_setup`, `opencode_context`, `opencode_provider_models`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`opencode_setup`, `opencode_context`, `opencode_provider_models`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "Quick question or follow-up | `opencode_ask`, `opencode_reply`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "Quick question or follow-up | `opencode_ask`, `opencode_reply`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "Start work and wait | `opencode_run`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "Work in the background | `opencode_fire`, then `opencode_check` or `opencode_wait`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "Work in the background | `opencode_fire`, then `opencode_check` or `opencode_wait`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "Work in the background | `opencode_fire`, then `opencode_check` or `opencode_wait`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "Recover or control a recorded job | `opencode_job_list`, `opencode_job_get`, `opencode_job_cancel`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:21+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:42+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

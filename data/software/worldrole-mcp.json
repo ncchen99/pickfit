@@ -1,0 +1,474 @@
+{
+  "schema_version": "software.v1",
+  "slug": "worldrole-mcp",
+  "repo_id": "gh:1363088827",
+  "name": "WorldRole MCP",
+  "summary": "Free agent workflow to find remote and visa-sponsored jobs, score fit, and help prepare applications.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-plugin",
+    "claude-code-plugin",
+    "gemini-cli-extension",
+    "mcp-server",
+    "qwen-code-extension"
+  ],
+  "use_cases": [
+    "Search multiple sources for remote and visa-sponsorship jobs",
+    "Score job matches against experience and preferences",
+    "Draft and tailor application letters and content"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://worldrole.work",
+  "repo": {
+    "url": "https://github.com/zzn199216/worldrole-mcp",
+    "full_name": "zzn199216/worldrole-mcp",
+    "created_at": "2026-09-09T18:40:58Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-worldrole-mcp-20261101-003444-f104",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "rm -rf worldrole-mcp && git clone https://github.com/zzn199216/worldrole-mcp --depth 1",
+          "purpose": "clone repository https://github.com/zzn199216/worldrole-mcp"
+        },
+        {
+          "command": "pip install ./worldrole-mcp",
+          "purpose": "install Python package worldrole-free-sources 0.2.0 via pip"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "plugin-v1.0.0",
+    "published_at": "2026-10-23T16:32:49Z",
+    "url": "https://github.com/zzn199216/worldrole-mcp/releases/tag/plugin-v1.0.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:36:13.927443+08:00",
+    "runs": [
+      {
+        "id": "verify-worldrole-mcp-20261101-003444-f104",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:36:13.927443+08:00",
+        "tool_version": "0.2.0",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf worldrole-mcp && git clone https://github.com/zzn199216/worldrole-mcp --depth 1",
+            "purpose": "clone repository https://github.com/zzn199216/worldrole-mcp"
+          },
+          {
+            "command": "pip install ./worldrole-mcp",
+            "purpose": "install Python package worldrole-free-sources 0.2.0 via pip"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 -- worldrole-free-sources",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 --call get_application_capabilities --args '{}' -- worldrole-free-sources",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_application_capabilities content=text text_chars=319",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "/plugin install worldrole --marketplace zzn199216/worldrole-mcp",
+            "actually_needed": "MCP server is Python package worldrole-free-sources in repo; install via git clone and pip install . (documented in INSTALL_FREE_SOURCES.md), launch command is worldrole-free-sources on PATH",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 9 tools listed and successful get_application_capabilities tool call.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-worldrole-mcp-20261101-003444-f104/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-worldrole-mcp-20261101-003444-f104/check-1-cmd9.judged.png",
+            "runs/verify/verify-worldrole-mcp-20261101-003444-f104/check-2-cmd10.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.067389,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "worldrole-free-sources"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "WorldRole?Free?Sources",
+          "server_version": "0.2.0",
+          "tools": [
+            "search_free_jobs",
+            "list_free_company_jobs",
+            "get_application_capabilities",
+            "prepare_application",
+            "prepare_application_followup",
+            "get_applications",
+            "send_application",
+            "record_application_event",
+            "sync_application_replies"
+          ],
+          "tool_count": 9,
+          "called_tool": "get_application_capabilities",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": null,
+    "client_configs": [],
+    "env_vars": [],
+    "tools": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 81.8,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 26.8,
+      "signals": {
+        "stars": 13,
+        "monthly_downloads": null,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 0,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 50,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 59.88
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "6b4cc4a5fdd0ebb71e129320032281f2c261537f8c739b26fd1a3c72b494a33f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Find remote jobs worldwide or overseas roles offering visa sponsorship. Let AI help from search and match scoring through application."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Find remote jobs worldwide or overseas roles offering visa sponsorship that fit my experience and preferences"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "No registration, complete resume or mailbox setup is needed to start."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "/plugin install worldrole --marketplace zzn199216/worldrole-mcp"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "On first use, your agent gives two **0–10 scores** for its understanding of your career capabilities"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "You do not need to configure each source separately."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Original code and skills use the [MIT License](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/zzn199216/worldrole-mcp",
+      "fetched_at": "2026-10-31T00:50:14+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/zzn199216/worldrole-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:06:48+08:00"
+    },
+    {
+      "id": "release:plugin-v1.0.0",
+      "kind": "release",
+      "url": "https://github.com/zzn199216/worldrole-mcp/releases/tag/plugin-v1.0.0",
+      "fetched_at": "2026-10-31T01:06:48+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "WorldRole is a free job-search MCP and agent workflow.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:39+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Install the free plugin from this repository with Claude Code",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:39+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "MCP for remote jobs worldwide and visa-sponsored jobs abroad.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:39+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Find remote jobs worldwide or overseas roles offering visa sponsorship that fit my experience and preferences, assess the matches and help prepare applications.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:39+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# WorldRole MCP",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:39+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:14+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:14+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:14+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:14+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:14+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:plugin-v1.0.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:06:48+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Search multiple sources for remote, overseas and visa-sponsorship opportunities, with original listing links",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:39+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Evaluate matches against your experience, skills and preferences, with reasons, gaps and conditions to verify",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:39+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Reuse known experience and materials to draft and tailor letters and application content",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:39+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "WorldRole is a free job-search MCP and agent workflow.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:39+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "release:plugin-v1.0.0",
+      "quote": "21 tests including a real stdio session, and a live anonymous hosted startup/usage check.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:39+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:50:14+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}
