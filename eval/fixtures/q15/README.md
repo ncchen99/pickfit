@@ -2,13 +2,14 @@
 
 題目：沒有 GPU 的 Linux 筆電上，把中文會議錄音轉成有時間軸的 SRT 逐字稿；要比 openai-whisper 快、不裝 PyTorch、離線、直接輸出繁體中文（找替代品）。沙盒：`linux_sandbox`。
 
-這個資料夾只給評分者，受測 agent 看不到。除了音檔（CC0 公開錄音，見 `needs.json`），內容全部自己寫、固定；不含任何工具名稱、廠商、模型名稱或預期答案。腳本只用 Python 3.9+ 標準函式庫與 POSIX 工具；評分端另需固定版本的 OpenCC 與 `srt`。
+這個資料夾只給評分者，受測 agent 看不到。除了音檔（公有領域的 LibriVox 錄音，**不是 CC0**；見 `needs.json`、`source_librivox.json`），內容全部自己寫、固定；不含任何工具名稱、廠商、模型名稱或預期答案。腳本只用 Python 3.9+ 標準函式庫與 POSIX 工具；評分端另需固定版本的 OpenCC 與 `srt`。
 
 ## 1. 檔案
 
 | 檔案 | 用途 |
 |---|---|
 | `sandbox.json` | 沙盒規格：x86_64、4 vCPU、16 GB、無 GPU；受測容器與基準容器 |
+| `source_librivox.json` | 錄音的來源（archive.org 項目與檔案、大小、md5／sha1／sha256、授權原文、解碼指令、切的起點、逐字稿的出版文字）；`build_clip.py cut --source-json` 讀它 |
 | `clip/` | **開跑前由念誠建立並 commit**：`clip.wav`（60.000 秒，16 kHz 單聲道 16-bit PCM）、`warmup.wav`（前 10 秒）、`reference.txt`、`SOURCE.json`（來源、授權、每個輸入檔的 SHA-256） |
 | `select_clips.py` | 依固定規則從語料庫選片段（不先聽、不先試工具） |
 | `build_clip.py` | 把選好的片段組成 60 秒音檔與逐字稿；`stats` 檢查語音秒數與繁簡不同字數 |
@@ -84,7 +85,7 @@
 
 > [L2] Frozen 60-second Mandarin clip (scripted text read by a consenting speaker, or CC0/CC-BY) with a frozen reference transcript: with egress blocked after setup, the output is valid SRT (parses with the pinned SRT parser, sequential indices, start before end in every cue, non-decreasing start times) and its cues cover at least 50 seconds
 
-- 測試資料：`clip/clip.wav`、`clip/reference.txt`（CC0，`SOURCE.json` 記來源）；`srt_check.py`；固定版本的 `srt`。
+- 測試資料：`clip/clip.wav`、`clip/reference.txt`（錄音是公有領域：archive.org 標 Public Domain Mark 1.0，LibriVox 寫 public domain in the USA；不是 CC0，也不是 CC-BY。檢查項目原文寫 CC0/CC-BY，念誠 2026-10-31 知道這點後選了這份錄音。`SOURCE.json` 記來源）；`srt_check.py`；固定版本的 `srt`。
 - 設定：第 3 節步驟 5–8（擋外連之後的輸出）。
 - 檢查（`srt_check.py`）：UTF-8（可有 BOM）；固定版本的 `srt` 解析沒有錯誤；至少 1 個 cue；每個 cue 的序號 = 前一個 + 1；每個 cue 開始 < 結束；開始時間不倒退；所有 cue 區間的聯集（截在 0–60 秒內）≥ 50 秒。
 - 通過：`passed: true`（沒固定 temperature／seed 時，3 次中 2 次）。

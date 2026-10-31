@@ -34,14 +34,18 @@
 
 | 項目 | 值 |
 |---|---|
-| 來源（資料集與版本，或 archive.org 識別碼） | |
-| 授權（來源頁面原文） | |
-| 下載網址與日期 | |
-| ffmpeg 版本（`ffmpeg -version` 第一行） | |
-| 用了幾句、跳過幾句（`SOURCE.json`） | |
+| 來源（資料集與版本，或 archive.org 識別碼） | LibriVox《呐喊 - Call to Arms》（魯迅），Jing Li 朗讀；archive.org `call_to_arms_jl_librivox`，檔案 `calltoarms_06_lu.mp3`（第 06 段〈一件小事〉，原始 VBR MP3，262.94 秒）。念誠 2026-10-31 選定（協調 session 轉達）。逐字稿的出版文字：Project Gutenberg #27166《吶喊》（Gutenberg 標示 Public domain in the USA；純文字檔 sha256 `ddf28d52…a429732`） |
+| 授權（來源頁面原文） | archive.org 項目的 licenseurl：`http://creativecommons.org/publicdomain/mark/1.0/`（Public Domain Mark 1.0），`source` 欄：「Librivox recording of a public-domain text」。LibriVox 目錄頁（https://librivox.org/call-to-arms-by-xun-lu/）：「LibriVox recordings are Public Domain in the USA.」**是公有領域，不是 CC0。** |
+| 下載網址與日期 | https://archive.org/download/call_to_arms_jl_librivox/calltoarms_06_lu.mp3，2026-10-31T08:11:12Z（UTC）。4,208,942 位元組；md5 `a284f268bc8edee002d12ae1ccfe5864`、sha1 `4d27b7e3691f30076d3f72e5d11bce30f330d046` 與 archive.org metadata 相同；sha256 `3fb8a83babca98710097bd0fd7a075fd72098c7bfc7736987274603d8aa656e3`。MP3 不 commit（只 commit 切出來的 `clip/`）；來源細節在 `source_librivox.json`（`build_clip.py cut --source-json` 讀它，寫進 `SOURCE.json`） |
+| ffmpeg 版本（`ffmpeg -version` 第一行） | `ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers`（念誠的 Mac，Homebrew）；轉出的 WAV sha256 `5377aee4…6005d57b`、262.88475 秒 |
+| 用了幾句、跳過幾句（`SOURCE.json`） | 不適用（`cut`：一段連續錄音，從 45.000 秒起 60.000 秒） |
 | 因壞掉而換掉的片段與原因 | （預期是「無」） |
 | `clip.wav` SHA-256 | |
 | `reference.txt` SHA-256 | |
+
+2026-10-31：`build_clip.py cut --start 45.000` 建了兩次，`clip.wav`（sha256 `115a528a…676536c`，1,920,044 位元組）與 `warmup.wav`（`146ba9bd…cd4b1c43`）兩次逐位元相同。起點落在 45.04–45.68 秒的停頓裡（停頓前剛唸完「…一轉眼已經六年了。」），105.000 秒的終點切在句子中間。逐字稿草稿（Gutenberg 原文那一段，去掉註腳記號，機器轉換留下的「里、于、關系、頭發」等改成正體）交給念誠聽一次校正，**還沒定**；所以 `clip/` 還沒 commit。
+
+**校準發現（等念誠決定）**：這一段的 `speech_seconds` 是 41.56，低於下面第 2 節要的 55。這個錄音每 5 秒取一個起點、每段 60 秒都算過，最多 45.0（130 秒起）：朗讀的句間停頓多（這一段裡 0.5 秒以上的停頓合計約 8.5 秒）。字數那一條過了：草稿到「車夫已經讓開道」為止的 `script_differing` 是 64，到「…所以終於兜著車把。」是 73（≥ 60）。
 
 `clip/` 底下四個檔（`clip.wav` 約 1.9 MB、`warmup.wav`、`reference.txt`、`SOURCE.json`）一起 commit。`clip.wav` 超過「每題 1 MB」的目標：60 秒 16 kHz 單聲道 PCM 就是 1.92 MB，而 WAV 是每個語音辨識 CLI 都能讀的格式，不換成壓縮格式（換了就可能變成某些工具要多一步轉檔）。
 
