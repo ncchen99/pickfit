@@ -33,6 +33,11 @@
     "whisper.cpp",
     "sherpa-onnx"
   ],
+  "features": [
+    "transcribe speech to text locally",
+    "export transcripts as SRT subtitles",
+    "serve local transcription API server"
+  ],
   "why_worth_it": null,
   "homepage": "https://crates.io/crates/wavo",
   "repo": {
@@ -72,17 +77,17 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-wavo-20261030-235638-ea8b",
+      "run_id": "verify-wavo-20261101-001718-fc00",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fL -o /tmp/wavo-dev.tar.gz https://github.com/vladkens/wavo/releases/download/dev/wavo-dev-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/wavo-dev.tar.gz -C /tmp && cp /tmp/wavo ~/.local/bin/wavo && chmod +x ~/.local/bin/wavo && wavo --version",
-          "purpose": "Download dev-release binary tarball, extract, install wavo to ~/.local/bin"
+          "command": "mkdir -p ~/.local/bin && curl -fL -o /tmp/wavo-dev.tar.gz https://github.com/vladkens/wavo/releases/download/dev/wavo-dev-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/wavo-dev.tar.gz -C /tmp && cp /tmp/wavo ~/.local/bin/wavo && chmod +x ~/.local/bin/wavo",
+          "purpose": "Download dev binary and install to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "curl -fL -o /tmp/wavo-dev.tar.gz https://github.com/vladkens/wavo/releases/download/dev/wavo-dev-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/wavo-dev.tar.gz -C /tmp && cp /tmp/wavo ~/.local/bin/wavo && chmod +x ~/.local/bin/wavo && wavo --version",
+        "command": "wavo --version",
         "expected_signal": "wavo 0.3.1-23-ga3b5c3b"
       },
       "first_task": "wavo list"
@@ -117,10 +122,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-30T23:58:51.654469+08:00",
+    "checked_at": "2026-11-01T00:18:22.456628+08:00",
     "runs": [
       {
-        "id": "verify-wavo-20261030-235638-ea8b",
+        "id": "verify-wavo-20261101-001718-fc00",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -128,25 +133,25 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-30T23:58:51.654469+08:00",
+        "checked_at": "2026-11-01T00:18:22.456628+08:00",
         "tool_version": "0.3.1-23-ga3b5c3b",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fL -o /tmp/wavo-dev.tar.gz https://github.com/vladkens/wavo/releases/download/dev/wavo-dev-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/wavo-dev.tar.gz -C /tmp && cp /tmp/wavo ~/.local/bin/wavo && chmod +x ~/.local/bin/wavo && wavo --version",
-            "purpose": "Download dev-release binary tarball, extract, install wavo to ~/.local/bin"
+            "command": "mkdir -p ~/.local/bin && curl -fL -o /tmp/wavo-dev.tar.gz https://github.com/vladkens/wavo/releases/download/dev/wavo-dev-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/wavo-dev.tar.gz -C /tmp && cp /tmp/wavo ~/.local/bin/wavo && chmod +x ~/.local/bin/wavo",
+            "purpose": "Download dev binary and install to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "curl -fL -o /tmp/wavo-dev.tar.gz https://github.com/vladkens/wavo/releases/download/dev/wavo-dev-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/wavo-dev.tar.gz -C /tmp && cp /tmp/wavo ~/.local/bin/wavo && chmod +x ~/.local/bin/wavo && wavo --version",
+            "command": "wavo --version",
             "expected_signal": "wavo 0.3.1-23-ga3b5c3b",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "wavo 0.3.1-23-ga3b5c3b",
             "setup": [],
-            "offline": false
+            "offline": true
           },
           {
             "command": "wavo list",
@@ -159,55 +164,76 @@
           },
           {
             "command": "wavo debug",
-            "expected_signal": "--- GPU ---",
+            "expected_signal": "no GPU adapter",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "--- GPU ------------------------------------------------------------------------",
+            "observed_excerpt": "error=no GPU adapter: No suitable graphics adapter found; noop not requested, vulkan drivers/libraries could not be loaded, metal support not compiled in, dx12 not requested, gl not requested, webgpu not requested",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "cargo install wavo / cargo install --git https://github.com/vladkens/wavo",
-            "actually_needed": "Downloaded the prebuilt Linux x86_64 tarball from GitHub releases and copied wavo to ~/.local/bin (no build step)",
+            "readme_said": "cargo install wavo",
+            "actually_needed": "download dev-release tarball wavo-dev-x86_64-unknown-linux-gnu.tar.gz and copy wavo to ~/.local/bin (cargo needs a Rust toolchain the box must not install)",
             "kind": "sandbox"
           },
           {
-            "readme_said": "wavo debug (and wavo serve) as documented commands",
-            "actually_needed": "Used the dev-release binary (wavo-dev-x86_64-unknown-linux-gnu.tar.gz); the latest stable release v0.3.1 prints 'error: unknown command: wavo debug' because the README follows main, ahead of the release",
+            "readme_said": "download the binary from the latest release",
+            "actually_needed": "use dev-release binary (v0.3.1-23-ga3b5c3b) which has list/debug/serve and parakeet-ultra; latest release v0.3.1 binary has no wavo debug or wavo serve",
             "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "wavo runs through Vulkan/GPU on Linux",
-            "actually_needed": "On this CPU-only box wavo debug reports 'error=no GPU adapter' and warns 'wavo can't load a model', so model load/transcription was not attempted; list/debug still work",
-            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three checks show expected output: empty model list, debug info with GPU section, and version string after reinstall.",
+          "observed": "All three screenshots show wavo working: empty model list, debug with no GPU adapter, and version printed.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-wavo-20261030-235638-ea8b/report.json",
+          "trace_path": "runs/verify/verify-wavo-20261101-001718-fc00/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-wavo-20261030-235638-ea8b/check-1-cmd11.judged.png",
-            "runs/verify/verify-wavo-20261030-235638-ea8b/check-2-cmd10.judged.png",
-            "runs/verify/verify-wavo-20261030-235638-ea8b/check-3-cmd9.judged.png"
+            "runs/verify/verify-wavo-20261101-001718-fc00/check-1-cmd12.judged.png",
+            "runs/verify/verify-wavo-20261101-001718-fc00/check-2-cmd9.judged.png",
+            "runs/verify/verify-wavo-20261101-001718-fc00/check-3-cmd11.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.072397
+        "cost_usd": 0.08316,
+        "features": [
+          {
+            "feature": "transcribe speech to text locally",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "wavo debug reports no GPU adapter and can't load a model in this box"
+          },
+          {
+            "feature": "export transcripts as SRT subtitles",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "SRT export needs a loaded model, no GPU in this box"
+          },
+          {
+            "feature": "serve local transcription API server",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "serve needs to load a model, no GPU in this box"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 71.1,
       "confidence": 0.8,
@@ -538,8 +564,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-30T23:54:18+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "`wavo` turns speech into text locally, on the GPU or a Mac's Neural Engine, in pure Rust.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:47+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "📝 Plain text, JSON with a start time for every token, or SRT subtitles",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:47+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "🔌 `wavo serve`: a local server for apps built on OpenAI's transcription API",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:47+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:18+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-01T00:18:22.459469+08:00"
 }

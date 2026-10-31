@@ -31,6 +31,11 @@
     "Let AI preview and screenshot slides to verify layout"
   ],
   "alternatives_to": [],
+  "features": [
+    "Build LMS courses with AI tools",
+    "Preview, screenshot, lint and test courses",
+    "Export SCORM, cmi5 and LTI packages"
+  ],
   "why_worth_it": null,
   "homepage": "https://coursecodeframework.com",
   "repo": {
@@ -55,7 +60,7 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-coursecode-20261031-013958-a822",
+      "run_id": "verify-coursecode-20261031-023617-af53",
       "method": "npm",
       "steps": [
         {
@@ -87,10 +92,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:41:50.164436+08:00",
+    "checked_at": "2026-10-31T02:38:38.543586+08:00",
     "runs": [
       {
-        "id": "verify-coursecode-20261031-013958-a822",
+        "id": "verify-coursecode-20261031-023617-af53",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -98,7 +103,7 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:41:50.164436+08:00",
+        "checked_at": "2026-10-31T02:38:38.543586+08:00",
         "tool_version": "0.4.4",
         "install_method": "npm",
         "replayed": true,
@@ -119,43 +124,91 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- coursecode mcp",
+            "command": "cd my-course && python3 ~/.pickfit/mcp_probe.py -- coursecode mcp",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
-            "setup": [],
+            "setup": [
+              {
+                "command": "coursecode create my-course",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call coursecode_workflow_status --args '{}' -- coursecode mcp",
+            "command": "cd my-course && python3 ~/.pickfit/mcp_probe.py --call coursecode_component_catalog --args '{}' -- coursecode mcp",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=coursecode_workflow_status content=text text_chars=1038",
-            "setup": [],
+            "observed_excerpt": "tools/call: ok tool=coursecode_component_catalog content=text text_chars=4636",
+            "setup": [
+              {
+                "command": "coursecode create my-course",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd my-course && python3 ~/.pickfit/mcp_probe.py --call coursecode_lint --args '{}' -- coursecode mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=coursecode_lint content=text text_chars=129",
+            "setup": [
+              {
+                "command": "coursecode create my-course",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd my-course && python3 ~/.pickfit/mcp_probe.py --call coursecode_build --args '{}' -- coursecode mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=coursecode_build content=text text_chars=231",
+            "setup": [
+              {
+                "command": "coursecode create my-course",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "npx coursecode create my-course",
+            "actually_needed": "used global install (npm install -g coursecode) then `coursecode create` so the `coursecode mcp` launch command stays on PATH for offline replay",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 16 tools, successful workflow_status tool call, and help listing the MCP server command.",
+          "observed": "All three screenshots show CourseCode MCP handshake, tool call result, and CLI help with MCP description.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-coursecode-20261031-013958-a822/report.json",
+          "trace_path": "runs/verify/verify-coursecode-20261031-023617-af53/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-coursecode-20261031-013958-a822/check-1-cmd8.judged.png",
-            "runs/verify/verify-coursecode-20261031-013958-a822/check-2-cmd9.judged.png",
-            "runs/verify/verify-coursecode-20261031-013958-a822/check-3-cmd3.judged.png"
+            "runs/verify/verify-coursecode-20261031-023617-af53/check-1-cmd5.judged.png",
+            "runs/verify/verify-coursecode-20261031-023617-af53/check-2-cmd7.judged.png",
+            "runs/verify/verify-coursecode-20261031-023617-af53/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.054678,
+        "cost_usd": 0.062124,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -185,9 +238,41 @@
             "coursecode_icon_catalog"
           ],
           "tool_count": 16,
-          "called_tool": "coursecode_workflow_status",
+          "called_tool": "coursecode_component_catalog",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Build LMS courses with AI tools",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Preview, screenshot, lint and test courses",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Export SCORM, cmi5 and LTI packages",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -200,7 +285,7 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 92.2,
       "confidence": 0.8,
@@ -515,8 +600,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:25:11+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Build LMS courses with Claude Code, Codex, or any AI tool that supports MCP.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:36:01+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "CourseCode's MCP server lets it preview, screenshot, lint, and test what it built.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:36:01+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Export SCORM 1.2, SCORM 2004, cmi5, or LTI 1.3.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:36:01+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:18:19+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

@@ -5,7 +5,11 @@
   second and only changes use disk. `close()` stops and deletes the clone.
 - Commands reach the guest through `tart exec`, which talks to the Tart Guest
   Agent over a virtio socket, not the network: cutting the guest's network
-  leaves control intact, so the replay's offline smoke tests work.
+  leaves control intact, so the replay's offline smoke tests work. A failed
+  command is the box's failure only when the host confirms it: the `tart run`
+  process has exited or `tart exec <vm> true` fails. Its stderr never decides,
+  since the guest writes there too (a tool that prints `VM "..." is not
+  running` and exits 1 has only failed).
 - Model commands run as `sbx`, a standard macOS user (not an admin, no sudo)
   that owns the Homebrew prefix, so `brew install` works without root. Each
   command runs under `ulimit` caps and an in-guest timeout that kills its
@@ -165,6 +169,7 @@ DETACH_CMD = f"{GUEST_PYTHON} -I {HELPER_DIR}/detach"
 MDNS_CMD = f"{GUEST_PYTHON} -I {HELPER_DIR}/mdns"
 ROOT_PATH = "PATH=/usr/bin:/bin:/usr/sbin:/sbin; export PATH"
 AGENT_WAIT_S = 240
+AGENT_PROBE_S = 20  # `tart exec <vm> true` after a failed command; a live agent answers well inside this
 NETWORK_WAIT_S = 60
 STALE_S = 3 * 3600  # a running pf-verify VM older than this was left by a dead process
 REAP_GRACE_S = 300  # the host reaper stops and deletes a clone this long after its lifetime
@@ -590,10 +595,21 @@ class TartBox(Box):
         return [self.tart, "exec", *(["-i"] if stdin else []), self.name, "sudo", "-n", "-u", MAC_USER, "-H",
                 "/usr/bin/env", "-i", *env, "/bin/bash", "-c", guard]
 
-    def _agent_failed(self, code: int, err: str) -> bool:
-        """tart's own failure (no VM, no agent), told apart from the command's exit code."""
-        return code != 0 and ("is the Tart Guest Agent running?" in err or f'"{self.name}" is not running' in err
-                              or f"VM \"{self.name}\" does not exist" in err)
+    def _gone(self) -> str | None:
+        """Why the VM or its guest agent is gone, from host-side state alone; None while both are alive.
+
+        A failed command's stderr carries the guest's text as well as tart's, so it never decides this.
+        """
+        vm = self.vm_proc  # close() may clear it from the lifetime timer's thread
+        if vm is not None and vm.poll() is not None:
+            return f"tart run exited with {vm.returncode}"
+        try:
+            probe = self._tart("exec", self.name, "true", timeout_s=AGENT_PROBE_S)
+        except BoxError as err:
+            return str(err)
+        if probe.returncode != 0:
+            return f"`tart exec {self.name} true` exited {probe.returncode}: {probe.stderr.strip()[-200:]}"
+        return None
 
     def exec(self, command: str, timeout_s: int, *, cwd: str | None = None) -> ExecResult:
         self._require_started()
@@ -602,8 +618,9 @@ class TartBox(Box):
         code, out, err, host_timeout, truncated = run_captured(
             self.user_argv(command, timeout_s, cwd or self.workdir), timeout_s + HOST_GRACE_S)
         seconds = round(time.monotonic() - began, 2)
-        if self._agent_failed(code, err):
-            raise BoxError(f"tart exec failed (the VM or its guest agent is gone): {err.strip()[-300:]}")
+        gone = self._gone() if code != 0 else None
+        if gone:
+            raise BoxError(f"tart exec failed (the VM or its guest agent is gone: {gone}): {err.strip()[-300:]}")
         timed_out = host_timeout or (code == 137 and seconds >= timeout_s - 0.5)
         if host_timeout:
             code = 124
@@ -625,7 +642,10 @@ class TartBox(Box):
     def read_file(self, path: str, max_bytes: int = 64_000) -> bytes:
         self._require_started()
         argv = self.user_argv(f"head -c {int(max_bytes)} -- {shlex.quote(path)}", 20, self.workdir)
-        proc = subprocess.run(argv, capture_output=True, timeout=20 + HOST_GRACE_S)
+        try:
+            proc = subprocess.run(argv, capture_output=True, timeout=20 + HOST_GRACE_S)
+        except subprocess.TimeoutExpired as err:  # a hung guest agent; the in-guest timeout would have exited 137
+            raise BoxError(f"cannot read {path}: tart exec did not return within {20 + HOST_GRACE_S}s") from err
         if proc.returncode != 0:
             raise BoxError(f"cannot read {path}: {proc.stderr.decode(errors='replace').strip()[-300:]}")
         return proc.stdout[:max_bytes]
@@ -685,8 +705,15 @@ class TartBox(Box):
             raise BoxError(f"firewall check ({where}) failed: {'; '.join(bad)} | {out.strip()[-160:]}")
 
     def _mdns_answered(self) -> bool:
-        """True if a multicast mDNS query is answered (i.e. multicast reached the host). Run as root."""
-        return self._root(MDNS_CMD, 20).returncode == 0
+        """True if a multicast mDNS query is answered (i.e. multicast reached the host). Run as root.
+
+        Fails closed: without the helper's mdns= line the probe did not run (tart's own failure exits
+        non-zero too), which is not the same as no answer.
+        """
+        proc = self._root(MDNS_CMD, 20)
+        if "mdns=" not in proc.stdout:
+            raise BoxError(f"mDNS probe could not run: {(proc.stdout + proc.stderr).strip()[-200:]}")
+        return proc.returncode == 0
 
     def validate_containment(self, timeout: int = 4) -> list[tuple[str, bool, str, str]]:
         """Positive/negative control for the limits test (as root): prove the probe can see an open host

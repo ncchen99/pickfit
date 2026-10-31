@@ -34,6 +34,12 @@
     "Claude Code",
     "Cursor"
   ],
+  "features": [
+    "understand your codebase",
+    "perform file operations",
+    "search code",
+    "run shell commands"
+  ],
   "why_worth_it": null,
   "homepage": "https://gokin.ginkida.dev",
   "repo": {
@@ -78,22 +84,22 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-gokin-20261029-012655-7f4d",
+      "run_id": "verify-gokin-20261031-021737-40c8",
       "method": "script",
       "steps": [
         {
-          "command": "go version; echo \"---\"; curl -fsSL https://raw.githubusercontent.com/ginkida/gokin/main/install.sh -o /tmp/install-gokin.sh && wc -c /tmp/install-gokin.sh && head -n 100 /tmp/install-gokin.sh",
-          "purpose": "Download install script to /tmp/install-gokin.sh for inspection"
+          "command": "curl -fsSL https://raw.githubusercontent.com/ginkida/gokin/main/install.sh -o /tmp/gokin-install.sh && wc -c /tmp/gokin-install.sh && head -n 200 /tmp/gokin-install.sh",
+          "purpose": "Download install script for reading"
         },
         {
-          "command": "sh /tmp/install-gokin.sh",
-          "purpose": "Install gokin binary to ~/.local/bin via inspected script"
+          "command": "sh /tmp/gokin-install.sh",
+          "purpose": "Install gokin via script to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "gokin --version",
-        "expected_signal": "gokin version v0.102.1"
+        "expected_signal": "gokin version v0.102.2"
       },
       "first_task": "gokin doctor"
     },
@@ -114,10 +120,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:28:08.657253+08:00",
+    "checked_at": "2026-10-31T02:18:20.392902+08:00",
     "runs": [
       {
-        "id": "verify-gokin-20261029-012655-7f4d",
+        "id": "verify-gokin-20261031-021737-40c8",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -125,36 +131,27 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T01:28:08.657253+08:00",
-        "tool_version": "v0.102.1",
+        "checked_at": "2026-10-31T02:18:20.392902+08:00",
+        "tool_version": "v0.102.2",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "go version; echo \"---\"; curl -fsSL https://raw.githubusercontent.com/ginkida/gokin/main/install.sh -o /tmp/install-gokin.sh && wc -c /tmp/install-gokin.sh && head -n 100 /tmp/install-gokin.sh",
-            "purpose": "Download install script to /tmp/install-gokin.sh for inspection"
+            "command": "curl -fsSL https://raw.githubusercontent.com/ginkida/gokin/main/install.sh -o /tmp/gokin-install.sh && wc -c /tmp/gokin-install.sh && head -n 200 /tmp/gokin-install.sh",
+            "purpose": "Download install script for reading"
           },
           {
-            "command": "sh /tmp/install-gokin.sh",
-            "purpose": "Install gokin binary to ~/.local/bin via inspected script"
+            "command": "sh /tmp/gokin-install.sh",
+            "purpose": "Install gokin via script to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
             "command": "gokin --version",
-            "expected_signal": "gokin version v0.102.1",
+            "expected_signal": "gokin version v0.102.2",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "gokin version v0.102.1",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "gokin --help",
-            "expected_signal": "help for gokin",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "-h, --help help for gokin",
+            "observed_excerpt": "gokin version v0.102.2",
             "setup": [],
             "offline": true
           },
@@ -168,35 +165,64 @@
             "offline": true
           }
         ],
-        "pitfalls": [
-          {
-            "readme_said": "Requirements: Go 1.25+ (build from source)",
-            "actually_needed": "No Go toolchain needed; binary install works with no `go` on PATH (box had no Go)"
-          }
-        ],
+        "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show gokin doctor printing System Diagnostics and gokin --version printing gokin version v0.102.1.",
+          "observed": "Screenshots show gokin doctor printing System Diagnostics details and gokin --version printing v0.102.2.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-gokin-20261029-012655-7f4d/report.json",
+          "trace_path": "runs/verify/verify-gokin-20261031-021737-40c8/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-gokin-20261029-012655-7f4d/check-1-cmd5.judged.png",
-            "runs/verify/verify-gokin-20261029-012655-7f4d/check-2-cmd3.judged.png"
+            "runs/verify/verify-gokin-20261031-021737-40c8/check-1-cmd4.judged.png",
+            "runs/verify/verify-gokin-20261031-021737-40c8/check-2-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.061208
+        "cost_usd": 0.046639,
+        "features": [
+          {
+            "feature": "understand your codebase",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Requires GLM/DeepSeek key or Ollama model; no key in box"
+          },
+          {
+            "feature": "perform file operations",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Requires provider key; agent file operations need model calls"
+          },
+          {
+            "feature": "search code",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Requires provider key; agent code search needs model calls"
+          },
+          {
+            "feature": "run shell commands",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Requires provider key; agent shell commands need model calls"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 86.8,
       "confidence": 0.9,
@@ -557,8 +583,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-28T23:52:23+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "Gokin understands your codebase",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:40+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "github_api",
+      "quote": "file operations",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:40+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "github_api",
+      "quote": "code search",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:40+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "github_api",
+      "quote": "shell commands",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:40+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

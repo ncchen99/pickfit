@@ -5,12 +5,16 @@ the checks that passed, each as the exact command the agent ran. In a new box:
 
 1. write the README and the sample files, as the agent had them;
 2. run the steps in order with the network on; stop at the first failure;
-3. run the checks' setup commands (input files, background servers) online;
+3. run the checks' setup commands (input files, background servers) online; a
+   setup that fails fails the checks that need it, not the others;
 4. cut the network and run every check: install online, smoke test offline;
 5. turn the network back on and rerun any check that failed offline; one that
    passes then is marked as needing the network.
 6. GUI launches run last, the same way (offline, then online for a failure):
    each one stops every process of the box user, background setups included.
+7. once the level is settled, rerun each failed feature check once, online, after
+   its setup: a failure is kept only if it repeats (features.py). These reruns
+   never change the level.
 
 The replay passes when every step succeeds and the passing checks still
 support a passed level; that level caps the run's level.
@@ -19,13 +23,14 @@ support a passed level; that level caps the run's level.
 from __future__ import annotations
 
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pickfit.verify import gui
-from pickfit.verify.box import Box, BoxError, ExecResult, background_script
+from pickfit.verify.box import Box, BoxError, ExecResult
+from pickfit.verify.features import failed_run
 from pickfit.verify.task import prepare_box
 from pickfit.verify.mcp import is_mcp
 from pickfit.verify.verdict import MCP_KINDS, ResolvedCheck, evaluate_check, mcp_problems, supported_level
@@ -37,6 +42,7 @@ if TYPE_CHECKING:
 
 COMMAND_TIMEOUT_S = 600
 BACKGROUND_WAIT_S = 90
+FAILED_RERUN_MAX_S = 120  # a failed feature check is rerun once; a hang must not hold the box
 
 
 def replay_timeout(recorded_s: float | None) -> int:
@@ -74,13 +80,18 @@ class ReplayPlan:
     steps: tuple[ReplayCommand, ...]
     setups: tuple[ReplayCommand, ...]  # setup commands that are not checks themselves, in id order
     checks: tuple[ReplayCheck, ...]
+    failed: tuple[ReplayCheck, ...] = ()  # failed feature checks, rerun once to see the failure repeat
+    failed_setups: tuple[ReplayCommand, ...] = ()  # what only those need first
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
-def plan_from(verdict: LogVerdict, commands: list[CommandRecord]) -> ReplayPlan:
-    """The steps and the passing checks of a log verdict, as commands to rerun."""
+def plan_from(verdict: LogVerdict, commands: list[CommandRecord], rerun_failed: Sequence[int] = ()) -> ReplayPlan:
+    """The steps and the passing checks of a log verdict, as commands to rerun.
+
+    rerun_failed: command ids of failed feature checks, rerun once after the checks.
+    """
     by_id = {c.command_id: c for c in commands if c.command_id is not None}
 
     def command(cid: int) -> ReplayCommand:
@@ -91,11 +102,22 @@ def plan_from(verdict: LogVerdict, commands: list[CommandRecord]) -> ReplayPlan:
     check_ids = {c.command_id for c in checks}
     setup_ids = sorted({s for c in checks for s in c.setup_ids} - check_ids - set(verdict.step_ids))
     steps = set(verdict.step_ids)
+    claimed = {c.command_id: c for c in verdict.checks}
+    failed = []
+    for cid in rerun_failed:
+        if cid not in by_id or cid in check_ids:
+            continue
+        check = claimed.get(cid)
+        own = tuple(s for s in (check.setup_ids if check else []) if s not in steps and s in by_id and s < cid)
+        failed.append(ReplayCheck(command(cid), own, check.expected_exit_code if check else 0,
+                                  check.expected_signal if check else "", check.kind if check else "example"))
+    failed_setups = sorted({s for f in failed for s in f.setup_ids} - set(setup_ids) - check_ids - steps)
     return ReplayPlan(
         steps=tuple(command(i) for i in verdict.step_ids),
         setups=tuple(command(i) for i in setup_ids),
         checks=tuple(ReplayCheck(command(c.command_id), tuple(s for s in c.setup_ids if s not in steps),
-                                 c.expected_exit_code, c.expected_signal, c.kind) for c in checks))
+                                 c.expected_exit_code, c.expected_signal, c.kind) for c in checks),
+        failed=tuple(failed), failed_setups=tuple(command(i) for i in failed_setups))
 
 
 @dataclass
@@ -132,6 +154,18 @@ class CheckResult:
 
 
 @dataclass
+class FailedRerun:
+    """A failed feature check, rerun once online in the fresh box."""
+
+    command_id: int
+    command: str
+    reproduced: bool  # it failed again
+    run: RanCommand | None = None  # None when its setup failed first
+    setup: list[ReplayCommand] = field(default_factory=list)
+    error: str | None = None
+
+
+@dataclass
 class ReplayResult:
     passed: bool
     level: str | None
@@ -139,6 +173,7 @@ class ReplayResult:
     steps: list[RanCommand] = field(default_factory=list)
     setups: list[RanCommand] = field(default_factory=list)
     checks: list[CheckResult] = field(default_factory=list)
+    failed: list[FailedRerun] = field(default_factory=list)  # failed feature checks, rerun once
     error: str | None = None
     seconds: float = 0.0
     box: dict[str, Any] = field(default_factory=dict)
@@ -158,7 +193,7 @@ class Replayer:
         self.evidence_dir = evidence_dir  # where launch_gui screenshots go
         self.launches = 0
 
-    def rerun(self, cmd: ReplayCommand) -> RanCommand:
+    def rerun(self, cmd: ReplayCommand, max_s: int | None = None) -> RanCommand:
         if cmd.tool == "launch_gui":
             if not self.box.display:
                 raise BoxError("a GUI launch needs a box with a display")
@@ -175,11 +210,10 @@ class Replayer:
             return ran
         if cmd.tool == "run_background":
             wait = min(cmd.wait_s or 30, BACKGROUND_WAIT_S)
-            result = self.box.exec(background_script(cmd.command, cmd.port, wait, f"replay-{cmd.command_id}",
-                                                     detach=self.box.detach),
+            result = self.box.exec(self.box.background(cmd.command, cmd.port, wait, f"replay-{cmd.command_id}"),
                                    wait + 15)
         else:
-            result = self.box.exec(cmd.command, min(self.timeout, replay_timeout(cmd.seconds)))
+            result = self.box.exec(cmd.command, min(self.timeout, replay_timeout(cmd.seconds), max_s or self.timeout))
         return self._ran(cmd, result)
 
     def _ran(self, cmd: ReplayCommand, result: ExecResult) -> RanCommand:
@@ -225,12 +259,12 @@ class Replayer:
             if not ran.ok:
                 result.error = f"step {step.command_id} exited {ran.exit_code}: {_one_line(step.command)}"
                 return
+        broken: dict[int, str] = {}  # setup id -> why it failed
         for setup in plan.setups:
             ran = self.rerun(setup)
             result.setups.append(ran)
             if not ran.ok:
-                result.error = f"setup {setup.command_id} exited {ran.exit_code}: {_one_line(setup.command)}"
-                return
+                broken[setup.command_id] = f"setup {setup.command_id} exited {ran.exit_code}: {_one_line(setup.command)}"
         known = {c.command_id: c for c in (*plan.setups, *(k.run for k in plan.checks))}
         by_id = {c.run.command_id: c for c in plan.checks}
         # GUI launches last: each stops every box-user process, background setups included.
@@ -238,12 +272,19 @@ class Replayer:
             box.set_network(False)
             outcomes = []
             for check in phase:
+                failed_setup = [broken[i] for i in check.setup_ids if i in broken]
+                if failed_setup:  # it cannot run as recorded: failed, without running it
+                    outcomes.append(CheckResult(
+                        check.run.command_id, check.run.command, check.kind, check.expected_exit_code,
+                        check.expected_signal, passed=False, offline=False, problems=failed_setup,
+                        setup=[known[i] for i in check.setup_ids if i in known]))
+                    continue
                 ran, ok, problems = self._check(check)
                 outcomes.append(CheckResult(
                     check.run.command_id, check.run.command, check.kind, check.expected_exit_code,
                     check.expected_signal, passed=ok, offline=ok, run=ran, problems=problems,
                     setup=[known[i] for i in check.setup_ids if i in known]))
-            failed = [c for c in outcomes if not c.passed]
+            failed = [c for c in outcomes if not c.passed and c.run is not None]
             if failed:
                 box.set_network(True)
                 for outcome in failed:
@@ -265,7 +306,31 @@ class Replayer:
         passing = [c for c in result.checks if c.passed]
         result.offline = bool(passing) and all(c.offline for c in passing)
         if not result.passed:
-            result.error = "no check passed in the replay"
+            result.error = "no check passed in the replay" + (f" ({'; '.join(broken.values())})" if broken else "")
+            return
+        self._rerun_failed(plan, result)
+
+    def _rerun_failed(self, plan: ReplayPlan, result: ReplayResult) -> None:
+        """Rerun each failed feature check once, online, after the setup it needs; the level is settled."""
+        known = {c.command_id: c for c in (*plan.setups, *plan.failed_setups, *(k.run for k in plan.checks))}
+        done = {s.command_id for s in plan.setups}
+        for check in plan.failed:
+            setup = [known[i] for i in check.setup_ids if i in known]
+            broken = None
+            for cmd in setup:
+                if cmd.command_id in done:
+                    continue
+                done.add(cmd.command_id)
+                if not self.rerun(cmd, FAILED_RERUN_MAX_S).ok:
+                    broken = f"setup {cmd.command_id} failed"
+                    break
+            if broken:
+                result.failed.append(FailedRerun(check.run.command_id, check.run.command, False, setup=setup,
+                                                 error=broken))
+                continue
+            ran = self.rerun(check.run, FAILED_RERUN_MAX_S)
+            result.failed.append(FailedRerun(check.run.command_id, check.run.command,
+                                             failed_run(ran, check.expected_exit_code), ran, setup))
 
 
 def judged_launch(checks: list[CheckResult]) -> CheckResult | None:

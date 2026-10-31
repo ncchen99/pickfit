@@ -14,6 +14,9 @@ unverified: with the box limit its error shows, else "suspected_tool_fault",
 with what the log, a fresh box and the structure probe found (failure.py) as
 evidence in blocking_error and a failed smoke test.
 A step that only works around the box (a shim) keeps a run from passing.
+A passed run also records which advertised features its smoke tests exercised
+(features.coverage): checked only when one of the replay's passing checks covers
+it, a failed feature check only when it failed again in the fresh box.
 
 An MCP server's run also carries the handshake the replay's probe check saw (tool
 names, server name, whether it ran offline) and the probe's notes; a passed MCP
@@ -70,6 +73,7 @@ from pickfit.verify.failure import (
     structural_defect,
     tool_command,
 )
+from pickfit.verify.features import coverage
 from pickfit.verify.gui import DISPLAY_NOTE as GUI_DISPLAY
 from pickfit.verify.mcp import handshake as mcp_handshake
 from pickfit.verify.mcp import pitfalls as mcp_pitfalls
@@ -152,8 +156,8 @@ def _record_check(command: str) -> tuple[str, list[SetupStep]] | None:
 def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeResult | None, *,
               evidence_dir: Path, screenshots: list[Path] | None = None,
               judge_cost_usd: float = 0.0, confirm: FailureCheck | None = None,
-              checked_at: datetime | None = None, gui_app: bool = False, mcp: bool = False
-              ) -> tuple[VerificationRun, list[str]]:
+              checked_at: datetime | None = None, gui_app: bool = False, mcp: bool = False,
+              feature_verdicts: dict[str, tuple[str, str]] | None = None) -> tuple[VerificationRun, list[str]]:
     """The VerificationRun for one verification, plus notes on why the level was lowered.
 
     checked_at is when its last box ran; it defaults to now, right after the boxes ran. A GUI app
@@ -240,6 +244,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         in_guide.append(cid)
 
     smoke: list[SmokeTest] = []
+    smoke_index: dict[int, int] = {}  # command_id -> its smoke test, for feature coverage
     if replay and replay.checks:
         for c in replay.checks:
             if c.run is None:
@@ -252,6 +257,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
                 notes.append(f"smoke test {c.command_id} is too long for the record")
                 continue
             command, before = fitted
+            smoke_index[c.command_id] = len(smoke)
             smoke.append(SmokeTest(
                 command=command, expected_signal=_clip(c.expected_signal, 300) or "",
                 exit_code=c.run.exit_code, passed=c.passed,
@@ -303,6 +309,11 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         reason = "other"
     outputs = [f"{c.stdout}\n{c.stderr}" for c in report.commands]
     method = infer_install_method([s.command for s in steps], finish.get("install_method"))
+    features = []
+    if is_passed(level) and replay and report.features:
+        features, feature_notes = coverage(report.features, smoke_index, smoke, replay.failed, _record_check,
+                                           feature_verdicts)
+        notes += feature_notes
     pitfalls = [Pitfall(readme_said=_clip(p["readme_said"], 300) or "-",
                         actually_needed=_clip(p["actually_needed"], 300) or "-", kind=_pitfall_kind(p))
                 for p in finish.get("pitfalls") or []]
@@ -335,7 +346,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         if judge else None,
         evidence=RunEvidence(trace_path=_rel(evidence_dir / "report.json"),
                              screenshot_paths=[p for p in map(_rel, screenshots or []) if p]),
-        actor_model=report.model, cost_usd=round(report.cost_usd + judge_cost_usd, 6), gui=gui,
+        actor_model=report.model, cost_usd=round(report.cost_usd + judge_cost_usd, 6), features=features, gui=gui,
         mcp=handshake if is_passed(level) else None)
     return run, notes
 

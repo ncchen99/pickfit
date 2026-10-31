@@ -29,6 +29,11 @@
     "review receipts or screenshots with image-capable build"
   ],
   "alternatives_to": [],
+  "features": [
+    "Classify text with option probabilities",
+    "Route support tickets and requests",
+    "Review receipts and screenshots from images"
+  ],
   "why_worth_it": null,
   "homepage": "https://jevstyle.com",
   "repo": {
@@ -53,20 +58,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-jev-style-20261031-003740-0887",
+      "run_id": "verify-jev-style-20261031-032653-f847",
       "method": "pip",
       "steps": [
         {
           "command": "pip install -U \"jev-style[torch]\"",
-          "purpose": "Install jev-style torch backend via pip"
+          "purpose": "Install jev-style torch backend"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "jev-style --help",
-        "expected_signal": "Small, calibrated, local decision models."
+        "command": "jev-style --version",
+        "expected_signal": "0.6.2"
       },
-      "first_task": "curl -s http://127.0.0.1:8765/v1/models && echo && curl -s http://127.0.0.1:8765/v1/systemone -H 'content-type: application/json' -d '{\"state\": \"I was charged twice\", \"questions\": {\"team\": {\"type\": \"choice\", \"instructions\": \"Which team?\", \"criteria\": {\"billing\": \"charges\", \"shipping\": \"delivery\", \"r"
+      "first_task": "curl -s http://127.0.0.1:8765/healthz && echo \"---MODELS---\" && curl -s http://127.0.0.1:8765/v1/models"
     },
     "windows": null
   },
@@ -85,10 +90,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:42:03.713586+08:00",
+    "checked_at": "2026-10-31T03:30:51.627142+08:00",
     "runs": [
       {
-        "id": "verify-jev-style-20261031-003740-0887",
+        "id": "verify-jev-style-20261031-032653-f847",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -96,26 +101,17 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:42:03.713586+08:00",
+        "checked_at": "2026-10-31T03:30:51.627142+08:00",
         "tool_version": "0.6.2",
         "install_method": "pip",
         "replayed": true,
         "steps": [
           {
             "command": "pip install -U \"jev-style[torch]\"",
-            "purpose": "Install jev-style torch backend via pip"
+            "purpose": "Install jev-style torch backend"
           }
         ],
         "smoke_tests": [
-          {
-            "command": "jev-style --help",
-            "expected_signal": "Small, calibrated, local decision models.",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Small, calibrated, local decision models.",
-            "setup": [],
-            "offline": true
-          },
           {
             "command": "jev-style --version",
             "expected_signal": "0.6.2",
@@ -126,14 +122,14 @@
             "offline": true
           },
           {
-            "command": "curl -s http://127.0.0.1:8765/v1/models && echo && curl -s http://127.0.0.1:8765/v1/systemone -H 'content-type: application/json' -d '{\"state\": \"I was charged twice\", \"questions\": {\"team\": {\"type\": \"choice\", \"instructions\": \"Which team?\", \"criteria\": {\"billing\": \"charges\", \"shipping\": \"delivery\", \"returns\": \"returns\"}}}}'",
-            "expected_signal": "jev-style-fake",
+            "command": "curl -s http://127.0.0.1:8765/healthz && echo \"---MODELS---\" && curl -s http://127.0.0.1:8765/v1/models",
+            "expected_signal": "\"status\":\"ok\"",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "{\"object\":\"list\",\"data\":[{\"id\":\"jev-style-fake\",\"context_tokens\":25600,\"head_max_tokens\":2048,\"backend\":\"fake\",\"images\":false,\"box\":false}],\"models\":[{\"name\":\"jev-style-fake\",\"release_date\":\"\",\"description\":\"Fake engine: deterministic hash-based probabilities, no model\"}]}",
+            "observed_excerpt": "{\"status\":\"ok\",\"model\":\"jev-style-fake\",\"backend\":\"fake\",\"auth\":false,\"untrained\":true,\"release_kind\":\"fake\",\"extensions\":[\"agent_approval\"],\"ext_errors\":[]}---MODELS---",
             "setup": [
               {
-                "command": "jev-style serve --fake --port 8765",
+                "command": "jev-style serve --fake",
                 "background": true,
                 "port": 8765
               }
@@ -142,56 +138,111 @@
           },
           {
             "command": "jev-style decide \"I was charged twice\" --url http://127.0.0.1:8765 --choice \"Which team?::billing,shipping,returns\"",
-            "expected_signal": "\"choice\": \"billing\"",
+            "expected_signal": "probabilities",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "\"choice\": \"billing\",",
+            "observed_excerpt": "\"probabilities\": {",
             "setup": [
               {
-                "command": "jev-style serve --fake --port 8765",
+                "command": "jev-style serve --fake",
                 "background": true,
                 "port": 8765
               }
             ],
             "offline": true
+          },
+          {
+            "command": "python3 -c \"from jev_style import JevStyle, image, noul; js=JevStyle(base_url='http://127.0.0.1:8765'); out=js.decide({'receipt':'r1','policy':'Meals over 50 EUR need a manager approval.'}, {'approval': noul('Does this receipt need a manager approval?')}, assets={'r1': image('receipt.png')}); print(out)\"",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "self._raise(resp) File \"/home/sbx/.local/lib/python3.12/site-packages/jev_style/client.py\", line 127, in _raise raise JevStyleError(resp.status_code, err.get(\"code\", \"http_error\"), err.get(\"message\", resp.text[:500]), jev_style.client.JevStyleError: 400 images_not_supported: this model reads text o…",
+            "setup": [
+              {
+                "command": "jev-style serve --fake",
+                "background": true,
+                "port": 8765
+              },
+              {
+                "command": "python3 -c \"from PIL import Image; Image.new('RGB',(400,400),'white').save('receipt.png'); print('wrote receipt.png')\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "pip install -U \"jev-style[mlx]\" for Apple silicon",
-            "actually_needed": "Skipped candidate 1 (jev-style[mlx]): MLX backend is Apple-silicon only and cannot run on this Linux x86_64 box; installed candidate 2 (jev-style[torch]) directly.",
+            "readme_said": "pip install -U jev-style[mlx] as first candidate",
+            "actually_needed": "On Linux x86_64 use pip install \"jev-style[torch]\"; mlx backend is Apple-silicon only and cannot work here",
             "kind": "sandbox"
           },
           {
-            "readme_said": "jev-style serve downloads the 0.8B weights (about 1.5 GB)",
-            "actually_needed": "Started server with `jev-style serve --fake` (deterministic fake engine, no model download) instead of plain `jev-style serve`, which downloads ~1.5 GB of 0.8B weights on first start and needs more RAM/time than this 2 GB box allows.",
+            "readme_said": "jev-style serve downloads 0.8B weights (~1.5GB)",
+            "actually_needed": "jev-style serve --fake for deterministic answers with no 1.5GB weight download; plain serve needs download and RAM beyond 2GB box",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "review receipts or screenshots with the image-capable build",
+            "actually_needed": "Fake server reports images:false and rejects assets with 400 images_not_supported; images need 2B v4 torch build",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show server listing jev-style-fake and returning billing choice, CLI deciding billing, and help showing the expected tagline.",
+          "observed": "Screenshots show health check returning status ok with model list, decide returning billing choice with probabilities, and version 0.6.2.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-jev-style-20261031-003740-0887/report.json",
+          "trace_path": "runs/verify/verify-jev-style-20261031-032653-f847/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-jev-style-20261031-003740-0887/check-1-cmd7.judged.png",
-            "runs/verify/verify-jev-style-20261031-003740-0887/check-2-cmd8.judged.png",
-            "runs/verify/verify-jev-style-20261031-003740-0887/check-3-cmd3.judged.png"
+            "runs/verify/verify-jev-style-20261031-032653-f847/check-1-cmd5.judged.png",
+            "runs/verify/verify-jev-style-20261031-032653-f847/check-2-cmd6.judged.png",
+            "runs/verify/verify-jev-style-20261031-032653-f847/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.061374
+        "cost_usd": 0.100226,
+        "features": [
+          {
+            "feature": "Classify text with option probabilities",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Route support tickets and requests",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          },
+          {
+            "feature": "Review receipts and screenshots from images",
+            "status": "test_failed",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "fake engine is text-only; real 2B v4 image weights ~4.43GB need more RAM than 2GB box"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 93.2,
       "confidence": 0.8,
@@ -498,8 +549,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Classify text, route requests, and score defined options with probabilities for each answer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:39+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Use it to route support tickets",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:39+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "review receipts or screenshots with the image-capable build.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:39+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

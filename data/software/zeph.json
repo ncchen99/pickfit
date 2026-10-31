@@ -31,6 +31,12 @@
     "ingest documents into semantic memory"
   ],
   "alternatives_to": [],
+  "features": [
+    "recall why decisions were made",
+    "read files and run commands",
+    "run long jobs with sub-agents",
+    "route tasks to cheapest capable provider"
+  ],
   "why_worth_it": null,
   "homepage": "https://bug-ops.github.io/zeph/",
   "repo": {
@@ -74,16 +80,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-zeph-20261029-030213-473a",
+      "run_id": "verify-zeph-20261031-021353-c376",
       "method": "binary",
       "steps": [
         {
-          "command": "mkdir -p ~/.local/bin /tmp/z && curl -fsSL --retry 3 -o /tmp/z/zeph.tar.gz https://github.com/bug-ops/zeph/releases/download/v0.22.5/zeph-x86_64-unknown-linux-musl.tar.gz && ls -l /tmp/z/",
-          "purpose": "Download pinned musl binary release"
+          "command": "mkdir -p /tmp/zd && cd /tmp/zd && curl -fsSL -O https://github.com/bug-ops/zeph/releases/download/v0.22.5/zeph-x86_64-unknown-linux-musl.tar.gz && curl -fsSL -O https://github.com/bug-ops/zeph/releases/download/v0.22.5/zeph-x86_64-unknown-linux-musl.tar.gz.sha256 && sha256sum -c zeph-x86_64-unknown-linux-musl.tar.gz.sha256",
+          "purpose": "Download musl binary and checksum, verify"
         },
         {
-          "command": "curl -fsSL -o /tmp/z/zeph.sha256 https://github.com/bug-ops/zeph/releases/download/v0.22.5/zeph-x86_64-unknown-linux-musl.tar.gz.sha256 && E=$(cut -d' ' -f1 /tmp/z/zeph.sha256) && A=$(sha256sum /tmp/z/zeph.tar.gz | cut -d' ' -f1) && test \"$E\" = \"$A\" && tar xzf /tmp/z/zeph.tar.gz -C /tmp/z && install -m0755 /tmp/z/zeph ~/.local/bin/zeph && rm -rf /tmp/z",
-          "purpose": "Verify checksum and install to ~/.local/bin"
+          "command": "tar xzf /tmp/zd/zeph-x86_64-unknown-linux-musl.tar.gz -C /tmp/zd && chmod 0755 /tmp/zd/zeph && mkdir -p ~/.zeph/bin ~/.local/bin && mv /tmp/zd/zeph ~/.zeph/bin/zeph && ln -sf ~/.zeph/bin/zeph ~/.local/bin/zeph",
+          "purpose": "Extract and install binary on PATH"
         }
       ],
       "manual_steps": [],
@@ -91,7 +97,7 @@
         "command": "zeph --version",
         "expected_signal": "zeph 0.22.5"
       },
-      "first_task": "zeph doctor"
+      "first_task": "mkdir -p ~/.local/bin && ln -sf ~/.zeph/bin/zeph ~/.local/bin/zeph && export PATH=\"$HOME/.local/bin:$HOME/.zeph/bin:$PATH\" && zeph doctor"
     },
     "windows": {
       "basis": "readme_claim",
@@ -123,10 +129,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T03:03:34.704630+08:00",
+    "checked_at": "2026-10-31T02:15:25.704761+08:00",
     "runs": [
       {
-        "id": "verify-zeph-20261029-030213-473a",
+        "id": "verify-zeph-20261031-021353-c376",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -134,18 +140,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T03:03:34.704630+08:00",
+        "checked_at": "2026-10-31T02:15:25.704761+08:00",
         "tool_version": "0.22.5",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "mkdir -p ~/.local/bin /tmp/z && curl -fsSL --retry 3 -o /tmp/z/zeph.tar.gz https://github.com/bug-ops/zeph/releases/download/v0.22.5/zeph-x86_64-unknown-linux-musl.tar.gz && ls -l /tmp/z/",
-            "purpose": "Download pinned musl binary release"
+            "command": "mkdir -p /tmp/zd && cd /tmp/zd && curl -fsSL -O https://github.com/bug-ops/zeph/releases/download/v0.22.5/zeph-x86_64-unknown-linux-musl.tar.gz && curl -fsSL -O https://github.com/bug-ops/zeph/releases/download/v0.22.5/zeph-x86_64-unknown-linux-musl.tar.gz.sha256 && sha256sum -c zeph-x86_64-unknown-linux-musl.tar.gz.sha256",
+            "purpose": "Download musl binary and checksum, verify"
           },
           {
-            "command": "curl -fsSL -o /tmp/z/zeph.sha256 https://github.com/bug-ops/zeph/releases/download/v0.22.5/zeph-x86_64-unknown-linux-musl.tar.gz.sha256 && E=$(cut -d' ' -f1 /tmp/z/zeph.sha256) && A=$(sha256sum /tmp/z/zeph.tar.gz | cut -d' ' -f1) && test \"$E\" = \"$A\" && tar xzf /tmp/z/zeph.tar.gz -C /tmp/z && install -m0755 /tmp/z/zeph ~/.local/bin/zeph && rm -rf /tmp/z",
-            "purpose": "Verify checksum and install to ~/.local/bin"
+            "command": "tar xzf /tmp/zd/zeph-x86_64-unknown-linux-musl.tar.gz -C /tmp/zd && chmod 0755 /tmp/zd/zeph && mkdir -p ~/.zeph/bin ~/.local/bin && mv /tmp/zd/zeph ~/.zeph/bin/zeph && ln -sf ~/.zeph/bin/zeph ~/.local/bin/zeph",
+            "purpose": "Extract and install binary on PATH"
           }
         ],
         "smoke_tests": [
@@ -159,8 +165,8 @@
             "offline": true
           },
           {
-            "command": "zeph doctor",
-            "expected_signal": "3 check(s) failed",
+            "command": "mkdir -p ~/.local/bin && ln -sf ~/.zeph/bin/zeph ~/.local/bin/zeph && export PATH=\"$HOME/.local/bin:$HOME/.zeph/bin:$PATH\" && zeph doctor",
+            "expected_signal": "3 check(s) failed, 6 warning(s)",
             "exit_code": 1,
             "passed": true,
             "observed_excerpt": "3 check(s) failed, 6 warning(s)",
@@ -184,46 +190,95 @@
             "observed_excerpt": "No Thompson state found at: /home/sbx/.zeph/router_thompson_state.json",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "zeph memory export /tmp/dump.json && cat /tmp/dump.json",
+            "expected_signal": "Exported 0 conversation(s)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Exported 0 conversation(s) with 0 message(s) to /tmp/dump.json",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -fsSL https://github.com/bug-ops/zeph/releases/latest/download/install.sh | sh",
-            "actually_needed": "manually download zeph-x86_64-unknown-linux-musl.tar.gz + .sha256 from v0.22.5, verify checksum, extract zeph to ~/.local/bin (already on PATH)"
+            "readme_said": "curl -fsSL .../latest/download/install.sh | sh installs on Linux x86_64",
+            "actually_needed": "download zeph-x86_64-unknown-linux-musl.tar.gz + .sha256, verify, extract and symlink into ~/.local/bin",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "install.sh downloads and verifies zeph tarball",
+            "actually_needed": "install.sh fetches a prebuilt binary tarball which cannot be read as a script before running",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show zeph doctor reporting 3 failed checks, skill list reporting no skills installed, and --version printing 0.22.5.",
+          "observed": "Screenshots show zeph doctor reporting 3 failures/6 warnings, skill list reporting no skills, and --version printing 0.22.5.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-zeph-20261029-030213-473a/report.json",
+          "trace_path": "runs/verify/verify-zeph-20261031-021353-c376/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-zeph-20261029-030213-473a/check-1-cmd8.judged.png",
-            "runs/verify/verify-zeph-20261029-030213-473a/check-2-cmd9.judged.png",
-            "runs/verify/verify-zeph-20261029-030213-473a/check-3-cmd6.judged.png"
+            "runs/verify/verify-zeph-20261031-021353-c376/check-1-cmd6.judged.png",
+            "runs/verify/verify-zeph-20261031-021353-c376/check-2-cmd7.judged.png",
+            "runs/verify/verify-zeph-20261031-021353-c376/check-3-cmd15.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.098271
+        "cost_usd": 0.118483,
+        "features": [
+          {
+            "feature": "recall why decisions were made",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows empty export with 0 conversations and 0 messages."
+          },
+          {
+            "feature": "read files and run commands",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "reads files/runs commands via agent and ingest needs vault init with provider keys"
+          },
+          {
+            "feature": "run long jobs with sub-agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "sub-agents/scheduler need configured provider; no offline example"
+          },
+          {
+            "feature": "route tasks to cheapest capable provider",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows missing Thompson state with no routing statistics."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 80.8,
+      "total": 68.0,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 0.595,
           "weight": 40.0
         },
         "install_docs": {
@@ -266,7 +321,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 30.54
+      "value": 25.7
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -562,8 +617,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-29T02:38:19+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "A memory-first AI agent that remembers why decisions were made — not just the last message.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:55+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "It reads files, runs commands, searches code, and answers with full project context.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:55+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Research loops, document RAG, scheduled tasks, multi-step plans, and sub-agents",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:55+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "then let Zeph route each task to the cheapest option that can handle it",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:55+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

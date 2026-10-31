@@ -26,7 +26,7 @@ FIXTURES = Path(__file__).parent / "fixtures" / "verify"
 
 
 def extraction(**changes: Any) -> dict[str, Any]:
-    data = json.loads((FIXTURES / "graphtty.json").read_text())["extraction"]
+    data = json.loads((FIXTURES / "graphtty.json").read_text(encoding="utf-8"))["extraction"]
     for path, value in changes.items():
         node = data
         *parents, leaf = path.split("__")
@@ -158,7 +158,7 @@ def test_run_batch_runs_in_parallel_and_survives_errors(db_path: Path, tmp_path:
     assert (summary["tools"], summary["passed"], summary["errors"]) == (3, 1, 1)
     assert summary["levels"] == {"function": 1, "unverified": 1, "None": 1}
     assert summary["cost_usd"] == 0.02 and summary["seconds_median"] == 40.0
-    saved = json.loads(Path(summary["path"]).read_text())
+    saved = json.loads(Path(summary["path"]).read_text(encoding="utf-8"))
     assert [r["slug"] for r in saved["items"]] == ["graphtty", "other-graphtty", "keyed"]
     assert saved["items"][2]["error"] == "RuntimeError: box exploded"
     assert "[graphtty] working" in lines
@@ -203,3 +203,16 @@ def test_a_new_release_requeues_a_record_whose_runs_did_not_pass(tmp_path: Path)
     # One that ran settles it, written back or not (it ended unverified "other").
     attempt("verify-fixed-20261101-190000-cd34", "fixed", "finished")
     assert recheck_slugs(tmp_path, runs) == {"boxed"}
+
+
+def test_features_of_a_features_only_extraction_join_the_extraction_that_built_the_record(db_path: Path):
+    db = PipelineDB(db_path)
+    feats = {"features": [{"value": "render a graph", "quote": "graphtty graph.json"}]}
+    add(db, 1, "acme/graphtty", feats, status="features")
+    (item,) = [i for i in load_candidates(db_path, limit=10)[0] if i.repo_id == "gh:1"]
+    assert [f.value for f in item.task.extraction.features] == ["render a graph"]
+    assert item.task.extraction.kind.value == "cli_tool"  # everything else is the earlier extraction
+    # A full extraction made after it, with features of its own, wins.
+    add(db, 1, "acme/graphtty", extraction(features=[{"value": "theme it", "quote": "graphtty"}]))
+    (item,) = [i for i in load_candidates(db_path, limit=10)[0] if i.repo_id == "gh:1"]
+    assert [f.value for f in item.task.extraction.features] == ["theme it"]

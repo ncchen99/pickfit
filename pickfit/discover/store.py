@@ -242,10 +242,15 @@ class PipelineDB:
 
     # -- extraction
 
-    def last_extraction(self, repo_id: str, model: str) -> dict[str, Any] | None:
+    def last_extraction(self, repo_id: str, model: str, statuses: tuple[str, ...] | None = None,
+                        exclude: tuple[str, ...] = ()) -> dict[str, Any] | None:
+        """The newest extraction of a repo by `model`: of any status, one of `statuses`, or none of `exclude`."""
+        where = f" AND status IN ({','.join('?' * len(statuses))})" if statuses else ""
+        where += f" AND status NOT IN ({','.join('?' * len(exclude))})" if exclude else ""
         with self._connect() as conn:
-            row = conn.execute("SELECT * FROM extractions WHERE repo_id = ? AND model = ? "
-                               "ORDER BY id DESC LIMIT 1", (repo_id, model)).fetchone()
+            row = conn.execute(f"SELECT * FROM extractions WHERE repo_id = ? AND model = ?{where} "
+                               "ORDER BY id DESC LIMIT 1",
+                               (repo_id, model, *(statuses or ()), *exclude)).fetchone()
         return _row_to_extraction(row) if row else None
 
     def save_extraction(self, *, repo_id: str, run_id: str, model: str, reasoning_effort: str,

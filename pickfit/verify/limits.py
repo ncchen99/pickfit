@@ -8,7 +8,8 @@ capped. No model is called. Measured 2026-10-29: Docker kills only the process
 that goes over the memory limit; Modal kills the whole sandbox. A macOS box has
 no /proc and no per-process memory cap (the VM's RAM is the cap), so it checks
 instead that the box user is not an admin, cannot sudo or change the firewall,
-and cannot reach the host.
+and cannot reach the host. A Windows box checks the same kind of things in
+PowerShell, plus that exit codes survive VBoxManage's mapping.
 
 A Linux box also checks (2026-10-31 review): no /dev/kvm; no user namespaces
 for the box user (VM; gVisor keeps them inside its own kernel); no vsock
@@ -271,6 +272,170 @@ def _not_admin(result: ExecResult) -> bool:
     return lines[:1] != ["0"] and "admin" not in groups and "sudo=0" not in result.stdout
 
 
+# The token, as whoami sees it: administrator role, every BUILTIN group (S-1-5-32-*), every privilege, and the
+# integrity level. The box user must be in BUILTIN\Users only (Backup Operators and the like can read the
+# SECURITY hive), hold none of the privileges that lead to SYSTEM, and run at Medium integrity.
+WIN_IS_ADMIN = (
+    "$g = whoami /groups /fo csv | ConvertFrom-Csv\n"
+    "\"admin=$(([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent())"
+    ".IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))\"\n"
+    "\"builtin=$(($g | Where-Object SID -like 'S-1-5-32-*' | ForEach-Object SID | Sort-Object) -join ',')\"\n"
+    "\"integrity=$(($g | Where-Object SID -like 'S-1-16-*' | ForEach-Object SID) -join ',')\"\n"
+    "\"privileges=$((whoami /priv /fo csv | ConvertFrom-Csv | ForEach-Object 'Privilege Name' | Sort-Object) "
+    "-join ',')\"\n")
+# An allowlist: what a standard Windows user holds. Anything else (SeBackup, SeRestore, SeDebug, SeImpersonate,
+# SeTcb, SeCreateToken, SeAssignPrimaryToken, SeManageVolume, SeRelabel, ...) fails the probe.
+WIN_USER_PRIVILEGES = frozenset({"SeChangeNotifyPrivilege", "SeShutdownPrivilege", "SeUndockPrivilege",
+                                 "SeIncreaseWorkingSetPrivilege", "SeTimeZonePrivilege"})
+
+
+def _win_token(r: ExecResult) -> dict[str, str]:
+    return {m.group(1): m.group(2).strip() for m in re.finditer(r"^(\w+)=(.*)$", r.stdout, re.M)}
+
+
+def _win_privileges(r: ExecResult) -> set[str]:
+    return set(filter(None, _win_token(r).get("privileges", "").split(",")))
+
+
+def _win_standard_user(r: ExecResult) -> bool:
+    t = _win_token(r)
+    privileges = _win_privileges(r)
+    return (r.exit_code == 0 and t.get("admin") == "False" and t.get("builtin") == "S-1-5-32-545"
+            and t.get("integrity") == "S-1-16-8192" and "SeChangeNotifyPrivilege" in privileges
+            and privileges <= WIN_USER_PRIVILEGES)
+
+
+WIN_HARNESS_WRITE = ("foreach ($p in 'C:\\ProgramData\\pickfit\\run.ps1','C:\\ProgramData\\pickfit\\probe.ps1') { "
+                     "try { [IO.File]::AppendAllText($p, '#'); \"writable $p\" } catch { \"locked $p\" } }; "
+                     "try { New-Item -ItemType File C:\\ProgramData\\pickfit\\x.ps1 -ErrorAction Stop | Out-Null; "
+                     "'writable dir' } catch { 'locked dir' }")
+
+
+def win_logon_secrets() -> str:
+    """sbx logs on by itself (winget and the MSIX pwsh need a desktop session), so the probe is: the auto
+    logon is sbx's and nobody else's; no password in Winlogon (HKLM or sbx's HKCU); the LSA secret that holds
+    it is refused to sbx; no answer file at any drive root or under Panther/Sysprep; no optical drive."""
+    from pickfit.verify.vbox_box import ANSWER_SCAN, LSA_TYPE
+
+    return LSA_TYPE + ANSWER_SCAN + (
+        "$w = Get-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon'\n"
+        "\"autologon=$($w.AutoAdminLogon) user=$($w.DefaultUserName)\"\n"
+        "\"hklm_password=$($w.PSObject.Properties.Name -contains 'DefaultPassword')\"\n"
+        "$u = Get-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon' -ErrorAction SilentlyContinue\n"
+        "\"hkcu_password=$([bool]($u -and $u.PSObject.Properties.Name -contains 'DefaultPassword'))\"\n"
+        "\"lsa=$([PfLsa]::Probe('DefaultPassword'))\"\n"
+        "\"answer_files=$($found -join ';')\"\n"
+        "\"cdrom=$(@(Get-CimInstance Win32_CDROMDrive -ErrorAction SilentlyContinue).Count)\"\n")
+
+
+WIN_LOGON_EXPECT = ["autologon=1 user=sbx", "hklm_password=False", "hkcu_password=False", "lsa=denied",
+                    "answer_files=", "cdrom=0"]
+
+
+def _no_logon_secret(r: ExecResult) -> bool:
+    lines = [line.strip() for line in r.stdout.strip().splitlines()]
+    return r.exit_code == 0 and lines == WIN_LOGON_EXPECT
+
+
+def _as_admin(box: Box, name: str, script: str, expect: str, ok: Callable[[ExecResult], bool]) -> ProbeResult:
+    """A control run by the harness's administrator (Windows PowerShell), never by the box user."""
+    began = time.monotonic()
+    code, out, err = box._admin(script, 120)  # type: ignore[attr-defined]
+    result = ExecResult(command=script, exit_code=code, stdout=out, stderr=err,
+                        seconds=round(time.monotonic() - began, 2), timed_out=False, truncated=False)
+    return ProbeResult(name, bool(ok(result)), expect, code, result.seconds, _detail(result))
+
+
+# Windows PowerShell logs each command line (events 400/403) where any user can read it; the harness passes
+# scripts and secrets in the environment, so no command line there carries one.
+WIN_ENCODED_IN_LOG = ("$e = @(Get-WinEvent -LogName 'Windows PowerShell' -ErrorAction Stop)\n"
+                      "\"events=$($e.Count) encoded=$(@($e | Where-Object Message -match "
+                      "'EncodedCommand|\\s-Enc\\s').Count)\"\n")
+
+
+def _no_encoded(r: ExecResult) -> bool:
+    m = re.search(r"events=(\d+) encoded=(\d+)", r.stdout)
+    return r.exit_code == 0 and m is not None and int(m.group(1)) > 0 and m.group(2) == "0"
+
+
+WIN_NEGATIVE_PASSWORD = "pickfit-negative-control"
+WIN_WINLOGON = "'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon'"
+
+
+def _windows_probes(box: Box, add: Callable[[ProbeResult], None]) -> None:
+    """A Windows box: the user is not an administrator, cannot change the harness, finds no logon password
+    it can read, and the network policy (outside the guest) holds. Every probe has a control that shows it
+    can see what it looks for (run as the administrator, or with the thing planted in this throwaway box).
+    Windows has no per-user process, file-size or memory cap; the VM's own RAM and disk are the caps."""
+    add(_probe(box, "non_admin", WIN_IS_ADMIN, 60,
+               "not an administrator; BUILTIN groups exactly Users; Medium integrity; privileges only from "
+               + ", ".join(sorted(WIN_USER_PRIVILEGES)) + " (SeChangeNotify present)", _win_standard_user))
+    add(_as_admin(box, "non_admin_control", WIN_IS_ADMIN,
+                  "the same check flags the administrator (admin=True, S-1-5-32-544, SeDebug and SeBackup parsed)",
+                  lambda r: r.exit_code == 0 and _win_token(r).get("admin") == "True"
+                  and "S-1-5-32-544" in _win_token(r).get("builtin", "")
+                  and {"SeDebugPrivilege", "SeBackupPrivilege"} <= _win_privileges(r) and not _win_standard_user(r)))
+    add(_probe(box, "harness_locked", WIN_HARNESS_WRITE, 60, "the box user cannot change the harness scripts",
+               lambda r: "writable" not in r.stdout and r.stdout.count("locked") == 3))
+    add(_probe(box, "no_logon_secret", win_logon_secrets(), 90,
+               "auto logon only for sbx; no Winlogon password; LSA secret denied to sbx; no answer file; no "
+               "optical drive", _no_logon_secret))
+    add(_as_admin(box, "no_logon_secret_control_admin", win_logon_secrets(),
+                  "the administrator can read the LSA secret the box user is denied",
+                  lambda r: re.search(r"^lsa=readable len=[1-9]\d*\r?$", r.stdout, re.M) is not None))
+    _as_admin(box, "plant", f"Set-ItemProperty {WIN_WINLOGON} DefaultPassword '{WIN_NEGATIVE_PASSWORD}'",
+              "", lambda r: True)
+    try:
+        planted = box.exec(win_logon_secrets(), 90)
+    finally:
+        _as_admin(box, "unplant", f"Remove-ItemProperty {WIN_WINLOGON} DefaultPassword", "", lambda r: True)
+    add(ProbeResult("no_logon_secret_control_planted", "hklm_password=True" in planted.stdout
+                    and not _no_logon_secret(planted),
+                    "with a DefaultPassword planted in Winlogon (this box only), the probe fails",
+                    planted.exit_code, planted.seconds, _detail(planted)))
+    no_secret_env = lambda r: not re.search(r"API_KEY|TOKEN|SECRET|PASSWORD", r.stdout)  # noqa: E731
+    add(_probe(box, "no_secrets_in_env", "(Get-ChildItem env:).Name -join ' '", 60,
+               "no API_KEY/TOKEN/SECRET/PASSWORD variables", no_secret_env))
+    add(_probe(box, "no_secrets_in_env_control", "$env:PF_CONTROL_TOKEN = 'x'; (Get-ChildItem env:).Name -join ' '",
+               60, "a planted *_TOKEN variable is seen", lambda r: not no_secret_env(r)))
+    add(_probe(box, "no_encoded_commands_in_log", WIN_ENCODED_IN_LOG, 90,
+               "the 'Windows PowerShell' log is readable and no command line in it carries a script",
+               _no_encoded))
+    planted_cmd = ("& \"$env:SystemRoot\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile "
+                   "-EncodedCommand VwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIABwAGYALQBjAG8AbgB0AHIAbwBsAA==")
+    _as_admin(box, "plant", planted_cmd, "", lambda r: True)  # Write-Output pf-control
+    add(_probe(box, "no_encoded_commands_in_log_control", WIN_ENCODED_IN_LOG, 90,
+               "after the administrator runs one -EncodedCommand (this box only), the probe sees it",
+               lambda r: r.exit_code == 0 and not _no_encoded(r)))
+    try:
+        for name, ok, expect, detail in box.validate_containment():
+            add(ProbeResult(name, ok, expect, None, 0.0, detail))
+    except BoxError as err:
+        add(ProbeResult("containment_check_ran", False, "the containment check completes", None, 0.0, str(err)))
+    box.exec(box.background("python -m http.server 8765 --bind 127.0.0.1", 8765, 20, "limits-http"), 40)
+    box.set_network(False)
+    try:
+        add(_probe(box, "offline_localhost",
+                   "curl.exe -sS -m 5 -o NUL -w '%{http_code}' http://127.0.0.1:8765/", 30,
+                   "localhost still answers with the network off", lambda r: r.stdout.strip() == "200"))
+    finally:
+        box.set_network(True)
+    add(_probe(box, "online_again", "curl.exe -sS -I -m 15 -o NUL -w '%{http_code}' https://pypi.org/simple/pip/",
+               40, "PyPI answers again after the network is back", lambda r: r.stdout.strip() == "200"))
+    timed = box.exec("Start-Sleep 30", 3)
+    add(ProbeResult("command_timeout", timed.timed_out and timed.seconds < 25, "Start-Sleep 30 killed at 3 s",
+                    timed.exit_code, timed.seconds, _detail(timed)))
+    quick = box.exec("Start-Sleep 1; 'done'", 15)
+    add(ProbeResult("command_timeout_control", not quick.timed_out and quick.exit_code == 0 and "done" in quick.stdout,
+                    "Start-Sleep 1 under a 15 s timeout finishes", quick.exit_code, quick.seconds, _detail(quick)))
+    for code in (0, 1, 3, 93, 94, 1603):  # VBoxManage maps codes; the harness must report the real one
+        add(_probe(box, f"exit_code_{code}", f"cmd /c exit {code}", 30, f"exit code {code} comes back as {code}",
+                   lambda r, code=code: r.exit_code == code))
+    # Last, since it changes the harness in this throwaway box: the same write test as the administrator.
+    add(_as_admin(box, "harness_locked_control", WIN_HARNESS_WRITE, "the same write test succeeds for the administrator",
+                  lambda r: r.stdout.count("writable") == 3))
+
+
 def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeResult]:
     """Run every probe in a started box; restores the network before returning."""
     results: list[ProbeResult] = []
@@ -280,6 +445,9 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
         log(f"  {'ok  ' if result.ok else 'FAIL'} {result.name}: {result.expect} · exit {result.exit_code} · "
             f"{result.seconds:.1f}s · {result.detail[:140]}")
 
+    if box.os == "windows":
+        _windows_probes(box, add)
+        return results
     macos = box.os == "macos"
     if macos:
         add(_probe(box, "non_admin", "id -u; id -Gn; sudo -n true 2>&1; echo sudo=$?", 20,

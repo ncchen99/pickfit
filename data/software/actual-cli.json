@@ -28,6 +28,11 @@
     "Check working tree changes against architecture rules"
   ],
   "alternatives_to": [],
+  "features": [
+    "answer architecture questions from ADRs",
+    "write ADR guidance to agent context files",
+    "check plans and changes against rules"
+  ],
   "why_worth_it": null,
   "homepage": "https://cli.actual.ai",
   "repo": {
@@ -70,12 +75,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-actual-cli-20261031-000911-4a97",
+      "run_id": "verify-actual-cli-20261031-031932-b827",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g @actualai/actual",
-          "purpose": "Install Actual.ai CLI via npm"
+          "purpose": "install actual CLI via npm"
         }
       ],
       "manual_steps": [],
@@ -83,7 +88,7 @@
         "command": "actual --version",
         "expected_signal": "actual 0.10.0"
       },
-      "first_task": "cd /tmp/actual-test && actual status"
+      "first_task": "cd /tmp/actual-test && actual status 2>&1"
     },
     "windows": null
   },
@@ -102,10 +107,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:10:48.051652+08:00",
+    "checked_at": "2026-10-31T03:22:04.794710+08:00",
     "runs": [
       {
-        "id": "verify-actual-cli-20261031-000911-4a97",
+        "id": "verify-actual-cli-20261031-031932-b827",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -113,14 +118,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:10:48.051652+08:00",
-        "tool_version": "0.10.0",
+        "checked_at": "2026-10-31T03:22:04.794710+08:00",
+        "tool_version": "actual 0.10.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g @actualai/actual",
-            "purpose": "Install Actual.ai CLI via npm"
+            "purpose": "install actual CLI via npm"
           }
         ],
         "smoke_tests": [
@@ -134,87 +139,95 @@
             "offline": true
           },
           {
-            "command": "actual --help",
-            "expected_signal": "adr-bot",
+            "command": "cd /tmp/actual-test && actual status 2>&1",
+            "expected_signal": "Config file:",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "adr-bot Analyze repo, fetch ADRs, tailor and write AI context files",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "cd /tmp/actual-test && actual status",
-            "expected_signal": "No CLAUDE.md files found",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "│ No CLAUDE.md files found. Run `actual adr-bot` to generate. │",
+            "observed_excerpt": "│ Config file: /home/sbx/.actualai/actual/config.yaml ⚠ created │",
             "setup": [
               {
-                "command": "mkdir -p /tmp/actual-test && cd /tmp/actual-test && git init -q && git config user.email test@test.com && git config user.name test && echo \"# test\" > README.md && git add README.md && git commit -qm init && pwd && ls -la",
+                "command": "mkdir -p /tmp/actual-test && cd /tmp/actual-test && git init -q 2>&1; echo \"# test repo\" > README.md; echo \"console.log('hi')\" > app.js; git add . 2>&1; git -c user.email=test@test.com -c user.name=test commit -qm init 2>&1; pwd; ls -la; git log --oneline | cat",
                 "background": false,
                 "port": null
               }
             ],
             "offline": true
-          },
-          {
-            "command": "actual runners",
-            "expected_signal": "Available Runners",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "╭─ Available Runners ──────────────────────────────────────────────────────────────────────────────╮",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "actual models",
-            "expected_signal": "Known models by runner",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Known models by runner",
-            "setup": [],
-            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "actual adr-bot --dry-run preview without writing; ADR-backed context needs no account or API key",
-            "actually_needed": "Install a runner (e.g. npm install -g @anthropic-ai/claude-code) or set ANTHROPIC_API_KEY/OPENAI_API_KEY before adr-bot can run; without one `actual adr-bot --dry-run` exits 2 with 'No runner available'. Created minimal git repo in /tmp/actual-test first since CLI expects a git working tree.",
+            "readme_said": "actual adr-bot --dry-run preview without writing",
+            "actually_needed": "install a runner (e.g. npm install -g @anthropic-ai/claude-code) or set ANTHROPIC_API_KEY/OPENAI_API_KEY; without it adr-bot --dry-run exits 2 with No runner available",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "actual rules ls list rule documents",
+            "actually_needed": "rule bullets must be - **<id>** LEVEL: text (e.g. - **cache-redis** MUST: ...); without it rules ls reports no parseable Rules and plan-check finds no rules",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "actual plan-check --plan-file plan.md",
+            "actually_needed": "actual plan-check with a matching rule and no runner exits 0 with Could not check: no runner available (documented not_checked outcome, only conflicting exits non-zero)",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three checks show expected outputs: status reports no CLAUDE.md files, runners list is displayed, and version prints actual 0.10.0.",
+          "observed": "Screenshots show actual status with Config file details and actual 0.10.0 version output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-actual-cli-20261031-000911-4a97/report.json",
+          "trace_path": "runs/verify/verify-actual-cli-20261031-031932-b827/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-actual-cli-20261031-000911-4a97/check-1-cmd8.judged.png",
-            "runs/verify/verify-actual-cli-20261031-000911-4a97/check-2-cmd9.judged.png",
-            "runs/verify/verify-actual-cli-20261031-000911-4a97/check-3-cmd2.judged.png"
+            "runs/verify/verify-actual-cli-20261031-031932-b827/check-1-cmd6.judged.png",
+            "runs/verify/verify-actual-cli-20261031-031932-b827/check-2-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.059945
+        "cost_usd": 0.099479,
+        "features": [
+          {
+            "feature": "answer architecture questions from ADRs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "advisor exits 2 Not signed in; needs Actual AI login"
+          },
+          {
+            "feature": "write ADR guidance to agent context files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "adr-bot --dry-run needs runner binary or API key"
+          },
+          {
+            "feature": "check plans and changes against rules",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "plan-check needs runner for verdict; got Could not check"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 94.1,
+      "total": 80.3,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -257,7 +270,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 58.91
+      "value": 50.27
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -529,8 +542,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:04:20+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "Architecture questions, answered from your ADRs.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:03+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "actual adr-bot                # write it to CLAUDE.md",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:03+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "checks its plans and changes against your rules",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:03+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:40:20+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

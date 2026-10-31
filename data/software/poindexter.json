@@ -34,6 +34,12 @@
     "Jasper",
     "Copy.ai"
   ],
+  "features": [
+    "discover trending topics",
+    "research topics with web search",
+    "write long-form posts",
+    "review drafts with multi-model QA"
+  ],
   "why_worth_it": null,
   "homepage": "https://www.gladlabs.io",
   "repo": {
@@ -58,18 +64,29 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "script",
+      "basis": "replayed",
+      "run_id": "verify-poindexter-20261031-021525-628a",
+      "method": "source",
       "steps": [
         {
-          "command": "bash scripts/start-stack.sh up -d",
-          "purpose": null
+          "command": "git clone --depth 1 https://github.com/Glad-Labs/poindexter.git poindexter-src && ls poindexter-src/src/cofounder_agent/ && python3 --version && pip --version",
+          "purpose": "clone poindexter repo"
+        },
+        {
+          "command": "uv python install 3.13",
+          "purpose": "provide required Python 3.13 via uv"
+        },
+        {
+          "command": "cd poindexter-src && /home/sbx/.local/share/uv/python/cpython-3.13-linux-x86_64-gnu/bin/python3.13 -m venv .venv && .venv/bin/pip install -e src/cofounder_agent",
+          "purpose": "create 3.13 venv and pip install poindexter"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "poindexter tasks list"
+      "check": {
+        "command": "cd poindexter-src && .venv/bin/poindexter --help",
+        "expected_signal": "Manage the content pipeline task queue."
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -99,22 +116,124 @@
     "url": "https://github.com/Glad-Labs/poindexter/releases/tag/v0.161.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:17:58.769607+08:00",
+    "runs": [
+      {
+        "id": "verify-poindexter-20261031-021525-628a",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:17:58.769607+08:00",
+        "tool_version": "0.163.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/Glad-Labs/poindexter.git poindexter-src && ls poindexter-src/src/cofounder_agent/ && python3 --version && pip --version",
+            "purpose": "clone poindexter repo"
+          },
+          {
+            "command": "uv python install 3.13",
+            "purpose": "provide required Python 3.13 via uv"
+          },
+          {
+            "command": "cd poindexter-src && /home/sbx/.local/share/uv/python/cpython-3.13-linux-x86_64-gnu/bin/python3.13 -m venv .venv && .venv/bin/pip install -e src/cofounder_agent",
+            "purpose": "create 3.13 venv and pip install poindexter"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd poindexter-src && .venv/bin/poindexter --help",
+            "expected_signal": "Manage the content pipeline task queue.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tasks Manage the content pipeline task queue.",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "python3.13 -m venv .venv",
+            "actually_needed": "install Python 3.13 via 'uv python install 3.13' and create venv with that binary before pip install",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "poindexter tasks list, poindexter settings list, poindexter doctor",
+            "actually_needed": "poindexter tasks list / settings list / doctor all exit 0 but print 'Error: No DSN' / 'No worker API URL configured' until 'poindexter setup --auto' seeds bootstrap.toml and the Docker stack runs",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The help output lists all CLI commands including 'tasks' with description 'Manage the content pipeline task queue.'",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-poindexter-20261031-021525-628a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-poindexter-20261031-021525-628a/check-1-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.108874,
+        "features": [
+          {
+            "feature": "discover trending topics",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_container",
+            "failure": null,
+            "note": "requires running Docker stack with Postgres and Ollama; doctor/settings/tasks all error with No DSN / No worker API URL"
+          },
+          {
+            "feature": "research topics with web search",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_container",
+            "failure": null,
+            "note": "requires running Docker stack with Postgres and Ollama; same missing-DB error"
+          },
+          {
+            "feature": "write long-form posts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_container",
+            "failure": null,
+            "note": "requires Ollama writer model (17 GB default) plus Docker stack"
+          },
+          {
+            "feature": "review drafts with multi-model QA",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_container",
+            "failure": null,
+            "note": "requires Ollama critic model (9 GB default) plus Docker stack"
+          }
+        ]
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 71.6,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.51,
           "weight": 40.0
         },
         "install_docs": {
@@ -155,7 +274,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 52.85
+      "value": 54.85
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -467,8 +586,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-29T02:40:11+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**Discovers** trending topics from HackerNews, Dev.to, and your niche feeds",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:33+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**Researches** each topic with deep web search and source verification",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:33+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**Writes** long-form posts using local LLMs — or cloud models via the optional LiteLLM plugin",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:33+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**Reviews** every draft with multi-model adversarial QA (more on that below)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:33+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:24+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

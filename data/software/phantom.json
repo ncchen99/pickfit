@@ -29,6 +29,11 @@
     "Start ollama serve for local model seats"
   ],
   "alternatives_to": [],
+  "features": [
+    "connect coding agent accounts and local models",
+    "chat interactively with agents and review changes",
+    "run autonomous engineering fleet for outcomes"
+  ],
   "why_worth_it": null,
   "homepage": "https://phm.dev",
   "repo": {
@@ -72,12 +77,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-phantom-20261029-012215-5eca",
+      "run_id": "verify-phantom-20261031-020238-8b32",
       "method": "npm",
       "steps": [
         {
-          "command": "node --version && npm install -g @ashlr/phantom",
-          "purpose": "Install @ashlr/phantom globally via npm"
+          "command": "npm install -g @ashlr/phantom",
+          "purpose": "install phantom via npm"
         }
       ],
       "manual_steps": [],
@@ -85,7 +90,7 @@
         "command": "phm --version",
         "expected_signal": "3.29.15"
       },
-      "first_task": "curl -s -o /tmp/verse.html -w \"%{http_code} %{size_download}\\n\" http://127.0.0.1:7777/verse/"
+      "first_task": "curl -s -o /tmp/verse.html -w \"%{http_code} %{size_download}\\n\" http://127.0.0.1:7777/verse/ && head -c 2000 /tmp/verse.html; echo \"---HEADERS---\"; curl -s -D - -o /dev/null http://127.0.0.1:7777/verse/"
     },
     "windows": {
       "basis": "readme_claim",
@@ -117,10 +122,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:23:19.952963+08:00",
+    "checked_at": "2026-10-31T02:04:13.946426+08:00",
     "runs": [
       {
-        "id": "verify-phantom-20261029-012215-5eca",
+        "id": "verify-phantom-20261031-020238-8b32",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -128,14 +133,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T01:23:19.952963+08:00",
+        "checked_at": "2026-10-31T02:04:13.946426+08:00",
         "tool_version": "3.29.15",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "node --version && npm install -g @ashlr/phantom",
-            "purpose": "Install @ashlr/phantom globally via npm"
+            "command": "npm install -g @ashlr/phantom",
+            "purpose": "install phantom via npm"
           }
         ],
         "smoke_tests": [
@@ -149,59 +154,92 @@
             "offline": true
           },
           {
-            "command": "phm --help",
-            "expected_signal": "Phantom — phm, the CLI for agentic engineers",
+            "command": "curl -s -o /tmp/verse.html -w \"%{http_code} %{size_download}\\n\" http://127.0.0.1:7777/verse/ && head -c 2000 /tmp/verse.html; echo \"---HEADERS---\"; curl -s -D - -o /dev/null http://127.0.0.1:7777/verse/",
+            "expected_signal": "Phantom — engineering agent workbench",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Phantom — phm, the CLI for agentic engineers (ashlr remains compatible)",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "curl -s -o /tmp/verse.html -w \"%{http_code} %{size_download}\\n\" http://127.0.0.1:7777/verse/",
-            "expected_signal": "200 627",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "200 627",
+            "observed_excerpt": "<title>Phantom — engineering agent workbench</title>",
             "setup": [
               {
-                "command": "phm verse --no-open --port 7777",
+                "command": "phm verse --no-open --json",
                 "background": true,
                 "port": 7777
               }
             ],
             "offline": true
+          },
+          {
+            "command": "phm authority status --json",
+            "expected_signal": "No standing grant is installed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"reason\": \"No standing grant is installed — autonomy is dark.\",",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "phm verse",
-            "actually_needed": "phm verse --no-open --port 7777 (stays listening; plain `phm verse` tries to open a browser and then exits)"
+            "readme_said": "`phm verse` starts the server and opens http://127.0.0.1:7777/verse/",
+            "actually_needed": "Run `phm verse --no-open --json` in background; it prints one JSON line with verseUrl and tokens and waits without opening a browser.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Source tree targets version 3.30.0 with canonical @ashlr/phantom release",
+            "actually_needed": "npm latest installed 3.29.15 while the source badge targets 3.30.0; pin @ashlr/phantom@<version> for reproducibility.",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show curl returning 200 627 and phm reporting version 3.29.15.",
+          "observed": "Screenshots show HTTP 200 serving Phantom workbench title, authority status with no grant, and version 3.29.15.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-phantom-20261029-012215-5eca/report.json",
+          "trace_path": "runs/verify/verify-phantom-20261031-020238-8b32/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-phantom-20261029-012215-5eca/check-1-cmd7.judged.png",
-            "runs/verify/verify-phantom-20261029-012215-5eca/check-2-cmd2.judged.png"
+            "runs/verify/verify-phantom-20261031-020238-8b32/check-1-cmd5.judged.png",
+            "runs/verify/verify-phantom-20261031-020238-8b32/check-2-cmd7.judged.png",
+            "runs/verify/verify-phantom-20261031-020238-8b32/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.034142
+        "cost_usd": 0.080093,
+        "features": [
+          {
+            "feature": "connect coding agent accounts and local models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Needs vendor CLI sign-in and browser flow as intended account; not attempted without accounts."
+          },
+          {
+            "feature": "chat interactively with agents and review changes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Interactive chat needs an eligible connected account or local model; verse UI served but no chat run without accounts."
+          },
+          {
+            "feature": "run autonomous engineering fleet for outcomes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Fleet needs signed standing grant and connected resources; status shows autonomy dark, no outcome run."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 92.2,
       "confidence": 0.8,
@@ -532,8 +570,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-28T23:51:28+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Connect eligible Claude Code, Codex, Grok or Devin accounts",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:33+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Work with me opens your interactive chats: guide the agent, inspect its tools and context, review changes and continue on another account or local model.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:33+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Work for me opens the fleet: describe a desired result, edit or pause it,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:33+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

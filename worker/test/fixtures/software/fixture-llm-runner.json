@@ -129,8 +129,21 @@
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "listening on 127.0.0.1:8080",
-            "setup": [{"command": "fixture-llm-runner pull tiny-test"}],
+            "setup": [
+              {
+                "command": "fixture-llm-runner pull tiny-test"
+              }
+            ],
             "offline": true
+          },
+          {
+            "command": "fixture-llm-runner pull big-model",
+            "expected_signal": "",
+            "exit_code": 7,
+            "passed": false,
+            "observed_excerpt": "could not resolve host",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [
@@ -152,7 +165,26 @@
           "evidence_url": "https://example.invalid/runs/run-20261028-linux-1"
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.1
+        "cost_usd": 0.1,
+        "features": [
+          {
+            "feature": "serve an OpenAI-compatible API",
+            "status": "checked",
+            "smoke_tests": [
+              0
+            ]
+          },
+          {
+            "feature": "pull models from a registry",
+            "status": "test_failed",
+            "smoke_tests": [
+              1
+            ],
+            "failure": "sandbox",
+            "reason": "needs_service",
+            "note": "the registry was unreachable offline"
+          }
+        ]
       },
       {
         "id": "run-20261028-macos-1",
@@ -335,5 +367,9 @@
     }
   ],
   "first_seen_at": "2026-10-28T10:00:00Z",
-  "updated_at": "2026-10-28T12:00:00Z"
+  "updated_at": "2026-10-28T12:00:00Z",
+  "features": [
+    "serve an OpenAI-compatible API",
+    "pull models from a registry"
+  ]
 }

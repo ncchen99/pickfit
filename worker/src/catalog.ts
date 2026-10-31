@@ -34,6 +34,17 @@ export interface GuiEvidence {
   launch_offline: boolean | null;
 }
 
+/** One advertised feature as the run behind a guide covered it (index.py _feature_coverage). */
+export interface FeatureCoverage {
+  feature: string;
+  status: 'checked' | 'not_checked' | 'test_failed';
+  reason: string | null;
+  failure: 'sandbox' | 'tool' | null;
+  note: string | null;
+  /** The run's smoke tests behind it; a feature counts as checked only when one passed. */
+  checks: { command: string; passed: boolean }[];
+}
+
 /** What a fresh sandbox saw when pickfit's MCP probe started the server (verification.runs[].mcp). */
 export interface McpHandshake {
   transport: 'stdio' | 'streamable_http' | 'sse';
@@ -74,6 +85,8 @@ export interface InstallGuide {
   works_offline: boolean | null;
   /** kind arrives with the P3 pitfall tags; older runs have none. */
   pitfalls: { readme_said: string; actually_needed: string; kind?: string | null }[];
+  /** Empty for runs from before features were checked; older indexes lack it. */
+  features?: FeatureCoverage[];
   run: RunSummary;
   /** MCP servers: the handshake of this run; null or absent for other software. */
   mcp?: McpHandshake | null;
@@ -90,6 +103,8 @@ export interface Entry {
   tags: string[];
   use_cases: string[];
   alternatives_to: string[];
+  /** The main features the README advertises; older indexes lack it. */
+  features?: string[];
   homepage: string | null;
   repo_url: string;
   platforms: OS[];

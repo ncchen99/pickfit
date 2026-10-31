@@ -31,6 +31,12 @@
     "Check build progress with status"
   ],
   "alternatives_to": [],
+  "features": [
+    "build projects from vision and spec",
+    "improve projects session after session",
+    "generate vision files via guided interview",
+    "convert existing docs to evolve format"
+  ],
   "why_worth_it": null,
   "homepage": "https://www.npmjs.com/package/code-evolve",
   "repo": {
@@ -61,16 +67,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-code-evolve-20261031-002542-61a7",
+      "run_id": "verify-code-evolve-20261031-040425-26f7",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g code-evolve",
           "purpose": "Install code-evolve globally via npm"
-        },
-        {
-          "command": "npm install -g @anthropic-ai/claude-code",
-          "purpose": "Install Claude CLI prerequisite for init dependency check"
         }
       ],
       "manual_steps": [],
@@ -78,7 +80,7 @@
         "command": "code-evolve --version",
         "expected_signal": "0.2.0"
       },
-      "first_task": "cd /tmp/evolve-test && code-evolve status"
+      "first_task": "cd evolve-demo && code-evolve migrate spec ./docs/technical-spec.md --yes"
     },
     "windows": null
   },
@@ -97,10 +99,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:27:35.513280+08:00",
+    "checked_at": "2026-10-31T04:05:51.796228+08:00",
     "runs": [
       {
-        "id": "verify-code-evolve-20261031-002542-61a7",
+        "id": "verify-code-evolve-20261031-040425-26f7",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -108,7 +110,7 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:27:35.513280+08:00",
+        "checked_at": "2026-10-31T04:05:51.796228+08:00",
         "tool_version": "0.2.0",
         "install_method": "npm",
         "replayed": true,
@@ -116,10 +118,6 @@
           {
             "command": "npm install -g code-evolve",
             "purpose": "Install code-evolve globally via npm"
-          },
-          {
-            "command": "npm install -g @anthropic-ai/claude-code",
-            "purpose": "Install Claude CLI prerequisite for init dependency check"
           }
         ],
         "smoke_tests": [
@@ -133,23 +131,14 @@
             "offline": true
           },
           {
-            "command": "code-evolve --help",
-            "expected_signal": "Usage: code-evolve",
+            "command": "cd evolve-demo && code-evolve migrate spec ./docs/technical-spec.md --yes",
+            "expected_signal": "Extracted 3 feature(s) from source.",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Usage: code-evolve [options] [command]",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "cd /tmp/evolve-test && code-evolve status",
-            "expected_signal": "\"features\"",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "{\"day\":2,\"started\":\"2026-10-30\",\"mode\":null,\"features\":{\"total\":0,\"done\":0,\"partial\":0,\"remaining\":0},\"schedule\":null,\"lastEntry\":\"## Day 2 — 00:24 — (auto-generated)\\n\\nSession commits: no commits made.\"}",
+            "observed_excerpt": "Extracted 3 feature(s) from source.",
             "setup": [
               {
-                "command": "mkdir -p /tmp/evolve-test && cd /tmp/evolve-test && code-evolve init --agent claude",
+                "command": "mkdir -p evolve-demo/docs && cat > evolve-demo/docs/technical-spec.md <<'EOF'\n# Technical Spec: Task Tracker\n\n## Overview\nA simple task tracker web app.\n\n## Tech Stack\n- TypeScript with Node.js\n- SQLite for storage\n\n## Architecture\nSingle-process server with REST API and static frontend.\n\n## Features\n- [ ] User authentication with JWT\n- [ ] Task CRUD API\n- [ ] Rate limiting middleware\nEOF\ncat evolve-demo/docs/technical-spec.md",
                 "background": false,
                 "port": null
               }
@@ -157,14 +146,14 @@
             "offline": true
           },
           {
-            "command": "cd /tmp/evolve-test && ce status",
-            "expected_signal": "\"features\"",
+            "command": "cd evolve-demo && code-evolve migrate vision ./docs/overview.md --yes",
+            "expected_signal": "Written to .evolve/vision.md",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "{\"day\":2,\"started\":\"2026-10-30\",\"mode\":null,\"features\":{\"total\":0,\"done\":0,\"partial\":0,\"remaining\":0},\"schedule\":null,\"lastEntry\":\"## Day 2 — 00:24 — (auto-generated)\\n\\nSession commits: no commits made.\"}",
+            "observed_excerpt": "Written to .evolve/vision.md",
             "setup": [
               {
-                "command": "mkdir -p /tmp/evolve-test && cd /tmp/evolve-test && code-evolve init --agent claude",
+                "command": "cat > evolve-demo/docs/overview.md <<'EOF'\n# Task Tracker Vision\n\nWe are building a simple task tracker for small teams who lose track of todos.\nIt solves scattered task management by giving one shared board with priorities.\nSuccess looks like a team creating tasks and shipping work faster within a week.\nEOF\ncat evolve-demo/docs/overview.md",
                 "background": false,
                 "port": null
               }
@@ -174,40 +163,77 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "Requirements lists an AI coding agent but init enforcement and exit code 3 are undocumented.",
-            "actually_needed": "Install an agent CLI (e.g. npm install -g @anthropic-ai/claude-code provides `claude`) before init; otherwise init exits 3 with 'Missing required dependencies: <agent>'.",
+            "readme_said": "npx code-evolve init creates .evolve/ with templates",
+            "actually_needed": "init checks for agent binary (claude/codex/opencode/ollama) plus python3 and git and exits 3 with 'Missing required dependencies' when absent; Requirements lists the agent but Getting Started does not warn",
             "kind": "note"
           },
           {
-            "readme_said": "README shows `code-evolve status` for checking progress without noting output format.",
-            "actually_needed": "In non-TTY run_command, `code-evolve status` prints JSON (e.g. {\"day\":...}) instead of the human-readable table.",
+            "readme_said": "code-evolve status checks progress after init",
+            "actually_needed": "migrate without init only creates .evolve/ dir with spec.md/vision.md; status still exits 1 'Not initialized' until full init provides scripts/evolve.sh and IDENTITY.md",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show both status commands outputting JSON with features and --version printing 0.2.0.",
+          "observed": "Screenshots show spec migration extracting 3 features, vision migration writing output, and version 0.2.0 printed.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-code-evolve-20261031-002542-61a7/report.json",
+          "trace_path": "runs/verify/verify-code-evolve-20261031-040425-26f7/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-code-evolve-20261031-002542-61a7/check-1-cmd10.judged.png",
-            "runs/verify/verify-code-evolve-20261031-002542-61a7/check-2-cmd11.judged.png",
-            "runs/verify/verify-code-evolve-20261031-002542-61a7/check-3-cmd2.judged.png"
+            "runs/verify/verify-code-evolve-20261031-040425-26f7/check-1-cmd9.judged.png",
+            "runs/verify/verify-code-evolve-20261031-040425-26f7/check-2-cmd11.judged.png",
+            "runs/verify/verify-code-evolve-20261031-040425-26f7/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.108838
+        "cost_usd": 0.115797,
+        "features": [
+          {
+            "feature": "build projects from vision and spec",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs ANTHROPIC_API_KEY/OPENAI_API_KEY or claude login plus agent CLI; not attempted"
+          },
+          {
+            "feature": "improve projects session after session",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs initialized project with schedule and API key; status requires init"
+          },
+          {
+            "feature": "generate vision files via guided interview",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "guided Socratic interview needs interactive TTY with stdin; box has stdin closed"
+          },
+          {
+            "feature": "convert existing docs to evolve format",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 86.5,
       "confidence": 0.8,
@@ -538,8 +564,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:14:43+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Give it a vision and a technical spec, and it builds your project from scratch",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:26+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "github_api",
+      "quote": "it autonomously builds and improves a project session after session.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:26+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Guided Socratic interview to generate `.evolve/vision.md`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:26+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Convert an existing spec/vision document into code-evolve format",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:26+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

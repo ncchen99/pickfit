@@ -30,6 +30,12 @@
     "rewind to a past turn and branch a new session"
   ],
   "alternatives_to": [],
+  "features": [
+    "run agent with any model",
+    "enforce deny-first approval for actions",
+    "isolate commands in OS sandbox",
+    "rewind sessions from event log"
+  ],
   "why_worth_it": null,
   "homepage": "https://medha.manojavamlabs.com",
   "repo": {
@@ -67,28 +73,28 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-medha-agent-20261031-005119-589a",
+      "run_id": "verify-medha-agent-20261031-033652-04da",
       "method": "script",
       "steps": [
         {
           "command": "curl -fsSL https://medha.manojavamlabs.com/install.sh -o /tmp/medha-install.sh && ls -l /tmp/medha-install.sh && wc -c /tmp/medha-install.sh",
-          "purpose": "Download installer script for reading before running"
+          "purpose": "download install script for reading before running"
         },
         {
           "command": "sh /tmp/medha-install.sh",
-          "purpose": "Install medha release binary via installer script"
+          "purpose": "run install script, installs medha v0.1.12"
         },
         {
-          "command": "curl -fsSL http://ftp.debian.org/debian/pool/main/d/dbus/libdbus-1-3_1.16.2-8_amd64.deb -o /tmp/libdbus.deb && dpkg-deb -x /tmp/libdbus.deb ~/.local/dbus-root && find ~/.local/dbus-root -name \"*.so*\" -ls && mkdir -p ~/.local/lib && cp -a ~/.local/dbus-root/usr/lib/x86_64-linux-gnu/libdbus-1.so* ~/.local/lib/ && ls -l ~/.local/lib/libdbus*",
-          "purpose": "Stage missing libdbus locally without root"
+          "command": "curl -fsSL http://deb.debian.org/debian/pool/main/d/dbus/libdbus-1-3_1.16.2-2_amd64.deb -o /tmp/d&&mkdir -p /tmp/db&&dpkg-deb -x /tmp/d /tmp/db&&cp /tmp/db/usr/lib/x86_64-linux-gnu/libdbus-1.so.3* ~/.local/lib/&&R=$(readlink ~/.local/bin/medha.realbin||readlink ~/.local/bin/medha)&&mv -f ~/.local/bin/medha ~/.local/bin/medha.realbin&&printf '#!/bin/sh\\nexec env LD_LIBRARY_PATH=$HOME/.local/lib \"'$R'\" \"$@\"\\n'>~/.local/bin/medha&&chmod +x ~/.local/bin/medha&&medha --version",
+          "purpose": "provide local libdbus, wrap binary, verify version"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "LD_LIBRARY_PATH=$HOME/.local/lib medha --version",
+        "command": "curl -fsSL http://deb.debian.org/debian/pool/main/d/dbus/libdbus-1-3_1.16.2-2_amd64.deb -o /tmp/d&&mkdir -p /tmp/db&&dpkg-deb -x /tmp/d /tmp/db&&cp /tmp/db/usr/lib/x86_64-linux-gnu/libdbus-1.so.3* ~/.local/lib/&&R=$(readlink ~/.local/bin/medha.realbin||readlink ~/.local/bin/medha)&&mv -f ~/.local/bin/medha ~/.local/bin/medha.realbin&&printf '#!/bin/sh\\nexec env LD_LIBRARY_PATH=$HOME/.local/lib \"'$R'\" \"$@\"\\n'>~/.local/bin/medha&&chmod +x ~/.local/bin/medha&&medha --version",
         "expected_signal": "medha 0.1.12"
       },
-      "first_task": "LD_LIBRARY_PATH=$HOME/.local/lib medha --sessions"
+      "first_task": "medha pulse"
     },
     "windows": {
       "basis": "readme_claim",
@@ -122,10 +128,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:52:36.573891+08:00",
+    "checked_at": "2026-10-31T03:40:08.381427+08:00",
     "runs": [
       {
-        "id": "verify-medha-agent-20261031-005119-589a",
+        "id": "verify-medha-agent-20261031-033652-04da",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -133,36 +139,45 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:52:36.573891+08:00",
+        "checked_at": "2026-10-31T03:40:08.381427+08:00",
         "tool_version": "0.1.12",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
             "command": "curl -fsSL https://medha.manojavamlabs.com/install.sh -o /tmp/medha-install.sh && ls -l /tmp/medha-install.sh && wc -c /tmp/medha-install.sh",
-            "purpose": "Download installer script for reading before running"
+            "purpose": "download install script for reading before running"
           },
           {
             "command": "sh /tmp/medha-install.sh",
-            "purpose": "Install medha release binary via installer script"
+            "purpose": "run install script, installs medha v0.1.12"
           },
           {
-            "command": "curl -fsSL http://ftp.debian.org/debian/pool/main/d/dbus/libdbus-1-3_1.16.2-8_amd64.deb -o /tmp/libdbus.deb && dpkg-deb -x /tmp/libdbus.deb ~/.local/dbus-root && find ~/.local/dbus-root -name \"*.so*\" -ls && mkdir -p ~/.local/lib && cp -a ~/.local/dbus-root/usr/lib/x86_64-linux-gnu/libdbus-1.so* ~/.local/lib/ && ls -l ~/.local/lib/libdbus*",
-            "purpose": "Stage missing libdbus locally without root"
+            "command": "curl -fsSL http://deb.debian.org/debian/pool/main/d/dbus/libdbus-1-3_1.16.2-2_amd64.deb -o /tmp/d&&mkdir -p /tmp/db&&dpkg-deb -x /tmp/d /tmp/db&&cp /tmp/db/usr/lib/x86_64-linux-gnu/libdbus-1.so.3* ~/.local/lib/&&R=$(readlink ~/.local/bin/medha.realbin||readlink ~/.local/bin/medha)&&mv -f ~/.local/bin/medha ~/.local/bin/medha.realbin&&printf '#!/bin/sh\\nexec env LD_LIBRARY_PATH=$HOME/.local/lib \"'$R'\" \"$@\"\\n'>~/.local/bin/medha&&chmod +x ~/.local/bin/medha&&medha --version",
+            "purpose": "provide local libdbus, wrap binary, verify version"
           }
         ],
         "smoke_tests": [
           {
-            "command": "LD_LIBRARY_PATH=$HOME/.local/lib medha --version",
+            "command": "curl -fsSL http://deb.debian.org/debian/pool/main/d/dbus/libdbus-1-3_1.16.2-2_amd64.deb -o /tmp/d&&mkdir -p /tmp/db&&dpkg-deb -x /tmp/d /tmp/db&&cp /tmp/db/usr/lib/x86_64-linux-gnu/libdbus-1.so.3* ~/.local/lib/&&R=$(readlink ~/.local/bin/medha.realbin||readlink ~/.local/bin/medha)&&mv -f ~/.local/bin/medha ~/.local/bin/medha.realbin&&printf '#!/bin/sh\\nexec env LD_LIBRARY_PATH=$HOME/.local/lib \"'$R'\" \"$@\"\\n'>~/.local/bin/medha&&chmod +x ~/.local/bin/medha&&medha --version",
             "expected_signal": "medha 0.1.12",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "medha 0.1.12",
             "setup": [],
+            "offline": false
+          },
+          {
+            "command": "medha pulse",
+            "expected_signal": "No model configured",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✗ No model configured",
+            "setup": [],
             "offline": true
           },
           {
-            "command": "LD_LIBRARY_PATH=$HOME/.local/lib medha --sessions",
+            "command": "medha --sessions",
             "expected_signal": "No sessions yet in this workspace.",
             "exit_code": 0,
             "passed": true,
@@ -171,59 +186,88 @@
             "offline": true
           },
           {
-            "command": "LD_LIBRARY_PATH=$HOME/.local/lib medha pulse",
-            "expected_signal": "No model configured",
+            "command": "medha undo",
+            "expected_signal": "Nothing to undo — no file writes recorded in this workspace yet.",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "✗ No model configured",
+            "observed_excerpt": "Nothing to undo — no file writes recorded in this workspace yet.",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "One binary. No Python, no Node, no Docker daemon. SQLite is compiled in ... so there's nothing to resolve at startup.",
-            "actually_needed": "Binary is dynamically linked to libdbus-1.so.3, which is absent in this box; fetched libdbus-1-3_1.16.2-8_amd64.deb from ftp.debian.org, extracted with dpkg-deb to ~/.local/dbus-root, copied libdbus-1.so.3* to ~/.local/lib, and run every medha invocation as LD_LIBRARY_PATH=$HOME/.local/lib medha ...",
+            "readme_said": "One binary. No Python, no Node, no Docker daemon ... nothing to resolve at startup",
+            "actually_needed": "fetch libdbus-1-3 deb from deb.debian.org, extract libdbus-1.so.3 to ~/.local/lib, and wrap the installed binary in a sh script that sets LD_LIBRARY_PATH before exec",
             "kind": "sandbox"
-          },
-          {
-            "readme_said": "curl -fsSL https://medha.manojavamlabs.com/install.sh | sh",
-            "actually_needed": "install.sh downloads a prebuilt medha-x86_64-unknown-linux-gnu.tar.gz binary plus its .sha256 at install time; that binary payload cannot be read before running the installer (checksum is verified by the script).",
-            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show empty-session notice, pulse status reporting no model configured, and version 0.1.12.",
+          "observed": "Screenshots show pulse reporting No model configured, sessions reporting none yet, and --version reporting medha 0.1.12.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-medha-agent-20261031-005119-589a/report.json",
+          "trace_path": "runs/verify/verify-medha-agent-20261031-033652-04da/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-medha-agent-20261031-005119-589a/check-1-cmd12.judged.png",
-            "runs/verify/verify-medha-agent-20261031-005119-589a/check-2-cmd13.judged.png",
-            "runs/verify/verify-medha-agent-20261031-005119-589a/check-3-cmd11.judged.png"
+            "runs/verify/verify-medha-agent-20261031-033652-04da/check-1-cmd12.judged.png",
+            "runs/verify/verify-medha-agent-20261031-033652-04da/check-2-cmd13.judged.png",
+            "runs/verify/verify-medha-agent-20261031-033652-04da/check-3-cmd15.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.080966
+        "cost_usd": 0.171999,
+        "features": [
+          {
+            "feature": "run agent with any model",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows 'No model configured' and 'none configured yet' instead of an agent running."
+          },
+          {
+            "feature": "enforce deny-first approval for actions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs a configured model to propose an action before deny-first approval can be observed; box has no keys, accounts or local model server"
+          },
+          {
+            "feature": "isolate commands in OS sandbox",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs a configured model to propose a command before sandbox isolation can be observed; box has no keys, accounts or local model server"
+          },
+          {
+            "feature": "rewind sessions from event log",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Outputs show 'No sessions yet' and 'Nothing to undo' with no rewind or branching demonstrated."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 88.1,
+      "total": 81.5,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 0.7,
           "weight": 40.0
         },
         "install_docs": {
@@ -264,7 +308,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 62.2
+      "value": 57.54
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -520,8 +564,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:36:38+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "It runs on whatever model you have: a local Ollama or vLLM server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:14+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**Nothing executes on the model's word.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:14+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**A real sandbox on macOS and Linux.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:14+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Rewind to any past turn and branch a new session",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:14+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

@@ -309,3 +309,28 @@ def test_files_that_are_not_downloaded_scripts():
     assert unread([rec(1, "curl -fL -o tool.tgz https://x.dev/tool.tgz && tar xzf tool.tgz", 0),
                    rec(2, "./tool --version", 0)]) == []
     assert unread([rec(1, "curl -fsSL https://x.dev/i.sh | bash", 0)], steps=[]) == []
+
+
+def test_a_check_that_reads_a_file_only_an_uncited_command_wrote_does_not_pass():
+    """mcp-audit, 2026-10-31: a dashboard setup read a scan another check wrote; the fresh box had none."""
+    log = [rec(1, "uv tool install mcp-audit-scanner", 0, "installed"),
+           rec(2, "cat > /tmp/risky.json <<'EOF'\n{\"mcpServers\": {}}\nEOF", 0),
+           rec(3, "mcp-audit scan --path /tmp/risky.json --format json -o /tmp/scan.json", 1, "grade F"),
+           rec(4, "mcp-audit dashboard --from-json /tmp/scan.json --no-open --port 8088", 0, "pid 7",
+               tool="run_background"),
+           rec(5, "curl -s http://127.0.0.1:8088/", 0, "Security Dashboard"),
+           rec(6, "mcp-audit lock /tmp/risky.json.d --path /tmp/risky.json", 0, "Lock: 3 servers checked")]
+    tests = [{"command_id": 3, "setup_ids": [2], "expected_signal": "grade F", "expected_exit_code": 1},
+             {"command_id": 5, "setup_ids": [4], "expected_signal": "Security Dashboard"},
+             {"command_id": 6, "expected_signal": "Lock: 3"}]
+    verdict = log_verdict(claim("service", [1], tests), log)
+    by_id = {c.command_id: c for c in verdict.checks}
+    assert by_id[3].passed  # its input file is its own setup
+    assert not by_id[5].passed and by_id[5].problems == [
+        "its setup 4 uses /tmp/scan.json, which only command 3 wrote; cite a command that writes it (and exits 0) "
+        "in setup_ids, or a fresh box will not have it"]
+    assert by_id[6].passed  # setup 2 runs before every check in a fresh box, cited by check 3
+    assert verdict.level == "function"
+    # A name that only contains the path is not a use of it.
+    log[5] = rec(6, "mcp-audit lock /tmp/scan.json.d", 0, "Lock: 3 servers checked")
+    assert {c.command_id: c.passed for c in log_verdict(claim("function", [1], tests), log).checks}[6]

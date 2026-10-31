@@ -292,6 +292,206 @@
 - NAT hairpin：家用路由器可能可經自己的公網 WAN 位址被打到（繞一圈）。這要先找出 WAN 位址才能擋，成本高，記為已知限制。
 - 第三輪結尾列的兩項已在別處修掉：Worker 的 `verified_on_user_os` 已看 arch（併入 c199445）；「讀過 installer 會執行的腳本」的提示規則在 P3 分支上。
 
+### 5.8 Windows：VirtualBox box（`VBoxBox`，2026-10-30～31）
+
+GitHub Actions 沒有採用。改在念誠的 Windows 11 Home 筆電（i5-1135G7，4 核 8 緒，16 GB）上用 VirtualBox 7.2.22。guest 是 Windows 11 Enterprise LTSC 2024 評估版（26100.1742，x86_64，90 天，線上啟用）。另有一台 Alpine router VM 當出口（規則與 5.5 節相同精神：所有私有、保留、multicast 範圍都丟掉，只放行 DHCP／DNS 到 router）。
+
+**安裝的實測**：
+
+- Hyper-V 開著時，VirtualBox 只能走 NEM（Hyper-V 的 API），非常慢，而且多 vCPU 會凍住。6 vCPU 時，韌體卡在 PciHostBridgeDxe；4 vCPU 時，安裝第一階段與 OOBE 各凍住過一次（vCPU0 的 TSC 跟其他顆差約 35,000 秒）；1 vCPU 才裝得完。念誠關掉 Hyper-V 與 Memory Integrity 後改走 VT-x：2 vCPU 開機正常，啟用、winget、工具安裝 12 分鐘完成。
+- LTSC 沒有 Store，所以 winget 由 pickfit 從 github.com/microsoft/winget-cli 的 v1.29.380 release 裝（檔名、大小、SHA-256 記在 manifest）。
+
+**為什麼 sbx 要自動登入（2026-10-31，跟 macOS 對照）**：
+
+- winget 和 PowerShell 7（winget 現在只發 MSIX 版）都是 MSIX 套件。Windows 只在使用者「互動登入」時註冊這類套件（guestcontrol 的工作階段部署會失敗：0x80073D19），而且使用者沒有桌面工作階段時根本啟動不了（"The specified user does not have a valid profile"）。所以受測使用者 `sbx` 在每個 box 都要登入桌面，就像一般使用者的電腦。
+- 原本的探測是「不准自動登入」，目的是受測工具（以 `sbx` 執行）拿不到能提權或冒用帳號的憑證。協調 session 同意改成一樣嚴的版本：
+  - 自動登入只限 `sbx`。
+  - Winlogon（HKLM 與 HKCU）不能有 DefaultPassword。
+  - 密碼存成 LSA secret `DefaultPassword`。Winlogon 在登錄檔沒有密碼時讀這裡，標準使用者在 LsaOpenPolicy 就被拒。
+  - 不留任何 answer file：查 Panther、Panther\Unattend、Sysprep、各磁碟根目錄、`C:\vboxpostinstall.log`。
+  - 沒有光碟：安裝 ISO 與帶 Administrator 密碼的 aux ISO 在拍快照前拔掉。
+  - Administrator 的自動登入只在建置時用（裝 winget 需要它），HARDEN 會移除。
+- 這跟 macOS 一致：macOS box 也讓 `sbx` 自動登入（guest agent 要靠它啟動），密碼放在只有 root 能讀的 `/etc/kcpassword`，limits 檢查 `kcpassword_unreadable`。Windows 的對應探測是 `no_logon_secret`：`sbx` 讀 LSA secret 要得到 `denied`。
+- 每次建 base 都隨機產生密碼（`sbx` 的密碼在 resume 時也換新）。**更正（10/31 審查）**：c76bd01 以前，`sbx` 的密碼曾被寫進 `PROVISION_USERS` 的腳本內容，再以 `-EncodedCommand` 傳進 guest；Windows PowerShell 會把整條指令列記進 "Windows PowerShell" log（event 400/403 的 HostApplication），一般使用者讀得到。現在腳本與密碼都只放在 guestcontrol 的 `--putenv` 環境變數（`PF_ENC`、`PF_SECRET`），shell 以固定的 `-Command` 開機碼讀出後刪掉，指令列上沒有腳本也沒有密碼。HARDEN 與拍快照前都會清空 PowerShell 的三個 log。密碼也不寫進 host 的 log 或 manifest。
+- 拍快照前，Administrator 以自己的密碼掃描 Panther、Sysprep、Setup、Temp、Public、`C:\Users\sbx`、harness 資料夾與各磁碟根目錄的檔案（明文，以及 answer file 用的 base64 形式），有命中就不拍。
+- 對照：
+  - 正向：同一個探測由 Administrator 跑時，LSA secret 是 `readable`。
+  - 反向：在用完就丟的 box 裡把 DefaultPassword 寫回 Winlogon，`sbx` 的探測要判失敗。
+  - 其他 Windows 探測也都加了對照：Administrator 會被 `non_admin` 判出、Administrator 寫得進 harness、刻意設的 `*_TOKEN` 變數會被看到、短指令不會被當成逾時。
+- harness 的 Administrator 檢查改用 Windows PowerShell 5.1：box 裡只有 `sbx` 有桌面工作階段，MSIX 的 pwsh 對 Administrator 啟動不了。模型指令仍走 pwsh 7。pwsh 的套件路徑記在 harness 資料夾的 `pwsh.path`（`sbx` 只能讀）。
+
+### 5.9 Windows 實測結果與交接（2026-10-31）
+
+**base**：
+
+- build `42796005b373`（15:00）。
+- Windows 11 Enterprise LTSC Evaluation 24H2（26100.1742，EnterpriseSEval，Licensed）。
+- Windows Update 關閉。ISO SHA-256 `67cec586…5da68`。
+- VirtualBox 7.2.22 走 VT-x（主機已關 Hyper-V 與 Memory Integrity）。
+- 2 vCPU、6 GB RAM、64 GB 動態 VDI、host I/O cache。
+- 從零建置約 6 分鐘（不含 Windows 安裝本身）。box 從 `clean` 快照冷開機到 `sbx` 桌面約 80 秒。
+
+**`--limits-test` 41／41**（`runs/verify/limits-vbox-20261031-150054.json`，每一項都有對照）：
+
+- 帳號與憑證：
+  - 不是管理員（對照：Administrator 會被判出）。
+  - 改不了 harness（對照：Administrator 寫得進）。
+  - `no_logon_secret`（見 5.8）：sbx 看到 `autologon=1 user=sbx`、沒有 Winlogon 密碼、`lsa=denied`、沒有 answer file、沒有光碟。正向對照是 Administrator 讀得到 `readable len=24`；反向對照是把 DefaultPassword 寫回後探測判失敗。
+  - 環境變數沒有金鑰（對照：自設的 `*_TOKEN` 會被看到）。
+- 網路：
+  - 經 router 時，主機與 LAN 的埠、gateway、VirtualBox NAT 位址、metadata、私有網段、router SSH 全部逾時（對照：plain NAT 下主機的埠是 open）。
+  - router DNS 開著；mDNS、SSDP 沒有回應（10/31 審查後移除這兩項，見 5.10）。
+  - 斷網後 HTTPS 失敗、localhost 照常，恢復後 PyPI 再通。
+- 指令：3 秒逾時被殺（對照：1 秒的指令正常結束）；exit code 0／1／3／93／94／1603 都正確傳回。
+
+**9 款工具**（Mac pipeline 匯出的 muse-spark-1.3 抽取結果；每款都在第二個從快照冷開機的 box 斷網重播通過，judge 都判 working。Meta 共 $0.114）：
+
+| 工具 | Windows 等級 | 版本 | 裝法 | 和 Linux（Modal gVisor）的差異 |
+|---|---|---|---|---|
+| frugon | function | 0.2.6 | `uv tool install frugon` | 相同 |
+| agent-database-cli | function | 0.4.1 | `npm install -g agent-database-cli` | 相同，多了 `list` |
+| nlm-memory | function | 0.21.20 | `npm install -g nlm-memory` | 相同 |
+| agent-history | function | 0.16.0 | `uv tool install git+…` | smoke 改成 `doctor` 與 `search --mode text`；沒有 Ollama 時 `index` 做不了，`search` 回 `(no matches)`；3 條裡 2 條離線 |
+| akm | function | 0.10.261022 | `npm install -g akm-cli` | 版本比 Linux 的 0.10.261019 新；另外跑了 `index`、`curate` |
+| martty | function | 0.3.3 | `npm install --global martty` | 用 `martty-cli`：`martty` 指令要第一次互動啟動才出現；`--demo` 要加 `--dump-frame` 才不需要 TTY；Linux 的 `--help` 要網路，這裡全部離線 |
+| aria-code | **install** | 0.165.0 | `npm install -g @artheras/aria-code` | Linux 是 function。Windows 只有 `--help`、`--version` 算進去，`aria update --check` 要網路，log 把等級降成 install |
+| alysiscode | function | 0.15.2 | `pipx install alysis-code` | 沒有 Docker Desktop，`sandbox doctor --smoke` 回 not ready（記為 note）；`doctor` 正常 |
+| labelize | function | 1.10.0 | `npm install @goodboy008/labelize-wasm` | 跟 Linux 一樣用 wasm 套件、node 腳本轉圖（PNG 8506 bytes，再轉回 ZPL）；cargo、docker 的裝法沒試 |
+
+紀錄與證據在這台的 `runs/verify/`（不進 git，沒有寫回 `data/software`），合併時再帶到 Mac。frugon 的第一筆 run（150518）image 標籤被截斷，以 151653 那筆為準。
+
+**每筆 Windows 紀錄合併時要加的 note**（協調 session 決定：指令照實際跑的原樣保留，PATH 前綴不拿掉）："On Windows, open a new terminal after installing so PATH includes the tool; the sandbox refreshed PATH in the same session instead."
+
+**已知限制**：
+
+- 主機要關掉 Hyper-V 與 Memory Integrity，VirtualBox 才走 VT-x。走 NEM 時多 vCPU 會凍住（見 5.8）。
+- 評估版授權 90 天（約到 2027-01-29），過期後每小時關機，要重建 base。Windows Update 關閉，所以快照停在 26100.1742，沒有累積更新，跟一般使用者的電腦不同。
+- winget 由 pickfit 從 GitHub release 安裝（LTSC 沒有 Store），版本與雜湊記在 manifest。只能從 Store 裝的工具記為 `needs_store` 未驗證。
+- 沒有 Docker：要 Docker 的功能驗證不到。例如 alysiscode 的 `alysis sandbox doctor --smoke` 要 Docker Desktop，在 box 裡回 not ready，記為 note。
+- martty：npm 只裝 `martty-cli`（`martty-cli.ps1` shim），`martty` 指令要第一次互動啟動 TUI 才出現，所以紀錄用 `martty-cli`。
+- MCP 驗證（main 的 `mcp_probe.py`）用 POSIX 訊號（SIGKILL）停伺服器，只在 Linux box 裡跑。它的 7 個測試在 Windows 主機上標為 POSIX-only 跳過；Windows box 還不能驗證 MCP 工具。
+- 沒有單一使用者的記憶體、程序數或檔案大小上限，VM 的 6 GB RAM 和磁碟就是上限。
+- 一次只能一個 box。每款工具 6–13 分鐘。
+- `run_background`：agent-history 用它在背景啟動 `serve`，75 秒後 VBoxManage 回 20，跟 sentinel 的 0 對不上，harness 判為不可信（方向是安全的），所以這款沒能宣稱 service 等級。要再查。
+- VirtualBox 安裝程式忽略了參數，裝上了 host-only 網卡與橋接 filter（VBoxNetLwf）。box 沒有用到，每次開機前檢查網卡會拒絕它們。
+- NAT hairpin：10/31 審查後，每次 box 啟動時 host 從 `https://1.1.1.1/cdn-cgi/trace` 讀出這個網路的公網 egress 位址，加進 router 的 drop set（讀不到就不開 box），並探測該位址的 80、443、445。在這台所在的網路上，不經 router 也連不到這個網路的對外位址，所以「不經 router 連得到」的正向對照在這裡做不出來；能證明它被擋的是 router 自己回報的 drop set（`egress_ip_in_router_block`）。
+- tart_box 的 `_agent_failed` 也用 stderr 裡的文字（例如 "is the Tart Guest Agent running?"）判斷 VM 或 agent 是否還在，guest 印得出這些字，跟這次修掉的 vbox 問題一樣；這個分支沒動 tart_box，留待之後改成看 host 端狀態。
+- 主機上還有一個舊的 Oracle Extension Pack 7.0.6（版本不合、無法載入，沒有用到），要不要移除由念誠決定。
+
+### 5.10 c76bd01 的安全審查與修正（2026-10-31 晚）
+
+審查只看程式碼（沒有 high 等級的問題）。修正在 f8c7fc0、ed94e51、68e5c30。
+
+**Medium**
+
+1. **sbx 的密碼留在 PowerShell log**：在 VM 上確認過，sbx 讀得到 "Windows PowerShell" log，最近 500 筆裡有 349 筆帶 `EncodedCommand`。
+   - 修正：腳本與密碼只放在 guestcontrol 的 `--putenv` 環境變數，shell 用固定的 `-Command` 開機碼讀出 `PF_ENC` 後刪掉；`run.ps1` 的指令列不再帶腳本。
+   - 每次建 base（包括 resume）都給 sbx 新密碼。
+   - HARDEN 與拍快照前清空 PowerShell 的三個 log。
+   - 掃描兩個密碼：檔案，加上所有 event log 的內容（其中的 base64 也解開比對）。重建時掃了 539 個檔案、24,273 筆事件，0 命中。
+   - 新的 limits 探測 `no_encoded_commands_in_log`（sbx：log 讀得到、沒有任何 EncodedCommand；對照：Administrator 執行一次 `-EncodedCommand` 後探測看得到）。審查要求的 `Get-WinEvent -LogName 'Windows PowerShell' | ? Message -match EncodedCommand` 以 sbx 跑，結果 0 筆。
+2. **家用路由器的 WAN 位址**：見 5.9 已知限制裡的 NAT hairpin 一項。
+
+**Low**
+
+3. box 只在 VM 的 extradata `pickfit/session` 是自己的 session 時才動 VM：`_refuse_foreign_run()` 移到 try 之前；`close()` 與逾時停機遇到不是自己的 VM 會跳過；每個指令前也檢查。
+4. VM 是否還在，改看 host 端的 VM 狀態，不再看 guest 印得出的 "VBoxManage: error:"。tart_box 有同樣的問題，見 5.9。
+5. mDNS／SSDP 探測移除：原本的查詢封包在 PowerShell 5.1 下格式錯誤；改用正確格式後，這台 guest 連 Windows 自己都不回應，做不出正向對照，所以不再列為檢查項目（router 照樣丟 224.0.0.0/4）。
+6. 權限檢查變嚴：sbx 的 BUILTIN 群組必須剛好是 Users（S-1-5-32-545）、Medium integrity、沒有 SeBackup／SeRestore／SeDebug／SeImpersonate／SeTakeOwnership／SeLoadDriver；Administrator 的對照必須看到 S-1-5-32-544。HARDENED_CHECK 檢查所有本機群組，sbx 只能在 Users。實測 sbx：`builtin=S-1-5-32-545 integrity=S-1-16-8192 privileges=SeChangeNotifyPrivilege,SeIncreaseWorkingSetPrivilege,SeShutdownPrivilege,…`。
+7. `ps_quote` 把 `'` 與 U+2018–U+201B 都加倍，測試用真的 Windows PowerShell 解析確認。
+8. router 的規則雜湊改在加入 extra4 之前計算，不刪任何行；router 重建（rules `17b815a69afc5d17`，build `583d254c306d`）。
+
+**順便做的**
+
+- 每次啟動前檢查 VirtualBox 的 host 通道都關著：共用資料夾、剪貼簿、拖放、VRDE、USB、音效、序列埠與平行埠、teleporter、錄影。
+- harness 的 Administrator 指令（外層的 `run.ps1` 與內層 shell）都在 `C:\ProgramData\pickfit` 執行，不再用 `C:\Windows\Temp`。
+
+**VM 實測的 3 件事**
+
+- a. HGCM：sbx 打得開 `\\.\VBoxGuest`（Guest Additions 的驅動程式沒有擋一般使用者）。用 guestcontrol 直接執行 VBoxControl 的嘗試，sbx 與 Administrator 都在 guestcontrol 層失敗（VBOX_E_IPRT_ERROR），所以 sbx 能否以 HGCM 連上 guest control service、攔到 harness 帶的 Administrator 憑證或偽造 admin 輸出，**沒有驗證到**。這是開放的風險：Administrator 的憑證只在 host 與 VBoxService 之間傳；VBoxService（SYSTEM）從開機就佔著 master 角色。
+  - **試過把裝置鎖起來，做不到（10/31 晚）**：Guest Additions 的 VBox 裝置有 `VBoxGuest` 與 `VBoxMiniRdrDN`（共用資料夾的 redirector），sbx 都打得開。
+    - 用 PnP 的裝置安全性（SPDRP_SECURITY_SDS）設成只給 SYSTEM 與 Administrators：設定讀得回來，但重開機後是空的，sbx 照樣打得開。
+    - 改在執行時直接改裝置物件的 DACL（WRITE_DAC 開 handle，SetSecurityInfo）：鎖得住（Administrator 仍打得開）。但之後所有 sbx 的 guestcontrol 指令都失敗（"Error starting guest session"）。
+    - 原因：VirtualBox 每個 guest session 是一個以**該使用者身分**執行的 VBoxService 程序（實測：`VBoxService.exe guestsession --session-id=1 … --user Administrator`，擁有者是 `PICKFIT-WIN\Administrator`）。這個程序要開 `\\.\VBoxGuest` 才能和 host 說話。所以只要模型指令以 sbx 的 guestcontrol session 執行，sbx 就一定開得了這個裝置；這是 VirtualBox 的設計，不是設定問題。
+  - 要真的關掉這個風險，得改架構：模型指令改由 Administrator 的 guest session 代為以 sbx 身分啟動（例如 CreateProcessWithLogonW），sbx 自己不開 guestcontrol session，裝置才能只給 SYSTEM 與 Administrators。這要重新驗證 MSIX pwsh 與 winget 在那種登入下能不能用，賽期內沒做。另一條路是寫一支 HGCM client，直接測 sbx 能不能拿到 master 角色或別的 session 的訊息。
+- b. guest property：sbx 與 Administrator 都沒能用 VBoxControl 寫入（host 讀不到 `/pickfit/*`）；快照還原後，host 端的 `LoggedInUsersList` 也變成沒有值（transient 屬性在還原時清掉）。harness 只讀 `GuestAdd/Version` 與 `LoggedInUsersList`，而且之後一定再以 sbx 實際跑一條指令確認，不只憑屬性。
+- c. 工作目錄：Administrator 的指令實測在 `C:\ProgramData\pickfit`，sbx 寫不進去；舊的 `C:\Windows\Temp` sbx 寫得進去，所以原本的 DLL 搜尋順序植入疑慮成立，現在已移開。
+
+**修正後的結果**：
+
+- base `b76bdbf073ec`（router `583d254c306d`），重建 474 秒；兩個密碼的掃描：543 個檔案、27,215 筆事件，0 命中。
+- `--limits-test` **45／45**（`runs/verify/limits-vbox-20261031-183951.json`），冷開機 75 秒。新增與改嚴的檢查與對照都通過：
+  - `non_admin`：sbx 的 BUILTIN 只有 S-1-5-32-545、Medium integrity、沒有危險權限；對照：Administrator 被判出。
+  - `no_encoded_commands_in_log`：events=214、encoded=0；對照：encoded=8。
+  - `egress_ip_in_router_block`：這個網路的對外位址在 router 的 drop set 裡；它的 80／443／445 經 router 都逾時。
+- 9 款都在這個 base 上重新驗證，等級、版本、裝法都和 5.9 節相同，全部在全新 box 斷網重播通過，judge 都判 working。（這組已被 5.11 在 base `16ea69df29ff` 上的那組取代，要合併的是 5.11 那組；這些 run 留著當證據。）
+
+  | 工具 | 等級 | 版本 | 裝法 | run |
+  |---|---|---|---|---|
+  | frugon | function | 0.2.6 | uv | verify-frugon-20261031-183954-0b4c |
+  | agent-database-cli | function | 0.4.1 | npm | verify-agent-database-cli-20261031-184831-4b85 |
+  | agent-history | function | 0.16.0 | uv | verify-agent-history-20261031-191020-7e22 |
+  | nlm-memory | function | 0.21.20 | npm | verify-nlm-memory-20261031-191851-82d8 |
+  | akm | function | 0.10.261022 | npm | verify-akm-20261031-192719-4f7e |
+  | martty | function | 0.3.3 | npm | verify-martty-20261031-193416-dbcb |
+  | aria-code | install | 0.165.0 | npm | verify-aria-code-20261031-194610-8332 |
+  | alysiscode | function | 0.15.2 | pipx | verify-alysiscode-20261031-200759-440a |
+  | labelize | function | 1.10.0 | npm（wasm） | verify-labelize-20261031-201458-f906 |
+
+  - 兩款第一次沒過，第二次才過，原因都是模型這次的做法不同，不是 harness：
+    - alysiscode（195338）：smoke 全過（`--version` → 0.15.2），但截圖裡 `--version` 那張看不到輸出（前面的 PATH 前綴很長），judge 判 inconclusive。
+    - labelize（200028）：agent 這次改從 GitHub release 下載官方的 Windows 執行檔，但 replay 的 setup 沒有引用產生 `label.png` 的 `convert`，重播在 `Copy-Item label.png logo.png` 失敗。
+    - 這兩筆都保留當證據。
+- 這台 Meta 累計 $0.270。
+
+**途中發現的問題**：改成 Windows PowerShell 跑探測後，.NET Framework 的 `TcpClient.ConnectAsync` 在斷網時可能直接丟例外，而不是回傳失敗的 task，那個目標就沒有結果，box 判「探測沒跑完」而停下（方向安全，但兩款工具的重播因此失敗）。68e5c30 改成把立即的例外也記成 `unreachable:<code>`，在主機的 Windows PowerShell 上驗證過 refused／timeout／open／error 四種結果都會輸出。
+
+### 5.11 1c01b33 的複審與修正（2026-10-31 夜）
+
+這次只有 low。修正在 ac11876、9ba1365。
+
+1. **IP**：5.9、5.10 的真實對外位址改成文字描述（新 commit，歷史不改寫）。在分支上 grep 過，沒有別處出現。
+2. **密碼進 traceback**：`VBox.__call__` 逾時時，原本會把 `TimeoutExpired` 串在後面，而它帶著整個 argv（包括 `--putenv PF_SECRET=…`）；prepare_base 沒有接住這個例外，traceback 會印到 console。
+   - 改成 `from None`。其他會帶 argv 的地方（`run_captured`、egress 的 curl）都沒有把 argv 串進例外或 log。
+   - 測試：帶 `--putenv` 而逾時，`traceback.format_exc()` 裡沒有那個值（舊碼會失敗）。
+   - Windows 上：搜尋 host 端 21 個 VirtualBox log（VM 的 `VBox.log*` 與 `VBoxSVC.log*`），兩個密碼（明文與 UTF-16）都沒出現。
+3. **close() 讀不到擁有者**：只有讀取成功、而且讀到另一個非空的 session，才把 VM 當成別人的。讀不到（試 3 次）或關不掉時，reaper、session 與鎖都保留，由 reaper 在期限到時關機；確認關機之後才清 session、停 reaper。各有測試。
+   - VM 上：**sbx 可以用 `shutdown /a` 取消 pickfit 在 guest 裡設的定時關機**（exit 0；第二次回 1116，表示已經沒有排定的關機）。所以 guest 裡的定時關機只是備援；真正的期限是 host 端的計時器與 reaper（lifetime 加寬限後直接 poweroff），sbx 碰不到。
+4. **兩個程序同時開 box**：在 state_dir 用獨佔的鎖檔（Windows 用 `msvcrt.locking`，其他用 `flock`），從 claim 一直持有到 close() 結束，鎖被占用就拒絕；程序死掉時 OS 會放開。`_attach`、`validate_containment`、`write_file` 都先檢查擁有權。有測試。
+5. **代理**：讀對外位址的 curl 加 `--noproxy '*'`，有測試。對外位址每個 box 只在啟動時讀一次。
+6. **掃描的對照**：掃描前，Administrator 先以 `powershell -EncodedCommand` 印出一個隨機 canary。掃描必須在 'Windows PowerShell' log 解碼後找到它，而且 scanned>0、events>0、兩個密碼都找不到，才算通過。最後的 CLEAR_PS_LOGS 會把它清掉。每個 log 只讀最新的 5000 筆。
+   - 重建結果：547 個檔案、29,478 筆事件；canary 在 8 筆 'Windows PowerShell' 事件裡找到；兩個密碼 0 命中。
+7. **權限改成允許清單**：sbx 的權限只能在 {SeChangeNotify, SeShutdown, SeUndock, SeIncreaseWorkingSet, SeTimeZone}Privilege 之內，而且必須有 SeChangeNotify；解析出空清單就判失敗。對照組要求 Administrator 的清單裡有 SeDebug 和 SeBackup。
+   - VM 上以 sbx 跑 `whoami /priv /fo csv` 的完整清單：SeShutdownPrivilege（Disabled）、SeChangeNotifyPrivilege（Enabled）、SeUndockPrivilege（Disabled）、SeIncreaseWorkingSetPrivilege（Disabled）、SeTimeZonePrivilege（Disabled）。
+8. **check_features**：VirtualBox 一定會印出的設定，缺了就拒絕；只有 `clipboard_file_transfers` 可以缺（只在編進共用剪貼簿檔案傳輸時才有）。加上 `accelerate3d=off`。在這台的 `showvminfo pickfit-win11 --machinereadable` 確認過，17 個 key 都有印出來，值都對。有測試。
+9. HARDENED_CHECK 列舉不了某個群組時判失敗。
+
+**途中發現的問題**：frugon 的重播 box 一次開不起來，「router did not report ready within 90s」。原因是 Router.reset 從 serial log 的舊大小往後讀；VirtualBox 在原地改寫檔案（不截斷）、寫進一樣長的 ready line 時（現在每個 box 送的位址清單都一樣），舊大小之後永遠沒有新內容。9ba1365 改成在 router 關機時由 host 先清空 serial log，檔案裡的 ready line 只可能是這次開機的。測試：原地改寫的 ready line 讀得到（舊碼會失敗）；舊的 ready line 不算數。
+
+**結果**（base `16ea69df29ff`，router `583d254c306d`）：
+- `--limits-test` **45／45**（`runs/verify/limits-vbox-20261031-213019.json`），冷開機 76 秒。
+  - `non_admin`：admin=False、builtin=S-1-5-32-545、integrity=S-1-16-8192、權限都在允許清單內。
+  - `non_admin_control`：Administrator 有 S-1-5-32-544，解析出的權限包括 SeDebug 與 SeBackup。
+- agent-database-cli：function，斷網重播通過，judge working（verify-agent-database-cli-20261031-213630-7d18）。
+- frugon：第一次重播碰到上面的 serial log 問題；修好後重跑，function，斷網重播通過，judge working（verify-frugon-20261031-214339-536c）。
+- 其餘 7 款也在這個 base 上重跑。**要合併的是這一組**（全部來自 base `16ea69df29ff`；5.10 在 `b76bdbf073ec` 上的那組留著當證據）：
+
+  | 工具 | 等級 | 版本 | 裝法 | run | 備註 |
+  |---|---|---|---|---|---|
+  | frugon | function | 0.2.6 | uv（uvx） | verify-frugon-20261031-214339-536c | |
+  | agent-database-cli | function | 0.4.1 | npm | verify-agent-database-cli-20261031-213630-7d18 | |
+  | agent-history | function | 0.16.0 | uv（git+） | verify-agent-history-20261031-220211-df28 | |
+  | nlm-memory | function | 0.21.20 | npm | verify-nlm-memory-20261031-220955-fd3d | |
+  | akm | function | 0.10.261022 | npm | verify-akm-20261031-221817-e9c3 | |
+  | martty | function | 0.3.3 | npm | verify-martty-20261031-222518-09bb | |
+  | aria-code | **install**（pipeline 判 function） | 0.165.0 | npm | verify-aria-code-20261031-223659-aa9c | 協調 session 決定記為 install。唯一不是查版本的檢查是 `aria update --check`（"You are up to date."，offline false），它連網查有沒有新版，沒有用到工具本身的功能；`--help`、`--version` 只到 install。main 的規則是任何不是查版本的檢查都算 function（只連網才過的會標成需要網路），所以 pipeline 判 function；這裡保守降一級。main 的 verdict 規則這次不動 |
+  | alysiscode | function | 0.15.2 | pipx | verify-alysiscode-20261031-224540-1927 | |
+  | labelize | function | 1.10.0 | release binary | verify-labelize-20261031-230031-6dff | 協調 session 接受：裝的是專案自己 GitHub releases 的官方 Windows 執行檔（labelize-x86_64-pc-windows-msvc.zip），P3.2 的安裝順序本來就包含 release 二進位，斷網重播也通過。README 的安裝段沒有列這條（brew、cargo、npm wasm、docker）；這只是註明，不算 README 修正 |
+
+  - labelize 第一次（225314）判 unverified：agent 宣稱 service，但有一步的最後一條是 `echo`，蓋掉了前面的 exit code，log 支持不了這個宣稱。第二次通過；225314 那筆留著當證據。
+  - 結果：8 款 function、aria-code install。寫回 `data/` 還沒做，合併後再提方案（install.windows、verification、證據放哪裡、Worker 怎麼顯示）。
+  - 這台 Meta 累計 $0.426。
+
 ---
 
 ## 6. 要念誠決定的事

@@ -25,6 +25,11 @@
   ],
   "use_cases": [],
   "alternatives_to": [],
+  "features": [
+    "switch AI providers with one command",
+    "connect MCP servers via built-in client",
+    "delegate work to parallel sub-agents"
+  ],
   "why_worth_it": null,
   "homepage": "https://www.privateer.pro",
   "repo": {
@@ -66,12 +71,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-privateer-agent-20261029-025906-4dcf",
+      "run_id": "verify-privateer-agent-20261031-020649-feb0",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g privateer-agent --ignore-scripts",
-          "purpose": "Install privateer-agent globally via npm"
+          "purpose": "install privateer via npm"
         }
       ],
       "manual_steps": [],
@@ -111,10 +116,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T03:01:01.967410+08:00",
+    "checked_at": "2026-10-31T02:08:42.212616+08:00",
     "runs": [
       {
-        "id": "verify-privateer-agent-20261029-025906-4dcf",
+        "id": "verify-privateer-agent-20261031-020649-feb0",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -122,14 +127,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T03:01:01.967410+08:00",
+        "checked_at": "2026-10-31T02:08:42.212616+08:00",
         "tool_version": "0.15.3",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g privateer-agent --ignore-scripts",
-            "purpose": "Install privateer-agent globally via npm"
+            "purpose": "install privateer via npm"
           }
         ],
         "smoke_tests": [
@@ -144,7 +149,7 @@
           },
           {
             "command": "privateer verify",
-            "expected_signal": "⚓ Privateer install check",
+            "expected_signal": "Privateer install check",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "⚓ Privateer install check v0.15.3",
@@ -153,10 +158,19 @@
           },
           {
             "command": "privateer harbor status",
-            "expected_signal": "harbor: not reachable",
+            "expected_signal": "service: not installed",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "harbor: not reachable",
+            "observed_excerpt": "service: not installed",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "privateer mcp list",
+            "expected_signal": "No MCP servers configured.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No MCP servers configured. Add them to /home/sbx/.privateer/agent/mcp.json or .pi/mcp.json.",
             "setup": [],
             "offline": true
           }
@@ -165,27 +179,53 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three screenshots show the expected Privateer outputs: install check header, harbor not reachable status, and version string.",
+          "observed": "Screenshots show install check passing with no failures, harbor status reporting not installed, and version 0.15.3 printed.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-privateer-agent-20261029-025906-4dcf/report.json",
+          "trace_path": "runs/verify/verify-privateer-agent-20261031-020649-feb0/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-privateer-agent-20261029-025906-4dcf/check-1-cmd4.judged.png",
-            "runs/verify/verify-privateer-agent-20261029-025906-4dcf/check-2-cmd5.judged.png",
-            "runs/verify/verify-privateer-agent-20261029-025906-4dcf/check-3-cmd3.judged.png"
+            "runs/verify/verify-privateer-agent-20261031-020649-feb0/check-1-cmd4.judged.png",
+            "runs/verify/verify-privateer-agent-20261031-020649-feb0/check-2-cmd5.judged.png",
+            "runs/verify/verify-privateer-agent-20261031-020649-feb0/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.035105
+        "cost_usd": 0.060745,
+        "features": [
+          {
+            "feature": "switch AI providers with one command",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "switching models (/model) needs a provider API key or /login account"
+          },
+          {
+            "feature": "connect MCP servers via built-in client",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only says no MCP servers are configured, not a successful connection."
+          },
+          {
+            "feature": "delegate work to parallel sub-agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "delegating to sub-agents needs a configured model/provider key"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 94.1,
       "confidence": 0.8,
@@ -476,8 +516,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "Switch between OpenRouter Anthropic, OpenAI & local Ollama with one command.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:49+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Connectors load through Pi's own MCP client instead of",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:49+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Hand work to bounded parallel agents that inherit the moat",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:49+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

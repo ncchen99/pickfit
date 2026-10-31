@@ -33,6 +33,12 @@
   "alternatives_to": [
     "lsof"
   ],
+  "features": [
+    "look up processes by port",
+    "kill processes by mixed targets",
+    "trace process ancestry for busy ports",
+    "monitor processes in real time"
+  ],
   "why_worth_it": null,
   "homepage": "https://proc-cli.com/",
   "repo": {
@@ -72,18 +78,22 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-proc-cli-20261029-012359-38f4",
+      "run_id": "verify-proc-cli-20261031-023735-d137",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g proc-cli",
-          "purpose": "install proc via npm install -g proc-cli"
+          "purpose": "install proc via npm"
+        },
+        {
+          "command": "proc --version",
+          "purpose": "first run downloads verified binary"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "proc --version",
-        "expected_signal": "proc 2.0.1"
+        "expected_signal": "proc"
       },
       "first_task": "proc on :3000"
     },
@@ -117,10 +127,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:29:46.642037+08:00",
+    "checked_at": "2026-10-31T02:39:11.199273+08:00",
     "runs": [
       {
-        "id": "verify-proc-cli-20261029-012359-38f4",
+        "id": "verify-proc-cli-20261031-023735-d137",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -128,34 +138,29 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T01:29:46.642037+08:00",
-        "tool_version": "2.0.1",
+        "checked_at": "2026-10-31T02:39:11.199273+08:00",
+        "tool_version": "2.0.2",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g proc-cli",
-            "purpose": "install proc via npm install -g proc-cli"
+            "purpose": "install proc via npm"
+          },
+          {
+            "command": "proc --version",
+            "purpose": "first run downloads verified binary"
           }
         ],
         "smoke_tests": [
           {
             "command": "proc --version",
-            "expected_signal": "proc 2.0.1",
+            "expected_signal": "proc",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "proc 2.0.1",
+            "observed_excerpt": "proc 2.0.2",
             "setup": [],
-            "offline": false
-          },
-          {
-            "command": "proc --help",
-            "expected_signal": "proc list --min-cpu 10",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "proc list --min-cpu 10 Processes using >10% CPU",
-            "setup": [],
-            "offline": false
+            "offline": true
           },
           {
             "command": "proc on :3000",
@@ -170,7 +175,56 @@
                 "port": 3000
               }
             ],
-            "offline": false
+            "offline": true
+          },
+          {
+            "command": "proc why :3000",
+            "expected_signal": "Port 3000",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ Port 3000 (TCP):",
+            "setup": [
+              {
+                "command": "python3 -m http.server 3000",
+                "background": true,
+                "port": 3000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "proc kill :3000 :8080 node --yes",
+            "expected_signal": "Killed 3 processes",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ Killed 3 processes",
+            "setup": [
+              {
+                "command": "python3 -m http.server 3000",
+                "background": true,
+                "port": 3000
+              },
+              {
+                "command": "python3 -m http.server 8080",
+                "background": true,
+                "port": 8080
+              },
+              {
+                "command": "node -e \"setInterval(()=>{}, 100000)\"",
+                "background": true,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "proc watch -n 1",
+            "expected_signal": "Found",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ Found 4 processes",
+            "setup": [],
+            "offline": true
           },
           {
             "command": "proc list --min-cpu 10",
@@ -179,48 +233,87 @@
             "passed": true,
             "observed_excerpt": "⚠ No processes found",
             "setup": [],
-            "offline": false
-          },
-          {
-            "command": "proc list --limit 5",
-            "expected_signal": "Found 5 processes",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "✓ Found 5 processes",
-            "setup": [],
-            "offline": false
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "npm install -g proc-cli installs proc",
-            "actually_needed": "first proc invocation downloads the prebuilt Linux binary (Checksum verified, Installed to ~/.local/lib/node_modules/proc-cli/proc) before printing the version"
+            "readme_said": "npm install -g proc-cli",
+            "actually_needed": "first proc invocation downloads the Linux binary to ~/.local/lib/node_modules/proc-cli/proc and verifies checksum (requires network)",
+            "kind": "tool_handled"
+          },
+          {
+            "readme_said": "proc kill :3000 :8080 node",
+            "actually_needed": "append --yes (proc kill :3000 :8080 node --yes) when stdin is not a terminal, otherwise exit 4 needs_confirmation and nothing is killed",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three screenshots show expected outputs for port lookup, filtered list, and version.",
+          "observed": "Screenshots show proc identifying python3 on port 3000, showing its process tree, and printing version 2.0.2.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-proc-cli-20261029-012359-38f4/report.json",
+          "trace_path": "runs/verify/verify-proc-cli-20261031-023735-d137/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-proc-cli-20261029-012359-38f4/check-1-cmd5.judged.png",
-            "runs/verify/verify-proc-cli-20261029-012359-38f4/check-2-cmd6.judged.png",
-            "runs/verify/verify-proc-cli-20261029-012359-38f4/check-3-cmd2.judged.png"
+            "runs/verify/verify-proc-cli-20261031-023735-d137/check-1-cmd4.judged.png",
+            "runs/verify/verify-proc-cli-20261031-023735-d137/check-2-cmd5.judged.png",
+            "runs/verify/verify-proc-cli-20261031-023735-d137/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.039523
+        "cost_usd": 0.076468,
+        "features": [
+          {
+            "feature": "look up processes by port",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "kill processes by mixed targets",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "trace process ancestry for busy ports",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "monitor processes in real time",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 84.4,
       "confidence": 0.8,
@@ -544,8 +637,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-28T23:51:37+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "`proc on :3000                   # what's on port 3000?`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:20:40+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "proc kill :3000 :8080 node      # kill mixed targets at once",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:20:40+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Trace process ancestry (why is this port busy?)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:20:40+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Real-time process monitoring",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:20:40+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

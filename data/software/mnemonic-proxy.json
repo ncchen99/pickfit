@@ -27,6 +27,12 @@
     "resume a 110K-token conversation from disk in 1.4s"
   ],
   "alternatives_to": [],
+  "features": [
+    "mask old history without summarizing",
+    "search verbatim archive via recall",
+    "seal segments with handoff notes",
+    "save and restore engine state"
+  ],
   "why_worth_it": null,
   "homepage": "https://lastreload.github.io/mnemonic-proxy/",
   "repo": {
@@ -51,12 +57,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-mnemonic-proxy-20261030-234713-d3eb",
+      "run_id": "verify-mnemonic-proxy-20261031-031915-511b",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install mnemonic-proxy 2>&1",
-          "purpose": "install via uv tool"
+          "purpose": "Install mnemonic-proxy via uv tool"
         }
       ],
       "manual_steps": [],
@@ -83,10 +89,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-30T23:47:44.677041+08:00",
+    "checked_at": "2026-10-31T03:20:09.083312+08:00",
     "runs": [
       {
-        "id": "verify-mnemonic-proxy-20261030-234713-d3eb",
+        "id": "verify-mnemonic-proxy-20261031-031915-511b",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -94,14 +100,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-30T23:47:44.677041+08:00",
+        "checked_at": "2026-10-31T03:20:09.083312+08:00",
         "tool_version": "0.3.19",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install mnemonic-proxy 2>&1",
-            "purpose": "install via uv tool"
+            "purpose": "Install mnemonic-proxy via uv tool"
           }
         ],
         "smoke_tests": [
@@ -115,17 +121,8 @@
             "offline": true
           },
           {
-            "command": "mnemonic-proxy --help 2>&1",
-            "expected_signal": "mnemonic-proxy demo",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "mnemonic-proxy demo offline demo (no model, no GPU): archive, masking, recall -> PASS/FAIL",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "mnemonic-proxy demo 2>&1",
-            "expected_signal": "PASS in 0.6 s",
+            "expected_signal": "PASS",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "PASS in 0.6 s",
@@ -137,27 +134,64 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three screenshots show version 0.3.19, help with demo subcommand, and offline demo ending in PASS in 0.6 s.",
+          "observed": "Screenshots show version 0.3.19 printed and demo completing with all ok checks and PASS.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-mnemonic-proxy-20261030-234713-d3eb/report.json",
+          "trace_path": "runs/verify/verify-mnemonic-proxy-20261031-031915-511b/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-mnemonic-proxy-20261030-234713-d3eb/check-1-cmd2.judged.png",
-            "runs/verify/verify-mnemonic-proxy-20261030-234713-d3eb/check-2-cmd3.judged.png",
-            "runs/verify/verify-mnemonic-proxy-20261030-234713-d3eb/check-3-cmd4.judged.png"
+            "runs/verify/verify-mnemonic-proxy-20261031-031915-511b/check-1-cmd2.judged.png",
+            "runs/verify/verify-mnemonic-proxy-20261031-031915-511b/check-2-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.024784
+        "cost_usd": 0.078094,
+        "features": [
+          {
+            "feature": "mask old history without summarizing",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "search verbatim archive via recall",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "seal segments with handoff notes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "segment switch needs a real model to write handoff notes (README T1: llama.cpp build, 2.5GB model, ~45min); demo does not exercise it"
+          },
+          {
+            "feature": "save and restore engine state",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "saved state needs real llama-server/Strata with --slot-save-path and model; demo states it does not prove saved state"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 94.0,
       "confidence": 0.9,
@@ -424,8 +458,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-30T23:43:36+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Old material leaves the prompt but is never\nsummarized away",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:42+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "A `recall` tool searches the verbatim archive",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:42+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "When even the masked window fills up, the model writes its own notes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:42+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "state is saved to disk",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:42+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

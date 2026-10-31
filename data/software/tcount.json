@@ -31,6 +31,12 @@
     "Output token counts as JSON for scripting"
   ],
   "alternatives_to": [],
+  "features": [
+    "count tokens with exact OpenAI tokenizers",
+    "approximate Claude and Gemini token counts",
+    "show context window usage percentage",
+    "count tokens across directory trees"
+  ],
   "why_worth_it": null,
   "homepage": "https://pkg.go.dev/github.com/lancekrogers/tcount",
   "repo": {
@@ -70,12 +76,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-tcount-20261030-234458-2d48",
+      "run_id": "verify-tcount-20261031-032629-6e06",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g @obedience-corp/tcount",
-          "purpose": "install tcount via npm"
+          "purpose": "install tcount via npm candidate"
         }
       ],
       "manual_steps": [],
@@ -115,10 +121,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-30T23:45:41.572639+08:00",
+    "checked_at": "2026-10-31T03:27:25.751958+08:00",
     "runs": [
       {
-        "id": "verify-tcount-20261030-234458-2d48",
+        "id": "verify-tcount-20261031-032629-6e06",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -126,14 +132,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-30T23:45:41.572639+08:00",
+        "checked_at": "2026-10-31T03:27:25.751958+08:00",
         "tool_version": "0.7.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g @obedience-corp/tcount",
-            "purpose": "install tcount via npm"
+            "purpose": "install tcount via npm candidate"
           }
         ],
         "smoke_tests": [
@@ -147,23 +153,29 @@
             "offline": true
           },
           {
-            "command": "tcount --help",
-            "expected_signal": "--model string specific model to use",
+            "command": "tcount myfile.txt",
+            "expected_signal": "o200k_base",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "--model string specific model to use",
-            "setup": [],
+            "observed_excerpt": "│ o200k_base │ 25 │ Exact │",
+            "setup": [
+              {
+                "command": "cat > myfile.txt <<'EOF'\nHello world. This is a test file for token counting with tcount.\nIt contains a few sentences to count tokens locally.\nEOF\ncat > prompt.md <<'EOF'\n# Sample prompt\nWrite a haiku about token counting in LLM workflows.\nEOF\ncat > document.md <<'EOF'\n# Document\nThis is a sample document for JSON output testing. Token counting should be local and fast.\nEOF\nmkdir -p src && printf 'Hello from a\\n' > src/a.txt && printf 'Second file with more content for counting tokens.\\n' > src/b.txt && ls -R",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           },
           {
-            "command": "tcount myfile.txt",
-            "expected_signal": "Token Count Report for: myfile.txt",
+            "command": "tcount --all myfile.txt",
+            "expected_signal": "Claude (approx)",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Token Count Report for: myfile.txt",
+            "observed_excerpt": "│ Claude (approx) │ 31 │ Estimated │",
             "setup": [
               {
-                "command": "printf 'Hello, world! This is a test file for tcount token counting.\\n' > myfile.txt && printf '# Sample Prompt\\n\\nCount the tokens in this prompt file for testing tcount.\\n' > prompt.md && printf '# Sample Document\\n\\nThis document is used to test JSON output of tcount.\\n' > document.md && ls -la *.txt *.md",
+                "command": "cat > myfile.txt <<'EOF'\nHello world. This is a test file for token counting with tcount.\nIt contains a few sentences to count tokens locally.\nEOF\ncat > prompt.md <<'EOF'\n# Sample prompt\nWrite a haiku about token counting in LLM workflows.\nEOF\ncat > document.md <<'EOF'\n# Document\nThis is a sample document for JSON output testing. Token counting should be local and fast.\nEOF\nmkdir -p src && printf 'Hello from a\\n' > src/a.txt && printf 'Second file with more content for counting tokens.\\n' > src/b.txt && ls -R",
                 "background": false,
                 "port": null
               }
@@ -172,13 +184,28 @@
           },
           {
             "command": "tcount --model gpt-5 prompt.md",
-            "expected_signal": "o200k_base (gpt-5)",
+            "expected_signal": "Context Usage",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "│ o200k_base (gpt-5) │ 16 │ Exact │ <0.1% of 400K │",
+            "observed_excerpt": "│ Method │ Tokens │ Accuracy │ Context Usage │",
             "setup": [
               {
-                "command": "printf 'Hello, world! This is a test file for tcount token counting.\\n' > myfile.txt && printf '# Sample Prompt\\n\\nCount the tokens in this prompt file for testing tcount.\\n' > prompt.md && printf '# Sample Document\\n\\nThis document is used to test JSON output of tcount.\\n' > document.md && ls -la *.txt *.md",
+                "command": "cat > myfile.txt <<'EOF'\nHello world. This is a test file for token counting with tcount.\nIt contains a few sentences to count tokens locally.\nEOF\ncat > prompt.md <<'EOF'\n# Sample prompt\nWrite a haiku about token counting in LLM workflows.\nEOF\ncat > document.md <<'EOF'\n# Document\nThis is a sample document for JSON output testing. Token counting should be local and fast.\nEOF\nmkdir -p src && printf 'Hello from a\\n' > src/a.txt && printf 'Second file with more content for counting tokens.\\n' > src/b.txt && ls -R",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "tcount -d --no-progress ./src",
+            "expected_signal": "Files: 2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Files: 2",
+            "setup": [
+              {
+                "command": "cat > myfile.txt <<'EOF'\nHello world. This is a test file for token counting with tcount.\nIt contains a few sentences to count tokens locally.\nEOF\ncat > prompt.md <<'EOF'\n# Sample prompt\nWrite a haiku about token counting in LLM workflows.\nEOF\ncat > document.md <<'EOF'\n# Document\nThis is a sample document for JSON output testing. Token counting should be local and fast.\nEOF\nmkdir -p src && printf 'Hello from a\\n' > src/a.txt && printf 'Second file with more content for counting tokens.\\n' > src/b.txt && ls -R",
                 "background": false,
                 "port": null
               }
@@ -193,7 +220,7 @@
             "observed_excerpt": "\"file_path\": \"document.md\",",
             "setup": [
               {
-                "command": "printf 'Hello, world! This is a test file for tcount token counting.\\n' > myfile.txt && printf '# Sample Prompt\\n\\nCount the tokens in this prompt file for testing tcount.\\n' > prompt.md && printf '# Sample Document\\n\\nThis document is used to test JSON output of tcount.\\n' > document.md && ls -la *.txt *.md",
+                "command": "cat > myfile.txt <<'EOF'\nHello world. This is a test file for token counting with tcount.\nIt contains a few sentences to count tokens locally.\nEOF\ncat > prompt.md <<'EOF'\n# Sample prompt\nWrite a haiku about token counting in LLM workflows.\nEOF\ncat > document.md <<'EOF'\n# Document\nThis is a sample document for JSON output testing. Token counting should be local and fast.\nEOF\nmkdir -p src && printf 'Hello from a\\n' > src/a.txt && printf 'Second file with more content for counting tokens.\\n' > src/b.txt && ls -R",
                 "background": false,
                 "port": null
               }
@@ -205,27 +232,69 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three screenshots show token count reports and version output matching the expected signals.",
+          "observed": "All three screenshots show successful token reports with expected methods and version 0.7.0 printed.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-tcount-20261030-234458-2d48/report.json",
+          "trace_path": "runs/verify/verify-tcount-20261031-032629-6e06/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-tcount-20261030-234458-2d48/check-1-cmd5.judged.png",
-            "runs/verify/verify-tcount-20261030-234458-2d48/check-2-cmd6.judged.png",
-            "runs/verify/verify-tcount-20261030-234458-2d48/check-3-cmd2.judged.png"
+            "runs/verify/verify-tcount-20261031-032629-6e06/check-1-cmd4.judged.png",
+            "runs/verify/verify-tcount-20261031-032629-6e06/check-2-cmd5.judged.png",
+            "runs/verify/verify-tcount-20261031-032629-6e06/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.036949
+        "cost_usd": 0.049702,
+        "features": [
+          {
+            "feature": "count tokens with exact OpenAI tokenizers",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "approximate Claude and Gemini token counts",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "show context window usage percentage",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "count tokens across directory trees",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 90.2,
       "confidence": 0.8,
@@ -556,8 +625,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-30T23:42:54+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Count with exact OpenAI tokenizers",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:06+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Claude and Gemini approximations",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:06+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "see what percentage of a model's context you're consuming",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:06+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Count an entire directory tree",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:06+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:05+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

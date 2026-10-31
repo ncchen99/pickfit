@@ -27,6 +27,12 @@
     "view benchmark history per model"
   ],
   "alternatives_to": [],
+  "features": [
+    "Benchmark TTFT and TPS for models",
+    "List local and cloud models",
+    "Show rich sortable result tables",
+    "Export results to JSON or CSV"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -53,20 +59,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-ometer-20261029-030213-b9fe",
+      "run_id": "verify-ometer-20261031-021459-2dc9",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install git+https://github.com/EndoTheDev/OMeter.git 2>&1",
-          "purpose": "install ometer from GitHub with uv tool"
+          "purpose": "install from GitHub with uv tool"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "ometer --version",
+        "command": "ometer --version 2>&1",
         "expected_signal": "ometer 0.4.0"
       },
-      "first_task": "ometer --local"
+      "first_task": "ometer --local 2>&1"
     },
     "windows": null
   },
@@ -85,10 +91,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T03:04:02.402574+08:00",
+    "checked_at": "2026-10-31T02:17:24.643948+08:00",
     "runs": [
       {
-        "id": "verify-ometer-20261029-030213-b9fe",
+        "id": "verify-ometer-20261031-021459-2dc9",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -96,19 +102,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T03:04:02.402574+08:00",
+        "checked_at": "2026-10-31T02:17:24.643948+08:00",
         "tool_version": "0.4.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install git+https://github.com/EndoTheDev/OMeter.git 2>&1",
-            "purpose": "install ometer from GitHub with uv tool"
+            "purpose": "install from GitHub with uv tool"
           }
         ],
         "smoke_tests": [
           {
-            "command": "ometer --version",
+            "command": "ometer --version 2>&1",
             "expected_signal": "ometer 0.4.0",
             "exit_code": 0,
             "passed": true,
@@ -117,16 +123,7 @@
             "offline": true
           },
           {
-            "command": "ometer --help",
-            "expected_signal": "usage: ometer",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "usage: ometer [-h] [--version] [--local] [--cloud] [--model MODEL [MODEL ...]] [--ttft] [--tps]",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "ometer --local",
+            "command": "ometer --local 2>&1",
             "expected_signal": "No local models found.",
             "exit_code": 0,
             "passed": true,
@@ -135,11 +132,11 @@
             "offline": true
           },
           {
-            "command": "ometer --history",
-            "expected_signal": "No history found.",
+            "command": "ometer --history --json 2>&1",
+            "expected_signal": "[]",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "No history found.",
+            "observed_excerpt": "[]",
             "setup": [],
             "offline": true
           }
@@ -147,37 +144,73 @@
         "pitfalls": [
           {
             "readme_said": "python 3.14+",
-            "actually_needed": "uv auto-downloaded cpython-3.15.2 to satisfy the requirement on the Python 3.12 host; no manual Python upgrade needed"
+            "actually_needed": "uv automatically downloaded and used cpython-3.15.2 to satisfy the requirement on this Python 3.12 box",
+            "kind": "tool_handled"
           },
           {
-            "readme_said": "ometer --local lists local models",
-            "actually_needed": "ometer --local with no Ollama daemon exits 0 and prints warning to stderr plus 'No local models found.'"
+            "readme_said": "uv tool install . from the project directory",
+            "actually_needed": "installed with `uv tool install git+https://github.com/EndoTheDev/OMeter.git` because the work dir contains only README.md, no pyproject.toml",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show ometer reporting no local models, no history, and version 0.4.0 with exit code 0.",
+          "observed": "Screenshots show ometer 0.4.0, No local models found, and empty [] history all with exit 0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-ometer-20261029-030213-b9fe/report.json",
+          "trace_path": "runs/verify/verify-ometer-20261031-021459-2dc9/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-ometer-20261029-030213-b9fe/check-1-cmd5.judged.png",
-            "runs/verify/verify-ometer-20261029-030213-b9fe/check-2-cmd6.judged.png",
-            "runs/verify/verify-ometer-20261029-030213-b9fe/check-3-cmd3.judged.png"
+            "runs/verify/verify-ometer-20261031-021459-2dc9/check-1-cmd4.judged.png",
+            "runs/verify/verify-ometer-20261031-021459-2dc9/check-2-cmd5.judged.png",
+            "runs/verify/verify-ometer-20261031-021459-2dc9/check-3-cmd9.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.031662
+        "cost_usd": 0.057524,
+        "features": [
+          {
+            "feature": "Benchmark TTFT and TPS for models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs live Ollama model; tried local benchmark but no daemon so no TTFT/TPS measured"
+          },
+          {
+            "feature": "List local and cloud models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows a connection failure warning and 'No local models found' instead of a model list."
+          },
+          {
+            "feature": "Show rich sortable result tables",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "no models to display or sort; sort flag accepted but same empty result"
+          },
+          {
+            "feature": "Export results to JSON or CSV",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only empty array '[]' with no results exported."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 81.9,
       "confidence": 0.9,
@@ -474,8 +507,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-29T02:37:21+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**Benchmark** time-to-first-token (TTFT) and tokens-per-second (TPS)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:05+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**List models** from local and cloud Ollama endpoints",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:05+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**Rich tables** with sorting by name, size, context length, modification date, TTFT, or TPS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:05+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**Export results** to JSON or CSV (stdout or file)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:05+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

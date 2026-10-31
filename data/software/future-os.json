@@ -29,6 +29,12 @@
     "fork and clone conversation sessions"
   ],
   "alternatives_to": [],
+  "features": [
+    "Use one agent across terminal, desktop and mobile",
+    "Run long-horizon goals with verification gates",
+    "Schedule recurring prompts as agent tasks",
+    "Control tool safety with approvals and sandboxing"
+  ],
   "why_worth_it": null,
   "homepage": "https://future-os.cn",
   "repo": {
@@ -70,16 +76,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-future-os-20261029-012520-4053",
+      "run_id": "verify-future-os-20261031-023828-eb81",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL https://dl.future-os.cn/releases/2.0.1/FutureOS_2.0.1_linux_x86_64-portable.tar.gz -o /tmp/future-portable.tgz",
-          "purpose": "download portable release"
+          "command": "curl -fsSL https://dl.future-os.cn/releases/2.0.1/FutureOS_2.0.1_linux_x86_64-cli.tar.gz -o /tmp/future-cli.tar.gz && sha256sum /tmp/future-cli.tar.gz",
+          "purpose": "Download v2.0.1 CLI tarball with checksum"
         },
         {
-          "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/future-portable.tgz -C ~/.local/bin && chmod +x ~/.local/bin/future ~/.local/bin/futureos && ~/.local/bin/future init",
-          "purpose": "extract portable tarball to ~/.local/bin and run future init"
+          "command": "tar -xzf /tmp/future-cli.tar.gz -C /home/sbx/.local/bin && chmod +x /home/sbx/.local/bin/future && future init",
+          "purpose": "Extract future to ~/.local/bin and run future init"
         }
       ],
       "manual_steps": [],
@@ -119,10 +125,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:29:00.414297+08:00",
+    "checked_at": "2026-10-31T02:41:16.970309+08:00",
     "runs": [
       {
-        "id": "verify-future-os-20261029-012520-4053",
+        "id": "verify-future-os-20261031-023828-eb81",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -130,18 +136,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T01:29:00.414297+08:00",
+        "checked_at": "2026-10-31T02:41:16.970309+08:00",
         "tool_version": "v2.0.1",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://dl.future-os.cn/releases/2.0.1/FutureOS_2.0.1_linux_x86_64-portable.tar.gz -o /tmp/future-portable.tgz",
-            "purpose": "download portable release"
+            "command": "curl -fsSL https://dl.future-os.cn/releases/2.0.1/FutureOS_2.0.1_linux_x86_64-cli.tar.gz -o /tmp/future-cli.tar.gz && sha256sum /tmp/future-cli.tar.gz",
+            "purpose": "Download v2.0.1 CLI tarball with checksum"
           },
           {
-            "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/future-portable.tgz -C ~/.local/bin && chmod +x ~/.local/bin/future ~/.local/bin/futureos && ~/.local/bin/future init",
-            "purpose": "extract portable tarball to ~/.local/bin and run future init"
+            "command": "tar -xzf /tmp/future-cli.tar.gz -C /home/sbx/.local/bin && chmod +x /home/sbx/.local/bin/future && future init",
+            "purpose": "Extract future to ~/.local/bin and run future init"
           }
         ],
         "smoke_tests": [
@@ -155,26 +161,17 @@
             "offline": true
           },
           {
-            "command": "future --help",
-            "expected_signal": "future agent",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Future OS CLI — agent gateway for the Future Agent gRPC server (per-user local IPC by default).",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "future doctor",
-            "expected_signal": "Future Doctor",
+            "expected_signal": "Future Doctor — checking environment...",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "\u001b[1mFuture Doctor\u001b[0m — checking environment...",
+            "observed_excerpt": "Up to date: future-browser (v1.5.0), future-database-lookup (v0.1.1), future-deep-research (v3.0.1), future-document (v1.1.0), future-goal (v5.1.1), future-image (v1.2.0), future-mcp (v1.1.0), future-paper (v1.1.0), future-peer-review (v0.1.1), future-scheduled-task (v0.3.0), future-scientific-writ…",
             "setup": [],
             "offline": true
           },
           {
             "command": "future skills list",
-            "expected_signal": "144 skills available",
+            "expected_signal": "144 skills available.",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "144 skills available. Use \"future skills install <name>\" to install.",
@@ -184,34 +181,74 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -fsSL https://dl.future-os.cn/install.sh | bash auto-installs (Debian gets .deb via apt/dpkg)",
-            "actually_needed": "on Debian without root/sudo, skip the .deb/sudo path and manually use the portable asset linux-x86_64-portable (sha256 0d4e79a349e1248576799ea2bc8d4fcadcff84908eb6f640f553c1e56021f8d1): download, tar -xzf to ~/.local/bin, chmod +x, then run future init"
+            "readme_said": "curl -fsSL https://dl.future-os.cn/install.sh | bash works on macOS/Linux",
+            "actually_needed": "Script takes Debian .deb path (dpkg detected) and runs `sudo apt-get install -y pkg`, but box has no sudo; installed the prebuilt linux-x86_64-cli tarball (same v2.0.1, SHA-256 verified) by extracting `future` to ~/.local/bin and running `future init`.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Installer provides desktop app + unified `future` CLI",
+            "actually_needed": "CLI-only tarball contains just the `future` binary, so `future doctor` reports future-tui, future-desktop and future-channel as not found on PATH.",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show Future Doctor report, 144-skill list, and version future v2.0.1 all printing successfully.",
+          "observed": "All three checks show expected output: doctor header with environment checks, 144-skill list, and version v2.0.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-future-os-20261029-012520-4053/report.json",
+          "trace_path": "runs/verify/verify-future-os-20261031-023828-eb81/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-future-os-20261029-012520-4053/check-1-cmd7.judged.png",
-            "runs/verify/verify-future-os-20261029-012520-4053/check-2-cmd8.judged.png",
-            "runs/verify/verify-future-os-20261029-012520-4053/check-3-cmd5.judged.png"
+            "runs/verify/verify-future-os-20261031-023828-eb81/check-1-cmd12.judged.png",
+            "runs/verify/verify-future-os-20261031-023828-eb81/check-2-cmd13.judged.png",
+            "runs/verify/verify-future-os-20261031-023828-eb81/check-3-cmd11.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.092202
+        "cost_usd": 0.104071,
+        "features": [
+          {
+            "feature": "Use one agent across terminal, desktop and mobile",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Needs a configured model provider to run the agent; none configured in box."
+          },
+          {
+            "feature": "Run long-horizon goals with verification gates",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Durable goals need a running agent with a model provider."
+          },
+          {
+            "feature": "Schedule recurring prompts as agent tasks",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Scheduled tasks need a running agent with a model provider."
+          },
+          {
+            "feature": "Control tool safety with approvals and sandboxing",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Approvals and sandboxing need agent runs with a model; doctor only reports backend status."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 80.8,
       "confidence": 0.8,
@@ -532,8 +569,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-28T23:50:42+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Terminal, desktop, mobile, and your chat apps — one Rust core, one agent.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:35:57+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Durable goals/todos/gates/monitors for long-horizon runs of 24+ hours",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:35:57+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Recurring work without you in the loop: a reusable prompt + working directory + model/thinking level, run at full permission on a schedule",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:35:57+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Configure file-access approvals and OS sandboxing for agent tools.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:35:57+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

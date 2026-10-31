@@ -26,6 +26,11 @@
     "list quants and check what fits GPU memory without downloading"
   ],
   "alternatives_to": [],
+  "features": [
+    "measure GGUF quants and pick fastest",
+    "search Hugging Face for GGUF repos",
+    "list quants and GPU fit"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -67,18 +72,18 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-quantpicker-20261029-024548-1d72",
+      "run_id": "verify-quantpicker-20261031-020903-796e",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install quantpicker",
-          "purpose": "isolated install of README pip package via uv tool"
+          "purpose": "install via uv tool"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "quantpicker --version",
-        "expected_signal": "quantpicker 0.1.0"
+        "command": "quantpicker --help",
+        "expected_signal": "Measures which GGUF quant"
       },
       "first_task": "quantpicker search qwen3 8b"
     },
@@ -112,10 +117,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:49:04.881701+08:00",
+    "checked_at": "2026-10-31T02:11:51.526332+08:00",
     "runs": [
       {
-        "id": "verify-quantpicker-20261029-024548-1d72",
+        "id": "verify-quantpicker-20261031-020903-796e",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -123,32 +128,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T02:49:04.881701+08:00",
+        "checked_at": "2026-10-31T02:11:51.526332+08:00",
         "tool_version": "0.1.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install quantpicker",
-            "purpose": "isolated install of README pip package via uv tool"
+            "purpose": "install via uv tool"
           }
         ],
         "smoke_tests": [
           {
-            "command": "quantpicker --version",
-            "expected_signal": "quantpicker 0.1.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "quantpicker 0.1.0",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "quantpicker --help",
-            "expected_signal": "Usage: quantpicker [OPTIONS] [REPO]",
+            "expected_signal": "Measures which GGUF quant",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Usage: quantpicker [OPTIONS] [REPO]",
+            "observed_excerpt": "Measures which GGUF quant of a model is worth running on your GPU: real speed and real quality loss, not estimates",
             "setup": [],
             "offline": true
           },
@@ -157,16 +153,16 @@
             "expected_signal": "unsloth/Qwen3-8B-GGUF",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "│ unsloth/Qwen3-8B-GGUF ┆ 135K ┆ 158 │",
+            "observed_excerpt": "│ unsloth/Qwen3-8B-GGUF ┆ 137K ┆ 158 │",
             "setup": [],
             "offline": false
           },
           {
             "command": "quantpicker list unsloth/Qwen3-8B-GGUF --vram 24",
-            "expected_signal": "unsloth/Qwen3-8B-GGUF on 24.0 GiB",
+            "expected_signal": "Q4_K_M",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "unsloth/Qwen3-8B-GGUF on 24.0 GiB (keeping 1.5 GiB for context):",
+            "observed_excerpt": "│ Q4_K_M ┆ 4.7 GiB ┆ yes ┆ tested │",
             "setup": [],
             "offline": false
           }
@@ -174,33 +170,64 @@
         "pitfalls": [
           {
             "readme_said": "quantpicker list unsloth/Qwen3-8B-GGUF",
-            "actually_needed": "quantpicker list unsloth/Qwen3-8B-GGUF --vram 24"
+            "actually_needed": "quantpicker list unsloth/Qwen3-8B-GGUF --vram 24 on machines without an NVIDIA/Apple GPU",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show search results containing unsloth/Qwen3-8B-GGUF, its quant size table on 24.0 GiB, and version quantpicker 0.1.0.",
+          "observed": "Screenshots show search results containing unsloth/Qwen3-8B-GGUF, quant list containing Q4_K_M, and help describing GGUF quant measurement.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-quantpicker-20261029-024548-1d72/report.json",
+          "trace_path": "runs/verify/verify-quantpicker-20261031-020903-796e/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-quantpicker-20261029-024548-1d72/check-1-cmd5.judged.png",
-            "runs/verify/verify-quantpicker-20261029-024548-1d72/check-2-cmd7.judged.png",
-            "runs/verify/verify-quantpicker-20261029-024548-1d72/check-3-cmd3.judged.png"
+            "runs/verify/verify-quantpicker-20261031-020903-796e/check-1-cmd3.judged.png",
+            "runs/verify/verify-quantpicker-20261031-020903-796e/check-2-cmd5.judged.png",
+            "runs/verify/verify-quantpicker-20261031-020903-796e/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.042253
+        "cost_usd": 0.048852,
+        "features": [
+          {
+            "feature": "measure GGUF quants and pick fastest",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "needs GPU measurement with llama-bench and multi-GB quant downloads; box has no GPU (list/measure detect no GPU)"
+          },
+          {
+            "feature": "search Hugging Face for GGUF repos",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "list quants and GPU fit",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 84.5,
       "confidence": 0.8,
@@ -532,8 +559,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-29T02:37:52+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "Measures which GGUF quant of a model to run on your GPU: real speed and quality loss (KL divergence), not estimates.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:47+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "quantpicker search qwen3 8b              # GGUF repos on Hugging Face, best matches first",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:47+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "quantpicker list unsloth/Qwen3-8B-GGUF   # every quant, its size, and whether it fits your GPU",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:47+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

@@ -472,6 +472,7 @@ function pick(overrides: Partial<PickOut> = {}): PickOut {
     verification: { level: 'function', os: 'linux', arch: 'x86_64', method: 'sandbox', replayed: true, checked_at: '2026-10-29T08:00:00Z', verified_on_user_os: null, gui: null },
     how_we_know: 'pickfit ran it.',
     evidence_url: null,
+    features: { recorded: false, checked: [], not_checked: [] },
     scores: { quality: 80, popularity: 10, treasure: false },
     repo: 'https://github.com/a/tool',
     homepage: null,

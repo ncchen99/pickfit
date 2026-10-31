@@ -38,6 +38,8 @@ NOT_IN_BOX: dict[str, dict[str, str]] = {
     "linux": {"brew": "Homebrew is not in the Linux box; kept as the macOS guide",
               "docker": "there is no Docker daemon inside the box"},
     "macos": {"docker": "there is no Docker daemon inside the box"},
+    "windows": {"brew": "Homebrew is not in the Windows box; kept as the macOS guide",
+                "docker": "there is no Docker daemon inside the box"},
 }
 NEEDS: dict[str, str] = {
     "cargo": "needs a Rust toolchain, which the box does not have",
@@ -49,6 +51,9 @@ NEEDS: dict[str, str] = {
 NEEDS_BY_OS: dict[str, dict[str, str]] = {
     "macos": {"npm": "npm is Homebrew's; -g installs under /opt/homebrew, which the box user owns",
               "brew": "the box user owns /opt/homebrew, so brew works without sudo"},
+    "windows": {"npm": r"npm -g installs into %APPDATA%\npm, which is on the box user's PATH; no admin needed",
+                "script": "download the script first and read it; do not pipe it into iex unread",
+                "binary": r"unpack it under %USERPROFILE% (e.g. ~\.local\bin, on PATH); no admin needed"},
 }
 
 # `pip install <one package>`, optionally `python -m` and `--user`/`-U`.
