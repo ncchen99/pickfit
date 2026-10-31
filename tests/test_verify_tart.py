@@ -6,6 +6,7 @@ import json
 import socket
 import stat
 import subprocess
+import sys
 import threading
 import types
 from collections.abc import Callable, Iterator
@@ -29,6 +30,10 @@ from pickfit.verify.tart_box import (
 )
 from pickfit.verify.task import load_fixture
 from verify_fakes import FakeBox
+
+POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="the fake tart is a #! script and softnet's "
+                                "control channel is an AF_UNIX socketpair; POSIX only")
+
 
 FIXTURES = Path(__file__).parent / "fixtures" / "verify"
 MANIFEST = {"base": "pickfit-macos-26", "source": "ghcr.io/cirruslabs/macos-tahoe-base:latest",
@@ -183,14 +188,15 @@ def make_box(fake_tart: Path, state_dir: Path, monkeypatch: pytest.MonkeyPatch) 
 
 
 def _calls(fake: Path) -> list[list[str]]:
-    return [json.loads(line) for line in (fake.parent / "calls.jsonl").read_text().splitlines()]
+    return [json.loads(line) for line in (fake.parent / "calls.jsonl").read_text(encoding="utf-8").splitlines()]
 
 
 def _phases(fake: Path) -> list[str]:
     log = fake.parent / "phases.log"
-    return log.read_text().split() if log.exists() else []
+    return log.read_text(encoding="utf-8").split() if log.exists() else []
 
 
+@POSIX_ONLY
 def test_start_clones_boots_with_softnet_blocks_host_and_close_deletes(make_box, fake_tart: Path):
     box = make_box()
     box.start()
@@ -214,6 +220,7 @@ def test_online_policy_blocks_the_host():
     assert SOFTNET_POLICY[False] == {"allow": [], "block": ["0.0.0.0/0"]}
 
 
+@POSIX_ONLY
 def test_boot_refuses_when_softnet_is_not_set_up(make_box, fake_tart: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(tb, "softnet_ready", lambda *a, **k: "softnet needs a one-time setuid-root bit: sudo ...")
     box = make_box()
@@ -222,6 +229,7 @@ def test_boot_refuses_when_softnet_is_not_set_up(make_box, fake_tart: Path, monk
     assert not any(c and c[0] == "run" for c in _calls(fake_tart))
 
 
+@POSIX_ONLY
 def test_an_unhardened_base_is_refused_before_any_model_command(make_box, fake_tart: Path,
                                                                  monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("FAKE_UNHARDENED", "1")
@@ -237,6 +245,7 @@ def test_a_manifest_from_before_hardening_is_refused(make_box, state_dir: Path):
         make_box().start()
 
 
+@POSIX_ONLY
 def test_model_commands_run_as_the_box_user_with_limits_and_no_host_env(
         make_box, fake_tart: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("MODEL_API_KEY", "LLM_123_should_never_leak")
@@ -258,6 +267,7 @@ def test_model_commands_run_as_the_box_user_with_limits_and_no_host_env(
     assert (fake_tart.parent / "stdin.bin").read_bytes() == b"data"
 
 
+@POSIX_ONLY
 @pytest.mark.parametrize("text", ['VM "pf-verify-1-abc" is not running',
                                   'the specified VM "pf-verify-1-abc" does not exist',
                                   "Error: failed to connect to the VM, is the Tart Guest Agent running?"])
@@ -273,6 +283,7 @@ def test_a_command_that_prints_tarts_own_errors_has_only_failed(make_box, fake_t
     assert _calls(fake_tart)[-1] == ["exec", "pf-verify-1-abc", "true"]  # the host's probe decided it
 
 
+@POSIX_ONLY
 def test_a_vm_that_is_gone_is_a_box_error(make_box, fake_tart: Path):
     box = make_box()
     box.start()
@@ -282,6 +293,7 @@ def test_a_vm_that_is_gone_is_a_box_error(make_box, fake_tart: Path):
         box.exec("echo hi", 30)
 
 
+@POSIX_ONLY
 def test_a_guest_agent_that_is_gone_is_a_box_error(make_box, monkeypatch: pytest.MonkeyPatch):
     box = make_box()
     box.start()
@@ -291,6 +303,7 @@ def test_a_guest_agent_that_is_gone_is_a_box_error(make_box, monkeypatch: pytest
     assert box.vm_proc.poll() is None  # the VM still runs; the agent probe is what failed
 
 
+@POSIX_ONLY
 def test_read_file_turns_a_hung_agent_into_a_box_error(make_box, monkeypatch: pytest.MonkeyPatch):
     box = make_box()
     box.start()
@@ -304,6 +317,7 @@ def test_read_file_turns_a_hung_agent_into_a_box_error(make_box, monkeypatch: py
             box.read_file("notes.txt")
 
 
+@POSIX_ONLY
 def test_an_mdns_probe_that_cannot_run_fails_closed(make_box, monkeypatch: pytest.MonkeyPatch):
     box = make_box()
     box.start()
@@ -312,6 +326,7 @@ def test_an_mdns_probe_that_cannot_run_fails_closed(make_box, monkeypatch: pytes
         box._check_firewall(online=True)
 
 
+@POSIX_ONLY
 def test_network_cut_sets_softnet_policy_and_is_checked_as_root(make_box, fake_tart: Path):
     box = make_box()
     box.start()
@@ -321,6 +336,7 @@ def test_network_cut_sets_softnet_policy_and_is_checked_as_root(make_box, fake_t
     assert _phases(fake_tart) == ["online", "offline", "online"] and box.network_enabled is True
 
 
+@POSIX_ONLY
 def test_online_check_fails_if_the_host_or_metadata_is_reachable(make_box, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("FAKE_REACH_METADATA", "0")  # metadata answers despite softnet -> containment broken
     box = make_box()
@@ -329,6 +345,7 @@ def test_online_check_fails_if_the_host_or_metadata_is_reachable(make_box, monke
     assert not box.started
 
 
+@POSIX_ONLY
 def test_online_check_fails_if_multicast_mdns_reaches_the_host(make_box, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("FAKE_MDNS_LEAK", "1")  # the host answers mDNS despite the block
     box = make_box()
@@ -336,6 +353,7 @@ def test_online_check_fails_if_multicast_mdns_reaches_the_host(make_box, monkeyp
         box.start()
 
 
+@POSIX_ONLY
 def test_a_refusal_is_not_accepted_as_blocked(make_box, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("FAKE_REACH_HOST", "7")  # host refuses (reached) rather than dropping
     box = make_box()
@@ -343,6 +361,7 @@ def test_a_refusal_is_not_accepted_as_blocked(make_box, monkeypatch: pytest.Monk
         box.start()
 
 
+@POSIX_ONLY
 def test_an_offline_cut_that_leaks_is_a_box_error(make_box, monkeypatch: pytest.MonkeyPatch):
     box = make_box()
     box.start()
@@ -352,6 +371,7 @@ def test_an_offline_cut_that_leaks_is_a_box_error(make_box, monkeypatch: pytest.
     assert box.network_enabled
 
 
+@POSIX_ONLY
 def test_turning_the_network_back_on_fails_if_the_cut_was_undone(make_box, monkeypatch: pytest.MonkeyPatch):
     box = make_box()
     box.start()
@@ -361,6 +381,7 @@ def test_turning_the_network_back_on_fails_if_the_cut_was_undone(make_box, monke
         box.set_network(True)
 
 
+@POSIX_ONLY
 def test_validate_containment_runs_the_positive_and_negative_controls(make_box):
     box = make_box()
     box.start()
@@ -375,6 +396,7 @@ def test_validate_containment_runs_the_positive_and_negative_controls(make_box):
     assert box.network_enabled  # restored online
 
 
+@POSIX_ONLY
 def test_softnet_control_speaks_policy_set_over_the_socket():
     ctrl = SoftnetControl()
     seen: list[dict] = []
@@ -398,6 +420,7 @@ def test_softnet_control_speaks_policy_set_over_the_socket():
     ctrl.close()
 
 
+@POSIX_ONLY
 def test_softnet_control_errors_on_a_closed_channel():
     ctrl = SoftnetControl()
     ctrl.child.close()
@@ -418,6 +441,7 @@ def test_softnet_ready_reports_how_to_fix_each_state(tmp_path: Path, monkeypatch
     assert softnet_ready() is None
 
 
+@POSIX_ONLY
 def test_close_never_raises_and_leaves_an_undeletable_clone_to_the_reaper(
         make_box, fake_tart: Path, monkeypatch: pytest.MonkeyPatch):
     box = make_box()
@@ -440,6 +464,7 @@ def test_close_never_raises_and_leaves_an_undeletable_clone_to_the_reaper(
     assert not box.cloned and box._reaper is None
 
 
+@POSIX_ONLY
 def test_vm_limit_failure_names_the_reboot_and_cleans_up(make_box, fake_tart: Path,
                                                          monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("FAKE_RUN_FAIL", "Error: VZErrorVirtualMachineLimitExceeded")
@@ -456,6 +481,7 @@ def test_missing_base_says_how_to_prepare_it(fake_tart: Path, tmp_path: Path, mo
         box.start()
 
 
+@POSIX_ONLY
 def test_failed_base_build_deletes_the_base_and_its_old_manifest(fake_tart: Path, tmp_path: Path,
                                                                  monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(tb, "softnet_ready", lambda *a, **k: None)
@@ -469,6 +495,7 @@ def test_failed_base_build_deletes_the_base_and_its_old_manifest(fake_tart: Path
     assert not (tmp_path / "pickfit-macos-26.json").exists()
 
 
+@POSIX_ONLY
 def test_prepare_refuses_to_overwrite_an_existing_base(fake_tart: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(tb, "softnet_ready", lambda *a, **k: None)
     monkeypatch.setenv("FAKE_BASE_EXISTS", "1")
@@ -486,6 +513,7 @@ def test_prepare_pins_the_agent_before_brew_and_hardens():
     assert "EnvironmentVariables:PATH" in script
 
 
+@POSIX_ONLY
 def test_prune_removes_stopped_and_stale_running_vms(fake_tart: Path, monkeypatch: pytest.MonkeyPatch):
     now = 1_800_000_000
     vms = [{"Name": f"pf-verify-{now - 10}-aaa", "Running": True, "State": "running"},

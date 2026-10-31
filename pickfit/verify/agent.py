@@ -24,7 +24,6 @@ from __future__ import annotations
 import json
 import re
 import secrets
-import shlex
 import time
 from collections import Counter
 from collections.abc import Callable
@@ -39,7 +38,7 @@ from pickfit.ledger import BudgetExceeded, taipei_now
 from pickfit.meta import MetaResult, ToolCall, call_meta, resolve_model
 from pickfit.schema import InstallMethod, PitfallKind, UnverifiedReason, VerificationLevel, is_passed
 from pickfit.verify import gui
-from pickfit.verify.box import Box, BoxError, ExecResult, background_script
+from pickfit.verify.box import Box, BoxError, ExecResult
 from pickfit.verify.plan import InstallPlan, plan_for
 from pickfit.verify.rules import RuleHit, error_signature, match_rules
 from pickfit.verify.mcp import GUIDE as MCP_GUIDE
@@ -91,7 +90,7 @@ _INT = {"type": "integer"}
 _LEVELS = ["function", "install", "service", "inference", "unverified", "failed"]
 _REASONS = ["needs_gpu", "apple_silicon_only", "macos_only", "windows_only", "gui_only",
             "needs_account", "model_too_large", "needs_toolchain", "needs_root", "needs_container",
-            "needs_more_resources", "other"]
+            "needs_more_resources", "needs_store", "other"]
 _METHODS = ["brew", "cargo", "pip", "pipx", "uv", "npm", "go", "binary", "docker", "script", "source", "other"]
 
 FINISH_TOOL = _fn(
@@ -179,6 +178,21 @@ LAUNCH_GUI_TOOL = _fn(
      "wait_s": {"type": "integer", "description": f"Seconds to wait for a window (max {gui.WAIT_MAX_S})."}},
     ["command", "wait_s"])
 GUI_TOOLS: list[dict[str, Any]] = [*TOOLS[:-1], LAUNCH_GUI_TOOL, FINISH_TOOL]
+
+
+def tools_for(box: Box) -> list[dict[str, Any]]:
+    """TOOLS with run_command naming the box's shell (bash, or pwsh in the Windows box)."""
+    if box.shell == "bash":
+        return TOOLS
+    tools = json.loads(json.dumps(TOOLS))
+    for tool in tools:
+        if tool.get("name") == "run_command":
+            tool["description"] = tool["description"].replace(
+                "bash command", f"{box.shell} (PowerShell 7) command").replace(
+                "`; echo $?`", "`; echo $LASTEXITCODE`")
+        if tool.get("name") == "list_dir":
+            tool["description"] = tool["description"].replace("(ls -la)", "(Get-ChildItem -Force)")
+    return tools
 
 
 class _ListDirArgs(BaseModel):
@@ -577,7 +591,7 @@ class VerifyAgent:
                                                 minutes=round(limits.max_seconds / 60),
                                                 stdout_chars=f"{STDOUT_CHARS:,}", box_kind=box.kind,
                                                 box_rule=box.user_rule) + (GUI_RULES if box.display else "")
-        self.tools = GUI_TOOLS if box.display else TOOLS
+        self.tools = GUI_TOOLS if box.display else tools_for(box)
         self.commands_used = 0
         self.finish_retries = 0
         self.verdict: LogVerdict | None = None
@@ -802,7 +816,7 @@ class VerifyAgent:
         return f"error: unknown tool {call.name!r}"
 
     def _list_dir(self, args: _ListDirArgs, turn: int) -> str:
-        result = self.box.exec(f"ls -la -- {shlex.quote(args.path)}", 20)
+        result = self.box.exec(self.box.list_command(args.path), 20)
         self._record(turn, "list_dir", args.path, result)
         self._say(f"  · list_dir {args.path} → exit {result.exit_code}")
         body = _tail(result.stdout or result.stderr, LIST_DIR_CHARS)
@@ -862,7 +876,7 @@ class VerifyAgent:
         n = self.commands_used
         wait = max(0, min(args.wait_s, BACKGROUND_WAIT_S))
         self._say(f"  & {_one_line(args.command, 200)}   [cmd {n}/{self.limits.max_commands}]")
-        script = background_script(args.command, args.port, wait, n, detach=self.box.detach)
+        script = self.box.background(args.command, args.port, wait, n)
         result = self.box.exec(script, self._timeout(wait + 15))
         hints = match_rules(args.command, result.exit_code, result.stdout, result.stderr)
         self._record(turn, "run_background", args.command, result, hints, port=args.port, wait_s=wait)

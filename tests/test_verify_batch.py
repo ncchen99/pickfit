@@ -26,7 +26,7 @@ FIXTURES = Path(__file__).parent / "fixtures" / "verify"
 
 
 def extraction(**changes: Any) -> dict[str, Any]:
-    data = json.loads((FIXTURES / "graphtty.json").read_text())["extraction"]
+    data = json.loads((FIXTURES / "graphtty.json").read_text(encoding="utf-8"))["extraction"]
     for path, value in changes.items():
         node = data
         *parents, leaf = path.split("__")
@@ -158,7 +158,7 @@ def test_run_batch_runs_in_parallel_and_survives_errors(db_path: Path, tmp_path:
     assert (summary["tools"], summary["passed"], summary["errors"]) == (3, 1, 1)
     assert summary["levels"] == {"function": 1, "unverified": 1, "None": 1}
     assert summary["cost_usd"] == 0.02 and summary["seconds_median"] == 40.0
-    saved = json.loads(Path(summary["path"]).read_text())
+    saved = json.loads(Path(summary["path"]).read_text(encoding="utf-8"))
     assert [r["slug"] for r in saved["items"]] == ["graphtty", "other-graphtty", "keyed"]
     assert saved["items"][2]["error"] == "RuntimeError: box exploded"
     assert "[graphtty] working" in lines
