@@ -391,3 +391,26 @@ q07（at most 3 changed lines）與 q09（changes at most 5 lines）用同一個
 1. C4 的 Claude 第二評分者固定為 `claude-opus-5-5`、effort high（`eval/runner/config.json`），在評分開始前固定。這個模型不接受 temperature，固定的是模型 ID 與 effort。
 2. 揭露：第二評分者和受測 agent 是同一個模型。若有偏好自己文字的傾向，最可能偏向對照組的答案（純 Claude 的文字）。評分時看不到組別、次數與模型（盲評）；結果以念誠的判定為準；Muse Spark Open（Baseten）另外做第三份獨立的描述（9.2 B）。
 3. 揭露：第二批 MCP server（11/1）的驗證 agent 由 Baseten 上的 Muse Spark Open 執行；抽取、評審與計分仍用 muse-spark-1.3，每筆紀錄寫明各階段用的模型。它和第三評分者是同一個模型來源；第三評分者只做描述、看到的是去識別的答案，不決定任何結果。
+
+#### I. q15 的音檔
+
+1. 錄音：LibriVox《吶喊》〈一件小事〉（Jing Li 朗讀，archive.org `call_to_arms_jl_librivox` 的 `calltoarms_06_lu.mp3`，sha256 `3fb8a83b…656e3`），公有領域（archive.org 標 Public Domain Mark 1.0；LibriVox 寫 public domain in the USA），**不是 CC0，也不是 CC-BY**。q15 的檢查項目原文寫 CC0/CC-BY，念誠 2026-10-31 知道這點後選了它。
+2. 處理（念誠 2026-10-31 決定；規則先寫進 `q15/calibration.md` 並 commit，才建片段）：從 39.02 秒的停頓起（念誠聽過：片段的第一句是第三段開頭「這是民國六年的冬天」；規則裡原本寫的「正文第一句前」是從時間推的猜測，猜錯了，秒數與音檔不變），超過 0.5 秒的停頓一律縮成 0.3 秒（保留停頓頭尾各 0.15 秒的原始聲音），0.5 秒以下的停頓與所有語音不動（不變速、不變調、不在字中間切），在停頓裡切、補靜音到剛好 60.000 秒。固定、兩組相同，兩次建出來逐位元相同；縮短的 12 個停頓逐一列在 `q15/calibration.md`。原因：朗讀的句間停頓多，原樣切 60 秒只有約 42 秒語音，L2-2 的「cue 涵蓋 ≥ 50 秒」幾乎做不到。
+3. 兩項量測，分開報告：
+   - `speech_seconds` **46.66 秒：calibration 原訂的 55 秒目標沒有達到，不算通過。** 剩下的非語音大多是 0.5 秒以下、照規則不動的間隙。
+   - cue 涵蓋可達的上限（另一項量測，不代替上一項）：片段裡最長的停頓 0.46 秒；假設工具在每個 ≥ 0.2 秒的停頓都斷開 cue，涵蓋最多 50.84 秒（≥ 0.3 秒：52.72 秒）。這是片段容許的上限，不是任何工具的結果；L2-2 仍照每個答案的實際 SRT 判定。
+4. 念誠 2026-10-31 接受這個片段：不再縮短 0.5 秒以下的停頓、不換 Common Voice，保留原始語音與固定的處理比達到 55 秒重要。逐字稿以 Project Gutenberg #27166 為底，由念誠聽過校正（片段唸到「……便很怪他多事，要自己惹出是非」為止），之後 `clip/` 四個檔才 commit。`script_differing` 正好 60，達到 ≥ 60（正好在門檻上，沒有餘裕）。
+
+#### J. 仍存在的限制（報告照實寫）
+
+- **記憶體量測**（B.5）：L2 沙盒沒有峰值計數，q03、q14 用每 0.2 秒取樣，比 0.2 秒短的尖峰可能漏掉；超過硬上限時整個沙盒結束，那一步看不到 exit code，記為 OOM kill。
+- **q03 的磁碟**：檔案放在 gVisor 的記憶體 overlay 上，讀檔接近記憶體速度（2 GB 的 `wc -l` 0.3 秒），5 分鐘的限制比一般 SSD 上寬鬆。
+- **q11 的硬體**（D）：24 GiB 的 M5，不是題目寫的 16 GB；記憶體以實測峰值對照 12 GB。
+- **q15 的音檔**（I）：公有領域、不是 CC0；長停頓縮短過；`speech_seconds` 46.66 秒，**55 秒的目標沒達到**（念誠接受）；cue 涵蓋可達上限 50.84 秒是另一項量測。`script_differing` 正好 60：達到 ≥ 60，但正好在門檻上、沒有餘裕。
+- **q18–q20**（C）：L2 量的是答案的用戶端或設定接上固定模型能不能用，不是答案推薦的模型；q18 用 `llama3.2:3b`、q19 用 `qwen2.5:7b`（`llama3.2:3b` 校準 0/3）；沙盒是 8 vCPU（題目寫的環境原本是 4）。q19 在 8 vCPU 上處理約 17,000 token 的提示仍要 348 秒，真的 coding agent 的第一回合可能要幾分鐘。
+- **Ollama 的 local-only 模式**（C.5）：評分者啟動的 Ollama 帶 `OLLAMA_NO_CLOUD=1`；答案自己啟動的伺服器不帶，它們的對外連線算答案的。
+- **q20 的 egress**：只算那一次呼叫的時段；封鎖網路的 probe 自己故意做的嘗試在呼叫前，不算。
+- **q01**：封鎖網路時 Claude Code 的 `mcp list` 自己會查名稱（30 次，都失敗），Codex、Gemini 不會；這是 agent 本身的行為，兩組相同，不算答案的。
+- **擋外連的方法**（B.3）：Modal 的 gVisor 裡用 user＋network namespace（不是 Modal 的擋網路），DNS 也擋住。
+- **評分者**（H）：Claude 第二評分者和受測 agent 是同一個模型；Muse Spark Open 和第二批 MCP server 的驗證 agent 同一個來源。結果以念誠的判定為準。
+- **Mac 題**（E）：念誠親手在乾淨帳號裡跑，`method: human`。
