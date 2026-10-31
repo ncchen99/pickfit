@@ -64,15 +64,8 @@
   },
   {
     "item": "dev image: the clean Linux environment for every L2 check (base image, packages, user)",
-    "why": "The checkers need python3 (3.9 or newer). Share one decision with q17-q20.",
-    "candidates": [
-      {
-        "source": "docker.io/library/ubuntu:24.04, plus apt packages from https://snapshot.ubuntu.com",
-        "license": "Ubuntu archive packages (each package's own license)",
-        "size": "about 30 MB compressed base image",
-        "pin": "pull by digest; `apt-get update --snapshot <id>`; record `dpkg-query -W`"
-      }
-    ],
+    "why": "Settled by 9.3 B (念誠, 2026-10-31): every Linux question but q03 and q10 uses the dev image (ubuntu:24.04 + python3, git, ca-certificates, curl, strace), built and recorded in eval/results/l2-images.json. Fixture infrastructure this question names (the pinned Ollama and model) is installed by the grader from eval/fixtures/PINS.md, not baked into the image.",
+    "candidates": [],
     "proposal": "Packages: python3, python3-venv, ca-certificates, curl, sudo, strace. User `dev`. q20 base image = dev image + pinned Ollama + small model store + /opt/q20-venv + ~/ask.py.",
     "decision_needed_by": "念誠"
   },

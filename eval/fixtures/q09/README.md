@@ -59,7 +59,7 @@
   #  2. 新增 "$T1"、"$T2"、"$T3"（依此順序）
   #  3. 關閉 T1（用工具印出的 id，或文件說的指定方式）
   #  4. JSON 列表：<列表指令> > /work/out/list1.json
-  jq . /work/out/list1.json > /dev/null && echo jq-ok
+  jq . /work/out/list1.json > /dev/null && echo jq-ok   # jq 是評分工具：答案的步驟跑完後才由評分者以固定版本安裝（dev image 沒有 jq，9.3 B）
   python3 /fixtures/q09/inspect_listing.py /work/out/list1.json
   ```
   指令來源只限答案與該工具的官方文件（README、`--help`、官方文件網站，以安裝的那個版本為準）；用到的每一行都記下來源。標題一律用 `titles.sh` 的變數傳入（等於填佔位字）。答案沒有某個操作、文件也查不到時，這項不過。
@@ -118,7 +118,7 @@
   ```
 - **判定**：
   - `text`：從固定的第一個 commit 到 HEAD 之間變動的每個檔，在 HEAD 的內容要能以 UTF-8 嚴格解碼、沒有 NUL、沒有 tab／換行／CR／form feed 以外的控制字元，git 也不把它當 binary。沒有任何檔變動（任務資料沒進 repo）算不過。
-  - `diffsize`：共用的行數定義（[`_shared/README.md`](../_shared/README.md) 第 4 節）：`git add -A` 後看 `git diff --cached -M $BEFORE`，每個 hunk 取刪掉與加上的行數較大者，加總。原地改一行算 1，搬檔（rename）只算內容變動。工具自己 commit 也算在內（比的是關閉前的 commit）。
+  - `diffsize`：共用的行數定義（[`_shared/README.md`](../_shared/README.md) 第 4 節；9.3 G 登記，念誠 2026-10-31 決定「原地改一行算 1 行」，門檻 5 不變）：`git add -A` 後看 `git diff --cached -M $BEFORE`，每個 hunk 取刪掉與加上的行數較大者，加總。原地改一行算 1，搬檔（rename）只算內容變動。工具自己 commit 也算在內（比的是關閉前的 commit）。
 - **過**：`L2-4 text: PASS` 而且 `L2-4 diff: PASS`（合計 ≤ 5、沒有 binary、確實有變動）。
 - **不過**：任一不成立。
 

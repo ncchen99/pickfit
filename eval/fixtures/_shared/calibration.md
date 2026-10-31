@@ -34,11 +34,11 @@ python3 $SHARED/egress.py probe --json /tmp/probe.json   # 預期 exit 0（block
 
 ## 步驟 3：OpenCC 字典
 
-照 `needs.json` 取得同一個 tag 的四個檔，放在 `$OPENCC`，記下：
+照 `needs.json` 取得同一個 tag 的四個檔（網址在 `eval/fixtures/PINS.md`），放在 `$OPENCC`，sha256 要等於下表：
 
 | tag | STCharacters.txt | STPhrases.txt | TSCharacters.txt | TWVariants.txt | 日期 |
 |---|---|---|---|---|---|
-| | sha256 | sha256 | sha256 | sha256 | |
+| `ver.1.4.2` | `a0ca1601c70648cf48b33c3c6210ccbecc5c7eead4b4c3daf76587ba2c03582b` | `f6eab5e5c6dd7640597878d3dfc6599ee1279d2bc91561eadd8e114194e2925a` | `737c21c66f55a419dd6956cb3089476cdefc5a36877452631617696df1e5d925` | `e187278e119c427ca561180ac5da5b20e9f8681190458f35c327ce499e95a6a5` | 2026-10-31（在 dev image 沙盒下載後算的，`eval/fixtures/PINS.md`） |
 
 確認：`python3 $SHARED/zh_script.py --dict-dir $OPENCC probe 台后里着為为們们` 印出 台、后、里、着 是 neutral，為、們 是 traditional，为、们 是 simplified。
 

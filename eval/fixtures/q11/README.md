@@ -23,13 +23,10 @@
 
 照 [mac/RUNBOOK.md](mac/RUNBOOK.md) 第 1～3 步：開新的測試帳號（每題每組一個）、拍 before 快照、登入測試帳號、`preflight.sh` 要 PASS、在 `script -q` 紀錄的 shell 裡照答案的步驟做。以下 `F=/Users/Shared/eval-fixtures`，`R=/Users/Shared/eval-runs/<題號-組別>`。
 
-**取樣設定**（第 5 節「能固定 temperature 或 seed 就固定；不能就跑 3 次、2 次過算過」）：依序選第一個做得到的，兩組用同一規則，寫進檢查紀錄：
+**取樣設定**（第 5 節「能固定 temperature 或 seed 就固定；不能就跑 3 次、2 次過算過」，9.3 F.1）：只用工具文件寫明的環境變數或設定檔固定 seed 或 temperature（9.3 F.1，念誠 2026-10-31 決定），不加或改答案指令裡的旗標；答案自己的設定已經固定時照用。兩組用同一規則，用了哪個環境變數或設定檔寫進檢查紀錄：
 
-1. 答案或工具文件有設定 seed 的方式：加上 seed `0`，temperature 照答案（答案沒寫就用預設值）。
-2. 沒有 seed、但能設 temperature：設成 `0`。
-3. 都不能：五個題目整組跑 3 次（`replies/run1`、`run2`、`run3`），每個檢查項目 3 次裡過 2 次算過。
-
-（這個優先順序是本資料夾的建議，開跑前請念誠在 `calibration.md` 確認。）
+1. 答案的設定已經固定 seed 或 temperature，或工具文件寫明可以用環境變數或設定檔固定（設成 seed `0`、temperature `0`）：只跑一次。
+2. 都沒有：五個題目整組跑 3 次（`replies/run1`、`run2`、`run3`），每個檢查項目 3 次裡過 2 次算過。
 
 **回覆怎麼存**：每個題目在一個新的對話裡問（重新執行答案的對話或執行指令；不沿用上一題的對話）。題目從 `prompts/Pn.txt` 複製貼上（`pbcopy < $F/q11/prompts/P1.txt`），一字不改。模型印在終端機的回覆原樣複製到 `$R/replies/run1/Pn.txt`（UTF-8）：只去掉執行程式自己的介面文字（提示字元、題目的回顯、速度與 token 統計），模型寫的每個字都保留，包括顯示在終端機上的思考過程。整段終端機紀錄另外保存在 `script` 的 transcript 裡。
 

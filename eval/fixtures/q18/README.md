@@ -44,7 +44,7 @@ proxy 佔用 Ollama 的預設位址，原樣轉送所有請求（含串流），
 - q18 base image ＝ dev image ＋ `setup_pinned_ollama.sh` 裝好的固定 Ollama 與模型（建一次，記 digest；評測中不再拉模型）。
 - Modal Sandbox，4 vCPU、16 GiB、無 GPU（與 q17 相同）。本題的檢查**不封鎖網路**，但全程量測 egress（L2-3）。
 - 佔位字（第 5 節允許填）：
-  - 模型名稱 → `pins.env` 的 `FIXTURE_MODEL`（檢查項目指定「the frozen tool-calling fixture model」；答案寫的模型名視為「你的模型」的佔位字，見 open question）；
+  - 模型名稱 → `pins.env` 的 `FIXTURE_MODEL`（檢查項目指定「the frozen tool-calling fixture model」；答案寫的模型名視為「你的模型」的佔位字；9.3 C：檢查項目寫明用固定的測試模型，所以換成固定模型，每一處替換記在檢查紀錄（念誠 2026-10-31 決定））；
   - Ollama 位址 → 答案寫的值（Ollama 預設 `http://localhost:11434`，或其 OpenAI 相容的 `/v1`）；
   - 「你自己寫的 stdio 伺服器」→ 指令 `python3`、參數 `["/opt/eval-fixtures/q18/mcp_server/project_code_server.py", "--state-dir", "/eval-work/q18/<組別>/state"]`，伺服器名稱填 `projects`；
   - 檔案系統伺服器：題目舉例提到，但檢查項目不用；評分者**不另外設定**它。
@@ -139,4 +139,4 @@ sh selftest.sh        # 離線；不需要 root；約 1 分鐘
 
 ## 4. 還沒決定的事
 
-見 `needs.json`（Ollama 版本、模型、dev image、strace）與 `calibration.md`（釘版本、3/3 校準、環境本身不外連）。另外要念誠確認：答案指定的模型名一律換成凍結的 fixture 模型（檢查項目指定，但第 5 節寫「不可換掉答案指定的模型」）；L2-2 互動模式下的同意 regex 由評分者依用戶端提示決定。
+見 `needs.json`（Ollama 版本、模型、dev image、strace）與 `calibration.md`（釘版本、3/3 校準、環境本身不外連）。答案指定的模型名一律換成凍結的 fixture 模型：已定案（9.3 C）。另外：L2-2 互動模式下的同意 regex 由評分者依用戶端提示決定。
