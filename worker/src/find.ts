@@ -1,15 +1,17 @@
 /**
  * find_software and find_alternatives (architecture F.2): hard filters
- * (code) -> every candidate card in one muse-spark-1.3 call that parses the
- * request and chooses -> guard (code). Without the model (off, no key, over
- * budget, failure after one retry of a transient error, or every pick
- * rejected) it ranks by rules and says so:
- * matched_by "rules", degraded true. find_alternatives sends the current tool
- * and its pain points too, drops the current tool from the candidates, and
- * may advise keeping it.
+ * (code) -> at most MAX_CARDS candidate cards, the ones that best match the
+ * request's words when more pass (filter.ts; English keywords for the request
+ * from muse-spark-1.3 first, expand.ts) -> one muse-spark-1.3 call that
+ * parses the request and chooses -> guard (code). Without the model (off, no
+ * key, over budget, failure after one retry of a transient error, or every
+ * pick rejected) it ranks by rules and says so: matched_by "rules", degraded
+ * true. find_alternatives sends the current tool and its pain points too,
+ * drops the current tool from the candidates, and may advise keeping it.
  */
 import {
   bestGuide,
+  nameKey,
   verifiedOnUserSystem,
   type Arch,
   type Catalog,
@@ -24,11 +26,14 @@ import { ranSentence } from './evidence.ts';
 import { featureSentence, featuresOut, type FeaturesOut } from './features.ts';
 import type { Settings } from './env.ts';
 import { logEvent, logFailure, newId, type Reporter } from './events.ts';
-import { hardFilter, MAX_CARDS, type Conditions } from './filter.ts';
+import { englishKeywords, EXPAND_TIMEOUT_MS, type Expansion } from './expand.ts';
+import { fitNote, fitOf, jobOf, type Fit, type MatchQuality } from './fit.ts';
+import { hardFilter, MAX_CARDS, replacesCurrent, type Conditions } from './filter.ts';
 import { clip, guardPicks, guardWellKnown, NO_WELL_KNOWN, parseAnswer, type GuardedPick, type GuardedWellKnown } from './guard.ts';
 import { callMeta, estimateCostUsd, MATCH_MODEL, MetaCallError, requestBody } from './meta.ts';
 import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer, type ModelReason } from './prompt.ts';
-import { nameKey, rankByRules, templateReasons } from './rules.ts';
+import { dropNegated, queryTerms, rulesRelevance, rulesTerms, termsAsSaid } from './relevance.ts';
+import { rankByRules, templateReasons } from './rules.ts';
 
 export interface FindInput extends Conditions {
   need: string;
@@ -89,6 +94,8 @@ export interface PickOut {
   scores: { quality: number | null; popularity: number | null; treasure: boolean };
   repo: string;
   homepage: string | null;
+  /** Rules only: how well the profile fits the request and which of its words it covers (fit.ts); absent when the model chose. */
+  match?: Fit;
 }
 
 export interface FindOutput {
@@ -108,6 +115,8 @@ export interface FindOutput {
   well_known_option: { name: string; why: string; verified: false; how_we_know: string } | null;
   clarifying_question: string | null;
   coverage_note: string | null;
+  /** Rules only: the best pick's label, or none when no pick reaches partial; absent when the model chose. */
+  match_quality?: MatchQuality;
 }
 
 export interface AlternativesOutput extends FindOutput {
@@ -127,7 +136,7 @@ function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, 
   }
   parts.push(
     matchedBy === 'rules'
-      ? `Ranked by rules (request keywords, verification on your OS, treasure score) among ${considered} tools that passed the hard filters; no model was used.`
+      ? `Ranked by rules (request keywords, verification on your OS, treasure score) among ${considered} tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.`
       : `Chosen by ${matchedBy} among ${considered} tools that passed pickfit's hard filters; code checked each reason against the profile.`,
   );
   return parts.join(' ');
@@ -148,7 +157,7 @@ function outsideHowWeKnow(matchedBy: string, cond: Conditions): string {
 
 function pickOut(
   entry: Entry,
-  chosen: GuardedPick,
+  chosen: GuardedPick & { match?: Fit },
   os: OS | undefined,
   arch: Arch | undefined,
   matchedBy: string,
@@ -203,11 +212,13 @@ function pickOut(
     },
     repo: entry.repo_url,
     homepage: entry.homepage,
+    ...(chosen.match ? { match: chosen.match } : {}),
   };
 }
 
 interface Choice {
-  picks: GuardedPick[];
+  /** match: rules only, how well the pick fits (fit.ts). */
+  picks: (GuardedPick & { match?: Fit })[];
   bestFree: { slug: string; reason: string } | null;
   noInstall: string | null;
   question: string | null;
@@ -215,6 +226,16 @@ interface Choice {
   emptyByModel: boolean;
   keepCurrent: { recommended: boolean; reason: string } | null;
   wellKnown: GuardedWellKnown;
+  /** Rules only: the best label among the picks; "none" when no pick reaches partial. */
+  matchQuality?: MatchQuality;
+  /** Rules only, partial or none: the request's words to name as missing. */
+  gaps?: string[];
+  /** Rules only, none: the gaps are missing from every pick, not only the top one. */
+  gapsInAll?: boolean;
+  /** Rules only, partial: the highest-ranked partial pick, whose gaps the note names. */
+  closest?: string;
+  /** Rules only, none: some tool past the picks reaches partial, so the note speaks of the picks only. */
+  fitsBeyond?: boolean;
 }
 
 const NO_CHOICE: Choice = {
@@ -270,19 +291,34 @@ function fromModel(
   };
 }
 
-function fromRules(req: MatchRequest, candidates: Entry[], cards: Map<string, Card>, limit: number): Choice {
+function fromRules(
+  req: MatchRequest,
+  candidates: Entry[],
+  relevance: Map<string, number>,
+  cards: Map<string, Card>,
+  limit: number,
+  corpus: Entry[],
+): Choice {
   const os = req.conditions.os;
-  const ranked = rankByRules(candidates, req.rulesText, os, req.currentTool);
+  const ranked = rankByRules(candidates, relevance, os, req.currentTool);
   const top = ranked.slice(0, limit);
   const free = ranked.find((entry) => entry.pricing === 'free');
   const osSets = new Set(top.map((entry) => entry.platforms.slice().sort().join(',')));
+  // Labels only: the fit decision never removes or reorders a pick.
+  const job = req.painPoints ? jobOf(corpus, req.painPoints.rest, req.painPoints.said) : jobOf(corpus, req.rulesText);
+  const fitFor = (entry: Entry) => (replacesCurrent(entry, req.currentTool) ? replacing(req.currentTool!) : fitOf(entry, job));
+  const fits = top.map(fitFor);
+  const best = fits.find((f) => f.quality === 'good') ?? fits.find((f) => f.quality === 'partial');
+  // Words no pick mentions, else what the top pick does not mention.
+  const unmentioned = fits[0]?.missing.filter((word) => fits.every((f) => f.missing.includes(word))) ?? [];
   return {
-    picks: top.map((entry) => ({
+    picks: top.map((entry, i) => ({
       slug: entry.slug,
       fit: entry.summary,
       reasons: templateReasons(entry, cards.get(entry.slug)!, os),
-      tradeoffs: [],
+      tradeoffs: [fitNote(fits[i])].filter((note): note is string => note !== null),
       vs_well_known: null,
+      match: fits[i],
     })),
     bestFree: free ? { slug: free.slug, reason: 'The highest-ranked free tool by rules.' } : null,
     noInstall: null,
@@ -291,8 +327,16 @@ function fromRules(req: MatchRequest, candidates: Entry[], cards: Map<string, Ca
     emptyByModel: false,
     keepCurrent: null, // rules cannot judge the current tool
     wellKnown: NO_WELL_KNOWN, // rules know only pickfit's data
+    matchQuality: best ? (best.quality === 'good' ? 'good' : 'partial') : 'none',
+    gaps: (best ? best.missing : unmentioned.length ? unmentioned : (fits[0]?.missing ?? [])).slice(0, 5),
+    gapsInAll: unmentioned.length > 0,
+    closest: best ? top[fits.indexOf(best)].slug : undefined,
+    fitsBeyond: !best && ranked.slice(limit).some((entry) => fitFor(entry).quality !== 'weak'),
   };
 }
+
+/** find_alternatives: a profile that names the current tool as what it replaces. */
+const replacing = (current: string): Fit => ({ quality: 'good', covers: [`an alternative to ${current}`], missing: [] });
 
 /** statuses: HTTP status of each request sent to Meta (null where none came back). */
 type Attempt = { cost: number; statuses: (number | null)[] } & (
@@ -309,6 +353,7 @@ async function askModel(
   limit: number,
   deps: Deps,
   now: Date,
+  timeoutMs: number,
 ): Promise<Attempt> {
   const { settings } = deps;
   if (!settings.modelEnabled) return notSent('model_off');
@@ -329,7 +374,7 @@ async function askModel(
   try {
     // A retry fits in the cap checked above: the failed try was not charged.
     const result = await callMeta(settings.apiKey, body, {
-      timeoutMs: settings.timeoutMs,
+      timeoutMs,
       fetch: deps.fetch,
       clock: () => deps.now().getTime(),
       sleep: deps.sleep,
@@ -365,8 +410,13 @@ interface MatchRequest {
   conditions: Conditions & { ui_language?: string; limit?: number };
   /** What the model reads inside <request>. */
   modelRequest: Record<string, unknown>;
-  /** Text the rules fallback ranks profiles against. */
+  /** Text the rules fallback ranks profiles against (the keyword call and the shortlist read it too). */
   rulesText: string;
+  /**
+   * find_alternatives: rulesText in two parts. In the pain points a negation names what the user wants
+   * ("no dark mode"), so the rules and the fit labels keep those words; what must be kept is negated as usual.
+   */
+  painPoints?: { said: string; rest: string };
   /** find_alternatives: the rules rank profiles that name this tool first. */
   currentTool?: string;
   /** Extra parsed conditions to log (never the user's words). */
@@ -378,7 +428,30 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   const now = deps.now();
   const cond = req.conditions;
   const limit = Math.min(Math.max(cond.limit ?? 3, 1), 3);
-  const { candidates, passed } = hardFilter(deps.catalog.entries, cond);
+  const corpus = deps.catalog.entries;
+  // Without Meta's keywords (rules only, the call failed, or no shortlist cut) the rules' scorer chooses and ranks.
+  // The rules' words: a negation is a constraint, except in pain points.
+  const ruleTerms = (...keywords: string[]) =>
+    req.painPoints ? [...new Set([...termsAsSaid(req.painPoints.said), ...rulesTerms(req.painPoints.rest, ...keywords)])] : rulesTerms(req.rulesText, ...keywords);
+  let filtered = hardFilter(corpus, cond, { terms: ruleTerms(), current: req.currentTool, scorer: 'rules' });
+  // Only a shortlist that must cut needs the request in the profiles' words.
+  let expansion: Expansion | null = null;
+  if (filtered.passed > MAX_CARDS) {
+    expansion = await englishKeywords(req.rulesText, deps, now, Math.min(EXPAND_TIMEOUT_MS, deps.settings.timeoutMs));
+    if (expansion.keywords) {
+      // A need's negated words are constraints ("不需要 GPU"). Pain points stay as they are: there "no dark mode"
+      // names what the current tool lacks, so find_alternatives' shortlist is unchanged.
+      const own = req.kind === 'find' ? dropNegated(req.rulesText) : req.rulesText;
+      const terms = queryTerms(own, ...expansion.keywords);
+      filtered = hardFilter(corpus, cond, { terms, current: req.currentTool });
+    }
+  }
+  const { candidates, passed, byRelevance } = filtered;
+  // The rules rank with their own scorer, adding Meta's keywords when there are some.
+  const rulesScores = () =>
+    expansion?.keywords
+      ? rulesRelevance(corpus, candidates, ruleTerms(...expansion.keywords))
+      : filtered.relevance;
   const entries = new Map(candidates.map((entry) => [entry.slug, entry]));
   const cards = new Map(candidates.map((entry) => [entry.slug, toCard(entry, cond.os, cond.arch)]));
 
@@ -391,7 +464,9 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   if (candidates.length === 0) {
     choice = NO_CHOICE;
   } else {
-    const attempt = await askModel({ ...req.modelRequest, limit }, req.kind, cards, limit, deps, now);
+    // META_TIMEOUT_MS bounds every Meta request of this call: the match gets what the keywords left.
+    const timeoutMs = Math.max(0, deps.settings.timeoutMs - (expansion?.latencyMs ?? 0));
+    const attempt = await askModel({ ...req.modelRequest, limit }, req.kind, cards, limit, deps, now, timeoutMs);
     cost = attempt.cost;
     statuses = attempt.statuses;
     if ('answer' in attempt) {
@@ -401,7 +476,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     } else {
       degradedReason = attempt.failure;
       httpStatus = attempt.httpStatus;
-      choice = fromRules(req, candidates, cards, limit);
+      choice = fromRules(req, candidates, rulesScores(), cards, limit, corpus);
       if (attempt.rejected) {
         // Not shown (the whole answer was rejected), but the log still says what the model named.
         const named = guardWellKnown(attempt.rejected, deps.catalog.entries, req.currentTool);
@@ -419,9 +494,26 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     );
   } else if (choice.emptyByModel) {
     notes.push(`None of the ${candidates.length} verified tools that meet the conditions fits this request.`);
+  } else if (choice.matchQuality === 'none') {
+    // Labels only: the picks stay listed; the note says how far they are from the request, not to drop them.
+    const gaps = choice.gaps?.length ? choice.gaps.join(', ') : '';
+    const miss = !gaps ? 'none of them covers enough of the request' : choice.gapsInAll ? `none of them mentions ${gaps}` : `each mentions only part of it (the top one does not mention ${gaps})`;
+    notes.push(
+      choice.fitsBeyond
+        ? `None of the listed ${what}s clearly does this job: judging by their profiles, ${miss}. They are listed as the top-ranked ${what}s; each pick's match says what it covers.`
+        : `pickfit has no verified ${what} that clearly does this job. Judging by their profiles, the listed ${what}s are the closest it has, but ${miss}; each pick's match says what it covers. ` +
+            'pickfit lists only lesser-known tools, so a well-known one may still fit.',
+    );
+  } else if (choice.matchQuality === 'partial') {
+    const gaps = choice.gaps?.length ? `: the closest, ${choice.closest}, does not mention ${choice.gaps.join(', ')}` : '';
+    notes.push(`No listed ${what} covers the whole request${gaps}. Each pick's match says what it covers.`);
   }
   if (passed > MAX_CARDS) {
-    notes.push(`${passed} tools met the conditions; the ${MAX_CARDS} with the highest treasure scores were compared.`);
+    notes.push(
+      byRelevance > 0
+        ? `${passed} tools met the conditions; the ${MAX_CARDS} compared were the ${byRelevance} whose profiles best match the request's words and the ${MAX_CARDS - byRelevance} other tools with the highest treasure scores.`
+        : `${passed} tools met the conditions; no profile matched the request's words, so the ${MAX_CARDS} with the highest treasure scores were compared.`,
+    );
   }
 
   const output: FindOutput = {
@@ -440,6 +532,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
       : null,
     clarifying_question: choice.question,
     coverage_note: notes.length ? notes.join(' ') : null,
+    ...(choice.matchQuality ? { match_quality: choice.matchQuality } : {}),
   };
 
   deps.waitUntil(
@@ -466,6 +559,10 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
           choice.wellKnown.name || choice.wellKnown.dropped
             ? { name: choice.wellKnown.name, dropped: choice.wellKnown.dropped }
             : null,
+        ...(choice.matchQuality ? { match_quality: choice.matchQuality } : {}),
+        // How the cards were chosen when not all could be sent; counts and outcomes only.
+        shortlist:
+          passed > MAX_CARDS ? { by_relevance: byRelevance, keywords: expansion?.outcome ?? null } : null,
         ...req.logged,
       },
       results: output.picks.map((pick) => pick.slug),
@@ -475,7 +572,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
       degraded_reason: degradedReason,
       model_attempts: statuses.length,
       model_statuses: statuses,
-      meta_cost_usd: cost,
+      meta_cost_usd: cost + (expansion?.costUsd ?? 0),
       latency_ms: Date.now() - started,
     }).catch(logFailure(req.kind, output.rec_id)),
   );
@@ -530,6 +627,7 @@ export async function findAlternatives(input: AlternativesInput, deps: Deps): Pr
         ...sharedRequest(input),
       },
       rulesText: [input.pain_points, ...mustKeep].join(' '),
+      painPoints: { said: input.pain_points, rest: mustKeep.join(' ') },
       currentTool: input.current_software,
       logged: { current: { matched_slug: current.matched_slug, known: current.known } },
     },

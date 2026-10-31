@@ -33,7 +33,7 @@ env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p "…" \
 
 | 工具 | 呼叫模型 | 寫 D1 | 重點 |
 |---|---|---|---|
-| `find_software` | `muse-spark-1.3` 一次（超預算或失敗退回規則） | `events`（find） | 見下節 |
+| `find_software` | `muse-spark-1.3` 一次；合格超過 60 款時先多一次小呼叫取英文關鍵字（超預算或失敗退回規則） | `events`（find） | 見下節 |
 | `find_alternatives` | 同上，同一條路徑 | `events`（alternatives） | 多送 `current_software`、`pain_points`、`must_keep`；回 `current`、`keep_current` |
 | `get_install_guide` | 不呼叫 | `events`（install_guide） | 只回實跑過的步驟；沿用或新發 `rec_id` |
 | `report_outcome` | 不呼叫 | `events`（outcome）、`reverify_queue` | 帶有效 `rec_id` 才計分；同一回報只記一次 |
@@ -46,10 +46,33 @@ GUI 桌面 app 的實跑另帶 `verification.gui`（`find_*` 的 pick 與 `get_i
 ### `find_software`、`find_alternatives` 怎麼配對（architecture F.2）
 
 1. **硬條件（程式）**：只留有實跑過安裝步驟的（`install.<os>` 的 basis 是 `replayed` 或 `human`）；類別、`budget: free_only` → `pricing = free`、`must_run_locally` → `processing = local`、不需網路、不需 API key；作業系統要在 `platforms` 或已驗證過。只在別的 OS 驗證過的留下，但卡片與回應都會標明。`verified_on_user_os` 要 OS 相同；請求有給 `arch` 時，跑的 CPU 架構也要相同，所以只在 arm64 Mac 跑過的，對 Intel Mac 是 `false`，並在取捨裡寫明。沒給 `arch` 就只看 OS，回應的 `verification.arch` 和 `get_install_guide` 的 note 會寫出實際跑的架構。`find_alternatives` 另外把使用者目前的工具（依 slug 或名稱比對到目錄裡的那筆）排除。
-2. **候選卡**：全部合格的卡（≤60 張，依 slug 排，不給模型看熱門度順序）。超過 60 張先取寶藏分數前 60（之後換 BM25）。
+2. **候選卡**：全部合格的卡（≤60 張，依 slug 排，不給模型看熱門度順序）。超過 60 張時（dev_cli、local_ai、不分類別幾乎都會）改成**先看相關度**（`src/filter.ts`、`src/relevance.ts`）：
+   - **英文關鍵字**（`src/expand.ts`）：先送一次小的 `muse-spark-1.3`（`store: false`、effort `minimal`、strict schema、最多 600 個輸出 token），把需求變成 6–15 個英文關鍵字：別的語言就是翻譯，英文就是同義詞。實測中位數 1.4 秒、約 $0.0012。最多等 5 秒；失敗、逾時、超預算、模型關掉時，改用下面「規則的相關度」挑卡（什麼字都對不到才是寶藏分數排序）。關鍵字只用來挑卡，模型讀到的仍是使用者原本的需求；不寫進 D1。
+   - **BM25**：需求原本的字加關鍵字，對卡片上的名稱（slug）、tags、summary、`alternatives_to`、use cases、`why_worth_it`、MCP 握手列出的工具名算 BM25（欄位加權：名稱 3、tags 2、summary 與 alternatives 1.5、其他 1；小寫、拆 camelCase／snake_case、去停用字、簡單去字尾）。
+   - **挑 60 張**：（`find_alternatives`）`alternatives_to` 提到目前工具的先放，再放 BM25 最高的，合計最多 50 張；剩下 10 張以上給其餘寶藏分數最高的，好的通用選項不會因為沒對到字就消失。沒有任何字對到就全照寶藏分數。硬條件完全不放寬。
+   - 回應的 `coverage_note` 說明幾張是因相關度、幾張是因寶藏分數；`events.need.shortlist` 記 `by_relevance`（張數）與關鍵字呼叫的結果（`ok`、`model_off`、`model_timeout`…），不記任何字。
+   - **規則的相關度**（`rulesRelevance`，只在沒有關鍵字時用：規則模式、關鍵字呼叫失敗、規則排序）：一樣的 BM25，但（1）通用字（`src/lexicon.ts` 的 `GENERIC_WORDS`，加上 OS 名稱，因為 OS 是硬條件）只算 IDF 的 0.2；（2）分數乘上「卡片對到的需求字權重 ÷ 需求字總權重」，對到越多具體需求的越前面；（3）中文用 `ZH_EN` 小字典（約 260 個常見軟體與功能詞，最長的詞優先）轉成英文，不呼叫任何模型；（4）否定後面的字是限制、不是功能，不算（見下面「否定」）。字典與通用字清單在看任何測試結果前寫好（`f05edf4`）。這次改動時，有關鍵字時送給模型的 60 張卡與順序完全不變（`bench/ai_path_same.ts` 用存下的關鍵字比對整個請求，1268 筆 0 筆不同）；之後的否定修正讓需求原字少了被否定的字，1268 筆中有 42 筆的卡片不同（見下）。
+   - **否定（`dropNegated`，`src/relevance.ts`；規則排序、有關鍵字時 shortlist 用的需求原字、合不合標記共用）**：中文 `不需要`、`不用`、`不要`、`不必`、`不想`、`無需`／`無須`、`沒有`、`免`（`免費`、`有沒有` 不算），英文 `without`、`no`、`no need for`、`don't／doesn't need／require／want`。這些詞後面的字不算想要的字，中英文都一樣（`不需要 GPU` 的 GPU 也不算）。
+     - 範圍是一個項目：英文字，或一個字典裡的中文詞加上後面的英文受詞（`免安裝 Docker`）；前面可以有一兩個字典外的短動詞（`不想裝 Python`）。`和`、`、`、`或`、`or`、`/` 讓否定延續到下一項（`不需要 GPU 和 Docker`）。
+     - 遇到標點、轉折或新的肯定動詞（`但`、`需要`、`要`、`用`、`能`、`but`、`need`、`with`…）、`的`、英文 `and`／`for`／`to`（動名詞後的 `to` 除外）、英文後面接的中文詞、其他字，或滿 4 個字就結束（`不需要 GPU，但需要 CUDA` 只排除 GPU）。
+     - `find_alternatives` 的痛點不套用：痛點裡的 `no dark mode` 是想要 dark mode，所以規則排序、標記與模型路徑的 shortlist 都照原字算；`must_keep` 照常套用否定。
+     - 模型路徑：1268 筆存下的關鍵字請求中 42 筆的 60 張卡不同（都來自真的否定詞）；把其中 20 筆實際送給模型（舊請求兩次、新請求一次），最後選的工具只在第 3 個或順序上變，和模型自己兩次之間的差異差不多（`scripts/replay_match.py`）。`find_alternatives` 的模型請求 0 筆不同。
+   - 量法：`scripts/shortlist_needs.py` 只從 `data/software` 產生檢查集（每筆驗證過的工具，用 Meta 模型把它的 summary 改寫成使用者的英文與中文需求），`bench/shortlist.ts` 算「自己那款有沒有進 60 張」；`bench/keywords.ts`、`bench/latency.ts` 量關鍵字呼叫與整體延遲（要花錢）。
 3. **一次 `muse-spark-1.3`**（Responses API、`store: false`、`reasoning.effort: low`、strict JSON schema；slug 欄位的 enum 就是這次的候選）：解析需求成條件、選 1–3 個、每個理由引用一個卡片欄位與原值、取捨、和知名工具比、最好的免費選項、「內建就夠」、不在資料裡的知名免費工具（`well_known_option`，見下）、最多 1 個追問。模型固定在程式裡，不能換成 `-contributor`（使用者需求是私人資料）。`find_alternatives` 用同一份 prompt，**後面加 4 條規則**（`ALTERNATIVES_RULES`：只選做同一件事、至少解決一個痛點、保留 `must_keep` 的；和目前的工具比較；`keep_current`；解析出的痛點）；`find_software` 的 prompt 與 schema 不變。
 4. **守門（程式）**：slug 必須在候選裡；理由引用的值要真的出現在該欄位；理由不能和卡片矛盾（離線、免費、開源、在某 OS 驗證過、不需 key、不需 GPU）。不合的理由丟掉，沒有理由的推薦丟掉。`well_known_option` 另有自己的檢查（見下）。
-5. **退回規則**：模型關掉、沒有 key、超出預算、逾時、HTTP 錯誤（重試一次後仍失敗，見下面「重試」）、輸出壞掉、或推薦全被守門擋掉 → 依「（`find_alternatives`）卡片的 `alternatives_to` 提到目前的工具 → 需求關鍵字命中 → 在使用者 OS 驗證過 → 寶藏分數」排序，理由用模板（只從欄位產生），標 `matched_by: "rules"`、`degraded: true`、`degraded_reason`。規則模式不判斷 `keep_current`（回 `null`）。
+5. **退回規則**：模型關掉、沒有 key、超出預算、逾時、HTTP 錯誤（重試一次後仍失敗，見下面「重試」）、輸出壞掉、或推薦全被守門擋掉 → 依「（`find_alternatives`）卡片的 `alternatives_to` 提到目前的工具 → 規則的相關度分數（有關鍵字就加上關鍵字）→ 分數相同時：在使用者 OS 驗證過 → 寶藏分數」排序，理由用模板（只從欄位產生），標 `matched_by: "rules"`、`degraded: true`、`degraded_reason`。規則模式不判斷 `keep_current`（回 `null`）。
+   - **合不合（`src/fit.ts`，只在規則模式；只加標記，不改列出的工具）**：把需求裡「具體的字」（去掉通用字、OS 名稱（整個字，`macOS` 不會變成產品 `OS`）、`MCP server` 這類工具種類、口語填充字與介系詞、`without`／`no` 到子句結束的限制、`不用` 之後的限制、`secret-project-xyz` 這類自己取的名字；只留目錄裡有出現過的字或產品名）和每個工具的能力欄位（名稱、summary、use cases、tags、MCP 工具名）比對。每個字算一樣重；一個中文詞的幾個英文同義字算一個字（`記憶體` → memory 或 ram，提到任一個就算）。判斷用的中文另有幾條修正（`ZH_PHRASES`：`編碼助手` 是 coding assistant 不是 encoding；`助手`／`助理` 是工具種類），排序用的 `ZH_EN` 不變。
+     - **good**：需求點名的產品（Notion、GitHub、PostgreSQL 這類大小寫混合或句中大寫的字；PDF、JSON 這種縮寫算一般字；`my Node project` 這種「在哪裡做」的不算點名）全都直接提到，涵蓋**過半**的具體字，而且至少兩個字。需求只有一個具體字時最多 partial，除非那個字是點名的產品、卡片也直接提到它。
+     - **partial**：至少提到一個點名的產品（有點名時），涵蓋至少三分之一的具體字：至少兩個字，或一個字但佔需求的一半以上。
+     - **weak**：其他。需求的具體字目錄裡完全沒出現過，也是 weak。
+     - 卡片只把某產品當成「替代誰」（tag `jira-alternative`、「an alternative to Notion」）時不算直接提到；只有需求說要它的替代品（`alternative to Jira`、`instead of`、`類似`）時才算數。
+     - 回應：**列出的工具、順序、數量、`best_free`、追問都和沒有這個判斷時一樣**（`bench/rules_same.ts` 對 main 逐筆比對）；判斷只加標記。每個 pick 多一個 `match`（`quality`：good／partial／weak、`covers`、`missing`），partial 與 weak 的 `tradeoffs` 寫明「提到了哪些、沒提到哪些」。整體多一個 `match_quality`：列出的 picks 裡最好的那個標記，沒有一個到 partial 就是 none。
+       - none：`coverage_note` 說 pickfit 沒有明確能做這件事的驗證工具，列出的是最接近的，但都沒提到某些字（列出來）；若排名更後面有工具到 partial，只說「列出的工具沒有一個明確做這件事」。
+       - partial：`coverage_note` 說沒有一個列出的工具涵蓋整個需求，並寫出最接近的那個沒提到哪些字。
+       - 文字不誇大 weak／partial，也不叫 agent 丟掉列出的工具：要不要用由 agent 和使用者決定。
+       - `find_alternatives` 裡 `alternatives_to` 寫了目前工具的算 good。`events.need.match_quality` 也記下來。
+     - **模型路徑完全不變**：`match`、`match_quality` 在模型選的回應裡不存在（schema 是 optional；`test/conformance.test.ts` 驗證兩種回應）；`bench/ai_path_same.ts` 用存下的關鍵字跑 1268 筆，模型回答的回應與 main 逐位元相同。
+     - 量法：`scripts/rules_eval.py queries --fit` 產生新題目（Baseten，不看工具），`label` 給每題所有過硬條件的工具打分；`bench/fit_eval.ts` 依標註把題目分成 good／partial／none 三類，從 `findSoftware` 的回應算整體 `match_quality`、每個 pick 的標記分布、各標記有多少站得住，以及排序的 P@5。第二輪的保留題組在 `bench/fit-fresh/`（`queries --used …` 產生、只收新工作、全部保留；題目與標註先 commit，之後才跑判斷）。
 
 `find_alternatives` 的 `current`：`matched_slug` 是目錄裡的那筆（有的話，且不會出現在 picks）；`known` 是「目錄有它，或某張卡的 `alternatives_to` 提到它」。`keep_current.recommended: true` 表示沒有一個候選明顯比較好，這時 picks 可能是空的。
 
@@ -111,8 +134,8 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 其他狀態不重試：`400`、`401`、`403`、路徑不對的 `404` 等。逾時、連線錯誤也不重試。Meta 已經回了答案的也不重試，不論輸出壞掉、`incomplete`，或推薦全被守門擋掉。
 
 - **等待**：200–800 ms 隨機。Meta 給的 `Retry-After`（或 `retry-after-ms`）在 5 秒以內就照它等；要求等更久就不重試，直接退回規則。
-- **時限**：兩次請求加上中間的等待都在 `META_TIMEOUT_MS` 之內。第二次的逾時是剩下的時間；剩不到 10 秒（一次配對約 6–8 秒）就不重試，照原本的方式退回規則。
-- **花費**：HTTP 錯誤沒有 usage，記 $0；只記有回 usage 的那次。整個 `find_*` 仍只寫一筆 `meta_budget`（`calls + 1`）。重試前不再查一次上限，因為失敗的那次沒有花到錢。
+- **時限**：兩次請求加上中間的等待都在 `META_TIMEOUT_MS` 之內；有關鍵字呼叫時，它用掉的時間也算在內，配對只拿剩下的。第二次的逾時是剩下的時間；剩不到 10 秒（一次配對約 6–8 秒）就不重試，照原本的方式退回規則。
+- **花費**：HTTP 錯誤沒有 usage，記 $0；只記有回 usage 的那次。配對呼叫只寫一筆 `meta_budget`（`calls + 1`）；有關鍵字呼叫時它另記一筆，`events.meta_cost_usd` 是兩者的和。重試前不再查一次上限，因為失敗的那次沒有花到錢。
 - **紀錄**：
   - `degraded_reason` 維持 `model_http`。
   - 回應多兩個欄位：`model_attempts`（送給 Meta 幾次；0 表示沒用模型，2 表示重試過）、`model_http_status`（`degraded_reason` 是 `model_http` 時，Meta 最後一次回的狀態碼）。

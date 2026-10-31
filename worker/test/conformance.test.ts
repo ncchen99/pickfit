@@ -132,6 +132,34 @@ test('find_software conforms: picks, a clarifying question, empty, no candidates
   assert.ok(rules.clarifying_question); // no OS given, and the picks run on different ones
 });
 
+test('find_software conforms with the rules fit labels: good, partial, weak and none; the model path has none of it', async () => {
+  const off = server({ MATCH_MODE: 'off' });
+  const schemas = await validators(off);
+  const call = (label: string, need: string) => conforming(off, schemas, label, 'find_software', { need });
+  const good = await call('rules: good match', 'run a language model offline on my laptop');
+  assert.equal(good.match_quality, 'good');
+  assert.equal(good.picks[0].match.quality, 'good');
+  const partial = await call('rules: partial match', 'transcribe audio into a json summary for git');
+  assert.equal(partial.match_quality, 'partial');
+  assert.deepEqual(partial.picks[0].match, { quality: 'partial', covers: ['transcribe', 'audio'], missing: ['json', 'summary', 'git'] });
+  assert.match(partial.picks[0].tradeoffs[0], /mentions transcribe, audio but not json, summary, git/);
+  const none = await call('rules: no good match', 'search my Notion pages');
+  assert.equal(none.match_quality, 'none');
+  assert.deepEqual(none.picks.map((p: any) => p.match.quality), ['weak', 'weak', 'weak']); // still listed
+  assert.match(none.coverage_note, /pickfit has no verified tool that clearly does this job/);
+
+  const s = server({ MODEL_API_KEY: 'k', META_TIMEOUT_MS: '2000' });
+  const modelSchemas = await validators(s);
+  s.answers(() => metaResponse(answer()));
+  const model = await conforming(s, modelSchemas, 'model picks', 'find_software', LLM);
+  assert.ok(!('match_quality' in model));
+  assert.ok(model.picks.every((p: any) => !('match' in p)));
+  s.answers(() => Response.json({ error: { code: 'unavailable' } }, { status: 503 }));
+  const degraded = await conforming(s, modelSchemas, 'degraded: rules decide', 'find_software', LLM);
+  assert.equal(degraded.matched_by, 'rules');
+  assert.ok(degraded.match_quality);
+});
+
 test('find_alternatives conforms: keep_current true, a better pick, and rules', async () => {
   const s = server({ MODEL_API_KEY: 'k', META_TIMEOUT_MS: '2000' });
   const schemas = await validators(s);

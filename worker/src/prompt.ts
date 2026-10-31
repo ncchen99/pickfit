@@ -47,7 +47,7 @@ export function instructions(limit: number, kind: MatchKind = 'find'): string {
 }
 
 /** JSON whose text cannot close the surrounding <request>/<candidates> tags. */
-function safeJson(value: unknown): string {
+export function safeJson(value: unknown): string {
   return JSON.stringify(value).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 }
 
