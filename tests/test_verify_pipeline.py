@@ -131,6 +131,14 @@ def test_an_agent_on_muse_spark_open_keeps_the_judge_on_muse_spark(tmp_path: Pat
     assert judge_model_for("dev") == "dev" and judge_model_for(None) is None
 
 
+def test_watch_and_reverify_stay_on_meta_muse_spark():
+    from pickfit import reverify, watch
+    from pickfit.meta import provider_for, resolve_model
+
+    assert watch.MODEL == reverify.MODEL == "muse-spark-1.3"
+    assert provider_for(resolve_model(watch.MODEL)) == "meta" and judge_model_for(watch.MODEL) == watch.MODEL
+
+
 def test_judge_that_sees_an_error_vetoes_the_pass(tmp_path: Path):
     outcome, _ = verify(tmp_path, FakeServer(*agent_turns(), judge_answer("error_visible")), Boxes({}))
     run = outcome.run
