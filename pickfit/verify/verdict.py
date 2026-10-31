@@ -28,7 +28,7 @@ from dataclasses import asdict, dataclass, field
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from pickfit.schema import COMMAND_MAX, PASSED_LEVELS, is_passed
-from pickfit.verify.mcp import credentials, parse_summary, probe_kind
+from pickfit.verify.mcp import credentials, parse_summary, probe_kind, remote_proxy
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import CommandRecord, FinishArgs
@@ -662,6 +662,10 @@ def mcp_problems(kind: str, stdout: str) -> list[str]:
         return ["no summary line from pickfit's MCP probe in the output"]
     if not summary.get("ok"):
         return [f"the MCP probe did not complete: {str(summary.get('error') or 'not ok')[:120]}"]
+    launch = summary.get("launch")
+    if isinstance(launch, list) and (remote := remote_proxy([str(w) for w in launch])):
+        return [f"the handshake went to the hosted {remote[1][:120]} through {remote[0]}: the box did not start "
+                "the server, so the check does not pass"]
     if kind == "mcp_call" and not summary.get("called"):
         return ["the MCP probe's tool call did not return a result"]
     return []

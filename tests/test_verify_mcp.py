@@ -22,6 +22,7 @@ from pickfit.verify.mcp import (
     launch_argv,
     pitfalls,
     probe_kind,
+    remote_proxy,
 )
 from pickfit.verify.replay import CheckResult, RanCommand, ReplayResult
 from pickfit.verify.result import build_run, install_guide
@@ -146,6 +147,35 @@ def test_a_probe_check_needs_the_probes_own_summary() -> None:
     verdict = log_verdict(claim("function", [1], [{"command_id": 3, "expected_signal": "initialize: ok"}]), broken,
                           mcp=True)
     assert verdict.level == "unverified" and "did not complete" in " ".join(verdict.checks[0].problems)
+
+
+@pytest.mark.parametrize("launch, found", [
+    (["mcp-remote", "https://mcp.opencaselaw.ch/mcp"], ("mcp-remote", "https://mcp.opencaselaw.ch/mcp")),
+    (["npx", "-y", "mcp-remote@0.1.29", "https://h.example/sse"], ("mcp-remote", "https://h.example/sse")),
+    (["supergateway", "--sse", "https://h.example/sse"], ("supergateway", "https://h.example/sse")),
+    (["uvx", "mcp-proxy", "https://h.example/sse"], ("mcp-proxy", "https://h.example/sse")),
+    (["node", "/home/sbx/.local/lib/node_modules/mcp-remote/dist/proxy.js", "https://h.example/mcp"],
+     ("mcp-remote", "https://h.example/mcp")),
+    (["mcp-remote", "http://127.0.0.1:3001/sse"], None),  # a server the box started, bridged to stdio
+    (["supergateway", "--stdio", "notes-mcp --root /tmp"], None),
+    (["agenticschema", "https://en.wikipedia.org/wiki/Backpack"], None),  # not a proxy: the server reads the page
+])
+def test_remote_proxy(launch: list[str], found: tuple[str, str] | None) -> None:
+    assert remote_proxy(launch) == found
+
+
+def test_a_proxy_to_a_hosted_server_does_not_pass() -> None:
+    hosted = summary(launch=["mcp-remote", "https://mcp.example.org/mcp"], called="list_courts")
+    probe = f"{PROBE_COMMAND} --call list_courts --args '{{}}' -- mcp-remote https://mcp.example.org/mcp"
+    log = [rec(1, "npm install -g mcp-remote", 0, "added 1 package"), rec(2, probe, 0, hosted)]
+    verdict = log_verdict(claim("service", [1], [{"command_id": 2, "expected_signal": "tools/call: ok"}]), log,
+                          mcp=True)
+    assert verdict.level == "unverified" and "hosted https://mcp.example.org/mcp through mcp-remote" in \
+        " ".join(verdict.checks[0].problems)
+    local = summary(launch=["mcp-remote", "http://127.0.0.1:3001/sse"], called="list_courts")
+    log = [log[0], rec(2, probe.replace("https://mcp.example.org/mcp", "http://127.0.0.1:3001/sse"), 0, local)]
+    assert log_verdict(claim("service", [1], [{"command_id": 2, "expected_signal": "tools/call: ok"}]), log,
+                       mcp=True).level == "service"
 
 
 def test_placeholder_credentials_never_count() -> None:
