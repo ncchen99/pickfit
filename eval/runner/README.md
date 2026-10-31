@@ -16,6 +16,9 @@ uv run --with pyyaml==6.0.2 python eval/runner/run.py check --round haiku       
 uv run --with pyyaml==6.0.2 python eval/runner/run.py snapshot --label after    # A3（所有輪都跑完之後）
 uv run --with pyyaml==6.0.2 python eval/runner/run.py compare          # A3：前後是否相同
 uv run python eval/runner/d5_check.py                                  # D5
+uv run --with pyyaml==6.0.2 --with anthropic==2.3.0 python eval/runner/grade.py run --batch B.jsonl --grader claude --out G.jsonl   # C4 第二評分者
+uv run --with pyyaml==6.0.2 python eval/runner/grade.py run --batch B.jsonl --grader muse --out G.jsonl                            # 9.2 B 第三評分者
+uv run --with pyyaml==6.0.2 python eval/runner/grade.py agree --batch B.jsonl --human l1-form.csv --grades claude=G1 muse=G2 --out A.json
 ```
 
 測試（不呼叫模型；不在 `tests/` 底下，pickfit 的測試不會收到評測程式）：
@@ -61,6 +64,7 @@ uv run --with pyyaml==6.0.2 --with pytest python -m pytest eval/runner/tests -q
 | G | 第 1 次預算吃緊時，先砍 rules-only（G 的第 6 項），對照組與實驗組照跑。其他砍除項目用 `run.py cut --item haiku|bset --reason ...` 記錄（9.2 F 的順序：VM 紀錄、Haiku、Muse Spark、B 題組），不會默默略過 |
 | 9.2 C Haiku 對照 | `run.py haiku`：要等 `reruns` 完成或停止；對照組與實驗組各跑 20 題一次，順序照 B1（不跑 rules-only），只換模型（`haiku_model`），其餘同第 1 次；B2 無效執行與設定核對同樣適用（核對的模型是 Haiku）；上限 $15，到了就停並記錄停在哪題。結果在 `runs/haiku/` |
 | 9.2 E B 題組 | `run.py bset`：要等 9.1 與 9.2 C 都結束（或 C 被砍，`cut --item haiku`）；`questions-b.yaml` 的 12 題，對照組與實驗組各一次，順序照 B1（`b01` 單號對照組先），其餘同第 1 次；上限 $40；結果在 `runs/bset/`，分開報告。A3 紀錄也記下 `questions-b.yaml` 的雜湊 |
+| C4、9.2 B 評分者 | `grade.py`：同一份評分說明（[../prompts/grader_l1.md](../prompts/grader_l1.md) 兩個標記之間的文字，原字送出）與同一批盲評資料（`blind.py` 產生，看不到組別、次數、模型、pickfit）。Claude 第二評分者：`grader_model`（`claude-opus-5-5`，effort `grader_effort`；這個模型不接受 temperature，固定的是模型 ID 與 effort），花費算進評分的 $20。Muse Spark 第三評分者：Baseten 的 `meta-models/muse-spark-open-1026`、temperature 0，花費算進 Baseten 的 $5。每次呼叫前以最壞情況估算，可能超過上限就停；花費記在 `eval/results/grading-spend.json`。可以中斷續跑。`agree` 只描述：三方兩兩一致率與每一個不一致的項目，以念誠的判定為準。10/31 冒煙測試各一次：Claude $0.0072、Muse $0.0039，都回傳合格的 JSON |
 | D5 | `d5_check.py`：每一則 pickfit 回應的 (a)–(e) 主張逐一對照快照裡的沙盒原始紀錄，寫出每一筆主張與判定；原始紀錄要和清單、A3 紀錄的清單雜湊一致 |
 
 ## 開跑前還要做的
