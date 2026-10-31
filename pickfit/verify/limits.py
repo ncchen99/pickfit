@@ -44,7 +44,6 @@ from pathlib import Path
 from pickfit.ledger import taipei_now
 from pickfit.verify import gui
 from pickfit.verify.box import Box, BoxError, ExecResult
-from pickfit.verify.modal_box import NET_UID
 
 PYPI = "curl -sS -I -m 15 -o /dev/null -w '%{http_code}' https://pypi.org/simple/pip/"
 # su admin in a pseudo-terminal, answering the password prompt with the image's default password.
@@ -98,10 +97,11 @@ PICKFIT_PY"""
 
 
 # The box user tries to leave its network namespace, signal NET_UID's processes (the namespace's holder, and the
-# uplink while online) and add a route; lists NET_UID's processes as "net_uid PID COMM".
+# uplink while online) and add a route; lists NET_UID's processes as "net_uid PID COMM". Inside the namespace
+# NET_UID is uid 0 (the box's real root is unmapped there and shows as 65534).
 NETNS_PROBE = r"""ip route add 1.1.1.1/32 dev lo 2>/dev/null && echo ROUTED
 nsenter --net=/proc/1/ns/net true 2>/dev/null && echo "ENTERED the box's own namespace"
-for p in $(pgrep -u {uid}); do echo "net_uid $p $(cat /proc/$p/comm 2>/dev/null)"
+for p in $(pgrep -u 0); do echo "net_uid $p $(cat /proc/$p/comm 2>/dev/null)"
   kill -0 "$p" 2>/dev/null && echo "SIGNALS $p"
   nsenter --target="$p" --net true 2>/dev/null && echo "ENTERED net of $p"
   nsenter --target="$p" --user --net true 2>/dev/null && echo "ENTERED user and net of $p"; done; true"""
@@ -375,7 +375,7 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
             add(_probe(box, "offline_dns", DNS_PROBE, 40, "names do not resolve with the network off",
                        lambda r: "answered" not in r.stdout and "resolved" not in r.stdout))
         if getattr(box, "runtime", None) == "gvisor":
-            add(_probe(box, "netns_held", NETNS_PROBE.format(uid=NET_UID), 30, "offline, the box user cannot leave "
+            add(_probe(box, "netns_held", NETNS_PROBE, 30, "offline, the box user cannot leave "
                        "its network namespace, signal the uplink's uid or add a route; only the holder runs as it",
                        _netns_held))
         add(_probe(box, "offline_localhost", "curl -sS -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/",
