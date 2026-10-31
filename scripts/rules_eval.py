@@ -2,6 +2,7 @@
 
 Usage:
     uv run python scripts/rules_eval.py queries [--out runs/rules-eval/queries.json]
+    uv run python scripts/rules_eval.py queries --used runs/fit-eval/queries.json ... --out runs/fit-fresh/queries.json
     uv run python scripts/rules_eval.py label --pool runs/rules-eval/pool.json [--out runs/rules-eval/labels.json]
 
 `queries` asks the model for realistic requests written from common user tasks; it never
@@ -57,6 +58,16 @@ FIT_INSTRUCTIONS = QUERY_INSTRUCTIONS.replace(
     "and do not repeat a job.",
 )
 FIT_LANGUAGES = {"en": (36, "in English"), "zh": (24, "in Traditional Chinese as a Taiwanese developer would type them, keeping product and format names in English when that is natural")}
+# The fresh held-out set for the second fit iteration: new jobs only (earlier requests are listed as used), the whole
+# set held out, and a deliberate mix of chores a long-tail catalog may lack, two-part jobs, and specialized jobs.
+FRESH_INSTRUCTIONS = QUERY_INSTRUCTIONS.replace(
+    "Vary length, tone and wording.",
+    "Vary length, tone and wording, and write them the way people really type to an assistant: often casual or terse, "
+    "sometimes with a little context about why, never in marketing words. Mix three kinds, about a third each: very "
+    "ordinary chores people need a small tool for (some of them outside developer tools, local AI and MCP servers "
+    "altogether); requests that ask one tool to do two or three things at once; and more specialized jobs. Do not "
+    "repeat a job, and do not reuse any job from <used>.",
+)
 LANGUAGES = {
     "en": (30, "in English"),
     "zh": (20, "in Traditional Chinese as a Taiwanese developer would type them, keeping product and format names in English when that is natural"),
@@ -109,27 +120,34 @@ def forced_call(instructions: str, text: str, model: type[BaseModel], name: str,
     return parsed, result.cost_usd
 
 
-def make_queries(out: Path, fit: bool = False) -> int:
-    """One call per language; a language already in `out` is kept with its split."""
+def make_queries(out: Path, fit: bool = False, used: list[Path] | None = None) -> int:
+    """One call per language; a language already in `out` is kept with its split.
+
+    With `used` (earlier query files), the requests must be new jobs and all of them are held out."""
     old = json.loads(out.read_text())["queries"] if out.exists() else []
     rows = [q for q in old if not q.get("reported")]
+    earlier = [q["query"] for path in used or [] for q in json.loads(path.read_text())["queries"]]
+    prompt = "Write the requests now."
+    if used:
+        prompt = "<used>\n" + "\n".join(earlier) + "\n</used>\n" + prompt
     cost = 0.0
-    for lang, (count, language) in (FIT_LANGUAGES if fit else LANGUAGES).items():
+    for lang, (count, language) in (FIT_LANGUAGES if fit or used else LANGUAGES).items():
         if any(q["lang"] == lang for q in rows):
             continue
-        instructions = (FIT_INSTRUCTIONS if fit else QUERY_INSTRUCTIONS).format(count=count, language=language, lang=lang)
-        parsed, spent = forced_call(instructions, "Write the requests now.", Queries, "record_queries",
-                                    f"rules-eval:queries:{lang}", "rules-eval-queries")
+        base = FRESH_INSTRUCTIONS if used else FIT_INSTRUCTIONS if fit else QUERY_INSTRUCTIONS
+        parsed, spent = forced_call(base.format(count=count, language=language, lang=lang), prompt, Queries,
+                                    "record_queries", f"rules-eval:queries:{lang}{':fresh' if used else ''}",
+                                    "rules-eval-queries")
         cost += spent
-        mine = [q.model_dump() | {"lang": lang} for q in (parsed.queries if parsed else [])]
+        mine = [q.model_dump() | {"lang": lang} for q in (parsed.queries if parsed else []) if q.query not in earlier]
         random.Random(f"{SEED}:{lang}").shuffle(mine)
-        half = len(mine) // 2
+        half = 0 if used else len(mine) // 2
         rows += [{**q, "split": "dev" if i < half else "heldout"} for i, q in enumerate(mine)]
-    if not fit:
+    if not fit and not used:
         rows += [{**q, "split": "dev", "reported": True} for q in REPORTED]
     ids = {q["query"]: q["id"] for q in old if "id" in q}
-    used = set(ids.values())
-    fresh = (f"q{i:02d}" for i in range(1000) if f"q{i:02d}" not in used)
+    taken = set(ids.values())
+    fresh = (f"q{i:02d}" for i in range(1000) if f"q{i:02d}" not in taken)
     for row in rows:
         row["id"] = ids.get(row["query"]) or next(fresh)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -195,11 +213,12 @@ def main(argv: list[str] | None = None) -> int:
     q = sub.add_parser("queries")
     q.add_argument("--out", type=Path, default=OUT_DIR / "queries.json")
     q.add_argument("--fit", action="store_true", help="the fit-decision set (ordinary chores mixed in)")
+    q.add_argument("--used", type=Path, nargs="+", help="earlier query files: write new jobs only, all held out")
     lab = sub.add_parser("label")
     lab.add_argument("--pool", type=Path, default=OUT_DIR / "pool.json")
     lab.add_argument("--out", type=Path, default=OUT_DIR / "labels.json")
     args = parser.parse_args(argv)
-    return make_queries(args.out, args.fit) if args.cmd == "queries" else label(args.pool, args.out)
+    return make_queries(args.out, args.fit, args.used) if args.cmd == "queries" else label(args.pool, args.out)
 
 
 if __name__ == "__main__":
