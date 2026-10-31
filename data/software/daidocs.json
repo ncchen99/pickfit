@@ -1,0 +1,526 @@
+{
+  "schema_version": "software.v1",
+  "slug": "daidocs",
+  "repo_id": "gh:1368190389",
+  "name": ".dai + .cai",
+  "summary": "Plain-text local memory files for AI covering chat history and code graph.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-memory",
+    "ai-agents",
+    "ai-memory",
+    "chatgpt",
+    "claude",
+    "claude-code",
+    "context-engineering",
+    "cursor",
+    "file-format",
+    "llm"
+  ],
+  "use_cases": [
+    "search .dai memory to answer a question",
+    "save a fact as a memory note"
+  ],
+  "alternatives_to": [
+    "Graphify"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://daidocs.com",
+  "repo": {
+    "url": "https://github.com/Kerneta/daidocs",
+    "full_name": "Kerneta/daidocs",
+    "created_at": "2026-09-13T08:29:01Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node 18+",
+      "Python 3.10+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-daidocs-20261101-002135-c5b6",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g daidocs",
+          "purpose": "install daidocs globally via npm (provides mcp_server.mjs)"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "V5.1.1",
+    "published_at": "2026-10-07T05:35:40Z",
+    "url": "https://github.com/Kerneta/daidocs/releases/tag/V5.1.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:22:56.741493+08:00",
+    "runs": [
+      {
+        "id": "verify-daidocs-20261101-002135-c5b6",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:22:56.741493+08:00",
+        "tool_version": "5.1.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g daidocs",
+            "purpose": "install daidocs globally via npm (provides mcp_server.mjs)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- node /home/sbx/.local/lib/node_modules/daidocs/mcp_server.mjs",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call list_memories --args '{}' -- node /home/sbx/.local/lib/node_modules/daidocs/mcp_server.mjs",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list_memories content=text text_chars=26",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both probes show daidocs-mcp v5.1.1 initializing, listing 6 tools, handshaking ok, and list_memories returning empty store.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-daidocs-20261101-002135-c5b6/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-daidocs-20261101-002135-c5b6/check-1-cmd10.judged.png",
+            "runs/verify/verify-daidocs-20261101-002135-c5b6/check-2-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.073464,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "node",
+            "/home/sbx/.local/lib/node_modules/daidocs/mcp_server.mjs"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "daidocs-mcp",
+          "server_version": "5.1.1",
+          "tools": [
+            "recall_memory",
+            "save_memory",
+            "list_memories",
+            "read_memory",
+            "brief_parent",
+            "declare_project"
+          ],
+          "tool_count": 6,
+          "called_tool": "list_memories",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "node mcp_server.mjs",
+    "client_configs": [],
+    "env_vars": [],
+    "tools": [
+      "save_memory",
+      "recall_memory"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 92.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7444,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 75.1,
+      "signals": {
+        "stars": 54,
+        "monthly_downloads": 276,
+        "forks": 5,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 8,
+        "registries_count": 1
+      },
+      "age_days": 48,
+      "packages": [
+        "npm:daidocs"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 22.91
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "0eee31531d75ffa6e792322ac954819f04d00020f00afef059131670b309c2e9",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Open plain-text memory for AI, covering both your history and your code."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Most people installing this have months of conversations sitting on disk already."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Node 18 or newer."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npx daidocs setup"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ grep -l \"Casa do Rio\" ~/DaiDocs/*.dai\n/home/you/DaiDocs/chat_20260720_e0546121.dai"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "there is no API key and nothing to pay."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "npx daidocs setup --restore"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "licence: Apache-2.0"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Kerneta/daidocs",
+      "fetched_at": "2026-10-31T20:22:04+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Kerneta/daidocs/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:27:13+08:00"
+    },
+    {
+      "id": "release:V5.1.1",
+      "kind": "release",
+      "url": "https://github.com/Kerneta/daidocs/releases/tag/V5.1.1",
+      "fetched_at": "2026-10-31T20:27:13+08:00"
+    },
+    {
+      "id": "hn:50004719",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=50004719",
+      "fetched_at": "2026-10-31T20:22:04+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "the MCP server that connects it to your assistants",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:30+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "npx daidocs setup        # .dai: documents + session history  (Node 18+)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:30+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "MCP: server included",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:30+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Open plain-text memory for AI, covering both your history and your code.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:30+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1>.dai + .cai</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:30+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Node 18 or newer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:30+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/1",
+      "source_id": "readme",
+      "quote": "Python 3.10 or newer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:30+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:22:04+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:22:04+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:22:04+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:22:04+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:22:04+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:V5.1.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:27:13+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "release:V5.1.1",
+      "quote": "/recall <question> searches your .dai memory and answers following the reading protocol.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:30+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "release:V5.1.1",
+      "quote": "/remember <fact> saves a note, writing the extraction itself so it needs no API key.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:30+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "On real repositories it matches or beats Graphify on",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:30+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "there is no API key and nothing to pay.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:30+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "plain-text, local-first layer, with a router that sends each question",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:30+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "The server is a plain stdio MCP server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:30+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "Point them at `node mcp_server.mjs`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "call `save_memory` and `recall_memory` with no adapter to write",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "call `save_memory` and `recall_memory` with no adapter to write",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:30+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:22:04+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}

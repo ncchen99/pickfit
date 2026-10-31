@@ -1,0 +1,480 @@
+{
+  "schema_version": "software.v1",
+  "slug": "zhist",
+  "repo_id": "gh:1331023203",
+  "name": "zhist",
+  "summary": "Records zsh commands with directory, exit status, and duration for fzf search.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "fzf",
+    "golang",
+    "history",
+    "shell",
+    "shell-history",
+    "terminal",
+    "zsh"
+  ],
+  "use_cases": [
+    "toggle between global and current-directory history",
+    "delete selected history entry",
+    "import existing zsh history file"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/overflowy/zhist",
+    "full_name": "overflowy/zhist",
+    "created_at": "2026-08-11T14:34:31Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "fzf"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-zhist-20261101-001803-cc59",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -L -o /tmp/zhist.tar.gz https://github.com/overflowy/zhist/releases/download/v1.2.2/zhist_1.2.2_linux_amd64.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/zhist.tar.gz -C /tmp && cp /tmp/zhist ~/.local/bin/zhist && chmod +x ~/.local/bin/zhist && zhist init > /tmp/zhist_init_out.txt && cat /tmp/zhist_init_out.txt",
+          "purpose": "download linux_amd64 binary from GitHub releases and install to ~/.local/bin/zhist"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "zhist init",
+        "expected_signal": "zmodload zsh/datetime"
+      },
+      "first_task": "zhist init"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.2.2",
+    "published_at": "2026-10-01T10:45:38Z",
+    "url": "https://github.com/overflowy/zhist/releases/tag/v1.2.2"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:19:11.491714+08:00",
+    "runs": [
+      {
+        "id": "verify-zhist-20261101-001803-cc59",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:19:11.491714+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -L -o /tmp/zhist.tar.gz https://github.com/overflowy/zhist/releases/download/v1.2.2/zhist_1.2.2_linux_amd64.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/zhist.tar.gz -C /tmp && cp /tmp/zhist ~/.local/bin/zhist && chmod +x ~/.local/bin/zhist && zhist init > /tmp/zhist_init_out.txt && cat /tmp/zhist_init_out.txt",
+            "purpose": "download linux_amd64 binary from GitHub releases and install to ~/.local/bin/zhist"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "zhist init",
+            "expected_signal": "zmodload zsh/datetime",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "zmodload zsh/datetime",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "printf ': 1700000000:0;echo hello world\\n: 1700000001:0;ls -la /tmp\\n: 1700000002:1;false\\n: 1700000003:0;git status\\n' > /tmp/sample_zsh_history && zhist import /tmp/sample_zsh_history",
+            "expected_signal": "imported 4 entries",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "imported 4 entries",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "zhist list",
+            "expected_signal": "echo hello world",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0-fd221f69eda7 \u001b[2m \u001b[0m \u001b[34m154w ago\u001b[0m echo hello world\u001b[0m",
+            "setup": [
+              {
+                "command": "printf ': 1700000000:0;echo hello world\\n: 1700000001:0;ls -la /tmp\\n: 1700000002:1;false\\n: 1700000003:0;git status\\n' > /tmp/sample_zsh_history && zhist import /tmp/sample_zsh_history",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "zhist search -- \"echo hello\"",
+            "expected_signal": "echo hello world",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "echo hello world",
+            "setup": [
+              {
+                "command": "printf ': 1700000000:0;echo hello world\\n: 1700000001:0;ls -la /tmp\\n: 1700000002:1;false\\n: 1700000003:0;git status\\n' > /tmp/sample_zsh_history && zhist import /tmp/sample_zsh_history",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go install github.com/overflowy/zhist@latest",
+            "actually_needed": "box has no Go toolchain (go: command not found); installed prebuilt binary zhist_1.2.2_linux_amd64.tar.gz from GitHub releases to ~/.local/bin instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "CLI help via --help",
+            "actually_needed": "zhist --help returns 'unknown command'; top-level usage is bare 'zhist' (exit 2) and per-subcommand 'zhist init --help'",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "Requires fzf 0.45 or newer for the picker",
+            "actually_needed": "core CLI (init, add, list, search, get, import) works without fzf; picker not tested in headless box",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "zhist init printed shell integration, import reported 4 entries, and list showed all imported commands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-zhist-20261101-001803-cc59/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-zhist-20261101-001803-cc59/check-1-cmd12.judged.png",
+            "runs/verify/verify-zhist-20261101-001803-cc59/check-2-cmd13.judged.png",
+            "runs/verify/verify-zhist-20261101-001803-cc59/check-3-cmd14.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.100526
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 77.4,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7225,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 59.4,
+      "signals": {
+        "stars": 45,
+        "monthly_downloads": null,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": 94,
+        "hn_top_score": 16,
+        "registries_count": 0
+      },
+      "age_days": 80,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 31.42
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "b4094156da6f0eb2f978bcceb21d81ffdad1ff7ad77d9533e6c750f3948c53de",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A shell history tool for zsh, written in Go. It records every command with its"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "A shell history tool for zsh, written in Go."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requires [fzf](https://github.com/junegunn/fzf) 0.45 or newer for the picker."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install overflowy/tap/zhist"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "eval \"$(zhist init)\""
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "HIST_EXCLUDE=(cd ls clear pwd exit)"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Compatibility notes:"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "## License\n\nMIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/overflowy/zhist",
+      "fetched_at": "2026-10-31T20:19:24+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/overflowy/zhist/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:26:00+08:00"
+    },
+    {
+      "id": "release:v1.2.2",
+      "kind": "release",
+      "url": "https://github.com/overflowy/zhist/releases/tag/v1.2.2",
+      "fetched_at": "2026-10-31T20:26:00+08:00"
+    },
+    {
+      "id": "hn:49729839",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=49729839",
+      "fetched_at": "2026-10-31T20:19:24+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A shell history tool for zsh, written in Go.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "brew install overflowy/tap/zhist",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A shell history tool for zsh, written in Go.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "It records every command with its\nworking directory, exit status, and duration.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# zhist",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Requires [fzf](https://github.com/junegunn/fzf) 0.45 or newer for the picker.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:19:24+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:19:24+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:19:24+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:19:24+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.2.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:26:00+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Toggle global / current-directory history",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Delete the selected entry",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Import a zsh EXTENDED_HISTORY file",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "It replaces the zsh history file\nas the persistent store.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:19:24+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}

@@ -1,0 +1,496 @@
+{
+  "schema_version": "software.v1",
+  "slug": "botsay",
+  "repo_id": "gh:1418385055",
+  "name": "botsay",
+  "summary": "Prints messages in speech balloons with seeded cute robot art.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "display a message with a random robot",
+    "pipe text input to display with a robot",
+    "display a message in a thought balloon"
+  ],
+  "alternatives_to": [
+    "cowsay",
+    "ponysay"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/maebert/botsay",
+    "full_name": "maebert/botsay",
+    "created_at": "2026-10-14T04:56:46Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install maebert/tap/botsay",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "botsay hello"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-botsay-20261101-002142-c7be",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/botsay2.tar.gz https://github.com/maebert/botsay/releases/download/v0.2.2/botsay-v0.2.2-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/botsay2.tar.gz -C /tmp && cp /tmp/botsay-v0.2.2-x86_64-unknown-linux-musl/botsay ~/.local/bin/botsay && chmod +x ~/.local/bin/botsay",
+          "purpose": "download x86_64-musl release tarball and install botsay to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "botsay --version\n",
+        "expected_signal": "botsay 0.2.2"
+      },
+      "first_task": "botsay hello\n"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.2.2",
+    "published_at": "2026-10-14T17:14:29Z",
+    "url": "https://github.com/maebert/botsay/releases/tag/v0.2.2"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:22:37.077252+08:00",
+    "runs": [
+      {
+        "id": "verify-botsay-20261101-002142-c7be",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:22:37.077252+08:00",
+        "tool_version": "0.2.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/botsay2.tar.gz https://github.com/maebert/botsay/releases/download/v0.2.2/botsay-v0.2.2-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/botsay2.tar.gz -C /tmp && cp /tmp/botsay-v0.2.2-x86_64-unknown-linux-musl/botsay ~/.local/bin/botsay && chmod +x ~/.local/bin/botsay",
+            "purpose": "download x86_64-musl release tarball and install botsay to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "botsay --version\n",
+            "expected_signal": "botsay 0.2.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "botsay 0.2.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "botsay --help\n",
+            "expected_signal": "Usage: botsay",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: botsay [OPTIONS] [MESSAGE]...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "botsay hello\n",
+            "expected_signal": "│ hello │",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ hello │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "botsay -s manu hello\n",
+            "expected_signal": "│ hello │",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ hello │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "botsay --gallery 27",
+            "expected_signal": "0 1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0 1 2 3 4 5 6 7 8",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install --git https://github.com/maebert/botsay (requires Rust 1.85+)",
+            "actually_needed": "installed prebuilt binary botsay-v0.2.2-x86_64-unknown-linux-musl.tar.gz from GitHub Releases; no Rust toolchain in box and policy forbids installing one",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Homebrew also installs botthink; with Cargo make symlink manually",
+            "actually_needed": "botthink not provided by binary; create symlink manually still applies",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show botsay printing the hello speech bubble and version 0.2.2 with exit 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-botsay-20261101-002142-c7be/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-botsay-20261101-002142-c7be/check-1-cmd7.judged.png",
+            "runs/verify/verify-botsay-20261101-002142-c7be/check-2-cmd8.judged.png",
+            "runs/verify/verify-botsay-20261101-002142-c7be/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.051564
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:31:58+08:00",
+    "quality": {
+      "total": 86.6,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 21.4,
+      "signals": {
+        "stars": 1,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 31,
+        "hn_top_score": 5,
+        "registries_count": 0
+      },
+      "age_days": 17,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 68.07
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:31:58.488326+08:00",
+      "sources_sha": "df9d1f2558eb578a24beebd0ba29f120e81794e4e969d5354f16c2feeb267bbe",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Like `cowsay`, but with cute little robots."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Or from source, with a [Rust toolchain](https://rustup.rs) (1.85 or newer):"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install maebert/tap/botsay"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ botsay -s 7 \"Hello! I'm a little robot.\"\n╭────────────────────────────╮"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Set `BOTSAY_SEED` in your shell profile to always get the same robot:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "- Message widths are counted in characters, so wide characters like CJK or\n  emoji make the right edge of the balloon uneven."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or\n[MIT license](LICENSE-MIT), at your option."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/maebert/botsay",
+      "fetched_at": "2026-10-31T20:22:55+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/maebert/botsay/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:27:37+08:00"
+    },
+    {
+      "id": "release:v0.2.2",
+      "kind": "release",
+      "url": "https://github.com/maebert/botsay/releases/tag/v0.2.2",
+      "fetched_at": "2026-10-31T20:27:37+08:00"
+    },
+    {
+      "id": "hn:50091196",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=50091196",
+      "fetched_at": "2026-10-31T20:22:55+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "botsay hello                  # a random robot says hello",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:17+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "brew install maebert/tap/botsay",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:17+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "botsay hello                  # a random robot says hello",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:17+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Like `cowsay`, but with cute little robots.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:17+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# botsay",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:17+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "With [Homebrew](https://brew.sh) on macOS or Linux:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:17+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:22:55+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:22:55+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:22:55+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.2.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:27:37+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "botsay hello                  # a random robot says hello",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:17+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "fortune | botsay              # read the message from stdin",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:17+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "botthink \"hmm...\"             # a thought balloon instead",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:17+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Like `cowsay`, but with cute little robots.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:17+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "The style names follow [ponysay](https://github.com/erkin/ponysay)'s:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:17+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install maebert/tap/botsay",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:17+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install --git https://github.com/maebert/botsay",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:17+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:22:55+08:00",
+  "updated_at": "2026-11-01T00:31:58+08:00"
+}

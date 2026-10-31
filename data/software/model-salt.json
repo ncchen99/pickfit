@@ -1,0 +1,515 @@
+{
+  "schema_version": "software.v1",
+  "slug": "model-salt",
+  "repo_id": "gh:1434486765",
+  "name": "Model Salt",
+  "summary": "MCP server that adds outside randomness so one prompt yields varied answers that still follow the request.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-tools",
+    "claude-code",
+    "codex",
+    "creativity",
+    "gemini-cli",
+    "gemini-cli-extension",
+    "kimi",
+    "llm",
+    "mcp",
+    "mcp-server"
+  ],
+  "use_cases": [
+    "Generate an SVG of a pelican riding a bicycle",
+    "Suggest a name for a neighbourhood coffee shop",
+    "Write the first line of a short story about a lighthouse keeper"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://modelsalt.com",
+  "repo": {
+    "url": "https://github.com/modelsalt/model-salt",
+    "full_name": "modelsalt/model-salt",
+    "created_at": "2026-10-26T14:20:37Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node 18 or later"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-model-salt-20261101-002256-3bcd",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @modelsalt/model-salt",
+          "purpose": "npm install -g @modelsalt/model-salt"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "model-salt --help",
+        "expected_signal": "Model Salt 1.0.1"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.0.1",
+    "published_at": "2026-10-27T12:43:51Z",
+    "url": "https://github.com/modelsalt/model-salt/releases/tag/v1.0.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:24:01.337652+08:00",
+    "runs": [
+      {
+        "id": "verify-model-salt-20261101-002256-3bcd",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:24:01.337652+08:00",
+        "tool_version": "1.0.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @modelsalt/model-salt",
+            "purpose": "npm install -g @modelsalt/model-salt"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "model-salt --help",
+            "expected_signal": "Model Salt 1.0.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Model Salt 1.0.1: randomness from outside your model, so one prompt gives different answers. https://modelsalt.com",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- model-salt anthropic",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call model_salt --args '{\"model\": \"test\", \"request\": \"Generate an SVG of a pelican riding a bicycle\"}' -- model-salt anthropic",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=model_salt content=text text_chars=100",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake succeeding, model_salt tool call returning text, and --help printing Model Salt 1.0.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-model-salt-20261101-002256-3bcd/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-model-salt-20261101-002256-3bcd/check-1-cmd9.judged.png",
+            "runs/verify/verify-model-salt-20261101-002256-3bcd/check-2-cmd10.judged.png",
+            "runs/verify/verify-model-salt-20261101-002256-3bcd/check-3-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.040724,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "model-salt",
+            "anthropic"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "model-salt-anthropic",
+          "server_version": "1.0.0",
+          "tools": [
+            "model_salt"
+          ],
+          "tool_count": 1,
+          "called_tool": "model_salt",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "npx -y @modelsalt/model-salt anthropic",
+    "client_configs": [],
+    "env_vars": [],
+    "tools": [
+      "model_salt"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 97.5,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 1.0,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.6,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 35.8,
+      "signals": {
+        "stars": 3,
+        "monthly_downloads": 480,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 1,
+        "hn_top_score": 1,
+        "registries_count": 1
+      },
+      "age_days": 4,
+      "packages": [
+        "npm:@modelsalt/model-salt"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 62.59
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "a9668b4fe0ffa578f03df5e59ca679f2e3e08774c7a4b902d6a4d0739d2b7a44",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "MCP server that gives your model randomness from outside it, so one prompt gives different answers that still do what you asked."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Ask for anything with room for choices: a picture, an SVG, a page, a name, a story, a plan."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**Node 18 or later.** `npx` fetches the package the first time."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "`npx -y @modelsalt/model-salt setup claude`"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "**\"Generate an SVG of a pelican riding a bicycle.\"** Different pictures in 10 runs:"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "The tool takes a setting from 0 to 2. Left out, it is 1."
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "npx -y @modelsalt/model-salt uninstall claude    # or codex, gemini, kimi"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[modelsalt.com](https://modelsalt.com) · works in Claude Code, Codex, Gemini CLI and Kimi Code"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/modelsalt/model-salt",
+      "fetched_at": "2026-10-31T20:24:24+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/modelsalt/model-salt/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:28:10+08:00"
+    },
+    {
+      "id": "release:v1.0.1",
+      "kind": "release",
+      "url": "https://github.com/modelsalt/model-salt/releases/tag/v1.0.1",
+      "fetched_at": "2026-10-31T20:28:10+08:00"
+    },
+    {
+      "id": "hn:50259180",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=50259180",
+      "fetched_at": "2026-10-31T20:24:24+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Model Salt is an MCP server that gives your model randomness from outside it",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:25+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "One command adds it to your client. Run it once.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:25+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Model Salt is an MCP server that gives your model randomness from outside it",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:25+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "MCP server that gives your model randomness from outside it, so one prompt gives different answers that still do what you asked.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:25+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Model Salt",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:25+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Node 18 or later.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:25+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Offline, it uses your computer's own random generator.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:25+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:24:24+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:24:24+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:24:24+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:24:24+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:24:24+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.0.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:28:10+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Generate an SVG of a pelican riding a bicycle.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:25+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Suggest a name for a neighbourhood coffee shop.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:25+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Write the first line of a short story about a lighthouse keeper.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:25+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Model Salt runs on your machine and never sends your prompts anywhere.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:25+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "add a stdio MCP server that runs `npx -y @modelsalt/model-salt anthropic` (Claude, Gemini and Kimi models)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:25+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "add a stdio MCP server that runs `npx -y @modelsalt/model-salt anthropic` (Claude, Gemini and Kimi models)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:25+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "the `model_salt` tool is there.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:25+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:24:24+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}

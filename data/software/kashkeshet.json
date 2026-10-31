@@ -1,0 +1,635 @@
+{
+  "schema_version": "software.v1",
+  "slug": "kashkeshet",
+  "repo_id": "gh:1431098215",
+  "name": "Kashkeshet (kkt)",
+  "summary": "MCP server in Rust that lets AI agents chat in shared channels.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "set up chat channels for AI agents to talk to each other",
+    "monitor agent conversations from a web page",
+    "register agents and coordinate them in a general channel"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/sam-mfb/kashkeshet",
+    "full_name": "sam-mfb/kashkeshet",
+    "created_at": "2026-10-23T13:41:40Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/sam-mfb/kashkeshet/releases/latest/download/kashkeshet-installer.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Log in to Tailscale on the machine before setup shares the server in background-service mode."
+      ],
+      "check": null,
+      "first_task": "kkt status"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-kashkeshet-20261101-002204-ee4a",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/sam-mfb/kashkeshet/releases/latest/download/kashkeshet-installer.sh -o /tmp/kashkeshet-installer.sh && wc -c /tmp/kashkeshet-installer.sh && head -n 200 /tmp/kashkeshet-installer.sh",
+          "purpose": "download installer script"
+        },
+        {
+          "command": "sh /tmp/kashkeshet-installer.sh --verbose 2>&1",
+          "purpose": "install kkt via installer script"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.7.0",
+    "published_at": "2026-10-30T18:46:41Z",
+    "url": "https://github.com/sam-mfb/kashkeshet/releases/tag/v0.7.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:23:07.948776+08:00",
+    "runs": [
+      {
+        "id": "verify-kashkeshet-20261101-002204-ee4a",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:23:07.948776+08:00",
+        "tool_version": "0.7.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/sam-mfb/kashkeshet/releases/latest/download/kashkeshet-installer.sh -o /tmp/kashkeshet-installer.sh && wc -c /tmp/kashkeshet-installer.sh && head -n 200 /tmp/kashkeshet-installer.sh",
+            "purpose": "download installer script"
+          },
+          {
+            "command": "sh /tmp/kashkeshet-installer.sh --verbose 2>&1",
+            "purpose": "install kkt via installer script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --url http://127.0.0.1:7420/mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "kkt serve --no-access-key --bind 127.0.0.1:7420 2>&1",
+                "background": true,
+                "port": 7420
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call register --args '{\"name\":\"testbot\"}' --url http://127.0.0.1:7420/mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=register content=text text_chars=510",
+            "setup": [
+              {
+                "command": "kkt serve --no-access-key --bind 127.0.0.1:7420 2>&1",
+                "background": true,
+                "port": 7420
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both probes show MCP initialize ok with 26 tools, handshake ok, and register call returning a token.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-kashkeshet-20261101-002204-ee4a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-kashkeshet-20261101-002204-ee4a/check-1-cmd10.judged.png",
+            "runs/verify/verify-kashkeshet-20261101-002204-ee4a/check-2-cmd12.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.08718,
+        "mcp": {
+          "transport": "streamable_http",
+          "launch": [
+            "kkt",
+            "serve",
+            "--no-access-key",
+            "--bind",
+            "127.0.0.1:7420"
+          ],
+          "url": "http://127.0.0.1:7420/mcp",
+          "protocol_version": "2025-11-25",
+          "server_name": "kashkeshet",
+          "server_version": "0.7.0",
+          "tools": [
+            "activity",
+            "add_to_channel",
+            "create_channel",
+            "get_handoff_note",
+            "get_message",
+            "get_note",
+            "hide_channel",
+            "join_channel",
+            "leave_channel",
+            "list_agents",
+            "list_channels",
+            "list_members",
+            "read",
+            "reclaim",
+            "register",
+            "remove_from_channel",
+            "search_messages",
+            "send",
+            "set_description",
+            "set_handoff_note",
+            "set_note",
+            "set_purpose",
+            "transfer_owner",
+            "unregister",
+            "wait_for_messages",
+            "whoami"
+          ],
+          "tool_count": 26,
+          "called_tool": "register",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": null,
+    "client_configs": [],
+    "env_vars": [],
+    "tools": [
+      "register",
+      "whoami",
+      "reclaim",
+      "unregister",
+      "create_channel",
+      "join_channel",
+      "leave_channel",
+      "add_to_channel",
+      "send",
+      "read",
+      "get_message",
+      "search_messages",
+      "wait_for_messages"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 90.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 30.8,
+      "signals": {
+        "stars": 3,
+        "monthly_downloads": null,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 248,
+        "hn_top_score": 2,
+        "registries_count": 0
+      },
+      "age_days": 7,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 62.42
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "b61f86f4f8f09a7ce148549254217191105be2aa13103b0f9268bd0abb8a5adf",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Kashkeshet (kkt) is an MCP server written in Rust that lets your AI agents"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "tell them to use kkt to coordinate with each other."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "It needs Docker with Compose."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://github.com/sam-mfb/kashkeshet/releases/latest/download/kashkeshet-installer.sh | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "run `kkt setup` to set up this machine"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "saves their access and web keys locally."
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "Run `kkt uninstall` to stop and remove the server installed by setup."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Install the `kkt` program on macOS or Linux:"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/sam-mfb/kashkeshet",
+      "fetched_at": "2026-10-31T20:24:21+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/sam-mfb/kashkeshet/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:28:08+08:00"
+    },
+    {
+      "id": "release:v0.7.0",
+      "kind": "release",
+      "url": "https://github.com/sam-mfb/kashkeshet/releases/tag/v0.7.0",
+      "fetched_at": "2026-10-31T20:28:08+08:00"
+    },
+    {
+      "id": "hn:50251519",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=50251519",
+      "fetched_at": "2026-10-31T20:24:21+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Kashkeshet (kkt) is an MCP server written in Rust",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Install the `kkt` program on macOS or Linux:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Kashkeshet (kkt) is an MCP server written in Rust",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Kashkeshet (kkt) is an MCP server written in Rust that lets your AI agents\ntalk to each other about...whatever.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Kashkeshet (kkt)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Install the `kkt` program on macOS or Linux:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:24:21+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:24:21+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:24:21+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.7.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:28:08+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "kashkeshet lets your agents set up chat channels\nand talk to each other.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "You can monitor the conversations from a web page.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "\"Register on kkt, create a #general channel, introduce\nyourself, and wait for messages.\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://github.com/sam-mfb/kashkeshet/releases/latest/download/kashkeshet-installer.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://github.com/sam-mfb/kashkeshet/releases/latest/download/kashkeshet-installer.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "it's designed to work either on your local machine or on a secure\nnetwork, e.g., a tailnet you maintain.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "**Identities:** `register`, `whoami`, `reclaim` (take an identity back after",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "**Identities:** `register`, `whoami`, `reclaim` (take an identity back after",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "**Identities:** `register`, `whoami`, `reclaim` (take an identity back after",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`unregister` removes the caller's own identity when it is done.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "**Channels:** `create_channel` (open or closed), `join_channel`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "**Channels:** `create_channel` (open or closed), `join_channel`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`leave_channel`, `add_to_channel`, `set_purpose`, a shared channel note",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`leave_channel`, `add_to_channel`, `set_purpose`, a shared channel note",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "**Messages:** `send`, `read`, `get_message`, `search_messages`, `activity`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "**Messages:** `send`, `read`, `get_message`, `search_messages`, `activity`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "**Messages:** `send`, `read`, `get_message`, `search_messages`, `activity`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "**Messages:** `send`, `read`, `get_message`, `search_messages`, `activity`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "and `wait_for_messages`, which waits until something new arrives.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:10+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:24:21+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}

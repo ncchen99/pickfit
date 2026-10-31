@@ -14,6 +14,9 @@ Writing again keeps what verification and scoring added to an existing record
 first_seen_at, and its features when the extraction lists none (they came from
 a features-only extraction).
 
+A candidate found through Show HN also lists each post as a source of kind `hn`:
+where pickfit found the tool, not evidence for any field.
+
 Only tools for end users are written (TOOL_KINDS, not import_only), by default
 only in the listed categories (dev_cli, local_ai, mcp_server). An MCP server also
 gets `mcp`: transports, launch command, client config snippets, environment
@@ -271,8 +274,12 @@ def _summary(text: str) -> str:
 
 
 def build_record(candidate: dict[str, Any], extraction: dict[str, Any], *, slug: str,
-                 now: datetime, existing: dict[str, Any] | None = None) -> SoftwareRecord:
-    """One record from a candidate row and its extraction row. Raises ValueError to skip."""
+                 now: datetime, existing: dict[str, Any] | None = None,
+                 found_in: list[dict[str, Any]] | None = None) -> SoftwareRecord:
+    """One record from a candidate row and its extraction row. Raises ValueError to skip.
+
+    found_in: the candidate's Show HN posts (channel_hits rows), listed as `hn` sources.
+    """
     result = ExtractionResult.model_validate(extraction["result"])
     repo = candidate["repo"]
     full_name = repo.get("full_name") or candidate["full_name"]
@@ -410,6 +417,12 @@ def build_record(candidate: dict[str, Any], extraction: dict[str, Any], *, slug:
         _keep_verified_work(data, existing)
         # A newer snapshot can change what the cap depends on (archived): refresh, no model call.
         refresh_scores(data, now)
+    listed = {s["id"] for s in data["sources"]}
+    for hit in found_in or []:  # last, so the index's first few source URLs stay the project's own
+        if f"hn:{hit['item_id']}" not in listed:
+            data["sources"].append({"id": f"hn:{hit['item_id']}", "kind": "hn", "url": hit["item_url"],
+                                    "fetched_at": hit["last_seen_at"]})
+            listed.add(f"hn:{hit['item_id']}")
     return SoftwareRecord.model_validate(data)
 
 
@@ -525,6 +538,10 @@ def write_profiles(db: PipelineDB, *, model: str, out_dir: Path = DEFAULT_OUT,
     taken = {data["slug"]: repo_id for repo_id, data in existing.items()}
     summary = WriteSummary()
     extractions = latest_extractions(db, model)
+    found_in: dict[str, list[dict[str, Any]]] = {}
+    for hit in db.channel_hits("show_hn"):
+        if hit["outcome"] == "candidate":
+            found_in.setdefault(hit["repo_id"], []).append(hit)
     candidates = sorted((db.candidate(repo_id) for repo_id in extractions),
                         key=lambda c: (c["first_seen_at"], c["repo_id"]))
     for c in candidates:
@@ -533,7 +550,8 @@ def write_profiles(db: PipelineDB, *, model: str, out_dir: Path = DEFAULT_OUT,
         if not old and (not slug or taken.get(slug, c["repo_id"]) != c["repo_id"]):
             slug = slugify(c["full_name"].replace("/", "-"))
         try:
-            record = build_record(c, extractions[c["repo_id"]], slug=slug, now=now, existing=old)
+            record = build_record(c, extractions[c["repo_id"]], slug=slug, now=now, existing=old,
+                                  found_in=found_in.get(c["repo_id"]))
         except (ValueError, ValidationError) as err:
             reason = str(err).splitlines()[0][:200]
             summary.skipped[c["full_name"]] = reason

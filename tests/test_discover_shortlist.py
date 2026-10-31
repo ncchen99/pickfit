@@ -89,6 +89,12 @@ def test_shortlist_skips_extracted_and_known_repos(tmp_path: Path) -> None:
     assert [r.full_name for r in shortlist(db, category="local_ai", skip_repo_ids={"gh:4"})] == ["a/cli"]
     assert shortlist(db, category="local_ai", screened_as="local_ai") == []  # gh:1 screened dev_cli; gh:4 unscreened
     assert [r.full_name for r in shortlist(db, category="local_ai", screened_as="dev_cli")] == ["a/cli"]
+    # Only what a channel found: gh:2 was also found by a Show HN post.
+    db.upsert_repo(normalize_repo(repo_item(2, "a/app")), category="local_ai", query_id="show_hn:local_ai")
+    assert [r.full_name for r in shortlist(db, category="local_ai", channel="show_hn")] == []  # gh:2 screened out
+    assert [r.full_name for r in shortlist(db, category="local_ai", channel=None, skip_repo_ids={"gh:4"})] == ["a/cli"]
+    db.upsert_repo(normalize_repo(repo_item(1, "a/cli")), category="local_ai", query_id="show_hn:local_ai")
+    assert [r.full_name for r in shortlist(db, category="local_ai", channel="show_hn")] == ["a/cli"]
 
 
 def test_description_about_local_models_counts_for_and_coding_agents_against() -> None:

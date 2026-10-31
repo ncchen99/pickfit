@@ -151,11 +151,13 @@ def _screened_category(decision: dict[str, Any]) -> str | None:
 
 
 def shortlist(db: PipelineDB, *, category: str, model: str = "muse-spark-1.3",
-              skip_repo_ids: set[str] | None = None, screened_as: str | None = None) -> list[Ranked]:
+              skip_repo_ids: set[str] | None = None, screened_as: str | None = None,
+              channel: str | None = None) -> list[Ranked]:
     """Rule-passed candidates of `category` with no finished extraction by `model`, best first.
 
     screened_as: only candidates the prescreen put in that category (a CLI tool found by an MCP
     query, say, is left to its own category's queue).
+    channel: only candidates a query of that channel found (`show_hn`).
     """
     skip = set(skip_repo_ids or ())
     done = {e["repo_id"] for e in db.extractions() if e["model"] == model and e["status"] in DONE}
@@ -168,6 +170,8 @@ def shortlist(db: PipelineDB, *, category: str, model: str = "muse-spark-1.3",
     for c in db.candidates("WHERE rule_passed = 1 AND category = ?", (category,)):
         if c["repo_id"] in done or c["repo_id"] in skip or c["repo_id"] in dropped \
                 or not (c.get("readme") or "").strip():
+            continue
+        if channel and not any(q.startswith(f"{channel}:") for q in c["queries"]):
             continue
         score, signals = box_fit(c)
         ranked.append(Ranked(c["repo_id"], c["full_name"], score, signals, c["repo"].get("pushed_at") or ""))
@@ -198,10 +202,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--ids-only", action="store_true", help="print only the repo ids")
     parser.add_argument("--screened-as", choices=["dev_cli", "local_ai", "mcp_server", "other"], default=None,
                         help="only candidates the prescreen put in this category")
+    parser.add_argument("--channel", choices=["show_hn"], default=None,
+                        help="only candidates this discovery channel found")
     args = parser.parse_args(argv)
     db = PipelineDB(args.db or pipeline_db_path())
     ranked = shortlist(db, category=args.category, skip_repo_ids=record_repo_ids(DEFAULT_OUT),
-                       screened_as=args.screened_as)
+                       screened_as=args.screened_as, channel=args.channel)
     if args.min_score is not None:
         ranked = [r for r in ranked if r.score >= args.min_score]
     for r in ranked[:args.limit]:

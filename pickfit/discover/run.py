@@ -1,4 +1,4 @@
-"""`pickfit discover`: search GitHub, store candidates, fetch details, apply rules."""
+"""`pickfit discover`: find candidates (GitHub search or Show HN), store them, fetch details, apply rules."""
 
 from __future__ import annotations
 
@@ -13,10 +13,12 @@ from typing import Any
 from pickfit.discover.github import (PUSHED_DAYS, RATE_LIMIT_MAX_WAIT_S, GitHub, GitHubError, build_queries,
                                      normalize_repo, runs_dir)
 from pickfit.discover.rules import RULES_VERSION, classify
+from pickfit.discover.showhn import DEFAULT_DAYS, HN, search_show_hn
 from pickfit.discover.store import PipelineDB
 from pickfit.env import get_env
 from pickfit.ledger import taipei_now
 
+CHANNELS = ("github", "show_hn")
 DEFAULT_PER_QUERY = 100
 DETAIL_WORKERS = 4  # REST calls in flight; GitHub asks clients not to hammer it concurrently
 
@@ -79,21 +81,35 @@ def apply_rules(db: PipelineDB) -> Counter[str]:
     return labels
 
 
-def run_discover(*, token: str, db_path: Path | None = None, per_query: int = DEFAULT_PER_QUERY,
-                 pushed_days: int = PUSHED_DAYS, categories: list[str] | None = None, skip_details: bool = False,
-                 today: date | None = None, gh: GitHub | None = None,
-                 max_rate_wait_s: float = RATE_LIMIT_MAX_WAIT_S,
+def run_discover(*, token: str, db_path: Path | None = None, channel: str = "github",
+                 per_query: int = DEFAULT_PER_QUERY, pushed_days: int = PUSHED_DAYS, days: int = DEFAULT_DAYS,
+                 categories: list[str] | None = None, skip_details: bool = False,
+                 today: date | None = None, now: datetime | None = None, gh: GitHub | None = None,
+                 hn: HN | None = None, max_rate_wait_s: float = RATE_LIMIT_MAX_WAIT_S,
                  log: Callable[[str], None] | None = None) -> dict[str, Any]:
-    """Run the free part of the funnel and return the funnel counts."""
+    """Run the free part of the funnel and return the funnel counts.
+
+    channel "github" runs the topic searches; "show_hn" reads the last `days` of Show HN
+    posts (pickfit.discover.showhn) and adds `show_hn` to the funnel.
+    """
+    if channel not in CHANNELS:
+        raise ValueError(f"unknown channel {channel!r}; expected one of {CHANNELS}")
     log = log or (lambda line: print(line, file=sys.stderr))
     db = PipelineDB(db_path or pipeline_db_path())
     own_client = gh is None
     gh = gh or GitHub(token, rate_limit_max_wait_s=max_rate_wait_s)
-    run_id = "discover-" + taipei_now().strftime("%Y%m%d-%H%M%S")
+    own_hn = hn is None and channel == "show_hn"
+    run_id = f"discover-{'' if channel == 'github' else channel + '-'}" + taipei_now().strftime("%Y%m%d-%H%M%S")
+    show_hn = None
     try:
-        # GitHub reads created:/pushed: dates in UTC.
-        search(gh, db, today=today or datetime.now(UTC).date(), per_query=per_query,
-               pushed_days=pushed_days, categories=categories, run_id=run_id, log=log)
+        if channel == "show_hn":
+            hn = hn or HN()
+            show_hn = search_show_hn(gh, db, hn, now=now or datetime.now(UTC), days=days,
+                                     categories=categories, run_id=run_id, log=log)
+        else:
+            # GitHub reads created:/pushed: dates in UTC.
+            search(gh, db, today=today or datetime.now(UTC).date(), per_query=per_query,
+                   pushed_days=pushed_days, categories=categories, run_id=run_id, log=log)
         if not skip_details:
             fetch_details(gh, db, workers=DETAIL_WORKERS, log=log)
         labels = apply_rules(db)
@@ -102,4 +118,11 @@ def run_discover(*, token: str, db_path: Path | None = None, per_query: int = DE
         log(f"github requests: {dict(gh.requests)}")
         if own_client:
             gh.close()
-    return db.funnel(prescreen_status())
+        if hn is not None:
+            log(f"hn requests: {dict(hn.requests)}")
+            if own_hn:
+                hn.close()
+    funnel = db.funnel(prescreen_status())
+    if show_hn is not None:
+        funnel["show_hn"] = {"run_id": run_id, "days": days, **show_hn.to_dict()}
+    return funnel

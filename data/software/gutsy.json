@@ -1,0 +1,452 @@
+{
+  "schema_version": "software.v1",
+  "slug": "gutsy",
+  "repo_id": "gh:1400272965",
+  "name": "gutsy",
+  "summary": "Local CPU decision model that returns calibrated probabilities for yes/no, choice, or score questions.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agents",
+    "classifier",
+    "content-moderation",
+    "cpu-inference",
+    "decision-model",
+    "gguf",
+    "intent-classification",
+    "jev",
+    "jev-compatible",
+    "llama-cpp"
+  ],
+  "use_cases": [
+    "Triage a support ticket for team, refund and mood",
+    "Ask yes/no questions of feedback rows",
+    "Pick the cheapest model per message",
+    "Score each claim against a source",
+    "Detect live triggers on a sales call"
+  ],
+  "alternatives_to": [
+    "Laya",
+    "Jev"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/kouhxp/gutsy",
+    "full_name": "kouhxp/gutsy",
+    "created_at": "2026-10-01T15:42:10Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": null,
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "needs_root",
+    "checked_at": "2026-11-01T00:30:09.901100+08:00",
+    "runs": [
+      {
+        "id": "verify-gutsy-20261101-002901-e3a6",
+        "level": "unverified",
+        "unverified_reason": "needs_root",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:30:09.901100+08:00",
+        "tool_version": "0.4.0",
+        "install_method": "uv",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "uv tool install huggingface_hub 2>&1",
+            "purpose": "install huggingface_hub via uv tool (isolated)"
+          },
+          {
+            "command": "pwd; ls -la\ngit clone https://github.com/kouhxp/gutsy ./gutsy 2>&1 | tail -5\nls -la gutsy/gutsy-inference/",
+            "purpose": "git clone gutsy into work dir"
+          },
+          {
+            "command": "pip install --no-deps -e gutsy/gutsy-inference --break-system-packages 2>&1 | tail -20\n~/.local/bin/gutsy-inference --help 2>&1; gutsy-inference --help 2>&1; python3 -m gutsy_inference --help 2>&1 | head -n 40\nhf --help 2>&1 | head -n 20",
+            "purpose": "pip install -e gutsy/gutsy-inference --no-deps (avoid llama-cpp build)"
+          },
+          {
+            "command": "pip install numpy --break-system-packages 2>&1 | tail -5\ngutsy-inference --help 2>&1 | head -n 80",
+            "purpose": "pip install numpy dependency"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "hf --version 2>&1; huggingface-cli --version 2>&1; gutsy-inference check --help 2>&1 | head -n 20",
+            "expected_signal": "2.4.0",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "2.4.0",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "pip install numpy --break-system-packages 2>&1 | tail -5\ngutsy-inference --help 2>&1 | head -n 80",
+            "expected_signal": "usage: gutsy-inference",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "usage: gutsy-inference [-h] {serve,decide,bench,check} ...",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install -e gutsy/gutsy-inference pulls llama-cpp-python >=0.3.35",
+            "actually_needed": "PyPI only hosts sdist tar.gz for llama-cpp-python 0.3.35/0.3.36 (no wheels), so pip tries to build from source and fails with CMake Error: Could not find compiler CC: gcc. No gcc/clang available in box, needs apt install build-essential",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "pip install -e gutsy/gutsy-inference then gutsy-inference check",
+            "actually_needed": "Install required --break-system-packages on this Debian PEP 668 system and --no-deps plus separate numpy install to get CLI help without building llama-cpp-python",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-gutsy-20261101-002901-e3a6/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.076897
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 45.6,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.45,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 67.2,
+      "signals": {
+        "stars": 81,
+        "monthly_downloads": null,
+        "forks": 4,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 9,
+        "registries_count": 0
+      },
+      "age_days": 29,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 14.96
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "cad0dd78d1010eb94fc64735d097a38d14bdb3b6ded82c175c27ef72fe29b7ae",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Local decision model with calibrated probabilities: send a state and yes/no, choice or score questions, get a probability for every option."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "llama.cpp on an ordinary CPU"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "git clone https://github.com/kouhxp/gutsy"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "gutsy-inference check                   # expect \"caching OK\" for both models"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "cp models.example.json models.json"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "| License | Apache 2.0 |"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/kouhxp/gutsy",
+      "fetched_at": "2026-10-31T20:21:04+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/kouhxp/gutsy/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:26:47+08:00"
+    },
+    {
+      "id": "hn:49923223",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=49923223",
+      "fetched_at": "2026-10-31T20:21:04+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "gutsy-inference serve                   # http://127.0.0.1:8765",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:36+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "gutsy-inference serve                   # http://127.0.0.1:8765",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:36+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Runs on CPU; your data never leaves the machine.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:36+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Local decision model with calibrated probabilities: send a state and yes/no, choice or score questions, get a probability for every option.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:36+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "alt=\"gutsy\" width=\"280\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:36+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "No text generation, no\nnetwork calls, no per-call cost.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:36+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:21:04+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:21:04+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:21:04+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:21:04+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Team, refund and mood for one ticket",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:36+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Ask any yes/no question of 30 rows",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:36+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Pick the cheapest model per message",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:36+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Score each claim against a source",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:36+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Live triggers on a sales call",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:36+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "**gutsy vs Laya vs Jev**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:36+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "**gutsy vs Laya vs Jev**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:36+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Runs on CPU; your data never leaves the machine.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:36+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:21:04+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}
