@@ -82,20 +82,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-fuigo-20261031-000907-a94c",
+      "run_id": "verify-fuigo-20261101-001144-40f3",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g fuigo",
-          "purpose": "install fuigo via npm global"
+          "purpose": "install fuigo via npm"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "which fuigo && fuigo --version",
-        "expected_signal": "fuigo 1.0.36"
+        "command": "fuigo --version",
+        "expected_signal": "fuigo 1.0.37"
       },
-      "first_task": "fuigo doctor"
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -127,10 +127,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:10:10.370346+08:00",
+    "checked_at": "2026-11-01T00:12:22.479410+08:00",
     "runs": [
       {
-        "id": "verify-fuigo-20261031-000907-a94c",
+        "id": "verify-fuigo-20261101-001144-40f3",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -138,69 +138,70 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:10:10.370346+08:00",
-        "tool_version": "1.0.36 (50de9813c81c)",
+        "checked_at": "2026-11-01T00:12:22.479410+08:00",
+        "tool_version": "1.0.37",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g fuigo",
-            "purpose": "install fuigo via npm global"
+            "purpose": "install fuigo via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "which fuigo && fuigo --version",
-            "expected_signal": "fuigo 1.0.36",
+            "command": "fuigo --version",
+            "expected_signal": "fuigo 1.0.37",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "fuigo 1.0.36 (50de9813c81c)",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "fuigo --help",
-            "expected_signal": "Commands:",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Commands:",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "fuigo doctor",
-            "expected_signal": "Fuigo Doctor",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Fuigo Doctor",
+            "observed_excerpt": "fuigo 1.0.37 (58f976406ab7)",
             "setup": [],
             "offline": true
           }
         ],
-        "pitfalls": [
-          {
-            "readme_said": "fuigo login --provider chatgpt; fuigo; fuigo -p \"Summarise this repo\"",
-            "actually_needed": "An API key or subscription (OPENAI_API_KEY, ANTHROPIC_API_KEY, FUIGO_API_KEY, or `fuigo login --provider chatgpt/xai`) is required before the README examples `fuigo` (interactive TUI) and `fuigo -p \"Summarise this repo\"` can run; they were not run here and cannot replay with network off.",
-            "kind": "note"
-          }
-        ],
+        "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show expected output: doctor report headed Fuigo Doctor and version fuigo 1.0.36.",
+          "observed": "Screenshot shows fuigo --version printing fuigo 1.0.37 (58f976406ab7) with exit code 0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-fuigo-20261031-000907-a94c/report.json",
+          "trace_path": "runs/verify/verify-fuigo-20261101-001144-40f3/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-fuigo-20261031-000907-a94c/check-1-cmd4.judged.png",
-            "runs/verify/verify-fuigo-20261031-000907-a94c/check-2-cmd2.judged.png"
+            "runs/verify/verify-fuigo-20261101-001144-40f3/check-1-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.0331
+        "cost_usd": 0.029768,
+        "features": [
+          {
+            "feature": "read code, edit code and run tests",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs API key or login; headless prompt exits 1 'Not signed in'"
+          },
+          {
+            "feature": "use any model with one workflow",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs OPENAI/ANTHROPIC/FUIGO key or subscription login"
+          },
+          {
+            "feature": "run parallel subagents with own context",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "subagents run inside authenticated session, needs login"
+          }
+        ]
       }
     ]
   },
@@ -588,5 +589,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:54+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T00:12:22.480892+08:00"
 }

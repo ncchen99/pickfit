@@ -74,22 +74,22 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-rigspark-20261031-005223-74b4",
+      "run_id": "verify-rigspark-20261101-001144-c675",
       "method": "binary",
       "steps": [
         {
-          "command": "mkdir -p ~/.local/bin /tmp/rigspark-dl && curl -fL -o /tmp/rigspark-dl/rigspark.tar.gz https://github.com/shashankswe2020-ux/rigspark/releases/download/v3.0.3/rigspark-x86_64-unknown-linux-gnu.tar.gz && du -h /tmp/rigspark-dl/rigspark.tar.gz",
-          "purpose": "Download prebuilt Linux x86_64 archive"
+          "command": "mkdir -p /tmp/rigspark-dl && curl -fL -o /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu.tar.gz https://github.com/shashankswe2020-ux/rigspark/releases/download/v3.0.6/rigspark-x86_64-unknown-linux-gnu.tar.gz && echo \"d139e9f656e26af006332201810ed0c8b8f21b54c5987c4bc12f24d453d4efae  /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu.tar.gz\" | sha256sum -c && tar tzf /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu.tar.gz",
+          "purpose": "Download prebuilt archive and verify checksum"
         },
         {
-          "command": "tar -xzf /tmp/rigspark-dl/rigspark.tar.gz -C /tmp/rigspark-dl && cp /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/rigspark /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/llmup /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/rigspark-gui ~/.local/bin/ && chmod +x ~/.local/bin/rigspark ~/.local/bin/llmup ~/.local/bin/rigspark-gui && ls ~/.local/bin/rigspark",
-          "purpose": "Extract and install binaries to ~/.local/bin"
+          "command": "tar xzf /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu.tar.gz -C /tmp/rigspark-dl && cp /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/rigspark /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/llmup /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/rigspark-gui ~/.local/bin/ && chmod +x ~/.local/bin/rigspark ~/.local/bin/llmup ~/.local/bin/rigspark-gui && rigspark --version",
+          "purpose": "Extract archive and install binaries to PATH"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "rigspark --version",
-        "expected_signal": "rigspark 3.0.3"
+        "expected_signal": "rigspark 3.0.6"
       },
       "first_task": "rigspark recommend"
     },
@@ -123,10 +123,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:53:17.350654+08:00",
+    "checked_at": "2026-11-01T00:12:58.162551+08:00",
     "runs": [
       {
-        "id": "verify-rigspark-20261031-005223-74b4",
+        "id": "verify-rigspark-20261101-001144-c675",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -134,33 +134,33 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:53:17.350654+08:00",
-        "tool_version": "3.0.3",
+        "checked_at": "2026-11-01T00:12:58.162551+08:00",
+        "tool_version": "3.0.6",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "mkdir -p ~/.local/bin /tmp/rigspark-dl && curl -fL -o /tmp/rigspark-dl/rigspark.tar.gz https://github.com/shashankswe2020-ux/rigspark/releases/download/v3.0.3/rigspark-x86_64-unknown-linux-gnu.tar.gz && du -h /tmp/rigspark-dl/rigspark.tar.gz",
-            "purpose": "Download prebuilt Linux x86_64 archive"
+            "command": "mkdir -p /tmp/rigspark-dl && curl -fL -o /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu.tar.gz https://github.com/shashankswe2020-ux/rigspark/releases/download/v3.0.6/rigspark-x86_64-unknown-linux-gnu.tar.gz && echo \"d139e9f656e26af006332201810ed0c8b8f21b54c5987c4bc12f24d453d4efae  /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu.tar.gz\" | sha256sum -c && tar tzf /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu.tar.gz",
+            "purpose": "Download prebuilt archive and verify checksum"
           },
           {
-            "command": "tar -xzf /tmp/rigspark-dl/rigspark.tar.gz -C /tmp/rigspark-dl && cp /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/rigspark /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/llmup /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/rigspark-gui ~/.local/bin/ && chmod +x ~/.local/bin/rigspark ~/.local/bin/llmup ~/.local/bin/rigspark-gui && ls ~/.local/bin/rigspark",
-            "purpose": "Extract and install binaries to ~/.local/bin"
+            "command": "tar xzf /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu.tar.gz -C /tmp/rigspark-dl && cp /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/rigspark /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/llmup /tmp/rigspark-dl/rigspark-x86_64-unknown-linux-gnu/rigspark-gui ~/.local/bin/ && chmod +x ~/.local/bin/rigspark ~/.local/bin/llmup ~/.local/bin/rigspark-gui && rigspark --version",
+            "purpose": "Extract archive and install binaries to PATH"
           }
         ],
         "smoke_tests": [
           {
             "command": "rigspark --version",
-            "expected_signal": "rigspark 3.0.3",
+            "expected_signal": "rigspark 3.0.6",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "rigspark 3.0.3",
+            "observed_excerpt": "rigspark 3.0.6",
             "setup": [],
             "offline": true
           },
           {
             "command": "rigspark recommend",
-            "expected_signal": "(ram-bound)",
+            "expected_signal": "ram-bound",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "❌ all-minilm:22m (ram-bound)",
@@ -178,33 +178,104 @@
           },
           {
             "command": "rigspark catalog --all",
-            "expected_signal": "llama3.1:8b",
+            "expected_signal": "smollm2:135m",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "llama3.1:8b 8B dense Q4_K_M 5.3 ram-bound 2024-07-23",
+            "observed_excerpt": "smollm2:135m 135M dense F16 0.3 ram-bound 2024-11-01",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rigspark can-run llama3.1:8b --json",
+            "expected_signal": "lowTokPerSec",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "\"lowTokPerSec\": 0.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rigspark catalog --generation",
+            "expected_signal": "wan2.1-t2v:1.3b",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "wan2.1-t2v:1.3b video 1.3B 9.2 no unknown apache-2.0 2025-02-25 runs",
             "setup": [],
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "cargo binstall rigspark-cli / cargo install rigspark-cli (needs Rust toolchain)",
+            "actually_needed": "downloaded prebuilt rigspark-x86_64-unknown-linux-gnu.tar.gz from GitHub releases, verified SHA-256 and copied rigspark/llmup/rigspark-gui to ~/.local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "rigspark can-run llama3.1:8b",
+            "actually_needed": "can-run exits 1 when the verdict is no; judge by output text not exit 0",
+            "kind": "note"
+          },
+          {
+            "readme_said": "offline yes/slow/no verdicts for this machine",
+            "actually_needed": "container reports 0.0 GiB usable memory with GPU-probe fallback warnings, so every verdict here is no/ram-bound; same commands give yes/slow on real hardware",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three checks show expected output: recommend lists models as ram-bound, can-run reports llama3.1:8b does not fit, and version prints rigspark 3.0.3.",
+          "observed": "Screenshots show recommend listing models as ram-bound, can-run rejecting llama3.1:8b as ram-bound, and version reporting 3.0.6.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-rigspark-20261031-005223-74b4/report.json",
+          "trace_path": "runs/verify/verify-rigspark-20261101-001144-c675/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-rigspark-20261031-005223-74b4/check-1-cmd5.judged.png",
-            "runs/verify/verify-rigspark-20261031-005223-74b4/check-2-cmd6.judged.png",
-            "runs/verify/verify-rigspark-20261031-005223-74b4/check-3-cmd4.judged.png"
+            "runs/verify/verify-rigspark-20261101-001144-c675/check-1-cmd5.judged.png",
+            "runs/verify/verify-rigspark-20261101-001144-c675/check-2-cmd6.judged.png",
+            "runs/verify/verify-rigspark-20261101-001144-c675/check-3-cmd14.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.061978
+        "cost_usd": 0.104851,
+        "features": [
+          {
+            "feature": "Give yes slow no run verdicts",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Estimate tokens per second",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: JSON shows throughput known false with 0.0 tok/s, so no estimate given."
+          },
+          {
+            "feature": "Pull, verify and serve models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs Ollama/llama.cpp backend plus multi-GB pull; doctor shows no backend installed"
+          },
+          {
+            "feature": "Generate images and short videos",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "actual generate needs ComfyUI at 127.0.0.1:8188 which is not in the box"
+          }
+        ]
       }
     ]
   },
@@ -568,5 +639,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T00:12:58.168777+08:00"
 }

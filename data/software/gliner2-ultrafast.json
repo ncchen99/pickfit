@@ -57,24 +57,24 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-gliner2-ultrafast-20261031-002825-dd66",
+      "run_id": "verify-gliner2-ultrafast-20261101-001144-8804",
       "method": "uv",
       "steps": [
         {
           "command": "rm -rf gliner2-ultrafast && git clone https://github.com/sahibzada-allahyar/gliner2-ultrafast.git gliner2-ultrafast",
-          "purpose": "Clone repo"
+          "purpose": "clone repo"
         },
         {
           "command": "cd gliner2-ultrafast && uv sync --frozen",
-          "purpose": "Install with uv sync --frozen"
+          "purpose": "uv sync frozen install"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "cd gliner2-ultrafast && uv run browser-harness --help",
-        "expected_signal": "Browser Harness"
+        "expected_signal": "browser-harness --doctor"
       },
-      "first_task": "cd gliner2-ultrafast && uv run browser-harness --doctor"
+      "first_task": "cd gliner2-ultrafast && timeout 30 uv run browser-harness --doctor"
     },
     "windows": null
   },
@@ -89,10 +89,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:32:35.680714+08:00",
+    "checked_at": "2026-11-01T00:17:13.236943+08:00",
     "runs": [
       {
-        "id": "verify-gliner2-ultrafast-20261031-002825-dd66",
+        "id": "verify-gliner2-ultrafast-20261101-001144-8804",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -100,41 +100,32 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:32:35.680714+08:00",
+        "checked_at": "2026-11-01T00:17:13.236943+08:00",
         "tool_version": "0.1.13",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "rm -rf gliner2-ultrafast && git clone https://github.com/sahibzada-allahyar/gliner2-ultrafast.git gliner2-ultrafast",
-            "purpose": "Clone repo"
+            "purpose": "clone repo"
           },
           {
             "command": "cd gliner2-ultrafast && uv sync --frozen",
-            "purpose": "Install with uv sync --frozen"
+            "purpose": "uv sync frozen install"
           }
         ],
         "smoke_tests": [
           {
             "command": "cd gliner2-ultrafast && uv run browser-harness --help",
-            "expected_signal": "Browser Harness",
+            "expected_signal": "browser-harness --doctor",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Browser Harness",
+            "observed_excerpt": "browser-harness --doctor diagnose install, daemon, and browser state",
             "setup": [],
             "offline": true
           },
           {
-            "command": "cd gliner2-ultrafast && uv run browser-harness --version",
-            "expected_signal": "0.1.13",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "0.1.13",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "cd gliner2-ultrafast && uv run browser-harness --doctor",
+            "command": "cd gliner2-ultrafast && timeout 30 uv run browser-harness --doctor",
             "expected_signal": "[FAIL] chrome running",
             "exit_code": 1,
             "passed": true,
@@ -143,30 +134,40 @@
             "offline": true
           },
           {
+            "command": "curl -s http://127.0.0.1:8766/api/state",
+            "expected_signal": "\"status\": \"idle\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"page\": null, \"status\": \"idle\", \"history\": [], \"decision\": null, \"text_model\": \"deepseek-chat\", \"max_steps\": 60}",
+            "setup": [
+              {
+                "command": "cd gliner2-ultrafast && uv run gliner",
+                "background": true,
+                "port": 8766
+              }
+            ],
+            "offline": true
+          },
+          {
             "command": "cd gliner2-ultrafast && uv run pytest -q",
             "expected_signal": "57 passed",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "57 passed in 5.60s",
+            "observed_excerpt": "57 passed in 7.27s",
             "setup": [],
             "offline": true
           },
           {
-            "command": "curl -s -f http://127.0.0.1:8767/api/state",
-            "expected_signal": "\"status\": \"idle\"",
+            "command": "curl -s http://127.0.0.1:8766/fixture.html",
+            "expected_signal": "Local reading fixture",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "{\"page\": null, \"status\": \"idle\", \"history\": [], \"decision\": null, \"text_model\": \"inception/mercury-2.5\", \"max_steps\": 60}",
+            "observed_excerpt": "\"</div><footer>Local reading fixture · Three original demo articles</footer>\";",
             "setup": [
               {
-                "command": "cd gliner2-ultrafast && cp .env.example .env",
-                "background": false,
-                "port": null
-              },
-              {
-                "command": "cd /home/sbx/work/gliner2-ultrafast && GLINER_DEMO_PORT=8767 uv run --env-file .env gliner",
+                "command": "cd gliner2-ultrafast && uv run gliner",
                 "background": true,
-                "port": 8767
+                "port": 8766
               }
             ],
             "offline": true
@@ -174,53 +175,82 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "uv run browser-harness --doctor to check the connection",
-            "actually_needed": "Without Chrome/daemon it prints [FAIL] chrome running, [FAIL] daemon alive, [FAIL] active browser connections and exits 1; README anticipates this case ('follow connection instructions if doctor does not report active connection')",
-            "kind": "sandbox"
+            "readme_said": "gliner CLI with --help",
+            "actually_needed": "uv run gliner starts the inspector server on 127.0.0.1:8766 (must run in background); it has no --help output",
+            "kind": "readme_wrong"
           },
           {
-            "readme_said": "Add your text-model key to .env, then start Chrome and run gliner inspector",
-            "actually_needed": "Inspector answers GET /api/state with {\"status\": \"idle\"} without a valid OpenRouter key or browser; running real goals still needs Chrome plus TEXT_MODEL_API_KEY and network to google.com",
-            "kind": "note"
-          },
-          {
-            "readme_said": "Model weights download on first use for agent runs",
-            "actually_needed": "Offline pytest suite (57 tests) mocks the GLiNER classifier/extractor and browser, so it passes with no model download, no Chrome and no API key",
+            "readme_said": "uv run browser-harness --doctor",
+            "actually_needed": "doctor exits 1 and reports FAIL chrome running / daemon alive / active connections when no Chrome is running",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show doctor reporting missing Chrome, pytest reporting 57 passed, and help displaying Browser Harness usage.",
+          "observed": "Screenshots show doctor reporting expected FAILs, API returning idle status, and help listing the doctor command.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-gliner2-ultrafast-20261031-002825-dd66/report.json",
+          "trace_path": "runs/verify/verify-gliner2-ultrafast-20261101-001144-8804/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-gliner2-ultrafast-20261031-002825-dd66/check-1-cmd4.judged.png",
-            "runs/verify/verify-gliner2-ultrafast-20261031-002825-dd66/check-2-cmd6.judged.png",
-            "runs/verify/verify-gliner2-ultrafast-20261031-002825-dd66/check-3-cmd15.judged.png"
+            "runs/verify/verify-gliner2-ultrafast-20261101-001144-8804/check-1-cmd4.judged.png",
+            "runs/verify/verify-gliner2-ultrafast-20261101-001144-8804/check-2-cmd7.judged.png",
+            "runs/verify/verify-gliner2-ultrafast-20261101-001144-8804/check-3-cmd5.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.220982
+        "cost_usd": 0.173273,
+        "features": [
+          {
+            "feature": "automate browser with local inference",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "needs Chrome browser; doctor reports no running Chrome"
+          },
+          {
+            "feature": "extract requirements and score page controls",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows 57 tests passed but no extracted requirements or control scores."
+          },
+          {
+            "feature": "run natural-language goals in browser",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs OpenRouter text-model key and live Google site"
+          },
+          {
+            "feature": "inspect and export automation traces",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Outputs show idle state with empty history and fixture HTML, not a choice preview or exported trace."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T00:17:13+08:00",
     "quality": {
-      "total": 72.7,
+      "total": 65.9,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.9,
+          "score": 0.765,
           "weight": 40.0
         },
         "install_docs": {
@@ -261,7 +291,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 32.21
+      "value": 29.19
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -538,5 +568,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:22+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T00:17:13.267311+08:00"
 }

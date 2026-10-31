@@ -61,12 +61,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-wikipedia-cli-20261031-002233-8d18",
+      "run_id": "verify-wikipedia-cli-20261101-000504-a4be",
       "method": "binary",
       "steps": [
         {
-          "command": "uname -m; mkdir -p \"$HOME/.local/bin\" && curl -sL https://github.com/tamnd/wikipedia-cli/releases/download/v0.4.9/wiki_0.4.9_linux_amd64.tar.gz -o /tmp/wiki.tar.gz && tar -tzf /tmp/wiki.tar.gz && tar -xzf /tmp/wiki.tar.gz -C /tmp && ls -l /tmp/*.md /tmp/wiki 2>&1; cp /tmp/wiki \"$HOME/.local/bin/wiki\" && chmod +x \"$HOME/.local/bin/wiki\" && \"$HOME/.local/bin/wiki\" --version",
-          "purpose": "Download prebuilt linux_amd64 release and install wiki to ~/.local/bin"
+          "command": "curl -sL -o /tmp/wiki.tar.gz https://github.com/tamnd/wikipedia-cli/releases/download/v0.4.9/wiki_0.4.9_linux_amd64.tar.gz && tar -tzf /tmp/wiki.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/wiki.tar.gz -C /tmp && cp /tmp/wiki ~/.local/bin/wiki && chmod +x ~/.local/bin/wiki && ~/.local/bin/wiki --version",
+          "purpose": "Download linux_amd64 release tarball and install wiki to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -74,7 +74,7 @@
         "command": "wiki --version",
         "expected_signal": "wiki version dev"
       },
-      "first_task": "wiki read \"Alan Turing\" --color never -o jsonl"
+      "first_task": "wiki dump pages /tmp/sample.xml --quiet -o jsonl"
     },
     "windows": null
   },
@@ -93,10 +93,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:26:37.936086+08:00",
+    "checked_at": "2026-11-01T00:09:13.044137+08:00",
     "runs": [
       {
-        "id": "verify-wikipedia-cli-20261031-002233-8d18",
+        "id": "verify-wikipedia-cli-20261101-000504-a4be",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -104,14 +104,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:26:37.936086+08:00",
+        "checked_at": "2026-11-01T00:09:13.044137+08:00",
         "tool_version": "dev",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "uname -m; mkdir -p \"$HOME/.local/bin\" && curl -sL https://github.com/tamnd/wikipedia-cli/releases/download/v0.4.9/wiki_0.4.9_linux_amd64.tar.gz -o /tmp/wiki.tar.gz && tar -tzf /tmp/wiki.tar.gz && tar -xzf /tmp/wiki.tar.gz -C /tmp && ls -l /tmp/*.md /tmp/wiki 2>&1; cp /tmp/wiki \"$HOME/.local/bin/wiki\" && chmod +x \"$HOME/.local/bin/wiki\" && \"$HOME/.local/bin/wiki\" --version",
-            "purpose": "Download prebuilt linux_amd64 release and install wiki to ~/.local/bin"
+            "command": "curl -sL -o /tmp/wiki.tar.gz https://github.com/tamnd/wikipedia-cli/releases/download/v0.4.9/wiki_0.4.9_linux_amd64.tar.gz && tar -tzf /tmp/wiki.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/wiki.tar.gz -C /tmp && cp /tmp/wiki ~/.local/bin/wiki && chmod +x ~/.local/bin/wiki && ~/.local/bin/wiki --version",
+            "purpose": "Download linux_amd64 release tarball and install wiki to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -125,72 +125,120 @@
             "offline": true
           },
           {
-            "command": "wiki --help",
-            "expected_signal": "Read an article (paged plain text by default)",
+            "command": "wiki read \"Alan Turing\"",
+            "expected_signal": "Alan Turing archive on New Scientist",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "read <title> [--flags] Read an article (paged plain text by default)",
+            "observed_excerpt": "Alan Turing archive on New Scientist",
             "setup": [],
+            "offline": false
+          },
+          {
+            "command": "wiki search \"turing machine\"",
+            "expected_signal": "Turing machine",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"title\":\"Turing machine\",\"description\":\"Computation model defining an abstract machine\",\"snippet\":\"Church\\u0026#039;s work intertwined with Turing\\u0026#039;s to form the basis for the Church–Turing thesis. This thesis states that Turing machines, lambda calculus, and other\",\"url\":\"https://en.wiki…",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "wiki sparql 'SELECT ?c ?p WHERE { ?c wdt:P31 wd:Q515; wdt:P1082 ?p } ORDER BY DESC(?p) LIMIT 5' --quiet -o jsonl",
+            "expected_signal": "http://www.wikidata.org/entity/Q956",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"c\":{\"type\":\"uri\",\"value\":\"http://www.wikidata.org/entity/Q956\"},\"p\":{\"type\":\"literal\",\"value\":\"21893095\",\"datatype\":\"http://www.w3.org/2001/XMLSchema#decimal\"}}",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "wiki dump pages /tmp/sample.xml --quiet -o jsonl",
+            "expected_signal": "\"title\":\"Alan Turing\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":12345,\"ns\":0,\"title\":\"Alan Turing\",\"revid\":1,\"timestamp\":\"2024-01-01T00:00:00Z\"}",
+            "setup": [
+              {
+                "command": "cat > /tmp/sample.xml <<'XML'\n<mediawiki version=\"0.11\" xml:space=\"preserve\" xmlns=\"http://www.mediawiki.org/xml/export-0.11/\">\n<siteinfo>\n<sitename>Wikipedia</sitename>\n<dbname>enwiki</dbname>\n<base>https://en.wikipedia.org/wiki/Main_Page</base>\n<generator>MediaWiki 1.44.0</generator>\n<case>first-letter</case>\n<namespaces>\n<namespace key=\"0\" case=\"first-letter\" />\n</namespaces>\n</siteinfo>\n<page>\n<title>Alan Turing</title>\n<ns>0</ns>\n<id>12345</id>\n<revision>\n<id>1</id>\n<timestamp>2024-01-01T00:00:00Z</timestamp>\n<contributor><username>Test</username><id>1</id></contributor>\n<comment>test</comment>\n<model>wikitext</model>\n<format>text/x-wiki</format>\n<text bytes=\"27\" xml:space=\"preserve\">'''Alan Turing''' was great.</text>\n<sha1>abc</sha1>\n</revision>\n</page>\n<page>\n<title>Quantum computing</title>\n<ns>0</ns>\n<id>12346</id>\n<revision>\n<id>2</id>\n<timestamp>2024-01-02T00:00:00Z</timestamp>\n<contributor><username>Test</username><id>1</id></contributor>\n<model>wikitext</model>\n<format>text/x-wiki</format>\n<text bytes=\"20\" xml:space=\"preserve\">Quantum is cool.</text>\n<sha1>def</sha1>\n</revision>\n</page>\n</mediawiki>\nXML\ncat /tmp/sample.xml",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
-          },
-          {
-            "command": "wiki read \"Alan Turing\" --color never -o jsonl",
-            "expected_signal": "Alan Turing plaques",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Alan Turing plaques Archived 24 April 2024 at the Wayback Machine on openplaques.org",
-            "setup": [],
-            "offline": false
-          },
-          {
-            "command": "wiki search \"turing machine\" --color never",
-            "expected_signal": "Universal Turing machine",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "{\"title\":\"Universal Turing machine\",\"description\":\"Type of Turing machine\",\"snippet\":\"science, a universal Turing machine (UTM) is a Turing machine capable of computing any computable sequence, as described by Alan Turing in his seminal paper\",\"url\":\"https://en.wikipedia.org/wiki/Universal_Turing_m…",
-            "setup": [],
-            "offline": false
-          },
-          {
-            "command": "wiki summary \"Quantum computing\" --color never",
-            "expected_signal": "A quantum computer is a computer that represents",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "{\"title\":\"Quantum computing\",\"description\":\"Computer hardware technology that uses quantum mechanics\",\"extract\":\"A quantum computer is a computer that represents and processes information using quantum states. Quantum computations exploit phenomena such as superposition, interference, and entanglem…",
-            "setup": [],
-            "offline": false
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "go install github.com/tamnd/wikipedia-cli/cmd/wiki@latest (Requires Go 1.26+)",
-            "actually_needed": "Used prebuilt release tarball wiki_0.4.9_linux_amd64.tar.gz from GitHub releases and copied the wiki binary to ~/.local/bin instead of `go install`, because the box has no Go toolchain and installing one is not allowed.",
+            "readme_said": "go install github.com/tamnd/wikipedia-cli/cmd/wiki@latest (requires Go 1.26+)",
+            "actually_needed": "downloaded prebuilt linux_amd64 tarball from GitHub releases and copied wiki binary to ~/.local/bin",
             "kind": "sandbox"
           },
           {
-            "readme_said": "Prebuilt binary from releases",
-            "actually_needed": "Release binary reports `wiki version dev` instead of the release tag v0.4.9.",
+            "readme_said": "versioned release binary",
+            "actually_needed": "binary prints 'wiki version dev' with no release number",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show wiki reading the Alan Turing article, returning Turing machine search results, and printing its version.",
+          "observed": "Screenshots show wiki reading the Alan Turing article, returning Turing machine search results, and printing version dev.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-wikipedia-cli-20261031-002233-8d18/report.json",
+          "trace_path": "runs/verify/verify-wikipedia-cli-20261101-000504-a4be/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-wikipedia-cli-20261031-002233-8d18/check-1-cmd5.judged.png",
-            "runs/verify/verify-wikipedia-cli-20261031-002233-8d18/check-2-cmd6.judged.png",
-            "runs/verify/verify-wikipedia-cli-20261031-002233-8d18/check-3-cmd3.judged.png"
+            "runs/verify/verify-wikipedia-cli-20261101-000504-a4be/check-1-cmd11.judged.png",
+            "runs/verify/verify-wikipedia-cli-20261101-000504-a4be/check-2-cmd12.judged.png",
+            "runs/verify/verify-wikipedia-cli-20261101-000504-a4be/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.045328
+        "cost_usd": 0.071719,
+        "features": [
+          {
+            "feature": "read Wikipedia articles as text",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "search Wikipedia full text",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "query Wikidata with SPARQL",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "stream Wikipedia dump files",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -528,5 +576,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:39+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T00:09:13.045835+08:00"
 }
