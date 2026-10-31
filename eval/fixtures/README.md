@@ -21,7 +21,7 @@ for q in q13 q14 q15 q16; do (cd $q && python3 -m unittest discover -s tests); d
 for q in q17 q18 q19 q20; do (cd $q && sh selftest.sh); done
 ```
 
-2026-10-31 在 macOS（Python 3.9）全部通過。strace 的實測要在 L2 沙盒做（`_shared/calibration.md` 步驟 1）。
+2026-10-31 在 macOS（Python 3.9）全部通過。strace 與擋外連的實測在 L2 沙盒做過（2026-10-31，`_shared/calibration.md` 步驟 1、2）。
 
 ## 產生器重跑（2026-10-31）
 
