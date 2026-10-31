@@ -286,9 +286,12 @@ function record(pick: PickOut, guide: InstallOutput | undefined, form: FormValue
   const v = pick.verification;
   const mine = yourSystem(v, form);
   const offline = guide?.verification.works_offline;
+  // A GUI app's launch sentence already says whether the launch passed offline.
   const offlineLine =
     offline === true
-      ? ' Its checks passed again with the network off.'
+      ? v.gui
+        ? ''
+        : ' Its checks passed again with the network off.'
       : offline === false
         ? ' Its checks failed with the network off: it needed the network in pickfit’s run.'
         : form.offline
@@ -356,7 +359,8 @@ function pickHtml(pick: PickOut, first: boolean, result: SearchResult, form: For
     `<article class="pick" id="pick-${esc(pick.slug)}">` +
     `<div class="claim">` +
     `<h3>${link(pick.repo, esc(pick.name)) || esc(pick.name)}</h3>${badges ? `<p class="badges">${badges}</p>` : ''}` +
-    `<p class="summary">${esc(pick.summary)}</p>` +
+    // On the rules path the fit sentence is the summary: say it once.
+    (pick.fit === pick.summary ? '' : `<p class="summary">${esc(pick.summary)}</p>`) +
     `<p class="fit">${esc(pick.fit)}</p>` +
     (pick.match ? coverage(pick.match) : '') +
     (why ? `<h4>Why it fits</h4><ul class="why">${why}</ul>` : '') +
@@ -403,6 +407,10 @@ const DEGRADED: Record<string, { title: string; text: string }> = {
   },
 };
 DEGRADED.no_api_key = DEGRADED.model_off;
+DEGRADED.model_timeout = {
+  title: 'Ranked without the model this time',
+  text: 'Muse Spark didn’t answer in time, so these results are ranked by rules. Search again to retry.',
+};
 const MODEL_FAILED = {
   title: 'Ranked without the model this time',
   text: 'Muse Spark didn’t return a usable answer, so these results are ranked by rules. Search again to retry.',
@@ -840,6 +848,7 @@ select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid 
 .results-title{margin-top:var(--gap);margin-bottom:12px}
 .match-line{font-size:var(--t-lead);color:var(--muted)}
 .ask,.aside{background:var(--surface);border-radius:var(--radius);padding:18px 22px;margin:28px 0;max-width:none}
+.ask{max-width:62ch}
 .aside h3{margin-bottom:8px}
 .lead-in{font-weight:600}
 .pick{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px 56px;padding-top:72px;animation:rise .6s cubic-bezier(.2,.7,.2,1) both}
@@ -1002,6 +1011,7 @@ details:not([open])>:not(summary){display:none}
 .runs tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:10px 0}
 .runs .kind{grid-column:1/-1;padding-top:0}
 .runs .where{white-space:normal}
+.runs .tool span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .runs tr:nth-child(3n) td{padding-bottom:0}
 .runs tr:nth-child(3n){padding-bottom:28px}
 .clause-field{padding:24px 16px}

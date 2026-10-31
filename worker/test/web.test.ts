@@ -605,9 +605,17 @@ test('render: a GUI app\'s launch is described as such, and only a real screen g
   assert.match(html, /<p class="level"><svg class="check"[^>]*>.*<\/svg>It opens to its first-run screen<\/p>/);
   assert.ok(html.includes(esc(guiSentence(gui))));
   assert.match(guiSentence(gui), /pickfit did not use any of its features\. The launch passed again with the network off\.$/);
+  const offlineGuide = { tool: { verification: { works_offline: true }, steps: [], known_issues: [], mcp_client_config: null } as any };
+  const once = renderResults({ out: output([app]), guides: offlineGuide }, EMPTY_FORM, fixtureCatalog());
+  assert.equal(once.split('network off').length - 1, 1, 'the offline result is said once for a GUI app');
   const broken = pick({ verification: { ...pick().verification, level: 'install', gui: { ...gui, screen: 'crash_or_error' } } });
   const bad = renderResults({ out: output([broken]), guides: {} }, EMPTY_FORM, fixtureCatalog());
   assert.match(bad, /<p class="level level-caution">It showed an error on launch<\/p>/);
   assert.equal(levelLabel('service', { mcp: { called_tool: null } }), 'An MCP client connects and lists its tools');
   assert.equal(levelLabel('function'), 'Its main function works');
+});
+
+test('render: a model timeout says so', () => {
+  const out = { ...output([pick()]), matched_by: 'rules', degraded: true, degraded_reason: 'model_timeout' };
+  assert.match(renderResults({ out, guides: {} }, EMPTY_FORM, fixtureCatalog()), /Muse Spark didn’t answer in time, so these results are ranked by rules\./);
 });
