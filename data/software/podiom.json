@@ -1,0 +1,556 @@
+{
+  "schema_version": "software.v1",
+  "slug": "podiom",
+  "repo_id": "gh:1283987352",
+  "name": "Podiom",
+  "summary": "Local-first workspace to manage Claude Code and Codex agents, sessions, projects, and goals.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-orchestration",
+    "ai-agents",
+    "anthropic",
+    "automation",
+    "claude",
+    "claude-code",
+    "cli",
+    "codex",
+    "developer-tools",
+    "go"
+  ],
+  "use_cases": [
+    "chat with named agents with durable history",
+    "hand an outcome to a lead agent to own over time",
+    "schedule recurring routines and timed work"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://github.com/Podiom/Podiom/tree/master/docs",
+  "repo": {
+    "url": "https://github.com/Podiom/Podiom",
+    "full_name": "Podiom/Podiom",
+    "created_at": "2026-06-29T12:22:41Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install Podiom/podiom/podiom",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "./bin/podiom status"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-podiom-20261031-001809-77fa",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/Podiom/Podiom/releases/latest/download/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
+          "purpose": "Download install script"
+        },
+        {
+          "command": "bash /tmp/install.sh --no-onboard --autostart no",
+          "purpose": "Install Podiom via script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "podiom --version",
+        "expected_signal": "podiom version v0.1.384 (67c8736)"
+      },
+      "first_task": "podiom status"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://github.com/Podiom/Podiom/releases/latest/download/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "./bin/podiom status"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.1.384",
+    "published_at": "2026-10-16T11:30:32Z",
+    "url": "https://github.com/Podiom/Podiom/releases/tag/v0.1.384"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:20:04.250658+08:00",
+    "runs": [
+      {
+        "id": "verify-podiom-20261031-001809-77fa",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:20:04.250658+08:00",
+        "tool_version": "v0.1.384 (67c8736)",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/Podiom/Podiom/releases/latest/download/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
+            "purpose": "Download install script"
+          },
+          {
+            "command": "bash /tmp/install.sh --no-onboard --autostart no",
+            "purpose": "Install Podiom via script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "podiom --version",
+            "expected_signal": "podiom version v0.1.384 (67c8736)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "podiom version v0.1.384 (67c8736)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "podiom --help",
+            "expected_signal": "podiom is the command-line client",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "podiom is the command-line client for Podiom. It connects to a running",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "podiom update check",
+            "expected_signal": "status: up to date",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "status: up to date",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "podiom status",
+            "expected_signal": "podiomd is live at 127.0.0.1:8787",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "podiomd is live at 127.0.0.1:8787",
+            "setup": [
+              {
+                "command": "podiomd",
+                "background": true,
+                "port": 8787
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsSL http://127.0.0.1:8787/ -o /tmp/index.html && wc -c /tmp/index.html",
+            "expected_signal": "675 /tmp/index.html",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "675 /tmp/index.html",
+            "setup": [
+              {
+                "command": "podiomd",
+                "background": true,
+                "port": 8787
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://github.com/Podiom/Podiom/releases/latest/download/install.sh | bash",
+            "actually_needed": "Download to /tmp/install.sh, read it, then run `bash /tmp/install.sh --no-onboard --autostart no` to avoid the interactive autostart prompt and onboard wizard in a non-interactive box",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "./bin/podiom status",
+            "actually_needed": "Installed client is `podiom status` from ~/.local/bin; `./bin/podiom status` only exists after `make build` in a source checkout",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show the expected update status, daemon live status, and version strings.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-podiom-20261031-001809-77fa/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-podiom-20261031-001809-77fa/check-1-cmd7.judged.png",
+            "runs/verify/verify-podiom-20261031-001809-77fa/check-2-cmd9.judged.png",
+            "runs/verify/verify-podiom-20261031-001809-77fa/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.064777
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 84.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 54.4,
+      "signals": {
+        "stars": 22,
+        "monthly_downloads": null,
+        "forks": 39,
+        "dependents": null,
+        "release_downloads": 49,
+        "hn_top_score": 3,
+        "registries_count": 0
+      },
+      "age_days": 123,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 38.62
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "24e0f7d76a6e9c3ea0c963877dab9788f838240fa8ca4fde3aa0e5a88d2550ff",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Podiom is an open-source, local-first workspace for Claude Code and OpenAI Codex."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Developers already using Claude Code or OpenAI Codex locally."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Prerequisites: Go 1.26+ and Node 20+."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://github.com/Podiom/Podiom/releases/latest/download/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "./bin/podiom status"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "PODIOM_HOME=/data/podiom ./bin/podiomd"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "podiom update check"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "It runs on macOS, Linux, and Windows, and the same core can run"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Podiom/Podiom",
+      "fetched_at": "2026-10-30T23:51:45+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Podiom/Podiom/blob/master/README.md",
+      "fetched_at": "2026-10-31T00:02:53+08:00"
+    },
+    {
+      "id": "release:v0.1.384",
+      "kind": "release",
+      "url": "https://github.com/Podiom/Podiom/releases/tag/v0.1.384",
+      "fetched_at": "2026-10-31T00:02:53+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "daemon: web server, scheduler, and core",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Open http://127.0.0.1:8787 after onboarding.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Developers already using Claude Code or OpenAI Codex locally.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Podiom is an open-source, local-first workspace for Claude Code and OpenAI Codex.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Podiom",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "It runs on macOS, Linux, and Windows",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:45+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:45+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:45+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:45+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:45+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.1.384",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:02:53+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "then chat, schedule work, or hand it",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "gives one lead agent an outcome to own over days or weeks.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "while the embedded scheduler handles\nrecurring routines and timed pickups.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install Podiom/podiom/podiom",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://github.com/Podiom/Podiom/releases/latest/download/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://github.com/Podiom/Podiom/releases/latest/download/install.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Podiom is open source under the [MIT License](LICENSE).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Keep the control plane local",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:41:22+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}

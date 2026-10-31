@@ -1,0 +1,555 @@
+{
+  "schema_version": "software.v1",
+  "slug": "nika",
+  "repo_id": "gh:1126625946",
+  "name": "Nika",
+  "summary": "Turns repeated AI work into readable checked workflow files run with chosen models.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agents",
+    "ai",
+    "ai-agents",
+    "ai-workflows",
+    "automation",
+    "cli",
+    "dag",
+    "developer-tools",
+    "devops",
+    "llm"
+  ],
+  "use_cases": [
+    "filter paid rows from orders.csv into paid.csv",
+    "pull action items out of meeting notes",
+    "turn CHANGELOG.md into release notes",
+    "rate risk of each pull request"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://nika.sh",
+  "repo": {
+    "url": "https://github.com/supernovae-st/nika",
+    "full_name": "supernovae-st/nika",
+    "created_at": "2026-01-02T09:32:06Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js 22 or newer"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "DEEPSEEK_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install supernovae-st/tap/nika",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "nika --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-nika-20261031-002735-aa21",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @supernovae-st/nika",
+          "purpose": "install nika via npm global"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "nika --version",
+        "expected_signal": "nika 0.124.1"
+      },
+      "first_task": "cd /tmp/nika-smoke && nika check hello.nika"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "AGPL-3.0",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.124.1",
+    "published_at": "2026-10-28T09:56:26Z",
+    "url": "https://github.com/supernovae-st/nika/releases/tag/v0.124.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:28:39.368610+08:00",
+    "runs": [
+      {
+        "id": "verify-nika-20261031-002735-aa21",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:28:39.368610+08:00",
+        "tool_version": "0.124.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @supernovae-st/nika",
+            "purpose": "install nika via npm global"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nika --version",
+            "expected_signal": "nika 0.124.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "nika 0.124.1 (bec4f5271)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nika --help",
+            "expected_signal": "nika run",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "nika run run a file",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/nika-smoke && nika check hello.nika",
+            "expected_signal": "run ready",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "layers · valid ✔ · access ready ✔ · capacity fit ✔ · run ready ✔",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/nika-smoke && cp /tmp/nika-smoke /tmp/nika-smoke-tmp 2>/dev/null; rm -rf /tmp/nika-smoke; mkdir -p /tmp/nika-smoke && cd /tmp/nika-smoke && nika compile hello hello.nika",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/nika-smoke && nika run hello.nika",
+            "expected_signal": "wrote .nika/traces",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "wrote .nika/traces",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/nika-smoke && cp /tmp/nika-smoke /tmp/nika-smoke-tmp 2>/dev/null; rm -rf /tmp/nika-smoke; mkdir -p /tmp/nika-smoke && cd /tmp/nika-smoke && nika compile hello hello.nika",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/nika-smoke && nika trace verify",
+            "expected_signal": "chain intact",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "OK — 5 events · chain intact · head 276db57e1a82aadb1c994d7f7cfe884e34b0739e067a295e9c6d52c1166b143c",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/nika-smoke && cp /tmp/nika-smoke /tmp/nika-smoke-tmp 2>/dev/null; rm -rf /tmp/nika-smoke; mkdir -p /tmp/nika-smoke && cd /tmp/nika-smoke && nika compile hello hello.nika",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/nika-smoke && nika run hello.nika",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show nika check reporting run ready, nika run writing traces, and version 0.124.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nika-20261031-002735-aa21/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nika-20261031-002735-aa21/check-1-cmd5.judged.png",
+            "runs/verify/verify-nika-20261031-002735-aa21/check-2-cmd6.judged.png",
+            "runs/verify/verify-nika-20261031-002735-aa21/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.05504
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 94.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 67.7,
+      "signals": {
+        "stars": 95,
+        "monthly_downloads": null,
+        "forks": 5,
+        "dependents": null,
+        "release_downloads": 4655,
+        "hn_top_score": 2,
+        "registries_count": 0
+      },
+      "age_days": 299,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 30.39
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "adff4ab56c15bfce04fc2209161090b29f9f967f36d12bfa3b0b95d11eeecdff",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Nika turns repeatable AI work into a small file you keep."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "\"Pull the action items out of my meeting notes.\""
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "(Node.js 22 or newer, on macOS or Linux with glibc)"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -LsSf https://nika.sh/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "✓ recorded 3 requirements"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export DEEPSEEK_API_KEY='your-key'"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "- **A clean check is not a true answer.** It describes a file's structure"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "fully open source (AGPL-3.0)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/supernovae-st/nika",
+      "fetched_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/supernovae-st/nika/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:30:05+08:00"
+    },
+    {
+      "id": "release:v0.124.1",
+      "kind": "release",
+      "url": "https://github.com/supernovae-st/nika/releases/tag/v0.124.1",
+      "fetched_at": "2026-10-29T02:30:05+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "One Rust binary with a terminal\nSession and a command line, plus a TypeScript SDK for your applications;",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:15:01+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "curl -LsSf https://nika.sh/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:15:01+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "One Rust binary with a terminal\nSession and a command line, plus a TypeScript SDK",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:15:01+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Nika turns the AI work you repeat into a readable workflow that stays yours.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:15:01+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<img src=\"https://nika.sh/brand/nika-logo-light.svg\" alt=\"Nika\" width=\"220\">",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:15:01+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "(Node.js 22 or newer, on macOS or Linux with glibc)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:15:01+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "(Node.js 22 or newer, on macOS or Linux with glibc)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:15:01+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "export DEEPSEEK_API_KEY='your-key'",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:15:01+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.124.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:30:05+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Read ./data/orders.csv, keep only the rows whose status is paid, and write them to ./out/paid.csv.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:15:01+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Pull the action items out of my meeting notes.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:15:01+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Every Friday, turn `CHANGELOG.md` into release notes.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:15:01+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Rate the risk of each pull request.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:15:01+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install supernovae-st/tap/nika",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:15:01+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install @supernovae-st/nika",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:15:01+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Fully open source.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:15:01+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "on\nyour machine or through a provider's API",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:15:01+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-28T19:03:31+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}

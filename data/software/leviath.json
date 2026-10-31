@@ -1,0 +1,643 @@
+{
+  "schema_version": "software.v1",
+  "slug": "leviath",
+  "repo_id": "gh:1281844128",
+  "name": "Leviath",
+  "summary": "Structured LLM agent runtime with staged workflows and ECS orchestration in one binary",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "agent-framework",
+    "agent-runtime",
+    "ai",
+    "cli",
+    "context-engineering",
+    "local-ai",
+    "multi-agent",
+    "rust"
+  ],
+  "use_cases": [
+    "Build a CLI that converts CSV to JSON",
+    "Survey solid-state batteries with research agent",
+    "Find cause of error spike in log files",
+    "Watch concurrent agents in TUI dashboard",
+    "Expose agents via REST and WebSocket API"
+  ],
+  "alternatives_to": [
+    "Claude Code",
+    "Codex",
+    "OpenHands",
+    "CrewAI",
+    "LangGraph",
+    "Gas Town",
+    "Gas City"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://leviath.dev",
+  "repo": {
+    "url": "https://github.com/GEMISIS/leviath",
+    "full_name": "GEMISIS/leviath",
+    "created_at": "2026-06-27T01:55:01Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Rust"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "API key from Anthropic, OpenAI, Google AI, OpenRouter or AWS Bedrock"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install leviath",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Obtain an API key from a model provider"
+      ],
+      "check": null,
+      "first_task": "lev --help"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-leviath-20261031-000705-112c",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://leviath.dev/install.sh -o /tmp/leviath-install.sh && wc -c /tmp/leviath-install.sh && head -c 2000 /tmp/leviath-install.sh",
+          "purpose": "Download outer install script for reading"
+        },
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/GEMISIS/leviath-dist/main/install.sh -o /tmp/leviath-dist-install.sh && wc -c /tmp/leviath-dist-install.sh && echo \"---downloaded-ok---\"",
+          "purpose": "Download nested dist install script for reading"
+        },
+        {
+          "command": "sed 's|^INSTALL_DIR=.*|INSTALL_DIR=\"$HOME/.local/bin\"|' /tmp/leviath-dist-install.sh > /tmp/leviath-user-install.sh && grep -n \"INSTALL_DIR\" /tmp/leviath-user-install.sh && bash /tmp/leviath-user-install.sh --channel stable",
+          "purpose": "Install stable binary to ~/.local/bin via patched script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "lev --help",
+        "expected_signal": "Leviath agent framework CLI"
+      },
+      "first_task": "lev ps"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://leviath.dev/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Obtain an API key from a model provider"
+      ],
+      "check": null,
+      "first_task": "lev --help"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.6.4",
+    "published_at": "2026-09-27T13:49:23Z",
+    "url": "https://github.com/GEMISIS/leviath/releases/tag/v0.6.4"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:08:36.906641+08:00",
+    "runs": [
+      {
+        "id": "verify-leviath-20261031-000705-112c",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:08:36.906641+08:00",
+        "tool_version": "lev 0.6.4",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://leviath.dev/install.sh -o /tmp/leviath-install.sh && wc -c /tmp/leviath-install.sh && head -c 2000 /tmp/leviath-install.sh",
+            "purpose": "Download outer install script for reading"
+          },
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/GEMISIS/leviath-dist/main/install.sh -o /tmp/leviath-dist-install.sh && wc -c /tmp/leviath-dist-install.sh && echo \"---downloaded-ok---\"",
+            "purpose": "Download nested dist install script for reading"
+          },
+          {
+            "command": "sed 's|^INSTALL_DIR=.*|INSTALL_DIR=\"$HOME/.local/bin\"|' /tmp/leviath-dist-install.sh > /tmp/leviath-user-install.sh && grep -n \"INSTALL_DIR\" /tmp/leviath-user-install.sh && bash /tmp/leviath-user-install.sh --channel stable",
+            "purpose": "Install stable binary to ~/.local/bin via patched script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lev --help",
+            "expected_signal": "Leviath agent framework CLI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Leviath agent framework CLI",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lev --version",
+            "expected_signal": "lev 0.6.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lev 0.6.4",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lev ps",
+            "expected_signal": "no agent runs active",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no agent runs active",
+            "setup": [
+              {
+                "command": "lev daemon",
+                "background": true,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://leviath.dev/install.sh | sh installs a prebuilt binary with no extra steps",
+            "actually_needed": "Installer hardcodes INSTALL_DIR=/usr/local/bin and falls back to `sudo install`; box has no sudo and /usr/local/bin is not writable, so patched a copy of the dist install script with INSTALL_DIR=\"$HOME/.local/bin\" and ran `bash /tmp/leviath-user-install.sh --channel stable`.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "lev ps lists running agents",
+            "actually_needed": "Started the shared-world daemon first with `lev daemon` (background); only then does `lev ps` succeed and print `no agent runs active`.",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show lev ps reporting no active runs and lev --help displaying the Leviath agent framework CLI help.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-leviath-20261031-000705-112c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-leviath-20261031-000705-112c/check-1-cmd10.judged.png",
+            "runs/verify/verify-leviath-20261031-000705-112c/check-2-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.074599
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:11:57+08:00",
+    "quality": {
+      "total": 84.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 47.5,
+      "signals": {
+        "stars": 14,
+        "monthly_downloads": null,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": 1379,
+        "hn_top_score": 3,
+        "registries_count": 0
+      },
+      "age_days": 125,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 44.47
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "2d2b88ad89f70d0b132c8c6c1c5e2dec0f3076d56f92e343624b3325815e95ba",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A structured agent runtime for LLMs. Structured context, multi-stage workflows, and ECS-based orchestration in a single binary"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Eleven agents ship out of the box, covering coding, review, research, data gathering, log"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Both install prebuilt binaries, so no Rust toolchain is needed."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://leviath.dev/install.sh | sh\n```\n\n**Windows**, in PowerShell (Windows Terminal opens one; not Command Prompt):\n\n```powershell\nirm https://leviath.dev/install.ps1 | iex"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "lev run coder --task \"Add pagination to the /users endpoint\""
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "lev setup --non-interactive --anthropic-key sk-ant-... --install-agents"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[MIT](LICENSE) © Gerald McAlister"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/GEMISIS/leviath",
+      "fetched_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/GEMISIS/leviath/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:32:30+08:00"
+    },
+    {
+      "id": "release:v0.6.4",
+      "kind": "release",
+      "url": "https://github.com/GEMISIS/leviath/releases/tag/v0.6.4",
+      "fetched_at": "2026-10-29T02:32:30+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "lev run coder --task \"Build a CLI that converts CSV to JSON\"    # run a coding agent...",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://leviath.dev/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "lev run coder --task \"Build a CLI that converts CSV to JSON\"    # run a coding agent...",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A structured agent runtime for LLMs. Structured context, multi-stage workflows, and ECS-based orchestration in a single binary",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<img src=\"docs/assets/logo.png\" alt=\"Leviath\" width=\"440\">",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "**macOS and Linux:**\n\n```bash\ncurl -fsSL https://leviath.dev/install.sh | sh\n```\n\n**Windows**, in PowerShell",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "**Cargo** (any platform, requires [Rust](https://rustup.rs/)):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "One provider is all you need: an API key from [Anthropic](https://console.anthropic.com/)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.6.4",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:32:30+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "release:v0.6.4",
+      "quote": "**Stable release** - v0.6.4",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "lev run coder --task \"Build a CLI that converts CSV to JSON\"    # run a coding agent...",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "lev run deep-researcher --task \"Survey solid-state batteries\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "lev run log-analyzer --task \"Find what caused the error spike in ./logs last night\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "lev dash                         # watch everything in the TUI dashboard",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "lev serve                        # REST + WebSocket API server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Claude Code, Codex, and OpenHands are agents you work\nwith",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "Claude Code, Codex, and OpenHands are agents you work\nwith",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "Claude Code, Codex, and OpenHands are agents you work\nwith",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "CrewAI and LangGraph are frameworks you build agents *in*",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/alternatives_to/4",
+      "source_id": "readme",
+      "quote": "CrewAI and LangGraph are frameworks you build agents *in*",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/alternatives_to/5",
+      "source_id": "readme",
+      "quote": "Gas Town and Gas City are\norchestrators that decide which work happens",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/alternatives_to/6",
+      "source_id": "readme",
+      "quote": "Gas Town and Gas City are\norchestrators that decide which work happens",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install leviath",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://leviath.dev/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://leviath.dev/install.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "**You need a model provider**: an API key, a local Ollama, or a Codex or Grok subscription sign-in.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:30+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:52+08:00",
+  "updated_at": "2026-10-31T02:11:57+08:00"
+}

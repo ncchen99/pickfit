@@ -71,7 +71,7 @@ def dry_run(repo: Path, **kwargs) -> tuple[int, list[str]]:
 def test_good_data_plans_the_deploy_and_writes_nothing(repo: Path) -> None:
     code, lines = dry_run(repo)
     assert code == 0, lines
-    assert lines[0].startswith("publish: 5 listed entries from ")
+    assert lines[0].startswith("publish: 6 listed entries from ")
     assert "commit " in lines[0] and "commit none" not in lines[0]
     assert lines[-1].endswith(f"would run `npx wrangler deploy` in {repo / 'worker'}")
     assert not (repo / "worker" / "src").exists()

@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "purpose": "Pre-registered query conditions for the B question set (eval/README.md section 9.2 E). Committed BEFORE any candidate was fetched; commit time is the registration time.",
+  "blinding": "Built by a session that did not open data/, runs/, docs/demo-candidates.md, docs/plan.md, worker/src/generated/ or any other session's branch, and did not call pickfit. Before this commit only three syntax probes were run, each with a nonsense search term (SE site info, HN and GitHub search for 'zzqxjkw'); no real result was looked at.",
+  "date_range": {
+    "from": "2024-01-01T00:00:00Z",
+    "to": "2026-10-26T23:59:59Z",
+    "note": "Post creation time, UTC. One range for all categories. MCP posts exist only from late 2024 on; that is not corrected for."
+  },
+  "sources": {
+    "stackexchange": {
+      "site": "softwarerecs (Software Recommendations Stack Exchange, CC BY-SA 4.0)",
+      "endpoint": "https://api.stackexchange.com/2.3/questions",
+      "params": {"site": "softwarerecs", "sort": "creation", "order": "asc", "pagesize": 100, "filter": "withbody", "fromdate": "<date_range.from>", "todate": "<date_range.to>"},
+      "keyword_filter": "none on the server: every question in the date range is fetched (the site is small) and the category rules below are applied locally. Closed questions are kept (flagged). Answers and comments are never fetched.",
+      "request_intent": "implied: the site only takes recommendation requests"
+    },
+    "hackernews": {
+      "endpoint": "https://hn.algolia.com/api/v1/search_by_date",
+      "params": {"tags": "ask_hn", "restrictSearchableAttributes": "title,story_text", "numericFilters": "created_at_i>=<from>,created_at_i<=<to>", "hitsPerPage": 1000},
+      "window": "calendar quarters inside date_range (the last window ends 2026-10-26); if a window returns nbHits > 1000 it is split in half by time until every part has <= 1000 hits",
+      "queries_per_category": {
+        "mcp": ["mcp", "model context protocol"],
+        "local_ai": ["ollama", "llama.cpp", "gguf", "lm studio", "local llm", "local llms", "local ai", "local model", "local models", "self-hosted llm", "offline llm", "run llm locally", "open weights", "whisper", "speech to text", "on-device", "local transcription", "local rag"],
+        "dev_cli": ["cli", "command line", "command-line", "terminal", "tui", "shell", "bash", "zsh", "dotfiles", "git cli"]
+      },
+      "query_semantics": "a multi-word query means all words must appear (Algolia default); there is no phrase matching",
+      "request_intent": "request_intent rule below must match"
+    },
+    "github_discussions": {
+      "endpoint": "GraphQL search(type: DISCUSSION) through `gh api graphql`",
+      "query_template": "<keyword> <intent_word> in:title,body created:<window_start>..<window_end> sort:created-asc",
+      "fields": "url, title, body, createdAt, category.name, answer (is there one), repository.nameWithOwner and stargazerCount, author.login (only used for the conflict-of-interest drop below). Comments are never fetched.",
+      "window": "calendar quarters inside date_range; if discussionCount > 1000 the window is split in half by time until every part has <= 1000",
+      "keywords_per_category": {
+        "mcp": ["mcp", "\"model context protocol\""],
+        "local_ai": ["ollama", "llama.cpp", "gguf", "\"local llm\"", "\"local ai\""],
+        "dev_cli": ["\"cli tool\"", "\"command line tool\"", "command-line"]
+      },
+      "intent_words": ["recommend", "alternative", "\"looking for\""],
+      "combination": "every keyword is searched with every intent word (one request series per pair)",
+      "request_intent": "request_intent rule below must also match locally",
+      "no_category_filter": "Discussion categories (Q&A, Ideas, General...) are recorded but not used to filter"
+    },
+    "reddit": {
+      "used": false,
+      "reason": "Reddit's Data API terms require a registered, approved app and limit what may be done with the content, and scraping the site or its .json endpoints is against its User Agreement. I cannot do it within the terms, so Reddit is dropped. Dropping a source is stated in the report; it is not replaced by anything."
+    }
+  },
+  "text_used_for_rules": "title + newline + body (HTML tags removed, entities decoded) + for Stack Exchange the tag names written as 'tag:<name>'. Case-insensitive. For HN and GitHub only the first 4000 characters of the body are used. Python `re` syntax; patterns are matched with re.IGNORECASE and re.search.",
+  "pool_conditions": {
+    "description": "A fetched item enters the candidate pool only if ALL hold. Items failing any condition are logged by id with the first failing condition and are not sampled.",
+    "conditions": [
+      {"id": "date", "rule": "created inside date_range"},
+      {"id": "category", "rule": "at least one category rule below matches"},
+      {"id": "request_intent", "rule": "for HN and GitHub: the request_intent pattern matches title + first 1500 characters of body; for Stack Exchange always true"},
+      {"id": "min_length", "rule": "len(title) + len(body after tag removal) >= 300 characters"},
+      {"id": "no_conflict", "rule": "drop if author login or repository name contains 'ncchen99' or 'pickfit'"},
+      {"id": "dedupe", "rule": "one entry per canonical URL"}
+    ]
+  },
+  "request_intent": {
+    "pattern": "recommend|suggest|alternativ|looking for|look for|is there (a|an|any|some)\\b|are there (any|some)\\b|any (good|better|other|decent|great|tools?|software|apps?|programs?|clis?|libraries|servers?|options?)\\b|what('s| is| are) (the )?(best|good|better|a good|your favou?rite)|what (tools?|software|apps?|clis?|servers?) (do|are|can|should)|what do you use|what are you using|which (tool|software|app|cli|server|client|one)\\b|best (tool|way|app|software|program|cli|option|server|client)|(need|want) (a|an|some) (tool|software|program|cli|app|server)"
+  },
+  "category_rules": {
+    "precedence": ["mcp", "local_ai", "dev_cli"],
+    "note": "The first category whose rule matches is the item's category (one category per item). The rule only buckets items; whether the text really is a request for that kind of software is checked again when the item is read (exclusion not_in_category). There is no reassignment: an item that the reading shows is in a different category is excluded as not_in_category.",
+    "definitions": {
+      "mcp": "asks for an MCP server (a server that gives AI agents access to a service, data source or capability over the Model Context Protocol), or for a tool that serves that purpose. Questions about building MCP servers, MCP clients, hosts or debuggers are not this category.",
+      "local_ai": "asks for a tool that runs, serves, or uses AI/LLM models locally or offline (runners, local chat clients, local transcription, local RAG, local coding agents, local OCR, and so on).",
+      "dev_cli": "asks for a command-line (or terminal UI) tool for a developer task."
+    },
+    "mcp": {
+      "any_of": ["\\bmcp\\b", "model context protocol"]
+    },
+    "local_ai": {
+      "any_of_groups": [
+        {"name": "runner_terms", "any_of": ["\\bollama\\b", "llama\\.cpp", "\\bgguf\\b", "lm[- ]?studio", "llamafile", "\\bvllm\\b", "gpt4all", "\\bmlx\\b", "open[- ]?webui", "text-generation-webui", "koboldcpp", "jan\\.ai", "\\bcomfyui\\b", "whisper\\.cpp", "faster-whisper", "\\blocalai\\b"]},
+        {"name": "ai_and_local", "all_of": [
+          {"any_of": ["\\bllms?\\b", "language models?", "\\bai\\b", "\\bgpt\\b", "chatgpt", "whisper", "stable diffusion", "speech[- ]to[- ]text", "text[- ]to[- ]speech", "\\btts\\b", "embeddings?", "\\brag\\b", "\\bocr\\b"]},
+          {"any_of": ["\\blocal(ly)?\\b", "offline", "self[- ]?host(ed|ing)?", "on[- ]prem(ise|ises)?", "on[- ]device", "air[- ]?gapped", "without (the )?(cloud|internet)", "no (cloud|internet)", "privately", "on my (own )?(machine|computer|laptop|pc|mac|server|hardware|gpu)", "my own (hardware|machine|server)"]}
+        ]}
+      ]
+    },
+    "dev_cli": {
+      "all_of": [
+        {"name": "cli_term", "any_of": ["\\bcli\\b", "command[- ]?line", "\\bterminal\\b", "\\btui\\b", "\\bshell\\b", "\\bbash\\b", "\\bzsh\\b", "\\bpowershell\\b", "\\bstdin\\b", "\\bstdout\\b", "tag:command-line-interface", "tag:cli", "tag:shell", "tag:terminal", "tag:bash"]},
+        {"name": "dev_context", "any_of": ["developer", "programming", "\\bcode\\b", "coding", "\\bgit\\b", "\\bgithub\\b", "repo(sitory)?\\b", "devops", "\\bci\\b", "\\bci/cd\\b", "\\bapi\\b", "\\bjson\\b", "\\byaml\\b", "\\btoml\\b", "\\bsql\\b", "docker", "kubernetes", "\\bk8s\\b", "\\blogs?\\b", "\\bssh\\b", "\\bnpm\\b", "\\bpip\\b", "cargo", "compiler", "debug", "\\bbuild\\b", "deploy", "scripts?\\b", "scripting", "dotfiles", "\\bcsv\\b", "\\bregex\\b", "\\bdiff\\b"]}
+      ]
+    }
+  },
+  "sampling": {
+    "seed": "pickfit-bset-20261031-a7",
+    "order_key": "sha256 hex digest of the UTF-8 string '<seed>|<canonical_url>'; the pool of each category is sorted by this key ascending (ties impossible in practice; broken by URL).",
+    "merge": "all sources of one category are merged into one list before ordering; no per-source quota",
+    "procedure": "Walk each category's ordered list from the top. Read the item's question text (title and body only), apply the exclusion list below, log the decision. An excluded item is replaced by the next item in the list. Stop at 4 accepted items per category (12 in all). If a category's list is exhausted first, report the shortfall; the rules are not relaxed.",
+    "pointer": "The index of the last item screened in each category is recorded, so a later replacement (if 念誠's review rejects an item for a reason on the exclusion list) continues from the same place."
+  },
+  "exclusions": {
+    "source": "eval/README.md section 9.2 E3, judged from the question text only",
+    "reasons": {
+      "not_in_category": "not a request for a developer CLI tool, a local AI/LLM tool or an MCP server (including: the bucket's category does not match what the text actually asks for, or the text is too unclear to tell)",
+      "no_hard_condition": "states no hard condition that can be checked against a tool's docs, license, repo or by running it (a vague wish for something 'good' or 'popular' does not count)",
+      "paid_or_commercial": "explicitly wants paid or commercially licensed software",
+      "duplicate_of_q": "substantially the same as one of the 20 questions in eval/questions.yaml (the matching q-id is logged)",
+      "personal_data": "requires giving personal data (the asker's or anyone else's) to answer or to run the tool, or the post itself contains personal data"
+    },
+    "accepted_answer": "A question that already has an accepted or upvoted answer is kept like any other."
+  },
+  "not_decided_here": "The rewrite into questions.yaml format, checklist tagging and fixture design are done after sampling and are described in eval/questions-b.yaml."
+}

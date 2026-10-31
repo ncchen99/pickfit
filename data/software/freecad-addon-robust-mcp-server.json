@@ -1,0 +1,713 @@
+{
+  "schema_version": "software.v1",
+  "slug": "freecad-addon-robust-mcp-server",
+  "repo_id": "gh:1127462076",
+  "name": "FreeCAD Robust MCP Server",
+  "summary": "MCP server that connects AI assistants to FreeCAD for CAD modeling, macros and debugging.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "addons",
+    "ai",
+    "freecad",
+    "mcp-server",
+    "workbench"
+  ],
+  "use_cases": [
+    "Develop and debug 3D models with AI assistance",
+    "Create, edit and run FreeCAD macros via MCP",
+    "Export models to STEP format"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://spkane.github.io/freecad-addon-robust-mcp-server/",
+  "repo": {
+    "url": "https://github.com/spkane/freecad-addon-robust-mcp-server",
+    "full_name": "spkane/freecad-addon-robust-mcp-server",
+    "created_at": "2026-01-03T23:45:40Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.11"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "robust-mcp-workbench-v0.6.2",
+    "published_at": "2026-01-19T08:01:45Z",
+    "url": "https://github.com/spkane/freecad-addon-robust-mcp-server/releases/tag/robust-mcp-workbench-v0.6.2"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "gui_only",
+    "checked_at": "2026-10-31T01:27:32.106218+08:00",
+    "runs": [
+      {
+        "id": "verify-freecad-addon-robust-mcp-server-20261031-012621-9147",
+        "level": "unverified",
+        "unverified_reason": "gui_only",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:27:32.106218+08:00",
+        "tool_version": "0.6.1",
+        "install_method": "uv",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "uv tool install freecad-robust-mcp 2>&1",
+            "purpose": "Install via uv tool install freecad-robust-mcp"
+          },
+          {
+            "command": "uv pip install --python ~/.local/share/uv/tools/freecad-robust-mcp/bin/python \"mcp<2\" 2>&1",
+            "purpose": "Pin mcp<2 in tool env to fix FastMCP import"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "freecad-mcp --help 2>&1",
+            "expected_signal": "FreeCAD Robust MCP Server",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "FreeCAD Robust MCP Server - Connect AI assistants to FreeCAD",
+            "setup": [
+              {
+                "command": "uv tool install freecad-robust-mcp 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "uv pip install --python ~/.local/share/uv/tools/freecad-robust-mcp/bin/python \"mcp<2\" 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "freecad-mcp --version 2>&1",
+            "expected_signal": "freecad-mcp unknown",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "freecad-mcp unknown",
+            "setup": [
+              {
+                "command": "uv tool install freecad-robust-mcp 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "uv pip install --python ~/.local/share/uv/tools/freecad-robust-mcp/bin/python \"mcp<2\" 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install freecad-robust-mcp then freecad-mcp --help",
+            "actually_needed": "downgrade the isolated tool env to mcp v1: uv pip install --python ~/.local/share/uv/tools/freecad-robust-mcp/bin/python \"mcp<2\" (gets mcp 1.30.0) before freecad-mcp will start",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "freecad-mcp --version shows version information",
+            "actually_needed": "freecad-mcp --version prints 'freecad-mcp unknown' (package is freecad-robust-mcp 0.6.1); use install output for version",
+            "kind": "note"
+          },
+          {
+            "readme_said": "FREECAD_MODE=xmlrpc freecad-mcp starts the MCP server",
+            "actually_needed": "a running FreeCAD with the Robust MCP Bridge started (XML-RPC localhost:9875 / socket localhost:9876) is required before the MCP handshake; server exits with CONNECTION REFUSED otherwise",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-freecad-addon-robust-mcp-server-20261031-012621-9147/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.089517
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": "freecad-mcp",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"freecad\": {\n      \"command\": \"freecad-mcp\",\n      \"env\": {\n        \"FREECAD_MODE\": \"xmlrpc\"\n      }\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "FREECAD_MODE",
+        "required": null,
+        "purpose": "Connection mode"
+      },
+      {
+        "name": "FREECAD_PATH",
+        "required": null,
+        "purpose": "Path to FreeCAD's lib directory"
+      },
+      {
+        "name": "FREECAD_SOCKET_HOST",
+        "required": null,
+        "purpose": "Socket/XML-RPC server hostname"
+      },
+      {
+        "name": "FREECAD_SOCKET_PORT",
+        "required": null,
+        "purpose": "JSON-RPC socket server port"
+      },
+      {
+        "name": "FREECAD_XMLRPC_PORT",
+        "required": null,
+        "purpose": "XML-RPC server port"
+      },
+      {
+        "name": "FREECAD_TIMEOUT_MS",
+        "required": null,
+        "purpose": "Default execution timeout in ms"
+      }
+    ],
+    "tools": [
+      "execute_python",
+      "get_freecad_version",
+      "get_connection_status",
+      "get_console_output",
+      "list_documents",
+      "create_document",
+      "create_box",
+      "create_cylinder",
+      "boolean_operation",
+      "create_sketch",
+      "pad_sketch",
+      "get_screenshot",
+      "undo",
+      "export_step",
+      "export_stl",
+      "list_macros",
+      "run_macro",
+      "create_macro"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:03:51+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.5,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 1.0,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.65,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 79.6,
+      "signals": {
+        "stars": 262,
+        "monthly_downloads": null,
+        "forks": 64,
+        "dependents": null,
+        "release_downloads": 3193,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 299,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 14.08
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "2a9d59e92c3cae1866031598ea7a646239b4a67d08adeaa4d9328c0d0c8f4c5e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "An [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server that enables integration between AI assistants"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "This section covers installation and usage for end users who want to use the Robust MCP Server with AI assistants."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- [FreeCAD](https://www.freecad.org/) 1.1.4 or newer is recommended for security;"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install freecad-robust-mcp"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "MCP Bridge started!\n     - XML-RPC: localhost:9875\n     - Socket: localhost:9876"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `FREECAD_MODE`        | Connection mode: `xmlrpc`, `socket`, or `embedded`   | `xmlrpc`    |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "To uninstall the Robust MCP Bridge workbench:"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/spkane/freecad-addon-robust-mcp-server",
+      "fetched_at": "2026-10-31T00:18:11+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/spkane/freecad-addon-robust-mcp-server/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:03:33+08:00"
+    },
+    {
+      "id": "release:robust-mcp-workbench-v0.6.2",
+      "kind": "release",
+      "url": "https://github.com/spkane/freecad-addon-robust-mcp-server/releases/tag/robust-mcp-workbench-v0.6.2",
+      "fetched_at": "2026-10-31T01:03:33+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "The FreeCAD Robust MCP server and MCP Bridge Workbench/Addon",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "This section covers installation and usage for end users who want to use the Robust MCP Server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "The FreeCAD Robust MCP server and MCP Bridge Workbench/Addon",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "An [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server that enables integration between AI assistants",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# FreeCAD Robust MCP Server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.11 or newer for the external server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:11+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:11+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:11+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:11+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:11+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:robust-mcp-workbench-v0.6.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:03:33+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "allowing AI-assisted development and debugging of 3D models, macros, and workbenches.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Create, edit, run, and template FreeCAD macros via MCP",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Export to STEP format (ISO CAD exchange)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "\"command\": \"freecad-mcp\",",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"freecad\": {\n      \"command\": \"freecad-mcp\",\n      \"env\": {\n        \"FREECAD_MODE\": \"xmlrpc\"\n      }\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "FREECAD_MODE",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "FREECAD_PATH",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "FREECAD_SOCKET_HOST",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "FREECAD_SOCKET_PORT",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "FREECAD_XMLRPC_PORT",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/5",
+      "source_id": "readme",
+      "quote": "FREECAD_TIMEOUT_MS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`execute_python`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`get_freecad_version`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`get_connection_status`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`get_console_output`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`list_documents`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`create_document`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`create_box`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`create_cylinder`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`boolean_operation`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`create_sketch`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`pad_sketch`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`get_screenshot`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "`undo`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "`export_step`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/14",
+      "source_id": "readme",
+      "quote": "`export_stl`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/15",
+      "source_id": "readme",
+      "quote": "`list_macros`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/16",
+      "source_id": "readme",
+      "quote": "`run_macro`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/17",
+      "source_id": "readme",
+      "quote": "`create_macro`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:14+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:11+08:00",
+  "updated_at": "2026-10-31T02:03:51+08:00"
+}

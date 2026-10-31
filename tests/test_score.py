@@ -458,3 +458,14 @@ def test_grade_docs_sends_a_strict_schema_and_zeroes_unquoted_items(tmp_path: Pa
     assert rubric.unquoted == ["troubleshooting_uninstall"]
     assert rubric.items.troubleshooting_uninstall.score == 0 and rubric.items.config_and_keys.quote is None
     assert rubric.items.score() == pytest.approx(12 / 16) and graded.cost_usd > 0
+
+
+def test_mcp_servers_have_their_own_popularity_refs() -> None:
+    from pickfit.score import POPULARITY_REFS, VERIFICATION_DEPTH, popularity
+
+    assert set(POPULARITY_REFS["mcp_server"]) == set(POPULARITY_REFS["dev_cli"])
+    signals = {"stars": 40, "forks": 5, "monthly_downloads": 20000, "release_downloads": None, "dependents": None,
+               "hn_top_score": 0, "registries_count": 1}
+    # The same npm download count says less about an MCP server, which npx fetches on every client start.
+    assert popularity(signals, "mcp_server", 60) < popularity(signals, "dev_cli", 60)
+    assert VERIFICATION_DEPTH["mcp_server"]["function"] < VERIFICATION_DEPTH["mcp_server"]["service"] == 1.0

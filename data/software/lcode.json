@@ -1,0 +1,522 @@
+{
+  "schema_version": "software.v1",
+  "slug": "lcode",
+  "repo_id": "gh:1392853213",
+  "name": "lcode",
+  "summary": "Local terminal coding agent that explores repos, edits files, and runs commands.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agents",
+    "ai",
+    "cli",
+    "coding-agent",
+    "developer-tools",
+    "llm",
+    "local-llm",
+    "ollama",
+    "open-weights",
+    "python"
+  ],
+  "use_cases": [
+    "answer questions about how code works with file references",
+    "write scripts and run them in the repo",
+    "find failing tests and fix them",
+    "search code semantically for specific behavior",
+    "review repository changes with findings"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://nasser1941.github.io/lcode/",
+  "repo": {
+    "url": "https://github.com/nasser1941/lcode",
+    "full_name": "nasser1941/lcode",
+    "created_at": "2026-09-28T13:54:50Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": "optional",
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install nasser1941/tap/lcode",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "lcode setup"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-lcode-20261031-001540-3a4d",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install lcode-cli 2>&1",
+          "purpose": "Install lcode via uv tool install lcode-cli"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "lcode --version 2>&1",
+        "expected_signal": "lcode 0.52.0"
+      },
+      "first_task": "lcode doctor 2>&1"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.52.0",
+    "published_at": "2026-10-27T19:59:10Z",
+    "url": "https://github.com/nasser1941/lcode/releases/tag/v0.52.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:16:27.739106+08:00",
+    "runs": [
+      {
+        "id": "verify-lcode-20261031-001540-3a4d",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:16:27.739106+08:00",
+        "tool_version": "0.52.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install lcode-cli 2>&1",
+            "purpose": "Install lcode via uv tool install lcode-cli"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lcode --version 2>&1",
+            "expected_signal": "lcode 0.52.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lcode 0.52.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lcode --help 2>&1",
+            "expected_signal": "A local-first terminal coding agent",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "A local-first terminal coding agent powered by open-weight models via Ollama.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lcode doctor 2>&1",
+            "expected_signal": "cannot reach Ollama at http://localhost:11434",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "✗ Ollama cannot reach Ollama at http://localhost:11434: HTTPConnectionPool(host='localhost',",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lcode models 2>&1",
+            "expected_signal": "qwen3.5-4b",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ qwen3.5-4b │ 3.4 GB │ 256K │ no │ too large │ tested │",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.52.0, help with local-first agent tagline, and doctor correctly reporting Ollama unreachable.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lcode-20261031-001540-3a4d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lcode-20261031-001540-3a4d/check-1-cmd2.judged.png",
+            "runs/verify/verify-lcode-20261031-001540-3a4d/check-2-cmd3.judged.png",
+            "runs/verify/verify-lcode-20261031-001540-3a4d/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.032259
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:11:57+08:00",
+    "quality": {
+      "total": 90.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 42.4,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": 2490,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 32,
+      "packages": [
+        "pypi:lcode-cli"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 51.96
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "4401f43c9a8ba1f5851daba7b82aed024cc096d1b5e3f47a5c1d0bd40e34f3be",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Point lcode at a repository and talk to it in your terminal."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Point lcode at a repository and talk to it in your terminal."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**Ubuntu / Linux** (NVIDIA GPU recommended) and **macOS** on Apple Silicon (M1–M4):"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://nasser1941.github.io/lcode/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "cd ~/code/your-project\nlcode"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Turn it back on with\n  `lcode config set memory_check true`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "\" alt=\"MIT License\"></a>\n  <img src=\"https://img.shields.io/badge/python-3.10%2B-blue.svg\" alt=\"Python 3.10+\">\n  <img src=\"https://img.shields.io/badge/platform-Linux%20%7C%20macOS"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/nasser1941/lcode",
+      "fetched_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/nasser1941/lcode/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:55:18+08:00"
+    },
+    {
+      "id": "release:v0.52.0",
+      "kind": "release",
+      "url": "https://github.com/nasser1941/lcode/releases/tag/v0.52.0",
+      "fetched_at": "2026-10-30T23:55:18+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "talk to it in your terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:22+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "talk to it in your terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:22+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A real agent.** Reads, searches, edits and runs commands in a loop",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:22+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "It explores the code, answers questions with `file:line` references, writes and edits files",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:22+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<img src=\"https://raw.githubusercontent.com/nasser1941/lcode/main/docs/assets/logo.png\" width=\"360\" alt=\"lcode\">",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:22+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "**Ubuntu / Linux** (NVIDIA GPU recommended) and **macOS** on Apple Silicon (M1–M4):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:22+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "(NVIDIA GPU recommended)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:22+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Web access is on by default and can be set to `ask` or `off`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:22+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.52.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:55:18+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "How does authentication work here? Cite files.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:22+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Write scripts/dedupe.py that removes duplicate rows from @data/users.csv by email, and run it",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:22+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "The tests in tests/test_parser.py fail. Find out why and fix it.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:22+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "where are failed uploads retried?",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:22+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "/review` checks the changes with `file:line` findings",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:22+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install nasser1941/tap/lcode",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:22+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "uv tool install lcode-cli",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:22+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "A coding agent that runs entirely on your own machine.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:22+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:27:46+08:00",
+  "updated_at": "2026-10-31T02:11:57+08:00"
+}

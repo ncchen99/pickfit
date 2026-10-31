@@ -1,0 +1,550 @@
+{
+  "schema_version": "software.v1",
+  "slug": "tokenix",
+  "repo_id": "gh:1229124312",
+  "name": "tokenix",
+  "summary": "Local CLI that indexes code, traces symbol calls, filters tool output, and hooks AI agents.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": null,
+  "maturity": null,
+  "tags": [
+    "ai",
+    "ai-tools",
+    "artificial-intelligence",
+    "claude-code",
+    "cli",
+    "codex",
+    "costs",
+    "developer-tools",
+    "embeddings",
+    "gemini"
+  ],
+  "use_cases": [
+    "find code symbols by name or path",
+    "find callers of a symbol",
+    "assess blast radius of uncommitted changes",
+    "scan agent transcripts for exposed credentials",
+    "create budgeted repo context bundle"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/juninmd/tokenix",
+    "full_name": "juninmd/tokenix",
+    "created_at": "2026-05-04T18:14:48Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Rust (MSRV 1.90)"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install tokenix --locked",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "tokenix index ."
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-tokenix-20261030-234458-a88b",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o /home/sbx/.local/bin/tokenix && chmod +x /home/sbx/.local/bin/tokenix && ls -lh /home/sbx/.local/bin/tokenix",
+          "purpose": "Download tokenix Linux x86_64 binary to ~/.local/bin and make executable"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "tokenix --version",
+        "expected_signal": "tokenix 1.0.1"
+      },
+      "first_task": "tokenix index ."
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o tokenix",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "tokenix index ."
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.0.1",
+    "published_at": "2026-10-26T15:56:43Z",
+    "url": "https://github.com/juninmd/tokenix/releases/tag/v1.0.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:45:42.843136+08:00",
+    "runs": [
+      {
+        "id": "verify-tokenix-20261030-234458-a88b",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:45:42.843136+08:00",
+        "tool_version": "1.0.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o /home/sbx/.local/bin/tokenix && chmod +x /home/sbx/.local/bin/tokenix && ls -lh /home/sbx/.local/bin/tokenix",
+            "purpose": "Download tokenix Linux x86_64 binary to ~/.local/bin and make executable"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "tokenix --version",
+            "expected_signal": "tokenix 1.0.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tokenix 1.0.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tokenix --help",
+            "expected_signal": "Index a repository (chunks and symbol graph)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "index [path] Index a repository (chunks and symbol graph)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tokenix index .",
+            "expected_signal": "Files: 1 indexed, 0 skipped, 0 errors",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Files: 1 indexed, 0 skipped, 0 errors",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tokenix doctor",
+            "expected_signal": "bundled: 534 filters",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "bundled: 534 filters · 1167 embedded golden cases",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tokenix gain",
+            "expected_signal": "No hook events found in this project.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No hook events found in this project.",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "chmod +x tokenix && sudo mv tokenix /usr/local/bin/tokenix",
+            "actually_needed": "Install to ~/.local/bin (already on PATH) with chmod +x and run from there; no sudo / no write to /usr/local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o tokenix",
+            "actually_needed": "Prebuilt binary asset cannot be read with read_file; installed directly after download without script audit",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks succeeded, showing indexed file counts, doctor with 534 bundled filters, and version 1.0.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tokenix-20261030-234458-a88b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tokenix-20261030-234458-a88b/check-1-cmd4.judged.png",
+            "runs/verify/verify-tokenix-20261030-234458-a88b/check-2-cmd5.judged.png",
+            "runs/verify/verify-tokenix-20261030-234458-a88b/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.035523
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-30T23:55:13+08:00",
+    "quality": {
+      "total": 88.6,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 45.6,
+      "signals": {
+        "stars": 16,
+        "monthly_downloads": 110,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 68,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 177,
+      "packages": [
+        "crates:tokenix"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 48.2
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:55:13.257428+08:00",
+      "sources_sha": "28f60a32b3249da5c0203e00c3a231e21a80d4409b5d322ee74cc7ca0c7fee64",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Local semantic search, symbol graphs, secrets scanning, output filters, and CLI hooks that save 60-90% LLM tokens."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Give your AI coding agent the exact slice of the repo it needs — not the whole file."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "[Rust](https://www.rust-lang.org/tools/install) toolchain (MSRV 1.90)."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o tokenix"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ tokenix symbols apply_tax\n## Symbols matching `apply_tax`"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Put a `.tokenix.toml` in the repository root."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "`tokenix remove-hook --tool <agent>` undoes the install."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "https://img.shields.io/badge/license-MIT-blue?style=flat-square"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/juninmd/tokenix",
+      "fetched_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/juninmd/tokenix/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:34:05+08:00"
+    },
+    {
+      "id": "release:v1.0.1",
+      "kind": "release",
+      "url": "https://github.com/juninmd/tokenix/releases/tag/v1.0.1",
+      "fetched_at": "2026-10-29T02:34:05+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "high-performance Rust CLI that sits directly between your AI coding agent and your repository",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:50+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "high-performance Rust CLI that sits directly between your AI coding agent and your repository",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:50+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Local semantic search, symbol graphs, secrets scanning, output filters, and CLI hooks that save 60-90% LLM tokens.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:50+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1>tokenix</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:50+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "platform-Linux%20%7C%20macOS%20%7C%20Windows",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:50+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "built%20with-Rust%20(MSRV%201.90)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:50+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "zero external services",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:50+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.0.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:34:05+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Find indexed symbols by name or path",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:50+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Symbols that call or reference a symbol",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:50+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Blast radius of the current diff: changed symbols and everything that calls them",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:50+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Scan agent transcripts for exposed credentials, attributed to repo + branch",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:50+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Budgeted repo pack for tools without hooks",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:50+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install tokenix --locked",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:50+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o tokenix",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:50+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o tokenix",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:50+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "It indexes your codebase locally, and it never changes what the agent reads",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:50+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-30T23:55:13+08:00"
+}

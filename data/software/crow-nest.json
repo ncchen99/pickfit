@@ -1,0 +1,435 @@
+{
+  "schema_version": "software.v1",
+  "slug": "crow-nest",
+  "repo_id": "gh:1353958940",
+  "name": "crow-nest",
+  "summary": "Rust and CUDA inference engine that serves quantized LLMs locally via OpenAI-compatible API.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "blackwell",
+    "cuda",
+    "glm",
+    "inference-engine",
+    "linux",
+    "llm",
+    "local-ai",
+    "local-llm",
+    "moe",
+    "multi-token-prediction"
+  ],
+  "use_cases": [
+    "Serve quantized models through an OpenAI-compatible API",
+    "Run inference with speculative decoding and vision support"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://github.com/nibor1896/crow-nest/releases/latest",
+  "repo": {
+    "url": "https://github.com/nibor1896/crow-nest",
+    "full_name": "nibor1896/crow-nest",
+    "created_at": "2026-09-01T19:36:44Z",
+    "archived": false
+  },
+  "platforms": [
+    "windows",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": "required",
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fLO https://github.com/nibor1896/crow-nest/releases/download/v0.15.0/crow-nest-engine-0.15.0-linux-x64.tar.gz; mkdir -p crow-nest-engine && tar -xzf crow-nest-engine-0.15.0-linux-x64.tar.gz -C crow-nest-engine",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "tools/serve-linux.sh --port 8099"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.15.0",
+    "published_at": "2026-10-22T10:29:36Z",
+    "url": "https://github.com/nibor1896/crow-nest/releases/tag/v0.15.0"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "model_too_large",
+    "checked_at": "2026-10-31T00:19:05.778409+08:00",
+    "runs": [
+      {
+        "id": "verify-crow-nest-20261031-001759-d213",
+        "level": "unverified",
+        "unverified_reason": "model_too_large",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:19:05.778409+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "curl -fLO https://github.com/nibor1896/crow-nest/releases/download/v0.15.0/crow-nest-engine-0.15.0-linux-x64.tar.gz; mkdir -p crow-nest-engine && tar -xzf crow-nest-engine-0.15.0-linux-x64.tar.gz -C crow-nest-engine && ls -la crow-nest-engine/",
+            "purpose": "download and extract release tarball"
+          },
+          {
+            "command": "bash crow-nest-engine/fetch-nvrtc.sh --target crow-nest-engine && ls -la crow-nest-engine/",
+            "purpose": "fetch NVRTC runtime per README"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && ln -sf $PWD/crow-nest-engine/serve ~/.local/bin/serve && command -v serve && LD_LIBRARY_PATH=$PWD/crow-nest-engine ldd $PWD/crow-nest-engine/serve | grep -i nvrtc; echo PATH_OK",
+            "purpose": "expose serve on PATH"
+          }
+        ],
+        "smoke_tests": [],
+        "pitfalls": [
+          {
+            "readme_said": "README lists serve invocations with --port but documents no --version/--help flag",
+            "actually_needed": "serve only accepts --port and --slot-save-path; both 'serve --help' and 'serve --version' exit 2 with '[serve] --help/--version needs a value (usage: serve [--port <n>] [--slot-save-path <dir>])'",
+            "kind": "note"
+          },
+          {
+            "readme_said": "run via tools/serve-linux.sh --port 8099 / serve --port 8099 and crow --base-url http://127.0.0.1:8099/v1",
+            "actually_needed": "serve exits at startup with 'cannot load models/Qwen3.8-Flash-Next-original/tokenizer.json: No such file or directory' unless the multi-GB tokenizer plus 104.7 GB Qwen3.8-Flash-Next-CNQ4.5-M (or 124.6 GB GLM-5.3-Flash / 27B CNQ4.5) container is present; generic tiny GGUF/Safetensors models under 30…",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-crow-nest-20261031-001759-d213/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.055114
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-30T23:55:13+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 21.2,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 28,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 56,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 54.37
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:55:13.257428+08:00",
+      "sources_sha": "5c95a1beb651255310ea50cf660f0ef6af834671423abf8f2a64be4e27c182c6",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Rust + CUDA inference engine for Crow on one RTX 5090: GLM-5.3-Flash, Qwen3.8-Flash-Next (MoE) and the dense Qwen3.8-27B"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "for Crow on one RTX 5090"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "NVRTC 13.3.33 from NVIDIA's PyPI wheel, verified; the zip holds no NVIDIA file"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "cd engine && cargo build --release --bin serve && cd .."
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "tools/serve-linux.sh --port 8099"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "CROW_CNQ=converter/Qwen3.8-27B-CNQ4.5.cnq tools/serve-linux.sh --port 8099"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Apache-2.0"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/nibor1896/crow-nest",
+      "fetched_at": "2026-10-29T02:28:43+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/nibor1896/crow-nest/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:32:14+08:00"
+    },
+    {
+      "id": "release:v0.15.0",
+      "kind": "release",
+      "url": "https://github.com/nibor1896/crow-nest/releases/tag/v0.15.0",
+      "fetched_at": "2026-10-29T02:32:14+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "OpenAI-compatible serve.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:52+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "tools/serve-linux.sh --port 8099",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:52+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Rust + CUDA inference engine for Crow on one RTX 5090",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:52+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Rust + CUDA inference engine for Crow on one RTX 5090: GLM-5.3-Flash, Qwen3.8-Flash-Next (MoE) and the dense Qwen3.8-27B as CNQ containers, own kernels, MTP speculative decoding, vision, OpenAI-compatible serve.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:52+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "crow-nest: one GPU, its own quant, three model families.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:52+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "github_api",
+      "quote": "Windows and Linux.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:52+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "github_api",
+      "quote": "for Crow on one RTX 5090",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:52+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:43+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:43+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:43+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:43+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:28:43+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.15.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:32:14+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "github_api",
+      "quote": "OpenAI-compatible serve.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:52+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "github_api",
+      "quote": "MTP speculative decoding, vision, OpenAI-compatible serve.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:52+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fLO https://github.com/nibor1896/crow-nest/releases/download/v0.15.0/crow-nest-engine-0.15.0-linux-x64.tar.gz; mkdir -p crow-nest-engine && tar -xzf crow-nest-engine-0.15.0-linux-x64.tar.gz -C crow-nest-engine",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:52+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "github_api",
+      "quote": "on one RTX 5090",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:52+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:43+08:00",
+  "updated_at": "2026-10-31T00:19:05.780544+08:00"
+}

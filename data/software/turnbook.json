@@ -1,0 +1,551 @@
+{
+  "schema_version": "software.v1",
+  "slug": "turnbook",
+  "repo_id": "gh:1409626040",
+  "name": "Turnbook",
+  "summary": "Local long-term memory that keeps agent conversations word for word on the PC.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": "beta",
+  "tags": [
+    "agent-memory",
+    "ai-memory",
+    "claude",
+    "claude-code",
+    "codex",
+    "conversational-memory",
+    "cursor",
+    "gemini-cli",
+    "github-copilot",
+    "hybrid-search"
+  ],
+  "use_cases": [
+    "recall where a conversation left off yesterday",
+    "recall which database was picked for a service and why",
+    "recall what changed in auth middleware last week"
+  ],
+  "alternatives_to": [
+    "Mem0",
+    "Mastra",
+    "Supermemory"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/goyohan0611-png/turnbook",
+    "full_name": "goyohan0611-png/turnbook",
+    "created_at": "2026-10-08T02:43:03Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": "none",
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pip",
+      "steps": [
+        {
+          "command": "python -m pip install --upgrade turnbook",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "turnbook model"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-turnbook-20261031-023306-1250",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install turnbook 2>&1",
+          "purpose": "install turnbook isolated via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "turnbook --help 2>&1",
+        "expected_signal": "turnbook folder [PATH | local | share | CODE]"
+      },
+      "first_task": "turnbook model 2>&1"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pip",
+      "steps": [
+        {
+          "command": "python -m pip install --upgrade turnbook",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "turnbook model"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.10.4",
+    "published_at": "2026-10-30T08:25:10Z",
+    "url": "https://github.com/goyohan0611-png/turnbook/releases/tag/v0.10.4"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:34:04.619281+08:00",
+    "runs": [
+      {
+        "id": "verify-turnbook-20261031-023306-1250",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:34:04.619281+08:00",
+        "tool_version": "0.10.4",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install turnbook 2>&1",
+            "purpose": "install turnbook isolated via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "turnbook --help 2>&1",
+            "expected_signal": "turnbook folder [PATH | local | share | CODE]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "turnbook folder [PATH | local | share | CODE] [--share-existing]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "turnbook model 2>&1",
+            "expected_signal": "Search model: gemma",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Search model: gemma (onnx-community/embeddinggemma-300m-ONNX@onnx/model_q4.onnx)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/sampledocs && printf '# hello\\nThis is a test doc for turnbook memory.\\n' > /tmp/sampledocs/hello.md && turnbook docs add /tmp/sampledocs 2>&1",
+            "expected_signal": "Added /tmp/sampledocs",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Added /tmp/sampledocs. Its Markdown and text files are stored within a minute and kept up to date while automatic capture runs.",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "See your memory in 3D (turnbook-view)",
+            "actually_needed": "turnbook-view crashes with sqlite3.OperationalError: unable to open database file until the capture service has created the memory DB; on a fresh install with no conversations use --help or add content first",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show expected outputs: help with folder syntax, search model gemma, and docs add confirmation.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-turnbook-20261031-023306-1250/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-turnbook-20261031-023306-1250/check-1-cmd2.judged.png",
+            "runs/verify/verify-turnbook-20261031-023306-1250/check-2-cmd4.judged.png",
+            "runs/verify/verify-turnbook-20261031-023306-1250/check-3-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.065965
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:43:57+08:00",
+    "quality": {
+      "total": 85.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.8,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 51.3,
+      "signals": {
+        "stars": 13,
+        "monthly_downloads": 651,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 1,
+        "registries_count": 1
+      },
+      "age_days": 22,
+      "packages": [
+        "pypi:turnbook"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 41.49
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:43:57.550284+08:00",
+      "sources_sha": "c721c9aa41a00cc99eb128aaf8e787bda3469a67c8ab0a5100a58d0ac99e019e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Your AI forgets everything when the session ends. This one remembers, and it never calls an LLM to do it."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Local long-term memory for AI agents."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "No Python needed; nothing else to set up."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install turnbook && turnbook-install"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "\"Where did we leave off yesterday?\""
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "No API key and no model calls of its own"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "**How do I remove it?** `turnbook-uninstall` disconnects every app and stops the service"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Contributions are welcome. License: [Apache-2.0](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/goyohan0611-png/turnbook",
+      "fetched_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/goyohan0611-png/turnbook/blob/main/README.md",
+      "fetched_at": "2026-10-31T02:10:13+08:00"
+    },
+    {
+      "id": "release:v0.10.4",
+      "kind": "release",
+      "url": "https://github.com/goyohan0611-png/turnbook/releases/tag/v0.10.4",
+      "fetched_at": "2026-10-31T02:10:13+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Any other MCP client works through the tools",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Runs on your own PC.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Word search, a local embedding model (Google's EmbeddingGemma,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Local long-term memory for AI agents. Keeps every conversation word for word",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Turnbook",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "platform-Windows%20%7C%20macOS%20%7C%20Linux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "ONNX, no GPU",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.10.4",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T02:10:13+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "**Beta.** Used daily on Windows.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "*\"Where did we leave off yesterday?\"*",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "*\"Which database did we pick for the billing service, and why?\"*",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "*\"What did you change in the auth middleware last week?\"*",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Typical memory layers (Mem0, Mastra, Supermemory, ...)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "Typical memory layers (Mem0, Mastra, Supermemory, ...)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "Typical memory layers (Mem0, Mastra, Supermemory, ...)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "release:v0.10.4",
+      "quote": "python -m pip install --upgrade turnbook",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "release:v0.10.4",
+      "quote": "python -m pip install --upgrade turnbook",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "release:v0.10.4",
+      "quote": "python -m pip install --upgrade turnbook",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "**What does it cost?** Nothing. No API key and no model calls of its own",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "stay on your PC",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:49+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:51:37+08:00",
+  "updated_at": "2026-10-31T02:43:57+08:00"
+}

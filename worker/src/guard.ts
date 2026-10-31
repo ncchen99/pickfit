@@ -7,9 +7,8 @@
  * candidates, gets the few checks code can make about it.
  */
 import { CARD_FIELDS, type Card, type CardValue } from './cards.ts';
-import type { Entry } from './catalog.ts';
+import { nameKey, type Entry } from './catalog.ts';
 import type { ModelAnswer, ModelPick, ModelReason } from './prompt.ts';
-import { nameKey } from './rules.ts';
 
 const norm = (text: string) => text.trim().toLowerCase().replace(/\s+/g, ' ');
 

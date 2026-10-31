@@ -1,0 +1,483 @@
+{
+  "schema_version": "software.v1",
+  "slug": "localharness",
+  "repo_id": "gh:1247964551",
+  "name": "LocalHarness",
+  "summary": "Self-hosted agent harness that runs AI agents on locally served LLMs with tools and permissions.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "alpha",
+  "tags": [
+    "agent",
+    "agent-framework",
+    "agent-harness",
+    "agentic-ai",
+    "ai-agents",
+    "claude",
+    "cost-optimization",
+    "llama-cpp",
+    "llm",
+    "llm-agents"
+  ],
+  "use_cases": [
+    "work as a coding agent",
+    "work as a research agent",
+    "generate images with ComfyUI",
+    "read JavaScript-rendered pages via headless browser"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://localharness.dev",
+  "repo": {
+    "url": "https://github.com/ahwurm/localharness",
+    "full_name": "ahwurm/localharness",
+    "created_at": "2026-05-24T02:30:59Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.12 or later"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-localharness-20261030-235452-2ec9",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install 'localharness[embeddings,mobile]' 2>&1",
+          "purpose": "install localharness via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "localharness --version 2>&1",
+        "expected_signal": "localharness 0.25.0"
+      },
+      "first_task": "localharness plugins list 2>&1"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.22.1",
+    "published_at": "2026-10-25T15:08:39Z",
+    "url": "https://github.com/ahwurm/localharness/releases/tag/v0.22.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:57:02.005125+08:00",
+    "runs": [
+      {
+        "id": "verify-localharness-20261030-235452-2ec9",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:57:02.005125+08:00",
+        "tool_version": "0.25.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install 'localharness[embeddings,mobile]' 2>&1",
+            "purpose": "install localharness via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "localharness --version 2>&1",
+            "expected_signal": "localharness 0.25.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "localharness 0.25.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "localharness --help 2>&1",
+            "expected_signal": "Launch the agent REPL",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ start Launch the agent REPL. Zero to chatting in one command. │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "localharness plugins list 2>&1",
+            "expected_signal": "memory persistent memory",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "memory persistent memory: facts recalled on built in",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "localharness agent list 2>&1",
+            "expected_signal": "No agents configured.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No agents configured. Run: localharness agent create <name>",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.25.0, help listing start as Launch the agent REPL, and plugins list with memory persistent memory on.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-localharness-20261030-235452-2ec9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-localharness-20261030-235452-2ec9/check-1-cmd2.judged.png",
+            "runs/verify/verify-localharness-20261030-235452-2ec9/check-2-cmd3.judged.png",
+            "runs/verify/verify-localharness-20261030-235452-2ec9/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.031927
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:11:57+08:00",
+    "quality": {
+      "total": 83.7,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.8,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 74.2,
+      "signals": {
+        "stars": 56,
+        "monthly_downloads": 1716,
+        "forks": 5,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 3,
+        "registries_count": 1
+      },
+      "age_days": 159,
+      "packages": [
+        "pypi:localharness"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 21.59
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "3dea5fc8f0b2889aa4a66651256ca49787b70883b662f4b633e173f3abc673f2",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "LocalHarness is an open-source, self-hosted agent harness for local LLMs. It connects to a model you serve over an OpenAI-compatible API"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Use it as a coding and research agent on your own machine"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Python 3.12 or later and [uv](https://docs.astral.sh/uv/)."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "uv tool install 'localharness[embeddings,mobile]'"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "localharness start"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "localharness plugins enable image --set comfyui_url=http://127.0.0.1:8188"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "localharness update                  # the latest release from PyPI"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "MIT licensed."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ahwurm/localharness",
+      "fetched_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ahwurm/localharness/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:31:25+08:00"
+    },
+    {
+      "id": "release:v0.22.1",
+      "kind": "release",
+      "url": "https://github.com/ahwurm/localharness/releases/tag/v0.22.1",
+      "fetched_at": "2026-10-29T02:31:25+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "localharness start                   # finds a model (or offers one), sets up, opens a session",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:23+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "uv tool install 'localharness[embeddings,mobile]'",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:23+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "An open-source, coding agent harness designed specifically for local LLMs.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:23+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Run AI agents on the models you already run locally.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:23+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# LocalHarness",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:23+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.12 or later",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:23+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.22.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:31:25+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "Early stage (v0.22.1, pre-1.0).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:23+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "so a session works as a coding agent or a research agent.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:23+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "so a session works as a coding agent or a research agent.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:23+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "makes pictures with ComfyUI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:23+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "reads JavaScript-rendered pages through a sandboxed headless Chromium",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:23+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "LocalHarness is an open-source, self-hosted agent harness for local LLMs.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:23+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Use it as a coding and research agent on your own machine, with no account and no telemetry.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:23+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:22+08:00",
+  "updated_at": "2026-10-31T02:11:57+08:00"
+}

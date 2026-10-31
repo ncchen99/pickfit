@@ -1,0 +1,520 @@
+#!/usr/bin/env python3
+"""pickfit's MCP probe: start an MCP server over stdio and complete initialize + tools/list.
+
+Written into each verification box (stdlib only, Python 3.8+) and run there:
+
+    python3 ~/.pickfit/mcp_probe.py [--timeout S] [--call TOOL --args JSON] -- COMMAND [ARG ...]
+    python3 ~/.pickfit/mcp_probe.py [--timeout S] [--call TOOL --args JSON] --url http://127.0.0.1:PORT/mcp
+
+The second form talks streamable HTTP to a server already started (pickfit's agent starts it
+with run_background); the first starts the server itself over stdio.
+
+It speaks both eras of the protocol: the legacy `initialize` handshake first (most servers),
+and, when a server rejects that with a JSON-RPC error, the stateless 2026-07-28 revision
+(`server/discover`, then requests that carry the protocol version in `_meta`).
+
+What it prints is all a model or a person sees of the server. Tool, argument and server names
+are cut down to safe characters. Tool descriptions never leave the box: the probe checks them
+for instruction-like text aimed at the calling agent ("tool poisoning"), and the server's own
+`instructions` too, and prints only the names of the patterns that matched. The last line is `pickfit-mcp: <JSON>`, which pickfit
+parses; every value in it is one of those reduced names, a count or a version string.
+
+Exit codes: 0 the handshake completed (and the tool call, when asked, returned no error);
+1 usage; 2 the server exited or closed stdout first; 3 it timed out; 4 a protocol error, or
+no tools; 5 the tool call returned an error.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import queue
+import re
+import signal
+import subprocess
+import sys
+import threading
+import time
+import urllib.error
+import urllib.request
+
+PROTOCOL_VERSION = "2025-11-25"  # the newest legacy revision; a server answers with the one it speaks
+MODERN_VERSION = "2026-07-28"
+UNSUPPORTED_VERSION = -32022
+INSTRUCTIONS_KEY = "(server instructions)"
+CLIENT_INFO = {"name": "pickfit-mcp-probe", "version": "1"}
+MARKER = "pickfit-mcp: "
+NAME_MAX = 64
+MAX_TOOLS_SHOWN = 200
+MAX_ARGS_SHOWN = 12
+MAX_PAGES = 20
+STDERR_KEEP = 4000
+RESULT_SHOWN = 200
+
+_UNSAFE_NAME = re.compile(r"[^A-Za-z0-9_.:/-]")
+_UNSAFE_VERSION = re.compile(r"[^A-Za-z0-9_.+-]")
+_CONTROL = re.compile(r"[\x00-\x1f\x7f-\x9f​-‏‪-‮⁠-⁤﻿]")
+
+# Instruction-like text aimed at the agent that reads the tool list, as published tool-poisoning
+# examples write it. Each pattern needs wording a plain description of a tool does not use.
+FLAGS = (
+    ("instruction_tag", re.compile(r"<\s*/?\s*(important|system|instructions?|secret|hidden|admin)\b[^>]*>"
+                                   r"|\[\s*(important|system|instructions?)\s*\]", re.I)),
+    ("override", re.compile(r"\b(ignore|disregard|forget)\b.{0,30}\b(previous|prior|above|earlier|other|all)\b"
+                            r".{0,20}\b(instructions?|prompts?|rules|messages)\b", re.I | re.S)),
+    ("conceal_from_user", re.compile(r"\b(do not|don't|never|without)\b.{0,20}\b(tell|telling|inform|informing|"
+                                     r"mention|mentioning|notify|notifying|alert|alerting|reveal|revealing|show|"
+                                     r"showing)\b.{0,20}\b(the )?user\b", re.I | re.S)),
+    ("side_channel", re.compile(r"\bas a side ?note\b|\bsidenote\b|\bpass (its|the|their) (content|contents)\b", re.I)),
+    ("sensitive_files", re.compile(r"\b(read|cat|open|include|send|pass|upload|attach)\b.{0,60}"
+                                   r"(~/\.ssh|id_rsa|id_ed25519|\.aws/credentials|/etc/passwd|\.netrc|"
+                                   r"mcp\.json|claude_desktop_config|\.cursor/|\.env\b)", re.I | re.S)),
+    ("other_tools", re.compile(r"\b(before|after|instead of|when) (calling|using|you (call|use)) (any|another|"
+                               r"other|every|all)\b.{0,15}\btools?\b", re.I)),
+    ("hidden_unicode", re.compile("[​-‏‪-‮⁠-⁤﻿\U000e0000-\U000e007f]")),
+)
+
+
+def safe_name(value: object) -> str:
+    text = value if isinstance(value, str) else ""
+    return (_UNSAFE_NAME.sub("?", text)[:NAME_MAX]) or "?"
+
+
+def safe_version(value: object) -> str | None:
+    if not isinstance(value, str) or not value:
+        return None
+    return _UNSAFE_VERSION.sub("?", value)[:40]
+
+
+def _strings(node: object, depth: int = 0) -> list[str]:
+    """Every string in a JSON value (descriptions, titles, enum labels), not too deep."""
+    if depth > 8:
+        return []
+    if isinstance(node, str):
+        return [node]
+    if isinstance(node, dict):
+        return [s for value in node.values() for s in _strings(value, depth + 1)]
+    if isinstance(node, list):
+        return [s for value in node for s in _strings(value, depth + 1)]
+    return []
+
+
+# "When using the send_email tool, ...": shadowing when that tool is not one of this server's own. Only a
+# name that looks like a tool's (send_email, mail.send, or quoted) counts, not prose ("before calling this tool").
+_NAMED_TOOL = re.compile(r"\b(?:before|after|instead of|when)\s+(?:calling|using|you (?:call|use))\s+(?:the\s+)?"
+                         r"(?:[`'\"](?P<quoted>[A-Za-z0-9_.:/-]+)[`'\"]|(?P<name>[A-Za-z0-9]+[_.:/-][A-Za-z0-9_.:/-]*))"
+                         r"\s+tool\b", re.I)
+
+
+def flags_for(tool: dict, own_names: set[str] | None = None) -> list[str]:
+    """Pattern names that match a tool's description, title, annotations or input schema text.
+
+    own_names: the server's tool names; text about how to use a tool not among them is other_tools.
+    """
+    texts = _strings({k: v for k, v in tool.items() if k != "name"})
+    raw_name = tool.get("name") if isinstance(tool.get("name"), str) else ""
+    text = "\n".join(texts)
+    found = [label for label, pattern in FLAGS if pattern.search(text)]
+    if "other_tools" not in found and own_names is not None and any(
+            (m.group("quoted") or m.group("name")) not in own_names for m in _NAMED_TOOL.finditer(text)):
+        found.append("other_tools")
+    if "hidden_unicode" not in found and FLAGS[-1][1].search(raw_name):
+        found.append("hidden_unicode")
+    return found
+
+
+def arg_names(tool: dict) -> list[str]:
+    schema = tool.get("inputSchema") if isinstance(tool.get("inputSchema"), dict) else {}
+    props = schema.get("properties") if isinstance(schema.get("properties"), dict) else {}
+    required = set(schema.get("required") or []) if isinstance(schema.get("required"), list) else set()
+    return [safe_name(name) + ("*" if name in required else "") for name in list(props)[:MAX_ARGS_SHOWN]]
+
+
+class Probe:
+    def __init__(self, argv: list[str], timeout: float) -> None:
+        self.argv = argv
+        self.timeout = timeout
+        self.lines: queue.Queue = queue.Queue()
+        self.noise = 0
+        self.stderr_tail = b""
+        self.stderr_bytes = 0
+        self.next_id = 0
+        self.modern: str | None = None  # the modern protocol version in use, once chosen
+        self.proc = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE, start_new_session=True)
+        threading.Thread(target=self._read_stdout, daemon=True).start()
+        threading.Thread(target=self._read_stderr, daemon=True).start()
+
+    def _read_stdout(self) -> None:
+        for raw in iter(self.proc.stdout.readline, b""):
+            self.lines.put(raw)
+        self.lines.put(None)
+
+    def _read_stderr(self) -> None:
+        for chunk in iter(lambda: self.proc.stderr.read(4096), b""):
+            self.stderr_bytes += len(chunk)
+            self.stderr_tail = (self.stderr_tail + chunk)[-STDERR_KEEP:]
+
+    def send(self, message: dict) -> None:
+        data = (json.dumps(message) + "\n").encode()
+        try:
+            self.proc.stdin.write(data)
+            self.proc.stdin.flush()
+        except (BrokenPipeError, OSError):
+            raise ProbeError(2, "the server closed its stdin")
+
+    def request(self, method: str, params: dict, timeout: float | None = None) -> dict:
+        self.next_id += 1
+        rid = self.next_id
+        self.send({"jsonrpc": "2.0", "id": rid, "method": method, "params": with_meta(params, self.modern)})
+        deadline = time.monotonic() + (timeout or self.timeout)
+        while True:
+            left = deadline - time.monotonic()
+            if left <= 0:
+                raise ProbeError(3, f"no answer to {method} within {timeout or self.timeout:.0f}s")
+            try:
+                raw = self.lines.get(timeout=left)
+            except queue.Empty:
+                continue
+            if raw is None:
+                raise ProbeError(2, f"the server closed stdout before answering {method}")
+            try:
+                message = json.loads(raw)
+            except ValueError:
+                self.noise += 1
+                continue
+            if not isinstance(message, dict):
+                self.noise += 1
+                continue
+            if "method" in message and "id" in message:  # a request from the server
+                self._answer(message)
+                continue
+            if message.get("id") != rid:
+                continue  # a notification, or a stale answer
+            return answer_of(message, method)
+
+    def _answer(self, message: dict) -> None:
+        method = message.get("method")
+        if method == "ping":
+            reply = {"jsonrpc": "2.0", "id": message["id"], "result": {}}
+        elif method == "roots/list":
+            reply = {"jsonrpc": "2.0", "id": message["id"], "result": {"roots": []}}
+        else:
+            reply = {"jsonrpc": "2.0", "id": message["id"],
+                     "error": {"code": -32601, "message": "not supported by pickfit's probe"}}
+        self.send(reply)
+
+    def stop(self) -> None:
+        try:
+            self.proc.stdin.close()
+        except OSError:
+            pass
+        for sig in (None, signal.SIGTERM, signal.SIGKILL):
+            if sig is not None:
+                try:
+                    os.killpg(self.proc.pid, sig)
+                except (ProcessLookupError, PermissionError):
+                    break
+            try:
+                self.proc.wait(timeout=2)
+                break
+            except subprocess.TimeoutExpired:
+                continue
+
+
+def with_meta(params: dict, modern: str | None) -> dict:
+    """The modern revision carries version, client info and capabilities on every request."""
+    if not modern:
+        return params
+    return {**params, "_meta": {"io.modelcontextprotocol/protocolVersion": modern,
+                                "io.modelcontextprotocol/clientInfo": CLIENT_INFO,
+                                "io.modelcontextprotocol/clientCapabilities": {}}}
+
+
+def answer_of(message: dict, method: str) -> dict:
+    if "error" in message:
+        error = message["error"] if isinstance(message["error"], dict) else {}
+        raise ProbeError(4, f"{method} returned error {error.get('code')}", error)
+    result = message.get("result")
+    if not isinstance(result, dict):
+        raise ProbeError(4, f"{method} returned no result object")
+    return result
+
+
+class HttpProbe:
+    """Streamable HTTP: every message is a POST; an answer comes as a JSON body or an SSE stream."""
+
+    def __init__(self, url: str, timeout: float) -> None:
+        self.url = url
+        self.timeout = timeout
+        self.noise = 0
+        self.stderr_tail = b""
+        self.next_id = 0
+        self.modern: str | None = None
+        self.session: str | None = None
+        self.protocol: str | None = None  # the legacy version initialize agreed on
+
+    def _post(self, message: dict, method: str, timeout: float):
+        headers = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}
+        if self.session:
+            headers["Mcp-Session-Id"] = self.session
+        if self.modern or self.protocol:
+            headers["MCP-Protocol-Version"] = self.modern or self.protocol
+        if self.modern:
+            headers["Mcp-Method"] = method
+        request = urllib.request.Request(self.url, data=json.dumps(message).encode(), headers=headers,
+                                         method="POST")
+        try:
+            response = urllib.request.urlopen(request, timeout=timeout)
+        except urllib.error.HTTPError as err:
+            try:
+                body = json.loads(err.read(65536) or b"null")
+            except ValueError:
+                body = None
+            if isinstance(body, dict) and "error" in body:
+                return None, body
+            raise ProbeError(4, f"{method} got HTTP {err.code}")
+        except TimeoutError:
+            raise ProbeError(3, f"no answer to {method} within {timeout:.0f}s")
+        except (urllib.error.URLError, OSError) as err:
+            reason = getattr(err, "reason", err)
+            if isinstance(reason, TimeoutError):
+                raise ProbeError(3, f"no answer to {method} within {timeout:.0f}s")
+            raise ProbeError(2, f"cannot reach the server: {type(reason).__name__}")
+        self.session = response.headers.get("Mcp-Session-Id") or self.session
+        return response, None
+
+    def send(self, message: dict) -> None:
+        response, _ = self._post(message, str(message.get("method")), self.timeout)
+        if response is not None:
+            response.close()
+
+    def request(self, method: str, params: dict, timeout: float | None = None) -> dict:
+        self.next_id += 1
+        rid = self.next_id
+        wait = timeout or self.timeout
+        message = {"jsonrpc": "2.0", "id": rid, "method": method, "params": with_meta(params, self.modern)}
+        response, error_body = self._post(message, method, wait)
+        if error_body is not None:
+            return answer_of(error_body, method)
+        with response:
+            for reply in self._messages(response):
+                if isinstance(reply, dict) and reply.get("id") == rid:
+                    result = answer_of(reply, method)
+                    if method == "initialize" and isinstance(result.get("protocolVersion"), str):
+                        self.protocol = result["protocolVersion"]
+                    return result
+        raise ProbeError(4, f"no answer to {method} in the HTTP response")
+
+    def _messages(self, response):
+        kind = response.headers.get("Content-Type", "")
+        if "text/event-stream" in kind:
+            data: list[str] = []
+            for raw in iter(response.readline, b""):
+                line = raw.decode("utf-8", errors="replace").rstrip("\r\n")
+                if line.startswith("data:"):
+                    data.append(line[5:].lstrip())
+                elif not line and data:
+                    yield from self._parse("\n".join(data))
+                    data = []
+            if data:
+                yield from self._parse("\n".join(data))
+        else:
+            yield from self._parse(response.read(4_000_000).decode("utf-8", errors="replace"))
+
+    def _parse(self, text: str):
+        try:
+            value = json.loads(text)
+        except ValueError:
+            self.noise += 1
+            return
+        yield from value if isinstance(value, list) else [value]
+
+    def stop(self) -> None:
+        if not self.session:
+            return
+        request = urllib.request.Request(self.url, headers={"Mcp-Session-Id": self.session}, method="DELETE")
+        try:
+            urllib.request.urlopen(request, timeout=5).close()
+        except (urllib.error.URLError, OSError):
+            pass
+
+
+class ProbeError(Exception):
+    def __init__(self, code: int, message: str, rpc_error: dict | None = None) -> None:
+        super().__init__(message)
+        self.code = code
+        self.rpc_error = rpc_error or {}
+
+
+def _supported(error: dict) -> list[str]:
+    data = error.get("data") if isinstance(error.get("data"), dict) else {}
+    return [v for v in data.get("supported") or [] if isinstance(v, str)]
+
+
+def handshake(probe: Probe, summary: dict) -> None:
+    """initialize, else the modern revision's server/discover; fills summary and prints one line."""
+    try:
+        init = probe.request("initialize", {"protocolVersion": PROTOCOL_VERSION, "capabilities": {},
+                                            "clientInfo": CLIENT_INFO})
+        info = init.get("serverInfo") if isinstance(init.get("serverInfo"), dict) else {}
+        summary.update(era="legacy", protocol=safe_version(init.get("protocolVersion")),
+                       server=safe_name(info.get("name")), version=safe_version(info.get("version")))
+        print(f"initialize: ok protocol={summary['protocol']} server={summary['server']} "
+              f"version={summary['version']}")
+        probe.send({"jsonrpc": "2.0", "method": "notifications/initialized"})
+        result = init
+    except ProbeError as err:
+        if err.code != 4:  # the server exited or timed out: nothing to fall back to
+            raise
+        print(f"initialize: rejected ({err}); trying the stateless {MODERN_VERSION} revision")
+        probe.modern = MODERN_VERSION
+        try:
+            result = probe.request("server/discover", {})
+        except ProbeError as again:
+            versions = [v for v in _supported(again.rpc_error) if v >= MODERN_VERSION]
+            if again.rpc_error.get("code") != UNSUPPORTED_VERSION or not versions:
+                raise
+            probe.modern = versions[0]
+            result = probe.request("server/discover", {})
+        meta = result.get("_meta") if isinstance(result.get("_meta"), dict) else {}
+        info = meta.get("io.modelcontextprotocol/serverInfo")
+        info = info if isinstance(info, dict) else {}
+        summary.update(era="modern", protocol=safe_version(probe.modern), server=safe_name(info.get("name")),
+                       version=safe_version(info.get("version")))
+        print(f"server/discover: ok protocol={summary['protocol']} server={summary['server']} "
+              f"version={summary['version']}")
+    if isinstance(result.get("instructions"), str):
+        probe.instructions = result["instructions"]  # checked once the tool names are known; never printed
+
+
+def _summary_line(summary: dict) -> str:
+    return MARKER + json.dumps(summary, sort_keys=True)
+
+
+def run(argv: list[str], *, timeout: float, call: str | None, call_args: dict, url: str | None = None) -> int:
+    summary: dict = {"probe": 1, "launch": argv, "ok": False,
+                     "transport": "streamable_http" if url else "stdio", "url": url}
+    try:
+        probe = HttpProbe(url, timeout) if url else Probe(argv, timeout)
+    except OSError as err:
+        print(f"error: cannot start {argv[0]!r}: {err.strerror or err}")
+        summary["error"] = "start"
+        print(_summary_line(summary))
+        return 2
+    code = 0
+    try:
+        handshake(probe, summary)
+        tools: list[dict] = []
+        cursor = None
+        for _ in range(MAX_PAGES):
+            page = probe.request("tools/list", {"cursor": cursor} if cursor else {})
+            tools += [t for t in page.get("tools") or [] if isinstance(t, dict)]
+            cursor = page.get("nextCursor")
+            if not cursor or not isinstance(cursor, str):
+                break
+        print(f"tools/list: ok count={len(tools)}")
+        names = [safe_name(t.get("name")) for t in tools]
+        own = {t.get("name") for t in tools if isinstance(t.get("name"), str)}
+        flags: dict[str, list[str]] = {}
+        instructions = getattr(probe, "instructions", None)
+        if instructions:
+            found = flags_for({"description": instructions}, own)
+            if found:
+                flags[INSTRUCTIONS_KEY] = found
+        for tool, name in zip(tools, names):
+            found = flags_for(tool, own)
+            if found:
+                flags[name] = found
+        for tool, name in list(zip(tools, names))[:MAX_TOOLS_SHOWN]:
+            print(f"tool: {name} args={','.join(arg_names(tool)) or '-'}")
+        for name, found in flags.items():
+            print(f"flag: {name} {','.join(found)}")
+        summary.update(tools=names[:MAX_TOOLS_SHOWN], count=len(tools), flags=flags)
+        if not tools:
+            raise ProbeError(4, "tools/list returned no tools")
+        if call:
+            if call not in [t.get("name") for t in tools]:
+                raise ProbeError(1, f"no tool named {safe_name(call)!r} in tools/list")
+            result = probe.request("tools/call", {"name": call, "arguments": call_args})
+            content = [c for c in result.get("content") or [] if isinstance(c, dict)]
+            kinds = ",".join(f"{safe_name(c.get('type'))}" for c in content) or "-"
+            text = next((c.get("text") for c in content if isinstance(c.get("text"), str)), "")
+            if result.get("resultType") == "input_required":
+                print(f"tools/call: needs more input tool={safe_name(call)}")
+                summary["call_error"] = safe_name(call)
+                code = 5
+            elif result.get("isError"):
+                print(f"tools/call: error tool={safe_name(call)} content={kinds}")
+                summary["call_error"] = safe_name(call)
+                code = 5
+            else:
+                shown = " ".join(_CONTROL.sub(" ", text).split())[:RESULT_SHOWN]
+                print(f"tools/call: ok tool={safe_name(call)} content={kinds} text_chars={len(text)}")
+                if shown:
+                    print(f"result: {shown}")
+                summary["called"] = safe_name(call)
+        if probe.noise:
+            print(f"warning: {probe.noise} line(s) on the server's stdout were not JSON-RPC; strict clients may fail")
+        summary["noise"] = probe.noise
+        if code == 0:
+            summary["ok"] = True
+            print("handshake: ok" + (", tool call ok" if call else ""))
+    except ProbeError as err:
+        code = err.code
+        print(f"error: {err}")
+        summary["error"] = str(err)
+        summary["noise"] = probe.noise
+        tail = probe.stderr_tail.decode("utf-8", errors="replace").strip()
+        if tail:
+            print("server stderr (last lines):", file=sys.stderr)
+            print("\n".join(tail.splitlines()[-25:]), file=sys.stderr)
+    finally:
+        probe.stop()
+    summary["exit"] = probe.proc.returncode if isinstance(probe, Probe) else None
+    print(_summary_line(summary))
+    return code
+
+
+def main(args: list[str]) -> int:
+    timeout, call, call_args, url = 60.0, None, {}, None
+    if "--" not in args and "--url" not in args:
+        print(__doc__.strip().splitlines()[2].strip())
+        return 1
+    split = args.index("--") if "--" in args else len(args)
+    options, command = args[:split], args[split + 1:]
+    i = 0
+    while i < len(options):
+        if options[i] == "--timeout" and i + 1 < len(options):
+            timeout = float(options[i + 1])
+        elif options[i] == "--call" and i + 1 < len(options):
+            call = options[i + 1]
+        elif options[i] == "--url" and i + 1 < len(options):
+            url = options[i + 1]
+            if not re.match(r"^https?://(127\.0\.0\.1|localhost|\[::1\])(:\d{1,5})?(/[A-Za-z0-9_./-]*)?$", url):
+                print("usage: --url takes a local http://127.0.0.1:PORT/path the box started")
+                return 1
+        elif options[i] == "--args" and i + 1 < len(options):
+            try:
+                call_args = json.loads(options[i + 1])
+            except ValueError:
+                print("usage: --args takes a JSON object")
+                return 1
+            if not isinstance(call_args, dict):
+                print("usage: --args takes a JSON object")
+                return 1
+        else:
+            print(f"usage: unknown option {options[i]!r}")
+            return 1
+        i += 2
+    if not command and not url:
+        print("usage: give the server's launch command after --, or --url")
+        return 1
+    if command and url:
+        print("usage: give either a launch command after -- or --url, not both")
+        return 1
+    return run(command, timeout=timeout, call=call, call_args=call_args, url=url)
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

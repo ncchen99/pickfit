@@ -323,10 +323,13 @@ def readme_fixes(pitfalls: list[Pitfall]) -> int:
 
 
 # How much of the tool a passed run proved (C.3). A dev CLI is fully checked once a README example
-# runs; a local AI tool once a tiny model generates text, and a one-shot CLI run proves less.
+# runs; a local AI tool once a tiny model generates text, and a one-shot CLI run proves less. An MCP
+# server's function run is its handshake (it starts and lists its tools); only a tool call (service)
+# shows it does its job. Install never passes an MCP server (verify/mcp.py), so its entry is unused.
 VERIFICATION_DEPTH: dict[str, dict[str, float]] = {
     "dev_cli": {"install": 0.6, "function": 1.0, "service": 1.0, "inference": 1.0},
     "local_ai": {"install": 0.6, "function": 0.8, "service": 0.9, "inference": 1.0},
+    "mcp_server": {"install": 0.6, "function": 0.8, "service": 1.0, "inference": 1.0},
 }
 README_FIX_FACTOR = 0.85
 
@@ -509,6 +512,12 @@ POPULARITY_REFS: dict[str, dict[str, float]] = {
                 "registries_count": 1, "hn_top_score": 10, "star_velocity": 32.3},
     "local_ai": {"stars": 196.1, "forks": 26.0, "release_downloads": 4067.1, "monthly_downloads": 8947.1,
                  "registries_count": 1, "hn_top_score": 10, "star_velocity": 31.7},
+    # 2026-10-31, the same script over the 471 rule-passed mcp_server candidates (--registries). An MCP
+    # client that launches a server with `npx -y` fetches the package on every start, so downloads per
+    # user run high: the download P95 is 29,208 a month against dev_cli's 17,548, and dev_cli's refs
+    # would rank an ordinary MCP server as popular. Forks also run higher (28 against 17).
+    "mcp_server": {"stars": 165.5, "forks": 28.0, "release_downloads": 2832.0, "monthly_downloads": 29208.3,
+                   "registries_count": 1, "hn_top_score": 10, "star_velocity": 28.4},
 }
 REF_FLOORS = {"monthly_downloads": 100, "registries_count": 1, "hn_top_score": 10}
 VELOCITY_MIN_AGE_DAYS = 90

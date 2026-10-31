@@ -1,0 +1,560 @@
+{
+  "schema_version": "software.v1",
+  "slug": "neboto-tui",
+  "repo_id": "gh:1371160918",
+  "name": "neboto",
+  "summary": "Read-only terminal UI for browsing AWS with fuzzy search, detail panes, logs and charts.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "aws",
+    "aws-cli",
+    "cli",
+    "cloud",
+    "cloudtrail",
+    "cloudwatch",
+    "devops",
+    "ratatui",
+    "read-only",
+    "rust"
+  ],
+  "use_cases": [
+    "tail and search live logs for AWS resources",
+    "view CloudWatch charts for AWS resources",
+    "view change timeline merging CloudTrail and alarm history",
+    "run security audit over loaded resources",
+    "follow links across AWS resources by ARN or ID"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://neboto.dev",
+  "repo": {
+    "url": "https://github.com/neboto/neboto-tui",
+    "full_name": "neboto/neboto-tui",
+    "created_at": "2026-09-15T08:49:33Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "recent stable Rust toolchain"
+    ],
+    "system_packages": [
+      "aws CLI + session-manager-plugin"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "AWS credentials"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo binstall --git https://github.com/neboto/neboto-tui neboto",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "configured AWS credentials"
+      ],
+      "check": null,
+      "first_task": "neboto --demo"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-neboto-tui-20261031-002536-7abf",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSLO https://raw.githubusercontent.com/neboto/neboto-tui/main/install.sh && ls -l install.sh",
+          "purpose": "Download installer script for reading before running"
+        },
+        {
+          "command": "sh install.sh",
+          "purpose": "Run installer script to install prebuilt binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "neboto --version",
+        "expected_signal": "neboto 0.11.0"
+      },
+      "first_task": "neboto --demo services -o table"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v0.11.0",
+    "published_at": "2026-10-27T11:56:07Z",
+    "url": "https://github.com/neboto/neboto-tui/releases/tag/v0.11.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:26:50.152899+08:00",
+    "runs": [
+      {
+        "id": "verify-neboto-tui-20261031-002536-7abf",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:26:50.152899+08:00",
+        "tool_version": "0.11.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSLO https://raw.githubusercontent.com/neboto/neboto-tui/main/install.sh && ls -l install.sh",
+            "purpose": "Download installer script for reading before running"
+          },
+          {
+            "command": "sh install.sh",
+            "purpose": "Run installer script to install prebuilt binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "neboto --version",
+            "expected_signal": "neboto 0.11.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "neboto 0.11.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "neboto --help",
+            "expected_signal": "A fast, keyboard-driven, read-only terminal UI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "A fast, keyboard-driven, read-only terminal UI for browsing AWS",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "neboto --demo services -o table",
+            "expected_signal": "@ec2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "@ec2 EC2 regional",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "neboto --demo ls ec2 -o table --limit 10",
+            "expected_signal": "i-0a1b2c3d4e5f60001",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "EC2 Instance i-0a1b2c3d4e5f60001 web-1 running",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "neboto --demo opens the interactive TUI demo account",
+            "actually_needed": "Headless check with `neboto --demo services -o table` and `neboto --demo ls ec2 -o table --limit 10` which use the same offline canned demo account and print tables; the full TUI needs a TTY",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Installer verifies SHA-256 and, when gh is installed, signed build provenance",
+            "actually_needed": "Installer still verifies SHA-256 and installs, printing `Provenance: skipped (install the GitHub CLI to verify build provenance)`",
+            "kind": "note"
+          },
+          {
+            "readme_said": "install.sh script is readable before running",
+            "actually_needed": "Installer downloads a prebuilt binary tarball (neboto-x86_64-unknown-linux-gnu.tar.gz) that cannot be read as text before running",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show neboto demo services table, EC2 demo listing with instance i-0a1b2c3d4e5f60001, and version neboto 0.11.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-neboto-tui-20261031-002536-7abf/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-neboto-tui-20261031-002536-7abf/check-1-cmd7.judged.png",
+            "runs/verify/verify-neboto-tui-20261031-002536-7abf/check-2-cmd8.judged.png",
+            "runs/verify/verify-neboto-tui-20261031-002536-7abf/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.063799
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 77.3,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7225,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.6957,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 40.3,
+      "signals": {
+        "stars": 22,
+        "monthly_downloads": null,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": 127,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 45,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 46.15
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "7f2814ee88a493a9a6c42f72eaf100c06cdf67fa384395aef0cf747d17a20043",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A fast, keyboard-driven terminal UI for browsing AWS."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Either way you need configured AWS credentials."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/neboto/neboto-tui/main/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "`neboto --demo` opens a made-up account"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "TOML, found at `$NEBOTO_CONFIG`, then `$XDG_CONFIG_HOME/neboto/config.toml`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "clicking it copies\nthe upgrade command and stops announcing that version."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Prebuilt binaries for Linux (x86_64, aarch64) and macOS (Intel, Apple"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/neboto/neboto-tui",
+      "fetched_at": "2026-10-30T23:44:56+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/neboto/neboto-tui/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:03:45+08:00"
+    },
+    {
+      "id": "release:v0.11.0",
+      "kind": "release",
+      "url": "https://github.com/neboto/neboto-tui/releases/tag/v0.11.0",
+      "fetched_at": "2026-10-31T00:03:45+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A fast, keyboard-driven terminal UI for browsing AWS.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Prebuilt binaries for Linux (x86_64, aarch64) and macOS (Intel, Apple\nSilicon) are attached to every [GitHub release](https://github.com/neboto/neboto-tui/releases).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A fast, keyboard-driven terminal UI for browsing AWS.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A fast, keyboard-driven terminal UI for browsing AWS. **70+ services**, rich\nconsole-style detail panes, live log tailing, CloudWatch charts, and\ncross-service link-following — all without leaving the terminal.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# neboto",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Prebuilt binaries for Linux (x86_64, aarch64) and macOS (Intel, Apple\nSilicon) are attached to every [GitHub release](https://github.com/neboto/neboto-tui/releases).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "From source** — needs a recent stable Rust toolchain:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Optional companions: the\n`aws` CLI + `session-manager-plugin` for SSM sessions (`s`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "Either way you need configured AWS credentials.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:44:56+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:44:56+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:44:56+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:44:56+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:44:56+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.11.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:03:45+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "**Live log tail** (`t`) and server-side **log search** (`f`) on log groups,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "**CloudWatch charts in the pane** (`m`) for 50+ resource kinds",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "a timeline on *any* resource that\nmerges CloudTrail, alarm history, CloudFormation events",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "**A security pass** (`@audit`) over what's loaded: open security groups,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "press `Enter` on any ARN, id or reference to jump to\nthat resource, across services",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "cargo binstall --git https://github.com/neboto/neboto-tui neboto",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/neboto/neboto-tui/main/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Either way you need configured AWS credentials.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:41:31+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}

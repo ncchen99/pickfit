@@ -10,8 +10,8 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
-from pickfit.discover.github import (PUSHED_DAYS, GitHub, GitHubError, build_queries, normalize_repo,
-                                     runs_dir)
+from pickfit.discover.github import (PUSHED_DAYS, RATE_LIMIT_MAX_WAIT_S, GitHub, GitHubError, build_queries,
+                                     normalize_repo, runs_dir)
 from pickfit.discover.rules import RULES_VERSION, classify
 from pickfit.discover.store import PipelineDB
 from pickfit.env import get_env
@@ -82,12 +82,13 @@ def apply_rules(db: PipelineDB) -> Counter[str]:
 def run_discover(*, token: str, db_path: Path | None = None, per_query: int = DEFAULT_PER_QUERY,
                  pushed_days: int = PUSHED_DAYS, categories: list[str] | None = None, skip_details: bool = False,
                  today: date | None = None, gh: GitHub | None = None,
+                 max_rate_wait_s: float = RATE_LIMIT_MAX_WAIT_S,
                  log: Callable[[str], None] | None = None) -> dict[str, Any]:
     """Run the free part of the funnel and return the funnel counts."""
     log = log or (lambda line: print(line, file=sys.stderr))
     db = PipelineDB(db_path or pipeline_db_path())
     own_client = gh is None
-    gh = gh or GitHub(token)
+    gh = gh or GitHub(token, rate_limit_max_wait_s=max_rate_wait_s)
     run_id = "discover-" + taipei_now().strftime("%Y%m%d-%H%M%S")
     try:
         # GitHub reads created:/pushed: dates in UTC.

@@ -12,16 +12,23 @@ the log and decides from what actually ran:
 - the level is the weaker of the claim and what the passing checks support:
   install needs a passing check, function a README example (not only
   --version/--help), service a background server, inference a generation
-  request against it.
+  request against it. A GUI launch (launch_gui: a window of the app's own)
+  supports install only: a GUI app is not function until an action is shown
+  to change checkable state, which pickfit does not check yet;
+- for an MCP server (mcp.py), only pickfit's probe counts: function needs its
+  completed handshake, service a tool call; nothing else passes, and a check
+  or step that sets a credential variable never counts.
 """
 
 from __future__ import annotations
 
 import re
+import shlex
 from dataclasses import asdict, dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from pickfit.schema import COMMAND_MAX, PASSED_LEVELS, is_passed
+from pickfit.verify.mcp import credentials, parse_summary, probe_kind
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import CommandRecord, FinishArgs
@@ -143,6 +150,153 @@ def written_paths(command: str) -> set[str]:
     return {p for p in _WRITES.findall(command) if not p.startswith("/dev/") and not p[:1].isdigit()}
 
 
+_SCRIPT = re.compile(r"\.(?:sh|bash|zsh|js|mjs|cjs|ts|py|ps1|rb|pl)$")
+_SHELLS = re.compile(r"(?:sh|bash|zsh|dash|ksh|node|deno|bun|python(?:3(?:\.\d+)?)?|ruby|perl|pwsh)")
+_READERS = {"cat", "head", "tail", "less", "more", "nl", "sed", "awk", "bat", "view"}
+_URL = re.compile(r"https?://[^\s'\"|)<>]+")
+# A shell fed straight from the network: bash <(curl ...), sh -c "$(wget -O- ...)", source <(curl ...).
+_SUBSTITUTED = re.compile(rf"^\s*(?:sudo\s+)?(?:{_SHELLS.pattern}|source|\.)\b[^|]*(?:<\(|\$\()\s*(?:curl|wget)\b"
+                          r"(?P<fetch>[^)]*)\)")
+
+
+class Unread(NamedTuple):
+    step_id: int
+    name: str  # the file, or the URL a shell ran straight from the network
+    how: str  # "piped": run without being saved; "ran": run after saving; "brought in": run by another script
+    via: str | None = None  # "brought in": the downloaded script that may run it
+
+
+def _words(part: str) -> list[str]:
+    """A simple command's words, without leading VAR=value, sudo, env or exec."""
+    try:
+        words = shlex.split(part, comments=False)
+    except ValueError:
+        words = part.split()
+    while words and (re.match(r"^\w+=", words[0]) or words[0] in ("sudo", "env", "exec", "command")):
+        words = words[1:]
+    return words
+
+
+def _base(path: str) -> str:
+    return path.rstrip("/").rsplit("/", 1)[-1]
+
+
+def _fetched(words: list[str]) -> list[str] | None:
+    """For curl or wget: the files it saves ([] when it writes to stdout); None for any other program."""
+    program = _base(words[0]) if words else ""
+    if program not in ("curl", "wget"):
+        return None
+    urls = [w for w in words if _URL.match(w)]
+    named: list[str] = []
+    remote = program == "wget"  # wget saves under the URL's name unless -O says otherwise
+    i = 1
+    while i < len(words):
+        word, value = words[i], words[i + 1] if i + 1 < len(words) else None
+        letter = "o" if program == "curl" else "O"
+        long = "--output" if program == "curl" else "--output-document"
+        if word == long or (re.fullmatch(rf"-[a-zA-Z]*{letter}", word) and value is not None):
+            named.append(value or "-")
+            remote, i = False, i + 2
+            continue
+        if word.startswith(long + "="):
+            named.append(word.split("=", 1)[1])
+            remote = False
+        elif m := re.fullmatch(rf"-[a-zA-Z]*{letter}(.+)", word):  # -o- or -ofile
+            named.append(m.group(1))
+            remote = False
+        elif program == "curl" and (word in ("--remote-name", "--remote-name-all") or
+                                    re.fullmatch(r"-[a-zA-Z]*O[a-zA-Z]*", word)):
+            remote = True
+        i += 1
+    saved = named + ([_base(u.split("?", 1)[0]) for u in urls] if remote else [])
+    return [s for s in saved if s and s != "-"]
+
+
+def _ran(words: list[str], part: str) -> list[str]:
+    """Files a simple command runs: an interpreter's script argument or stdin, source, or ./file."""
+    if not words:
+        return []
+    program = words[0]
+    if program in ("source", "."):
+        return words[1:2]
+    if "/" in program:
+        return [program]
+    if not _SHELLS.fullmatch(_base(program)):
+        return []
+    args = [w for w in words[1:] if not w.startswith("-")]
+    stdin = re.search(r"(?<![<\d])<\s*([^\s<>&|;]+)", part)
+    return args[:1] + ([stdin.group(1)] if stdin else [])
+
+
+def unread_scripts(step_ids: list[int], commands: list[CommandRecord]) -> list[Unread]:
+    """Downloaded scripts a cited step ran, or brought in, before anything read them.
+
+    - piped: a shell ran a URL without saving it (curl ... | bash, bash <(curl ...), sh -c "$(curl ...)").
+    - ran: a file curl or wget saved, run by an interpreter, source or ./file, with no read of it between
+      its download and the step that ran it.
+    - brought in: a script (by its extension) a cited step saved and no step ran directly, while a later
+      cited step ran another downloaded script that may run it (an installer's helper), unread before then.
+    A read is a successful read_file, or cat, head, tail, less, more, nl, sed, awk or bat taking the file.
+    """
+    cited = set(step_ids)
+    saved: dict[str, list[tuple[tuple[int, int], int]]] = {}  # name -> [(position, cited step id or 0)]
+    reads: dict[str, list[tuple[int, int]]] = {}
+    runs: list[tuple[tuple[int, int], int, str]] = []
+    found: list[Unread] = []
+    for i, record in enumerate(commands):
+        if record.tool == "read_file":
+            if record.exit_code == 0 and not record.stderr:
+                reads.setdefault(_base(record.command.split(" [", 1)[0]), []).append((i, 0))
+            continue
+        if record.tool != "run_command":
+            continue
+        step = record.command_id if record.command_id in cited else 0
+        parts = [(op, text) for op, text in _top_level(record.command) if text.strip()]
+        for j, (_, text) in enumerate(parts):
+            words = _words(text)
+            fetched = _fetched(words)
+            if step and (m := _SUBSTITUTED.match(text)):
+                url = _URL.search(m.group("fetch"))
+                found.append(Unread(step, url.group(0) if url else "a downloaded script", "piped"))
+            if fetched is not None:
+                if step and not fetched and j + 1 < len(parts) and parts[j + 1][0] == "|" and \
+                        _SHELLS.fullmatch(_base((_words(parts[j + 1][1]) or [""])[0])):
+                    url = next((w for w in words if _URL.match(w)), "a downloaded script")
+                    found.append(Unread(step, url, "piped"))
+                for name in fetched:
+                    saved.setdefault(_base(name), []).append(((i, j), step))
+            elif words and _base(words[0]) in _READERS:
+                for word in words[1:]:
+                    reads.setdefault(_base(word), []).append((i, j))
+            elif step:
+                runs += [((i, j), step, _base(path)) for path in _ran(words, text)]
+
+    def read_between(name: str, start: tuple[int, int], end: tuple[int, int]) -> bool:
+        return any(start < at < end for at in reads.get(name, []))
+
+    def last_save(name: str, before: tuple[int, int]) -> tuple[tuple[int, int], int] | None:
+        return max((s for s in saved.get(name, []) if s[0] < before), default=None)
+
+    ran_downloaded = []  # (position, step, name) of cited runs of a saved file
+    for at, step, name in runs:
+        save = last_save(name, at)
+        if save is None:
+            continue
+        ran_downloaded.append((at, step, name))
+        if not read_between(name, save[0], at) and all(u.name != name for u in found):
+            found.append(Unread(step, name, "ran"))
+    run_names = {name for _, _, name in runs}
+    for name, saves in saved.items():
+        for at, step in saves:
+            if not step or not _SCRIPT.search(name) or name in run_names:
+                continue
+            installer = next(((r_at, r_step, r_name) for r_at, r_step, r_name in ran_downloaded
+                              if r_at > at and r_name != name), None)
+            if installer and not read_between(name, at, installer[0]) and all(u.name != name for u in found):
+                found.append(Unread(installer[1], name, "brought in", installer[2]))
+    return sorted(found, key=lambda u: (u.step_id, u.name))
+
+
 def masked_exit(command: str) -> str | None:
     """Why the recorded exit code of `command` may not be its real result, or None."""
     parts = _top_level(command)
@@ -163,16 +317,18 @@ def masked_exit(command: str) -> str | None:
             return f"`{_first_word(text)}` decides the exit code itself"
     if not parts:
         return None
-    # The exit code is the last list's: everything after the last `;`, `&` or newline.
+    # The exit code is the last list's: everything after the last `;`, `&` or newline. Within that
+    # list it is the last pipeline's last command, since `&&`/`||` yield their final command's code
+    # (so `cat x && tool y` is tool y's result, not cat's).
     cut = max((k for k, (op, _) in enumerate(parts) if op in (";", "&", "\n")), default=0)
     tail = parts[cut:]
-    if cut and _first_word(tail[0][1]) in _TRIVIAL:
-        return f"the last command is `{_first_word(tail[0][1])}`, so it hides the exit code before it"
-    # Within that list, the exit code is the last pipeline's last command.
     start = max(k for k, (op, _) in enumerate(tail) if op != "|")
     pipeline = tail[start:]
-    if len(pipeline) > 1 and _first_word(pipeline[-1][1]) in _FILTERS:
-        return f"piping into `{_first_word(pipeline[-1][1])}` hides the exit code of the command before it"
+    last = _first_word(pipeline[-1][1])
+    if cut and last in _TRIVIAL:
+        return f"the last command is `{last}`, so it hides the exit code before it"
+    if len(pipeline) > 1 and last in _FILTERS:
+        return f"piping into `{last}` hides the exit code of the command before it"
     return None
 
 
@@ -219,8 +375,17 @@ def _excerpt(record: CommandRecord, signal: str) -> str:
     return lines[-1].strip()[:EXCERPT_CHARS] if lines else ""
 
 
-def check_kind(command: str) -> str:
-    """version (--version/--help only), generation (asks a model for text), or example."""
+MCP_KINDS = ("mcp", "mcp_call")
+
+
+def check_kind(command: str, tool: str = "run_command") -> str:
+    """gui (a launch_gui), mcp or mcp_call (pickfit's MCP probe), version (--version/--help only), generation
+    (asks a model for text), or example."""
+    if tool == "launch_gui":
+        return "gui"
+    probe = probe_kind(last_command(command))
+    if probe:
+        return probe
     if _GENERATION.search(command):
         return "generation"
     if _VERSION_HELP.search(last_command(command)):
@@ -263,9 +428,12 @@ class LogVerdict:
         return {**asdict(self), "agrees": self.agrees}
 
 
-def evaluate_check(record: CommandRecord, expected_exit_code: int, expected_signal: str
-                   ) -> tuple[bool, list[str]]:
-    """Whether one recorded command shows a passing check; the reasons when not."""
+def evaluate_check(record: CommandRecord, expected_exit_code: int, expected_signal: str, *,
+                   trusted_only: bool = False) -> tuple[bool, list[str]]:
+    """Whether one recorded command shows a passing check; the reasons when not.
+
+    trusted_only (a GUI launch): the signal must be in stdout, pickfit's own lines; stderr is the app's output.
+    """
     problems: list[str] = []
     masked = masked_exit(record.command)
     if masked:
@@ -280,24 +448,44 @@ def evaluate_check(record: CommandRecord, expected_exit_code: int, expected_sign
     signal = _plain(expected_signal)
     if expected_exit_code != 0 and not signal:
         problems.append("a non-zero expected exit needs an expected_signal")
-    if signal and signal not in output:
-        problems.append(f"expected_signal not in the output: {expected_signal[:80]!r}")
+    if signal and signal not in (_plain(record.stdout) if trusted_only else output):
+        where = "pickfit's own lines about the launch" if trusted_only else "the output"
+        problems.append(f"expected_signal not in {where}: {expected_signal[:80]!r}")
     crash = _CRASH.search(_ANSI.sub("", f"{record.stdout}\n{record.stderr}"))
     if crash:
         problems.append(f"output shows a crash: {crash.group(0)!r}")
     return not problems, problems
 
 
-def supported_level(steps_ok: bool, checks: list[ResolvedCheck], has_service: bool) -> str | None:
-    """The strongest passed level the passing checks support, or None."""
+def mcp_problems(kind: str, stdout: str) -> list[str]:
+    """Why a probe check's output does not show what its kind claims; [] when it does."""
+    summary = parse_summary(stdout)
+    if summary is None:
+        return ["no summary line from pickfit's MCP probe in the output"]
+    if not summary.get("ok"):
+        return [f"the MCP probe did not complete: {str(summary.get('error') or 'not ok')[:120]}"]
+    if kind == "mcp_call" and not summary.get("called"):
+        return ["the MCP probe's tool call did not return a result"]
+    return []
+
+
+def supported_level(steps_ok: bool, checks: list[ResolvedCheck], has_service: bool, *,
+                    mcp: bool = False) -> str | None:
+    """The strongest passed level the passing checks support, or None.
+
+    An MCP server passes only on pickfit's probe: function for the handshake, service for a tool call.
+    """
     passing = [c for c in checks if c.passed]
     if not steps_ok or not passing:
         return None
+    if mcp:
+        kinds = {c.kind for c in passing}
+        return "service" if "mcp_call" in kinds else "function" if "mcp" in kinds else None
     if any(c.kind == "generation" for c in passing) and has_service:
         return "inference"
-    if has_service and any(c.kind != "version" for c in passing):
+    if has_service and any(c.kind not in ("version", "gui") for c in passing):
         return "service"
-    if any(c.kind != "version" for c in passing):
+    if any(c.kind not in ("version", "gui") for c in passing):
         return "function"
     return "install"
 
@@ -306,8 +494,11 @@ def weaker(a: str, b: str) -> str:
     return a if PASSED_LEVELS.index(a) > PASSED_LEVELS.index(b) else b
 
 
-def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict:
-    """Decide the level from the command log; the claim is only an upper bound."""
+def log_verdict(finish: FinishArgs, commands: list[CommandRecord], *, mcp: bool = False) -> LogVerdict:
+    """Decide the level from the command log; the claim is only an upper bound.
+
+    mcp: the software is an MCP server, so only pickfit's probe can make it pass.
+    """
     by_id = {c.command_id: c for c in commands if c.command_id is not None}
     problems: list[str] = []
 
@@ -330,6 +521,10 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict
             steps_ok = False
             problems.append(f"step {step.command_id} is {len(record.command)} characters; an install step "
                             f"must fit in {COMMAND_MAX} (split it into shorter commands)")
+        elif mcp and credentials(record.command):
+            steps_ok = False
+            problems.append(f"step {step.command_id} sets {', '.join(credentials(record.command))}: pickfit "
+                            "never uses placeholder credentials")
 
     # A step that runs a file only an uncited command wrote cannot be replayed (a fresh box lacks it).
     cited = set(step_ids)
@@ -358,7 +553,7 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict
             command_id=test.command_id, command=record.command, tool=record.tool,
             setup_ids=list(test.setup_ids), expected_signal=test.expected_signal.strip(),
             expected_exit_code=test.expected_exit_code, exit_code=record.exit_code, passed=False,
-            kind=check_kind(record.command))
+            kind=check_kind(record.command, record.tool))
         setup_ok = True
         for setup_id in test.setup_ids:
             if setup_id in step_ids:  # an install step: the replay runs every step first anyway
@@ -370,7 +565,16 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict
             elif setup.exit_code != 0 or setup.timed_out:
                 setup_ok = False
                 check.problems.append(f"setup {setup_id} exited {setup.exit_code}")
-        ok, why = evaluate_check(record, check.expected_exit_code, check.expected_signal)
+        ok, why = evaluate_check(record, check.expected_exit_code, check.expected_signal,
+                                 trusted_only=check.kind == "gui")
+        if check.kind in MCP_KINDS:
+            why += mcp_problems(check.kind, record.stdout)
+        if mcp:
+            fake = sorted({name for cid in (test.command_id, *test.setup_ids) if cid in by_id
+                           for name in credentials(by_id[cid].command)})
+            if fake:
+                why.append(f"sets {', '.join(fake)}: pickfit never uses placeholder credentials")
+        ok = ok and not why
         check.problems += why
         check.passed = ok and setup_ok
         check.observed_excerpt = _excerpt(record, check.expected_signal)
@@ -383,9 +587,11 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord]) -> LogVerdict
 
     level, reason = finish.level, finish.unverified_reason
     if is_passed(level):
-        supported = supported_level(steps_ok, checks, has_service)
+        supported = supported_level(steps_ok, checks, has_service, mcp=mcp)
         if supported is None:
             level, reason = "unverified", "other"
+            if mcp and steps_ok and any(c.passed for c in checks):
+                problems.append("an MCP server passes only when pickfit's probe completes the handshake")
             if not problems:
                 problems.append("no passing check in the log")
         else:

@@ -1,0 +1,471 @@
+{
+  "schema_version": "software.v1",
+  "slug": "shuvarie",
+  "repo_id": "gh:1326937616",
+  "name": "Shuvarie",
+  "summary": "Terminal AI coding agent that edits files, runs commands, and searches codebases.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent",
+    "ai",
+    "blazingly-fast",
+    "harness",
+    "ratatui",
+    "rig",
+    "rust",
+    "tui",
+    "turso"
+  ],
+  "use_cases": [
+    "read and write files",
+    "run shell commands",
+    "search codebase with grep and glob",
+    "review code without edits",
+    "fetch content from the web"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://shuvarie.org",
+  "repo": {
+    "url": "https://github.com/shuvarie/shuvarie",
+    "full_name": "shuvarie/shuvarie",
+    "created_at": "2026-08-07T16:47:41Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "provider API key"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-shuvarie-20261031-001003-4894",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin && curl -L -o /tmp/shuvarie.tar.gz https://github.com/shuvarie/shuvarie/releases/download/v0.5.6/shuvarie-0.5.6-x86_64-unknown-linux-musl.tar.gz && tar -tzf /tmp/shuvarie.tar.gz && tar -xzf /tmp/shuvarie.tar.gz -C /tmp/ && ls -la /tmp/shuvarie-*/ && cp /tmp/shuvarie-0.5.6/shuvarie ~/.local/bin/shuvarie && chmod +x ~/.local/bin/shuvarie && ls -la ~/.local/bin/shuvarie",
+          "purpose": "Download and install static binary release"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "shuvarie --version",
+        "expected_signal": "shuvarie 0.5.6"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.5.6",
+    "published_at": "2026-10-30T08:52:27Z",
+    "url": "https://github.com/shuvarie/shuvarie/releases/tag/v0.5.6"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:11:25.736518+08:00",
+    "runs": [
+      {
+        "id": "verify-shuvarie-20261031-001003-4894",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:11:25.736518+08:00",
+        "tool_version": "0.5.6",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin && curl -L -o /tmp/shuvarie.tar.gz https://github.com/shuvarie/shuvarie/releases/download/v0.5.6/shuvarie-0.5.6-x86_64-unknown-linux-musl.tar.gz && tar -tzf /tmp/shuvarie.tar.gz && tar -xzf /tmp/shuvarie.tar.gz -C /tmp/ && ls -la /tmp/shuvarie-*/ && cp /tmp/shuvarie-0.5.6/shuvarie ~/.local/bin/shuvarie && chmod +x ~/.local/bin/shuvarie && ls -la ~/.local/bin/shuvarie",
+            "purpose": "Download and install static binary release"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "shuvarie --version",
+            "expected_signal": "shuvarie 0.5.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "shuvarie 0.5.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "shuvarie --help",
+            "expected_signal": "Usage: shuvarie",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: shuvarie [OPTIONS] [WORK_DIR] [COMMAND]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install --path .",
+            "actually_needed": "box has no Rust toolchain and installing Rust/Go toolchains is forbidden, so skipped cargo candidate and installed the official prebuilt static binary shuvarie-0.5.6-x86_64-unknown-linux-musl.tar.gz from GitHub releases to ~/.local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "nix run . / nix profile install .",
+            "actually_needed": "nix is not installed in the box and nix run would build the Rust workspace from source; used the same prebuilt musl tarball instead (tar -xzf, cp shuvarie to ~/.local/bin)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "launch shuvarie and choose provider/model from selectors",
+            "actually_needed": "all usage (TUI launch, shuvarie run) requires a provider API key in ~/.config/shuvarie/connections.kdl plus an interactive terminal, so no README functional example could run here; verified only --version and --help",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Terminal shows shuvarie --version outputting shuvarie 0.5.6.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-shuvarie-20261031-001003-4894/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-shuvarie-20261031-001003-4894/check-1-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.069152
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 59.9,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 44.6,
+      "signals": {
+        "stars": 8,
+        "monthly_downloads": 84,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 238,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 83,
+      "packages": [
+        "crates:shuvarie"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 33.18
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "f8ae4e4b0caf24a2e424222551188f0e761d1ee3ac293528a1d0ff28a18dd05a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Shuvarie is a terminal-based AI coding agent: a Rust TUI around an agentic loop that edits files, runs commands, scrys your codebase"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Blazingly fast AI coding TUI for chivalrous people"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "With [Nix](https://nixos.org) (flakes enabled), from a checkout:"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "cargo install --path ."
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Then launch `shuvarie` and choose your steed — provider and model — from the selectors."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "kind \"anthropic\"\n        api-key \"sk-ant-…\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 0,
+          "quote": null
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/shuvarie/shuvarie",
+      "fetched_at": "2026-10-30T23:41:48+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/shuvarie/shuvarie/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:52:59+08:00"
+    },
+    {
+      "id": "release:v0.5.6",
+      "kind": "release",
+      "url": "https://github.com/shuvarie/shuvarie/releases/tag/v0.5.6",
+      "fetched_at": "2026-10-30T23:52:59+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Shuvarie is a terminal-based AI coding agent: a Rust TUI around an agentic loop that edits files",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:37+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Then launch `shuvarie` and choose your steed",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:37+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Shuvarie is a terminal-based AI coding agent: a Rust TUI around an agentic loop that edits files",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:37+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Shuvarie is a terminal-based AI coding agent: a Rust TUI around an agentic loop that edits files, runs commands, scrys your codebase",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:37+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# <p align=\"center\">Shuvarie",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:37+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "That file holds your API keys",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:37+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:48+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:48+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:48+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:48+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:48+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.5.6",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:52:59+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "it reads and writes scrolls (files)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:37+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "lights the ritual circle (your shell) when the quest demands",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:37+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "scrys with grep and glob",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:37+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Reviewer** (code review without edits)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:37+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "fetches tomes from the far webs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:37+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Bind any patron** — OpenAI, Anthropic, Gemini, Ollama, or another OpenAI-compatible plane.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:37+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-28T19:03:07+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}

@@ -1,0 +1,780 @@
+{
+  "schema_version": "software.v1",
+  "slug": "obsidian-mcp-server",
+  "repo_id": "gh:1131313996",
+  "name": "Obsidian MCP Server",
+  "summary": "MCP server that lets AI assistants read, write, search and organize an Obsidian vault.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "claude",
+    "markdown",
+    "mcp",
+    "model-context-protocol",
+    "notes",
+    "obsidian",
+    "sse",
+    "vault"
+  ],
+  "use_cases": [
+    "read note contents",
+    "create a new note",
+    "full-text search vault with context",
+    "find notes linking to a note",
+    "list all tags with usage counts"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://github.com/smith-and-web/obsidian-mcp-server#readme",
+  "repo": {
+    "url": "https://github.com/smith-and-web/obsidian-mcp-server",
+    "full_name": "smith-and-web/obsidian-mcp-server",
+    "created_at": "2026-01-09T20:00:39Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js 20.19 or newer"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-obsidian-mcp-server-20261031-012317-8166",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "mkdir -p /tmp/test-vault && printf '# Hello\\n\\nThis is a test note with tag #test.\\n\\nSee [[Other]].\\n' > /tmp/test-vault/Hello.md && printf '# Other\\n\\nLinked back from Hello.\\n' > /tmp/test-vault/Other.md && ls -la /tmp/test-vault && npm install -g @smith-and-web/obsidian-mcp-server",
+          "purpose": "create test vault and npm install -g package"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "curl http://localhost:3001/health",
+        "expected_signal": "\"status\":\"ok\""
+      },
+      "first_task": "curl http://localhost:3001/health"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.5.1",
+    "published_at": "2026-10-13T23:06:42Z",
+    "url": "https://github.com/smith-and-web/obsidian-mcp-server/releases/tag/v1.5.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:24:52.221689+08:00",
+    "runs": [
+      {
+        "id": "verify-obsidian-mcp-server-20261031-012317-8166",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:24:52.221689+08:00",
+        "tool_version": "1.12.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p /tmp/test-vault && printf '# Hello\\n\\nThis is a test note with tag #test.\\n\\nSee [[Other]].\\n' > /tmp/test-vault/Hello.md && printf '# Other\\n\\nLinked back from Hello.\\n' > /tmp/test-vault/Other.md && ls -la /tmp/test-vault && npm install -g @smith-and-web/obsidian-mcp-server",
+            "purpose": "create test vault and npm install -g package"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "curl http://localhost:3001/health",
+            "expected_signal": "\"status\":\"ok\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"ok\",\"vault\":\"/tmp/test-vault\",\"auth\":\"disabled\",\"semanticSearch\":\"disabled\"}",
+            "setup": [
+              {
+                "command": "VAULT_PATH=/tmp/test-vault PORT=3001 obsidian-mcp-server",
+                "background": true,
+                "port": 3001
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --url http://127.0.0.1:3001/sse",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "VAULT_PATH=/tmp/test-vault PORT=3001 obsidian-mcp-server",
+                "background": true,
+                "port": 3001
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call list-vault --args '{}' --url http://127.0.0.1:3001/sse",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list-vault content=text text_chars=91",
+            "setup": [
+              {
+                "command": "VAULT_PATH=/tmp/test-vault PORT=3001 obsidian-mcp-server",
+                "background": true,
+                "port": 3001
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "VAULT_PATH=/path/to/your/vault npx @smith-and-web/obsidian-mcp-server and 'obsidian-mcp-server --help' style checks",
+            "actually_needed": "Use global install 'npm install -g @smith-and-web/obsidian-mcp-server' then run 'VAULT_PATH=/tmp/test-vault PORT=3001 obsidian-mcp-server'; npx fetch would fail with network off on replay. The binary 'obsidian-mcp-server' has no --help/--version: running it with --help starts the server instead of …",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Health returns status ok, MCP handshake lists 31 tools, and list-vault call returns Hello.md and Other.md.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-obsidian-mcp-server-20261031-012317-8166/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-obsidian-mcp-server-20261031-012317-8166/check-1-cmd5.judged.png",
+            "runs/verify/verify-obsidian-mcp-server-20261031-012317-8166/check-2-cmd6.judged.png",
+            "runs/verify/verify-obsidian-mcp-server-20261031-012317-8166/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.054911,
+        "mcp": {
+          "transport": "streamable_http",
+          "launch": [
+            "VAULT_PATH=/tmp/test-vault",
+            "PORT=3001",
+            "obsidian-mcp-server"
+          ],
+          "url": "http://127.0.0.1:3001/sse",
+          "protocol_version": "2024-11-05",
+          "server_name": "obsidian-mcp",
+          "server_version": "1.12.0",
+          "tools": [
+            "read-note",
+            "read-multiple-notes",
+            "create-note",
+            "edit-note",
+            "delete-note",
+            "move-note",
+            "duplicate-note",
+            "write-note",
+            "get-notes-info",
+            "create-directory",
+            "delete-directory",
+            "rename-directory",
+            "list-vault",
+            "get-frontmatter",
+            "update-frontmatter",
+            "add-tags",
+            "remove-tags",
+            "list-tags",
+            "find-notes-by-tag",
+            "search-missing-tag",
+            "audit-tags",
+            "search-vault",
+            "get-backlinks",
+            "find-broken-links",
+            "append-to-file",
+            "append-to-section",
+            "replace-section",
+            "insert-at-marker",
+            "read-section",
+            "list-headings",
+            "find-replace"
+          ],
+          "tool_count": 31,
+          "called_tool": "list-vault",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "sse"
+    ],
+    "launch_command": null,
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"obsidian\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"mcp-remote\", \"http://localhost:3001/sse\"]\n    }\n  }\n}"
+      },
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add --transport sse obsidian http://localhost:3001/sse"
+      },
+      {
+        "client": "other",
+        "snippet": "npx mcp-remote http://localhost:3001/sse"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "VAULT_PATH",
+        "required": true,
+        "purpose": "Path to Obsidian vault"
+      },
+      {
+        "name": "PORT",
+        "required": false,
+        "purpose": "Server port"
+      },
+      {
+        "name": "API_KEY",
+        "required": false,
+        "purpose": "API key for authentication"
+      },
+      {
+        "name": "DATABASE_URL",
+        "required": false,
+        "purpose": "Enables semantic search"
+      },
+      {
+        "name": "OLLAMA_URL",
+        "required": false,
+        "purpose": "Ollama server for embeddings"
+      },
+      {
+        "name": "EMBED_MODEL",
+        "required": false,
+        "purpose": "Ollama embedding model"
+      }
+    ],
+    "tools": [
+      "read-note",
+      "read-multiple-notes",
+      "create-note",
+      "edit-note",
+      "write-note",
+      "delete-note",
+      "search-vault",
+      "get-backlinks",
+      "list-vault",
+      "semantic-search",
+      "similar-notes",
+      "list-tags"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:03:51+08:00",
+    "quality": {
+      "total": 82.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 50.6,
+      "signals": {
+        "stars": 19,
+        "monthly_downloads": 1589,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 293,
+      "packages": [
+        "npm:@smith-and-web/obsidian-mcp-server"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 40.85
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "b4c1bf057bc9609b22a0b2d4a6b4b3353efe400062b1d7ad117ca019d50ce1e2",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "MCP server for Obsidian vault management - enables Claude and other AI assistants to read, write, search, and organize your notes"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "enables AI assistants like Claude to interact with your Obsidian vault."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requires Node.js 20.19 or newer."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "VAULT_PATH=/path/to/your/vault npx @smith-and-web/obsidian-mcp-server"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "curl http://localhost:3001/health"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `VAULT_PATH` | `/vault` | Path to Obsidian vault |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/smith-and-web/obsidian-mcp-server",
+      "fetched_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/smith-and-web/obsidian-mcp-server/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:06:52+08:00"
+    },
+    {
+      "id": "release:v1.5.1",
+      "kind": "release",
+      "url": "https://github.com/smith-and-web/obsidian-mcp-server/releases/tag/v1.5.1",
+      "fetched_at": "2026-10-31T01:06:52+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that enables AI assistants like Claude",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "This starts the server in the foreground (default port 3000):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that enables AI assistants like Claude",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "MCP server for Obsidian vault management - enables Claude and other AI assistants to read, write, search, and organize your notes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Obsidian MCP Server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires Node.js 20.19 or newer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.5.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:06:52+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Read note contents (supports `frontmatterOnly` for efficiency)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Create a new note",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Full-text search with context",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Find notes linking to a note",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "List all tags with counts",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Nothing leaves your network",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "the server speaks MCP over **HTTP + SSE only** (there is no stdio mode)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"obsidian\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"mcp-remote\", \"http://localhost:3001/sse\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "claude mcp add --transport sse obsidian http://localhost:3001/sse",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/2",
+      "source_id": "readme",
+      "quote": "npx mcp-remote http://localhost:3001/sse",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "VAULT_PATH",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "PORT",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "DATABASE_URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "OLLAMA_URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/5",
+      "source_id": "readme",
+      "quote": "EMBED_MODEL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`read-note` | Read note contents (supports `frontmatterOnly` for efficiency)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`read-multiple-notes` | Batch read multiple notes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`create-note` | Create a new note",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`edit-note` | Replace note contents",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`write-note` | Write with modes: overwrite, append, or prepend",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`delete-note` | Delete a note (requires confirmation)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`search-vault` | Full-text search with context",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`get-backlinks` | Find notes linking to a note",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`list-vault` | List files and directories",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`semantic-search` | Hybrid vector + full-text search",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`similar-notes` | Notes nearest to a note by centroid embedding",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`list-tags` | List all tags with counts",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:27+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:50:21+08:00",
+  "updated_at": "2026-10-31T02:03:51+08:00"
+}

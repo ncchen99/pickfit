@@ -1,0 +1,513 @@
+{
+  "schema_version": "software.v1",
+  "slug": "agav",
+  "repo_id": "gh:1318362226",
+  "name": "Agav",
+  "summary": "Terminal-native AI assistant that inspects repos, edits files, runs tests and verifies changes.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "beta",
+  "tags": [
+    "ai-agent",
+    "ai-coding-assistant",
+    "anthropic",
+    "claude-code",
+    "cli",
+    "codex",
+    "coding-agent",
+    "command-line",
+    "devtools",
+    "harness"
+  ],
+  "use_cases": [
+    "review code in src directory",
+    "explain errors from a log file",
+    "create and track plans automatically"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://agav.dev",
+  "repo": {
+    "url": "https://github.com/prapaa-ai/agav",
+    "full_name": "prapaa-ai/agav",
+    "created_at": "2026-07-31T13:08:53Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://agav.dev/install.sh | bash",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "agav"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-agav-20261031-000101-8ea4",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://agav.dev/install.sh -o /tmp/agav-install.sh && ls -l /tmp/agav-install.sh && wc -c /tmp/agav-install.sh",
+          "purpose": "Download install script"
+        },
+        {
+          "command": "bash /tmp/agav-install.sh",
+          "purpose": "Install Agav via script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "agav --version",
+        "expected_signal": "0.2.6"
+      },
+      "first_task": "agav update"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://www.agav.dev/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "agav"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.2.6",
+    "published_at": "2026-10-22T18:31:51Z",
+    "url": "https://github.com/prapaa-ai/agav/releases/tag/v0.2.6"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:02:08.385358+08:00",
+    "runs": [
+      {
+        "id": "verify-agav-20261031-000101-8ea4",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:02:08.385358+08:00",
+        "tool_version": "0.2.6",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://agav.dev/install.sh -o /tmp/agav-install.sh && ls -l /tmp/agav-install.sh && wc -c /tmp/agav-install.sh",
+            "purpose": "Download install script"
+          },
+          {
+            "command": "bash /tmp/agav-install.sh",
+            "purpose": "Install Agav via script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "agav --version",
+            "expected_signal": "0.2.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.2.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "agav --help",
+            "expected_signal": "Show this help",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "--help, -h Show this help",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "agav update",
+            "expected_signal": "Already up to date.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Already up to date.",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show update check reporting Already up to date and --version printing 0.2.6.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-agav-20261031-000101-8ea4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-agav-20261031-000101-8ea4/check-1-cmd5.judged.png",
+            "runs/verify/verify-agav-20261031-000101-8ea4/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.051226
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:11:57+08:00",
+    "quality": {
+      "total": 89.5,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8333,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 76.8,
+      "signals": {
+        "stars": 171,
+        "monthly_downloads": null,
+        "forks": 63,
+        "dependents": null,
+        "release_downloads": 688,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 91,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 20.76
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "96cc486e60ff041284fab07200c0853e6b52848c6c3bb43ec01900d3a8097d9e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Terminal-native AI coding assistant for real repositories. Inspect code, edit files, run tests, and verify changes from the CLI."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Inspect code, edit files, run tests, and verify changes from the CLI."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "No Node.js required. One command, self-contained binary:"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://agav.dev/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "agav run \"review the code in src/\""
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Pick a provider and model, or use defaults:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "agav update"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[Apache 2.0](LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/prapaa-ai/agav",
+      "fetched_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/prapaa-ai/agav/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:34:14+08:00"
+    },
+    {
+      "id": "release:v0.2.6",
+      "kind": "release",
+      "url": "https://github.com/prapaa-ai/agav/releases/tag/v0.2.6",
+      "fetched_at": "2026-10-29T02:34:14+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Terminal-native autonomous agent for real repositories and projects",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:54+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "No Node.js required. One command, self-contained binary:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:54+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Inspect code, edit files, run tests, and verify changes from the CLI.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:54+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Terminal-native AI coding assistant for real repositories. Inspect code, edit files, run tests, and verify changes from the CLI.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:54+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Agav",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:54+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "sandboxed commands on macOS/Linux.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:54+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.2.6",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:34:14+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "**Experimental Beta**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:54+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "agav run \"review the code in src/\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:54+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "cat error.log | agav -P \"explain this error\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:54+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Plans are created and tracked automatically",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:54+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://agav.dev/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:54+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://agav.dev/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:54+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://www.agav.dev/install.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:54+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "run local with Ollama, or route via OpenRouter.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:54+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-31T02:11:57+08:00"
+}

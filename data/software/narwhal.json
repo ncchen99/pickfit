@@ -1,0 +1,470 @@
+{
+  "schema_version": "software.v1",
+  "slug": "narwhal",
+  "repo_id": "gh:1380014057",
+  "name": "Narwhal",
+  "summary": "Disaggregated LLM inference framework that hot-swaps prefill and decode roles without reloading weights.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "amd",
+    "arrow",
+    "cuda",
+    "decode",
+    "disaggregated-inference",
+    "disaggregated-serving",
+    "gpu",
+    "inference",
+    "kv-cache",
+    "llm-inference"
+  ],
+  "use_cases": [
+    "serve completion and chat requests streamed or buffered",
+    "reassign prefill and decode roles across GPU fleet",
+    "profile engines and run ordered benchmark points"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://athrael-soju.github.io/Narwhal/",
+  "repo": {
+    "url": "https://github.com/athrael-soju/Narwhal",
+    "full_name": "athrael-soju/Narwhal",
+    "created_at": "2026-09-21T15:24:05Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.11"
+    ],
+    "system_packages": [],
+    "gpu": "required",
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-narwhal-20261031-001759-4772",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install narwhal-inference 2>&1",
+          "purpose": "Install narwhal-inference with uv tool install"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "narwhal-serve --version",
+        "expected_signal": "narwhal-inference 0.8.0"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.8.0",
+    "published_at": "2026-10-27T21:27:02Z",
+    "url": "https://github.com/athrael-soju/Narwhal/releases/tag/v0.8.0"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:19:12.885944+08:00",
+    "runs": [
+      {
+        "id": "verify-narwhal-20261031-001759-4772",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:19:12.885944+08:00",
+        "tool_version": "0.8.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install narwhal-inference 2>&1",
+            "purpose": "Install narwhal-inference with uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "narwhal-serve --version",
+            "expected_signal": "narwhal-inference 0.8.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "narwhal-inference 0.8.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "narwhal --help",
+            "expected_signal": "Manage a local shared-GPU development fleet",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Manage a local shared-GPU development fleet",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "narwhal dev init then narwhal dev status",
+            "actually_needed": "Even after creating ~/.cache/huggingface and ~/.cache/huggingface/hub, `narwhal dev init` still exits 2 with FileNotFound for `~/.cache/huggingface/hub/models--Qwen--Qwen3.5-0.8B`; `narwhal dev status` without a prior successful init exits 2 with missing runs/dev/instance.json.",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows narwhal-serve --version outputting narwhal-inference 0.8.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-narwhal-20261031-001759-4772/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-narwhal-20261031-001759-4772/check-1-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.050247
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 65.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 50.6,
+      "signals": {
+        "stars": 8,
+        "monthly_downloads": 757,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": 5,
+        "hn_top_score": 2,
+        "registries_count": 1
+      },
+      "age_days": 37,
+      "packages": [
+        "pypi:narwhal-inference"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 32.46
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "22f4451d1d9f9f9155178730702a3ac11a6ed4b2cf731869643ee31114e65156",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Narwhal is a disaggregated inference framework that automatically hot-swaps prefill and decode roles as demand changes, without reloading model weights."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Operator tooling"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Install on Linux with Python 3.11 or newer:"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "python -m pip install narwhal-inference"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "narwhal-serve --version"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Validates fleet files offline and collects private diagnostic bundles"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "<img src=\"https://img.shields.io/badge/license-Apache--2.0-blue\" alt=\"Apache-2.0 license\">"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/athrael-soju/Narwhal",
+      "fetched_at": "2026-10-30T23:51:23+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/athrael-soju/Narwhal/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:31:51+08:00"
+    },
+    {
+      "id": "release:v0.8.0",
+      "kind": "release",
+      "url": "https://github.com/athrael-soju/Narwhal/releases/tag/v0.8.0",
+      "fetched_at": "2026-10-29T02:31:51+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Serves completion and chat requests, streamed or buffered, with latency-aware admission",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:29+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "python -m pip install narwhal-inference",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:29+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "It runs on a [single GPU](https://athrael-soju.github.io/Narwhal/Dev-Runtime/) or across [multi-node deployments]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:29+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Narwhal is a disaggregated inference framework that automatically hot-swaps prefill and decode roles as demand changes, without reloading model weights.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:29+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "Narwhal is a disaggregated inference framework",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:29+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Install on Linux with Python 3.11 or newer:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:29+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Install on Linux with Python 3.11 or newer:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:29+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "Narwhal dev runs a local NVIDIA CUDA fleet on Ubuntu",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:29+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:23+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:23+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:23+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:23+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:23+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.8.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:31:51+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Serves completion and chat requests, streamed or buffered, with latency-aware admission",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:29+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Reassigns prefill and decode roles across a fixed GPU fleet, with NIXL key-value (KV) transfer between them",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:29+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Profiles engines, runs ordered benchmark points, and keeps the evidence from each point",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:29+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "python -m pip install narwhal-inference",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:29+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Narwhal dev runs a local NVIDIA CUDA fleet on Ubuntu",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:29+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:30+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}

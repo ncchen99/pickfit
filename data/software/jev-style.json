@@ -1,0 +1,505 @@
+{
+  "schema_version": "software.v1",
+  "slug": "jev-style",
+  "repo_id": "gh:1387781216",
+  "name": "Jev-Style",
+  "summary": "Local toolkit to classify text, route requests, and score options with probabilities.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-skills",
+    "calibration",
+    "claude-code",
+    "decision-model",
+    "gguf",
+    "guardrails",
+    "jev",
+    "llm-routing",
+    "local-llm",
+    "mcp"
+  ],
+  "use_cases": [
+    "route support tickets",
+    "decide when to call a larger model",
+    "review receipts or screenshots with image-capable build"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://jevstyle.com",
+  "repo": {
+    "url": "https://github.com/lawrence3699/jev-style",
+    "full_name": "lawrence3699/jev-style",
+    "created_at": "2026-09-25T15:31:24Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.10 or newer"
+    ],
+    "system_packages": [],
+    "gpu": "none",
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-jev-style-20261031-003740-0887",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install -U \"jev-style[torch]\"",
+          "purpose": "Install jev-style torch backend via pip"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "jev-style --help",
+        "expected_signal": "Small, calibrated, local decision models."
+      },
+      "first_task": "curl -s http://127.0.0.1:8765/v1/models && echo && curl -s http://127.0.0.1:8765/v1/systemone -H 'content-type: application/json' -d '{\"state\": \"I was charged twice\", \"questions\": {\"team\": {\"type\": \"choice\", \"instructions\": \"Which team?\", \"criteria\": {\"billing\": \"charges\", \"shipping\": \"delivery\", \"r"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.6.2",
+    "published_at": "2026-10-28T18:17:53Z",
+    "url": "https://github.com/lawrence3699/jev-style/releases/tag/v0.6.2"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:42:03.713586+08:00",
+    "runs": [
+      {
+        "id": "verify-jev-style-20261031-003740-0887",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:42:03.713586+08:00",
+        "tool_version": "0.6.2",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pip install -U \"jev-style[torch]\"",
+            "purpose": "Install jev-style torch backend via pip"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "jev-style --help",
+            "expected_signal": "Small, calibrated, local decision models.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Small, calibrated, local decision models.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "jev-style --version",
+            "expected_signal": "0.6.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.6.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8765/v1/models && echo && curl -s http://127.0.0.1:8765/v1/systemone -H 'content-type: application/json' -d '{\"state\": \"I was charged twice\", \"questions\": {\"team\": {\"type\": \"choice\", \"instructions\": \"Which team?\", \"criteria\": {\"billing\": \"charges\", \"shipping\": \"delivery\", \"returns\": \"returns\"}}}}'",
+            "expected_signal": "jev-style-fake",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"object\":\"list\",\"data\":[{\"id\":\"jev-style-fake\",\"context_tokens\":25600,\"head_max_tokens\":2048,\"backend\":\"fake\",\"images\":false,\"box\":false}],\"models\":[{\"name\":\"jev-style-fake\",\"release_date\":\"\",\"description\":\"Fake engine: deterministic hash-based probabilities, no model\"}]}",
+            "setup": [
+              {
+                "command": "jev-style serve --fake --port 8765",
+                "background": true,
+                "port": 8765
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "jev-style decide \"I was charged twice\" --url http://127.0.0.1:8765 --choice \"Which team?::billing,shipping,returns\"",
+            "expected_signal": "\"choice\": \"billing\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"choice\": \"billing\",",
+            "setup": [
+              {
+                "command": "jev-style serve --fake --port 8765",
+                "background": true,
+                "port": 8765
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install -U \"jev-style[mlx]\" for Apple silicon",
+            "actually_needed": "Skipped candidate 1 (jev-style[mlx]): MLX backend is Apple-silicon only and cannot run on this Linux x86_64 box; installed candidate 2 (jev-style[torch]) directly.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "jev-style serve downloads the 0.8B weights (about 1.5 GB)",
+            "actually_needed": "Started server with `jev-style serve --fake` (deterministic fake engine, no model download) instead of plain `jev-style serve`, which downloads ~1.5 GB of 0.8B weights on first start and needs more RAM/time than this 2 GB box allows.",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show server listing jev-style-fake and returning billing choice, CLI deciding billing, and help showing the expected tagline.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-jev-style-20261031-003740-0887/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-jev-style-20261031-003740-0887/check-1-cmd7.judged.png",
+            "runs/verify/verify-jev-style-20261031-003740-0887/check-2-cmd8.judged.png",
+            "runs/verify/verify-jev-style-20261031-003740-0887/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.061374
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:11:57+08:00",
+    "quality": {
+      "total": 85.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 56.5,
+      "signals": {
+        "stars": 22,
+        "monthly_downloads": 928,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 35,
+      "packages": [
+        "pypi:jev-style"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 37.28
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "74bf2b4b945a27ae9d275a2d5fe5daa9fd59b0f62a165032dd67f2645d1e1cc1",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Classify text, route requests, and score defined options with probabilities for each answer."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Use it to route support tickets, decide when to call a larger model, and review receipts or screenshots with the image-capable build."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "You'll need Python 3.10 or newer."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install -U \"jev-style[mlx]\"\n```\n\n```bash\n# NVIDIA GPU, CPU, or image input (also works on Apple MPS)\npip install -U \"jev-style[torch]\""
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "This is the actual response from the 0.8B (the default release) with MLX on an Apple M1 Max, with probabilities rounded:"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "`JEV_STYLE_RELEASE=2b` sets it for every command and for the Python client."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "License: Apache-2.0"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/lawrence3699/jev-style",
+      "fetched_at": "2026-10-30T23:51:11+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/lawrence3699/jev-style/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:54:05+08:00"
+    },
+    {
+      "id": "release:v0.6.2",
+      "kind": "release",
+      "url": "https://github.com/lawrence3699/jev-style/releases/tag/v0.6.2",
+      "fetched_at": "2026-10-30T23:54:05+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "jev-style serve",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "pip install -U \"jev-style[mlx]\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "jev-style serve",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "JevStyle is an open-source toolkit for running small decision models locally.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Jev-Style",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "You'll need Python 3.10 or newer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "No GPU, no API key and no training needed.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Nothing leaves your machine.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:11+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:11+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:11+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:11+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:11+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.6.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:54:05+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Use it to route support tickets, decide when to call a larger model, and review receipts or screenshots with the image-capable build.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Use it to route support tickets, decide when to call a larger model, and review receipts or screenshots with the image-capable build.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Use it to route support tickets, decide when to call a larger model, and review receipts or screenshots with the image-capable build.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "JevStyle is an open-source toolkit for running small decision models locally.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Nothing leaves your machine.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:12+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-28T19:03:23+08:00",
+  "updated_at": "2026-10-31T02:11:57+08:00"
+}
