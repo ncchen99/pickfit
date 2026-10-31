@@ -2,11 +2,11 @@
 
 eval/README.md section 5 (blind preference) and 9.1 C4 (blind L1), 9.2 B, C.3, E.7.
 
-  blind.py prefer  --round run1 --seed N --out DIR            preference form, one A/B pair per question
-  blind.py answers --rounds run1 run2 run3 haiku --seed N --out DIR
+  blind.py prefer  --round run1 --out DIR                     preference form, one A/B pair per question
+  blind.py answers --rounds run1 run2 run3 haiku --out DIR
                                                               every counted answer, de-identified and
                                                               shuffled, plus picks.csv to fill in
-  blind.py l1-batch --answers DIR --picks picks.csv --set A|B --seed N --out DIR
+  blind.py l1-batch --answers DIR --picks picks.csv --set A|B --out DIR
                                                               unique (question, pick) items, shuffled:
                                                               l1-batch.jsonl (graders) + l1-form.csv (念誠)
   blind.py unblind-prefer --form DIR --choices choices.json   join 念誠's choices to the key
@@ -20,9 +20,12 @@ ids (rec_...), and any URL or host naming pickfit become [source]. Nothing else 
 changed; phrases that may still hint at the group (sandbox, verified/replayed,
 how_we_know, treasure score) are listed per answer as `tells` for 念誠 to see, not edited.
 
-Randomness: --seed has no default (how seeds are fixed is open decision 7); every output
-records the seed and the sha256 of its inputs, and the key files are written next to
-the form with their own sha256 printed in the form, so the key cannot change unseen.
+Randomness (9.3 F.2): one integer, EVAL_SEED = 20261102, fixed when 9.3 was committed and
+never changed. Each use draws from its own seed, sha256("<EVAL_SEED>:<use>") cut to 64 bits,
+with a fixed use name: prefer:<round>, answers:<rounds joined by commas>, l1-batch:<set>.
+--seed exists only for the tests; every output records the seed, the use and the derived
+seed, and the key files are written next to the form with their own sha256 printed in the
+form, so the key cannot change unseen.
 The forms carry no group, round, attempt or model; only the key files do. Do not open a
 key file before the matching form is filled in.
 
@@ -92,13 +95,26 @@ def write_json(path: Path, data: Any) -> str:
     return sha256_bytes(text.encode("utf-8"))
 
 
+EVAL_SEED = 20261102  # eval/README.md 9.3 F.2
+
+
+def use_seed(seed: int, use: str) -> int:
+    """The seed one use draws from: the first 16 hex digits of sha256("<seed>:<use>")."""
+    return int(sha256_bytes(f"{seed}:{use}".encode("utf-8"))[:16], 16)
+
+
+def seed_record(seed: int, use: str) -> dict[str, Any]:
+    return {"seed": seed, "use": use, "use_seed": use_seed(seed, use)}
+
+
 # --- section 5: the preference form -------------------------------------------------------
 
 
 def prefer(rnd: str, seed: int, out: Path, base: Path | None = None, questions: dict | None = None) -> dict[str, Any]:
     """One pair per question: control and experimental, de-identified, in random A/B order."""
     questions = questions or questions_by_id([rnd])
-    rng = random.Random(seed)
+    seeds = seed_record(seed, f"prefer:{rnd}")
+    rng = random.Random(seeds["use_seed"])
     pairs, key = [], {}
     for qid in sorted(questions):
         answers = [counted_answer(rnd, qid, g, base) for g in ("control", "experimental")]
@@ -113,8 +129,8 @@ def prefer(rnd: str, seed: int, out: Path, base: Path | None = None, questions: 
         key[qid] = {"A": {k: order[0][k] for k in ("group", "attempt", "sha256")},
                     "B": {k: order[1][k] for k in ("group", "attempt", "sha256")}}
     out.mkdir(parents=True, exist_ok=True)
-    key_sha = write_json(out / "prefer-key.json", {"round": rnd, "seed": seed, "pairs": key})
-    form = {"round_label": "blind", "seed": seed, "key_sha256": key_sha, "pairs": pairs,
+    key_sha = write_json(out / "prefer-key.json", {"round": rnd, **seeds, "pairs": key})
+    form = {"round_label": "blind", **seeds, "key_sha256": key_sha, "pairs": pairs,
             "instructions": "For each question choose A, B or tie and give one sentence why, before seeing any "
                             "check result (eval/README.md section 5). Do not open prefer-key.json until done."}
     form_sha = write_json(out / "prefer-form.json", form)
@@ -148,7 +164,7 @@ pre {{ white-space: pre-wrap; background: var(--panel); border: 1px solid var(--
 fieldset {{ border: 0; padding: 8px 0; }} button {{ font-size: 16px; padding: 8px 16px; }}
 </style></head><body>
 <h1>Blind preference</h1><p>{html.escape(form['instructions'])}</p>
-<p>form sha256 <code>{form_sha}</code> · key sha256 <code>{form['key_sha256']}</code> · seed {form['seed']}</p>
+<p>form sha256 <code>{form_sha}</code> · key sha256 <code>{form['key_sha256']}</code> · seed {form['seed']} ({html.escape(form['use'])}: {form['use_seed']})</p>
 {''.join(blocks)}
 <p><button id="export">Export choices.json</button> <span id="left"></span></p>
 <script>
@@ -209,7 +225,8 @@ def answers(rounds: list[str], seed: int, out: Path, base: Path | None = None,
                 a = counted_answer(rnd, qid, group, base)
                 if a:
                     found.append(a)
-    random.Random(seed).shuffle(found)
+    seeds = seed_record(seed, "answers:" + ",".join(rounds))
+    random.Random(seeds["use_seed"]).shuffle(found)
     out.mkdir(parents=True, exist_ok=True)
     rows, key = [], {}
     for i, a in enumerate(found, 1):
@@ -220,7 +237,7 @@ def answers(rounds: list[str], seed: int, out: Path, base: Path | None = None,
     with (out / "answers.jsonl").open("w", encoding="utf-8") as fh:
         for row in rows:
             fh.write(json.dumps(row, ensure_ascii=False) + "\n")
-    key_sha = write_json(out / "answers-key.json", {"rounds": rounds, "seed": seed, "answers": key})
+    key_sha = write_json(out / "answers-key.json", {"rounds": rounds, **seeds, "answers": key})
     with (out / "picks.csv").open("w", encoding="utf-8", newline="") as fh:
         w = csv.writer(fh)
         w.writerow(["answer_id", "question", "pick_kind", "pick_tool", "install_method", "note"])
@@ -262,7 +279,8 @@ def l1_batch(answers_dir: Path, picks_csv: Path, set_name: str, seed: int, out: 
         groups.setdefault(k, []).append(r["answer_id"])
         shown.setdefault(k, {"tool": tool, "install": r.get("install_method") or "", "kind": r["pick_kind"]})
     keys = sorted(groups)
-    random.Random(seed).shuffle(keys)
+    seeds = seed_record(seed, f"l1-batch:{set_name}")
+    random.Random(seeds["use_seed"]).shuffle(keys)
     out.mkdir(parents=True, exist_ok=True)
     items, item_key = [], {}
     for i, k in enumerate(keys, 1):
@@ -276,7 +294,7 @@ def l1_batch(answers_dir: Path, picks_csv: Path, set_name: str, seed: int, out: 
     with (out / "l1-batch.jsonl").open("w", encoding="utf-8") as fh:
         for item in items:
             fh.write(json.dumps(item, ensure_ascii=False) + "\n")
-    key_sha = write_json(out / "l1-items-key.json", {"set": set_name, "seed": seed, "items": item_key,
+    key_sha = write_json(out / "l1-items-key.json", {"set": set_name, **seeds, "items": item_key,
                                                      "no_item": no_item,
                                                      "answers_sha256": sha256_bytes((answers_dir / "answers.jsonl").read_bytes()),
                                                      "picks_sha256": sha256_bytes(picks_csv.read_bytes())})
@@ -313,17 +331,17 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     p = sub.add_parser("prefer")
     p.add_argument("--round", default="run1", choices=list(runner.ROUNDS))
-    p.add_argument("--seed", type=int, required=True)
+    p.add_argument("--seed", type=int, default=EVAL_SEED, help=argparse.SUPPRESS)
     p.add_argument("--out", type=Path, required=True)
     a = sub.add_parser("answers")
     a.add_argument("--rounds", nargs="+", required=True, choices=list(runner.ROUNDS))
-    a.add_argument("--seed", type=int, required=True)
+    a.add_argument("--seed", type=int, default=EVAL_SEED, help=argparse.SUPPRESS)
     a.add_argument("--out", type=Path, required=True)
     b = sub.add_parser("l1-batch")
     b.add_argument("--answers", type=Path, required=True)
     b.add_argument("--picks", type=Path, required=True)
     b.add_argument("--set", required=True, choices=["A", "B"])
-    b.add_argument("--seed", type=int, required=True)
+    b.add_argument("--seed", type=int, default=EVAL_SEED, help=argparse.SUPPRESS)
     b.add_argument("--out", type=Path, required=True)
     u = sub.add_parser("unblind-prefer")
     u.add_argument("--form", type=Path, required=True)

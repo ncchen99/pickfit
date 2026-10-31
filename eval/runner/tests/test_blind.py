@@ -130,3 +130,21 @@ def test_the_real_question_files_give_every_item_checks() -> None:
     for rounds in (["run1"], ["bset"]):
         qs = blind.questions_by_id(rounds)
         assert qs and all(blind.checks_for(q) for q in qs.values())
+
+
+def test_each_use_draws_from_its_own_seed_derived_from_the_fixed_integer(tmp_path: Path) -> None:
+    assert blind.EVAL_SEED == 20261102
+    # sha256("20261102:prefer:run1"), first 16 hex digits; fixed, so a changed rule shows up here
+    assert blind.use_seed(20261102, "prefer:run1") == int(blind.sha256_bytes(b"20261102:prefer:run1")[:16], 16)
+    assert len({blind.use_seed(20261102, u) for u in ("prefer:run1", "answers:run1", "l1-batch:A", "l1-batch:B")}) == 4
+    base = tmp_path / "runs"
+    make_runs(base)
+    blind.prefer("run1", blind.EVAL_SEED, tmp_path / "form", base, QUESTIONS)
+    key = json.loads((tmp_path / "form" / "prefer-key.json").read_text(encoding="utf-8"))
+    form = json.loads((tmp_path / "form" / "prefer-form.json").read_text(encoding="utf-8"))
+    for record in (key, form):
+        assert (record["seed"], record["use"]) == (20261102, "prefer:run1")
+        assert record["use_seed"] == blind.use_seed(20261102, "prefer:run1")
+    assert "seed 20261102 (prefer:run1: " in (tmp_path / "form" / "prefer-form.html").read_text(encoding="utf-8")
+    blind.answers(["run1"], blind.EVAL_SEED, tmp_path / "a", base, QUESTIONS)
+    assert json.loads((tmp_path / "a" / "answers-key.json").read_text(encoding="utf-8"))["use"] == "answers:run1"
