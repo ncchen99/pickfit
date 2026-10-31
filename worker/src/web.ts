@@ -40,8 +40,12 @@ export const NEED_MIN = 3;
 export const NEED_MAX = 500;
 /** Model searches running at once in one isolate; the reservation bounds spend across isolates. */
 export const MAX_IN_FLIGHT = 6;
-/** Held per search: the estimate for a 150,000-character request (today's 60 cards are about 80,000). */
-export const WEB_RESERVE_USD = estimateCostUsd(150_000);
+/**
+ * Held per search, covering both of its Meta calls: the match for a 150,000-character request (today's
+ * 60 cards are about 84,000) and, when more than 60 tools pass, the keyword call (expand.ts: under
+ * 8,000 characters, at most 600 output tokens).
+ */
+export const WEB_RESERVE_USD = estimateCostUsd(150_000) + estimateCostUsd(8_000, 600);
 
 export interface WebOptions {
   /** Test hook: replaces global fetch for the Meta call. */

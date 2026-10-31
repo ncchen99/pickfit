@@ -13,8 +13,9 @@
  * verified gets no slip at all.
  */
 import { toCard } from './cards.ts';
-import { bestGuide, verifiedOnUserSystem, type Arch, type Catalog, type Entry, type InstallGuide, type OS } from './catalog.ts';
+import { bestGuide, verifiedOnUserSystem, type Arch, type Catalog, type Entry, type GuiEvidence, type InstallGuide, type OS } from './catalog.ts';
 import type { FindOutput, PickOut } from './find.ts';
+import { fitNote } from './fit.ts';
 import { PIPE_TO_SHELL, type InstallOutput } from './install.ts';
 import { templateReasons } from './rules.ts';
 
@@ -126,6 +127,42 @@ export const LEVEL_LABEL: Record<string, string> = {
   inference: 'It produces model output',
 };
 
+const SCREEN_LABEL: Record<GuiEvidence['screen'], string> = {
+  main_ui: 'It opens to its main screen',
+  first_run: 'It opens to its first-run screen',
+  sign_in_wall: 'It opens to a sign-in screen',
+  crash_or_error: 'It showed an error on launch',
+  blank_or_loading: 'Its window stayed blank',
+  other: 'It opened a window',
+};
+const SCREEN_SEEN: Record<GuiEvidence['screen'], string> = {
+  main_ui: 'its main screen rendered',
+  first_run: 'its first-run (setup) screen rendered',
+  sign_in_wall: 'it showed a sign-in screen, and nothing past it was checked',
+  crash_or_error: 'it showed an error',
+  blank_or_loading: 'the window was still blank or loading',
+  other: 'it showed something other than its own UI',
+};
+
+/** What a run proves, by its evidence: a GUI app's screen, an MCP server's handshake, or the level. */
+export function levelLabel(level: string, evidence: { gui?: GuiEvidence | null; mcp?: { called_tool: string | null } | null } = {}): string {
+  if (evidence.gui) return SCREEN_LABEL[evidence.gui.screen] ?? 'It opened a window';
+  if (evidence.mcp) return evidence.mcp.called_tool ? 'An MCP client called one of its tools' : 'An MCP client connects and lists its tools';
+  return LEVEL_LABEL[level] ?? level;
+}
+
+/** The check mark is for runs that passed; a GUI app that showed an error or a blank window gets none. */
+const passed = (gui?: GuiEvidence | null) => !gui || gui.screen === 'main_ui' || gui.screen === 'first_run';
+const levelLine = (label: string, ok: boolean) => `<p class="level${ok ? '' : ' level-caution'}">${ok ? CHECK : ''}${esc(label)}</p>`;
+
+/** The GUI launch in words: where it ran, who looked, and that no feature was used. */
+export function guiSentence(gui: GuiEvidence): string {
+  return (
+    `pickfit launched it on a virtual display (${gui.display}), and a separate model reading a screenshot of its window judged that ${SCREEN_SEEN[gui.screen]}. ` +
+    `That shows it installs and starts; pickfit did not use any of its features.${gui.launch_offline ? ' The launch passed again with the network off.' : ''}`
+  );
+}
+
 /** "pickfit installed it in a fresh Linux x86_64 sandbox and replayed the steps from scratch on 29 Oct 2026." */
 export function ranSentence(v: PickOut['verification']): string {
   if (!v.os) return 'pickfit has no recorded run of its install steps.';
@@ -216,6 +253,20 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
     const setup = guide.first_task_setup.map((s) => command(s.command)).join('');
     parts.push(`<h5>First thing to try</h5>${setup}${command(guide.first_task)}`);
   }
+  const cfg = guide.mcp_client_config;
+  if (cfg) {
+    const env = cfg.env.length
+      ? `<h5>You fill in</h5><ul>${cfg.env
+          .map((e) => `<li><code translate="no">${esc(e.name)}</code>${e.purpose ? `: ${esc(e.purpose)}` : ''}${e.required ? ' (required)' : ''}</li>`)
+          .join('')}</ul>`
+      : '';
+    parts.push(
+      `<h5>Add it to your agent</h5>${command(cfg.claude_code)}` +
+        `<details class="json"><summary>JSON for Claude Desktop, Cursor and other clients</summary>${command(cfg.json)}</details>` +
+        env +
+        (cfg.note ? `<p class="quiet">${esc(cfg.note)}</p>` : ''),
+    );
+  }
   const issues = readerIssues(guide.known_issues);
   if (issues.length) {
     parts.push(
@@ -245,15 +296,35 @@ function record(pick: PickOut, guide: InstallOutput | undefined, form: FormValue
           : '';
   const q = pick.scores.quality === null ? 'not scored' : `${Math.round(pick.scores.quality)}/100`;
   const p = pick.scores.popularity === null ? 'not scored' : `${Math.round(pick.scores.popularity)}/100`;
+  const mcp = guide?.mcp_client_config ?? null;
+  const shown = (tools: string[]) => tools.slice(0, 6).join(', ') + (tools.length > 6 ? ', …' : '');
+  const mcpLine = mcp
+    ? `An MCP client handshake over ${mcp.transport === 'stdio' ? 'stdio' : 'HTTP'} listed its ${mcp.tool_count} tool${mcp.tool_count === 1 ? '' : 's'}` +
+      `${mcp.tools.length ? ` (${shown(mcp.tools)})` : ''}${mcp.called_tool ? `, and a call to ${mcp.called_tool} returned a result` : ''}.`
+    : '';
   return (
     `<section class="record" aria-label="Test record" data-ui>` +
-    `<p class="level">${CHECK}${esc(LEVEL_LABEL[v.level] ?? v.level)}</p>` +
+    levelLine(levelLabel(v.level, { gui: v.gui, mcp }), passed(v.gui)) +
     `<p>${esc(ranSentence(v) + offlineLine)}</p>` +
+    (mcpLine ? `<p>${esc(mcpLine)}</p>` : '') +
+    (v.gui ? `<p>${esc(guiSentence(v.gui))}</p>` : '') +
     `<p class="mine mine-${mine.state}">${esc(mine.text)}</p>` +
     `<p class="quiet">Quality ${q}, popularity ${p}, scored separately.</p>` +
     `<details class="how"><summary>How we know</summary><p>${esc(pick.how_we_know)}</p></details>` +
     `</section>`
   );
+}
+
+const MATCH_LABEL = { good: 'Good match', partial: 'Partial match', weak: 'Weak match' } as const;
+
+/** Rules only: which of the request's words the profile mentions, and which it does not. */
+function coverage(match: NonNullable<PickOut['match']>): string {
+  const list = (words: string[]) => words.slice(0, 6).map((w) => `“${esc(w)}”`).join(', ');
+  const parts = [
+    match.covers.length ? `Its profile mentions ${list(match.covers)}.` : '',
+    match.missing.length ? `It does not mention ${list(match.missing)}.` : '',
+  ].filter(Boolean);
+  return parts.length ? `<p class="coverage">${parts.join(' ')}</p>` : '';
 }
 
 /** find.ts adds this tradeoff for agents when the run was on another system; the test record says it in full. */
@@ -263,14 +334,16 @@ function pickHtml(pick: PickOut, first: boolean, result: SearchResult, form: For
   const { out } = result;
   const best = out.best_free?.slug === pick.slug ? out.best_free : null;
   const badges = [
+    pick.match ? `<span class="badge match-${pick.match.quality}">${MATCH_LABEL[pick.match.quality]}</span>` : '',
     best ? '<span class="badge free">Best free option</span>' : '',
     pick.scores.treasure ? '<span class="badge gem" title="High quality, little known">Hidden gem</span>' : '',
   ].join('');
   const why = pick.why
     .map((r) => `<li>${esc(r.claim)}<span class="cite">From its profile: ${esc(r.field)} is “${esc(r.value)}”</span></li>`)
     .join('');
+  const fitSaid = pick.match ? fitNote(pick.match) : null;
   const tradeoffs = pick.tradeoffs
-    .filter((t) => !RAN_ELSEWHERE.test(t))
+    .filter((t) => !RAN_ELSEWHERE.test(t) && t !== fitSaid)
     .map((t) => `<li>${esc(t)}</li>`)
     .join('');
   const links = [
@@ -285,6 +358,7 @@ function pickHtml(pick: PickOut, first: boolean, result: SearchResult, form: For
     `<h3>${link(pick.repo, esc(pick.name)) || esc(pick.name)}</h3>${badges ? `<p class="badges">${badges}</p>` : ''}` +
     `<p class="summary">${esc(pick.summary)}</p>` +
     `<p class="fit">${esc(pick.fit)}</p>` +
+    (pick.match ? coverage(pick.match) : '') +
     (why ? `<h4>Why it fits</h4><ul class="why">${why}</ul>` : '') +
     (tradeoffs ? `<h4>Tradeoffs</h4><ul class="tradeoffs">${tradeoffs}</ul>` : '') +
     (pick.vs_well_known ? `<p><span class="lead-in">Compared with better-known tools:</span> ${esc(pick.vs_well_known)}</p>` : '') +
@@ -339,7 +413,12 @@ function resultsTitle(out: FindOutput): string {
   const n = out.picks.length;
   if (n === 0) return 'Nothing fits yet';
   const tools = `${n} ${n === 1 ? 'tool' : 'tools'}`;
-  return out.matched_by === 'rules' ? `${tools} ranked by rules` : `${tools} ${n === 1 ? 'fits' : 'fit'} your need`;
+  if (out.matched_by === 'rules') {
+    if (out.match_quality === 'none') return 'No clear fit, ranked by rules';
+    if (out.match_quality === 'partial') return 'Partial fits, ranked by rules';
+    return `${tools} ranked by rules`;
+  }
+  return `${tools} ${n === 1 ? 'fits' : 'fit'} your need`;
 }
 
 function matchLine(out: FindOutput): string {
@@ -369,8 +448,11 @@ export function renderResults(
   const head: string[] = [`<h2 class="results-title">${esc(resultsTitle(out))}</h2>`];
   if (out.considered > 0) head.push(`<p class="match-line">${matchLine(out)}</p>`);
   if (out.picks.length === 0) {
-    head.push(`<p class="match-line">${esc(out.coverage_note ?? 'pickfit covers developer CLI tools and local AI tools today.')}</p>`);
+    head.push(`<p class="match-line">${esc(out.coverage_note ?? 'pickfit covers developer CLI tools, local AI tools and MCP servers today.')}</p>`);
   }
+  // A partial or missing fit is said before the picks, not after them.
+  const fitFirst = out.picks.length > 0 && (out.match_quality === 'partial' || out.match_quality === 'none') && out.coverage_note;
+  if (fitFirst) head.push(`<p class="ask">${esc(out.coverage_note)}</p>`);
   if (out.clarifying_question) {
     parts.push(`<p class="ask"><span class="lead-in">To narrow it down:</span> ${esc(out.clarifying_question)} Set it above and search again.</p>`);
   }
@@ -383,7 +465,7 @@ export function renderResults(
   }
   if (out.picks.length) {
     parts.push(`<div class="picks">${out.picks.map((pick, i) => pickHtml(pick, i === 0, result, form)).join('')}</div>`);
-    if (out.coverage_note) parts.push(`<p class="quiet">${esc(out.coverage_note)}</p>`);
+    if (out.coverage_note && !fitFirst) parts.push(`<p class="quiet">${esc(out.coverage_note)}</p>`);
   }
   const free = out.best_free && !out.picks.some((p) => p.slug === out.best_free!.slug) ? catalog.bySlug.get(out.best_free.slug) : undefined;
   if (free && out.best_free) {
@@ -432,7 +514,7 @@ export function renderNotice(kind: 'busy' | 'error', title: string, text: string
 export const EXAMPLES = [
   'Turn a folder of interview recordings into subtitles, offline',
   'Check my MCP server configs for risky permissions before I install one',
-  'Find the fastest GGUF quantization that still works well on my GPU',
+  'An MCP server that gives my coding agent a map of my codebase',
   'See which process holds port 3000 and stop it',
 ];
 
@@ -455,7 +537,7 @@ function select(name: 'os' | 'arch', value: string, label: string): string {
   return `<select name="${name}" aria-label="${label}">${options}</select>`;
 }
 
-const KIND: Record<string, string> = { dev_cli: 'Developer CLI', local_ai: 'Local AI', other: 'Other' };
+const KIND: Record<string, string> = { dev_cli: 'Developer CLI', local_ai: 'Local AI', mcp_server: 'MCP server', other: 'Other' };
 
 /** The hero's frame: one real run record, as the slip pickfit prints. */
 function heroRecord(featured: Showcase['featured']): string {
@@ -468,7 +550,7 @@ function heroRecord(featured: Showcase['featured']): string {
     `<figure class="frame"><div class="slip" data-ui>` +
     `<p class="slip-name"><strong>${link(entry.repo_url, esc(entry.name)) || esc(entry.name)}</strong>` +
     `${entry.scores?.treasure ? '<span class="badge gem">Hidden gem</span>' : ''}</p>` +
-    `<p class="level">${CHECK}${esc(LEVEL_LABEL[r.level] ?? r.level)}</p>` +
+    levelLine(levelLabel(r.level, { gui: r.gui, mcp: guide.mcp }), passed(r.gui)) +
     `<p>${esc(how)}, ${esc(day(r.checked_at))}.</p>` +
     (issue
       ? `<p class="diff"><span class="quiet">README:</span> ${esc(issue.readme_said)}<br><span class="quiet">What worked:</span> ${esc(issue.actually_needed)}</p>`
@@ -486,7 +568,7 @@ function recentSection(showcase: Showcase): string {
   const fixSlip =
     fix && issue
       ? `<figure class="fix"><div class="slip" data-ui><p class="slip-name"><strong>${link(fix.entry.repo_url, esc(fix.entry.name)) || esc(fix.entry.name)}</strong></p>` +
-        `<p class="level">${CHECK}${esc(LEVEL_LABEL[fix.guide.run.level] ?? fix.guide.run.level)}</p>` +
+        levelLine(levelLabel(fix.guide.run.level, { gui: fix.guide.run.gui, mcp: fix.guide.mcp }), passed(fix.guide.run.gui)) +
         `<p class="diff"><span class="quiet">README:</span> ${esc(issue.readme_said)}<br><span class="quiet">What worked:</span> ${esc(issue.actually_needed)}</p>` +
         (fix.guide.steps[0] ? `<pre translate="no"><code>${esc(fix.guide.steps[0].command)}</code></pre>` : '') +
         `</div><figcaption>Found while installing it on ${esc(system(fix.guide.run.os, fix.guide.run.arch))}, ${esc(day(fix.guide.run.checked_at))}.</figcaption></figure>`
@@ -499,7 +581,7 @@ function recentSection(showcase: Showcase): string {
       return (
         `<tr><td class="kind">${esc(KIND[entry.category] ?? entry.category)}</td>` +
         `<td class="tool">${link(entry.repo_url, esc(entry.name)) || esc(entry.name)}<span>${esc(entry.summary)}</span></td>` +
-        `<td class="where">${esc(system(r.os, r.arch))}, ${esc(day(r.checked_at, SHORT_DAY))}<span>${esc(LEVEL_LABEL[r.level] ?? r.level)}</span></td></tr>`
+        `<td class="where">${esc(system(r.os, r.arch))}, ${esc(day(r.checked_at, SHORT_DAY))}<span>${esc(levelLabel(r.level, { gui: r.gui, mcp: guide.mcp }))}</span></td></tr>`
       );
     })
     .join('');
@@ -551,7 +633,7 @@ function stagesSection(showcase: Showcase): string {
         `<p class="ui-title">${esc(entry.name)}: run on ${esc(system(r.os, r.arch))}</p>` +
         guide.steps.map((s) => `<pre translate="no"><code>${esc(s.command)}</code></pre>`).join('') +
         (issue ? `<p class="diff"><span class="quiet">README:</span> ${esc(issue.readme_said)}<br><span class="quiet">What worked:</span> ${esc(issue.actually_needed)}</p>` : '') +
-        `<p class="level">${CHECK}${esc(LEVEL_LABEL[r.level] ?? r.level)}${r.replayed ? ', and again on replay' : ''}</p>`,
+        levelLine(`${levelLabel(r.level, { gui: r.gui, mcp: guide.mcp })}${r.replayed ? ', and again on replay' : ''}`, passed(r.gui)),
     },
     {
       name: 'Match',
@@ -614,7 +696,7 @@ export function renderPage(input: PageInput): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>pickfit: tools that fit, tested first</title>
-<meta name="description" content="Describe the job in one sentence. pickfit suggests lesser-known developer CLI tools and local AI tools it has installed and tested, with the evidence and the steps that worked.">
+<meta name="description" content="Describe the job in one sentence. pickfit suggests lesser-known developer CLI tools, local AI tools and MCP servers it has installed and tested, with the evidence and the steps that worked.">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0F1626" media="(prefers-color-scheme: dark)">
@@ -633,7 +715,7 @@ export function renderPage(input: PageInput): string {
 <h1 id="title"><span class="half first">Tools that fit,</span> <span class="half second">tested first.</span></h1>
 ${heroRecord(showcase.featured)}
 </div>
-<p class="lede">Describe the job in one sentence. pickfit suggests lesser-known developer CLI tools and local AI tools that it has installed in a fresh sandbox, matched to you by Meta’s Muse Spark.</p>
+<p class="lede">Describe the job in one sentence. pickfit suggests lesser-known developer CLI tools, local AI tools and MCP servers that it has installed in a fresh sandbox, matched to you by Meta’s Muse Spark.</p>
 <form id="search" class="search" method="post" action="/search#results">
 <div class="need">
 <label for="need">I need</label>
@@ -767,6 +849,10 @@ select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid 
 .badge{font:600 var(--t-small)/1 var(--sans);padding:7px 10px;border-radius:var(--radius)}
 .badge.free{background:var(--pass-soft);color:var(--pass)}
 .badge.gem{background:var(--accent);color:var(--accent-ink)}
+.badge.match-good{background:var(--pass-soft);color:var(--pass)}
+.badge.match-partial,.badge.match-weak{background:var(--caution-soft);color:var(--caution)}
+.coverage{color:var(--muted)}
+.level-caution{color:var(--caution)}
 .summary{color:var(--muted);margin-top:12px}
 .fit{font-size:var(--t-lead);line-height:1.5;margin:16px 0 4px}
 .why{list-style:none;padding:0}

@@ -161,9 +161,15 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 - **同一個大腦**：`POST /search` 先用 `server.ts` 的 `findInput`（MCP 工具同一個 zod schema）驗表單，再呼叫 `find.ts` 的 `findSoftware`，每個 pick 再呼叫 `install.ts` 的 `installGuide`，最後才排成 HTML。沒有另一份配對或安裝步驟的程式碼，網頁和 agent 不會分岔。沒選 OS 時，安裝步驟用 pickfit 實際跑過的那個系統，並寫明在哪裡跑的。
 - **路由**：`GET /` 只有在 `Accept` 含 `text/html`（瀏覽器）時回網頁；`curl`、健康檢查、`pickfit publish` 之後的確認照舊拿到 JSON（`Vary: Accept`）。所以公開網址打開就是產品，而部署檢查與評測部署比對 `data_sha256` 的方式不變。`GET /search` 轉回 `/`。沒有 JavaScript 時表單照樣送出，伺服器回整頁；有 JavaScript 時只換結果區（`X-Pickfit-Fragment: 1`）。
 - **呈現**：每個 pick 有 fit 句、理由（每條附上它引用的卡片欄位與值）、取捨、和知名工具的比較、`best_free`、試驗紀錄（驗證等級、在哪個 OS／CPU、沙盒重播或人工、日期、離線測試通過、沒通過，或使用者要離線但還沒測過，以及「在你的系統上驗證過／沒有／請選 OS」）、`get_install_guide` 的步驟（第一個展開）、原始碼與 run record 連結（有才顯示）。`best_free` 不在 picks 裡時，也寫出它在哪裡跑過、是不是使用者的系統。`well_known_option` 的標題寫著「not verified by pickfit」，用一般字體（不是 pick 名稱的襯線大字）；第一行是一條填色的「pickfit 沒裝過也沒測過，沒有試跑紀錄和安裝指南」；沒有排名、徽章、試驗紀錄、安裝步驟或連結。沒有合適的工具時顯示 `coverage_note`。`find.ts` 給 agent 的「Verified on linux only…」取捨不重複顯示，因為試驗紀錄已經用完整句子說了。
+  - **MCP server**：試驗紀錄寫出握手列出的工具，以及有沒有實際呼叫過其中一個。安裝步驟後面接 `get_install_guide` 的 `mcp_client_config`：
+    - `claude mcp add` 那一行；
+    - 給 Claude Desktop、Cursor 等客戶端的 JSON（收在可展開的區塊）；
+    - 使用者要自己填的環境變數，標出哪些是必填。
+  - **桌面 app**：試驗紀錄照 `verification.gui` 寫出畫面判讀看到什麼，並明說 pickfit 沒用過它的任何功能；斷網啟動有通過也會寫出來。只有 `main_ui`、`first_run` 打勾，顯示錯誤或空白視窗的不打勾，用警示色。
+  - **規則路徑**：每個 pick 標 Good／Partial／Weak match，下面一行列出 profile 提到與沒提到的需求字；`find.ts` 加在取捨裡的同一句不重複。標題跟著 `match_quality`：partial 是「Partial fits」，none 是「No clear fit」，`coverage_note` 移到 picks 前面。
 - **不記個資**：不存 IP。`events` 和 MCP 一樣只存解析後的條件，另標 `client = 'web'`，網頁和 agent 的使用量分得開。網頁上顯示安裝步驟**不**寫 `install_guide` 事件，因為使用者還沒選，而 MCP 的那個事件代表「選了這一款」。不支援 `?need=` 預填：請求網址會進 Workers log，頁尾寫著 pickfit 不留使用者的原話。
 - **花費與濫用**（每次搜尋是一次付費的 `muse-spark-1.3`，用 Worker 自己的 `meta_budget`）：
-  - **網頁上限** `WEB_DAILY_CAP_USD`（預設 2）：呼叫模型前，先用**一條** D1 指令（`budget.ts` 的 `reserveSpend`，`INSERT … SELECT … WHERE` 加 upsert）預留這次最壞情況的花費（`estimateCostUsd(150000)`，約 $0.08；今天 60 張卡約 8 萬字元）。條件是「今天已花＋預留 ≤ `min(WEB_DAILY_CAP_USD, META_DAILY_CAP_USD)`」而且「總額＋預留 ≤ $40」。同時湧入的搜尋不會在任何一筆記帳前全部通過檢查；兩個 isolate 共用一個 D1 也一樣，`test/web.test.ts` 有測。呼叫結束（不論成敗）後釋放預留，實際花費照 MCP 原本的方式記帳。`findSoftware` 裡原本的檢查照跑，只是上限加上自己的預留，不重複計算。MCP 路徑不預留，程式沒變，但它的檢查看得到網頁正在進行的預留，所以比較保守。預留不到時改用規則排序，並說明原因：
+  - **網頁上限** `WEB_DAILY_CAP_USD`（預設 2）：呼叫模型前，先用**一條** D1 指令（`budget.ts` 的 `reserveSpend`，`INSERT … SELECT … WHERE` 加 upsert）預留這次最壞情況的花費（配對呼叫 `estimateCostUsd(150000)` 加上超過 60 筆時的關鍵字呼叫 `estimateCostUsd(8000, 600)`，約 $0.085；今天 60 張卡約 8.4 萬字元）。條件是「今天已花＋預留 ≤ `min(WEB_DAILY_CAP_USD, META_DAILY_CAP_USD)`」而且「總額＋預留 ≤ $40」。同時湧入的搜尋不會在任何一筆記帳前全部通過檢查；兩個 isolate 共用一個 D1 也一樣，`test/web.test.ts` 有測。呼叫結束（不論成敗）後釋放預留，實際花費照 MCP 原本的方式記帳。`findSoftware` 裡原本的檢查照跑，只是上限加上自己的預留，不重複計算。MCP 路徑不預留，程式沒變，但它的檢查看得到網頁正在進行的預留，所以比較保守。預留不到時改用規則排序，並說明原因：
     - 網頁今天的額度用完：「paused until 00:00 UTC」，並說明網頁和 agent 的花費合計已到上限；
     - 總額用完：不承諾重置；
     - 查不到 D1：照實說查不到。

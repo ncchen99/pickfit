@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Env } from '../src/env.ts';
 import type { FindOutput, PickOut } from '../src/find.ts';
-import { catalogStats, EMPTY_FORM, esc, ranSentence, renderResults, safeUrl, yourSystem, type FormValues } from '../src/page.ts';
+import { catalogStats, EMPTY_FORM, esc, guiSentence, levelLabel, ranSentence, renderResults, safeUrl, yourSystem, type FormValues } from '../src/page.ts';
 import { BODY_MAX_BYTES, MAX_IN_FLIGHT, SEARCHES_PER_MINUTE, visitorKey } from '../src/web.ts';
 import { makeWorker } from '../src/worker.ts';
 import { answer, fixtureCatalog, fixtureIndex, makeD1, metaResponse } from './helpers.ts';
@@ -557,4 +557,57 @@ test('render: the offline check is shown when it failed, and said when it was ne
   assert.match(html(false, false), /Its checks failed with the network off: it needed the network in pickfit’s run\./);
   assert.match(html(null, true), /pickfit hasn’t checked it with the network off\./);
   assert.ok(!html(null, false).includes('network off'));
+});
+
+test('an MCP server pick shows its handshake and how to add it to an agent', async () => {
+  const mcpAnswer = answer({
+    need: { ...answer().need, task: 'search notes from an agent', category: 'mcp_server' },
+    picks: [
+      {
+        slug: 'fixture-notes-mcp',
+        fit: 'Lets your agent search and read your notes over MCP.',
+        reasons: [{ claim: 'An MCP server', field: 'category', value: 'mcp_server' }],
+        tradeoffs: [],
+        vs_well_known: null,
+      },
+    ],
+    best_free_slug: null,
+  });
+  const s = site({}, () => metaResponse(mcpAnswer));
+  const html = await (await s.search({ need: 'let my coding agent search my notes', os: 'linux' })).text();
+  const pick = html.split('<article class="pick"')[1];
+  assert.match(pick, /An MCP client called one of its tools<\/p>/);
+  assert.match(pick, /An MCP client handshake over stdio listed its 2 tools \(search_notes, read_note\), and a call to search_notes returned a result\./);
+  assert.match(pick, /<h5>Add it to your agent<\/h5><div class="cmd"><pre translate="no"><code>claude mcp add/);
+  assert.match(pick, /JSON for Claude Desktop, Cursor and other clients/);
+  assert.match(pick, /<code translate="no">NOTES_SYNC_TOKEN<\/code>: sync service token \(required\)/);
+});
+
+test('the rules path shows each pick\'s fit label and its words once, and the heading follows match_quality', async () => {
+  const s = site({ MATCH_MODE: 'off' });
+  const html = await (await s.search({ ...MAC_LLM, need: 'run a language model offline with a terminal chat client' })).text();
+  const title = /<h2 class="results-title">([^<]*)<\/h2>/.exec(html)![1];
+  assert.match(title, /^(\d tools? ranked by rules|Partial fits, ranked by rules|No clear fit, ranked by rules)$/);
+  const picks = html.split('<article class="pick"').slice(1);
+  assert.ok(picks.length > 0);
+  for (const pick of picks) {
+    assert.match(pick, /<span class="badge match-(good|partial|weak)">(Good|Partial|Weak) match<\/span>/);
+    assert.match(pick, /<p class="coverage">/);
+    // The same words are not repeated as a tradeoff.
+    assert.ok(!/<li>(Covers part of the request|Weak match):/.test(pick));
+  }
+});
+
+test('render: a GUI app\'s launch is described as such, and only a real screen gets a check mark', () => {
+  const gui = { tier: 'ui_rendered' as const, screen: 'first_run' as const, display: 'Xvfb 1280x800x24, no window manager, no GPU', launch_offline: true };
+  const app = pick({ verification: { ...pick().verification, level: 'install', gui } });
+  const html = renderResults({ out: output([app]), guides: {} }, EMPTY_FORM, fixtureCatalog());
+  assert.match(html, /<p class="level"><svg class="check"[^>]*>.*<\/svg>It opens to its first-run screen<\/p>/);
+  assert.ok(html.includes(esc(guiSentence(gui))));
+  assert.match(guiSentence(gui), /pickfit did not use any of its features\. The launch passed again with the network off\.$/);
+  const broken = pick({ verification: { ...pick().verification, level: 'install', gui: { ...gui, screen: 'crash_or_error' } } });
+  const bad = renderResults({ out: output([broken]), guides: {} }, EMPTY_FORM, fixtureCatalog());
+  assert.match(bad, /<p class="level level-caution">It showed an error on launch<\/p>/);
+  assert.equal(levelLabel('service', { mcp: { called_tool: null } }), 'An MCP client connects and lists its tools');
+  assert.equal(levelLabel('function'), 'Its main function works');
 });
