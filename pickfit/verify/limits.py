@@ -146,7 +146,8 @@ for name in sys.argv[1:]:
 # Names only DNS resolves (to 127.0.0.1): a font server's name the box user can hand to Xvfb.
 FONT_NAMES = ("127.0.0.1.nip.io", "127.0.0.1.sslip.io")
 # The box user, as a raw X client: SetFontPath (opcode 51) with each argv element, then a round trip to read the
-# answer ("accepted" or "error N"), then the default path back. No xset in the image, and none needed.
+# answer ("accepted" or "error N"), then the default path back. No xset in the image, and none needed. Xvfb refuses
+# an unreachable font server whether or not it resolved the name, so the answer is recorded, not judged.
 SET_FONT_PATH = r"""python3 -I - "$@" <<'PICKFIT_PY'
 import socket, struct, sys
 def exact(s, n):
@@ -177,12 +178,14 @@ def font_path(elements):
     body = b"".join(bytes([len(e)]) + e.encode() for e in elements)
     body += b"\0" * (-len(body) % 4)
     s.sendall(struct.pack("<BxHHxx", 51, 2 + len(body) // 4, len(elements)) + body + struct.pack("<BxH", 43, 1))
-    while True:
+    error = None
+    while True:  # up to the round trip's reply, so an error does not leave it for the next request
         packet = exact(s, 32)
-        if packet[0] == 0:
-            return f"error {packet[1]}"
-        if packet[0] == 1:
-            return "accepted"
+        if packet[0] == 0 and error is None:
+            error = f"error {packet[1]}"
+        elif packet[0] == 1:
+            exact(s, 4 * struct.unpack("<I", packet[4:8])[0])
+            return error or "accepted"
 for element in sys.argv[1:]:
     print("font path", element, font_path([element]), flush=True)
 print("font path reset", font_path([]))
@@ -369,9 +372,10 @@ def _display_no_tcp(box: Box) -> ProbeResult:
 
 def _display_no_network(box: Box) -> ProbeResult:
     """Offline: the display has no network, so the box user cannot use Xvfb to resolve a name (a font server's, by
-    SetFontPath). Decided by root: Xvfb's network namespace is neither the box's nor the box user's; from it, the
-    display uid gets no DNS answer and resolves no name, while root's same lookups answer (the control); and Xvfb
-    does not accept a font server named by a DNS-only name."""
+    SetFontPath, which the box user sends). Decided by root: Xvfb's network namespace is neither the box's nor the
+    box user's, and from it the display uid gets no DNS answer and resolves no name, while root's same lookups
+    answer (the control). Xvfb's answer to SetFontPath is kept in the detail: it refuses an unreachable font
+    server whether or not it resolved the name."""
     names = " ".join(FONT_NAMES)
     control = box.harness_exec([gui.PYTHON, "-I", "-S", "-", *FONT_NAMES], 40, stdin=NAMES_PY.encode())
     name = next((line.split()[1] for line in control.stdout.splitlines()
@@ -387,13 +391,13 @@ def _display_no_network(box: Box) -> ProbeResult:
     decisive = bool(re.search(r"^answered ", control.stdout, re.M)) and name is not None
     closed = (not re.search(r"^(answered|resolved) ", own.stdout, re.M)
               and bool(re.search(r"^unresolved ", own.stdout, re.M)))
-    refused = "font path" in asked.stdout and not re.search(r"^font path tcp/\S+ accepted", asked.stdout, re.M)
+    ran = "font path tcp/" in asked.stdout
     detail = (f"Xvfb ns {xvfb_ns[:1]} box {xvfb_ns[1:]} box user {user_ns}; control (root): {_detail(control)}; "
               f"display: {_detail(own)}; box user's SetFontPath: {_detail(asked)}")
-    return ProbeResult("display_no_network", apart and decisive and closed and refused,
-                       f"offline, Xvfb's namespace has no network: no DNS answer or name ({names}) from it, root's "
-                       "control answers, and Xvfb refuses a font server by a DNS-only name", asked.exit_code,
-                       asked.seconds, detail[-300:])
+    return ProbeResult("display_no_network", apart and decisive and closed and ran,
+                       f"offline, after the box user's SetFontPath for those names, Xvfb's namespace has no network: no "
+                       f"DNS answer or name ({names}) from it, root's control answers", asked.exit_code, asked.seconds,
+                       detail[-300:])
 
 
 def _gateway(box: Box) -> ProbeResult:

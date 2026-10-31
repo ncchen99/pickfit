@@ -693,7 +693,8 @@ CLOSED = "ns net:[11]\nno answer 172.21.0.1 OSError\nunresolved 127.0.0.1.nip.io
     # main's code: Xvfb in the box's own namespace, where the resolver answers it offline
     (CONTROL, "ns net:[2]\nanswered 172.21.0.1\nresolved 127.0.0.1.nip.io 127.0.0.1\n", "net:[2]\nnet:[2]\n",
      "font path tcp/127.0.0.1.nip.io:7100 accepted\n", False),
-    (CONTROL, CLOSED, "net:[11]\nnet:[2]\n", "font path tcp/127.0.0.1.nip.io:7100 accepted\n", False),
+    (CONTROL, CLOSED, "net:[11]\nnet:[2]\n", "font path tcp/127.0.0.1.nip.io:7100 accepted\n", True),  # not judged
+    (CONTROL, CLOSED, "net:[11]\nnet:[2]\n", "no X connection\n", False),  # the box user's request never ran
     ("ns net:[2]\nno answer 172.21.0.1 OSError\n", CLOSED, "net:[11]\nnet:[2]\n",  # no control: undecided
      "font path tcp/127.0.0.1.nip.io:7100 error 2\n", False),
     (CONTROL, CLOSED, "net:[9]\nnet:[2]\n", "font path tcp/127.0.0.1.nip.io:7100 error 2\n", False),  # the box user's
