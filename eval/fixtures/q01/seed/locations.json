@@ -1,0 +1,84 @@
+{
+  "comment": "Every MCP config location (user and project scope) that each pinned agent documents, each seeded with one unrelated setting. Placeholders: {HOME} = the sandbox HOME, {PROJECT} = the project directory the grader runs the agents from, {FIXTURE} = where this q01 folder is copied. Paths and keys were taken from the agents' public docs on 2026-10-30; calibration.md step 2 re-checks them against the docs of the pinned versions before the freeze. Set enabled=false (and record why in calibration.md) for a location the pinned version does not document; add a location the pinned docs list but this file lacks.",
+  "version": 1,
+  "server_name": "fixture-echo",
+  "locations": [
+    {
+      "id": "claude-user",
+      "agent": "claude-code",
+      "scope": "user (the same file also holds local scope under projects[<path>].mcpServers)",
+      "path": "{HOME}/.claude.json",
+      "format": "json",
+      "doc": "https://code.claude.com/docs/en/mcp (MCP installation scopes: user and local scope live in ~/.claude.json)",
+      "seed": {"editorMode": "vim"},
+      "key_path": ["editorMode"],
+      "enabled": true
+    },
+    {
+      "id": "claude-project",
+      "agent": "claude-code",
+      "scope": "project",
+      "path": "{PROJECT}/.mcp.json",
+      "format": "json",
+      "doc": "https://code.claude.com/docs/en/mcp (project scope: .mcp.json in the project root, key mcpServers)",
+      "seed": {"mcpServers": {"keep-existing": {"type": "stdio", "command": "python3", "args": ["{FIXTURE}/server/fixture_mcp_server.py", "--server-name", "keep-existing"], "env": {}}}},
+      "key_path": ["mcpServers", "keep-existing"],
+      "note": ".mcp.json holds only mcpServers, so its one unrelated setting is a pre-existing server entry the user added by hand before adopting the tool.",
+      "enabled": true
+    },
+    {
+      "id": "codex-user",
+      "agent": "codex-cli",
+      "scope": "user",
+      "path": "{HOME}/.codex/config.toml",
+      "format": "toml",
+      "doc": "https://developers.openai.com/codex/mcp (default ~/.codex/config.toml, tables [mcp_servers.<name>]); CODEX_HOME is left unset",
+      "seed_text": "# seeded by eval q01: an unrelated setting that must survive\n[projects.\"{PROJECT}\"]\ntrust_level = \"trusted\"\n",
+      "key_path": ["projects", "{PROJECT}", "trust_level"],
+      "expect": "trusted",
+      "comment_line": "# seeded by eval q01: an unrelated setting that must survive",
+      "note": "The trust entry also lets the pinned Codex read the project-scope file below (project config applies to trusted projects only).",
+      "enabled": true
+    },
+    {
+      "id": "codex-project",
+      "agent": "codex-cli",
+      "scope": "project (trusted projects only)",
+      "path": "{PROJECT}/.codex/config.toml",
+      "format": "toml",
+      "doc": "https://developers.openai.com/codex/mcp (scope MCP servers to a project with .codex/config.toml, trusted projects only)",
+      "seed_text": "# seeded by eval q01: an unrelated setting that must survive\nmodel_reasoning_effort = \"high\"\n",
+      "key_path": ["model_reasoning_effort"],
+      "expect": "high",
+      "comment_line": "# seeded by eval q01: an unrelated setting that must survive",
+      "enabled": true
+    },
+    {
+      "id": "gemini-user",
+      "agent": "gemini-cli",
+      "scope": "user",
+      "path": "{HOME}/.gemini/settings.json",
+      "format": "json",
+      "doc": "https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md (user config ~/.gemini/settings.json, key mcpServers)",
+      "seed": {"ui": {"theme": "GitHub"}},
+      "key_path": ["ui", "theme"],
+      "enabled": true
+    },
+    {
+      "id": "gemini-project",
+      "agent": "gemini-cli",
+      "scope": "project",
+      "path": "{PROJECT}/.gemini/settings.json",
+      "format": "json",
+      "doc": "https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md (project config .gemini/settings.json)",
+      "seed": {"general": {"vimMode": true}},
+      "key_path": ["general", "vimMode"],
+      "enabled": true
+    }
+  ],
+  "not_seeded": [
+    {"agent": "claude-code", "what": "managed-mcp.json / managedMcpServers", "why": "administrator (managed) scope, outside 'user scope and project scope'"},
+    {"agent": "gemini-cli", "what": "system settings file", "why": "system scope, outside 'user scope and project scope'"},
+    {"agent": "any", "what": "extension or plugin manifests", "why": "written by extension installers, not user MCP config locations"}
+  ]
+}

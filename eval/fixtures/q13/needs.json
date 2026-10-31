@@ -1,0 +1,72 @@
+[
+  {
+    "item": "Frozen fixture GGUF: one 0.5B-1.5B instruct model file",
+    "why": "L2-2, L2-3 and L2-4 load it from a read-only path. Too large for the repo: it lives in read-only eval storage and only its SHA-256 is recorded (calibration.md). To stay neutral it must use a widely supported architecture and a common quantization so any GGUF-native server can load it, carry its chat template in the file, and have an open license that allows storing and running it. Suggested pick: the first candidate (largest size allowed, so the 5% disk margin is about 55 MB rather than about 20 MB, and published by the model's own authors).",
+    "candidates": [
+      {
+        "source": "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF (file qwen2.5-1.5b-instruct-q4_k_m.gguf)",
+        "license": "Apache-2.0",
+        "size": "about 1.1 GB (confirm on the file page)",
+        "pin": "repository commit hash + the file's SHA-256 (LFS sha256 on the file page); check with gguf_info.py and record both in calibration.md"
+      },
+      {
+        "source": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF (file qwen2.5-0.5b-instruct-q4_k_m.gguf)",
+        "license": "Apache-2.0",
+        "size": "about 0.4-0.5 GB (confirm on the file page)",
+        "pin": "repository commit hash + file SHA-256, as above"
+      },
+      {
+        "source": "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF (file tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf)",
+        "license": "Apache-2.0",
+        "size": "about 0.7 GB (confirm on the file page)",
+        "pin": "repository commit hash + file SHA-256, as above"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Read-only storage for the model file inside the sandbox",
+    "why": "The item mounts the GGUF read-only at a path. The file is uploaded once and mounted read-only in every q13 sandbox (both groups); a write to the mount must fail.",
+    "candidates": [
+      {
+        "source": "a Modal Volume in the eval's own Modal workspace, mounted read-only at /models",
+        "license": "n/a",
+        "size": "the model file",
+        "pin": "volume name + path + file SHA-256 (calibration.md)"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Dev image digest (shared by every Linux question)",
+    "why": "eval/README.md section 5: ubuntu:24.04 base, digest recorded. Every L2 step here runs in it.",
+    "candidates": [
+      {
+        "source": "docker.io/library/ubuntu:24.04 plus the eval's own dev-image layer (decided once for all Linux questions)",
+        "license": "Ubuntu image terms; packages under their own licenses",
+        "size": "about 30 MB compressed base",
+        "pin": "image digest sha256:... recorded in calibration.md and in the results"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Grader-side Python 3 inside the sandbox",
+    "why": "bench.py and disk_usage.py run inside the sandbox (they talk to 127.0.0.1 and measure its disks). If the dev image has python3, use it; otherwise use a standalone interpreter on the read-only /eval mount so nothing is installed into the answer's environment (and the mount stays out of the disk measurement).",
+    "candidates": [
+      {
+        "source": "the dev image's own /usr/bin/python3 (Ubuntu 24.04 ships 3.12)",
+        "license": "PSF-2.0",
+        "size": "already in the image",
+        "pin": "image digest"
+      },
+      {
+        "source": "https://github.com/astral-sh/python-build-standalone/releases (x86_64-unknown-linux-gnu install_only build)",
+        "license": "PSF-2.0 (plus bundled library licenses)",
+        "size": "about 30 MB",
+        "pin": "release tag + archive SHA-256"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  }
+]

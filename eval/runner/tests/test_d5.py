@@ -161,3 +161,144 @@ def test_evidence_that_differs_from_the_manifest_is_reported(tmp_path: Path) -> 
     manifest.write_text(json.dumps({"runs": {"verify-demo-1": {"slug": "demo", "files": {"report.json": "0" * 64}}}}))
     problems = d5_check.evidence_integrity(evidence, manifest, tmp_path / "versions-before.json")
     assert problems == ["verify-demo-1/report.json differs from the manifest"]
+
+
+# --- GUI, MCP, features, how_we_know, rules labels (added 10/31) -------------------------
+
+
+def replay(evidence: Path, run_id: str, checks: list[dict], level: str = "function", judge: dict | None = None,
+           feature_judge: dict | None = None) -> None:
+    folder = evidence / run_id
+    (folder / "replay.json").write_text(json.dumps({"result": {"level": level, "passed": True, "checks": checks}}))
+    if judge is not None:
+        (folder / "judge.json").write_text(json.dumps(judge))
+    if feature_judge is not None:
+        (folder / "feature_judge.json").write_text(json.dumps({"verdicts": feature_judge}))
+
+
+def run_with(tmp_path: Path, calls, prepare) -> dict:
+    runs, evidence, manifest = tmp_path / "runs", tmp_path / "evidence", tmp_path / "manifest.json"
+    record(evidence, "verify-demo-1", level="service")
+    prepare(evidence)
+    manifest.write_text(json.dumps({"runs": {"verify-demo-1": {"slug": "demo"}}}))
+    folder = runs / "run1" / "q01" / "experimental" / "attempt-1"
+    folder.mkdir(parents=True)
+    (folder / "meta.json").write_text(json.dumps({"question": "q01", "group": "experimental", "attempt": 1,
+                                                  "started_at": "2026-11-02T10:00:00+08:00"}))
+    (folder / "stream.jsonl").write_text(stream_with(calls))
+    return d5_check.run(["run1"], runs, evidence, manifest)
+
+
+GUI_CHECK = {"command": "demo-app", "kind": "gui", "passed": True, "offline": True,
+             "run": {"stdout": "gui tier: window (a window of the app's own process is shown)"}}
+
+
+def by_kind(report: dict) -> dict:
+    return {(c["kind"], c["source"]): c["status"] for c in report["claims"]}
+
+
+def test_gui_claims_need_the_launch_the_screen_and_the_offline_pass(tmp_path: Path) -> None:
+    gui = {"tier": "ui_rendered", "screen": "main_ui", "display": "Xvfb", "launch_offline": True}
+    body = {"picks": [pick(verification={"level": "install", "os": "linux", "arch": "x86_64", "method": "sandbox",
+                                         "verified_on_user_os": None, "gui": gui})]}
+    calls = [("find_software", {"need": "x"}, body)]
+    ok = run_with(tmp_path / "a", calls, lambda ev: replay(ev, "verify-demo-1", [GUI_CHECK], judge={"screen": "main_ui"}))
+    assert by_kind(ok)[("gui", "a")] == "found" and ok["violations"] == 0
+    bad = run_with(tmp_path / "b", calls, lambda ev: replay(ev, "verify-demo-1", [GUI_CHECK], judge={"screen": "sign_in_wall"}))
+    assert by_kind(bad)[("gui", "a")] == "not_found" and bad["violations"] == 1
+    assert "sign_in_wall" in next(c["reason"] for c in bad["claims"] if c["kind"] == "gui")
+    online_only = dict(GUI_CHECK, offline=False)
+    off = run_with(tmp_path / "c", calls, lambda ev: replay(ev, "verify-demo-1", [online_only], judge={"screen": "main_ui"}))
+    assert off["violations"] == 1
+
+
+MCP_STDOUT = "initialize: ok\ntools/list: ok count=2\ntool: alpha args=x*\ntool: beta args=\n"
+
+
+def mcp_checks(offline: bool = True) -> list[dict]:
+    return [{"command": "python3 probe.py -- demo", "kind": "mcp", "passed": True, "offline": offline,
+             "run": {"stdout": MCP_STDOUT}},
+            {"command": "python3 probe.py --call alpha --args '{}' -- demo", "kind": "mcp_call", "passed": True,
+             "offline": offline, "run": {"stdout": MCP_STDOUT + "tools/call: ok"}}]
+
+
+def guide(**mcp_over) -> dict:
+    mcp = {"tools": ["alpha", "beta"], "tool_count": 2, "called_tool": "alpha", "works_offline": True}
+    mcp.update(mcp_over)
+    return {"slug": "demo", "verification": {"status": "verified", "level": "service", "os": "linux", "arch": "x86_64"},
+            "steps": [{"command": "uv tool install demo 2>&1"}], "mcp_client_config": mcp,
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal) and replayed the steps from "
+                           "scratch on 2026-10-28; an MCP client handshake over stdio listed its 2 tools with the "
+                           "network off, and a call to alpha returned a result."}
+
+
+def test_mcp_claims_are_the_handshake_and_the_calls_of_the_replay(tmp_path: Path) -> None:
+    calls = [("get_install_guide", {"slug": "demo", "os": "linux"}, guide())]
+    ok = run_with(tmp_path / "a", calls, lambda ev: replay(ev, "verify-demo-1", mcp_checks(), level="service"))
+    kinds = by_kind(ok)
+    assert kinds[("mcp", "d")] == "found" and kinds[("mcp", "c")] == "found" and kinds[("level", "c")] == "found"
+    assert ok["violations"] == 0
+    wrong_call = [("get_install_guide", {"slug": "demo", "os": "linux"}, guide(called_tool="gamma"))]
+    assert run_with(tmp_path / "b", wrong_call, lambda ev: replay(ev, "verify-demo-1", mcp_checks(), level="service"))["violations"] == 1
+    online = run_with(tmp_path / "c", calls, lambda ev: replay(ev, "verify-demo-1", mcp_checks(offline=False), level="service"))
+    assert {c["kind"] for c in online["claims"] if c["status"] == "not_found"} == {"mcp"}
+    extra_tool = [("get_install_guide", {"slug": "demo", "os": "linux"}, guide(tools=["alpha", "beta", "delta"], tool_count=3))]
+    assert run_with(tmp_path / "d", extra_tool, lambda ev: replay(ev, "verify-demo-1", mcp_checks(), level="service"))["violations"] == 1
+
+
+def test_a_checked_feature_needs_its_passing_check_and_the_judge(tmp_path: Path) -> None:
+    feats = {"recorded": True, "checked": [{"feature": "Convert files", "check": "demo convert in.txt"}],
+             "not_checked": [{"feature": "Sync", "reason": "test_failed", "detail": "its test failed"}]}
+    body = {"picks": [pick(features=feats)]}
+    calls = [("find_software", {"need": "x"}, body)]
+    check = [{"command": "demo convert in.txt", "kind": "function", "passed": True, "run": {"stdout": "ok"}}]
+    ok = run_with(tmp_path / "a", calls, lambda ev: replay(ev, "verify-demo-1", check,
+                                                           feature_judge={"Convert files": ["shows_it_working", "ok"]}))
+    assert by_kind(ok)[("feature", "a")] == "found" and ok["violations"] == 0
+    assert sum(1 for c in ok["claims"] if c["kind"] == "feature") == 1  # not_checked claims nothing
+    lowered = run_with(tmp_path / "b", calls, lambda ev: replay(ev, "verify-demo-1", check,
+                                                                feature_judge={"Convert files": ["does_not_show", "no"]}))
+    assert lowered["violations"] == 1
+    failed = [dict(check[0], passed=False)]
+    assert run_with(tmp_path / "c", calls, lambda ev: replay(ev, "verify-demo-1", failed))["violations"] == 1
+
+
+def test_the_replay_level_bounds_the_record_level(tmp_path: Path) -> None:
+    hwk = ("pickfit installed it in a fresh linux/x86_64 sandbox (modal) and replayed the steps from scratch on "
+           "2026-10-28; its service answered a test request.")
+    body = {"picks": [pick(verification={"level": "service", "os": "linux", "arch": "x86_64", "method": "sandbox",
+                                         "verified_on_user_os": None}, how_we_know=hwk)]}
+    calls = [("find_software", {"need": "x"}, body)]
+    ok = run_with(tmp_path / "a", calls, lambda ev: replay(ev, "verify-demo-1", [], level="service"))
+    assert ok["violations"] == 0 and by_kind(ok)[("level", "c")] == "found"
+    lower = run_with(tmp_path / "b", calls, lambda ev: replay(ev, "verify-demo-1", [], level="function"))
+    assert lower["violations"] == 1 and "level function < service" in lower["claims"][0]["reason"]
+
+
+def test_by_hand_how_we_know_is_a_human_run_and_not_found(tmp_path: Path) -> None:
+    hwk = "pickfit installed it by hand on macos/arm64 (mac mini) on 2026-10-30; the install finished and the tool started."
+    report = run_with(tmp_path, [("find_software", {"need": "x"}, {"picks": [pick(how_we_know=hwk)]})], lambda ev: None)
+    claim = next(c for c in report["claims"] if c["source"] == "c")
+    assert (claim["os"], claim["arch"], claim["status"]) == ("macos", "arm64", "not_found")
+
+
+def test_rules_labels_are_listed_and_checked_but_never_violations(tmp_path: Path) -> None:
+    good = {"matched_by": "rules", "match_quality": "partial",
+            "picks": [pick(match={"quality": "partial", "covers": ["pdf"], "missing": ["ocr"]}),
+                      pick(slug="demo2", match={"quality": "weak", "covers": [], "missing": ["pdf", "ocr"]},
+                           verification={"level": "unverified", "os": None, "arch": None, "method": None,
+                                         "verified_on_user_os": None})]}
+    report = run_with(tmp_path / "a", [("find_software", {"need": "x"}, good)], lambda ev: None)
+    assert report["label_problems"] == 0 and report["labels"][0]["match_quality"] == "partial"
+    bad = dict(good, matched_by="muse-spark-1.3", match_quality="good")
+    report = run_with(tmp_path / "b", [("find_software", {"need": "x"}, bad)], lambda ev: None)
+    assert report["label_problems"] == 1 and report["violations"] == 0
+    wrong = dict(good, match_quality="good")
+    assert run_with(tmp_path / "c", [("find_software", {"need": "x"}, wrong)], lambda ev: None)["label_problems"] == 1
+
+
+def test_coverage_note_is_scanned_as_model_text(tmp_path: Path) -> None:
+    body = {"picks": [pick()], "coverage_note": "Demo was tested on Windows."}
+    report = run_with(tmp_path, [("find_software", {"need": "x"}, body)], lambda ev: None)
+    e = [c for c in report["claims"] if c["source"] == "e"]
+    assert [(c["slug"], c["os"], c["status"]) for c in e] == [("demo", "windows", "not_found")]

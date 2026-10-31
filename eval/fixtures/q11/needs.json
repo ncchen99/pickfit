@@ -1,0 +1,33 @@
+[
+  {
+    "item": "L2-4 shared OpenCC scorer: pinned OpenCC character tables (shared with q15)",
+    "why": "README section 5 fixes the script judgement to one pinned OpenCC version, character by character. The shared scorer eval/fixtures/_shared/zh_script.py reads OpenCC's own text dictionaries; the files are listed once in eval/fixtures/_shared/needs.json (q15 uses the same files).",
+    "candidates": [],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "L2-3 blind grader model",
+    "why": "README section 5: semantic judgements use a pinned Claude model with a fixed rubric, blind to the group. judge_rubric.md is the rubric; the model ID must be fixed before the first run (graders' budget: section 9.1 B4, $20).",
+    "candidates": [
+      {
+        "source": "Anthropic API, a fixed full model ID (for example the same model as the runner, claude-opus-5-5, or a cheaper fixed model)",
+        "license": "Anthropic API terms",
+        "size": "8 judge calls per run (4 prompts; x3 when three runs are needed)",
+        "pin": "Write the full model ID and temperature 0 in calibration.md; the API key is supplied at run time and never committed"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Mac baseline for q11 and q12 (and q08 if it uses the same runbook)",
+    "why": "Settled by 9.3 E (念誠, 2026-10-31): a fresh macOS account per run, created by 念誠, with only Homebrew installed; snapshots before and after. Steps: eval/fixtures/_mac/CHECKLIST.md.",
+    "candidates": [],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "L2-1 hardware: a 16 GB Apple silicon Mac",
+    "why": "Settled by 9.3 D (念誠, 2026-10-31): run on 念誠's Apple M5 with 24 GiB, judge memory by the measured peak footprint against the question's 12 GB limit, and report the real hardware.",
+    "candidates": [],
+    "decision_needed_by": "念誠"
+  }
+]

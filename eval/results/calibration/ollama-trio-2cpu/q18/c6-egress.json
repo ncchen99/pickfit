@@ -1,0 +1,94 @@
+{
+  "tool": "egress.py report",
+  "at": "2026-10-31T06:29:24.914+00:00",
+  "result": "fail",
+  "reason": "4 egress attempt(s)",
+  "steps": [
+    {
+      "label": "fixtures",
+      "command": "STATE=/tmp/q18cal sh /opt/eval/fixtures/q18/start_fixture_servers.sh",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_s": 4.303,
+      "started_at": "2026-10-31T06:27:13.891+00:00",
+      "started_epoch": 1793428033.8918116,
+      "ended_epoch": 1793428038.195,
+      "block_network": false,
+      "netns": null
+    }
+  ],
+  "traces": [
+    {
+      "trace": "/out/q18/eg/fixtures.strace",
+      "exists": true,
+      "execve": 25,
+      "net_calls": 114,
+      "egress_attempts": 4,
+      "attempts": [
+        {
+          "call": "connect",
+          "pid": 367,
+          "ts": 1793428034.00803,
+          "family": "AF_INET",
+          "address": "172.21.0.1",
+          "port": 53,
+          "result": "0",
+          "egress": true,
+          "reason": "name lookup (port 53)",
+          "line_number": 11,
+          "line": "367   1793428034.008030 connect(8, {sa_family=AF_INET, sin_port=htons(53), sin_addr=inet_addr(\"172.21.0.1\")}, 16) = 0"
+        },
+        {
+          "call": "connect",
+          "pid": 367,
+          "ts": 1793428034.00922,
+          "family": "AF_INET",
+          "address": "172.21.0.1",
+          "port": 53,
+          "result": "0",
+          "egress": true,
+          "reason": "name lookup (port 53)",
+          "line_number": 12,
+          "line": "367   1793428034.009220 connect(9, {sa_family=AF_INET, sin_port=htons(53), sin_addr=inet_addr(\"172.21.0.1\")}, 16) = 0"
+        },
+        {
+          "call": "connect",
+          "pid": 367,
+          "ts": 1793428034.022395,
+          "family": "AF_INET",
+          "address": "34.36.133.15",
+          "port": 443,
+          "result": "-1 EINPROGRESS",
+          "egress": true,
+          "reason": "address outside this box",
+          "line_number": 13,
+          "line": "367   1793428034.022395 connect(8, {sa_family=AF_INET, sin_port=htons(443), sin_addr=inet_addr(\"34.36.133.15\")}, 16) = -1 EINPROGRESS (Operation now in progress)"
+        },
+        {
+          "call": "connect",
+          "pid": 367,
+          "ts": 1793428034.022945,
+          "family": "AF_INET",
+          "address": "34.36.133.15",
+          "port": 443,
+          "result": "-1 EINPROGRESS",
+          "egress": true,
+          "reason": "address outside this box",
+          "line_number": 14,
+          "line": "367   1793428034.022945 connect(10, {sa_family=AF_INET, sin_port=htons(443), sin_addr=inet_addr(\"34.36.133.15\")}, 16) = -1 EINPROGRESS (Operation now in progress)"
+        }
+      ],
+      "families": {
+        "AF_INET": 34,
+        "AF_UNIX": 2
+      },
+      "window": [
+        null,
+        null
+      ],
+      "outside_window": 0,
+      "sha256": "2da97497149bc421a3c9bdade10b62edf30b20fe71eb8853cd5f15718d865dfb",
+      "label": "fixtures"
+    }
+  ]
+}

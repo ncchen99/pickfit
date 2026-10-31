@@ -1,0 +1,22 @@
+{
+  "question": "q14",
+  "sandbox": "linux_sandbox",
+  "platform": "Modal Sandbox (eval/README.md section 5)",
+  "image": "the eval L2 dev image: ubuntu:24.04 base, digest recorded in calibration.md",
+  "arch": "x86_64",
+  "gpu": null,
+  "cpu": 4,
+  "memory_mib": 8192,
+  "install_timeout_s": 1200,
+  "first_start_wait_s": 1200,
+  "check_timeout_s": 600,
+  "mounts": [
+    {"path": "/eval/q14", "read_only": true, "content": "this folder (+ the grader's Python with the pinned openai client, see needs.json)"},
+    {"path": "/results", "read_only": false, "content": "grader outputs"}
+  ],
+  "phases": [
+    {"name": "A", "network": "open", "what": "install, first start (models download), L2-1 to L2-4"},
+    {"name": "B", "network": "egress blocked from the start", "what": "fresh sandbox from phase A's filesystem snapshot, same limits; L2-5",
+     "why_fresh": "memory.peak then covers only phase B, not the downloads of phase A"}
+  ]
+}
