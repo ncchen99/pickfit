@@ -755,6 +755,24 @@ def test_agent_tools_and_task_name_powershell(fake) -> None:
     assert "Windows 11 Enterprise" in text and "PowerShell 7" in text and "standard user" in text
 
 
+def test_windows_runs_check_features_under_the_same_rules(fake) -> None:
+    """tools_for rewrites run_command for pwsh and leaves finish as it is, features included, and the task
+    lists the README's features with the same guide, so a Windows run records coverage like any other."""
+    import dataclasses
+
+    from pickfit.schema import Cited
+    from pickfit.verify.agent import FINISH_TOOL
+
+    box = fake.box()
+    box.manifest = {"windows": "26H2 (build 28000.1)", "pwsh": "7.5.4", "python": "3.12.10"}
+    finish = next(t for t in tools_for(box) if t["name"] == "finish")
+    assert finish == FINISH_TOOL and "features" in finish["parameters"]["required"]
+    task = load_fixture(FIXTURES / "evnx.json")
+    ex = task.extraction.model_copy(update={"features": [Cited(value="validate .env files", quote="Validate .env")]})
+    text = render_task(dataclasses.replace(task, extraction=ex), plan_for(ex, "windows"), box, AgentLimits())
+    assert 'F1. validate .env files (README: "Validate .env")' in text and "Feature checks:" in text
+
+
 def test_windows_plan_keeps_brew_aside() -> None:
     from pickfit.schema import InstallClaim
 

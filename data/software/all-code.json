@@ -31,6 +31,12 @@
     "run Claude Code on Antigravity login"
   ],
   "alternatives_to": [],
+  "features": [
+    "Run Claude Code on Codex login",
+    "Launch every agent on one login",
+    "Mirror sessions to browser for remote control",
+    "Launch agents with chosen provider"
+  ],
   "why_worth_it": null,
   "homepage": "https://treeleaves30760.github.io/all-code/",
   "repo": {
@@ -72,16 +78,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-all-code-20261029-030213-49cb",
+      "run_id": "verify-all-code-20261031-020854-86bb",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/treeleaves30760/all-code/main/install.sh -o /tmp/alc-install.sh && ls -l /tmp/alc-install.sh && wc -l /tmp/alc-install.sh",
-          "purpose": "Download installer script for inspection"
+          "command": "curl -fsSL https://raw.githubusercontent.com/treeleaves30760/all-code/main/install.sh -o /tmp/install.sh && echo DOWNLOADED && wc -c /tmp/install.sh",
+          "purpose": "download install.sh for reading before running"
         },
         {
-          "command": "ALC_NO_TMUX_INSTALL=1 sh /tmp/alc-install.sh",
-          "purpose": "Install alc via inspected script"
+          "command": "sh /tmp/install.sh",
+          "purpose": "install alc via the README install.sh script"
         }
       ],
       "manual_steps": [],
@@ -123,10 +129,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T03:03:11.921361+08:00",
+    "checked_at": "2026-10-31T02:09:41.218134+08:00",
     "runs": [
       {
-        "id": "verify-all-code-20261029-030213-49cb",
+        "id": "verify-all-code-20261031-020854-86bb",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -134,18 +140,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T03:03:11.921361+08:00",
+        "checked_at": "2026-10-31T02:09:41.218134+08:00",
         "tool_version": "2.5.1",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/treeleaves30760/all-code/main/install.sh -o /tmp/alc-install.sh && ls -l /tmp/alc-install.sh && wc -l /tmp/alc-install.sh",
-            "purpose": "Download installer script for inspection"
+            "command": "curl -fsSL https://raw.githubusercontent.com/treeleaves30760/all-code/main/install.sh -o /tmp/install.sh && echo DOWNLOADED && wc -c /tmp/install.sh",
+            "purpose": "download install.sh for reading before running"
           },
           {
-            "command": "ALC_NO_TMUX_INSTALL=1 sh /tmp/alc-install.sh",
-            "purpose": "Install alc via inspected script"
+            "command": "sh /tmp/install.sh",
+            "purpose": "install alc via the README install.sh script"
           }
         ],
         "smoke_tests": [
@@ -159,17 +165,8 @@
             "offline": true
           },
           {
-            "command": "alc --help",
-            "expected_signal": "Launch Qwen Code",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "qwen Launch Qwen Code",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "alc doctor",
-            "expected_signal": "needs attention — 3 issues",
+            "expected_signal": "needs attention",
             "exit_code": 1,
             "passed": true,
             "observed_excerpt": "✗ needs attention — 3 issues",
@@ -179,33 +176,68 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "alc doctor",
-            "actually_needed": "alc doctor reports diagnostics and exits 1 when optional keys/services are missing (shows 'needs attention — 3 issues'); this is the validator finding problems, not an install failure"
+            "readme_said": "curl -fsSL .../install.sh | sh installs alc",
+            "actually_needed": "install still succeeds (exit 0); warning that `--tmux` needs tmux 3.2+ is expected on minimal boxes without root",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "alc doctor reports needs attention with 3 issues and alc --version prints alc 2.5.1.",
+          "observed": "alc doctor exits with needs attention listing 3 issues and alc --version prints alc 2.5.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-all-code-20261029-030213-49cb/report.json",
+          "trace_path": "runs/verify/verify-all-code-20261031-020854-86bb/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-all-code-20261029-030213-49cb/check-1-cmd5.judged.png",
-            "runs/verify/verify-all-code-20261029-030213-49cb/check-2-cmd3.judged.png"
+            "runs/verify/verify-all-code-20261031-020854-86bb/check-1-cmd4.judged.png",
+            "runs/verify/verify-all-code-20261031-020854-86bb/check-2-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.072593
+        "cost_usd": 0.064302,
+        "features": [
+          {
+            "feature": "Run Claude Code on Codex login",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs `codex login` credentials plus `claude` binary; neither available in box"
+          },
+          {
+            "feature": "Launch every agent on one login",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "same `codex login` drives every agent; no login or agent binaries in box"
+          },
+          {
+            "feature": "Mirror sessions to browser for remote control",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "mirroring needs a running agent session (login + agent binary) and a browser page"
+          },
+          {
+            "feature": "Launch agents with chosen provider",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "launching on a chosen provider needs that provider's key/login"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 90.2,
       "confidence": 0.8,
@@ -526,8 +558,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-29T02:40:42+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Run Claude Code on the Codex/ChatGPT subscription you already pay for",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:37:01+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "The same `codex login` drives every agent alc launches.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:37:01+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Any session, any agent, any provider — mirrored to a browser page you can open",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:37:01+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "github_api",
+      "quote": "Configure LLM providers once, then launch Claude Code, Codex CLI, or OpenCode with the provider you want",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:37:01+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

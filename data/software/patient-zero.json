@@ -33,6 +33,11 @@
     "Snyk Open Source",
     "osv-scanner"
   ],
+  "features": [
+    "triage supply-chain exposure in 30 seconds",
+    "block malicious installs before postinstall runs",
+    "scan every commit in CI"
+  ],
   "why_worth_it": null,
   "homepage": "https://www.npmjs.com/package/patient-zero",
   "repo": {
@@ -57,12 +62,12 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-patient-zero-20261029-235118-db1d",
+      "run_id": "verify-patient-zero-20261031-023503-51ea",
       "method": "npm",
       "steps": [
         {
           "command": "npx -y patient-zero@latest --version",
-          "purpose": "fetch patient-zero via npx and confirm version"
+          "purpose": "install via npx and check version"
         }
       ],
       "manual_steps": [],
@@ -70,24 +75,24 @@
         "command": "npx -y patient-zero@latest --version",
         "expected_signal": "0.2.1"
       },
-      "first_task": "npx -y patient-zero@latest"
+      "first_task": "mkdir -p /tmp/pz-triage && cd /tmp/pz-triage && npx -y patient-zero@latest 2>&1"
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-patient-zero-20261029-011302-75a6",
+      "run_id": "verify-patient-zero-20261031-013720-5efd",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g patient-zero@latest && patient-zero --version && npm ls -g --depth=0",
-          "purpose": "Install patient-zero globally via npm"
+          "command": "npm install -g patient-zero@latest && patient-zero --version && which patient-zero",
+          "purpose": "install patient-zero globally via npm"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "patient-zero --version",
+        "command": "npm install -g patient-zero@latest && patient-zero --version && which patient-zero",
         "expected_signal": "0.2.1"
       },
-      "first_task": "patient-zero scan --offline --no-github"
+      "first_task": "patient-zero scan --no-github --offline --sarif /tmp/patient-zero.sarif 2>&1"
     },
     "windows": null
   },
@@ -106,10 +111,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T23:57:41.943561+08:00",
+    "checked_at": "2026-10-31T02:42:39.063215+08:00",
     "runs": [
       {
-        "id": "verify-patient-zero-20261029-011302-75a6",
+        "id": "verify-patient-zero-20261031-013720-5efd",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -117,19 +122,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T01:15:07.025898+08:00",
+        "checked_at": "2026-10-31T01:41:03.663283+08:00",
         "tool_version": "0.2.1",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g patient-zero@latest && patient-zero --version && npm ls -g --depth=0",
-            "purpose": "Install patient-zero globally via npm"
+            "command": "npm install -g patient-zero@latest && patient-zero --version && which patient-zero",
+            "purpose": "install patient-zero globally via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "patient-zero --version",
+            "command": "npm install -g patient-zero@latest && patient-zero --version && which patient-zero",
             "expected_signal": "0.2.1",
             "exit_code": 0,
             "passed": true,
@@ -138,16 +143,7 @@
             "offline": true
           },
           {
-            "command": "patient-zero --help",
-            "expected_signal": "Usage: patient-zero",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Usage: patient-zero [options] [command]",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "npx patient-zero@latest",
+            "command": "npx patient-zero@latest 2>&1",
             "expected_signal": "No known IoCs matched.",
             "exit_code": 0,
             "passed": true,
@@ -156,37 +152,82 @@
             "offline": false
           },
           {
-            "command": "patient-zero scan --offline --no-github",
-            "expected_signal": "IoC: bundled (offline)",
+            "command": "npx patient-zero@latest install --offline is-odd@3.0.1 2>&1",
+            "expected_signal": "added 2 packages",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "\u001b[2m0.01s · coverage 2025-09-08 → present · 7 families · 6 indicators · IoC: \u001b[33mbundled (offline)\u001b[39m\u001b[22m",
+            "observed_excerpt": "added 2 packages in 609ms",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "patient-zero scan --no-github --offline --sarif /tmp/patient-zero.sarif 2>&1",
+            "expected_signal": "SARIF report written",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[2mSARIF report written: /tmp/patient-zero.sarif",
             "setup": [],
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "npx patient-zero@latest",
+            "actually_needed": "global install with npm install -g patient-zero@latest puts patient-zero on PATH; README npx form also works and was verified",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show patient-zero v0.2.1 reporting No known IoCs matched, offline bundled IoCs, and version 0.2.1.",
+          "observed": "Screenshots show version 0.2.1 installed, clean IoC scan with No known IoCs matched, and successful offline install of is-odd.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-patient-zero-20261029-011302-75a6/report.json",
+          "trace_path": "runs/verify/verify-patient-zero-20261031-013720-5efd/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-patient-zero-20261029-011302-75a6/check-1-cmd5.judged.png",
-            "runs/verify/verify-patient-zero-20261029-011302-75a6/check-2-cmd7.judged.png",
-            "runs/verify/verify-patient-zero-20261029-011302-75a6/check-3-cmd2.judged.png"
+            "runs/verify/verify-patient-zero-20261031-013720-5efd/check-1-cmd1.judged.png",
+            "runs/verify/verify-patient-zero-20261031-013720-5efd/check-2-cmd13.judged.png",
+            "runs/verify/verify-patient-zero-20261031-013720-5efd/check-3-cmd11.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.039294
+        "cost_usd": 0.106289,
+        "features": [
+          {
+            "feature": "triage supply-chain exposure in 30 seconds",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "block malicious installs before postinstall runs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows successful install with no block or postinstall check."
+          },
+          {
+            "feature": "scan every commit in CI",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       },
       {
-        "id": "verify-patient-zero-20261029-235118-db1d",
+        "id": "verify-patient-zero-20261031-023503-51ea",
         "level": "function",
         "unverified_reason": null,
         "os": "macos",
@@ -194,14 +235,14 @@
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
-        "checked_at": "2026-10-29T23:57:41.943561+08:00",
+        "checked_at": "2026-10-31T02:42:39.063215+08:00",
         "tool_version": "0.2.1",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npx -y patient-zero@latest --version",
-            "purpose": "fetch patient-zero via npx and confirm version"
+            "purpose": "install via npx and check version"
           }
         ],
         "smoke_tests": [
@@ -215,16 +256,7 @@
             "offline": false
           },
           {
-            "command": "npx -y patient-zero@latest --help",
-            "expected_signal": "Usage: patient-zero",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Usage: patient-zero [options] [command]",
-            "setup": [],
-            "offline": false
-          },
-          {
-            "command": "npx -y patient-zero@latest",
+            "command": "mkdir -p /tmp/pz-triage && cd /tmp/pz-triage && npx -y patient-zero@latest 2>&1",
             "expected_signal": "No known IoCs matched.",
             "exit_code": 0,
             "passed": true,
@@ -233,11 +265,20 @@
             "offline": false
           },
           {
-            "command": "mkdir -p /tmp/pz-test && cat > /tmp/pz-test/package-lock.json <<'EOF'\n{\n  \"name\": \"pz-test\",\n  \"lockfileVersion\": 3,\n  \"packages\": {\n    \"\": { \"name\": \"pz-test\", \"version\": \"1.0.0\" },\n    \"node_modules/chalk\": { \"version\": \"4.0.0\" }\n  }\n}\nEOF\nnpx -y patient-zero@latest scan --dir /tmp/pz-test --offline --json",
-            "expected_signal": "lockfiles_found",
+            "command": "mkdir -p /tmp/pz-install && cd /tmp/pz-install && npx -y patient-zero@latest install lodash@4.17.21 2>&1",
+            "expected_signal": "added 1 package",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "\"lockfiles_found\": 1,",
+            "observed_excerpt": "added 1 package in 549ms",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "mkdir -p /tmp/pz-ci && cd /tmp/pz-ci && npx -y patient-zero@latest scan --no-github --json 2>&1",
+            "expected_signal": "\"findings\": []",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"findings\": []",
             "setup": [],
             "offline": false
           }
@@ -245,34 +286,67 @@
         "pitfalls": [
           {
             "readme_said": "npx patient-zero@latest",
-            "actually_needed": "run as `npx -y patient-zero@latest` so npx does not prompt to confirm the download in a non-interactive shell",
+            "actually_needed": "add -y to npx for non-interactive box: npx -y patient-zero@latest",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "README example shows chalk@4.0.0 flagged CRITICAL and install mode blocks malicious installs",
+            "actually_needed": "bundled data/iocs.json has 0 package indicators (only file/process/github/mcp), so chalk@4.0.0 install passes through instead of blocking",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show clean IoC scan, JSON scan finding 1 lockfile, and version 0.2.1 printed.",
+          "observed": "Screenshots show clean triage with No known IoCs matched, successful install of lodash, and version 0.2.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-patient-zero-20261029-235118-db1d/report.json",
+          "trace_path": "runs/verify/verify-patient-zero-20261031-023503-51ea/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-patient-zero-20261029-235118-db1d/check-1-cmd3.judged.png",
-            "runs/verify/verify-patient-zero-20261029-235118-db1d/check-2-cmd5.judged.png",
-            "runs/verify/verify-patient-zero-20261029-235118-db1d/check-3-cmd1.judged.png"
+            "runs/verify/verify-patient-zero-20261031-023503-51ea/check-1-cmd2.judged.png",
+            "runs/verify/verify-patient-zero-20261031-023503-51ea/check-2-cmd3.judged.png",
+            "runs/verify/verify-patient-zero-20261031-023503-51ea/check-3-cmd1.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.04397
+        "cost_usd": 0.100588,
+        "features": [
+          {
+            "feature": "triage supply-chain exposure in 30 seconds",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "block malicious installs before postinstall runs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only normal install succeeded with no malicious package blocked."
+          },
+          {
+            "feature": "scan every commit in CI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows local scan with github disabled and 0 repos checked, not CI workflow use."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 88.3,
       "confidence": 0.8,
@@ -611,8 +685,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-28T23:51:07+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "Triage in 30s with `npx patient-zero`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:04+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "github_api",
+      "quote": "block malicious installs before postinstall runs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:04+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Drops into any GitHub Actions workflow.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:04+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:07:48+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

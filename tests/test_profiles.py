@@ -13,7 +13,7 @@ from pickfit.discover.github import normalize_repo
 from pickfit.discover.store import PipelineDB
 from pickfit.index import build_index
 from pickfit.ledger import TAIPEI
-from pickfit.profiles import open_source_from_license, slugify, write_profiles
+from pickfit.profiles import open_source_from_license, slugify, write_features, write_profiles
 from pickfit.schema import SoftwareRecord
 
 MODEL = "muse-spark-1.3"
@@ -246,6 +246,60 @@ def test_repeated_list_values_are_kept_once(db: PipelineDB, tmp_path: Path) -> N
     out = tmp_path / "software"
     write_profiles(db, model=MODEL, out_dir=out, now=NOW)
     assert read(out, "tinyq")["prerequisites"]["api_keys"] == ["JQ_KEY"]
+
+
+FEATURES = [cited("query JSON Lines with a path", "A tiny jq-like query tool for JSON Lines."),
+            cited("run fully offline", "fully offline"), cited("edit YAML", "edits YAML files")]
+
+
+def test_new_records_list_the_quoted_features(db: PipelineDB, tmp_path: Path) -> None:
+    add(db, 7, "someone/tinyq", extraction(features=FEATURES))
+    out = tmp_path / "software"
+    write_profiles(db, model=MODEL, out_dir=out, now=NOW)
+    record = read(out, "tinyq")
+    assert record["features"] == ["query JSON Lines with a path", "run fully offline"]
+    evidence = {e["field"]: e for e in record["evidence"]}
+    assert evidence["/features/1"]["quote"] == "fully offline" and evidence["/features/1"]["method"] == "model"
+    assert build_index(out, now=NOW).index["entries"][0]["features"] == record["features"]
+
+
+def test_features_only_touches_features_of_existing_records(db: PipelineDB, tmp_path: Path) -> None:
+    key = add(db, 7, "someone/tinyq", extraction())
+    out = tmp_path / "software"
+    write_profiles(db, model=MODEL, out_dir=out, now=NOW)
+    before = read(out, "tinyq")
+    assert "features" not in before
+    db.save_extraction(repo_id=key, run_id="extract-features", model=MODEL, reasoning_effort="low",
+                       status="ok", sources_sha="y", result=extraction(features=FEATURES, summary=cited(
+                           "Something else entirely.", "A tiny jq-like query tool for JSON Lines.")),
+                       quote_failures=[], quotes_checked=9, error=None, usage=None, cost_usd=0.015,
+                       cache_hit=False, response_id="r2", latency_s=1.0)
+    later = datetime(2026, 10, 31, 9, 0, tzinfo=TAIPEI)
+    summary = write_features(db, model=MODEL, out_dir=out, now=later)
+    assert summary.written == ["tinyq"]
+    after = read(out, "tinyq")
+    assert after["features"] == ["query JSON Lines with a path", "run fully offline"]
+    assert after["summary"] == before["summary"]  # nothing but the features changes
+    assert {k: v for k, v in after.items() if k not in ("features", "evidence", "updated_at")} == \
+        {k: v for k, v in before.items() if k not in ("evidence", "updated_at")}
+    assert [e for e in after["evidence"] if not e["field"].startswith("/features/")] == before["evidence"]
+    assert write_features(db, model=MODEL, out_dir=out, now=later).unchanged == ["tinyq"]
+
+
+def test_features_only_reads_a_features_only_extraction(db: PipelineDB, tmp_path: Path) -> None:
+    key = add(db, 7, "someone/tinyq", extraction())
+    out = tmp_path / "software"
+    write_profiles(db, model=MODEL, out_dir=out, now=NOW)
+    assert write_features(db, model=MODEL, out_dir=out, now=NOW).skipped == {
+        "tinyq": "no extraction with features by muse-spark-1.3"}
+    db.save_extraction(repo_id=key, run_id="extract-features-x", model=MODEL, reasoning_effort="minimal",
+                       status="features", sources_sha="y", result={"features": FEATURES[:2]}, quote_failures=[],
+                       quotes_checked=2, error=None, usage=None, cost_usd=0.01, cache_hit=False, response_id="r3",
+                       latency_s=1.0)
+    assert write_features(db, model=MODEL, out_dir=out, now=NOW).written == ["tinyq"]
+    assert read(out, "tinyq")["features"] == ["query JSON Lines with a path", "run fully offline"]
+    # Profiles never build a record from a features-only row.
+    assert write_profiles(db, model=MODEL, out_dir=out, now=NOW).unchanged == ["tinyq"]
 
 
 def test_helpers() -> None:

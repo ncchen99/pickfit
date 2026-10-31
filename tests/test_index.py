@@ -45,6 +45,22 @@ def test_only_run_install_guides_are_indexed(data_dir: Path) -> None:
                                                    "background": False}]
 
 
+def test_guides_carry_feature_coverage_with_the_checks_behind_it(data_dir: Path) -> None:
+    entries = {e["slug"]: e for e in build_index(data_dir).index["entries"]}
+    transcribe = entries["fixture-transcribe"]
+    assert transcribe["features"] == ["transcribe audio files offline", "write SRT subtitles",
+                                      "dictate from a microphone"]
+    coverage = {f["feature"]: f for f in transcribe["install"]["linux"]["features"]}
+    assert coverage["transcribe audio files offline"]["checks"] == [
+        {"command": "fixture-transcribe sample.wav", "passed": True}]
+    assert (coverage["write SRT subtitles"]["status"], coverage["write SRT subtitles"]["failure"]) == (
+        "test_failed", "tool")
+    assert coverage["dictate from a microphone"]["reason"] == "needs_hardware"
+    runner = entries["fixture-llm-runner"]["install"]
+    assert runner["macos"]["features"] == []  # verified before features were checked
+    assert entries["fixture-json-query"]["features"] == []
+
+
 def test_unlisted_records_are_skipped(data_dir: Path) -> None:
     edit(data_dir / "fixture-chat-tui.json", lambda r: r.update(status="hidden"))
     result = build_index(data_dir)

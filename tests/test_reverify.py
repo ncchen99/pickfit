@@ -21,7 +21,7 @@ from pickfit.verify.task import ReportedFailure
 from pickfit.watch import Settings, Watcher
 from pickfit.watch import Steps as WatchSteps
 from queue_fakes import EXAMPLE, FakeGitHub, FakeVerify, checkout, d1, git, passed_run, repo_item, unverified_run
-from test_profiles import extraction
+from test_profiles import FEATURES, extraction
 
 NOW = datetime(2026, 10, 31, 9, 0, tzinfo=TAIPEI)
 FULL_NAME = EXAMPLE["repo"]["full_name"]
@@ -98,6 +98,24 @@ def test_new_working_steps_are_written_back_with_a_diff(env: dict[str, Any]) -> 
     assert reported == ReportedFailure(stage="install_failed", os="linux", arch="x86_64",
                                        steps=("pipx install frobtail",), guide_os="linux")
     assert result.error_excerpt == EXCERPT and result.stage == "install_failed"
+
+
+def test_a_features_only_reading_gives_the_agent_the_features(env: dict[str, Any]) -> None:
+    """The stored extraction is from before features; a newer features-only row (extract --features-only)
+    lists them. The stored extraction is still reused (no paid call) and the agent gets the features."""
+    pipeline = PipelineDB(env["db"])
+    stored = pipeline.last_extraction(EXAMPLE["repo_id"], "muse-spark-1.3")
+    pipeline.save_extraction(repo_id=EXAMPLE["repo_id"], run_id="extract-features-x", model="muse-spark-1.3",
+                             reasoning_effort="minimal", status="features", sources_sha=stored["sources_sha"],
+                             result={"features": FEATURES[:2]}, quote_failures=[], quotes_checked=2, error=None,
+                             usage=None, cost_usd=0.01, cache_hit=False, response_id="r2", latency_s=1.0)
+    report(env["d1"])
+    verify = FakeVerify(env["tmp"], passed_run("run-20261031-linux-9", ["pipx install frobtail"]))
+    [result] = reverifier(env, verify).run()  # extract fails the test if called
+    assert result.outcome == "unchanged"
+    task = verify.tasks[0]
+    assert [f.value for f in task.extraction.features] == ["query JSON Lines with a path", "run fully offline"]
+    assert task.extraction.kind.value == stored["result"]["kind"]["value"]
 
 
 def test_steps_that_still_work_leave_the_record_alone(env: dict[str, Any]) -> None:

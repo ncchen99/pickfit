@@ -31,6 +31,12 @@
     "scan dependencies for known vulnerabilities"
   ],
   "alternatives_to": [],
+  "features": [
+    "audit code, dependencies and configuration locally",
+    "generate one self-contained HTML report",
+    "find important issues and show fixes",
+    "detect stack and flag security issues"
+  ],
   "why_worth_it": null,
   "homepage": "https://sanks205.github.io/getobserver/",
   "repo": {
@@ -70,20 +76,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-getobserver-20261031-000753-66fa",
+      "run_id": "verify-getobserver-20261031-033312-1cc7",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL -o /tmp/observer_linux_amd64 https://github.com/sanks205/getobserver/releases/download/v0.8.2/observer_linux_amd64 && curl -fsSL -o /tmp/SHA256SUMS.txt https://github.com/sanks205/getobserver/releases/download/v0.8.2/SHA256SUMS.txt && cat /tmp/SHA256SUMS.txt && (cd /tmp && sha256sum -c SHA256SUMS.txt --ignore-missing) && chmod +x /tmp/observer_linux_amd64 && mkdir -p ~/.local/bin && mv /tmp/observer_linux_amd64 ~/.local/bin/observer && observer --help",
-          "purpose": "download verify install observer binary"
+          "command": "curl -fSL -o /tmp/observer https://github.com/sanks205/getobserver/releases/latest/download/observer_linux_amd64 && chmod +x /tmp/observer && mkdir -p ~/.local/bin && cp /tmp/observer ~/.local/bin/observer",
+          "purpose": "Download prebuilt Linux binary and install to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "observer version",
+        "command": "observer --version",
         "expected_signal": "observer 0.8.2"
       },
-      "first_task": "observer version"
+      "first_task": "observer analyze . --out report.html"
     },
     "windows": {
       "basis": "readme_claim",
@@ -115,10 +121,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:08:50.038407+08:00",
+    "checked_at": "2026-10-31T03:34:16.323571+08:00",
     "runs": [
       {
-        "id": "verify-getobserver-20261031-000753-66fa",
+        "id": "verify-getobserver-20261031-033312-1cc7",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -126,19 +132,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:08:50.038407+08:00",
-        "tool_version": "0.8.2",
+        "checked_at": "2026-10-31T03:34:16.323571+08:00",
+        "tool_version": "observer 0.8.2",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL -o /tmp/observer_linux_amd64 https://github.com/sanks205/getobserver/releases/download/v0.8.2/observer_linux_amd64 && curl -fsSL -o /tmp/SHA256SUMS.txt https://github.com/sanks205/getobserver/releases/download/v0.8.2/SHA256SUMS.txt && cat /tmp/SHA256SUMS.txt && (cd /tmp && sha256sum -c SHA256SUMS.txt --ignore-missing) && chmod +x /tmp/observer_linux_amd64 && mkdir -p ~/.local/bin && mv /tmp/observer_linux_amd64 ~/.local/bin/observer && observer --help",
-            "purpose": "download verify install observer binary"
+            "command": "curl -fSL -o /tmp/observer https://github.com/sanks205/getobserver/releases/latest/download/observer_linux_amd64 && chmod +x /tmp/observer && mkdir -p ~/.local/bin && cp /tmp/observer ~/.local/bin/observer",
+            "purpose": "Download prebuilt Linux binary and install to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "observer version",
+            "command": "observer --version",
             "expected_signal": "observer 0.8.2",
             "exit_code": 0,
             "passed": true,
@@ -147,55 +153,128 @@
             "offline": true
           },
           {
-            "command": "observer doctor",
-            "expected_signal": "Built-in analyzer: available",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Built-in analyzer: available (local heuristic rules)",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "observer analyze . --out report.html",
-            "expected_signal": "Report written to",
+            "expected_signal": "Report written to /home/sbx/work/report.html",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "Report written to /home/sbx/work/report.html",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "observer analyze ./demo-proj --guidance --out demo-report.html",
+            "expected_signal": "[Critical] index.php:3 Hardcoded AWS access key",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[Critical] index.php:3 Hardcoded AWS access key",
+            "setup": [
+              {
+                "command": "mkdir -p demo-proj && cat > demo-proj/index.php <<'EOF'\n<?php\n$password = \"supersecret123\";\n$api_key = \"AKIAIOSFODNN7EXAMPLE\";\n$db_pass = \"hardcoded_db_password\";\n$id = $_GET['id'];\n$query = \"SELECT * FROM users WHERE id = '\" . $id . \"'\";\nmysql_query($query);\neval($_GET['cmd']);\n$hash = md5($password);\n?>\nEOF\ncat > demo-proj/composer.json <<'EOF'\n{\n  \"name\": \"demo/php-demo\",\n  \"require\": {\n    \"codeigniter/framework\": \"3.1.11\",\n    \"php\": \">=7.2\"\n  }\n}\nEOF\ncat > demo-proj/.env <<'EOF'\nDB_PASSWORD=supersecret123\nSECRET_KEY=hardcoded-secret-value\nEOF\nls -R demo-proj",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "ls -l report.html demo-report.html && test -s report.html && test -s demo-report.html && echo \"both reports present and non-empty\"",
+            "expected_signal": "both reports present and non-empty",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "both reports present and non-empty",
+            "setup": [
+              {
+                "command": "mkdir -p demo-proj && cat > demo-proj/index.php <<'EOF'\n<?php\n$password = \"supersecret123\";\n$api_key = \"AKIAIOSFODNN7EXAMPLE\";\n$db_pass = \"hardcoded_db_password\";\n$id = $_GET['id'];\n$query = \"SELECT * FROM users WHERE id = '\" . $id . \"'\";\nmysql_query($query);\neval($_GET['cmd']);\n$hash = md5($password);\n?>\nEOF\ncat > demo-proj/composer.json <<'EOF'\n{\n  \"name\": \"demo/php-demo\",\n  \"require\": {\n    \"codeigniter/framework\": \"3.1.11\",\n    \"php\": \">=7.2\"\n  }\n}\nEOF\ncat > demo-proj/.env <<'EOF'\nDB_PASSWORD=supersecret123\nSECRET_KEY=hardcoded-secret-value\nEOF\nls -R demo-proj",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "observer analyze . --out report.html",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "observer analyze ./demo-proj --guidance --out demo-report.html",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "go build -o observer ./cmd/cli (requires Go 1.26+)",
-            "actually_needed": "used README's recommended single-binary download: curl the observer_linux_amd64 asset for v0.8.2 from GitHub releases, verified SHA256SUMS.txt, chmod +x and moved to ~/.local/bin/observer",
+            "readme_said": "go build -o observer ./cmd/cli (build from source)",
+            "actually_needed": "Downloaded prebuilt observer_linux_amd64 from releases, chmod +x, copied to ~/.local/bin/observer; box has no Go and installing a Go toolchain is forbidden, so source build was skipped",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three checks show expected output: doctor reports built-in analyzer available, analyze writes report.html, and version prints 0.8.2.",
+          "observed": "All three screenshots show Observer completing scans with security findings and report files written, plus the correct version string.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-getobserver-20261031-000753-66fa/report.json",
+          "trace_path": "runs/verify/verify-getobserver-20261031-033312-1cc7/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-getobserver-20261031-000753-66fa/check-1-cmd5.judged.png",
-            "runs/verify/verify-getobserver-20261031-000753-66fa/check-2-cmd6.judged.png",
-            "runs/verify/verify-getobserver-20261031-000753-66fa/check-3-cmd4.judged.png"
+            "runs/verify/verify-getobserver-20261031-033312-1cc7/check-1-cmd5.judged.png",
+            "runs/verify/verify-getobserver-20261031-033312-1cc7/check-2-cmd7.judged.png",
+            "runs/verify/verify-getobserver-20261031-033312-1cc7/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.042537
+        "cost_usd": 0.082721,
+        "features": [
+          {
+            "feature": "audit code, dependencies and configuration locally",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "generate one self-contained HTML report",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "find important issues and show fixes",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "detect stack and flag security issues",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 89.6,
       "confidence": 0.8,
@@ -532,8 +611,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:04:44+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Audit code, dependencies, and configuration locally.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:22+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "You get **one self-contained `report.html`**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:22+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Find important issues and understand how to fix them.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:22+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Observer detects the stack, flags security, runtime, and dependency issues with",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:22+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:40:38+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

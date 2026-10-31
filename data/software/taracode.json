@@ -30,6 +30,11 @@
     "diagnose engine and recommend model via doctor"
   ],
   "alternatives_to": [],
+  "features": [
+    "guide Kubernetes, Terraform, Docker, multi-cloud deployments",
+    "investigate infrastructure in read-only mode",
+    "apply mutations through policy-gated operate mode"
+  ],
   "why_worth_it": null,
   "homepage": "https://code.tara.vision",
   "repo": {
@@ -68,16 +73,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-taracode-20261031-021957-f0ab",
+      "run_id": "verify-taracode-20261031-031700-7ecf",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://code.tara.vision/install.sh -o /tmp/taracode-install.sh && echo DOWNLOAD_OK && wc -c /tmp/taracode-install.sh && head -n 50 /tmp/taracode-install.sh",
-          "purpose": "Download taracode install script"
+          "command": "curl -fsSL https://code.tara.vision/install.sh -o /tmp/taracode-install.sh && wc -c /tmp/taracode-install.sh && echo \"---ENGINE---\" && curl -fsSL https://engine.tara.vision/install.sh -o /tmp/engine-install.sh && wc -c /tmp/engine-install.sh",
+          "purpose": "Download taracode and engine install scripts"
         },
         {
           "command": "INSTALL_DIR=\"$HOME/.local/bin\" bash /tmp/taracode-install.sh",
-          "purpose": "Install taracode to ~/.local/bin"
+          "purpose": "Install taracode v3.5.0 to user bin"
         }
       ],
       "manual_steps": [],
@@ -104,10 +109,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:20:50.896072+08:00",
+    "checked_at": "2026-10-31T03:18:16.206592+08:00",
     "runs": [
       {
-        "id": "verify-taracode-20261031-021957-f0ab",
+        "id": "verify-taracode-20261031-031700-7ecf",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -115,18 +120,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:20:50.896072+08:00",
+        "checked_at": "2026-10-31T03:18:16.206592+08:00",
         "tool_version": "3.5.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://code.tara.vision/install.sh -o /tmp/taracode-install.sh && echo DOWNLOAD_OK && wc -c /tmp/taracode-install.sh && head -n 50 /tmp/taracode-install.sh",
-            "purpose": "Download taracode install script"
+            "command": "curl -fsSL https://code.tara.vision/install.sh -o /tmp/taracode-install.sh && wc -c /tmp/taracode-install.sh && echo \"---ENGINE---\" && curl -fsSL https://engine.tara.vision/install.sh -o /tmp/engine-install.sh && wc -c /tmp/engine-install.sh",
+            "purpose": "Download taracode and engine install scripts"
           },
           {
             "command": "INSTALL_DIR=\"$HOME/.local/bin\" bash /tmp/taracode-install.sh",
-            "purpose": "Install taracode to ~/.local/bin"
+            "purpose": "Install taracode v3.5.0 to user bin"
           }
         ],
         "smoke_tests": [
@@ -140,17 +145,8 @@
             "offline": true
           },
           {
-            "command": "taracode --help",
-            "expected_signal": "doctor Diagnose the LLM server, installed models and external tools",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "doctor Diagnose the LLM server, installed models and external tools",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "taracode doctor",
-            "expected_signal": "Policy ok (built-in)",
+            "expected_signal": "Policy",
             "exit_code": 1,
             "passed": true,
             "observed_excerpt": "Policy ok (built-in)",
@@ -161,38 +157,69 @@
         "pitfalls": [
           {
             "readme_said": "curl -fsSL https://code.tara.vision/install.sh | bash",
-            "actually_needed": "INSTALL_DIR=\"$HOME/.local/bin\" bash /tmp/taracode-install.sh (default /usr/local/bin is not writable without root)",
+            "actually_needed": "INSTALL_DIR=$HOME/.local/bin bash /tmp/taracode-install.sh (default /usr/local/bin is not writable without root)",
             "kind": "sandbox"
           },
           {
-            "readme_said": "taracode doctor",
-            "actually_needed": "taracode doctor reports missing engine/tools and exits 1; this is its diagnostic job, not an install failure",
+            "readme_said": "ranked candidate 1 engine install script before taracode install script",
+            "actually_needed": "candidate 1 installs the taraengine backend binary, not taracode; taracode itself comes from candidate 2, so only candidate 2 was run for the tool",
+            "kind": "note"
+          },
+          {
+            "readme_said": "taracode doctor example with no exit code documented",
+            "actually_needed": "taracode doctor exits 1 while printing the diagnosis when the engine is unreachable and tools are missing",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show doctor reporting Policy ok (built-in) and version command reporting taracode version 3.5.0.",
+          "observed": "taracode doctor shows Policy ok (built-in) and --version prints taracode version 3.5.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-taracode-20261031-021957-f0ab/report.json",
+          "trace_path": "runs/verify/verify-taracode-20261031-031700-7ecf/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-taracode-20261031-021957-f0ab/check-1-cmd6.judged.png",
-            "runs/verify/verify-taracode-20261031-021957-f0ab/check-2-cmd4.judged.png"
+            "runs/verify/verify-taracode-20261031-031700-7ecf/check-1-cmd4.judged.png",
+            "runs/verify/verify-taracode-20261031-031700-7ecf/check-2-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.063767
+        "cost_usd": 0.084229,
+        "features": [
+          {
+            "feature": "guide Kubernetes, Terraform, Docker, multi-cloud deployments",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "needs taraengine plus 16GB+ model and interactive session"
+          },
+          {
+            "feature": "investigate infrastructure in read-only mode",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "read-only investigate needs engine plus model; doctor shows policy ok but no session run"
+          },
+          {
+            "feature": "apply mutations through policy-gated operate mode",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "operate-mode mutation gate needs engine plus model; only policy status shown"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 92.2,
       "confidence": 0.8,
@@ -497,8 +524,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T02:16:50+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Expert guidance for Kubernetes, Terraform, Docker, and multi-cloud deployments.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:25+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**Investigate-first** - Read-only by default, and never prompts you in that mode",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:25+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**Policy-gated operate mode** - Mutations pass through protected targets, deny patterns and required",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:25+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:46:41+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

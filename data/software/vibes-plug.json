@@ -25,6 +25,12 @@
   ],
   "use_cases": [],
   "alternatives_to": [],
+  "features": [
+    "turn IDE into autonomous agent studio",
+    "run autonomous zero-to-prod workflow",
+    "serve MCP tools over stdio and SSE",
+    "auto-heal CI failures"
+  ],
   "why_worth_it": null,
   "homepage": "https://www.npmjs.com/package/vibes-plug",
   "repo": {
@@ -63,18 +69,21 @@
       "first_task": "vibes mcp"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-vibes-plug-20261031-030220-7d04",
       "method": "npm",
       "steps": [
         {
-          "command": "npm i -g vibes-plug",
-          "purpose": null
+          "command": "npm i -g vibes-plug 2>&1",
+          "purpose": "Install vibes-plug globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "vibes mcp"
+      "check": {
+        "command": "vibes --version 2>&1",
+        "expected_signal": "Vibes-Plug CLI (v4.2.1)"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -104,23 +113,23 @@
     "url": "https://github.com/roedyrustam/vibes-plug/releases/tag/v4.5.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "suspected_tool_fault",
-    "checked_at": "2026-10-31T01:31:19.388763+08:00",
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T03:05:30.991249+08:00",
     "runs": [
       {
-        "id": "verify-vibes-plug-20261031-012553-ee21",
-        "level": "unverified",
-        "unverified_reason": "suspected_tool_fault",
+        "id": "verify-vibes-plug-20261031-030220-7d04",
+        "level": "service",
+        "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:31:19.388763+08:00",
+        "checked_at": "2026-10-31T03:05:30.991249+08:00",
         "tool_version": "4.2.1",
         "install_method": "npm",
-        "replayed": false,
+        "replayed": true,
         "steps": [
           {
             "command": "npm i -g vibes-plug 2>&1",
@@ -129,97 +138,132 @@
         ],
         "smoke_tests": [
           {
-            "command": "vibes --version",
+            "command": "vibes --version 2>&1",
             "expected_signal": "Vibes-Plug CLI (v4.2.1)",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "🌊 Vibes-Plug CLI (v4.2.1)",
-            "setup": [
-              {
-                "command": "npm i -g vibes-plug 2>&1",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": null
+            "setup": [],
+            "offline": true
           },
           {
-            "command": "vibes --help",
-            "expected_signal": "Start the native Model Context Protocol",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "mcp Start the native Model Context Protocol (MCP) server on stdio",
-            "setup": [
-              {
-                "command": "npm i -g vibes-plug 2>&1",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": null
-          },
-          {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 -- node /home/sbx/.local/lib/node_modules/vibes-plug/bin/mcp-server.mjs",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- node /home/sbx/.local/lib/node_modules/vibes-plug/bin/mcp-server.mjs 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
-            "setup": [
-              {
-                "command": "npm i -g vibes-plug 2>&1",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": null
+            "setup": [],
+            "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 --call vibes_compile_cache --args '{}' -- node /home/sbx/.local/lib/node_modules/vibes-plug/bin/mcp-server.mjs",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call vibes_get_skill --args '{\"skillName\":\"anti-slop\"}' -- node /home/sbx/.local/lib/node_modules/vibes-plug/bin/mcp-server.mjs 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=vibes_compile_cache content=text text_chars=173",
-            "setup": [
-              {
-                "command": "npm i -g vibes-plug 2>&1",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": null
+            "observed_excerpt": "tools/call: ok tool=vibes_get_skill content=text text_chars=49560",
+            "setup": [],
+            "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- vibes mcp",
-            "expected_signal": "",
-            "exit_code": 3,
-            "passed": false,
-            "observed_excerpt": "pickfit-mcp: {\"error\": \"no answer to initialize within 120s\", \"exit\": 0, \"launch\": [\"vibes\", \"mcp\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"transport\": \"stdio\", \"url\": null}",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call vibes_swarm --args '{\"taskDescription\":\"Plan a tiny demo todo app\"}' -- node /home/sbx/.local/lib/node_modules/vibes-plug/bin/mcp-server.mjs 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=vibes_swarm content=text text_chars=1441",
             "setup": [],
-            "offline": null
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "vibes mcp starts the native MCP server on stdio",
-            "actually_needed": "Run the underlying server directly: node /home/sbx/.local/lib/node_modules/vibes-plug/bin/mcp-server.mjs (handshake ok, 8 tools). The `vibes mcp` wrapper never forwards stdio because the parent keeps a readline on stdin.",
+            "readme_said": "README advertises v4.5.0 with 176 skills and 42 MCP tools via `vibes mcp`",
+            "actually_needed": "installed version is 4.2.1 with 147 skills and 8 MCP tools; launch the server directly with node /home/sbx/.local/lib/node_modules/vibes-plug/bin/mcp-server.mjs",
             "kind": "readme_wrong"
           },
           {
-            "readme_said": "VibesPlug Pro v4.5.0 with 176 skills and 42 MCP tools",
-            "actually_needed": "npm installs vibes-plug 4.2.1 exposing 8 MCP tools (vibes_ast_query, vibes_eval_sql, vibes_arbitrate_code, vibes_verify_invariants, vibes_get_skill, vibes_memory, vibes_swarm, vibes_compile_cache) and 147 skills, not 176 skills / 42 tools.",
+            "readme_said": "`vibes mcp` starts the stdio MCP server (probe via `vibes mcp` timed out with no answer to initialize; direct node launch answers)",
+            "actually_needed": "bypass the `vibes mcp` wrapper and run node bin/mcp-server.mjs directly so the client's piped stdin reaches the server",
             "kind": "readme_wrong"
           }
         ],
-        "blocking_error": "suspected tool fault, not proven: command 4 exits 3 (command 4 shows no error of the tool's own code); it failed again in a fresh box; `vibes mcp` never answers MCP initialize (probe: no answer to initialize within 120s). Wrapper bin/vibes.mjs holds stdin in a readline interface and spawns bin/mcp-server.mjs with stdio:inherit, so the child never receives the JSON-RPC request; launching bin/mcp-server.mjs directly handshakes fine.",
-        "judge": null,
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show CLI version v4.2.1 with full help, MCP handshake with 8 tools, and successful vibes_get_skill call returning anti-slop content.",
+          "model": "muse-spark-1.3"
+        },
         "evidence": {
-          "trace_path": "runs/verify/verify-vibes-plug-20261031-012553-ee21/report.json",
+          "trace_path": "runs/verify/verify-vibes-plug-20261031-030220-7d04/report.json",
           "log_path": null,
-          "screenshot_paths": [],
+          "screenshot_paths": [
+            "runs/verify/verify-vibes-plug-20261031-030220-7d04/check-1-cmd3.judged.png",
+            "runs/verify/verify-vibes-plug-20261031-030220-7d04/check-2-cmd13.judged.png",
+            "runs/verify/verify-vibes-plug-20261031-030220-7d04/check-3-cmd14.judged.png"
+          ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.104426
+        "cost_usd": 0.184707,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "node",
+            "/home/sbx/.local/lib/node_modules/vibes-plug/bin/mcp-server.mjs"
+          ],
+          "url": null,
+          "protocol_version": "2024-11-05",
+          "server_name": "vibes-plug-mcp",
+          "server_version": "4.2.1",
+          "tools": [
+            "vibes_ast_query",
+            "vibes_eval_sql",
+            "vibes_arbitrate_code",
+            "vibes_verify_invariants",
+            "vibes_get_skill",
+            "vibes_memory",
+            "vibes_swarm",
+            "vibes_compile_cache"
+          ],
+          "tool_count": 8,
+          "called_tool": "vibes_get_skill",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "turn IDE into autonomous agent studio",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only retrieves one skill text and lists 8 tools, not autonomous 176-agent studio work."
+          },
+          {
+            "feature": "run autonomous zero-to-prod workflow",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "serve MCP tools over stdio and SSE",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "stdio serving shown by handshake but no per-feature tool call ran before budget ran out"
+          },
+          {
+            "feature": "auto-heal CI failures",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "installed 4.2.1 server exposes no ci:heal/self-heal tool; budget ran out before further checks"
+          }
+        ]
       }
     ]
   },
@@ -244,15 +288,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 72.8,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -295,7 +339,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 16.49
+      "value": 17.4
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -599,8 +643,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:14:46+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**Turn any IDE into an autonomous 176-agent software development studio.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:36+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "🚀 **Autonomous 8-Phase Zero-To-Prod**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:36+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "🔌 **Stdio & SSE MCP v1.x Server with 42 Frontier Tools & Profile Masking**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:36+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "🩺 **Autonomous CI Auto-Healer (`vibes ci:heal`)**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:36+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:50:21+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

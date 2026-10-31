@@ -29,6 +29,12 @@
     "list in-progress construction permits pipeline"
   ],
   "alternatives_to": [],
+  "features": [
+    "Show parcel building summary card",
+    "Show parcel history timeline",
+    "Show neighborhood building statistics",
+    "Find aging buildings by age"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -55,24 +61,23 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-archhub-mcp-20261031-015240-e2b4",
-      "method": "source",
+      "run_id": "verify-archhub-mcp-20261031-030829-0e44",
+      "method": "pip",
       "steps": [
         {
-          "command": "git clone https://github.com/chrisryugj/archhub-mcp archhub-repo && ls -la archhub-repo && cat archhub-repo/pyproject.toml",
-          "purpose": "Clone repo and inspect packaging"
+          "command": "rm -rf /tmp/archhub-mcp && git clone https://github.com/chrisryugj/archhub-mcp /tmp/archhub-mcp",
+          "purpose": "Clone archhub-mcp repo"
         },
         {
-          "command": "cd archhub-repo && pip install -e . && which archhub-mcp && archhub-mcp --help",
-          "purpose": "Install via pip and check help"
-        },
-        {
-          "command": "cd archhub-repo && python3 -c \"from archhub.client import ArchHubClient; c=ArchHubClient('x'); df=c.bdong_table(); print(f'bdong cached rows={len(df)}')\"",
-          "purpose": "Pre-warm bdong cache as install step"
+          "command": "pip install -e /tmp/archhub-mcp",
+          "purpose": "Install archhub-mcp with pip"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "archhub-mcp --help",
+        "expected_signal": "건축HUB MCP 서버"
+      },
       "first_task": null
     },
     "windows": null
@@ -88,10 +93,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:55:15.121791+08:00",
+    "checked_at": "2026-10-31T03:11:28.557309+08:00",
     "runs": [
       {
-        "id": "verify-archhub-mcp-20261031-015240-e2b4",
+        "id": "verify-archhub-mcp-20261031-030829-0e44",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -99,27 +104,32 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:55:15.121791+08:00",
+        "checked_at": "2026-10-31T03:11:28.557309+08:00",
         "tool_version": "0.4.0",
-        "install_method": "source",
+        "install_method": "pip",
         "replayed": true,
         "steps": [
           {
-            "command": "git clone https://github.com/chrisryugj/archhub-mcp archhub-repo && ls -la archhub-repo && cat archhub-repo/pyproject.toml",
-            "purpose": "Clone repo and inspect packaging"
+            "command": "rm -rf /tmp/archhub-mcp && git clone https://github.com/chrisryugj/archhub-mcp /tmp/archhub-mcp",
+            "purpose": "Clone archhub-mcp repo"
           },
           {
-            "command": "cd archhub-repo && pip install -e . && which archhub-mcp && archhub-mcp --help",
-            "purpose": "Install via pip and check help"
-          },
-          {
-            "command": "cd archhub-repo && python3 -c \"from archhub.client import ArchHubClient; c=ArchHubClient('x'); df=c.bdong_table(); print(f'bdong cached rows={len(df)}')\"",
-            "purpose": "Pre-warm bdong cache as install step"
+            "command": "pip install -e /tmp/archhub-mcp",
+            "purpose": "Install archhub-mcp with pip"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- archhub-mcp",
+            "command": "archhub-mcp --help",
+            "expected_signal": "건축HUB MCP 서버",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "건축HUB MCP 서버",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- archhub-mcp",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -128,44 +138,34 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call find_region --args '{\"keyword\": \"광진구 자양동\"}' -- archhub-mcp",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call find_region --args '{\"keyword\": \"광진구 자양동\"}' -- archhub-mcp",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "tools/call: ok tool=find_region content=text text_chars=202",
             "setup": [],
-            "offline": true
+            "offline": false
           }
         ],
-        "pitfalls": [
-          {
-            "readme_said": "Local run requires data.go.kr ARCHHUB_SERVICE_KEY before running archhub-mcp",
-            "actually_needed": "Handshake (initialize + tools/list, 12 tools) and find_region('광진구 자양동' -> 11215/10500) succeed with no ARCHHUB_SERVICE_KEY set; only ledger/permit/housing data queries raise NO_KEY",
-            "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "ARCHHUB_SERVICE_KEY=... uvx --from . archhub-mcp as first install candidate",
-            "actually_needed": "pip install -e . installs persistent console script archhub-mcp on PATH (~/.local/bin), suitable for offline replay; uvx --from . is ephemeral and also requires the key at launch",
-            "kind": "note"
-          }
-        ],
+        "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both probes show successful MCP handshake with 12 tools listed and find_region returning region codes.",
+          "observed": "All three screenshots show successful handshake with 12 tools, successful find_region call returning region codes, and help output with usage.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-archhub-mcp-20261031-015240-e2b4/report.json",
+          "trace_path": "runs/verify/verify-archhub-mcp-20261031-030829-0e44/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-archhub-mcp-20261031-015240-e2b4/check-1-cmd4.judged.png",
-            "runs/verify/verify-archhub-mcp-20261031-015240-e2b4/check-2-cmd5.judged.png"
+            "runs/verify/verify-archhub-mcp-20261031-030829-0e44/check-1-cmd3.judged.png",
+            "runs/verify/verify-archhub-mcp-20261031-030829-0e44/check-2-cmd5.judged.png",
+            "runs/verify/verify-archhub-mcp-20261031-030829-0e44/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.104382,
+        "cost_usd": 0.09149,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -192,7 +192,41 @@
           "tool_count": 12,
           "called_tool": "find_region",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Show parcel building summary card",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "building_profile requires ARCHHUB_SERVICE_KEY data.go.kr key; not exercised without a key"
+          },
+          {
+            "feature": "Show parcel history timeline",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "parcel_history requires ARCHHUB_SERVICE_KEY data.go.kr key; not exercised without a key"
+          },
+          {
+            "feature": "Show neighborhood building statistics",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "district_stats requires ARCHHUB_SERVICE_KEY data.go.kr key; not exercised without a key"
+          },
+          {
+            "feature": "Find aging buildings by age",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "old_buildings requires ARCHHUB_SERVICE_KEY data.go.kr key; not exercised without a key"
+          }
+        ]
       }
     ]
   },
@@ -236,15 +270,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 76.1,
+      "total": 82.8,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -285,7 +319,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 27.17
+      "value": 29.56
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -655,8 +689,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:25:13+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "용도지역(법적 규제) + 주용도·구조·규모·건폐율/용적률·세대/주차·사용승인·내진·에너지효율",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:36:01+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "필지 연혁 타임라인",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:36:01+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "동 단위 건축물 통계",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:36:01+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "github_api",
+      "quote": "노후건축물 분석",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:36:01+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

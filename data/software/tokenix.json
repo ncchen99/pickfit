@@ -31,6 +31,12 @@
     "create budgeted repo context bundle"
   ],
   "alternatives_to": [],
+  "features": [
+    "index codebase locally by symbol",
+    "trace callers and callees via symbol graph",
+    "filter noisy build and test output",
+    "scan transcripts for exposed secrets"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -72,20 +78,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-tokenix-20261030-234458-a88b",
+      "run_id": "verify-tokenix-20261031-032608-51c3",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o /home/sbx/.local/bin/tokenix && chmod +x /home/sbx/.local/bin/tokenix && ls -lh /home/sbx/.local/bin/tokenix",
-          "purpose": "Download tokenix Linux x86_64 binary to ~/.local/bin and make executable"
+          "command": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o /tmp/tokenix && chmod +x /tmp/tokenix && mkdir -p ~/.local/bin && cp /tmp/tokenix ~/.local/bin/tokenix && tokenix --version",
+          "purpose": "download prebuilt binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "tokenix --version",
+        "command": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o /tmp/tokenix && chmod +x /tmp/tokenix && mkdir -p ~/.local/bin && cp /tmp/tokenix ~/.local/bin/tokenix && tokenix --version",
         "expected_signal": "tokenix 1.0.1"
       },
-      "first_task": "tokenix index ."
+      "first_task": "cd /tmp/txdemo && TOKENIX_NO_UPDATE=1 tokenix index ."
     },
     "windows": {
       "basis": "readme_claim",
@@ -117,10 +123,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-30T23:45:42.843136+08:00",
+    "checked_at": "2026-10-31T03:28:05.985363+08:00",
     "runs": [
       {
-        "id": "verify-tokenix-20261030-234458-a88b",
+        "id": "verify-tokenix-20261031-032608-51c3",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -128,107 +134,204 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-30T23:45:42.843136+08:00",
+        "checked_at": "2026-10-31T03:28:05.985363+08:00",
         "tool_version": "1.0.1",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o /home/sbx/.local/bin/tokenix && chmod +x /home/sbx/.local/bin/tokenix && ls -lh /home/sbx/.local/bin/tokenix",
-            "purpose": "Download tokenix Linux x86_64 binary to ~/.local/bin and make executable"
+            "command": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o /tmp/tokenix && chmod +x /tmp/tokenix && mkdir -p ~/.local/bin && cp /tmp/tokenix ~/.local/bin/tokenix && tokenix --version",
+            "purpose": "download prebuilt binary to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "tokenix --version",
+            "command": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o /tmp/tokenix && chmod +x /tmp/tokenix && mkdir -p ~/.local/bin && cp /tmp/tokenix ~/.local/bin/tokenix && tokenix --version",
             "expected_signal": "tokenix 1.0.1",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "tokenix 1.0.1",
             "setup": [],
-            "offline": true
+            "offline": false
           },
           {
-            "command": "tokenix --help",
-            "expected_signal": "Index a repository (chunks and symbol graph)",
+            "command": "cd /tmp/txdemo && TOKENIX_NO_UPDATE=1 tokenix index .",
+            "expected_signal": "Files: 2 indexed",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "index [path] Index a repository (chunks and symbol graph)",
-            "setup": [],
+            "observed_excerpt": "Files: 2 indexed, 0 skipped, 0 errors",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/txdemo/src && cat > /tmp/txdemo/src/billing.rs <<'EOF'\nfn apply_tax(amount: u32) -> u32 {\n    amount + amount / 10\n}\nfn invoice_total(amounts: &[u32]) -> u32 {\n    amounts.iter().map(|a| apply_tax(*a)).sum()\n}\nEOF\ncat > /tmp/txdemo/src/main.rs <<'EOF'\nmod billing;\nfn main() {\n    let total = crate::billing::invoice_total(&[100, 200]);\n    println!(\"total {}\", total);\n}\nEOF\ncat /tmp/txdemo/src/billing.rs && echo \"---\" && cat /tmp/txdemo/src/main.rs",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           },
           {
-            "command": "tokenix index .",
-            "expected_signal": "Files: 1 indexed, 0 skipped, 0 errors",
+            "command": "cd /tmp/txdemo && TOKENIX_NO_UPDATE=1 tokenix callers apply_tax",
+            "expected_signal": "Callers of `apply_tax`",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Files: 1 indexed, 0 skipped, 0 errors",
-            "setup": [],
+            "observed_excerpt": "## Callers of `apply_tax`",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/txdemo/src && cat > /tmp/txdemo/src/billing.rs <<'EOF'\nfn apply_tax(amount: u32) -> u32 {\n    amount + amount / 10\n}\nfn invoice_total(amounts: &[u32]) -> u32 {\n    amounts.iter().map(|a| apply_tax(*a)).sum()\n}\nEOF\ncat > /tmp/txdemo/src/main.rs <<'EOF'\nmod billing;\nfn main() {\n    let total = crate::billing::invoice_total(&[100, 200]);\n    println!(\"total {}\", total);\n}\nEOF\ncat /tmp/txdemo/src/billing.rs && echo \"---\" && cat /tmp/txdemo/src/main.rs",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/txdemo && TOKENIX_NO_UPDATE=1 tokenix index .",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           },
           {
-            "command": "tokenix doctor",
-            "expected_signal": "bundled: 534 filters",
+            "command": "cd /tmp/txdemo && TOKENIX_NO_UPDATE=1 tokenix run \"echo hello-filter-test\"",
+            "expected_signal": "hello-filter-test",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hello-filter-test",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/txdemo/src && cat > /tmp/txdemo/src/billing.rs <<'EOF'\nfn apply_tax(amount: u32) -> u32 {\n    amount + amount / 10\n}\nfn invoice_total(amounts: &[u32]) -> u32 {\n    amounts.iter().map(|a| apply_tax(*a)).sum()\n}\nEOF\ncat > /tmp/txdemo/src/main.rs <<'EOF'\nmod billing;\nfn main() {\n    let total = crate::billing::invoice_total(&[100, 200]);\n    println!(\"total {}\", total);\n}\nEOF\ncat /tmp/txdemo/src/billing.rs && echo \"---\" && cat /tmp/txdemo/src/main.rs",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/txdemo && TOKENIX_NO_UPDATE=1 tokenix scan-secrets",
+            "expected_signal": "no credentials found",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ no credentials found in 0 conversation files",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/txdemo/src && cat > /tmp/txdemo/src/billing.rs <<'EOF'\nfn apply_tax(amount: u32) -> u32 {\n    amount + amount / 10\n}\nfn invoice_total(amounts: &[u32]) -> u32 {\n    amounts.iter().map(|a| apply_tax(*a)).sum()\n}\nEOF\ncat > /tmp/txdemo/src/main.rs <<'EOF'\nmod billing;\nfn main() {\n    let total = crate::billing::invoice_total(&[100, 200]);\n    println!(\"total {}\", total);\n}\nEOF\ncat /tmp/txdemo/src/billing.rs && echo \"---\" && cat /tmp/txdemo/src/main.rs",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/txdemo && TOKENIX_NO_UPDATE=1 tokenix doctor --no-tui",
+            "expected_signal": "534 filters",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "bundled: 534 filters · 1167 embedded golden cases",
-            "setup": [],
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/txdemo/src && cat > /tmp/txdemo/src/billing.rs <<'EOF'\nfn apply_tax(amount: u32) -> u32 {\n    amount + amount / 10\n}\nfn invoice_total(amounts: &[u32]) -> u32 {\n    amounts.iter().map(|a| apply_tax(*a)).sum()\n}\nEOF\ncat > /tmp/txdemo/src/main.rs <<'EOF'\nmod billing;\nfn main() {\n    let total = crate::billing::invoice_total(&[100, 200]);\n    println!(\"total {}\", total);\n}\nEOF\ncat /tmp/txdemo/src/billing.rs && echo \"---\" && cat /tmp/txdemo/src/main.rs",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           },
           {
-            "command": "tokenix gain",
-            "expected_signal": "No hook events found in this project.",
+            "command": "cd /tmp/txdemo && TOKENIX_NO_UPDATE=1 tokenix gain --no-tui",
+            "expected_signal": "tokenix gain",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "No hook events found in this project.",
-            "setup": [],
+            "observed_excerpt": "│ tokenix gain · txdemo │",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/txdemo/src && cat > /tmp/txdemo/src/billing.rs <<'EOF'\nfn apply_tax(amount: u32) -> u32 {\n    amount + amount / 10\n}\nfn invoice_total(amounts: &[u32]) -> u32 {\n    amounts.iter().map(|a| apply_tax(*a)).sum()\n}\nEOF\ncat > /tmp/txdemo/src/main.rs <<'EOF'\nmod billing;\nfn main() {\n    let total = crate::billing::invoice_total(&[100, 200]);\n    println!(\"total {}\", total);\n}\nEOF\ncat /tmp/txdemo/src/billing.rs && echo \"---\" && cat /tmp/txdemo/src/main.rs",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/txdemo && TOKENIX_NO_UPDATE=1 tokenix index .",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
             "readme_said": "chmod +x tokenix && sudo mv tokenix /usr/local/bin/tokenix",
-            "actually_needed": "Install to ~/.local/bin (already on PATH) with chmod +x and run from there; no sudo / no write to /usr/local/bin",
+            "actually_needed": "copy binary to ~/.local/bin (on PATH) with no sudo; box has no root",
             "kind": "sandbox"
-          },
-          {
-            "readme_said": "curl -fsSL https://github.com/juninmd/tokenix/releases/latest/download/tokenix-linux-x86_64 -o tokenix",
-            "actually_needed": "Prebuilt binary asset cannot be read with read_file; installed directly after download without script audit",
-            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three checks succeeded, showing indexed file counts, doctor with 534 bundled filters, and version 1.0.1.",
+          "observed": "All three screenshots show expected success output: index of 2 files, callers of apply_tax, and version 1.0.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-tokenix-20261030-234458-a88b/report.json",
+          "trace_path": "runs/verify/verify-tokenix-20261031-032608-51c3/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-tokenix-20261030-234458-a88b/check-1-cmd4.judged.png",
-            "runs/verify/verify-tokenix-20261030-234458-a88b/check-2-cmd5.judged.png",
-            "runs/verify/verify-tokenix-20261030-234458-a88b/check-3-cmd2.judged.png"
+            "runs/verify/verify-tokenix-20261031-032608-51c3/check-1-cmd3.judged.png",
+            "runs/verify/verify-tokenix-20261031-032608-51c3/check-2-cmd4.judged.png",
+            "runs/verify/verify-tokenix-20261031-032608-51c3/check-3-cmd1.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.035523
+        "cost_usd": 0.066922,
+        "features": [
+          {
+            "feature": "index codebase locally by symbol",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "trace callers and callees via symbol graph",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "filter noisy build and test output",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only echoes the test string without showing noisy logs stripped."
+          },
+          {
+            "feature": "scan transcripts for exposed secrets",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output scanned 0 conversation files so no detection is demonstrated."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 96.1,
+      "total": 88.6,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -271,7 +374,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 52.28
+      "value": 48.2
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -543,8 +646,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-30T23:43:50+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "A SQLite index of every file, chunked by symbol.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:19+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Deep AST symbol parsing with PageRank importance, bidirectional caller/callee tracing, and diff blast-radius impact analysis.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:19+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "534 bundled filters stripping noisy build/test logs without masking real errors or exit codes.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:19+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Scan agent transcripts for exposed credentials, attributed to repo + branch",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:19+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

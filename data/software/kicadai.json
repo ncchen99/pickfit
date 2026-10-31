@@ -28,6 +28,11 @@
     "place components and route PCB nets"
   ],
   "alternatives_to": [],
+  "features": [
+    "turn behavioral requirements into KiCad projects",
+    "write native schematic and PCB files",
+    "validate designs with ERC and DRC"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -59,20 +64,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-kicadai-20261031-002405-4b79",
+      "run_id": "verify-kicadai-20261101-000504-d83f",
       "method": "binary",
       "steps": [
         {
-          "command": "mkdir -p ~/.local/bin /tmp/kicadai-dl && curl -L -o /tmp/kicadai-dl/kicadai https://github.com/dshills/KiCadAI/releases/download/v1.0.1/kicadai_v1.0.1_linux_amd64 && curl -L -o /tmp/kicadai-dl/SHA256SUMS https://github.com/dshills/KiCadAI/releases/download/v1.0.1/SHA256SUMS && cat /tmp/kicadai-dl/SHA256SUMS && sha256sum /tmp/kicadai-dl/kicadai && install -m 0755 /tmp/kicadai-dl/kicadai ~/.local/bin/kicadai && ls -l ~/.local/bin/kicadai",
-          "purpose": "download and install release binary"
+          "command": "curl -L -o /tmp/kicadai https://github.com/dshills/KiCadAI/releases/download/v1.0.1/kicadai_v1.0.1_linux_amd64 && curl -L -o /tmp/SHA256SUMS https://github.com/dshills/KiCadAI/releases/download/v1.0.1/SHA256SUMS && cat /tmp/SHA256SUMS && sha256sum /tmp/kicadai && mkdir -p ~/.local/bin ./bin && cp /tmp/kicadai ./bin/kicadai && cp /tmp/kicadai ~/.local/bin/kicadai && chmod +x ./bin/kicadai ~/.local/bin/kicadai && ls -lh ./bin/kicadai ~/.local/bin/kicadai",
+          "purpose": "download release binary and install"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "kicadai --help",
-        "expected_signal": "--pretty Pretty-print JSON output"
+        "command": "./bin/kicadai version",
+        "expected_signal": "\"version\": \"1.0.1\""
       },
-      "first_task": "kicadai version"
+      "first_task": "./bin/kicadai version"
     },
     "windows": null
   },
@@ -91,10 +96,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:26:03.518020+08:00",
+    "checked_at": "2026-11-01T00:07:00.061394+08:00",
     "runs": [
       {
-        "id": "verify-kicadai-20261031-002405-4b79",
+        "id": "verify-kicadai-20261101-000504-d83f",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -102,28 +107,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:26:03.518020+08:00",
+        "checked_at": "2026-11-01T00:07:00.061394+08:00",
         "tool_version": "1.0.1",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "mkdir -p ~/.local/bin /tmp/kicadai-dl && curl -L -o /tmp/kicadai-dl/kicadai https://github.com/dshills/KiCadAI/releases/download/v1.0.1/kicadai_v1.0.1_linux_amd64 && curl -L -o /tmp/kicadai-dl/SHA256SUMS https://github.com/dshills/KiCadAI/releases/download/v1.0.1/SHA256SUMS && cat /tmp/kicadai-dl/SHA256SUMS && sha256sum /tmp/kicadai-dl/kicadai && install -m 0755 /tmp/kicadai-dl/kicadai ~/.local/bin/kicadai && ls -l ~/.local/bin/kicadai",
-            "purpose": "download and install release binary"
+            "command": "curl -L -o /tmp/kicadai https://github.com/dshills/KiCadAI/releases/download/v1.0.1/kicadai_v1.0.1_linux_amd64 && curl -L -o /tmp/SHA256SUMS https://github.com/dshills/KiCadAI/releases/download/v1.0.1/SHA256SUMS && cat /tmp/SHA256SUMS && sha256sum /tmp/kicadai && mkdir -p ~/.local/bin ./bin && cp /tmp/kicadai ./bin/kicadai && cp /tmp/kicadai ~/.local/bin/kicadai && chmod +x ./bin/kicadai ~/.local/bin/kicadai && ls -lh ./bin/kicadai ~/.local/bin/kicadai",
+            "purpose": "download release binary and install"
           }
         ],
         "smoke_tests": [
           {
-            "command": "kicadai --help",
-            "expected_signal": "--pretty Pretty-print JSON output",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "--pretty Pretty-print JSON output",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "kicadai version",
+            "command": "./bin/kicadai version",
             "expected_signal": "\"version\": \"1.0.1\"",
             "exit_code": 0,
             "passed": true,
@@ -132,69 +128,133 @@
             "offline": true
           },
           {
-            "command": "kicadai --request ./led_indicator.json schematic-ir validate",
-            "expected_signal": "\"ok\": true",
+            "command": "bin/kicadai generate-led-demo --output ./out/led_demo --overwrite",
+            "expected_signal": "led_indicator.kicad_sch",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "\"ok\": true,",
+            "observed_excerpt": "\"led_indicator/led_indicator.kicad_sch\"",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "bin/kicadai inspect project ./led_indicator",
+            "expected_signal": "\"symbol_count\": 4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"symbol_count\": 4,",
             "setup": [
               {
-                "command": "cat > ./led_indicator.json <<'EOF'\n{\n  \"schema\": \"kicadai.schematic.ir.v1\",\n  \"version\": 1,\n  \"metadata\": {\n    \"name\": \"led_indicator\",\n    \"title\": \"LED Indicator\",\n    \"description\": \"Minimal current-limited LED indicator.\",\n    \"paper\": \"A4\"\n  },\n  \"circuit\": {\n    \"components\": [\n      {\n        \"id\": \"vin\",\n        \"ref\": \"J1\",\n        \"role\": \"input_connector\",\n        \"symbol\": \"Connector_Generic:Conn_01x02\",\n        \"footprint\": \"Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical\",\n        \"pins\": [{\"number\": \"1\"}, {\"number\": \"2\"}]\n      },\n      {\n        \"id\": \"r_limit\",\n        \"ref\": \"R1\",\n        \"role\": \"current_limiter\",\n        \"symbol\": \"Device:R\",\n        \"value\": \"1k\",\n        \"footprint\": \"Resistor_SMD:R_0805_2012Metric\",\n        \"pins\": [{\"number\": \"1\"}, {\"number\": \"2\"}]\n      },\n      {\n        \"id\": \"led\",\n        \"ref\": \"D1\",\n        \"role\": \"indicator_led\",\n        \"symbol\": \"Device:LED\",\n        \"value\": \"green\",\n        \"footprint\": \"LED_SMD:LED_0805_2012Metric\",\n        \"pins\": [{\"number\": \"1\"}, {\"number\": \"2\"}]\n      }\n    ],\n    \"nets\": [\n      {\"name\": \"VIN\", \"role\": \"power\", \"connect\": [\"vin.1\", \"r_limit.1\"], \"label\": \"VIN\"},\n      {\"name\": \"LED_A\", \"role\": \"signal\", \"connect\": [\"r_limit.2\", \"led.1\"], \"label\": \"LED_A\"},\n      {\"name\": \"GND\", \"role\": \"ground\", \"connect\": [\"led.2\", \"vin.2\"], \"label\": \"GND\"}\n    ]\n  },\n  \"layout\": {\n    \"flow\": \"left_to_right\",\n    \"origin\": \"centered\",\n    \"lanes\": {\"power\": \"top\", \"ground\": \"bottom\", \"signals\": \"middle\"},\n    \"rules\": {\n      \"positive_power_top\": true,\n      \"ground_bottom\": true,\n      \"center_on_page\": true,\n      \"prefer_labels_for_long_nets\": true,\n      \"avoid_wire_crossings\": true,\n      \"min_group_spacing_mm\": 20,\n      \"min_component_spacing_mm\": 10\n    }\n  },\n  \"policy\": {\n    \"repair\": {\n      \"allow_ref_assignment\": true,\n      \"allow_label_insertion\": true,\n      \"allow_group_spacing_adjustment\": true,\n      \"allow_symbol_substitution\": false,\n      \"allow_pin_guessing\": false\n    },\n    \"acceptance\": \"readable\"\n  }\n}\nEOF",
+                "command": "bin/kicadai generate-led-demo --output ./out/led_demo --overwrite",
                 "background": false,
                 "port": null
               }
             ],
             "offline": true
+          },
+          {
+            "command": "bin/kicadai block list",
+            "expected_signal": "led_indicator",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"id\": \"led_indicator\",",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "bin/kicadai validate board ./led_indicator",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "validate reported blocking issues }",
+            "setup": [
+              {
+                "command": "bin/kicadai generate-led-demo --output ./out/led_demo --overwrite",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "git clone + make build requiring Go 1.26.8",
-            "actually_needed": "used release binary kicadai_v1.0.1_linux_amd64 installed to ~/.local/bin/kicadai with checksum verified (df262f...); no Go installation per README 'Released binaries require no Go installation'",
+            "readme_said": "Go 1.26.8+ and make build from source",
+            "actually_needed": "downloaded prebuilt kicadai_v1.0.1_linux_amd64 release binary (SHA256 df262f84...) to ./bin/kicadai and ~/.local/bin/kicadai; no Go needed",
             "kind": "sandbox"
           },
           {
             "readme_said": "bin/kicadai --output ./out/divider schematic example divider",
-            "actually_needed": "use schematic-ir validate/write (e.g. kicadai --request ./led_indicator.json schematic-ir validate); v1.0.1 binary has no 'schematic' command",
+            "actually_needed": "v1.0.1 binary has no `schematic` command (unknown command schematic); used `generate-led-demo`, `inspect project`, `writer check`, `validate board` syntax from cli-reference",
             "kind": "readme_wrong"
           },
           {
-            "readme_said": "kicadai --request examples/schematic-ir/led_indicator.json --output ./out/ir_led --overwrite schematic-ir write",
-            "actually_needed": "schematic-ir write succeeded only with a fresh absolute --output path (/tmp/ir_led --overwrite); pre-created relative ./out/ir_led failed with doubled path 'out/ir_led/out/ir_led'",
-            "kind": "note"
+            "readme_said": "--output selects output project directory",
+            "actually_needed": "generate-led-demo ignored --output and wrote ./led_indicator/ with only .kicad_sch+.kicad_pro, no .kicad_pcb",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show schematic-ir validation returning ok true and help listing the pretty flag.",
+          "observed": "Screenshots show LED demo generated with schematic file, inspect reporting ok with project files, and version 1.0.1 printed.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-kicadai-20261031-002405-4b79/report.json",
+          "trace_path": "runs/verify/verify-kicadai-20261101-000504-d83f/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-kicadai-20261031-002405-4b79/check-1-cmd14.judged.png",
-            "runs/verify/verify-kicadai-20261031-002405-4b79/check-2-cmd4.judged.png"
+            "runs/verify/verify-kicadai-20261101-000504-d83f/check-1-cmd7.judged.png",
+            "runs/verify/verify-kicadai-20261101-000504-d83f/check-2-cmd13.judged.png",
+            "runs/verify/verify-kicadai-20261101-000504-d83f/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.126989
+        "cost_usd": 0.133278,
+        "features": [
+          {
+            "feature": "turn behavioral requirements into KiCad projects",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "write native schematic and PCB files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only .pro and .sch written and inspector warns pcb file not found."
+          },
+          {
+            "feature": "validate designs with ERC and DRC",
+            "status": "test_failed",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "writer missing footprints; validate no .kicad_pcb; KiCad CLI absent"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-11-01T00:07:00+08:00",
     "quality": {
-      "total": 78.3,
+      "total": 72.9,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.7225,
+          "score": 0.6141,
           "weight": 40.0
         },
         "install_docs": {
@@ -235,7 +295,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 58.33
+      "value": 54.31
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -491,8 +551,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:16:22+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "turns bounded behavioral requirements into deterministic,\nevidence-backed native KiCad projects",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:36+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "KiCadAI writes native `.kicad_sch`,\n  `.kicad_pcb`, and `.kicad_pro` files",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:36+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "then uses installed KiCad for ERC,\n  strict DRC, and normalized round trips.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:36+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:41:22+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-01T00:07:00.063456+08:00"
 }

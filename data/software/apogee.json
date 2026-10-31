@@ -29,6 +29,12 @@
     "delegate work to parallel sub-agents"
   ],
   "alternatives_to": [],
+  "features": [
+    "read code, edit files and run commands",
+    "use local models and cloud APIs",
+    "delegate work to parallel sub-agents",
+    "extend agent with MCP servers"
+  ],
   "why_worth_it": null,
   "homepage": "https://airiclenz.com",
   "repo": {
@@ -68,18 +74,18 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-apogee-20261029-025755-0c85",
+      "run_id": "verify-apogee-20261031-020238-5178",
       "method": "binary",
       "steps": [
         {
-          "command": "VERSION=$(curl -fsSL https://api.github.com/repos/airiclenz/apogee/releases/latest | sed -n 's/.*\"tag_name\": *\"v\\([^\"]*\\)\".*/\\1/p') && echo \"VERSION=$VERSION\" && curl -fsSLO \"https://github.com/airiclenz/apogee/releases/download/v$VERSION/apogee_${VERSION}_linux_amd64.tar.gz\" && tar -xzf \"apogee_${VERSION}_linux_amd64.tar.gz\" && ls -R && mkdir -p ~/.local/bin && install -m 0755 \"apogee_${VERSION}_linux_amd64/apogee\" ~/.local/bin/apogee && ~/.local/bin/apogee --version",
-          "purpose": "Download linux_amd64 prebuilt archive for latest release and install binary to ~/.local/bin"
+          "command": "VERSION=$(curl -fsSL https://api.github.com/repos/airiclenz/apogee/releases/latest | sed -n 's/.*\"tag_name\": *\"v\\([^\"]*\\)\".*/\\1/p') && echo \"VERSION=$VERSION\" && PLATFORM=linux_amd64 && curl -fsSLO \"https://github.com/airiclenz/apogee/releases/download/v$VERSION/apogee_${VERSION}_${PLATFORM}.tar.gz\" && tar -xzf \"apogee_${VERSION}_${PLATFORM}.tar.gz\" && ls -la && mkdir -p ~/.local/bin && install -m 0755 \"apogee_${VERSION}_${PLATFORM}/apogee\" ~/.local/bin/apogee && ~/.local/bin/apogee --version",
+          "purpose": "Download prebuilt linux_amd64 archive and install to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "apogee --version",
-        "expected_signal": "apogee version v0.28.0+4710.g8336a32f77c3"
+        "expected_signal": "apogee version v0.29.0"
       },
       "first_task": "apogee probe"
     },
@@ -113,10 +119,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:58:38.407823+08:00",
+    "checked_at": "2026-10-31T02:03:48.566546+08:00",
     "runs": [
       {
-        "id": "verify-apogee-20261029-025755-0c85",
+        "id": "verify-apogee-20261031-020238-5178",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -124,32 +130,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T02:58:38.407823+08:00",
-        "tool_version": "v0.28.0+4710.g8336a32f77c3",
+        "checked_at": "2026-10-31T02:03:48.566546+08:00",
+        "tool_version": "v0.29.0+4773.gcd926069e55f",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "VERSION=$(curl -fsSL https://api.github.com/repos/airiclenz/apogee/releases/latest | sed -n 's/.*\"tag_name\": *\"v\\([^\"]*\\)\".*/\\1/p') && echo \"VERSION=$VERSION\" && curl -fsSLO \"https://github.com/airiclenz/apogee/releases/download/v$VERSION/apogee_${VERSION}_linux_amd64.tar.gz\" && tar -xzf \"apogee_${VERSION}_linux_amd64.tar.gz\" && ls -R && mkdir -p ~/.local/bin && install -m 0755 \"apogee_${VERSION}_linux_amd64/apogee\" ~/.local/bin/apogee && ~/.local/bin/apogee --version",
-            "purpose": "Download linux_amd64 prebuilt archive for latest release and install binary to ~/.local/bin"
+            "command": "VERSION=$(curl -fsSL https://api.github.com/repos/airiclenz/apogee/releases/latest | sed -n 's/.*\"tag_name\": *\"v\\([^\"]*\\)\".*/\\1/p') && echo \"VERSION=$VERSION\" && PLATFORM=linux_amd64 && curl -fsSLO \"https://github.com/airiclenz/apogee/releases/download/v$VERSION/apogee_${VERSION}_${PLATFORM}.tar.gz\" && tar -xzf \"apogee_${VERSION}_${PLATFORM}.tar.gz\" && ls -la && mkdir -p ~/.local/bin && install -m 0755 \"apogee_${VERSION}_${PLATFORM}/apogee\" ~/.local/bin/apogee && ~/.local/bin/apogee --version",
+            "purpose": "Download prebuilt linux_amd64 archive and install to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
             "command": "apogee --version",
-            "expected_signal": "apogee version v0.28.0+4710.g8336a32f77c3",
+            "expected_signal": "apogee version v0.29.0",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "apogee version v0.28.0+4710.g8336a32f77c3",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "apogee --help",
-            "expected_signal": "Available Commands:",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Available Commands:",
+            "observed_excerpt": "apogee version v0.29.0+4773.gcd926069e55f",
             "setup": [],
             "offline": true
           },
@@ -171,37 +168,73 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "go install github.com/airiclenz/apogee/cmd/apogee@latest",
-            "actually_needed": "Skipped: box has no Go toolchain and installing language toolchains is forbidden; used the README's prebuilt-archive method instead"
+            "readme_said": "go install github.com/airiclenz/apogee/cmd/apogee@latest and sudo install to /usr/local/bin/apogee",
+            "actually_needed": "used prebuilt linux_amd64 tarball from releases and installed to ~/.local/bin/apogee (no root, no Go toolchain)",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "sudo install -m 0755 apogee /usr/local/bin/apogee",
-            "actually_needed": "install -m 0755 apogee ~/.local/bin/apogee (PATH already starts with ~/.local/bin); no sudo and no write to /usr/local/bin"
+            "readme_said": "apogee probe reports host/model/terminal without setup",
+            "actually_needed": "wrote minimal ~/.apogee/config.yaml with dummy server entry and update-check: false before probe would run",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show apogee probe host report with confinement details and apogee version v0.28.0+4710.g8336a32f77c3.",
+          "observed": "Both screenshots show apogee probe host report and version v0.29.0 output as expected with exit 0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-apogee-20261029-025755-0c85/report.json",
+          "trace_path": "runs/verify/verify-apogee-20261031-020238-5178/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-apogee-20261029-025755-0c85/check-1-cmd6.judged.png",
-            "runs/verify/verify-apogee-20261029-025755-0c85/check-2-cmd2.judged.png"
+            "runs/verify/verify-apogee-20261031-020238-5178/check-1-cmd5.judged.png",
+            "runs/verify/verify-apogee-20261031-020238-5178/check-2-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.043225
+        "cost_usd": 0.064971,
+        "features": [
+          {
+            "feature": "read code, edit files and run commands",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs reachable LLM to drive read/edit/run loop"
+          },
+          {
+            "feature": "use local models and cloud APIs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs reachable local model server or cloud API key; probe only attempted discovery"
+          },
+          {
+            "feature": "delegate work to parallel sub-agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs reachable LLM to delegate sub-agents"
+          },
+          {
+            "feature": "extend agent with MCP servers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs reachable LLM plus MCP server config"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 90.5,
       "confidence": 0.8,
@@ -522,8 +555,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-29T02:38:11+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "it reads your code, edits files, runs commands",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:52+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "### Works with local models and cloud APIs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:52+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**Parallel sub-agents**, each with a context window of its own",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:52+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**MCP servers** over stdio, SSE, or streamable-http",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:52+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

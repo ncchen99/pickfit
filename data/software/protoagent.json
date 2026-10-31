@@ -29,6 +29,11 @@
     "design regression cases and run approved checks"
   ],
   "alternatives_to": [],
+  "features": [
+    "Orchestrate local LLMs with Python",
+    "Run agents in native Rust terminal",
+    "Index workspace into context packs"
+  ],
   "why_worth_it": null,
   "homepage": "https://nmaroulis.github.io/protoagent/",
   "repo": {
@@ -55,16 +60,16 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-protoagent-20261031-004449-46d2",
+      "run_id": "verify-protoagent-20261031-040645-736c",
       "method": "pip",
       "steps": [
         {
-          "command": "rm -rf protoagent-src && git clone --depth 1 https://github.com/nMaroulis/protoagent.git protoagent-src",
-          "purpose": "clone source for pip install"
+          "command": "rm -rf protoagent-src && git clone https://github.com/nMaroulis/protoagent.git protoagent-src",
+          "purpose": "clone protoagent source"
         },
         {
-          "command": "python3 -m pip install -e ./protoagent-src/core --no-deps && python3 -m pip install protolink[http,mcp,openai,anthropic,gemini,huggingface,deepseek,grok,ollama,openai-compatible,lmstudio,vllm,llama-cpp-server]>=0.8.2",
-          "purpose": "install protoagent-core without llama build plus protolink deps"
+          "command": "python3 -m pip install --no-deps -e protoagent-src/core && python3 -m pip install \"protolink[http,mcp]>=0.8.2\"",
+          "purpose": "pip install core without compiler-heavy deps plus protolink http mcp extras"
         }
       ],
       "manual_steps": [],
@@ -91,10 +96,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:47:22.882905+08:00",
+    "checked_at": "2026-10-31T04:09:01.507564+08:00",
     "runs": [
       {
-        "id": "verify-protoagent-20261031-004449-46d2",
+        "id": "verify-protoagent-20261031-040645-736c",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -102,18 +107,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:47:22.882905+08:00",
+        "checked_at": "2026-10-31T04:09:01.507564+08:00",
         "tool_version": "0.3.1",
         "install_method": "pip",
         "replayed": true,
         "steps": [
           {
-            "command": "rm -rf protoagent-src && git clone --depth 1 https://github.com/nMaroulis/protoagent.git protoagent-src",
-            "purpose": "clone source for pip install"
+            "command": "rm -rf protoagent-src && git clone https://github.com/nMaroulis/protoagent.git protoagent-src",
+            "purpose": "clone protoagent source"
           },
           {
-            "command": "python3 -m pip install -e ./protoagent-src/core --no-deps && python3 -m pip install protolink[http,mcp,openai,anthropic,gemini,huggingface,deepseek,grok,ollama,openai-compatible,lmstudio,vllm,llama-cpp-server]>=0.8.2",
-            "purpose": "install protoagent-core without llama build plus protolink deps"
+            "command": "python3 -m pip install --no-deps -e protoagent-src/core && python3 -m pip install \"protolink[http,mcp]>=0.8.2\"",
+            "purpose": "pip install core without compiler-heavy deps plus protolink http mcp extras"
           }
         ],
         "smoke_tests": [
@@ -127,60 +132,94 @@
             "offline": true
           },
           {
-            "command": "python3 -c \"import json; from protoagent_core.agent_engine import get_agent_settings; d=json.loads(get_agent_settings()); print(sorted([a['name'] for a in d['agents']]))\"",
-            "expected_signal": "architect",
+            "command": "python3 -c \"from protoagent_core.harness_eval import run_harness_eval; import json; r=run_harness_eval(); print(json.dumps(r)[:4000])\"",
+            "expected_signal": "ProtoLink evaluate",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "['architect', 'coder', 'explorer', 'mcp', 'scout', 'tester', 'verifier']",
+            "observed_excerpt": "{\"engine\": \"ProtoLink evaluate\", \"mode\": \"offline\", \"passed\": true, \"samples\": [{\"case\": {\"name\": \"read-source\", \"prompt\": \"read-source\", \"expected\": \"value = 42\", \"metadata\": {\"tool\": \"read_file\"}}, \"repetition\": 0, \"output\": \"value = 42\", \"error\": null, \"duration_seconds\": 0.020674185000000733, \"…",
             "setup": [],
             "offline": true
           },
           {
-            "command": "python3 -c \"import json; from protoagent_core.agent_engine import doctor; d=json.loads(doctor(workspace='/tmp')); print(d['python']); print(d['active_provider']); print(d['component_versions'][1]['version'])\"",
-            "expected_signal": "ollama",
+            "command": "python3 -c \"from protoagent_core.context import refresh_context_index, build_context_pack, format_context_pack_for_prompt; print(refresh_context_index('/tmp/demo-ws')); p=build_context_pack('explain the authentication flow', '/tmp/demo-ws'); print('ITEMS:', len(p['items'])); print([i['path'] for i in p['items']]); print(format_context_pack_for_prompt(p)[:2000])\"",
+            "expected_signal": "Context Loom",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "ollama",
-            "setup": [],
+            "observed_excerpt": "{'name': 'Context Loom', 'workspace': '/tmp/demo-ws', 'index_path': '/home/sbx/.protoagent/indexes/576da46408cbad45.sqlite', 'files_indexed': 2, 'indexed_at': '2026-10-30T20:08:51Z', 'last_duration_ms': 3, 'files_seen': 2, 'files_updated': 2, 'files_removed': 0, 'files_unchanged': 0, 'files_skipped…",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/demo-ws && cat > /tmp/demo-ws/auth.py <<'PY'\ndef login(user, password):\n    \"\"\"Authenticate user and return token.\"\"\"\n    if user == \"admin\" and password == \"secret\":\n        return \"token-123\"\n    return None\n\ndef logout(token):\n    \"\"\"Invalidate token.\"\"\"\n    return True\nPY\ncat > /tmp/demo-ws/README.md <<'MD'\n# Demo workspace\nAuthentication flow uses login and logout helpers.\nMD\nls -R /tmp/demo-ws",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "python -m pip install -e core (pulls protolink[http,llms,mcp] including llama-cpp-python)",
-            "actually_needed": "install core with --no-deps then install protolink without llama-cpp-local: python3 -m pip install protolink[http,mcp,openai,anthropic,gemini,huggingface,deepseek,grok,ollama,openai-compatible,lmstudio,vllm,llama-cpp-server]>=0.8.2",
+            "readme_said": "python -m pip install -e core",
+            "actually_needed": "install with --no-deps then protolink[http,mcp] to avoid llama-cpp-python gcc build; full pip install -e core tries to build llama-cpp-python and fails with Could not find compiler gcc",
             "kind": "sandbox"
           },
           {
             "readme_said": "cargo run --locked --manifest-path cli/Cargo.toml -- version/check/agents",
-            "actually_needed": "called the same logic via Python: component_versions() for version, get_agent_settings() for agents, doctor() for check",
-            "kind": "sandbox"
+            "actually_needed": "Python equivalents via protoagent_core.agent_engine (component_versions/doctor/get_agent_settings) and harness_eval/context modules; cargo run examples need Rust toolchain absent in box",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show version 0.3.1, agent list containing architect, and doctor reporting python 3.12.16 with active provider ollama.",
+          "observed": "All three checks succeeded with version 0.3.1, ProtoLink evaluate harness passing, and Context Loom pack returning indexed context.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-protoagent-20261031-004449-46d2/report.json",
+          "trace_path": "runs/verify/verify-protoagent-20261031-040645-736c/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-protoagent-20261031-004449-46d2/check-1-cmd11.judged.png",
-            "runs/verify/verify-protoagent-20261031-004449-46d2/check-2-cmd12.judged.png",
-            "runs/verify/verify-protoagent-20261031-004449-46d2/check-3-cmd13.judged.png"
+            "runs/verify/verify-protoagent-20261031-040645-736c/check-1-cmd14.judged.png",
+            "runs/verify/verify-protoagent-20261031-040645-736c/check-2-cmd8.judged.png",
+            "runs/verify/verify-protoagent-20261031-040645-736c/check-3-cmd11.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.180842
+        "cost_usd": 0.151796,
+        "features": [
+          {
+            "feature": "Orchestrate local LLMs with Python",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows scripted MockLLM with zero output tokens and no provider requests, not a local LLM orchestration."
+          },
+          {
+            "feature": "Run agents in native Rust terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_toolchain",
+            "failure": null,
+            "note": "Rust CLI needs cargo toolchain absent in box"
+          },
+          {
+            "feature": "Index workspace into context packs",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 84.4,
       "confidence": 0.8,
@@ -477,8 +516,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:37:01+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "Orchestrate local LLMs with Python",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:37+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "github_api",
+      "quote": "run them in a native Rust terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:37+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Context Loom incrementally indexes the workspace and",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:37+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

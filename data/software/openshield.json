@@ -29,6 +29,12 @@
     "Check token usage and model performance"
   ],
   "alternatives_to": [],
+  "features": [
+    "execute coding tasks autonomously",
+    "search persistent memory across sessions",
+    "start interactive TUI session",
+    "use any OpenAI-compatible model provider"
+  ],
   "why_worth_it": null,
   "homepage": "https://github.com/synthalorian/openshield",
   "repo": {
@@ -72,16 +78,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-openshield-20261031-002336-68d0",
+      "run_id": "verify-openshield-20261031-034209-dfa9",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/Blackshield-Company/openshield/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
-          "purpose": "Download install script for reading"
+          "command": "curl -fsSL https://raw.githubusercontent.com/Blackshield-Company/openshield/main/install.sh -o /tmp/install.sh",
+          "purpose": "Download install script without piping to shell"
         },
         {
           "command": "bash /tmp/install.sh",
-          "purpose": "Run installer script (candidate 1)"
+          "purpose": "Install openshield binary via install script"
         }
       ],
       "manual_steps": [],
@@ -108,10 +114,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:24:33.923000+08:00",
+    "checked_at": "2026-10-31T03:42:58.614853+08:00",
     "runs": [
       {
-        "id": "verify-openshield-20261031-002336-68d0",
+        "id": "verify-openshield-20261031-034209-dfa9",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -119,18 +125,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:24:33.923000+08:00",
+        "checked_at": "2026-10-31T03:42:58.614853+08:00",
         "tool_version": "1.2.2",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/Blackshield-Company/openshield/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
-            "purpose": "Download install script for reading"
+            "command": "curl -fsSL https://raw.githubusercontent.com/Blackshield-Company/openshield/main/install.sh -o /tmp/install.sh",
+            "purpose": "Download install script without piping to shell"
           },
           {
             "command": "bash /tmp/install.sh",
-            "purpose": "Run installer script (candidate 1)"
+            "purpose": "Install openshield binary via install script"
           }
         ],
         "smoke_tests": [
@@ -140,15 +146,6 @@
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "openshield 1.2.2",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "openshield --help",
-            "expected_signal": "Usage: openshield [COMMAND]",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Usage: openshield [COMMAND]",
             "setup": [],
             "offline": true
           },
@@ -163,10 +160,10 @@
           },
           {
             "command": "openshield config",
-            "expected_signal": "providers.local",
+            "expected_signal": "[providers.",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "[providers.local]",
+            "observed_excerpt": "[providers.openai]",
             "setup": [],
             "offline": true
           },
@@ -178,41 +175,100 @@
             "observed_excerpt": "🛡 OpenShield Stats",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "openshield memory \"test query\"",
+            "expected_signal": "Memory Search",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "🛡 Memory Search: 'test query' (0 results)",
+            "setup": [],
+            "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "README install URL and repo is Blackshield-Company/openshield",
+            "actually_needed": "Binary was downloaded from https://github.com/synthalorian/openshield/releases/latest/download/ as coded in install.sh OWNER_REPO=senthalorian/openshield",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "curl install.sh | bash",
+            "actually_needed": "Installer fetches a prebuilt tar.gz binary at install time which cannot be read before running",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Run openshield setup to configure before other commands",
+            "actually_needed": "openshield auto-generated a default config on first models/config/stats run with no setup step needed",
+            "kind": "tool_handled"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three checks exit 0 showing models list, config dump, and version 1.2.2.",
+          "observed": "Screenshots show model list with providers, full config dump, and version 1.2.2 all exiting 0 with no errors.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-openshield-20261031-002336-68d0/report.json",
+          "trace_path": "runs/verify/verify-openshield-20261031-034209-dfa9/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-openshield-20261031-002336-68d0/check-1-cmd5.judged.png",
-            "runs/verify/verify-openshield-20261031-002336-68d0/check-2-cmd6.judged.png",
-            "runs/verify/verify-openshield-20261031-002336-68d0/check-3-cmd3.judged.png"
+            "runs/verify/verify-openshield-20261031-034209-dfa9/check-1-cmd4.judged.png",
+            "runs/verify/verify-openshield-20261031-034209-dfa9/check-2-cmd5.judged.png",
+            "runs/verify/verify-openshield-20261031-034209-dfa9/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.047562
+        "cost_usd": 0.051172,
+        "features": [
+          {
+            "feature": "execute coding tasks autonomously",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Agent execution requires a model API key which the box does not have."
+          },
+          {
+            "feature": "search persistent memory across sessions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows 0 results with no memory content retrieved."
+          },
+          {
+            "feature": "start interactive TUI session",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Interactive TUI needs a terminal/GUI session, cannot be exercised non-interactively."
+          },
+          {
+            "feature": "use any OpenAI-compatible model provider",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists models/providers without showing use of a provider."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 86.3,
+      "total": 78.8,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -252,8 +308,8 @@
       "packages": []
     },
     "treasure": {
-      "is_treasure": true,
-      "value": 60.32
+      "is_treasure": false,
+      "value": 55.08
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -549,8 +605,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**Autonomous agent mode** — Plans, executes, verifies, retries.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:52+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**Persistent memory** — SQLite-backed sessions with keyword and semantic search.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:52+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Start TUI session",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:52+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Works with any OpenAI-compatible API.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:52+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:42:22+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

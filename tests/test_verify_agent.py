@@ -160,7 +160,8 @@ def test_command_budget_forces_a_finish_only_turn(task, ledger, tmp_path):
     assert report.stop_reason == "finished" and report.verdict["claimed_level"] == "failed"
     assert report.verdict["level"] == "unverified"
     last = server.requests[-1]
-    assert last["tools"] == [FINISH_TOOL]
+    # The same tools as every turn, so the prompt cache still covers the whole history.
+    assert last["tools"] == server.requests[0]["tools"]
     assert "Stop working: the command budget (2) is used up" in last["input"][-1]["content"]
     assert report.turns[-1].finish_only
 
@@ -178,11 +179,26 @@ def test_same_error_three_times_stops_the_work(task, ledger, tmp_path):
     assert "same error happened 3 times" in server.requests[-1]["input"][-1]["content"]
 
 
-def test_last_turn_is_finish_only_and_silence_ends_the_run(task, ledger, tmp_path):
-    server = FakeServer(response("r1", run_cmd("echo 1")), response("r2", text="I am done."))
-    report = agent(task, FakeBox(), server, ledger, tmp_path, limits=AgentLimits(max_turns=2)).run()
+def test_past_the_limit_only_finish_runs_and_silence_ends_the_run(task, ledger, tmp_path):
+    server = FakeServer(response("r1", run_cmd("echo 1")), response("r2", run_cmd("echo 2")),
+                        response("r3", text="I am done."))
+    box = FakeBox()
+    report = agent(task, box, server, ledger, tmp_path, limits=AgentLimits(max_turns=3)).run()
     assert report.stop_reason == "no_finish" and report.verdict is None
-    assert server.requests[1]["tools"] == [FINISH_TOOL]
+    assert "the 3-turn limit is near" in server.requests[1]["input"][-1]["content"]
+    assert [c for c, _ in box.ran] == ["echo 1"]  # the call past the limit was refused, not run
+    assert server.requests[2]["input"][-1]["output"].startswith("error: nothing else runs past the limit")
+    assert server.requests[2]["tools"] == server.requests[0]["tools"]
+
+
+def test_a_finish_in_the_spare_turn_still_counts(task, ledger, tmp_path):
+    server = FakeServer(response("r1", run_cmd("echo 1")),
+                        response("r2", run_cmd("echo 2"), finish(level="unverified", unverified_reason="other")),
+                        )
+    report = agent(task, FakeBox(), server, ledger, tmp_path, limits=AgentLimits(max_commands=1)).run()
+    # Past the command budget a finish beside a refused call counts as alone.
+    assert report.stop_reason == "finished" and report.verdict["level"] == "unverified"
+    assert len(server.requests) == 2
 
 
 def test_text_reply_gets_a_nudge(task, ledger, tmp_path):

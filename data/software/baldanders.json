@@ -29,6 +29,12 @@
     "scrub an IBAN and output JSON for pipelines"
   ],
   "alternatives_to": [],
+  "features": [
+    "Scrub personal data into tokens before sending",
+    "Restore real values in AI replies",
+    "Chat with Claude Code, Codex or Grok",
+    "Scrub text locally for scripts and pipelines"
+  ],
   "why_worth_it": null,
   "homepage": "https://pypi.org/project/baldanders/",
   "repo": {
@@ -53,12 +59,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-baldanders-20261031-000820-260e",
+      "run_id": "verify-baldanders-20261031-033837-4aa5",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install baldanders==0.1.5 && baldanders --version",
-          "purpose": "Install baldanders 0.1.5 via uv tool"
+          "command": "uv tool install baldanders==0.1.5",
+          "purpose": "Install Baldanders via uv tool"
         }
       ],
       "manual_steps": [],
@@ -85,10 +91,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:09:11.740573+08:00",
+    "checked_at": "2026-10-31T03:39:13.800126+08:00",
     "runs": [
       {
-        "id": "verify-baldanders-20261031-000820-260e",
+        "id": "verify-baldanders-20261031-033837-4aa5",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -96,14 +102,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:09:11.740573+08:00",
+        "checked_at": "2026-10-31T03:39:13.800126+08:00",
         "tool_version": "0.1.5",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install baldanders==0.1.5 && baldanders --version",
-            "purpose": "Install baldanders 0.1.5 via uv tool"
+            "command": "uv tool install baldanders==0.1.5",
+            "purpose": "Install Baldanders via uv tool"
           }
         ],
         "smoke_tests": [
@@ -117,17 +123,8 @@
             "offline": true
           },
           {
-            "command": "baldanders --help",
-            "expected_signal": "Scrub TEXT (or stdin)",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "scrub Scrub TEXT (or stdin) and print the result.",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "echo \"Call me on +54 9 11 4567-8901\" | baldanders scrub",
-            "expected_signal": "Call me on [PHONE_1]",
+            "expected_signal": "[PHONE_1]",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "Call me on [PHONE_1]",
@@ -136,7 +133,7 @@
           },
           {
             "command": "baldanders scrub --json \"IBAN DE89 3704 0044 0532 0130 00\"",
-            "expected_signal": "\"type\": \"IBAN\"",
+            "expected_signal": "IBAN",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "\"type\": \"IBAN\",",
@@ -148,27 +145,63 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show phone number scrubbed to [PHONE_1], IBAN detected as JSON type IBAN, and version 0.1.5 reported.",
+          "observed": "Screenshots show phone redaction to [PHONE_1], IBAN JSON detection, and version 0.1.5 output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-baldanders-20261031-000820-260e/report.json",
+          "trace_path": "runs/verify/verify-baldanders-20261031-033837-4aa5/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-baldanders-20261031-000820-260e/check-1-cmd4.judged.png",
-            "runs/verify/verify-baldanders-20261031-000820-260e/check-2-cmd5.judged.png",
-            "runs/verify/verify-baldanders-20261031-000820-260e/check-3-cmd2.judged.png"
+            "runs/verify/verify-baldanders-20261031-033837-4aa5/check-1-cmd3.judged.png",
+            "runs/verify/verify-baldanders-20261031-033837-4aa5/check-2-cmd4.judged.png",
+            "runs/verify/verify-baldanders-20261031-033837-4aa5/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.035637
+        "cost_usd": 0.032438,
+        "features": [
+          {
+            "feature": "Scrub personal data into tokens before sending",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Restore real values in AI replies",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Restoring tokens requires an AI provider reply"
+          },
+          {
+            "feature": "Chat with Claude Code, Codex or Grok",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Chat requires Claude Code/Codex/Grok login"
+          },
+          {
+            "feature": "Scrub text locally for scripts and pipelines",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output lists the IBAN with original text but shows no tokenized scrubbed text."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 91.2,
       "confidence": 0.8,
@@ -459,8 +492,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:04:06+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Names, emails, ID numbers, bank details and secrets are swapped for tokens like `[PERSON_1]` before anything leaves your machine",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:18+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Tokens in the reply are replaced with the real values on your side.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:18+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "You use Claude Code, Codex or Grok as usual.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:18+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Scrub text without talking to any AI, for scripts and pipelines:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:18+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:40:38+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

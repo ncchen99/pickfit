@@ -30,6 +30,12 @@
     "publish a VM port to an HTTPS subdomain"
   ],
   "alternatives_to": [],
+  "features": [
+    "create persistent Linux VMs",
+    "run AI coding agents inside VMs",
+    "publish any VM port to HTTPS",
+    "use Mac OS 9 desktop in browser"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -73,16 +79,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-exe-20261031-004403-36a0",
+      "run_id": "verify-exe-20261031-034325-8a1e",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://exe.v2core.com/install.sh -o /tmp/install-exe.sh && ls -l /tmp/install-exe.sh && wc -c /tmp/install-exe.sh",
+          "command": "curl -fsSL https://exe.v2core.com/install.sh -o /tmp/exe-install.sh && ls -l /tmp/exe-install.sh && wc -c /tmp/exe-install.sh",
           "purpose": "Download install script only"
         },
         {
-          "command": "EXE_INSTALL_LISTEN=local EXE_INSTALL_TOKEN=no EXE_INSTALL_APPS=no EXE_INSTALL_VMS=no sh /tmp/install-exe.sh",
-          "purpose": "Run exe installer non-interactive"
+          "command": "sh /tmp/exe-install.sh",
+          "purpose": "Run exe installer script"
         }
       ],
       "manual_steps": [],
@@ -122,10 +128,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:45:24.699597+08:00",
+    "checked_at": "2026-10-31T03:44:42.674711+08:00",
     "runs": [
       {
-        "id": "verify-exe-20261031-004403-36a0",
+        "id": "verify-exe-20261031-034325-8a1e",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -133,18 +139,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:45:24.699597+08:00",
-        "tool_version": "2026.10.28",
+        "checked_at": "2026-10-31T03:44:42.674711+08:00",
+        "tool_version": "2026.10.28 (linux/amd64)",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://exe.v2core.com/install.sh -o /tmp/install-exe.sh && ls -l /tmp/install-exe.sh && wc -c /tmp/install-exe.sh",
+            "command": "curl -fsSL https://exe.v2core.com/install.sh -o /tmp/exe-install.sh && ls -l /tmp/exe-install.sh && wc -c /tmp/exe-install.sh",
             "purpose": "Download install script only"
           },
           {
-            "command": "EXE_INSTALL_LISTEN=local EXE_INSTALL_TOKEN=no EXE_INSTALL_APPS=no EXE_INSTALL_VMS=no sh /tmp/install-exe.sh",
-            "purpose": "Run exe installer non-interactive"
+            "command": "sh /tmp/exe-install.sh",
+            "purpose": "Run exe installer script"
           }
         ],
         "smoke_tests": [
@@ -158,29 +164,41 @@
             "offline": true
           },
           {
-            "command": "exe --help",
-            "expected_signal": "exe serve",
+            "command": "curl -fsSL http://127.0.0.1:7777/ -o /tmp/exe-home.html && wc -c /tmp/exe-home.html && grep -oi -m1 \"Mac OS 9\\|Platinum\\|exe\" /tmp/exe-home.html",
+            "expected_signal": "815714 /tmp/exe-home.html",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "exe serve run the daemon (API + HTTP proxy)",
-            "setup": [],
+            "observed_excerpt": "815714 /tmp/exe-home.html",
+            "setup": [
+              {
+                "command": "exe serve",
+                "background": true,
+                "port": 7777
+              }
+            ],
             "offline": true
           },
           {
             "command": "exe ls",
-            "expected_signal": "NAME STATE",
+            "expected_signal": "NAME STATE CPUS MEM DISK IP",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "NAME STATE CPUS MEM DISK IP",
-            "setup": [],
+            "setup": [
+              {
+                "command": "exe serve",
+                "background": true,
+                "port": 7777
+              }
+            ],
             "offline": true
           },
           {
-            "command": "curl -fsSL http://127.0.0.1:7777/ -o /tmp/exe-index.html && wc -c /tmp/exe-index.html && head -c 2000 /tmp/exe-index.html",
-            "expected_signal": "<title>exe</title>",
+            "command": "exe routes",
+            "expected_signal": "HOST BACKEND",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "<title>exe</title>",
+            "observed_excerpt": "HOST BACKEND",
             "setup": [
               {
                 "command": "exe serve",
@@ -194,34 +212,73 @@
         "pitfalls": [
           {
             "readme_said": "curl -fsSL https://exe.v2core.com/install.sh | sh",
-            "actually_needed": "Set EXE_INSTALL_LISTEN=local EXE_INSTALL_TOKEN=no EXE_INSTALL_APPS=no EXE_INSTALL_VMS=no before running the script so it stays non-interactive and skips the sudo VM-setup step",
-            "kind": "sandbox"
+            "actually_needed": "Download to /tmp/exe-install.sh, read it, then run sh /tmp/exe-install.sh; non-interactive run defaults to listen local, no token, extra apps yes",
+            "kind": "note"
+          },
+          {
+            "readme_said": "./exe init writes ~/.exe/config.json",
+            "actually_needed": "install.sh already runs `exe setup` writing ~/.exe/config.json, so re-running `exe init` exits 1 with error already exists; use `exe serve` next",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show exe ls header, web UI with <title>exe</title>, and correct version string.",
+          "observed": "All three screenshots show expected outputs: 815714-byte download with exe match, ls header, and version string.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-exe-20261031-004403-36a0/report.json",
+          "trace_path": "runs/verify/verify-exe-20261031-034325-8a1e/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-exe-20261031-004403-36a0/check-1-cmd9.judged.png",
-            "runs/verify/verify-exe-20261031-004403-36a0/check-2-cmd7.judged.png",
-            "runs/verify/verify-exe-20261031-004403-36a0/check-3-cmd3.judged.png"
+            "runs/verify/verify-exe-20261031-034325-8a1e/check-1-cmd6.judged.png",
+            "runs/verify/verify-exe-20261031-034325-8a1e/check-2-cmd10.judged.png",
+            "runs/verify/verify-exe-20261031-034325-8a1e/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.070936
+        "cost_usd": 0.086447,
+        "features": [
+          {
+            "feature": "create persistent Linux VMs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "No /dev/kvm and no firecracker binary; daemon logs runs without VMs; create would need ~3GB image"
+          },
+          {
+            "feature": "run AI coding agents inside VMs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Needs a running VM plus Ollama Cloud model access"
+          },
+          {
+            "feature": "publish any VM port to HTTPS",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Needs Cloudflare tunnel token per task"
+          },
+          {
+            "feature": "use Mac OS 9 desktop in browser",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only an 815k page containing 'exe', with no evidence of a Mac OS 9 desktop."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 87.1,
       "confidence": 0.9,
@@ -542,8 +599,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:35:52+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "persistent Linux VMs on macOS, Linux and Windows",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:59+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "github_api",
+      "quote": "AI coding agents working inside them",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:59+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "github_api",
+      "quote": "any port published to HTTPS through Cloudflare Tunnel",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:59+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "github_api",
+      "quote": "Driven from a Mac OS 9 desktop in the browser",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:59+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:27:54+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

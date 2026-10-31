@@ -29,6 +29,12 @@
     "manage test plans and run them"
   ],
   "alternatives_to": [],
+  "features": [
+    "manage test case lifecycle",
+    "generate framework-specific code from test cases",
+    "manage launches and test results",
+    "manage test plans and content"
+  ],
   "why_worth_it": null,
   "homepage": "https://ivanostanin.github.io/lucius-mcp/",
   "repo": {
@@ -72,19 +78,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-lucius-mcp-20261031-015013-ba7b",
+      "run_id": "verify-lucius-mcp-20261031-030648-8d0c",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install lucius-mcp 2>&1",
-          "purpose": "install lucius-mcp with uv tool so start/lucius are on PATH"
+          "purpose": "install lucius-mcp with uv tool install so start/lucius are on PATH"
         }
       ],
       "manual_steps": [],
-      "check": {
-        "command": "lucius --help 2>&1",
-        "expected_signal": "test_case (tc)"
-      },
+      "check": null,
       "first_task": null
     },
     "windows": {
@@ -117,10 +120,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:51:50.271371+08:00",
+    "checked_at": "2026-10-31T03:08:14.272106+08:00",
     "runs": [
       {
-        "id": "verify-lucius-mcp-20261031-015013-ba7b",
+        "id": "verify-lucius-mcp-20261031-030648-8d0c",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -128,80 +131,50 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:51:50.271371+08:00",
+        "checked_at": "2026-10-31T03:08:14.272106+08:00",
         "tool_version": "0.16.6",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install lucius-mcp 2>&1",
-            "purpose": "install lucius-mcp with uv tool so start/lucius are on PATH"
+            "purpose": "install lucius-mcp with uv tool install so start/lucius are on PATH"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- start 2>&1",
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && TELEMETRY_ENABLED=false MCP_MODE=stdio python3 ~/.pickfit/mcp_probe.py -- start 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
             "setup": [],
             "offline": true
-          },
-          {
-            "command": "lucius --help 2>&1",
-            "expected_signal": "test_case (tc)",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "│ test_case (tc) │ create, delete, delete_archived, │ lucius test_case │",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "lucius test_case get --help 2>&1",
-            "expected_signal": "Mapped tool: get_test_case_details",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Mapped tool: get_test_case_details",
-            "setup": [],
-            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "uv run start / uvx --from lucius-mcp --refresh start",
-            "actually_needed": "uv tool install lucius-mcp provides PATH-stable `start` and `lucius` executables that work with network off; uvx --from lucius-mcp --refresh would refetch on each launch",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "start launch command supports --help/--version",
-            "actually_needed": "`start --help` ignores help flag and starts the stdio MCP server (had to be killed after 30s); use `lucius --help` or `lucius test_case get --help` for CLI help",
-            "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "ALLURE_ENDPOINT (required), ALLURE_API_TOKEN (required)",
-            "actually_needed": "server starts and completes MCP initialize/tools-list with no env set; ALLURE_ENDPOINT/ALLURE_API_TOKEN are only needed when actually calling Allure tools",
+            "readme_said": "README documents `lucius ... --help` and `start` as server launch without clarifying `start --help` behavior.",
+            "actually_needed": "Use `lucius --help` for CLI help; `start --help` ignores the flag and starts the MCP server on stdio (had to be killed after 30s).",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three screenshots show success: MCP probe handshake ok with 70 tools, lucius help listing test_case (tc), and test_case get help mapping to get_test_case_details.",
+          "observed": "Screenshot shows MCP probe initializing successfully, listing 70 tools, and reporting handshake: ok.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-lucius-mcp-20261031-015013-ba7b/report.json",
+          "trace_path": "runs/verify/verify-lucius-mcp-20261031-030648-8d0c/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-lucius-mcp-20261031-015013-ba7b/check-1-cmd4.judged.png",
-            "runs/verify/verify-lucius-mcp-20261031-015013-ba7b/check-2-cmd5.judged.png",
-            "runs/verify/verify-lucius-mcp-20261031-015013-ba7b/check-3-cmd6.judged.png"
+            "runs/verify/verify-lucius-mcp-20261031-030648-8d0c/check-1-cmd5.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.047533,
+        "cost_usd": 0.042772,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -286,7 +259,41 @@
           "tool_count": 70,
           "called_tool": null,
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "manage test case lifecycle",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "All test-case tools require ALLURE_ENDPOINT and ALLURE_API_TOKEN; no account in box."
+          },
+          {
+            "feature": "generate framework-specific code from test cases",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "generate_test_code needs an existing Allure test case via API; no account in box."
+          },
+          {
+            "feature": "manage launches and test results",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "All launch/result tools require Allure endpoint and API token; no account in box."
+          },
+          {
+            "feature": "manage test plans and content",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "All test-plan tools require Allure endpoint and API token; no account in box."
+          }
+        ]
       }
     ]
   },
@@ -342,15 +349,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 75.4,
+      "total": 80.7,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.68,
+          "score": 0.8,
           "weight": 40.0
         },
         "install_docs": {
@@ -392,8 +399,8 @@
       ]
     },
     "treasure": {
-      "is_treasure": false,
-      "value": 42.75
+      "is_treasure": true,
+      "value": 45.76
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -817,8 +824,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:24:20+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Full lifecycle for test documentation.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:52+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Generate framework-specific code from existing test cases.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:52+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Manage launches, result uploads, manual execution, reruns, and attachments.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:52+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Manage test plans and their content.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:52+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

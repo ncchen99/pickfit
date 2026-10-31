@@ -31,6 +31,12 @@
   "alternatives_to": [
     "Ollama"
   ],
+  "features": [
+    "make structured decisions without generation",
+    "run GGUF models locally",
+    "serve Ollama and OpenAI compatible API",
+    "verticalize models for domain and language"
+  ],
   "why_worth_it": null,
   "homepage": "https://www.eullm.eu",
   "repo": {
@@ -70,22 +76,22 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-eullm-20261030-235736-c2ca",
+      "run_id": "verify-eullm-20261031-033207-5431",
       "method": "script",
       "steps": [
         {
           "command": "curl -fsSL https://raw.githubusercontent.com/eullm/eullm/main/installer/install.sh -o /tmp/eullm-install.sh && wc -c /tmp/eullm-install.sh && head -c 2000 /tmp/eullm-install.sh",
-          "purpose": "Download installer script for review"
+          "purpose": "download installer script"
         },
         {
           "command": "sh /tmp/eullm-install.sh",
-          "purpose": "Install eullm via reviewed script"
+          "purpose": "run installer, verifies checksum into ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "eullm --version",
-        "expected_signal": "eullm 0.8.5"
+        "expected_signal": "eullm 0.8.5 (CPU)"
       },
       "first_task": "curl -s http://localhost:11434/v1/models"
     },
@@ -119,10 +125,10 @@
   "verification": {
     "level": "inference",
     "unverified_reason": null,
-    "checked_at": "2026-10-30T23:59:08.370015+08:00",
+    "checked_at": "2026-10-31T03:33:12.956470+08:00",
     "runs": [
       {
-        "id": "verify-eullm-20261030-235736-c2ca",
+        "id": "verify-eullm-20261031-033207-5431",
         "level": "inference",
         "unverified_reason": null,
         "os": "linux",
@@ -130,24 +136,24 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-30T23:59:08.370015+08:00",
-        "tool_version": "0.8.5",
+        "checked_at": "2026-10-31T03:33:12.956470+08:00",
+        "tool_version": "eullm 0.8.5 (CPU) [a3bbe56fc2b6]",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
             "command": "curl -fsSL https://raw.githubusercontent.com/eullm/eullm/main/installer/install.sh -o /tmp/eullm-install.sh && wc -c /tmp/eullm-install.sh && head -c 2000 /tmp/eullm-install.sh",
-            "purpose": "Download installer script for review"
+            "purpose": "download installer script"
           },
           {
             "command": "sh /tmp/eullm-install.sh",
-            "purpose": "Install eullm via reviewed script"
+            "purpose": "run installer, verifies checksum into ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
             "command": "eullm --version",
-            "expected_signal": "eullm 0.8.5",
+            "expected_signal": "eullm 0.8.5 (CPU)",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "eullm 0.8.5 (CPU) [a3bbe56fc2b6]",
@@ -156,7 +162,7 @@
           },
           {
             "command": "curl -s http://localhost:11434/v1/models",
-            "expected_signal": "stories260K",
+            "expected_signal": "\"id\":\"stories260K\"",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "{\"data\":[{\"created\":1700000000,\"id\":\"stories260K\",\"object\":\"model\",\"owned_by\":\"eullm\"},{\"created\":1700000000,\"id\":\"qwen3-0.6b\",\"object\":\"model\",\"owned_by\":\"eullm\"},{\"created\":1700000000,\"id\":\"qwen3-1.7b\",\"object\":\"model\",\"owned_by\":\"eullm\"},{\"created\":1700000000,\"id\":\"smollm2-1.7b\",\"object\":\"model\"…",
@@ -167,7 +173,7 @@
                 "port": null
               },
               {
-                "command": "eullm run /home/sbx/models/stories260K.gguf --no-ui --port 11434",
+                "command": "eullm run ~/models/stories260K.gguf",
                 "background": true,
                 "port": 11434
               }
@@ -175,11 +181,11 @@
             "offline": true
           },
           {
-            "command": "curl -si http://localhost:11434/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\":\"stories260K\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hi\"}],\"max_tokens\":16,\"temperature\":0}'",
-            "expected_signal": "completion_tokens",
+            "command": "curl -s http://localhost:11434/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\": \"stories260K\", \"messages\": [{\"role\": \"user\", \"content\": \"Hello!\"}], \"temperature\": 0, \"max_tokens\": 16}'",
+            "expected_signal": "\"completion_tokens\":16",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "{\"choices\":[{\"finish_reason\":\"length\",\"index\":0,\"message\":{\"content\":\"\\\"Here?\\\" Annabyed.\\n\",\"role\":\"assistant\"}}],\"created\":1793375942,\"id\":\"chatcmpl-d3482fad-bec7-475f-8569-aa49d88654b6\",\"model\":\"stories260K\",\"object\":\"chat.completion\",\"timings\":{\"predicted_ms\":1.852201,\"predicted_n\":16,\"prompt_m…",
+            "observed_excerpt": "{\"choices\":[{\"finish_reason\":\"length\",\"index\":0,\"message\":{\"content\":\"\\\"Here?\\\" Annabyed.\\n\",\"role\":\"assistant\"}}],\"created\":1793388785,\"id\":\"chatcmpl-4d52473c-10dd-4044-9473-2d378f8e857f\",\"model\":\"stories260K\",\"object\":\"chat.completion\",\"timings\":{\"predicted_ms\":2.2403980000000003,\"predicted_n\":16…",
             "setup": [
               {
                 "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -l ~/models/stories260K.gguf",
@@ -187,7 +193,27 @@
                 "port": null
               },
               {
-                "command": "eullm run /home/sbx/models/stories260K.gguf --no-ui --port 11434",
+                "command": "eullm run ~/models/stories260K.gguf",
+                "background": true,
+                "port": 11434
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://localhost:11434/v1/systemone -H 'Content-Type: application/json' -d '{\"model\": \"stories260K\", \"state\": \"Help! My payouts have been failing for 3 days.\", \"questions\": {\"team\": {\"type\": \"choice\", \"instructions\": \"Which team handles it?\", \"criteria\": {\"billing\": \"Payments, payouts\", \"tech\": \"Bugs\"}}}}'",
+            "expected_signal": "\"probabilities\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"model\":\"stories260K\",\"answers\":{\"team\":{\"type\":\"choice\",\"choice\":\"tech\",\"probabilities\":{\"billing\":0.10650316111317144,\"tech\":0.8934968388868285},\"confidence\":0.786993677773657,\"eullm\":{\"logprobs\":{\"billing\":-5.287626373037526,\"tech\":-3.1606582428665657},\"raw_probabilities\":{\"billing\":0.106503161…",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -l ~/models/stories260K.gguf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "eullm run ~/models/stories260K.gguf",
                 "background": true,
                 "port": 11434
               }
@@ -197,35 +223,75 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "Ollama and OpenAI APIs on port 11434",
-            "actually_needed": "Use POST /v1/chat/completions even for base completion model; POST /v1/completions returns 404",
+            "readme_said": "docs start server with `eullm serve --decision-model ...` then POST /v1/systemone without a model field",
+            "actually_needed": "name the loaded file in \"model\": \"stories260K\" when server was started with `eullm run ~/models/stories260K.gguf`; without it /v1/systemone returns model_not_loaded",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show model list containing stories260K, a successful chat completion with token usage, and eullm 0.8.5 version output.",
+          "observed": "Screenshots show models list with stories260K, chat completion with 16 completion tokens, and eullm 0.8.5 version.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-eullm-20261030-235736-c2ca/report.json",
+          "trace_path": "runs/verify/verify-eullm-20261031-033207-5431/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-eullm-20261030-235736-c2ca/check-1-cmd10.judged.png",
-            "runs/verify/verify-eullm-20261030-235736-c2ca/check-2-cmd13.judged.png",
-            "runs/verify/verify-eullm-20261030-235736-c2ca/check-3-cmd3.judged.png"
+            "runs/verify/verify-eullm-20261031-033207-5431/check-1-cmd6.judged.png",
+            "runs/verify/verify-eullm-20261031-033207-5431/check-2-cmd7.judged.png",
+            "runs/verify/verify-eullm-20261031-033207-5431/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.097279
+        "cost_usd": 0.097858,
+        "features": [
+          {
+            "feature": "make structured decisions without generation",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "run GGUF models locally",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "serve Ollama and OpenAI compatible API",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "verticalize models for domain and language",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "Forge in development per README; no verticalize command in this build"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 92.2,
       "confidence": 0.8,
@@ -546,8 +612,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-30T23:52:58+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "The model gives the probability of every option and generates nothing.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:39+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "run any GGUF model (Qwen, Mistral, DeepSeek, Gemma, …)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:39+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "The same API on port 11434: Open WebUI, LangChain, n8n and any OpenAI client work unchanged.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:39+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "github_api",
+      "quote": "Verticalize any model for your domain, language and brand.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:39+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

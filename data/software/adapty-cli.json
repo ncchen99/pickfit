@@ -26,6 +26,12 @@
     "list access levels for an app"
   ],
   "alternatives_to": [],
+  "features": [
+    "manage apps from terminal",
+    "manage paywalls from terminal",
+    "manage products from terminal",
+    "run A/B tests of paywalls and flows"
+  ],
   "why_worth_it": null,
   "homepage": "https://adapty.io/docs/developer-cli",
   "repo": {
@@ -52,18 +58,18 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-adapty-cli-20261029-012455-2b1f",
+      "run_id": "verify-adapty-cli-20261031-021329-d316",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g adapty",
-          "purpose": "Install adapty CLI globally via npm"
+          "command": "npm install -g adapty && adapty --version",
+          "purpose": "install adapty via npm install -g adapty"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "adapty --version",
-        "expected_signal": "adapty/0.14.0"
+        "expected_signal": "adapty/0.15.0"
       },
       "first_task": "adapty auth status"
     },
@@ -84,10 +90,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:25:48.323340+08:00",
+    "checked_at": "2026-10-31T02:14:19.046803+08:00",
     "runs": [
       {
-        "id": "verify-adapty-cli-20261029-012455-2b1f",
+        "id": "verify-adapty-cli-20261031-021329-d316",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -95,32 +101,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T01:25:48.323340+08:00",
-        "tool_version": "0.14.0",
+        "checked_at": "2026-10-31T02:14:19.046803+08:00",
+        "tool_version": "0.15.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g adapty",
-            "purpose": "Install adapty CLI globally via npm"
+            "command": "npm install -g adapty && adapty --version",
+            "purpose": "install adapty via npm install -g adapty"
           }
         ],
         "smoke_tests": [
           {
             "command": "adapty --version",
-            "expected_signal": "adapty/0.14.0",
+            "expected_signal": "adapty/0.15.0",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "adapty/0.14.0 linux-x64 node-v22.23.4",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "adapty --help",
-            "expected_signal": "Adapty command line interface",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Adapty command line interface",
+            "observed_excerpt": "adapty/0.15.0 linux-x64 node-v22.23.4",
             "setup": [],
             "offline": true
           },
@@ -132,51 +129,66 @@
             "observed_excerpt": "Not authenticated. Run `adapty auth login`.",
             "setup": [],
             "offline": true
-          },
-          {
-            "command": "adapty auth whoami",
-            "expected_signal": "Not authenticated. Run `adapty auth login`.",
-            "exit_code": 3,
-            "passed": true,
-            "observed_excerpt": "› Error: Not authenticated. Run `adapty auth login`.",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "adapty apps list",
-            "expected_signal": "Not authenticated. Run `adapty auth login`.",
-            "exit_code": 3,
-            "passed": true,
-            "observed_excerpt": "› Error: Not authenticated. Run `adapty auth login`.",
-            "setup": [],
-            "offline": true
           }
         ],
         "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show auth status and whoami reporting not authenticated and version reporting adapty/0.14.0.",
+          "observed": "Both screenshots show expected outputs: not-authenticated prompt and version adapty/0.15.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-adapty-cli-20261029-012455-2b1f/report.json",
+          "trace_path": "runs/verify/verify-adapty-cli-20261031-021329-d316/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-adapty-cli-20261029-012455-2b1f/check-1-cmd4.judged.png",
-            "runs/verify/verify-adapty-cli-20261029-012455-2b1f/check-2-cmd5.judged.png",
-            "runs/verify/verify-adapty-cli-20261029-012455-2b1f/check-3-cmd2.judged.png"
+            "runs/verify/verify-adapty-cli-20261031-021329-d316/check-1-cmd3.judged.png",
+            "runs/verify/verify-adapty-cli-20261031-021329-d316/check-2-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.057787
+        "cost_usd": 0.041216,
+        "features": [
+          {
+            "feature": "manage apps from terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "requires ADAPTY_TOKEN and app ID; not attempted without account"
+          },
+          {
+            "feature": "manage paywalls from terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "requires ADAPTY_TOKEN and app ID; not attempted without account"
+          },
+          {
+            "feature": "manage products from terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "requires ADAPTY_TOKEN and app ID; not attempted without account"
+          },
+          {
+            "feature": "run A/B tests of paywalls and flows",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "requires ADAPTY_TOKEN and app ID; not attempted without account"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 89.0,
       "confidence": 0.8,
@@ -491,8 +503,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-28T23:51:17+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "Manage apps, products, paywalls, placements, and access levels from your terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:11+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "github_api",
+      "quote": "Manage apps, products, paywalls, placements, and access levels from your terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:11+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "github_api",
+      "quote": "Manage apps, products, paywalls, placements, and access levels from your terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:11+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "release:v0.14.0",
+      "quote": "Run regular A/B tests of paywalls and flows from the CLI: `list`, `get`, `create`, `update`, `start`, `stop`, `replace`, `archive` (#59).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:11+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

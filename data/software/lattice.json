@@ -29,6 +29,12 @@
     "quantize models to Q4 or QuaRot"
   ],
   "alternatives_to": [],
+  "features": [
+    "run interactive chat with models",
+    "serve OpenAI-compatible chat API",
+    "generate embeddings from 9 models",
+    "quantize models to Q4 and Q8"
+  ],
   "why_worth_it": null,
   "homepage": "https://khive.ai",
   "repo": {
@@ -68,18 +74,29 @@
       "first_task": "./target/release/lattice chat --model ~/.lattice/models/qwen3.5-0.8b -p \"Hello\""
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-lattice-20261031-014230-ed6f",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo install lattice-serve --bin lattice --features f16",
-          "purpose": null
+          "command": "mkdir -p ~/.local/bin /tmp/lattice-dl && cd /tmp/lattice-dl && curl -fLO \"https://github.com/ohdearquant/lattice/releases/download/v0.9.0/lattice-0.9.0-x86_64-unknown-linux-gnu.tar.gz\" && curl -fLO \"https://github.com/ohdearquant/lattice/releases/download/v0.9.0/lattice-0.9.0-x86_64-unknown-linux-gnu.tar.gz.sha256\" && ls -la",
+          "purpose": "Download prebuilt lattice binary release"
+        },
+        {
+          "command": "cd /tmp/lattice-dl && cat lattice-0.9.0-x86_64-unknown-linux-gnu.tar.gz.sha256 && sha256sum -c lattice-0.9.0-x86_64-unknown-linux-gnu.tar.gz.sha256 && tar -tzf lattice-0.9.0-x86_64-unknown-linux-gnu.tar.gz",
+          "purpose": "Verify checksum and list tarball"
+        },
+        {
+          "command": "cd /tmp/lattice-dl && tar -xzf lattice-0.9.0-x86_64-unknown-linux-gnu.tar.gz && install -m 0755 lattice-0.9.0-x86_64-unknown-linux-gnu/lattice ~/.local/bin/lattice && lattice --help",
+          "purpose": "Clean reinstall ending in help check"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "./target/release/lattice chat --model ~/.lattice/models/qwen3.5-0.8b -p \"Hello\""
+      "check": {
+        "command": "lattice --help",
+        "expected_signal": "Usage: lattice <COMMAND>"
+      },
+      "first_task": null
     },
     "windows": null
   },
@@ -96,22 +113,129 @@
     "url": "https://github.com/ohdearquant/lattice/releases/tag/v0.14.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:43:41.414083+08:00",
+    "runs": [
+      {
+        "id": "verify-lattice-20261031-014230-ed6f",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:43:41.414083+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/lattice-dl && cd /tmp/lattice-dl && curl -fLO \"https://github.com/ohdearquant/lattice/releases/download/v0.9.0/lattice-0.9.0-x86_64-unknown-linux-gnu.tar.gz\" && curl -fLO \"https://github.com/ohdearquant/lattice/releases/download/v0.9.0/lattice-0.9.0-x86_64-unknown-linux-gnu.tar.gz.sha256\" && ls -la",
+            "purpose": "Download prebuilt lattice binary release"
+          },
+          {
+            "command": "cd /tmp/lattice-dl && cat lattice-0.9.0-x86_64-unknown-linux-gnu.tar.gz.sha256 && sha256sum -c lattice-0.9.0-x86_64-unknown-linux-gnu.tar.gz.sha256 && tar -tzf lattice-0.9.0-x86_64-unknown-linux-gnu.tar.gz",
+            "purpose": "Verify checksum and list tarball"
+          },
+          {
+            "command": "cd /tmp/lattice-dl && tar -xzf lattice-0.9.0-x86_64-unknown-linux-gnu.tar.gz && install -m 0755 lattice-0.9.0-x86_64-unknown-linux-gnu/lattice ~/.local/bin/lattice && lattice --help",
+            "purpose": "Clean reinstall ending in help check"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lattice --help",
+            "expected_signal": "Usage: lattice <COMMAND>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: lattice <COMMAND>",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install lattice-serve --bin lattice --features f16 (requires Rust 1.93+)",
+            "actually_needed": "used prebuilt release tarball lattice-0.9.0-x86_64-unknown-linux-gnu.tar.gz (verified sha256, installed to ~/.local/bin)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "GitHub releases ship lattice-<version>-<target>.tar.gz",
+            "actually_needed": "only v0.9.0 has prebuilt Linux x86_64 assets; releases up to v0.14.0 ship none, so the binary lags current crate versions",
+            "kind": "note"
+          },
+          {
+            "readme_said": "README documents chat/serve usage without stating version-flag support",
+            "actually_needed": "top-level `lattice --version` errors (exit 2); `lattice --help` works and lists chat/serve/doctor/prune-score",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows lattice help with Usage line and available commands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lattice-20261031-014230-ed6f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lattice-20261031-014230-ed6f/check-1-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.096412,
+        "features": [
+          {
+            "feature": "run interactive chat with models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "needs Qwen3.5-0.8B weights (1.7 GB download) and ~3.2 GB RAM; box has 2 GB"
+          },
+          {
+            "feature": "serve OpenAI-compatible chat API",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "same model/RAM requirement as F1; serve cannot start without weights"
+          },
+          {
+            "feature": "generate embeddings from 9 models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "v0.9.0 lattice binary exposes only chat/serve/doctor/prune-score; no embedding subcommand, and library use needs a Rust toolchain"
+          },
+          {
+            "feature": "quantize models to Q4 and Q8",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "v0.9.0 lattice binary has no quantize subcommand; quantize tools need a source build with Rust toolchain"
+          }
+        ]
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 67.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.51,
           "weight": 40.0
         },
         "install_docs": {
@@ -152,7 +276,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 33.33
+      "value": 32.7
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -424,8 +548,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-28T23:51:46+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "run the `lattice` binary for interactive chat",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:08+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "OpenAI-compatible `/v1/chat/completions` via `lattice serve`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:08+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "9 models: BGE, E5, MiniLM, Qwen3-Embedding families.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:08+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Q8, Q4, and QuaRot (rotation-based 4-bit), including Q4 + LoRA inference on Qwen3.5.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:08+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

@@ -13,7 +13,7 @@ Rules:
 3. Fit comes first: the job itself, then the person's conditions. Popularity and star counts are never reasons. Among tools that fit about equally, prefer higher quality, verification on the person's OS (verified_on_user_os), and fewer manual steps.
 4. Offer a choice: pick up to {limit} tools that do the job, ordered by fit, and give at least 2 whenever 2 or more candidates do the job, so the person can compare. Never add a tool that does not do the job just to fill the list; one or none is the right answer when that is all that fits.
 5. fit: one sentence on why this tool suits this person's request.
-6. tradeoffs: honest downsides for this person, such as manual steps, GPU or RAM needs, alpha or beta maturity, needing a runtime, or verified only on another OS than theirs.
+6. tradeoffs: honest downsides for this person, such as manual steps, GPU or RAM needs, alpha or beta maturity, needing a runtime, verified only on another OS than theirs, or a feature their job needs that is in features_not_checked (pickfit did not see it work).
 7. vs_well_known: when the card's alternatives_to names a well-known tool, one sentence on when this tool is the better or the worse choice than it; otherwise null.
 8. best_free_slug: the candidate with pricing "free" that fits the job best (it may also be a pick); null when no free candidate fits. best_free_reason: one sentence, or null.
 9. no_install_option: when something built into the person's OS, or a tool nearly everyone already has, would honestly be enough for the job, name it in one sentence; otherwise null. Saying they need nothing new is part of being neutral.

@@ -29,6 +29,12 @@
     "list modules loaded in an attached process"
   ],
   "alternatives_to": [],
+  "features": [
+    "connect to local, USB, and remote devices",
+    "attach to apps and processes",
+    "create and load instrumentation scripts",
+    "search and fetch CodeShare community scripts"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -67,7 +73,7 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-super-trouper-20261031-012621-2e94",
+      "run_id": "verify-super-trouper-20261031-030323-b01e",
       "method": "npm",
       "steps": [
         {
@@ -76,7 +82,10 @@
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "super-trouper --help",
+        "expected_signal": "MCP server for the Frida"
+      },
       "first_task": null
     },
     "windows": null
@@ -96,10 +105,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:27:05.042805+08:00",
+    "checked_at": "2026-10-31T03:04:31.353552+08:00",
     "runs": [
       {
-        "id": "verify-super-trouper-20261031-012621-2e94",
+        "id": "verify-super-trouper-20261031-030323-b01e",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -107,7 +116,7 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:27:05.042805+08:00",
+        "checked_at": "2026-10-31T03:04:31.353552+08:00",
         "tool_version": "0.5.1",
         "install_method": "npm",
         "replayed": true,
@@ -119,11 +128,38 @@
         ],
         "smoke_tests": [
           {
+            "command": "super-trouper --help",
+            "expected_signal": "MCP server for the Frida",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "MCP server for the Frida reverse engineering toolkit.",
+            "setup": [],
+            "offline": true
+          },
+          {
             "command": "python3 ~/.pickfit/mcp_probe.py -- super-trouper",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call device_list --args '{}' -- super-trouper",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=device_list content=text text_chars=178",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call device_connect --args '{\"type\":\"local\"}' -- super-trouper",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=device_connect content=text text_chars=99",
             "setup": [],
             "offline": true
           },
@@ -135,26 +171,36 @@
             "observed_excerpt": "tools/call: ok tool=frida_version content=text text_chars=21",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call script_bridge_list --args '{}' -- super-trouper",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=script_bridge_list content=text text_chars=377",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake listing 38 tools and successful frida_version call returning version 17.23.3.",
+          "observed": "Screenshots show successful MCP handshake with 38 tools, successful device_list tool call listing devices, and help identifying the Frida MCP server.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-super-trouper-20261031-012621-2e94/report.json",
+          "trace_path": "runs/verify/verify-super-trouper-20261031-030323-b01e/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-super-trouper-20261031-012621-2e94/check-1-cmd4.judged.png",
-            "runs/verify/verify-super-trouper-20261031-012621-2e94/check-2-cmd5.judged.png"
+            "runs/verify/verify-super-trouper-20261031-030323-b01e/check-1-cmd3.judged.png",
+            "runs/verify/verify-super-trouper-20261031-030323-b01e/check-2-cmd4.judged.png",
+            "runs/verify/verify-super-trouper-20261031-030323-b01e/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.028386,
+        "cost_usd": 0.075327,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -205,9 +251,43 @@
             "thread_list"
           ],
           "tool_count": 38,
-          "called_tool": "frida_version",
+          "called_tool": "device_list",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "connect to local, USB, and remote devices",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows local connect succeeding but no USB device and no USB or remote connect."
+          },
+          {
+            "feature": "attach to apps and processes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "needs device handle from prior device_connect; single probe call cannot chain handles"
+          },
+          {
+            "feature": "create and load instrumentation scripts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "needs session handle from session_attach; single probe call cannot chain handles"
+          },
+          {
+            "feature": "search and fetch CodeShare community scripts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "fetch from codeshare.frida.re needs network and outside service, off on replay"
+          }
+        ]
       }
     ]
   },
@@ -266,7 +346,7 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 88.7,
       "confidence": 0.8,
@@ -845,8 +925,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:14:02+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "can connect to local, USB, and remote devices",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:41+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "attach to apps and processes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:41+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "create and load Frida scripts, evaluate directly in a target",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:41+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "search, browse, and fetch the CodeShare catalog of community scripts",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:41+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:18:19+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

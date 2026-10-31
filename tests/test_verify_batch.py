@@ -203,3 +203,16 @@ def test_a_new_release_requeues_a_record_whose_runs_did_not_pass(tmp_path: Path)
     # One that ran settles it, written back or not (it ended unverified "other").
     attempt("verify-fixed-20261101-190000-cd34", "fixed", "finished")
     assert recheck_slugs(tmp_path, runs) == {"boxed"}
+
+
+def test_features_of_a_features_only_extraction_join_the_extraction_that_built_the_record(db_path: Path):
+    db = PipelineDB(db_path)
+    feats = {"features": [{"value": "render a graph", "quote": "graphtty graph.json"}]}
+    add(db, 1, "acme/graphtty", feats, status="features")
+    (item,) = [i for i in load_candidates(db_path, limit=10)[0] if i.repo_id == "gh:1"]
+    assert [f.value for f in item.task.extraction.features] == ["render a graph"]
+    assert item.task.extraction.kind.value == "cli_tool"  # everything else is the earlier extraction
+    # A full extraction made after it, with features of its own, wins.
+    add(db, 1, "acme/graphtty", extraction(features=[{"value": "theme it", "quote": "graphtty"}]))
+    (item,) = [i for i in load_candidates(db_path, limit=10)[0] if i.repo_id == "gh:1"]
+    assert [f.value for f in item.task.extraction.features] == ["theme it"]

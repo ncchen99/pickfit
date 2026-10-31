@@ -25,6 +25,12 @@
   ],
   "use_cases": [],
   "alternatives_to": [],
+  "features": [
+    "provide in-context code review feedback with personality",
+    "react to completed work with companion",
+    "save memories and keep persistent companion state",
+    "gain XP and level up as you code"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -68,20 +74,23 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-buddy-20261031-014350-76a9",
+      "run_id": "verify-buddy-20261031-025835-ee98",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/fiorastudio/buddy/master/install.sh -o /tmp/install-buddy.sh && wc -c /tmp/install-buddy.sh && head -c 500 /tmp/install-buddy.sh",
-          "purpose": "download install.sh for inspection before running"
+          "command": "curl -fsSL https://raw.githubusercontent.com/fiorastudio/buddy/master/install.sh -o /tmp/buddy-install.sh && echo DOWNLOAD_OK && wc -c /tmp/buddy-install.sh",
+          "purpose": "Download installer script for inspection"
         },
         {
-          "command": "bash /tmp/install-buddy.sh --no-onboard",
-          "purpose": "install Buddy via official script with --no-onboard"
+          "command": "node --version && git --version && bash /tmp/buddy-install.sh --no-onboard",
+          "purpose": "Install Buddy via script without onboarding"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "node /home/sbx/.buddy/server/dist/cli/buddy.js --help",
+        "expected_signal": "Usage: buddy"
+      },
       "first_task": null
     },
     "windows": {
@@ -114,10 +123,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:45:48.359271+08:00",
+    "checked_at": "2026-10-31T03:00:37.896504+08:00",
     "runs": [
       {
-        "id": "verify-buddy-20261031-014350-76a9",
+        "id": "verify-buddy-20261031-025835-ee98",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -125,23 +134,32 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:45:48.359271+08:00",
+        "checked_at": "2026-10-31T03:00:37.896504+08:00",
         "tool_version": "1.0.6",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/fiorastudio/buddy/master/install.sh -o /tmp/install-buddy.sh && wc -c /tmp/install-buddy.sh && head -c 500 /tmp/install-buddy.sh",
-            "purpose": "download install.sh for inspection before running"
+            "command": "curl -fsSL https://raw.githubusercontent.com/fiorastudio/buddy/master/install.sh -o /tmp/buddy-install.sh && echo DOWNLOAD_OK && wc -c /tmp/buddy-install.sh",
+            "purpose": "Download installer script for inspection"
           },
           {
-            "command": "bash /tmp/install-buddy.sh --no-onboard",
-            "purpose": "install Buddy via official script with --no-onboard"
+            "command": "node --version && git --version && bash /tmp/buddy-install.sh --no-onboard",
+            "purpose": "Install Buddy via script without onboarding"
           }
         ],
         "smoke_tests": [
           {
-            "command": "ls ~/.buddy/server/dist/server/index.js && node --version && python3 ~/.pickfit/mcp_probe.py -- node /home/sbx/.buddy/server/dist/server/index.js",
+            "command": "node /home/sbx/.buddy/server/dist/cli/buddy.js --help",
+            "expected_signal": "Usage: buddy",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: buddy <command>",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- node /home/sbx/.buddy/server/dist/server/index.js",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -150,59 +168,96 @@
             "offline": true
           },
           {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call buddy_observe --args '{\"summary\":\"Fixed off-by-one bug in parser loop and added a unit test\"}' -- node /home/sbx/.buddy/server/dist/server/index.js",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=buddy_observe content=text,text text_chars=358",
+            "setup": [
+              {
+                "command": "python3 ~/.pickfit/mcp_probe.py --call buddy_hatch --args '{\"name\":\"PickfitTest\"}' -- node /home/sbx/.buddy/server/dist/server/index.js",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call buddy_observe --args '{\"summary\":\"Finished refactoring the auth module, all tests pass\"}' -- node /home/sbx/.buddy/server/dist/server/index.js",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=buddy_observe content=text,text text_chars=358",
+            "setup": [
+              {
+                "command": "python3 ~/.pickfit/mcp_probe.py --call buddy_hatch --args '{\"name\":\"PickfitTest\"}' -- node /home/sbx/.buddy/server/dist/server/index.js",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call buddy_remember --args '{\"content\":\"Pickfit verification memory\"}' -- node /home/sbx/.buddy/server/dist/server/index.js",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=buddy_remember content=text text_chars=43",
+            "setup": [
+              {
+                "command": "python3 ~/.pickfit/mcp_probe.py --call buddy_hatch --args '{\"name\":\"PickfitTest\"}' -- node /home/sbx/.buddy/server/dist/server/index.js",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
             "command": "python3 ~/.pickfit/mcp_probe.py --call buddy_status --args '{}' -- node /home/sbx/.buddy/server/dist/server/index.js",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=buddy_status content=text text_chars=51",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call buddy_hatch --args '{\"name\":\"PickfitTest\"}' -- node /home/sbx/.buddy/server/dist/server/index.js",
-            "expected_signal": "tools/call: ok",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "tools/call: ok tool=buddy_hatch content=text,text text_chars=1979",
-            "setup": [],
+            "observed_excerpt": "tools/call: ok tool=buddy_status content=text text_chars=1496",
+            "setup": [
+              {
+                "command": "python3 ~/.pickfit/mcp_probe.py --call buddy_hatch --args '{\"name\":\"PickfitTest\"}' -- node /home/sbx/.buddy/server/dist/server/index.js",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "Requires node 18+ and git",
-            "actually_needed": "Node 20+ is required; installer exits if major version <20 because better-sqlite3 dropped Node 18/19 support",
-            "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "curl ... | bash installs and auto-configures clients",
-            "actually_needed": "Symlink to /usr/local/bin fails without root; launch MCP server via full path: node ~/.buddy/server/dist/server/index.js",
+            "readme_said": "curl -fsSL .../install.sh | bash",
+            "actually_needed": "run installer with --no-onboard and launch server via node /home/sbx/.buddy/server/dist/server/index.js; /usr/local/bin symlinks fail without root",
             "kind": "sandbox"
           },
           {
-            "readme_said": "one-line curl|bash install",
-            "actually_needed": "Installer clones https://github.com/fiorastudio/buddy.git and runs npm install/build, fetching ~282 npm packages plus a prebuilt better-sqlite3 native binary at install time, which cannot be fully pre-read",
-            "kind": "note"
+            "readme_said": "Requires node 18+",
+            "actually_needed": "Node 20+ is required (better-sqlite3 dropped 18/19 support)",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show Buddy MCP server initializing with 13 tools and successfully completing buddy_status and buddy_hatch tool calls.",
+          "observed": "Screenshots show MCP handshake with 13 tools, successful buddy_observe call returning text, and CLI help with Usage buddy.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-buddy-20261031-014350-76a9/report.json",
+          "trace_path": "runs/verify/verify-buddy-20261031-025835-ee98/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-buddy-20261031-014350-76a9/check-1-cmd3.judged.png",
-            "runs/verify/verify-buddy-20261031-014350-76a9/check-2-cmd4.judged.png",
-            "runs/verify/verify-buddy-20261031-014350-76a9/check-3-cmd5.judged.png"
+            "runs/verify/verify-buddy-20261031-025835-ee98/check-1-cmd4.judged.png",
+            "runs/verify/verify-buddy-20261031-025835-ee98/check-2-cmd6.judged.png",
+            "runs/verify/verify-buddy-20261031-025835-ee98/check-3-cmd11.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.086549,
+        "cost_usd": 0.106885,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -229,9 +284,51 @@
             "buddy_share"
           ],
           "tool_count": 13,
-          "called_tool": "buddy_status",
+          "called_tool": "buddy_observe",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "provide in-context code review feedback with personality",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "react to completed work with companion",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "save memories and keep persistent companion state",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "gain XP and level up as you code",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -258,7 +355,7 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 77.2,
       "confidence": 0.9,
@@ -651,8 +748,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "Designed to provide in-context code review feedback with personality",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:14+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "`buddy_observe` lets your companion react to work you just finished",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:14+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Save local memories and keep a continuous companion state",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:14+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "gain XP as you code",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:14+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:50:29+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }
