@@ -66,7 +66,7 @@ export interface InstallOutput {
 
 export class UnknownSlugError extends Error {}
 
-const PIPE_TO_SHELL = /\|\s*(sudo\s+)?(ba|z)?sh\b/;
+export const PIPE_TO_SHELL = /\|\s*(sudo\s+)?(ba|z)?sh\b/;
 
 export function installGuide(catalog: Catalog, input: InstallInput): InstallOutput {
   const entry = catalog.bySlug.get(input.slug);

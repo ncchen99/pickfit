@@ -1,9 +1,10 @@
-/** HTTP front: /mcp only, with DNS-rebinding protection (Host and Origin allowlists). */
+/** HTTP front: /mcp with DNS-rebinding protection (Host and Origin allowlists), and the web page (web.ts). */
 import { createMcpHandler, localhostAllowedHostnames, validateHostHeader, validateOriginHeader } from '@modelcontextprotocol/server';
 import { loadCatalog } from './catalog.ts';
 import { settings, type Env } from './env.ts';
 import { reporterFrom } from './events.ts';
 import { buildServer } from './server.ts';
+import { makeWeb } from './web.ts';
 
 function allowedHosts(env: Env): string[] {
   const extra = (env.ALLOWED_HOSTS ?? '')
@@ -25,10 +26,13 @@ export interface WorkerOptions {
 
 export function makeWorker(indexData: unknown, options: WorkerOptions = {}) {
   const catalog = loadCatalog(indexData);
+  const web = makeWeb(catalog, options);
   return {
     async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
       const url = new URL(request.url);
       if (url.pathname !== '/mcp') {
+        const page = await web.fetch(request, env, ctx, allowedHosts(env));
+        if (page) return page;
         if (url.pathname === '/' && request.method === 'GET') {
           // What this deployment serves, so two deployments can be checked for the same data.
           const config = settings(env);
@@ -40,7 +44,7 @@ export function makeWorker(indexData: unknown, options: WorkerOptions = {}) {
             data_sha256: catalog.data_sha256 ?? null,
             tools: config.tools,
             match_mode: config.modelEnabled ? 'model' : 'off',
-          });
+          }, { headers: { vary: 'Accept' } }); // browsers get the page here (web.ts)
         }
         return new Response('Not found', { status: 404 });
       }
