@@ -33,6 +33,10 @@ test('jobOf: the specific words of the job, without the kind of tool, filler, co
   assert.deepEqual(job('類似 ChatGPT 的工具，用正規表示式找檔案').terms, ['regex']);
   assert.deepEqual(job('defragment my disk').unknown, ['defragment', 'disk']);
   assert.deepEqual(job('text-to-speech without sending my notes to the cloud').terms, ['speech']); // to the end of the clause
+  const gpu = [tool('gpu-tts', 'Text-to-speech on a GPU.')];
+  assert.deepEqual(jobOf(gpu, 'a text-to-speech tool on a GPU').terms, ['speech', 'gpu']);
+  assert.deepEqual(jobOf(gpu, 'a text-to-speech tool, 不需要 GPU').terms, ['speech']); // a Chinese negation of an English word
+  assert.deepEqual([...job('不用 Notion 也能搜尋筆記').named], []); // a negated product is not required
 });
 
 test('jobOf: a Chinese word counts once whatever its synonyms; OS names, context and the kind of tool are not products', () => {

@@ -27,7 +27,7 @@
  */
 import { OSES, type Entry } from './catalog.ts';
 import { EN_PHRASES, GENERIC_WORDS, NOT_THE_JOB_WORDS, ZH_PHRASES } from './lexicon.ts';
-import { relevanceIndex, terms, zhWords } from './relevance.ts';
+import { dropNegated, relevanceIndex, terms, zhWords } from './relevance.ts';
 
 export type FitQuality = 'good' | 'partial' | 'weak';
 /** A whole rules answer: its best pick's label, or none when no pick reaches partial. */
@@ -57,11 +57,6 @@ const PHRASES = [
 ];
 /** Whole words that are never the job, removed before splitting ("ChatGPT" would split into chat + gpt). */
 const NOT_THE_JOB = new RegExp(`\\b(?:${NOT_THE_JOB_WORDS.join('|')})\\b`, 'gi');
-/**
- * "without API keys", "without sending code to the cloud": a negation names a
- * constraint up to the end of its clause (punctuation or a conjunction), at most six words.
- */
-const NEGATED = /\b(without|no)\s+(?:(?!(?:and|or|but|so|while|because|that|which|with)\b)[A-Za-z][\w'-]*\s*){1,6}/gi;
 /** "an alternative to Jira", "instead of Postman", "類似 Notion": a product to replace, not to work with. */
 const REFERENCE = /\b(?:[Aa]lternatives?\s+(?:to|for)|[Ii]nstead\s+of|[Ss]imilar\s+to|[Rr]eplacements?\s+for)\s+(?:(?:my|the|a|an)\s+)?([A-Z][\w.+-]*)|(?:類似|取代|替代|像是|像)\s*([A-Za-z][\w.+-]*)/g;
 /** How a profile mentions a product it replaces: "jira-alternative", "an alternative to Notion". */
@@ -111,7 +106,7 @@ export function jobOf(corpus: readonly Entry[], text: string): Job {
   const reference = new Set(
     [...plain.matchAll(REFERENCE)].map((m) => m[1] ?? m[2]).filter((w) => !NOT_THE_JOB_WORDS.includes(w.toLowerCase())).flatMap(terms).filter((t) => !SKIP.has(t)),
   );
-  plain = plain.replace(NEGATED, '$1 ');
+  plain = dropNegated(plain);
   for (const [pattern, word] of PHRASES) plain = plain.replace(pattern, ` ${word} `);
   plain = plain.replace(NOT_THE_JOB, ' ');
   const index = relevanceIndex(corpus);

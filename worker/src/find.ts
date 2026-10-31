@@ -31,7 +31,7 @@ import { hardFilter, MAX_CARDS, replacesCurrent, type Conditions } from './filte
 import { clip, guardPicks, guardWellKnown, NO_WELL_KNOWN, parseAnswer, type GuardedPick, type GuardedWellKnown } from './guard.ts';
 import { callMeta, estimateCostUsd, MATCH_MODEL, MetaCallError, requestBody } from './meta.ts';
 import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer, type ModelReason } from './prompt.ts';
-import { queryTerms, rulesRelevance, rulesTerms } from './relevance.ts';
+import { dropNegated, queryTerms, rulesRelevance, rulesTerms } from './relevance.ts';
 import { rankByRules, templateReasons } from './rules.ts';
 
 export interface FindInput extends Conditions {
@@ -425,7 +425,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   if (filtered.passed > MAX_CARDS) {
     expansion = await englishKeywords(req.rulesText, deps, now, Math.min(EXPAND_TIMEOUT_MS, deps.settings.timeoutMs));
     if (expansion.keywords) {
-      const terms = queryTerms(req.rulesText, ...expansion.keywords);
+      const terms = queryTerms(dropNegated(req.rulesText), ...expansion.keywords);
       filtered = hardFilter(corpus, cond, { terms, current: req.currentTool });
     }
   }

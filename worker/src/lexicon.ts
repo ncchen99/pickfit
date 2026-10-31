@@ -130,3 +130,44 @@ export const ZH_PHRASES: Record<string, string> = {
   助手: 'assistant',
   助理: 'assistant',
 };
+
+/**
+ * Negation in a request ("不需要 GPU", "without a cloud account"): what follows
+ * is a constraint, not something the tool should do. Used by the rules'
+ * terms, the shortlist's own words and the fit decision (relevance.ts
+ * dropNegated). English phrases are matched word by word, longest first.
+ */
+export const NEGATIONS = {
+  zh: ['不需要', '不需', '不用', '不要', '不必', '不想', '無需', '无需', '無須', '无须', '沒有', '没有', '免'],
+  en: [
+    'without', 'no need for', 'no need to', 'no need of', 'no',
+    "don't need", 'do not need', "doesn't need", 'does not need', "won't need", 'will not need',
+    "don't require", 'do not require', "doesn't require", 'does not require', 'not require', 'not requiring',
+    "don't want", 'do not want', 'not need', 'not needing',
+  ],
+};
+
+/** Look like a negation and are not: free, "is there", "whether". */
+export const NOT_NEGATIONS = ['免費', '免费', '有沒有', '有没有', '要不要', '需不需要', '用不用'];
+
+/**
+ * End a negation's scope: a contrast or a new positive verb; in Chinese also
+ * 的, which closes the modifier ("不需要 GPU 的語音轉文字工具"). English "and"
+ * and "for" usually start what the tool should do ("works without internet
+ * and transcribes audio"); "to" does too, except after a gerund ("without
+ * sending code to the cloud").
+ */
+export const NEGATION_STOPS = {
+  zh: [
+    '的', '但是', '但', '可是', '而是', '不過', '不过', '只是', '需要', '想要', '要', '使用', '用',
+    '能夠', '能够', '能', '可以', '支援', '支持', '希望', '最好', '而且', '並且', '并且', '同時', '同时', '還有', '还有',
+  ],
+  en: [
+    'and', 'but', 'though', 'although', 'however', 'while', 'whereas', 'so', 'because', 'that', 'which', 'where', 'for',
+    'to', 'with', 'need', 'needs', 'want', 'wants', 'require', 'requires', 'prefer', 'use', 'uses', 'support', 'supports',
+    'can', 'could', 'should', 'must', 'has', 'have', 'only', 'instead', 'then',
+  ],
+};
+
+/** Continue a negation over a list: "不需要 GPU 和 Docker", "without an account or API key", "GPU/CUDA". */
+export const NEGATION_LISTS = ['和', '與', '与', '跟', '及', '以及', '或', '或是', '或者', '、', 'or', 'nor', '/'];
