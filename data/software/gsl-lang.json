@@ -65,18 +65,25 @@
       "first_task": "gsl-query \"\" < model.gsl"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "go",
+      "basis": "replayed",
+      "run_id": "verify-gsl-lang-20261101-001915-7b0c",
+      "method": "binary",
       "steps": [
         {
-          "command": "go install github.com/dnnrly/gsl-lang/cmd/gsl-query@latest",
-          "purpose": null
+          "command": "mkdir -p /tmp/gsl_dl2 && curl -fL -o /tmp/gsl_dl2/gsl.tgz https://github.com/dnnrly/gsl-lang/releases/download/v0.7.0/gsl-lang_0.7.0_linux_amd64.tar.gz\n",
+          "purpose": "download prebuilt Linux amd64 binary from GitHub releases v0.7.0"
+        },
+        {
+          "command": "tar xzf /tmp/gsl_dl2/gsl.tgz -C /tmp/gsl_dl2 && mkdir -p ~/.local/bin && cp /tmp/gsl_dl2/gsl-query /tmp/gsl_dl2/gsl-diagram ~/.local/bin/ && chmod +x ~/.local/bin/gsl-query ~/.local/bin/gsl-diagram\n",
+          "purpose": "extract tarball and install gsl-query and gsl-diagram to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "gsl-query \"\" < model.gsl"
+      "check": {
+        "command": "gsl-query version",
+        "expected_signal": "gsl-query version 0.7.0"
+      },
+      "first_task": "gsl-query version"
     },
     "windows": {
       "basis": "readme_claim",
@@ -106,10 +113,112 @@
     "url": "https://github.com/dnnrly/gsl-lang/releases/tag/v0.7.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:20:16.529099+08:00",
+    "runs": [
+      {
+        "id": "verify-gsl-lang-20261101-001915-7b0c",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:20:16.529099+08:00",
+        "tool_version": "0.7.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p /tmp/gsl_dl2 && curl -fL -o /tmp/gsl_dl2/gsl.tgz https://github.com/dnnrly/gsl-lang/releases/download/v0.7.0/gsl-lang_0.7.0_linux_amd64.tar.gz\n",
+            "purpose": "download prebuilt Linux amd64 binary from GitHub releases v0.7.0"
+          },
+          {
+            "command": "tar xzf /tmp/gsl_dl2/gsl.tgz -C /tmp/gsl_dl2 && mkdir -p ~/.local/bin && cp /tmp/gsl_dl2/gsl-query /tmp/gsl_dl2/gsl-diagram ~/.local/bin/ && chmod +x ~/.local/bin/gsl-query ~/.local/bin/gsl-diagram\n",
+            "purpose": "extract tarball and install gsl-query and gsl-diagram to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "gsl-query version",
+            "expected_signal": "gsl-query version 0.7.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gsl-query version 0.7.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "gsl-query --help",
+            "expected_signal": "Execute queries against GSL",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Execute queries against GSL (Graph Specification Language) graphs and output filtered/transformed results.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cat > /tmp/model.gsl <<'GSL'\nset critical\n\nnode gateway [team=\"gateway\"] @critical\nnode orders [team=\"orders\"] @critical\nnode orders_db [text=\"PostgreSQL\", team=\"platform\"] @critical\nnode payments [team=\"payments\"]\nnode users [team=\"identity\"]\n\ngateway -> orders [protocol=\"http\"]\norders -> payments [protocol=\"grpc\"]\norders -> users [protocol=\"grpc\"]\norders -> orders_db [protocol=\"sql\"]\nGSL\ncat /tmp/model.gsl\ngsl-query \"\" < /tmp/model.gsl\n",
+            "expected_signal": "gateway->orders [protocol=\"http\"]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gateway->orders [protocol=\"http\"]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "gsl-query '(subgraph node.id == \"orders\" traverse in all) as BLAST | from * | (subgraph node in @critical) as CRIT | BLAST & CRIT' < /tmp/model.gsl\n",
+            "expected_signal": "node gateway [team=\"gateway\"] @critical",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "node gateway [team=\"gateway\"] @critical",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "gsl-query 'from *' < /tmp/model.gsl | gsl-diagram -f mermaid -t component",
+            "expected_signal": "graph TB",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "graph TB",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go install github.com/dnnrly/gsl-lang/cmd/gsl-query@latest requires Go 1.26",
+            "actually_needed": "Box has no Go toolchain; installed prebuilt binaries gsl-lang_0.7.0_linux_amd64.tar.gz from GitHub releases instead, which README mentions as alternative",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "gsl-query --version implied",
+            "actually_needed": "Tool uses subcommand `gsl-query version` not --version flag (--version returns unknown flag)",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show GSL working: identity query echoed the model, blast-radius query returned gateway and orders, and version printed 0.7.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-gsl-lang-20261101-001915-7b0c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-gsl-lang-20261101-001915-7b0c/check-1-cmd6.judged.png",
+            "runs/verify/verify-gsl-lang-20261101-001915-7b0c/check-2-cmd7.judged.png",
+            "runs/verify/verify-gsl-lang-20261101-001915-7b0c/check-3-cmd12.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.076087
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -382,5 +491,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:19:10+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:20:16.530015+08:00"
 }

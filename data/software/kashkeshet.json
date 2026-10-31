@@ -57,20 +57,22 @@
       "first_task": "kkt status"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-kashkeshet-20261101-002204-ee4a",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://github.com/sam-mfb/kashkeshet/releases/latest/download/kashkeshet-installer.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://github.com/sam-mfb/kashkeshet/releases/latest/download/kashkeshet-installer.sh -o /tmp/kashkeshet-installer.sh && wc -c /tmp/kashkeshet-installer.sh && head -n 200 /tmp/kashkeshet-installer.sh",
+          "purpose": "download installer script"
+        },
+        {
+          "command": "sh /tmp/kashkeshet-installer.sh --verbose 2>&1",
+          "purpose": "install kkt via installer script"
         }
       ],
-      "manual_steps": [
-        "Log in to Tailscale on the machine before setup shares the server in background-service mode."
-      ],
+      "manual_steps": [],
       "check": null,
-      "first_task": "kkt status"
+      "first_task": null
     },
     "windows": null
   },
@@ -87,10 +89,130 @@
     "url": "https://github.com/sam-mfb/kashkeshet/releases/tag/v0.7.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:23:07.948776+08:00",
+    "runs": [
+      {
+        "id": "verify-kashkeshet-20261101-002204-ee4a",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:23:07.948776+08:00",
+        "tool_version": "0.7.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/sam-mfb/kashkeshet/releases/latest/download/kashkeshet-installer.sh -o /tmp/kashkeshet-installer.sh && wc -c /tmp/kashkeshet-installer.sh && head -n 200 /tmp/kashkeshet-installer.sh",
+            "purpose": "download installer script"
+          },
+          {
+            "command": "sh /tmp/kashkeshet-installer.sh --verbose 2>&1",
+            "purpose": "install kkt via installer script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --url http://127.0.0.1:7420/mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "kkt serve --no-access-key --bind 127.0.0.1:7420 2>&1",
+                "background": true,
+                "port": 7420
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call register --args '{\"name\":\"testbot\"}' --url http://127.0.0.1:7420/mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=register content=text text_chars=510",
+            "setup": [
+              {
+                "command": "kkt serve --no-access-key --bind 127.0.0.1:7420 2>&1",
+                "background": true,
+                "port": 7420
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both probes show MCP initialize ok with 26 tools, handshake ok, and register call returning a token.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-kashkeshet-20261101-002204-ee4a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-kashkeshet-20261101-002204-ee4a/check-1-cmd10.judged.png",
+            "runs/verify/verify-kashkeshet-20261101-002204-ee4a/check-2-cmd12.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.08718,
+        "mcp": {
+          "transport": "streamable_http",
+          "launch": [
+            "kkt",
+            "serve",
+            "--no-access-key",
+            "--bind",
+            "127.0.0.1:7420"
+          ],
+          "url": "http://127.0.0.1:7420/mcp",
+          "protocol_version": "2025-11-25",
+          "server_name": "kashkeshet",
+          "server_version": "0.7.0",
+          "tools": [
+            "activity",
+            "add_to_channel",
+            "create_channel",
+            "get_handoff_note",
+            "get_message",
+            "get_note",
+            "hide_channel",
+            "join_channel",
+            "leave_channel",
+            "list_agents",
+            "list_channels",
+            "list_members",
+            "read",
+            "reclaim",
+            "register",
+            "remove_from_channel",
+            "search_messages",
+            "send",
+            "set_description",
+            "set_handoff_note",
+            "set_note",
+            "set_purpose",
+            "transfer_owner",
+            "unregister",
+            "wait_for_messages",
+            "whoami"
+          ],
+          "tool_count": 26,
+          "called_tool": "register",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [],
@@ -416,5 +538,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:24:21+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:23:07.950876+08:00"
 }

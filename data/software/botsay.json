@@ -58,18 +58,21 @@
       "first_task": "botsay hello"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-botsay-20261101-002142-c7be",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo install --git https://github.com/maebert/botsay",
-          "purpose": null
+          "command": "curl -fsSL -o /tmp/botsay2.tar.gz https://github.com/maebert/botsay/releases/download/v0.2.2/botsay-v0.2.2-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/botsay2.tar.gz -C /tmp && cp /tmp/botsay-v0.2.2-x86_64-unknown-linux-musl/botsay ~/.local/bin/botsay && chmod +x ~/.local/bin/botsay",
+          "purpose": "download x86_64-musl release tarball and install botsay to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "botsay hello"
+      "check": {
+        "command": "botsay --version\n",
+        "expected_signal": "botsay 0.2.2"
+      },
+      "first_task": "botsay hello\n"
     },
     "windows": null
   },
@@ -86,10 +89,108 @@
     "url": "https://github.com/maebert/botsay/releases/tag/v0.2.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:22:37.077252+08:00",
+    "runs": [
+      {
+        "id": "verify-botsay-20261101-002142-c7be",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:22:37.077252+08:00",
+        "tool_version": "0.2.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/botsay2.tar.gz https://github.com/maebert/botsay/releases/download/v0.2.2/botsay-v0.2.2-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/botsay2.tar.gz -C /tmp && cp /tmp/botsay-v0.2.2-x86_64-unknown-linux-musl/botsay ~/.local/bin/botsay && chmod +x ~/.local/bin/botsay",
+            "purpose": "download x86_64-musl release tarball and install botsay to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "botsay --version\n",
+            "expected_signal": "botsay 0.2.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "botsay 0.2.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "botsay --help\n",
+            "expected_signal": "Usage: botsay",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: botsay [OPTIONS] [MESSAGE]...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "botsay hello\n",
+            "expected_signal": "│ hello │",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ hello │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "botsay -s manu hello\n",
+            "expected_signal": "│ hello │",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ hello │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "botsay --gallery 27",
+            "expected_signal": "0 1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0 1 2 3 4 5 6 7 8",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install --git https://github.com/maebert/botsay (requires Rust 1.85+)",
+            "actually_needed": "installed prebuilt binary botsay-v0.2.2-x86_64-unknown-linux-musl.tar.gz from GitHub Releases; no Rust toolchain in box and policy forbids installing one",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Homebrew also installs botthink; with Cargo make symlink manually",
+            "actually_needed": "botthink not provided by binary; create symlink manually still applies",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show botsay printing the hello speech bubble and version 0.2.2 with exit 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-botsay-20261101-002142-c7be/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-botsay-20261101-002142-c7be/check-1-cmd7.judged.png",
+            "runs/verify/verify-botsay-20261101-002142-c7be/check-2-cmd8.judged.png",
+            "runs/verify/verify-botsay-20261101-002142-c7be/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.051564
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -298,5 +399,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:22:55+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:22:37.078681+08:00"
 }

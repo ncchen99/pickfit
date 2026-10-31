@@ -40,7 +40,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-etiny-20261101-001839-b47a",
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install etiny",
+          "purpose": "install etiny via pipx"
+        },
+        {
+          "command": "etiny pull personal-goals",
+          "purpose": "pull personal-goals bundle required for scan"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "etiny --help",
+        "expected_signal": "usage: etiny"
+      },
+      "first_task": "etiny doctor"
+    },
     "windows": null
   },
   "pricing": {
@@ -56,10 +76,98 @@
     "url": "https://github.com/shanedevane/etiny/releases/tag/v0.2.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:20:43.018599+08:00",
+    "runs": [
+      {
+        "id": "verify-etiny-20261101-001839-b47a",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:20:43.018599+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "pipx",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pipx install etiny",
+            "purpose": "install etiny via pipx"
+          },
+          {
+            "command": "etiny pull personal-goals",
+            "purpose": "pull personal-goals bundle required for scan"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "etiny --help",
+            "expected_signal": "usage: etiny",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: etiny [-h] [--version]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "etiny --version",
+            "expected_signal": "etiny 0.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "etiny 0.1.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "etiny doctor",
+            "expected_signal": "doctor: healthy",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "doctor: healthy",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "etiny scan checks .md in folder against default model",
+            "actually_needed": "default --model is 'goals' which does not exist; must specify --model personal-goals after pulling bundle (~36 MB)",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "etiny walk walks every .md in every subfolder",
+            "actually_needed": "command 'walk' not present in installed CLI (invalid choice); only scan/elevators/elevations/doctor etc exist",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "etiny scan (bare) scans every .md in current folder",
+            "actually_needed": "scan requires a document argument; bare scan errors 'the following arguments are required: document'; use piped stdin or explicit file path",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show etiny doctor reporting healthy with all checks ok and etiny --help printing usage.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-etiny-20261101-001839-b47a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-etiny-20261101-001839-b47a/check-1-cmd4.judged.png",
+            "runs/verify/verify-etiny-20261101-001839-b47a/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.060106
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -260,5 +368,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:24:46+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:20:43.019516+08:00"
 }

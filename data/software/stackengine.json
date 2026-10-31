@@ -76,17 +76,20 @@
       "first_task": "stackengine init"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-stackengine-20261101-001916-1fff",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g stackengine",
-          "purpose": null
+          "purpose": "install stackengine globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "stackengine --version",
+        "expected_signal": "stackengine v1.0.6"
+      },
       "first_task": "stackengine init"
     },
     "windows": {
@@ -117,10 +120,85 @@
     "url": "https://github.com/gweisec/stackengine/releases/tag/v1.0.6"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:20:06.254789+08:00",
+    "runs": [
+      {
+        "id": "verify-stackengine-20261101-001916-1fff",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:20:06.254789+08:00",
+        "tool_version": "1.0.6",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g stackengine",
+            "purpose": "install stackengine globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "stackengine --version",
+            "expected_signal": "stackengine v1.0.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "stackengine v1.0.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "stackengine init",
+            "expected_signal": "StackEngine Workspace Initialized",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[1;34m◆\u001b[0m \u001b[1mStackEngine Workspace Initialized\u001b[0m",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "stackengine redact prod.yaml",
+            "expected_signal": "Tokenized 5 credential(s)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[36m▶\u001b[0m Tokenized 5 credential(s) from prod.yaml:",
+            "setup": [
+              {
+                "command": "rm -rf .stackengine prod.yaml prod.yaml.redacted\ncat > prod.yaml <<'YAML'\ndatabase:\n  host: prod-db.example.com\n  password: S3cur3P@ssw0rd!\n  dsn: postgres://admin:S3cur3P@ssw0rd!@prod-db:5432/app\naws:\n  access_key_id: AKIAIOSFODNN7EXAMPLE\n  secret_access_key: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY\napi:\n  key: sk-proj-abc123def456ghi789\npem_key: |\n  -----BEGIN RSA PRIVATE KEY-----\n  MIIEpAIBAAKCAQEA7b\n  -----END RSA PRIVATE KEY-----\nYAML",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three commands succeeded, showing workspace initialization, redaction of 5 credentials, and version v1.0.6.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-stackengine-20261101-001916-1fff/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-stackengine-20261101-001916-1fff/check-1-cmd9.judged.png",
+            "runs/verify/verify-stackengine-20261101-001916-1fff/check-2-cmd10.judged.png",
+            "runs/verify/verify-stackengine-20261101-001916-1fff/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.055826
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -393,5 +471,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:23:43+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:20:06.255669+08:00"
 }

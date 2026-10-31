@@ -40,7 +40,24 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-apple-design-hig-20261101-002307-11f1",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install git+https://github.com/mr8lu/apple-design-hig --force",
+          "purpose": "install apple-design-hig via uv tool install from git"
+        },
+        {
+          "command": "uv pip install --python /home/sbx/.local/share/uv/tools/apple-design-hig/bin/python \"mcp<2\"",
+          "purpose": "pin mcp<2 to fix FastMCP import error"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -52,10 +69,88 @@
   "processing": "cloud",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:24:26.309462+08:00",
+    "runs": [
+      {
+        "id": "verify-apple-design-hig-20261101-002307-11f1",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:24:26.309462+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install git+https://github.com/mr8lu/apple-design-hig --force",
+            "purpose": "install apple-design-hig via uv tool install from git"
+          },
+          {
+            "command": "uv pip install --python /home/sbx/.local/share/uv/tools/apple-design-hig/bin/python \"mcp<2\"",
+            "purpose": "pin mcp<2 to fix FastMCP import error"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 -- apple-design-hig-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "dependencies = [\"mcp>=1.6.0\"] works with current mcp",
+            "actually_needed": "uv resolves to mcp 2.3.0 which removes mcp.server.fastmcp causing ModuleNotFoundError; must pin mcp<2 (uv pip install --python ~/.local/share/uv/tools/apple-design-hig/bin/python \"mcp<2\")",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows MCP probe initialized apple-design-hig v1.30.0, listed 4 tools, and reported handshake: ok.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-apple-design-hig-20261101-002307-11f1/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-apple-design-hig-20261101-002307-11f1/check-1-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.068983,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "apple-design-hig-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "apple-design-hig",
+          "server_version": "1.30.0",
+          "tools": [
+            "hig_list_sections",
+            "hig_search",
+            "hig_get_topic",
+            "hig_sync"
+          ],
+          "tool_count": 4,
+          "called_tool": null,
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -309,5 +404,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:23:56+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:24:26.315961+08:00"
 }

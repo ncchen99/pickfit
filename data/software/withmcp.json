@@ -41,17 +41,28 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-withmcp-20261101-001726-41d3",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo install --git https://github.com/lava/withmcp",
-          "purpose": null
+          "command": "curl -L -o /tmp/withmcp.tar.gz https://github.com/lava/withmcp/releases/download/v0.1.0/withmcp-v0.1.0-x86_64-unknown-linux-musl.tar.gz",
+          "purpose": "download prebuilt binary tarball v0.1.0"
+        },
+        {
+          "command": "tar xzf /tmp/withmcp.tar.gz -C /tmp",
+          "purpose": "extract tarball"
+        },
+        {
+          "command": "cp /tmp/withmcp-v0.1.0-x86_64-unknown-linux-musl/withmcp ~/.local/bin/withmcp",
+          "purpose": "install binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "withmcp --version",
+        "expected_signal": "withmcp 0.1.0"
+      },
       "first_task": "withmcp"
     },
     "windows": null
@@ -69,10 +80,97 @@
     "url": "https://github.com/lava/withmcp/releases/tag/v0.1.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:18:28.571609+08:00",
+    "runs": [
+      {
+        "id": "verify-withmcp-20261101-001726-41d3",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:18:28.571609+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -L -o /tmp/withmcp.tar.gz https://github.com/lava/withmcp/releases/download/v0.1.0/withmcp-v0.1.0-x86_64-unknown-linux-musl.tar.gz",
+            "purpose": "download prebuilt binary tarball v0.1.0"
+          },
+          {
+            "command": "tar xzf /tmp/withmcp.tar.gz -C /tmp",
+            "purpose": "extract tarball"
+          },
+          {
+            "command": "cp /tmp/withmcp-v0.1.0-x86_64-unknown-linux-musl/withmcp ~/.local/bin/withmcp",
+            "purpose": "install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "withmcp --version",
+            "expected_signal": "withmcp 0.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "withmcp 0.1.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "withmcp --help",
+            "expected_signal": "withmcp - launch a coding-agent harness",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "withmcp - launch a coding-agent harness with extra MCP servers",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "withmcp",
+            "expected_signal": "Configured Servers:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Configured Servers:",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install --git https://github.com/lava/withmcp",
+            "actually_needed": "box has no Rust toolchain (cargo/rustc not found); used published binary release withmcp-v0.1.0-x86_64-unknown-linux-musl.tar.gz instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "withmcp docs # reference for agents",
+            "actually_needed": "v0.1.0 binary has no docs subcommand, treats docs as harness: unsupported harness docs",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show withmcp printing usage with Configured Servers list and reporting version 0.1.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-withmcp-20261101-001726-41d3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-withmcp-20261101-001726-41d3/check-1-cmd13.judged.png",
+            "runs/verify/verify-withmcp-20261101-001726-41d3/check-2-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.064278
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -265,5 +363,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:20:29+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:18:28.573055+08:00"
 }

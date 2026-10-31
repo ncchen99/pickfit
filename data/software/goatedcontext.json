@@ -58,17 +58,20 @@
       "first_task": "ctx agents"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-goatedcontext-20261101-001810-ab92",
       "method": "npm",
       "steps": [
         {
-          "command": "npx goatedcontext setup",
-          "purpose": null
+          "command": "npx goatedcontext setup 2>&1",
+          "purpose": "npx goatedcontext setup installs ctx CLI via npm prefix ~/.local"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "ctx --version",
+        "expected_signal": "0.4.4"
+      },
       "first_task": "ctx agents"
     },
     "windows": {
@@ -95,10 +98,94 @@
   "processing": "local",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:18:54.345381+08:00",
+    "runs": [
+      {
+        "id": "verify-goatedcontext-20261101-001810-ab92",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:18:54.345381+08:00",
+        "tool_version": "0.4.4",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npx goatedcontext setup 2>&1",
+            "purpose": "npx goatedcontext setup installs ctx CLI via npm prefix ~/.local"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ctx --version",
+            "expected_signal": "0.4.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.4.4",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ctx --help",
+            "expected_signal": "Usage: ctx",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: ctx [options] [command]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ctx agents",
+            "expected_signal": "Universal interfaces",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Universal interfaces (any agent — no goatedcontext adapter required):",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ctx doctor",
+            "expected_signal": "ctx doctor — 0.4.4",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "ctx doctor — 0.4.4",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "ctx doctor diagnostics should pass cleanly",
+            "actually_needed": "ctx doctor exits 1 with 3 problem(s) when Claude/Codex/Cursor not installed; this is expected in sandbox and not a failure",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show expected output: agents lists Universal interfaces, doctor reports version 0.4.4 with expected exit 1, and --version prints 0.4.4.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-goatedcontext-20261101-001810-ab92/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-goatedcontext-20261101-001810-ab92/check-1-cmd5.judged.png",
+            "runs/verify/verify-goatedcontext-20261101-001810-ab92/check-2-cmd6.judged.png",
+            "runs/verify/verify-goatedcontext-20261101-001810-ab92/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.034138
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -309,5 +396,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:22:46+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:18:54.353126+08:00"
 }

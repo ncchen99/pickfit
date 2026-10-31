@@ -70,9 +70,58 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_account",
+    "checked_at": "2026-11-01T00:27:20.110100+08:00",
+    "runs": [
+      {
+        "id": "verify-openregistry-20261101-002514-c13a",
+        "level": "unverified",
+        "unverified_reason": "needs_account",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:27:20.110100+08:00",
+        "tool_version": "1.0.4",
+        "install_method": "npm",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "npm install -g /tmp/openregistry 2>&1 | tail -20; echo \"EXIT:$?\"",
+            "purpose": "install openregistry stdio bridge via npm install -g from cloned repo"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 15 -- openregistry 2>&1; echo \"EXIT:$?\"",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "EXIT:3",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Free tier with no API key, live access via https://openregistry.sophymarine.com/mcp",
+            "actually_needed": "Hosted /mcp endpoint returns HTTP 401 invalid_token 'Sign in required to use /mcp' with WWW-Authenticate Bearer and OAuth discovery URL; stdio bridge forwards without token and returns non-JSON-RPC error causing probe timeout; requires OAuth 2.1 account creation",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-openregistry-20261101-002514-c13a/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.06742
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -405,5 +454,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:23:04+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:27:20.128757+08:00"
 }

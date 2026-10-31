@@ -57,7 +57,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-subnetlens-20261101-002755-cc89",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/subnetlens.tar.gz https://github.com/ostefani/subnetlens/releases/download/v1.5.12/subnetlens_1.5.12_linux_x86_64.tar.gz",
+          "purpose": "download Linux x86_64 release tarball v1.5.12"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && tar xzf /tmp/subnetlens.tar.gz -C /tmp && cp /tmp/subnetlens ~/.local/bin/subnetlens && chmod +x ~/.local/bin/subnetlens",
+          "purpose": "extract tarball and install binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "which subnetlens",
+        "expected_signal": "/home/sbx/.local/bin/subnetlens"
+      },
+      "first_task": "which subnetlens"
+    },
     "windows": null
   },
   "pricing": {
@@ -73,10 +93,103 @@
     "url": "https://github.com/ostefani/subnetlens/releases/tag/v1.5.12"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:29:01.628469+08:00",
+    "runs": [
+      {
+        "id": "verify-subnetlens-20261101-002755-cc89",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:29:01.628469+08:00",
+        "tool_version": "1.5.12",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/subnetlens.tar.gz https://github.com/ostefani/subnetlens/releases/download/v1.5.12/subnetlens_1.5.12_linux_x86_64.tar.gz",
+            "purpose": "download Linux x86_64 release tarball v1.5.12"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && tar xzf /tmp/subnetlens.tar.gz -C /tmp && cp /tmp/subnetlens ~/.local/bin/subnetlens && chmod +x ~/.local/bin/subnetlens",
+            "purpose": "extract tarball and install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "which subnetlens",
+            "expected_signal": "/home/sbx/.local/bin/subnetlens",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "/home/sbx/.local/bin/subnetlens",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "subnetlens --help",
+            "expected_signal": "subnetlens discovers live hosts",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "subnetlens discovers live hosts on your local network and scans their open ports.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "subnetlens --version",
+            "expected_signal": "subnetlens version 1.5.12",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "subnetlens version 1.5.12 (commit e037478abf5b9a08d420c443b71db63dcef55685, built 2026-10-09T12:43:19Z)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "subnetlens scan 127.0.0.1 --plain --ports 22,80 --timeout 500",
+            "expected_signal": "Scan complete in",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Scan complete in 2.108s",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Prerequisites Go 1.25+ and go install ./go build/go run . scan",
+            "actually_needed": "Go toolchain not present and must not be installed; used prebuilt Linux x86_64 binary from GitHub Releases (v1.5.12) instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "On macOS and Linux, run with sudo to enable ARP and ICMP",
+            "actually_needed": "Scan without sudo warns ICMP/ARP unavailable but TCP connect scan still completes",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show binary present, scan completing, and help describing live-host discovery.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-subnetlens-20261101-002755-cc89/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-subnetlens-20261101-002755-cc89/check-1-cmd12.judged.png",
+            "runs/verify/verify-subnetlens-20261101-002755-cc89/check-2-cmd15.judged.png",
+            "runs/verify/verify-subnetlens-20261101-002755-cc89/check-3-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.06767
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -317,5 +430,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:18:33+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:29:01.630204+08:00"
 }

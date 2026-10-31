@@ -67,20 +67,18 @@
       "first_task": "understand-review --root ."
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "go",
+      "basis": "replayed",
+      "run_id": "verify-gen-system-20261101-002043-14e2",
+      "method": "npm",
       "steps": [
         {
-          "command": "go install github.com/hpdkhoa/gen-system/generator/cmd/understand-mcp@latest",
-          "purpose": null
+          "command": "npm install -g gen-understand 2>&1",
+          "purpose": "install gen-understand via npm (npm install -g gen-understand)"
         }
       ],
-      "manual_steps": [
-        "Provide Ollama and a 16 GB GPU for the generator experiment"
-      ],
+      "manual_steps": [],
       "check": null,
-      "first_task": "understand-review --root ."
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -112,10 +110,105 @@
     "url": "https://github.com/hpdkhoa/gen-system/releases/tag/understand-mcp-v0.2.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:21:35.601294+08:00",
+    "runs": [
+      {
+        "id": "verify-gen-system-20261101-002043-14e2",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:21:35.601294+08:00",
+        "tool_version": "0.2.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g gen-understand 2>&1",
+            "purpose": "install gen-understand via npm (npm install -g gen-understand)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- gen-understand --root . 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call architecture --args '{}' -- gen-understand --root . 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=architecture content=text text_chars=313",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx -y gen-understand --root <your repo> and MCP tools include review_diff",
+            "actually_needed": "npm install -g gen-understand caches understand-mcp binary on first run (downloading understand-mcp-linux-amd64 0.2.0); review_diff tool is not yet in npm release (docs note: review_diff reaches npx gen-understand with next release, until then build from source), only 8 tools advertised",
+            "kind": "note"
+          },
+          {
+            "readme_said": "understand-mcp / understand-review commands",
+            "actually_needed": "npm package installs as gen-understand which wraps understand-mcp-linux-amd64 binary; understand-mcp name not separately on PATH",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show gen-understand MCP server initializing, listing 8 tools, completing handshake, and returning architecture data on tool call.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-gen-system-20261101-002043-14e2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-gen-system-20261101-002043-14e2/check-1-cmd4.judged.png",
+            "runs/verify/verify-gen-system-20261101-002043-14e2/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.039137,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "gen-understand",
+            "--root",
+            "."
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "gen-understand",
+          "server_version": "0.2.0",
+          "tools": [
+            "architecture",
+            "search_symbols",
+            "call_graph",
+            "control_flow",
+            "source",
+            "file_symbols",
+            "effects",
+            "beliefs"
+          ],
+          "tool_count": 8,
+          "called_tool": "architecture",
+          "offline": false
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -508,5 +601,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:22:27+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:21:35.602392+08:00"
 }

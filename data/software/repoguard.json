@@ -45,7 +45,20 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-repoguard-20261101-002345-3bd6",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g repoguard-rules",
+          "purpose": "npm install -g repoguard-rules"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -61,10 +74,95 @@
     "url": "https://github.com/taylormatematica-beep/repoguard/releases/tag/v1.7.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:25:14.681587+08:00",
+    "runs": [
+      {
+        "id": "verify-repoguard-20261101-002345-3bd6",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:25:14.681587+08:00",
+        "tool_version": "1.7.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g repoguard-rules",
+            "purpose": "npm install -g repoguard-rules"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- repoguard mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call repoguard_get_rules --args '{}' -- repoguard mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=repoguard_get_rules content=text text_chars=3878",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Launch via npx repoguard-rules mcp and global binary repoguard-rules",
+            "actually_needed": "Package bin is repoguard and repoguard-cli, not repoguard-rules; installed MCP server runs as repoguard mcp",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show successful MCP handshake with 4 tools listed and a successful repoguard_get_rules call returning architectural rules.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-repoguard-20261101-002345-3bd6/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-repoguard-20261101-002345-3bd6/check-1-cmd7.judged.png",
+            "runs/verify/verify-repoguard-20261101-002345-3bd6/check-2-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.043108,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "repoguard",
+            "mcp"
+          ],
+          "url": null,
+          "protocol_version": "2024-11-05",
+          "server_name": "repoguard-mcp",
+          "server_version": "1.7.0",
+          "tools": [
+            "repoguard_audit",
+            "repoguard_diff",
+            "repoguard_get_rules",
+            "repoguard_fix"
+          ],
+          "tool_count": 4,
+          "called_tool": "repoguard_get_rules",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -320,5 +418,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:21:26+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:25:14.682666+08:00"
 }

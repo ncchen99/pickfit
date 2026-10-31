@@ -68,18 +68,25 @@
       "first_task": "videre scan"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-videre-20261101-002755-80f0",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo install videre --locked",
-          "purpose": null
+          "command": "curl -fL -o /tmp/videre.tar.gz https://github.com/aegea-dev/videre/releases/download/v0.64.2/videre-v0.64.2-x86_64-unknown-linux-gnu.tar.gz",
+          "purpose": "download x86_64 Linux binary tarball from GitHub releases v0.64.2"
+        },
+        {
+          "command": "tar -xzf /tmp/videre.tar.gz -C /tmp && cp /tmp/videre ~/.local/bin/videre && chmod +x ~/.local/bin/videre",
+          "purpose": "extract and install binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "videre scan"
+      "check": {
+        "command": "~/.local/bin/videre --version",
+        "expected_signal": "videre 0.64.2"
+      },
+      "first_task": null
     },
     "windows": null
   },
@@ -96,10 +103,92 @@
     "url": "https://github.com/aegea-dev/videre/releases/tag/v0.64.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:29:08.495437+08:00",
+    "runs": [
+      {
+        "id": "verify-videre-20261101-002755-80f0",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:29:08.495437+08:00",
+        "tool_version": "0.64.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fL -o /tmp/videre.tar.gz https://github.com/aegea-dev/videre/releases/download/v0.64.2/videre-v0.64.2-x86_64-unknown-linux-gnu.tar.gz",
+            "purpose": "download x86_64 Linux binary tarball from GitHub releases v0.64.2"
+          },
+          {
+            "command": "tar -xzf /tmp/videre.tar.gz -C /tmp && cp /tmp/videre ~/.local/bin/videre && chmod +x ~/.local/bin/videre",
+            "purpose": "extract and install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "~/.local/bin/videre --version",
+            "expected_signal": "videre 0.64.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "videre 0.64.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/testvidere_final && cp /tmp/testlib/sample.jpg /tmp/testvidere_final/a.png && cp /tmp/testlib/sample.jpg /tmp/testvidere_final/b.png && ~/.local/bin/videre --library /tmp/testvidere_final scan",
+            "expected_signal": "2/2 images processed",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "cp: cannot stat '/tmp/testlib/sample.jpg': No such file or directory",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "~/.local/bin/videre --library /tmp/testvidere_final dedupe --json",
+            "expected_signal": "\"total_files\":2",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "{\"schema_version\":1,\"error\":{\"message\":\"library /tmp/testvidere_final is not initialized: /tmp/testvidere_final/.videre does not exist\"}}",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install videre --locked",
+            "actually_needed": "No Rust toolchain in box; used binary download from latest release (README's documented alternative) to ~/.local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "videre search \"golden gate bridge at sunset\"",
+            "actually_needed": "Search requires prior `videre embed` which downloads ~1.5 GB model; without it search exits 1 with guidance to run `videre embed`",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows videre --version printing videre 0.64.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-videre-20261101-002755-80f0/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-videre-20261101-002755-80f0/check-1-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.086359
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -348,5 +437,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:23:05+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:29:08.496425+08:00"
 }

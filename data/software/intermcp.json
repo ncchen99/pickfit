@@ -72,18 +72,21 @@
       "first_task": "intermcp bench --iterations 5000"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-intermcp-20261101-002016-6287",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install intermcp",
-          "purpose": null
+          "command": "npm install -g intermcp && curl -sSL \"https://github.com/Bharathcoorg/intermcp/releases/download/v0.3.0/intermcp-v0.3.0-x86_64-unknown-linux-gnu.tar.gz\" -o /tmp/intermcp.tar.gz && mkdir -p ~/.intermcp/bin && tar xzf /tmp/intermcp.tar.gz -C ~/.intermcp/bin && chmod +x ~/.intermcp/bin/intermcp",
+          "purpose": "install npm wrapper and download/extract native binary to ~/.intermcp/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "intermcp bench --iterations 5000"
+      "check": {
+        "command": "~/.intermcp/bin/intermcp --version 2>&1",
+        "expected_signal": "intermcp 0.3.0"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -113,10 +116,119 @@
     "url": "https://github.com/Bharathcoorg/intermcp/releases/tag/v0.3.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:23:45.036152+08:00",
+    "runs": [
+      {
+        "id": "verify-intermcp-20261101-002016-6287",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:23:45.036152+08:00",
+        "tool_version": "0.3.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g intermcp && curl -sSL \"https://github.com/Bharathcoorg/intermcp/releases/download/v0.3.0/intermcp-v0.3.0-x86_64-unknown-linux-gnu.tar.gz\" -o /tmp/intermcp.tar.gz && mkdir -p ~/.intermcp/bin && tar xzf /tmp/intermcp.tar.gz -C ~/.intermcp/bin && chmod +x ~/.intermcp/bin/intermcp",
+            "purpose": "install npm wrapper and download/extract native binary to ~/.intermcp/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "~/.intermcp/bin/intermcp --version 2>&1",
+            "expected_signal": "intermcp 0.3.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "intermcp 0.3.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- ~/.intermcp/bin/intermcp serve 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call system_info --args '{}' -- ~/.intermcp/bin/intermcp serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=system_info content=text text_chars=187",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm install intermcp then npx intermcp serve works",
+            "actually_needed": "npm package is only a JS wrapper that spawns native binary; must also download native binary intermcp-v0.3.0-x86_64-unknown-linux-gnu.tar.gz to ~/.intermcp/bin",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "curl install.sh downloads intermcp-linux-x86_64.tar.gz via latest/download",
+            "actually_needed": "asset name is intermcp-v0.3.0-x86_64-unknown-linux-gnu.tar.gz, so install.sh 404s",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "pip install intermcp provides executables",
+            "actually_needed": "PyPI package has no executables (uv/pipx fail with No executables)",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.3.0, successful MCP handshake listing 8 tools, and successful system_info tool call returning system details.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-intermcp-20261101-002016-6287/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-intermcp-20261101-002016-6287/check-1-cmd12.judged.png",
+            "runs/verify/verify-intermcp-20261101-002016-6287/check-2-cmd13.judged.png",
+            "runs/verify/verify-intermcp-20261101-002016-6287/check-3-cmd14.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.12044,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "~/.intermcp/bin/intermcp",
+            "serve"
+          ],
+          "url": null,
+          "protocol_version": "2024-11-05",
+          "server_name": "intermcp-sandboxed",
+          "server_version": "0.3.0",
+          "tools": [
+            "fs_write_file",
+            "git_status",
+            "system_info",
+            "git_diff",
+            "system_run_command",
+            "fs_read_file",
+            "fs_search_text",
+            "fs_list_dir"
+          ],
+          "tool_count": 8,
+          "called_tool": "system_info",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -489,5 +601,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:17:56+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:23:45.062668+08:00"
 }

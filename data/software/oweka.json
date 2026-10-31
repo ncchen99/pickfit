@@ -43,7 +43,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-oweka-20261101-002755-7e5e",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g oweka@0.1.3",
+          "purpose": "install oweka 0.1.3 globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "which oweka",
+        "expected_signal": "/home/sbx/.local/bin/oweka"
+      },
+      "first_task": "which oweka"
+    },
     "windows": null
   },
   "pricing": {
@@ -59,10 +75,80 @@
     "url": "https://github.com/ByteAtATime/oweka/releases/tag/v0.1.3"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:29:07.853582+08:00",
+    "runs": [
+      {
+        "id": "verify-oweka-20261101-002755-7e5e",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:29:07.853582+08:00",
+        "tool_version": "0.1.3",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g oweka@0.1.3",
+            "purpose": "install oweka 0.1.3 globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "which oweka",
+            "expected_signal": "/home/sbx/.local/bin/oweka",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "/home/sbx/.local/bin/oweka",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "npx oweka --help 2>&1",
+            "expected_signal": "--help does not exist or is not a directory",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "--help does not exist or is not a directory",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "README shows npx oweka and oweka ~/projects with no documented flags",
+            "actually_needed": "binary has no --help/--version; every argument is treated as path (e.g. \"--help does not exist or is not a directory\")",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "oweka scans and shows TUI",
+            "actually_needed": "TUI requires TTY; in non-interactive sandbox it exits with terminal error",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show oweka binary path and the expected '--help does not exist' message with matching exit codes.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-oweka-20261101-002755-7e5e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-oweka-20261101-002755-7e5e/check-1-cmd15.judged.png",
+            "runs/verify/verify-oweka-20261101-002755-7e5e/check-2-cmd1.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.080963
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -255,5 +341,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:18:17+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:29:07.854775+08:00"
 }

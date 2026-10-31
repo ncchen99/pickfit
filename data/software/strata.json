@@ -38,7 +38,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-strata-20261101-002426-1e81",
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install strata-mem",
+          "purpose": "install strata-mem via pipx (provides strata and strata-mcp)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "strata --version 2>&1",
+        "expected_signal": "strata 1.19.0"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -54,10 +70,129 @@
     "url": "https://github.com/oren198/Strata/releases/tag/v1.19.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:25:58.084177+08:00",
+    "runs": [
+      {
+        "id": "verify-strata-20261101-002426-1e81",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:25:58.084177+08:00",
+        "tool_version": "1.19.0",
+        "install_method": "pipx",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pipx install strata-mem",
+            "purpose": "install strata-mem via pipx (provides strata and strata-mcp)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "strata --version 2>&1",
+            "expected_signal": "strata 1.19.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "strata 1.19.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/strata-test && python3 /home/sbx/.pickfit/mcp_probe.py --timeout 30 -- strata-mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/strata-test && cd /tmp/strata-test && git init -q && strata register --harness claude-code --harness codex --description \"test scope\" 2>&1 | head -n 100\nls -R .strata 2>&1 | head -n 100\ncat .strata/fleet.yaml 2>&1 | head -n 100\ncat .strata/config.toml 2>&1 | head -n 100",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/strata-test && python3 /home/sbx/.pickfit/mcp_probe.py --call strata_list_scopes --args '{}' -- strata-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=strata_list_scopes content=text text_chars=340",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/strata-test && cd /tmp/strata-test && git init -q && strata register --harness claude-code --harness codex --description \"test scope\" 2>&1 | head -n 100\nls -R .strata 2>&1 | head -n 100\ncat .strata/fleet.yaml 2>&1 | head -n 100\ncat .strata/config.toml 2>&1 | head -n 100",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "strata-mcp starts unconditionally",
+            "actually_needed": "MCP server requires a registered project (strata register creates .strata/config.toml and fleet.yaml) and must be launched from that project directory; without it it exits with 3 validation failures",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show strata version 1.19.0, MCP handshake with 17 tools, and successful strata_list_scopes call.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-strata-20261101-002426-1e81/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-strata-20261101-002426-1e81/check-1-cmd10.judged.png",
+            "runs/verify/verify-strata-20261101-002426-1e81/check-2-cmd7.judged.png",
+            "runs/verify/verify-strata-20261101-002426-1e81/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.076926,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "strata-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "strata",
+          "server_version": "1.29.1",
+          "tools": [
+            "strata_bind",
+            "strata_contribute",
+            "strata_rejudge",
+            "strata_publish",
+            "strata_withdraw",
+            "strata_restore",
+            "strata_read_scope_summary",
+            "strata_read_perspective",
+            "strata_list_scopes",
+            "strata_read_scope_record",
+            "strata_read_contribution",
+            "strata_session_stats",
+            "strata_session_closeout",
+            "strata_fleet_propose",
+            "strata_fleet_pending",
+            "strata_fleet_approve",
+            "strata_fleet_reject"
+          ],
+          "tool_count": 17,
+          "called_tool": "strata_list_scopes",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [],
@@ -284,5 +419,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:20:08+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:25:58.087153+08:00"
 }

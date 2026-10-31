@@ -62,18 +62,25 @@
       "first_task": "mati check"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-mati-20261101-002851-58a2",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo install mati",
-          "purpose": null
+          "command": "curl -fsSL https://github.com/ioni-dev/mati/releases/download/v0.1.6/mati-x86_64-unknown-linux-musl.tar.gz -o /tmp/mati.tar.gz && tar xzf /tmp/mati.tar.gz -C /tmp",
+          "purpose": "Download and extract mati musl binary from GitHub releases"
+        },
+        {
+          "command": "cp /tmp/mati ~/.local/bin/mati.new && mv ~/.local/bin/mati.new ~/.local/bin/mati && chmod +x ~/.local/bin/mati && mati --version",
+          "purpose": "Install binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "mati check"
+      "check": {
+        "command": "mati --version",
+        "expected_signal": "mati 0.1.6"
+      },
+      "first_task": null
     },
     "windows": null
   },
@@ -90,10 +97,109 @@
     "url": "https://github.com/ioni-dev/mati/releases/tag/v0.1.6"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:29:54.238457+08:00",
+    "runs": [
+      {
+        "id": "verify-mati-20261101-002851-58a2",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:29:54.238457+08:00",
+        "tool_version": "0.1.6",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/ioni-dev/mati/releases/download/v0.1.6/mati-x86_64-unknown-linux-musl.tar.gz -o /tmp/mati.tar.gz && tar xzf /tmp/mati.tar.gz -C /tmp",
+            "purpose": "Download and extract mati musl binary from GitHub releases"
+          },
+          {
+            "command": "cp /tmp/mati ~/.local/bin/mati.new && mv ~/.local/bin/mati.new ~/.local/bin/mati && chmod +x ~/.local/bin/mati && mati --version",
+            "purpose": "Install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mati --version",
+            "expected_signal": "mati 0.1.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mati 0.1.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- mati serve",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call mem_query --args '{\"query\":\"test\"}' -- mati serve",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=mem_query content=text text_chars=2",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install mati (requires Rust toolchain)",
+            "actually_needed": "box has no Rust toolchain; installed prebuilt x86_64 musl binary from GitHub releases",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 4 tools, successful mem_query call returning [], and version mati 0.1.6.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mati-20261101-002851-58a2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mati-20261101-002851-58a2/check-1-cmd14.judged.png",
+            "runs/verify/verify-mati-20261101-002851-58a2/check-2-cmd15.judged.png",
+            "runs/verify/verify-mati-20261101-002851-58a2/check-3-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.099207,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "mati",
+            "serve"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "rmcp",
+          "server_version": "3.1.4",
+          "tools": [
+            "mem_bootstrap",
+            "mem_get",
+            "mem_query",
+            "mem_set"
+          ],
+          "tool_count": 4,
+          "called_tool": "mem_query",
+          "offline": true
+        }
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -388,5 +494,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:19:44+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:29:54.240248+08:00"
 }

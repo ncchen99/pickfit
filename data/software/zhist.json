@@ -49,7 +49,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-zhist-20261101-001803-cc59",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -L -o /tmp/zhist.tar.gz https://github.com/overflowy/zhist/releases/download/v1.2.2/zhist_1.2.2_linux_amd64.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/zhist.tar.gz -C /tmp && cp /tmp/zhist ~/.local/bin/zhist && chmod +x ~/.local/bin/zhist && zhist init > /tmp/zhist_init_out.txt && cat /tmp/zhist_init_out.txt",
+          "purpose": "download linux_amd64 binary from GitHub releases and install to ~/.local/bin/zhist"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "zhist init",
+        "expected_signal": "zmodload zsh/datetime"
+      },
+      "first_task": "zhist init"
+    },
     "windows": null
   },
   "pricing": {
@@ -65,10 +81,116 @@
     "url": "https://github.com/overflowy/zhist/releases/tag/v1.2.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:19:11.491714+08:00",
+    "runs": [
+      {
+        "id": "verify-zhist-20261101-001803-cc59",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:19:11.491714+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -L -o /tmp/zhist.tar.gz https://github.com/overflowy/zhist/releases/download/v1.2.2/zhist_1.2.2_linux_amd64.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/zhist.tar.gz -C /tmp && cp /tmp/zhist ~/.local/bin/zhist && chmod +x ~/.local/bin/zhist && zhist init > /tmp/zhist_init_out.txt && cat /tmp/zhist_init_out.txt",
+            "purpose": "download linux_amd64 binary from GitHub releases and install to ~/.local/bin/zhist"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "zhist init",
+            "expected_signal": "zmodload zsh/datetime",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "zmodload zsh/datetime",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "printf ': 1700000000:0;echo hello world\\n: 1700000001:0;ls -la /tmp\\n: 1700000002:1;false\\n: 1700000003:0;git status\\n' > /tmp/sample_zsh_history && zhist import /tmp/sample_zsh_history",
+            "expected_signal": "imported 4 entries",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "imported 4 entries",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "zhist list",
+            "expected_signal": "echo hello world",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0-fd221f69eda7 \u001b[2m \u001b[0m \u001b[34m154w ago\u001b[0m echo hello world\u001b[0m",
+            "setup": [
+              {
+                "command": "printf ': 1700000000:0;echo hello world\\n: 1700000001:0;ls -la /tmp\\n: 1700000002:1;false\\n: 1700000003:0;git status\\n' > /tmp/sample_zsh_history && zhist import /tmp/sample_zsh_history",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "zhist search -- \"echo hello\"",
+            "expected_signal": "echo hello world",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "echo hello world",
+            "setup": [
+              {
+                "command": "printf ': 1700000000:0;echo hello world\\n: 1700000001:0;ls -la /tmp\\n: 1700000002:1;false\\n: 1700000003:0;git status\\n' > /tmp/sample_zsh_history && zhist import /tmp/sample_zsh_history",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go install github.com/overflowy/zhist@latest",
+            "actually_needed": "box has no Go toolchain (go: command not found); installed prebuilt binary zhist_1.2.2_linux_amd64.tar.gz from GitHub releases to ~/.local/bin instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "CLI help via --help",
+            "actually_needed": "zhist --help returns 'unknown command'; top-level usage is bare 'zhist' (exit 2) and per-subcommand 'zhist init --help'",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "Requires fzf 0.45 or newer for the picker",
+            "actually_needed": "core CLI (init, add, list, search, get, import) works without fzf; picker not tested in headless box",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "zhist init printed shell integration, import reported 4 entries, and list showed all imported commands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-zhist-20261101-001803-cc59/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-zhist-20261101-001803-cc59/check-1-cmd12.judged.png",
+            "runs/verify/verify-zhist-20261101-001803-cc59/check-2-cmd13.judged.png",
+            "runs/verify/verify-zhist-20261101-001803-cc59/check-3-cmd14.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.100526
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -261,5 +383,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:19:24+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:19:11.493542+08:00"
 }

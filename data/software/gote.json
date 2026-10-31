@@ -45,7 +45,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-gote-20261101-001551-85d3",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/gote https://github.com/banorton/gote/releases/latest/download/gote-linux-amd64 && chmod +x /tmp/gote && file /tmp/gote && mkdir -p ~/.local/bin && mv /tmp/gote ~/.local/bin/gote && ls -lh ~/.local/bin/gote",
+          "purpose": "Download gote-linux-amd64 binary from releases and install to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "gote -v 2>&1",
+        "expected_signal": "gote 0.3.1"
+      },
+      "first_task": "gote -v 2>&1"
+    },
     "windows": null
   },
   "pricing": {
@@ -61,10 +77,131 @@
     "url": "https://github.com/banorton/gote/releases/tag/v0.3.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:16:47.688041+08:00",
+    "runs": [
+      {
+        "id": "verify-gote-20261101-001551-85d3",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:16:47.688041+08:00",
+        "tool_version": "0.3.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/gote https://github.com/banorton/gote/releases/latest/download/gote-linux-amd64 && chmod +x /tmp/gote && file /tmp/gote && mkdir -p ~/.local/bin && mv /tmp/gote ~/.local/bin/gote && ls -lh ~/.local/bin/gote",
+            "purpose": "Download gote-linux-amd64 binary from releases and install to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "gote -v 2>&1",
+            "expected_signal": "gote 0.3.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gote 0.3.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "gote help 2>&1",
+            "expected_signal": "gote - CLI note-taking tool",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gote - CLI note-taking tool",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "gote t 2>&1",
+            "expected_signal": "work (2)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "work (2)",
+            "setup": [
+              {
+                "command": "mkdir -p ~/gotes && cat > ~/gotes/search_design.md <<'EOF'\n.work.design\nThis note discusses BM25 ranking and search design with stemming.\nEOF\ncat > ~/gotes/standup.md <<'EOF'\n.work.meeting\nStandup notes about BM25 and project updates.\nEOF\ncat > ~/gotes/gopl.md <<'EOF'\n.reading.personal\nNotes on Go programming language book.\nEOF\ncat > ~/gotes/sourdough.md <<'EOF'\n.recipe.personal\nSourdough recipe with starter instructions.\nEOF\nls -l ~/gotes/*.md\ngote index 2>&1\necho INDEX_EXIT:$?\nls -lh ~/.gote/\ncat ~/.gote/index.json | head -n 50\necho ---\ncat ~/.gote/tags.json 2>&1 | head -n 50",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "echo q | gote r 2>&1",
+            "expected_signal": "[a] gopl",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[a] gopl",
+            "setup": [
+              {
+                "command": "mkdir -p ~/gotes && cat > ~/gotes/search_design.md <<'EOF'\n.work.design\nThis note discusses BM25 ranking and search design with stemming.\nEOF\ncat > ~/gotes/standup.md <<'EOF'\n.work.meeting\nStandup notes about BM25 and project updates.\nEOF\ncat > ~/gotes/gopl.md <<'EOF'\n.reading.personal\nNotes on Go programming language book.\nEOF\ncat > ~/gotes/sourdough.md <<'EOF'\n.recipe.personal\nSourdough recipe with starter instructions.\nEOF\nls -l ~/gotes/*.md\ngote index 2>&1\necho INDEX_EXIT:$?\nls -lh ~/.gote/\ncat ~/.gote/index.json | head -n 50\necho ---\ncat ~/.gote/tags.json 2>&1 | head -n 50",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "echo q | gote s bm25 2>&1",
+            "expected_signal": "[a] standup",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[a] standup",
+            "setup": [
+              {
+                "command": "mkdir -p ~/gotes && cat > ~/gotes/search_design.md <<'EOF'\n.work.design\nThis note discusses BM25 ranking and search design with stemming.\nEOF\ncat > ~/gotes/standup.md <<'EOF'\n.work.meeting\nStandup notes about BM25 and project updates.\nEOF\ncat > ~/gotes/gopl.md <<'EOF'\n.reading.personal\nNotes on Go programming language book.\nEOF\ncat > ~/gotes/sourdough.md <<'EOF'\n.recipe.personal\nSourdough recipe with starter instructions.\nEOF\nls -l ~/gotes/*.md\ngote index 2>&1\necho INDEX_EXIT:$?\nls -lh ~/.gote/\ncat ~/.gote/index.json | head -n 50\necho ---\ncat ~/.gote/tags.json 2>&1 | head -n 50",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -L -o gote https://github.com/banorton/gote/releases/latest/download/gote-mac-arm64",
+            "actually_needed": "Use gote-linux-amd64 on Linux x86_64 (ELF binary)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "mv gote /usr/local/bin/",
+            "actually_needed": "Move to ~/.local/bin (already on PATH) without root",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "gote r and gote s bm25 run interactively",
+            "actually_needed": "In non-TTY CI, pipe 'q' to quit the interactive picker: echo q | gote r",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.3.1, full help text, and tag list containing work (2).",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-gote-20261101-001551-85d3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-gote-20261101-001551-85d3/check-1-cmd7.judged.png",
+            "runs/verify/verify-gote-20261101-001551-85d3/check-2-cmd8.judged.png",
+            "runs/verify/verify-gote-20261101-001551-85d3/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.042274
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -265,5 +402,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:18:08+08:00",
-  "updated_at": "2026-11-01T00:14:05+08:00"
+  "updated_at": "2026-11-01T00:16:47.690137+08:00"
 }
