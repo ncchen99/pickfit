@@ -1,0 +1,736 @@
+{
+  "schema_version": "software.v1",
+  "slug": "xlide-mcp",
+  "repo_id": "gh:1377744410",
+  "name": "xlide-mcp",
+  "summary": "MCP server to read, write, analyze and test VBA in Office files and edit the documents.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-tools",
+    "excel",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "office",
+    "powerquery",
+    "vba",
+    "xlsm"
+  ],
+  "use_cases": [
+    "read a VBA module from an Office file",
+    "write a VBA module in an Office file",
+    "analyze VBA in a workbook for errors and warnings"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://pypi.org/project/xlide-mcp/",
+  "repo": {
+    "url": "https://github.com/WilliamSmithEdward/xlide_mcp",
+    "full_name": "WilliamSmithEdward/xlide_mcp",
+    "created_at": "2026-09-20T00:40:21Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.10+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install xlide-mcp",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Enable the Trust Center setting that module injection needs for Office applications"
+      ],
+      "check": null,
+      "first_task": "xlide-mcp --root /path/to/your/files"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-xlide-mcp-20261101-001726-9216",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install xlide-mcp 2>&1",
+          "purpose": "install xlide-mcp via uv tool install"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install xlide-mcp",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Enable the Trust Center setting that module injection needs for Office applications"
+      ],
+      "check": null,
+      "first_task": "xlide-mcp --root /path/to/your/files"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.2.4",
+    "published_at": "2026-10-13T17:24:15Z",
+    "url": "https://github.com/WilliamSmithEdward/xlide_mcp/releases/tag/v1.2.4"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:18:14.671241+08:00",
+    "runs": [
+      {
+        "id": "verify-xlide-mcp-20261101-001726-9216",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:18:14.671241+08:00",
+        "tool_version": "1.2.4",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install xlide-mcp 2>&1",
+            "purpose": "install xlide-mcp via uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- xlide-mcp --root /home/sbx/work 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call xlide_doctor --args '{}' -- xlide-mcp --root /home/sbx/work 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=xlide_doctor content=text text_chars=788",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show MCP initialize ok with 65 tools, handshake ok, and xlide_doctor call returning server version details.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-xlide-mcp-20261101-001726-9216/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-xlide-mcp-20261101-001726-9216/check-1-cmd4.judged.png",
+            "runs/verify/verify-xlide-mcp-20261101-001726-9216/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.047302,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "xlide-mcp",
+            "--root",
+            "/home/sbx/work"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "xlide",
+          "server_version": "1.2.4",
+          "tools": [
+            "xlide_list_projects",
+            "xlide_project_info",
+            "xlide_validate_project",
+            "xlide_create_project",
+            "xlide_doctor",
+            "xlide_list_modules",
+            "xlide_read_module",
+            "xlide_list_procedures",
+            "xlide_search_modules",
+            "xlide_write_module",
+            "xlide_edit_module",
+            "xlide_rename_module",
+            "xlide_delete_module",
+            "xlide_analyze",
+            "xlide_analyze_source",
+            "xlide_rules",
+            "xlide_list_references",
+            "xlide_manage_reference",
+            "xlide_access_catalog",
+            "xlide_read_access_query",
+            "xlide_list_forms",
+            "xlide_read_form",
+            "xlide_manage_form",
+            "xlide_edit_form",
+            "xlide_list_queries",
+            "xlide_read_query",
+            "xlide_write_query",
+            "xlide_list_sheets",
+            "xlide_read_cells",
+            "xlide_evaluate_formula",
+            "xlide_list_shapes",
+            "xlide_set_shape_macro",
+            "xlide_manage_shape",
+            "xlide_update_shape",
+            "xlide_add_chart",
+            "xlide_write_cells",
+            "xlide_check_cells",
+            "xlide_sort_rows",
+            "xlide_remove_duplicates",
+            "xlide_copy_cells",
+            "xlide_format_cells",
+            "xlide_manage_sheet",
+            "xlide_manage_rows_columns",
+            "xlide_manage_table",
+            "xlide_manage_name",
+            "xlide_manage_validation",
+            "xlide_manage_conditional_format",
+            "xlide_manage_hyperlink",
+            "xlide_page_setup",
+            "xlide_manage_comment",
+            "xlide_manage_filter",
+            "xlide_export_modules",
+            "xlide_import_modules",
+            "xlide_git_changes",
+            "xlide_run_macro",
+            "xlide_run_vba",
+            "xlide_run_tests",
+            "xlide_compile_check",
+            "xlide_is_open",
+            "xlide_open_in_app",
+            "xlide_close_in_app",
+            "xlide_live_sessions",
+            "xlide_live_state",
+            "xlide_live_request",
+            "xlide_live_read_module"
+          ],
+          "tool_count": 65,
+          "called_tool": "xlide_doctor",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "xlide-mcp --root /path/to/your/files",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"xlide\": {\n      \"command\": \"xlide-mcp\",\n      \"args\": [\"--root\", \"/path/to/your/files\"]\n    }\n  }\n}"
+      },
+      {
+        "client": "vscode",
+        "snippet": "{\n  \"servers\": {\n    \"xlide\": {\n      \"type\": \"stdio\",\n      \"command\": \"uvx\",\n      \"args\": [\"--from\", \"xlide-mcp[live]\", \"xlide-mcp\", \"--root\", \"${workspaceFolder}\"]\n    }\n  }\n}"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"xlide\": {\n      \"command\": \"uvx\",\n      \"args\": [\n        \"--from\", \"xlide-mcp[live]\",\n        \"xlide-mcp\", \"--root\", \"/path/to/your/files\"\n      ]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "xlide_list_projects",
+      "xlide_project_info",
+      "xlide_read_module",
+      "xlide_write_module",
+      "xlide_analyze",
+      "xlide_run_tests",
+      "xlide_doctor",
+      "xlide_edit_module",
+      "xlide_list_modules",
+      "xlide_run_macro"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 95.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 50.0,
+      "signals": {
+        "stars": 11,
+        "monthly_downloads": 1295,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": 29,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 41,
+      "packages": [
+        "pypi:xlide-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 47.6
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "dc9d8574364014fe3d5871b58ef1d0ac80de65ad43153ef088080a167a73f816",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Read, write, analyze and test the VBA inside Excel, Word, PowerPoint and Access files, and edit the document around it."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "An agent asked to fix a macro works from a copied snippet with no idea what else"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "VBA, Power Query and OOXML worksheet edits need no Office installation and run on"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install xlide-mcp"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "xlide_list_projects                -> Budget.xlsm"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "`--root` is the security boundary."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Run `MCP: List Servers` in VS Code to start `xlide` and inspect its output if it"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Windows, macOS and Linux."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/WilliamSmithEdward/xlide_mcp",
+      "fetched_at": "2026-10-31T13:38:56+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/WilliamSmithEdward/xlide_mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:41:21+08:00"
+    },
+    {
+      "id": "release:v1.2.4",
+      "kind": "release",
+      "url": "https://github.com/WilliamSmithEdward/xlide_mcp/releases/tag/v1.2.4",
+      "fetched_at": "2026-10-31T13:41:21+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "An MCP server for the inside of an Office file.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "xlide-mcp --root /path/to/your/files",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "An MCP server for the inside of an Office file.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Read, write, analyze and test the VBA inside Excel, Word, PowerPoint and Access files, and edit the document around it. No Office installation needed.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# xlide-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Windows, macOS and Linux.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "| [`python/`](python/) | Python 3.10+ | Reference implementation |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:56+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:56+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:56+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:56+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:56+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.2.4",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:41:21+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "xlide_read_module    Helpers       -> the source, and a content token",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "xlide_write_module   Helpers       -> guarded by that token",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "xlide_analyze        Budget.xlsm   -> 0 errors, 2 warnings",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "pip install xlide-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "pip install xlide-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "pip install xlide-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "VBA, Power Query and OOXML worksheet edits need no Office installation and run on\nWindows, macOS and Linux.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "a server over stdio",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "xlide-mcp --root /path/to/your/files",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"xlide\": {\n      \"command\": \"xlide-mcp\",\n      \"args\": [\"--root\", \"/path/to/your/files\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"servers\": {\n    \"xlide\": {\n      \"type\": \"stdio\",\n      \"command\": \"uvx\",\n      \"args\": [\"--from\", \"xlide-mcp[live]\", \"xlide-mcp\", \"--root\", \"${workspaceFolder}\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/2",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"xlide\": {\n      \"command\": \"uvx\",\n      \"args\": [\n        \"--from\", \"xlide-mcp[live]\",\n        \"xlide-mcp\", \"--root\", \"/path/to/your/files\"\n      ]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "xlide_list_projects                -> Budget.xlsm",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "xlide_project_info   Budget.xlsm   -> 4 modules, 2 sheets, 1 query, not signed",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "xlide_read_module    Helpers       -> the source, and a content token",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "xlide_write_module   Helpers       -> guarded by that token",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "xlide_analyze        Budget.xlsm   -> 0 errors, 2 warnings",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "xlide_run_tests      Budget.xlsm   -> 12 passed",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "Call `xlide_doctor` first from a new client: it reports the workspace roots",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`xlide_edit_module` accepts `preview_only=true` to check a batch of line edits",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "Discover | `xlide_list_projects`, `xlide_project_info`, `xlide_validate_project`, `xlide_create_project`, `xlide_doctor`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`xlide_run_macro`, `xlide_run_vba`, `xlide_run_tests`, `xlide_compile_check`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:50:13+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

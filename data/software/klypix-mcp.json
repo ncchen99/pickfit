@@ -1,0 +1,735 @@
+{
+  "schema_version": "software.v1",
+  "slug": "klypix-mcp",
+  "repo_id": "gh:1263204125",
+  "name": "klypix-mcp",
+  "summary": "Shared project memory for coding agents using one brain.klypix file committed with code.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-coordination",
+    "ai-agents",
+    "ai-memory",
+    "ci",
+    "claude",
+    "claude-code",
+    "code-review",
+    "codex",
+    "cursor",
+    "developer-tools"
+  ],
+  "use_cases": [
+    "carry project decisions over across sessions",
+    "warn when two sessions touch same file",
+    "leave notes and handoffs between sessions",
+    "record corrections that supersede old decisions",
+    "ask what the project believed at a past date"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://klypix.com/klypix-mcp",
+  "repo": {
+    "url": "https://github.com/dahshanlabs/klypix-mcp",
+    "full_name": "dahshanlabs/klypix-mcp",
+    "created_at": "2026-06-08T18:14:45Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js 20 or newer"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npx klypix-mcp install",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "npx klypix-mcp doctor"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-klypix-mcp-20261101-000953-32ff",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g klypix-mcp",
+          "purpose": "install klypix-mcp globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npx klypix-mcp install",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "npx klypix-mcp doctor"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.109.0",
+    "published_at": "2026-10-30T22:56:14Z",
+    "url": "https://github.com/dahshanlabs/klypix-mcp/releases/tag/v1.109.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:12:02.042257+08:00",
+    "runs": [
+      {
+        "id": "verify-klypix-mcp-20261101-000953-32ff",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:12:02.042257+08:00",
+        "tool_version": "1.110.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g klypix-mcp",
+            "purpose": "install klypix-mcp globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- klypix-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 --call klypix_status --args '{}' -- klypix-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=klypix_status content=text text_chars=1065",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx klypix-mcp --version / --help shows version",
+            "actually_needed": "bare klypix-mcp without subcommand starts MCP stdio server and hangs; version is visible via MCP probe server version 1.110.0",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both probes list 29 tools with handshake ok, and klypix_status call returns file-mode status text.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-klypix-mcp-20261101-000953-32ff/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-klypix-mcp-20261101-000953-32ff/check-1-cmd8.judged.png",
+            "runs/verify/verify-klypix-mcp-20261101-000953-32ff/check-2-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.205467,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "klypix-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "klypix-canvas",
+          "server_version": "1.110.0",
+          "tools": [
+            "list_canvases",
+            "read_canvas",
+            "search_canvases",
+            "search_all_brains",
+            "brain_ask",
+            "project_map_context",
+            "project_map_scan",
+            "project_map_drift",
+            "brain_challenge",
+            "brain_insights",
+            "brain_lens",
+            "brain_connect",
+            "brain_reconcile",
+            "brain_garden",
+            "create_canvas",
+            "add_to_canvas",
+            "klypix_status",
+            "read_card_contents",
+            "prepare_video",
+            "brain_note",
+            "brain_message",
+            "brain_message_receipt",
+            "brain_reopen",
+            "brain_handoff",
+            "brain_review",
+            "brain_sync",
+            "brain_rules",
+            "brain_doctor",
+            "canvas_view"
+          ],
+          "tool_count": 29,
+          "called_tool": "klypix_status",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "npx -y klypix-mcp@<version>",
+    "client_configs": [
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"klypix\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"klypix-mcp\", \"--vault\", \"/absolute/path/to/canvases\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "KLYPIX_PLUGIN",
+        "required": null,
+        "purpose": "enables plugin mode"
+      },
+      {
+        "name": "KLYPIX_SEMANTIC_MEMORY_MODE",
+        "required": null,
+        "purpose": "select memory runtime"
+      },
+      {
+        "name": "KLYPIX_RERANK",
+        "required": null,
+        "purpose": "enable cross-encoder experiment"
+      }
+    ],
+    "tools": [
+      "brain_sync",
+      "brain_note",
+      "brain_ask",
+      "brain_challenge",
+      "brain_reconcile",
+      "brain_doctor",
+      "project_map_context",
+      "show_in_klypix",
+      "prepare_video",
+      "create_canvas"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 96.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 50.0,
+      "signals": {
+        "stars": 10,
+        "monthly_downloads": 5610,
+        "forks": 5,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 144,
+      "packages": [
+        "npm:klypix-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 48.05
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "85f8c5bea84be7ed42d2f53a565869004cd7c5e4c1d307f9cc1e53fc89d2219b",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Shared project memory for **Claude Code, Codex, Cursor** and other MCP coding tools."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "You are running more than one coding agent on one codebase"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "You need **Node.js 20 or newer** (`node -v`)."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npx klypix-mcp install"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "brain_sync { project: \"/absolute/path/to/project\", phase: \"start\",\n             intent: \"rewrite the auth token refresh\", files: [\"src/auth/token.ts\"] }\n// → task-relevant memory capsule"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "\"command\": \"npx\",\n      \"args\": [\"-y\", \"klypix-mcp\", \"--vault\", \"/absolute/path/to/canvases\"]"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "MCP config fails **silently** — a wrong entry means the server never"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "The engine is Apache-2.0, runs on your machine"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/dahshanlabs/klypix-mcp",
+      "fetched_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/dahshanlabs/klypix-mcp/blob/master/README.md",
+      "fetched_at": "2026-10-31T13:40:11+08:00"
+    },
+    {
+      "id": "release:v1.109.0",
+      "kind": "release",
+      "url": "https://github.com/dahshanlabs/klypix-mcp/releases/tag/v1.109.0",
+      "fetched_at": "2026-10-31T13:40:11+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "This repository is its local MCP\nserver.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Run this inside your project:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "This repository is its local MCP\nserver.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Shared project memory for **Claude Code, Codex, Cursor** and other MCP coding tools.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# klypix-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "klypix-mcp has 28 MCP tools on Linux and macOS and 29 on Windows",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "You need **Node.js 20 or newer**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.109.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:40:11+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Decisions that carry over.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "A heads-up when work overlaps.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Notes and handoffs between sessions.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "A correction replaces the old decision",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "ask what the project believed then.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npx klypix-mcp install",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npx klypix-mcp install",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npx klypix-mcp install",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "runs on your machine, and works without the KLYPIX app or an\n  account.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "a real stdio handshake against the config it just wrote",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "The KLYPIX Claude plugin starts this server as `npx -y klypix-mcp@<version>`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"klypix\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"klypix-mcp\", \"--vault\", \"/absolute/path/to/canvases\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "KLYPIX_PLUGIN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "KLYPIX_SEMANTIC_MEMORY_MODE",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "KLYPIX_RERANK",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "when the agent calls\n  `brain_sync` in other hosts.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "The agent calls `brain_sync` and `brain_note` itself",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`brain_ask` with `as_of: 2026-03-01` reweights",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`brain_challenge { claim: \"move token storage to localStorage\" }`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`brain_reconcile` only *proposes* stale-vs-correction pairs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`brain_doctor` reports this layer separately",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "project_map_context {\n  \"question\": \"what owns refresh-token rotation?\",",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "where `show_in_klypix` is\nadded",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "which leaves out `prepare_video`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`create_canvas` makes one from any agent.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:06+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:11+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

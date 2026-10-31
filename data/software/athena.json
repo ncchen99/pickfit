@@ -1,0 +1,534 @@
+{
+  "schema_version": "software.v1",
+  "slug": "athena",
+  "repo_id": "gh:1422648566",
+  "name": "Athena",
+  "summary": "Local-first MCP server and CLI for Git and AST breaking-change, blast-radius, and release-note analysis.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "blast-radius",
+    "breaking-changes",
+    "developer-tools",
+    "mcp",
+    "model-context-protocol",
+    "static-analysis"
+  ],
+  "use_cases": [
+    "detect breaking changes between git refs",
+    "map caller blast radius for changed symbols",
+    "identify documentation drift for changed symbols",
+    "draft evidence-grounded release notes",
+    "inspect repository branch, tags and HEAD status"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/aaryanrwt/athena",
+    "full_name": "aaryanrwt/athena",
+    "created_at": "2026-10-16T20:36:43Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.12"
+    ],
+    "system_packages": [
+      "git>=2.30"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.1.0",
+    "published_at": "2026-10-20T18:12:39Z",
+    "url": "https://github.com/aaryanrwt/athena/releases/tag/v1.1.0"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "not_run",
+    "checked_at": null,
+    "runs": []
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "athena mcp",
+    "client_configs": [
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"athena\": {\n      \"command\": \"athena\",\n      \"args\": [\"mcp\"],\n      \"env\": {\n        \"ATHENA_ENABLE_LLM\": \"0\"\n      }\n    }\n  }\n}"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"athena\": {\n    \"command\": \"python\",\n    \"args\": [\"-m\", \"athena.cli\", \"mcp\"]\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "ATHENA_ENABLE_LLM",
+        "required": false,
+        "purpose": "enable optional local Ollama enhancement"
+      }
+    ],
+    "tools": [
+      "inspect_repository",
+      "analyze_git_history",
+      "detect_potential_breaking_changes",
+      "generate_release_notes",
+      "analyze_change_graph",
+      "verify_breaking_and_doc_drift",
+      "generate_verified_release_brief"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 32.0,
+      "signals": {
+        "stars": 12,
+        "monthly_downloads": null,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 14,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 46.92
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "051447be62ab55f6c1e21c7f13ca5eee3bbe7585424a73d061b4749be5fe3108",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Deterministic Git & AST change intelligence engine and Model Context Protocol (MCP) server."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Audience-Tailored Release Notes"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- **Python**: `>= 3.12` (verified on Python `3.12`, `3.13`, and `3.14`)"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "pip install -e ."
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "athena inspect examples/demo_repo"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "\"ATHENA_ENABLE_LLM\": \"0\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "On Linux / macOS:"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/aaryanrwt/athena",
+      "fetched_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/aaryanrwt/athena/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:45:21+08:00"
+    },
+    {
+      "id": "release:v1.1.0",
+      "kind": "release",
+      "url": "https://github.com/aaryanrwt/athena/releases/tag/v1.1.0",
+      "fetched_at": "2026-10-31T13:45:21+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Athena is an open-source, local-first Model Context Protocol (MCP) server and developer CLI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Athena CLI provides instant, zero-LLM deterministic analysis directly from your terminal.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Local-First, Evidence-Backed Multi-Language Git & AST Release-Readiness and Change-Intelligence MCP Server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Deterministic Git & AST change intelligence engine and Model Context Protocol (MCP) server. Detects breaking changes, maps caller blast radius",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Athena (`athena-mcp`) — v1.1.0",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "# On Linux / macOS:\nsource .venv/bin/activate\n\n# On Windows (PowerShell):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": ">= 3.12",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": ">= 2.30",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "without any network connection",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.1.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:45:21+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "github_api",
+      "quote": "Detects breaking changes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "github_api",
+      "quote": "maps caller blast radius",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "github_api",
+      "quote": "identifies doc drift",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "github_api",
+      "quote": "drafts evidence-grounded release notes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Safely inspects branch status, tags, HEAD commit, clean status, and recent commits.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Athena is an open-source, local-first Model Context Protocol (MCP) server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Athena works out-of-the-box completely offline without Ollama, without an external API, and without any network connection.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Athena communicates via standard JSON-RPC 2.0 over standard I/O (`stdio`).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "\"command\": \"athena\",\n      \"args\": [\"mcp\"]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"athena\": {\n      \"command\": \"athena\",\n      \"args\": [\"mcp\"],\n      \"env\": {\n        \"ATHENA_ENABLE_LLM\": \"0\"\n      }\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"athena\": {\n    \"command\": \"python\",\n    \"args\": [\"-m\", \"athena.cli\", \"mcp\"]\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "ATHENA_ENABLE_LLM",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`inspect_repository`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`analyze_git_history`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`detect_potential_breaking_changes`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`generate_release_notes`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`analyze_change_graph`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`verify_breaking_and_doc_drift`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`generate_verified_release_brief`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:38:28+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

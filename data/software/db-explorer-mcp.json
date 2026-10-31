@@ -1,0 +1,624 @@
+{
+  "schema_version": "software.v1",
+  "slug": "db-explorer-mcp",
+  "repo_id": "gh:1339315553",
+  "name": "DB Explorer MCP",
+  "summary": "Read-only MCP server letting AI assistants explore schemas and run safe SELECTs on Postgres, MySQL, SQLite.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "claude",
+    "fastmcp",
+    "mcp-server",
+    "model-context-protocol",
+    "mysql",
+    "postgresql",
+    "read-only",
+    "sqlalchemy",
+    "sqlite",
+    "stdio-server"
+  ],
+  "use_cases": [
+    "list tables and find missing primary keys",
+    "query top rows from orders table",
+    "explain slow query execution plan",
+    "suggest indexes for unindexed foreign keys",
+    "draft and validate database migration scripts"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/AYUSH-148/DB-Explorer-MCP",
+    "full_name": "AYUSH-148/DB-Explorer-MCP",
+    "created_at": "2026-08-19T08:39:22Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.11+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-db-explorer-mcp-20261101-000835-d55f",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install db-explorer-mcp-server",
+          "purpose": "install db-explorer-mcp-server via uv tool install"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": null,
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:10:32.056707+08:00",
+    "runs": [
+      {
+        "id": "verify-db-explorer-mcp-20261101-000835-d55f",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:10:32.056707+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install db-explorer-mcp-server",
+            "purpose": "install db-explorer-mcp-server via uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- db-explorer-mcp-server 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call explore_schema --args '{}' -- db-explorer-mcp-server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=explore_schema content=text text_chars=621",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "DATABASE_URL (required) and MCP_AUTH_TOKEN (required) env vars",
+            "actually_needed": "stdio transport works without DATABASE_URL (defaults to bundled SQLite) and without MCP_AUTH_TOKEN; server started and returned tables",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake listing 7 tools and successful explore_schema call returning sqlite tables.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-db-explorer-mcp-20261101-000835-d55f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-db-explorer-mcp-20261101-000835-d55f/check-1-cmd4.judged.png",
+            "runs/verify/verify-db-explorer-mcp-20261101-000835-d55f/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.05743,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "db-explorer-mcp-server"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "db-explorer",
+          "server_version": "4.1.4",
+          "tools": [
+            "explore_schema",
+            "execute_query",
+            "explain_query",
+            "validate_schema",
+            "suggest_index",
+            "migration_context",
+            "validate_migration"
+          ],
+          "tool_count": 7,
+          "called_tool": "explore_schema",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "sse",
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "uv run server.py",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add db-explorer --env DATABASE_URL=\"postgresql+psycopg2://user:pass@localhost:5432/example\" -- uvx db-explorer-mcp-server"
+      },
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"db-explorer\": {\n      \"command\": \"uv\",\n      \"args\": [\"--directory\", \"C:/path/to/DB-Explorer-MCP\", \"run\", \"server.py\"],\n      \"env\": { \"DATABASE_URL\": \"postgresql+psycopg2://user:pass@localhost:5432/example\" }\n    }\n  }\n}"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"db-explorer\": {\n      \"type\": \"http\",\n      \"url\": \"https://dbx.example.com/mcp\",\n      \"headers\": { \"Authorization\": \"Bearer ${DBX_TOKEN}\" }\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "DATABASE_URL",
+        "required": true,
+        "purpose": "database connection string"
+      },
+      {
+        "name": "MCP_AUTH_TOKEN",
+        "required": true,
+        "purpose": "bearer token for HTTP"
+      },
+      {
+        "name": "QUERY_TIMEOUT_SECONDS",
+        "required": null,
+        "purpose": "upper bound on any single statement"
+      }
+    ],
+    "tools": [
+      "explore_schema",
+      "execute_query",
+      "explain_query",
+      "validate_schema",
+      "suggest_index",
+      "migration_context",
+      "validate_migration"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 77.6,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 40.6,
+      "signals": {
+        "stars": 7,
+        "monthly_downloads": 30,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 72,
+      "packages": [
+        "pypi:db-explorer-mcp-server"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 46.09
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "ef9d7ec0cdfe4e1a72bb262b270db099609e133e24563c195ae58ac36ed4ba81",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A read-only [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server for PostgreSQL, MySQL, and SQLite"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Lets AI assistants (Claude, Cursor, VS Code) explore schemas, run safe SELECT queries"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/)."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "claude mcp add db-explorer --env DATABASE_URL=\"postgresql+psycopg2://user:pass@localhost:5432/example\" -- uvx db-explorer-mcp-server"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "ask it to run `DELETE FROM users`. The call fails with `Unsafe query blocked: Only SELECT queries are allowed. Got: DELETE`"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "there is **no API key to configure** — reasoning happens in whichever client you connect"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "[query_timeout] The query exceeded the statement timeout of 15s: interrupted."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "for PostgreSQL, MySQL, and SQLite"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/AYUSH-148/DB-Explorer-MCP",
+      "fetched_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/AYUSH-148/DB-Explorer-MCP/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:06:32+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A read-only [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server for PostgreSQL, MySQL, and SQLite",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "your MCP client launches it over stdio, so go on to [Connect a client](#connect-a-client)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A read-only [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server for PostgreSQL, MySQL, and SQLite",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A read-only [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server for PostgreSQL, MySQL, and SQLite that lets an AI coding assistant explore, query, and audit a relational database",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# DB Explorer MCP",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "\"What tables exist, and which ones are missing primary keys?\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "\"Show me 5 rows from `orders` with the highest total.\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "\"Why is this query slow? `SELECT * FROM orders WHERE created_at >= '2026-01-01'`\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "\"Which foreign keys in this database lack indexes? Give me the `CREATE INDEX` statements.\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "\"Draft a migration adding a `shipped_at` column to `orders`, then validate the up and down scripts.\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "The server makes no LLM API calls of its own, so there is **no API key to configure**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "`stdio`, `streamable-http`, or `sse`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "Run by hand, `uv run server.py` prints nothing and waits for a client on stdin",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add db-explorer --env DATABASE_URL=\"postgresql+psycopg2://user:pass@localhost:5432/example\" -- uvx db-explorer-mcp-server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"db-explorer\": {\n      \"command\": \"uv\",\n      \"args\": [\"--directory\", \"C:/path/to/DB-Explorer-MCP\", \"run\", \"server.py\"],\n      \"env\": { \"DATABASE_URL\": \"postgresql+psycopg2://user:pass@localhost:5432/example\" }\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/2",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"db-explorer\": {\n      \"type\": \"http\",\n      \"url\": \"https://dbx.example.com/mcp\",\n      \"headers\": { \"Authorization\": \"Bearer ${DBX_TOKEN}\" }\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "DATABASE_URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "MCP_AUTH_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "QUERY_TIMEOUT_SECONDS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`explore_schema`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`execute_query`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`explain_query`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`validate_schema`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`suggest_index`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`migration_context`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`validate_migration`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:59+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:50+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

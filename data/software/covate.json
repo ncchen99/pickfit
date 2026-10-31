@@ -1,0 +1,674 @@
+{
+  "schema_version": "software.v1",
+  "slug": "covate",
+  "repo_id": "gh:1136585330",
+  "name": "Covate",
+  "summary": "MCP server that quizzes developers on AI-generated code and keeps debug history.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-assisted-coding",
+    "code-comprehension",
+    "code-review",
+    "developer-tools",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "spaced-repetition"
+  ],
+  "use_cases": [
+    "quiz yourself on AI-generated code changes",
+    "search past debugging solutions when errors occur",
+    "record debugging solutions to project knowledge base",
+    "fetch programming terms by domain"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://covate.org",
+  "repo": {
+    "url": "https://github.com/SunflowersLwtech/covate",
+    "full_name": "SunflowersLwtech/covate",
+    "created_at": "2026-01-18T00:31:24Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.11"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/SunflowersLwtech/covate/main/scripts/install.sh | bash",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "covate review due"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-covate-20261101-002640-e617",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/SunflowersLwtech/covate/main/scripts/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh",
+          "purpose": "download install.sh without piping to shell"
+        },
+        {
+          "command": "bash /tmp/install.sh",
+          "purpose": "run install.sh to clone to ~/covate and create uv venv"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://raw.githubusercontent.com/SunflowersLwtech/covate/main/scripts/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "covate review due"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": null,
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:28:26.038402+08:00",
+    "runs": [
+      {
+        "id": "verify-covate-20261101-002640-e617",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:28:26.038402+08:00",
+        "tool_version": "1.2.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/SunflowersLwtech/covate/main/scripts/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh",
+            "purpose": "download install.sh without piping to shell"
+          },
+          {
+            "command": "bash /tmp/install.sh",
+            "purpose": "run install.sh to clone to ~/covate and create uv venv"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 -- ~/covate/covate/bin/covate",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 --call term_get --args '{\"project_directory\": \"/home/sbx/work\"}' -- ~/covate/covate/bin/covate",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=term_get content=text text_chars=842",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show Covate MCP server initializing, listing 4 tools, completing handshake and returning term_get data.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-covate-20261101-002640-e617/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-covate-20261101-002640-e617/check-1-cmd5.judged.png",
+            "runs/verify/verify-covate-20261101-002640-e617/check-2-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.04402,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "~/covate/covate/bin/covate"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "Covate",
+          "server_version": "1.2.0",
+          "tools": [
+            "learning_session",
+            "debug_search",
+            "debug_record",
+            "term_get"
+          ],
+          "tool_count": 4,
+          "called_tool": "term_get",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "~/covate/covate/bin/covate",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add covate -- ~/covate/covate/bin/covate"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"covate\": {\n      \"command\": \"~/covate/covate/bin/covate\"\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "MCP_DEBUG",
+        "required": null,
+        "purpose": "Enable debug logging"
+      },
+      {
+        "name": "MCP_TIMEOUT",
+        "required": null,
+        "purpose": "MCP server startup timeout in ms"
+      },
+      {
+        "name": "MAX_MCP_OUTPUT_TOKENS",
+        "required": null,
+        "purpose": "Maximum tokens for MCP output"
+      },
+      {
+        "name": "COVATE_SYNC_URL",
+        "required": null,
+        "purpose": "Sync destination URL"
+      },
+      {
+        "name": "COVATE_SYNC_TOKEN",
+        "required": null,
+        "purpose": "Sync token"
+      },
+      {
+        "name": "COVATE_REVIEW_LEDGER",
+        "required": null,
+        "purpose": "Override review ledger location"
+      }
+    ],
+    "tools": [
+      "learning_session",
+      "debug_search",
+      "debug_record",
+      "term_get"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 88.0,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 26.7,
+      "signals": {
+        "stars": 8,
+        "monthly_downloads": null,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 285,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 64.5
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "b953bb2d760088d0ae9366b77247a1ec5cf690232631f712406a45e544c52610",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A context-aware **Model Context Protocol (MCP)** server that acts as a learning sidecar for AI coding assistants."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "| **Developers** | Don't just accept AI code—understand it."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**Prerequisites**: Python 3.11+ or [uv](https://docs.astral.sh/uv/)"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/SunflowersLwtech/covate/main/scripts/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "claude mcp add covate -- ~/covate/covate/bin/covate"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `MCP_DEBUG` | `false` | Enable debug logging (`true`, `1`, `yes`, `on`) |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/SunflowersLwtech/covate/main/scripts/update.sh | bash"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "This project is licensed under the [MIT License](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/SunflowersLwtech/covate",
+      "fetched_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/SunflowersLwtech/covate/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:03:34+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Model Context Protocol (MCP)** server that acts as a learning sidecar",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Developers | Don't just accept AI code—understand it.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Model Context Protocol (MCP)** server that acts as a learning sidecar",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "It helps developers **learn from AI-generated code changes** through interactive quizzes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# <img src=\"assets/favicon.png\" width=\"48\" height=\"48\" align=\"top\" style=\"margin-right: 10px;\"> Covate",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "**Prerequisites**: Python 3.11+ or [uv](https://docs.astral.sh/uv/)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "\"Quiz me on this change\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Searches project debug history for relevant past solutions.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Records debugging experiences to project knowledge base.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Fetches programming terms/concepts.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/SunflowersLwtech/covate/main/scripts/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/SunflowersLwtech/covate/main/scripts/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://raw.githubusercontent.com/SunflowersLwtech/covate/main/scripts/install.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "There is **no paid tier and nothing to buy**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "github_api",
+      "quote": "an MCP server that quizzes you on the code your AI just wrote, plus a hosted learning ledger at covate.org",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "- **Transport:** stdio",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "\"command\": \"~/covate/covate/bin/covate\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add covate -- ~/covate/covate/bin/covate",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"covate\": {\n      \"command\": \"~/covate/covate/bin/covate\"\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "MCP_DEBUG",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "MCP_TIMEOUT",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "MAX_MCP_OUTPUT_TOKENS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "COVATE_SYNC_URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "COVATE_SYNC_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/5",
+      "source_id": "readme",
+      "quote": "COVATE_REVIEW_LEDGER",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`learning_session` | 🎓 Interactive | Opens a WebUI quiz",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`debug_search` | 🔍 Silent RAG | Searches project debug history",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`debug_record` | 📝 Silent | Records debugging experiences",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`term_get` | 📚 Reference | Fetches programming terms/concepts.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:46+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:11+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

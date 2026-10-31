@@ -1,0 +1,565 @@
+{
+  "schema_version": "software.v1",
+  "slug": "memnest",
+  "repo_id": "gh:1268953379",
+  "name": "memnest",
+  "summary": "Local memory service that lets coding AIs save and look up past decisions from original text.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-memory",
+    "claude-code",
+    "coding-agents",
+    "cursor",
+    "mcp-server",
+    "persistent-memory",
+    "semantic-search",
+    "sqlite"
+  ],
+  "use_cases": [
+    "Find the discussion behind switching task managers",
+    "Look up last settled deployment approach and why",
+    "Look up what was tried last time an error happened"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/Blue-B/memnest",
+    "full_name": "Blue-B/memnest",
+    "created_at": "2026-06-14T06:00:44Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3 is needed for setup"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": 1.9,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/Blue-B/memnest/main/core/scripts/install.sh | bash",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "/memnest"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-memnest-20261101-005146-2747",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/Blue-B/memnest/releases/download/v0.4.3/memnest-v0.4.3-x86_64-unknown-linux-gnu.tar.gz -o /tmp/memnest.tar.gz && ls -lh /tmp/memnest.tar.gz",
+          "purpose": "download memnest v0.4.3 release archive"
+        },
+        {
+          "command": "mkdir -p /tmp/mn_extract && tar -xzf /tmp/memnest.tar.gz -C /tmp/mn_extract && mkdir -p ~/.local/bin && cp /tmp/mn_extract/memnest ~/.local/bin/memnest && chmod +x ~/.local/bin/memnest",
+          "purpose": "extract archive and install memnest binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.4.3",
+    "published_at": "2026-10-30T15:45:35Z",
+    "url": "https://github.com/Blue-B/memnest/releases/tag/v0.4.3"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:54:59.021095+08:00",
+    "runs": [
+      {
+        "id": "verify-memnest-20261101-005146-2747",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:54:59.021095+08:00",
+        "tool_version": "0.4.3",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/Blue-B/memnest/releases/download/v0.4.3/memnest-v0.4.3-x86_64-unknown-linux-gnu.tar.gz -o /tmp/memnest.tar.gz && ls -lh /tmp/memnest.tar.gz",
+            "purpose": "download memnest v0.4.3 release archive"
+          },
+          {
+            "command": "mkdir -p /tmp/mn_extract && tar -xzf /tmp/memnest.tar.gz -C /tmp/mn_extract && mkdir -p ~/.local/bin && cp /tmp/mn_extract/memnest ~/.local/bin/memnest && chmod +x ~/.local/bin/memnest",
+            "purpose": "extract archive and install memnest binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- memnest --mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call memory_search --args '{\"query\":\"test\",\"project\":\"all\"}' -- memnest --mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 2,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"error\": \"the server closed stdout before answering initialize\", \"exit\": 1, \"launch\": [\"memnest\", \"--mcp\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"transport\": \"stdio\", \"url\": null}",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/Blue-B/memnest/main/core/scripts/install.sh | bash installs and starts service",
+            "actually_needed": "install.sh requires systemd-analyze and systemd unit paths; in sandbox it fails with 'systemd-analyze: command not found'. Manually download tarball and copy memnest binary to ~/.local/bin works; run MCP via memnest --mcp",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "memory_search(query=\"...\")",
+            "actually_needed": "requires project or cwd; use project=\"all\" for cross-project search e.g. {\"query\":\"test\",\"project\":\"all\"}",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "first write or search downloads 1.1GB embedding model",
+            "actually_needed": "first memory_search took ~18s to download model; subsequent offline calls succeed from cache",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows MCP probe initializing memnest 0.4.3, listing 5 memory tools, and reporting handshake: ok.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-memnest-20261101-005146-2747/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-memnest-20261101-005146-2747/check-1-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.07193,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "memnest",
+            "--mcp"
+          ],
+          "url": null,
+          "protocol_version": "2024-11-05",
+          "server_name": "memnest",
+          "server_version": "0.4.3",
+          "tools": [
+            "memory_remember",
+            "memory_search",
+            "memory_get",
+            "memory_update",
+            "memory_delete"
+          ],
+          "tool_count": 5,
+          "called_tool": null,
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": null,
+    "client_configs": [],
+    "env_vars": [
+      {
+        "name": "MEMNEST_EXPOSE_SECRET_TOOLS",
+        "required": null,
+        "purpose": "enable the vault tools"
+      }
+    ],
+    "tools": [
+      "memory_search",
+      "memory_get",
+      "memory_remember"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:54:59+08:00",
+    "quality": {
+      "total": 73.0,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.578,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 26.3,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 85,
+        "hn_top_score": 1,
+        "registries_count": 0
+      },
+      "age_days": 138,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 53.8
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "e2ff45c4f53eb431766519dbb659706357135df29d00e5b71d09c5ff3d19302a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Memnest lets it look up what you decided before, and why, from the original conversation instead of an AI-written summary."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Decide something in Claude Code, look it up from Codex."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requirements: macOS on Apple Silicon, or Linux with systemd on x86_64 (glibc 2.35+, e.g. Ubuntu 22.04, Debian 12) or Arm64 (glibc 2.39+, e.g. Ubuntu 24.04). Python 3 is needed for setup."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/Blue-B/memnest/main/core/scripts/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "memory_search(query=\"reason for switching task managers\")"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Saving and searching call no model API, so there is no API key and no extra token bill."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "If Memnest is already registered from another source, remove that registration first to avoid loading it twice."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "MIT © Blue-B"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Blue-B/memnest",
+      "fetched_at": "2026-10-31T00:18:11+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Blue-B/memnest/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:03:55+08:00"
+    },
+    {
+      "id": "release:v0.4.3",
+      "kind": "release",
+      "url": "https://github.com/Blue-B/memnest/releases/tag/v0.4.3",
+      "fetched_at": "2026-10-31T01:03:55+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Other MCP clients connect to `http://127.0.0.1:3111/mcp`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "This installs the latest release for your user, starts the server and conversation watcher",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Other MCP clients connect to `http://127.0.0.1:3111/mcp`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Your coding AI forgets everything when the session ends. Memnest lets it look up what you decided before, and why",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# memnest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Requirements: macOS on Apple Silicon, or Linux with systemd on x86_64",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/prerequisites/min_ram_gb",
+      "source_id": "readme",
+      "quote": "embedding can use about 1.9 GB of RAM.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3 is needed for setup.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:11+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:11+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:11+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:11+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.4.3",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:03:55+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Why did we switch task managers? Find the discussion behind that decision.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "What deployment approach did we last settle on for this project, and why?",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "What did we try the last time this error happened?",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/Blue-B/memnest/main/core/scripts/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/Blue-B/memnest/main/core/scripts/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Stays on your machine.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "MEMNEST_EXPOSE_SECRET_TOOLS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "memory_search(query=\"reason for switching task managers\")",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "memory_get(id=\"<ID returned by search>\")",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "Use `memory_remember` to explicitly save an important decision.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:11+08:00",
+  "updated_at": "2026-11-01T00:54:59.027530+08:00"
+}

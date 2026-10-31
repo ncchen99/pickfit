@@ -1,0 +1,507 @@
+{
+  "schema_version": "software.v1",
+  "slug": "ai-agents-api-library",
+  "repo_id": "gh:1385624519",
+  "name": "AI Agents API Library",
+  "summary": "Curated machine-readable catalog of APIs and MCP servers for AI agents to call.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": null,
+  "maturity": null,
+  "tags": [
+    "agent-tools",
+    "ai-agents",
+    "api-catalog",
+    "api-directory",
+    "function-calling",
+    "llm-tools",
+    "llms-txt",
+    "mcp",
+    "mcp-server",
+    "mcp-servers"
+  ],
+  "use_cases": [],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://eater2.github.io/ai_agents_api_library/",
+  "repo": {
+    "url": "https://github.com/eater2/ai_agents_api_library",
+    "full_name": "eater2/ai_agents_api_library",
+    "created_at": "2026-09-24T13:59:21Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-ai-agents-api-library-20261101-003122-ac9d",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g ai-agents-api-library\n",
+          "purpose": "install package globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": null,
+  "last_release": {
+    "tag": "v0.3.11",
+    "published_at": "2026-10-14T13:26:33Z",
+    "url": "https://github.com/eater2/ai_agents_api_library/releases/tag/v0.3.11"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:32:53.111436+08:00",
+    "runs": [
+      {
+        "id": "verify-ai-agents-api-library-20261101-003122-ac9d",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:32:53.111436+08:00",
+        "tool_version": "0.3.11",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g ai-agents-api-library\n",
+            "purpose": "install package globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- ai-agents-api-library\n",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call list_categories --args '{}' -- ai-agents-api-library\n",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list_categories content=text text_chars=822",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search_apis --args '{\"query\":\"search\"}' -- ai-agents-api-library\n",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search_apis content=text text_chars=21320",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake succeeding and list_categories and search_apis tool calls returning bundled data.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ai-agents-api-library-20261101-003122-ac9d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ai-agents-api-library-20261101-003122-ac9d/check-1-cmd3.judged.png",
+            "runs/verify/verify-ai-agents-api-library-20261101-003122-ac9d/check-2-cmd4.judged.png",
+            "runs/verify/verify-ai-agents-api-library-20261101-003122-ac9d/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.029351,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "ai-agents-api-library"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "ai-agents-api-library",
+          "server_version": "0.3.11",
+          "tools": [
+            "list_categories",
+            "search_apis",
+            "get_api",
+            "get_reviews"
+          ],
+          "tool_count": 4,
+          "called_tool": "list_categories",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "npx -y ai-agents-api-library",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"ai-agents-api-library\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"ai-agents-api-library\"]\n    }\n  }\n}"
+      },
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add ai-agents-api-library -- npx -y ai-agents-api-library"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "search_apis",
+      "get_api",
+      "get_reviews",
+      "list_categories"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 83.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 57.1,
+      "signals": {
+        "stars": 32,
+        "monthly_downloads": 275,
+        "forks": 7,
+        "dependents": null,
+        "release_downloads": 11,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 36,
+      "packages": [
+        "npm:ai-agents-api-library"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 35.65
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "c6d82e9ad83edcddb031375edb225518304a420306a5ceb5dbf22ff42f5b106d",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A curated, machine-readable encyclopedia of third-party APIs and MCP servers that AI agents can call on a user's behalf."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "that an autonomous AI agent — such as Claude, ChatGPT, Gemini or a custom LLM agent — can use"
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "Claude Code: `claude mcp add ai-agents-api-library -- npx -y ai-agents-api-library`"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "No key needed. Add it to your MCP client:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "CC BY 4.0 (data), MIT (code)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/eater2/ai_agents_api_library",
+      "fetched_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/eater2/ai_agents_api_library/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:05:25+08:00"
+    },
+    {
+      "id": "release:v0.3.11",
+      "kind": "release",
+      "url": "https://github.com/eater2/ai_agents_api_library/releases/tag/v0.3.11",
+      "fetched_at": "2026-10-31T01:05:25+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "The catalog is also an MCP server with four tools",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:05+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "The catalog is also an MCP server with four tools",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:05+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A curated, machine-readable encyclopedia of third-party APIs and MCP servers that AI agents can call on a user's behalf.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:05+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# AI Agents API Library",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:05+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.3.11",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:05:25+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "remote_MCP-free%2C_no_API_key",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:05+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "No install: remote endpoint (Streamable HTTP, no key)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:05+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add ai-agents-api-library -- npx -y ai-agents-api-library",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:05+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"ai-agents-api-library\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"ai-agents-api-library\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:05+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "claude mcp add ai-agents-api-library -- npx -y ai-agents-api-library",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`search_apis` (filters: `query`, `category`, `mcp` (official/remote/any)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`search_apis` (filters: `query`, `category`, `mcp` (official/remote/any)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`get_api`, `get_reviews` (user reviews with pros and cons) and `list_categories`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`get_api`, `get_reviews` (user reviews with pros and cons) and `list_categories`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:05+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:34+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

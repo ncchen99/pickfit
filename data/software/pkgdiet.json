@@ -1,0 +1,594 @@
+{
+  "schema_version": "software.v1",
+  "slug": "pkgdiet",
+  "repo_id": "gh:1336774799",
+  "name": "PkgDiet",
+  "summary": "Dependency policy tool that blocks risky AI-suggested npm installs via hooks and MCP.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "ai-agent",
+    "ai-safety",
+    "ai-tools",
+    "bundle-size",
+    "cli",
+    "dependencies",
+    "devtools",
+    "llm",
+    "llm-evaluation"
+  ],
+  "use_cases": [
+    "evaluate npm packages against repository dependency policy",
+    "block risky AI-generated dependency before install",
+    "audit existing dependencies for policy, health and size",
+    "suggest modern lighter alternatives for blocked packages",
+    "enforce dependency policy on branch changes in CI"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://www.npmjs.com/package/pkgdiet",
+  "repo": {
+    "url": "https://github.com/om-tajne/pkgdiet",
+    "full_name": "om-tajne/pkgdiet",
+    "created_at": "2026-08-17T06:37:19Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js >=20"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-pkgdiet-20261101-000737-a202",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g pkgdiet 2>&1",
+          "purpose": "install pkgdiet globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v2.0.0",
+    "published_at": "2026-09-21T21:25:19Z",
+    "url": "https://github.com/om-tajne/pkgdiet/releases/tag/v2.0.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:08:35.628694+08:00",
+    "runs": [
+      {
+        "id": "verify-pkgdiet-20261101-000737-a202",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:08:35.628694+08:00",
+        "tool_version": "2.0.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g pkgdiet 2>&1",
+            "purpose": "install pkgdiet globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- pkgdiet mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call get_policy --args '{}' -- pkgdiet mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_policy content=text text_chars=561",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show pkgdiet MCP initialize, 5 tools listed, handshake ok, and get_policy tool call returning policy.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-pkgdiet-20261101-000737-a202/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-pkgdiet-20261101-000737-a202/check-1-cmd4.judged.png",
+            "runs/verify/verify-pkgdiet-20261101-000737-a202/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.032923,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "pkgdiet",
+            "mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "pkgdiet",
+          "server_version": "2.0.1",
+          "tools": [
+            "check_dependency",
+            "check_dependencies",
+            "suggest_alternative",
+            "get_policy",
+            "explain_verdict"
+          ],
+          "tool_count": 5,
+          "called_tool": "get_policy",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "npx pkgdiet mcp",
+    "client_configs": [],
+    "env_vars": [
+      {
+        "name": "PKGDIET_NO_NETWORK",
+        "required": null,
+        "purpose": "offline mode flag"
+      },
+      {
+        "name": "PKGDIET_TELEMETRY_DISABLED",
+        "required": null,
+        "purpose": "disables telemetry"
+      },
+      {
+        "name": "PKGDIET_REGISTRY_URL",
+        "required": null,
+        "purpose": "custom registry endpoint"
+      }
+    ],
+    "tools": [
+      "check_dependency",
+      "check_dependencies",
+      "suggest_alternative",
+      "get_policy",
+      "explain_verdict"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 90.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 37.2,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": 173,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 74,
+      "packages": [
+        "npm:pkgdiet"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 56.65
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "b4c0ce9a609bbe4c540968d3c262156e766dc8963316d5703499668f4601599b",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Dependency policy for AI-assisted JavaScript and TypeScript development."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requires Node.js 20 or later (Node.js >=20)."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npx -y pkgdiet@2.0.0 check moment"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "📊 Demo Summary: 2 blocked, 2 warned"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "`PKGDIET_NO_NETWORK=1`: Runs completely offline using cached metadata; never contacts the external registry."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "PkgDiet is open-source software provided under the [MIT License](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/om-tajne/pkgdiet",
+      "fetched_at": "2026-10-31T13:38:35+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/om-tajne/pkgdiet/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:42:04+08:00"
+    },
+    {
+      "id": "release:v2.0.0",
+      "kind": "release",
+      "url": "https://github.com/om-tajne/pkgdiet/releases/tag/v2.0.0",
+      "fetched_at": "2026-10-31T13:42:04+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "**`audit`** | Audit existing dependencies for policy, health, size, and unused-package signals",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "npx pkgdiet init",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "PkgDiet acts as a local Model Context Protocol (MCP) server over `stdio`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Dependency policy and MCP server for AI-assisted JavaScript development.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# 🥗 PkgDiet",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires Node.js 20 or later (Node.js >=20).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:35+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:35+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:35+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:35+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:35+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.0.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:42:04+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Evaluate npm packages against this repository's dependency policy",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "PkgDiet blocked this risky AI-generated dependency before install.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Audit existing dependencies for policy, health, size, and unused-package signals",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Queries PkgDiet's curated dataset to find modern, lighter, and maintained alternatives",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Enforce policy for dependency changes introduced by this branch",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Built-in Verification (all free, zero paid API keys):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "PkgDiet operates locally via stdio and local caching.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "PkgDiet acts as a local Model Context Protocol (MCP) server over `stdio`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "release:v2.0.0",
+      "quote": "PkgDiet now runs as a standard MCP server (`npx pkgdiet mcp`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "PKGDIET_NO_NETWORK",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "PKGDIET_TELEMETRY_DISABLED",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "PKGDIET_REGISTRY_URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "* `check_dependency`: Evaluates an npm package against your local `.pkgdietrc.json`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "* `check_dependencies`: Bounded batch evaluation of up to 50 dependencies",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "* `suggest_alternative`: Queries PkgDiet's curated dataset to find modern, lighter",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "* `get_policy`: Retrieves the active repository dependency policy rules and thresholds.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "* `explain_verdict`: Detailed breakdown of package scoring, maintenance signals",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:14+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:37:25+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

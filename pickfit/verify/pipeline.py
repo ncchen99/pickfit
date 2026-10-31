@@ -28,7 +28,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from pickfit.meta import resolve_model
+from pickfit.meta import is_open_model, resolve_model
 from pickfit.schema import VerificationRun, is_passed
 from pickfit.verify.agent import DEFAULT_MODE, AgentLimits, HistoryMode, VerifyAgent, VerifyReport, new_run_id
 from pickfit.verify.box import Box, BoxError
@@ -96,6 +96,16 @@ def _start(box: Box) -> float:
     began = time.monotonic()
     box.start()
     return round(time.monotonic() - began, 1)
+
+
+# The agent may run on Muse Spark Open (Baseten); the output, screenshot and feature judges stay on
+# muse-spark-1.3.
+OPEN_JUDGE_MODEL = "prod"
+
+
+def judge_model_for(model: str | None) -> str | None:
+    """The judges' model for an agent model: muse-spark-1.3 when the agent runs on Muse Spark Open."""
+    return OPEN_JUDGE_MODEL if is_open_model(model) else model
 
 
 def _judge_features(task: VerifyTask, report: VerifyReport, replay: ReplayResult, evidence_dir: Path, *,
@@ -198,7 +208,8 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
         box_usd += replay_box.usd_per_second() * phases["replay_box_s"]
         _dump(evidence_dir / "replay.json", {"plan": plan.to_dict(), "result": replay.to_dict()})
         if replay.passed:
-            judge_args = dict(model=model, run_id=run_id, scope=f"verify:{task.slug}",
+            judge_model = judge_model_for(model)
+            judge_args = dict(model=judge_model, run_id=run_id, scope=f"verify:{task.slug}",
                               scope_cap_usd=limits.scope_cap_usd, log=log, **call_kwargs)
             try:
                 parts = [judge_checks(_display_name(task), replay.checks, evidence_dir, **judge_args)]
@@ -206,7 +217,7 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
                 if launched is not None and launched.passed:  # a window without a readable screenshot cannot pass
                     parts.append(judge_gui(_display_name(task), launched, evidence_dir, **judge_args) or JudgeResult(
                         verdict="inconclusive", observed="the GUI launch left no screenshot to judge",
-                        error_text=None, matches_expected_signal=False, model=resolve_model(model)))
+                        error_text=None, matches_expected_signal=False, model=resolve_model(judge_model)))
                 judge = merge([p for p in parts if p is not None])
             except Exception as err:  # budget or API failure: no verdict, so nothing passes on it
                 notes.append(f"judge failed: {type(err).__name__}: {err}")
@@ -215,7 +226,7 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
                 phases["judge"] = judge.latency_s
                 _dump(evidence_dir / "judge.json", judge.to_dict())
             if judge is not None and judge.verdict == "working":
-                verdicts, feature_cost = _judge_features(task, report, replay, evidence_dir, model=model,
+                verdicts, feature_cost = _judge_features(task, report, replay, evidence_dir, model=judge_model,
                                                          run_id=run_id, limits=limits, log=log, notes=notes,
                                                          **call_kwargs)
 

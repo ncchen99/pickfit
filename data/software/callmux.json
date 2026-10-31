@@ -1,0 +1,565 @@
+{
+  "schema_version": "software.v1",
+  "slug": "callmux",
+  "repo_id": "gh:1215239749",
+  "name": "callmux",
+  "summary": "MCP proxy adding parallel execution, batching, caching, and pipelining between agents and servers.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agents",
+    "ai",
+    "batch",
+    "claude-mcp",
+    "codex-mcp",
+    "mcp",
+    "mcp-proxy",
+    "mcp-tools",
+    "model-context-protocol",
+    "multiplexer"
+  ],
+  "use_cases": [
+    "run independent reads concurrently in one turn",
+    "chain read-transform-write tools as a pipeline"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/edimuj/callmux",
+    "full_name": "edimuj/callmux",
+    "created_at": "2026-04-19T17:00:08Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-callmux-20261101-002158-cb6e",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g callmux",
+          "purpose": "Install callmux globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "callmux --version; echo ---; callmux -v",
+        "expected_signal": "0.25.0"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": null,
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:24:00.891587+08:00",
+    "runs": [
+      {
+        "id": "verify-callmux-20261101-002158-cb6e",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:24:00.891587+08:00",
+        "tool_version": "0.25.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g callmux",
+            "purpose": "Install callmux globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "callmux --version; echo ---; callmux -v",
+            "expected_signal": "0.25.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.25.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- callmux -- npx -y @modelcontextprotocol/server-github",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call callmux_status --args '{}' -- callmux -- npx -y @modelcontextprotocol/server-github",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=callmux_status content=text text_chars=2277",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show callmux MCP handshake with 11 tools listed, successful callmux_status tool call, and version 0.25.0 output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-callmux-20261101-002158-cb6e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-callmux-20261101-002158-cb6e/check-1-cmd5.judged.png",
+            "runs/verify/verify-callmux-20261101-002158-cb6e/check-2-cmd6.judged.png",
+            "runs/verify/verify-callmux-20261101-002158-cb6e/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.047552,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "callmux",
+            "--",
+            "npx",
+            "-y",
+            "@modelcontextprotocol/server-github"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "callmux",
+          "server_version": "0.25.0",
+          "tools": [
+            "callmux_parallel",
+            "callmux_batch",
+            "callmux_pipeline",
+            "callmux_search_tools",
+            "callmux_get_result",
+            "callmux_call",
+            "callmux_dry_run",
+            "callmux_recipe_run",
+            "callmux_recipe_dry_run",
+            "callmux_cache_clear",
+            "callmux_status"
+          ],
+          "tool_count": 11,
+          "called_tool": "callmux_status",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "npx -y callmux -- npx -y @modelcontextprotocol/server-github",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"github\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"callmux\", \"--\", \"npx\", \"-y\", \"@modelcontextprotocol/server-github\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "callmux_parallel",
+      "callmux_batch",
+      "callmux_pipeline",
+      "callmux_search_tools",
+      "callmux_get_result",
+      "callmux_call",
+      "callmux_dry_run",
+      "callmux_recipe_run",
+      "callmux_recipe_dry_run",
+      "callmux_cache_clear",
+      "callmux_status"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 83.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 45.4,
+      "signals": {
+        "stars": 9,
+        "monthly_downloads": 505,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 2,
+        "registries_count": 1
+      },
+      "age_days": 194,
+      "packages": [
+        "npm:callmux"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 45.37
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "46a9b904e78e78d23657e942fd23ce1050d5cdc9a23a2d08b3c453c455588eec",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Multiplexer for MCP tool calls: parallel execution, batching, caching, and pipelining for any MCP server"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "parallel execution, batching, caching, and pipelining for any AI agent."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "No install needed. Use `npx`:"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npm install -g callmux"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "npx -y callmux -- npx -y @modelcontextprotocol/server-github"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Set `exposeMetaTools: false` when you want the opposite shape"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "MIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/edimuj/callmux",
+      "fetched_at": "2026-10-31T13:39:16+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/edimuj/callmux/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:05:37+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "**callmux sits between your agent and any MCP server.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Or install globally:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Works with **any MCP client**: [Codex](docs/shared-server.md#codex-streamable-http), [Claude Desktop](docs/shared-server.md#claude-desktop)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Multiplexer for MCP tool calls: parallel execution, batching, caching, and pipelining for any MCP server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1>callmux</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:16+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:16+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:16+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:16+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Five independent reads become one `callmux_parallel`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Read > transform > write chain",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "anything that speaks MCP stdio or HTTP",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "npx -y callmux -- npx -y @modelcontextprotocol/server-github",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"github\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"callmux\", \"--\", \"npx\", \"-y\", \"@modelcontextprotocol/server-github\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`callmux_parallel` | Fire independent calls concurrently, get all results in one turn",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`callmux_batch` | Same tool, many items. The bulk operation pattern",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`callmux_pipeline` | Chain tools where each step feeds into the next",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`callmux_search_tools` | Search downstream tools by task, keyword, server, description, and input fields",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`callmux_get_result` | Page, filter, or project a full stored result when callmux returns a truncated response ref",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`callmux_call` | Call a single downstream tool by name, or `callmux_get_result` when the direct pagination tool is deferred",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`callmux_dry_run` | Validate and preview calls without executing",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`callmux_recipe_run` | Run a named [recipe](docs/recipes.md) from config",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`callmux_recipe_dry_run` | Preview a recipe without executing",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`callmux_cache_clear` | Invalidate cached results by tool, server, or everything",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`callmux_status` | Introspect servers, tools, cache state, and [session diagnostics](docs/shared-server.md)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:47+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:42+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

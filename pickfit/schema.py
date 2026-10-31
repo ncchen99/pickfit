@@ -256,6 +256,38 @@ def _clip(text: Any, limit: int) -> Any:
     return text[:limit] if isinstance(text, str) else text
 
 
+OS_NAMES: tuple[str, ...] = get_args(OS.__value__)
+MCP_TRANSPORTS: tuple[str, ...] = get_args(McpTransport.__value__)
+TRANSPORT_SPELLINGS = {"streamable-http": "streamable_http", "streamable http": "streamable_http",
+                       "streamablehttp": "streamable_http"}
+
+
+def _enum_items(items: Any, allowed: tuple[str, ...], spellings: dict[str, str] | None = None) -> Any:
+    """The items of an enum list that name an allowed value, in any case or a known spelling.
+
+    A model whose API does not enforce the enum (Muse Spark Open on Baseten) writes "macOS", or
+    names a runtime, client or distro ("python", "claude-code", "Ubuntu") as a platform: the first
+    is the same value, the rest are dropped rather than guessed into one.
+    """
+    if not isinstance(items, list) or not all(isinstance(item, str) for item in items):
+        return items  # left for validation to report
+    kept: list[str] = []
+    for item in items:
+        key = item.strip().lower()
+        key = (spellings or {}).get(key, key)
+        if key in allowed and key not in kept:
+            kept.append(key)
+    return kept
+
+
+def _enum_cited(cited: Any, allowed: tuple[str, ...], spellings: dict[str, str] | None = None) -> Any:
+    if isinstance(cited, dict) and "value" in cited:
+        kept = _enum_items(cited["value"], allowed, spellings)
+        # Nothing named an allowed value: unknown, like a value with no quote.
+        return {**cited, "value": kept if kept or not cited["value"] else None}
+    return cited
+
+
 class Cited(_Model, Generic[T]):
     """A value read from the sources, with the verbatim snippet that supports it."""
 
@@ -310,6 +342,11 @@ class InstallClaim(_Model):
             "brew alone does not mean macOS only."
         )
     )
+
+    @field_validator("platforms", mode="before")
+    @classmethod
+    def _known_platforms(cls, platforms: Any) -> Any:
+        return _enum_items(platforms, OS_NAMES)
 
 
 class SmokeTestCandidate(_Model):
@@ -375,6 +412,11 @@ class ExtractedMcp(_Model):
     client_configs: list[McpConfigClaim] = Field(description="Up to 3 config snippets, best documented first.")
     env_vars: list[McpEnvClaim] = Field(description="Environment variables the server reads; up to 10.")
     tools: CitedList = Field(description="Names of the tools it offers, as the sources list them; up to 30.")
+
+    @field_validator("transports", mode="before")
+    @classmethod
+    def _known_transports(cls, transports: Any) -> Any:
+        return _enum_cited(transports, MCP_TRANSPORTS, TRANSPORT_SPELLINGS)
 
 
 _NO_MCP = {"transports": {"value": None, "quote": None}, "launch_command": {"value": None, "quote": None},
@@ -478,6 +520,11 @@ class ExtractionResult(_Model):
         description="Only for an MCP server; leave every value null and every list empty otherwise.",
     )
     features: CitedList = Field(default=[], description=FEATURES_DESCRIPTION)
+
+    @field_validator("platforms", mode="before")
+    @classmethod
+    def _known_platforms(cls, platforms: Any) -> Any:
+        return _enum_cited(platforms, OS_NAMES)
 
     @model_validator(mode="after")
     def _drop_unusable_commands(self) -> ExtractionResult:

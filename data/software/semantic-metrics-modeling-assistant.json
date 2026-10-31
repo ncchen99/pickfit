@@ -1,0 +1,526 @@
+{
+  "schema_version": "software.v1",
+  "slug": "semantic-metrics-modeling-assistant",
+  "repo_id": "gh:1127042824",
+  "name": "Semantic Metrics Modeling Assistant",
+  "summary": "MCP agent that helps data teams define, validate, and visualize semantic metrics with trust scoring.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "ai-agent",
+    "analytics-engineering",
+    "data-engineering",
+    "data-engineering-project",
+    "data-governance",
+    "data-lineage",
+    "data-observability",
+    "data-quality",
+    "dbt",
+    "fastmcp"
+  ],
+  "use_cases": [
+    "define Active Users metric from natural language",
+    "visualize metric lineage and dependencies",
+    "export metrics to Looker LookML files"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/jkelleman/semantic-metrics-modeling-assistant",
+    "full_name": "jkelleman/semantic-metrics-modeling-assistant",
+    "created_at": "2026-01-03T04:02:10Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.10+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "local",
+  "last_release": null,
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "suspected_tool_fault",
+    "checked_at": "2026-11-01T00:14:17.861837+08:00",
+    "runs": [
+      {
+        "id": "verify-semantic-metrics-modeling-assistant-20261101-001301-8422",
+        "level": "unverified",
+        "unverified_reason": "suspected_tool_fault",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:14:17.861837+08:00",
+        "tool_version": null,
+        "install_method": "source",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "git clone https://github.com/jkelleman/semantic-metrics-modeling-assistant.git repo && ls -la repo",
+            "purpose": "clone repository"
+          },
+          {
+            "command": "pip install \"mcp[cli]>=1.1.2\"",
+            "purpose": "install mcp dependency"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "PYTHONPATH=/home/sbx/work/repo:$PYTHONPATH python -m semantic_metrics.server",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "File \"/home/sbx/work/repo/semantic_metrics/server.py\", line 889 Looker LookML Export for: {metric[''name'']} ^^^^^^ SyntaxError: invalid syntax. Perhaps you forgot a comma?",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install -e .",
+            "actually_needed": "fails with hatchling error: no directory matches project name semantic_metrics_assistant; requires tool.hatch.build config",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "python -m semantic_metrics.server starts MCP server",
+            "actually_needed": "server.py line 889 has SyntaxError metric[''name''] doubled quotes; server exits before handshake",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": "suspected tool fault, not proven: command 13 exits 1 with SyntaxError: invalid syntax. Perhaps you forgot a comma?; it failed again in a fresh box; File \"/home/sbx/work/repo/semantic_metrics/server.py\", line 889\\n Looker LookML Export for: {metric[''name'']}\\n ^^^^^^\\nSyntaxError: invalid syntax. Perhaps you forgot a comma?",
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-semantic-metrics-modeling-assistant-20261101-001301-8422/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.105875
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": "python -m semantic_metrics.server",
+    "client_configs": [],
+    "env_vars": [],
+    "tools": [
+      "define_metric",
+      "search_metrics",
+      "validate_metric",
+      "check_trust_score",
+      "suggest_improvements",
+      "visualize_lineage",
+      "generate_mermaid_diagram",
+      "compare_metrics",
+      "export_to_looker",
+      "export_to_tableau",
+      "export_to_dbt",
+      "analyze_impact"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 47.0,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.25,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 17.2,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 300,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 38.92
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "b149067768a654a797281bfbcf72f5239c23dd5c5e19f4fd10d50789fb316d81",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A production-ready MCP agent that helps data teams define, validate, and visualize semantic metrics with enterprise-grade persistence, trust scoring, and BI integrations."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Designed for data teams working with dbt, LookML, and modern semantic layers."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "- **Python 3.10+** - Core language"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "pip install -e ."
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "check_trust_score(\"Active Users\")\n\n# Returns:\n# Trust Score: 87/100 ↗️"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "License: MIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/jkelleman/semantic-metrics-modeling-assistant",
+      "fetched_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/jkelleman/semantic-metrics-modeling-assistant/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:06:06+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A production-ready MCP agent that helps data teams define, validate, and visualize semantic metrics",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Run the MCP server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Run the MCP server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Model Context Protocol (MCP) agent designed to reduce cognitive load for data teams working with semantic layers.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Semantic Metrics Modeling Assistant",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.10+",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "A production-ready MCP agent that helps data teams define, validate, and visualize semantic metrics",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "\"Define 'Active Users' as daily unique logins\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Visualize lineage",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Export to Looker",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "SQLite Database** - Persistent storage with full audit trails",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "python -m semantic_metrics.server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`define_metric()`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`search_metrics()`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`validate_metric()`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`check_trust_score()`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`suggest_improvements()`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`visualize_lineage()`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`generate_mermaid_diagram()`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`compare_metrics()`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`export_to_looker()`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`export_to_tableau()`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`export_to_dbt()`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`analyze_impact()`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:28+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:50+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

@@ -1,0 +1,625 @@
+{
+  "schema_version": "software.v1",
+  "slug": "ctxfw",
+  "repo_id": "gh:1365118892",
+  "name": "CTXFW // CONTEXT FIREWALL",
+  "summary": "Local MCP firewall that compacts code context with AST pruning and blocks prompt injection.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "anthropic",
+    "ast-pruning",
+    "code-analysis",
+    "context-window",
+    "cursor",
+    "developer-tools",
+    "llm-finops",
+    "mcp",
+    "mcp-server"
+  ],
+  "use_cases": [
+    "compact peripheral code into interface stubs to reduce tokens",
+    "inspect tool observations for indirect prompt injection",
+    "validate environment readiness with health diagnostic"
+  ],
+  "alternatives_to": [
+    "Lakera Guard",
+    "Palo Alto Networks Prisma AIRS",
+    "Protect AI Guardian",
+    "Cloudflare Firewall for AI"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://glama.ai/mcp/servers/heuristicolab/ctxfw",
+  "repo": {
+    "url": "https://github.com/heuristicolab/ctxfw",
+    "full_name": "heuristicolab/ctxfw",
+    "created_at": "2026-09-11T00:40:23Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install ctxfw",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "ctxfw doctor"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-ctxfw-20261101-001823-8014",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install ctxfw 2>&1",
+          "purpose": "install ctxfw via uv tool install ctxfw"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install ctxfw",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "ctxfw doctor"
+    }
+  },
+  "pricing": {
+    "model": "freemium",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v4.1.0",
+    "published_at": "2026-10-22T21:32:19Z",
+    "url": "https://github.com/heuristicolab/ctxfw/releases/tag/v4.1.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:19:00.204270+08:00",
+    "runs": [
+      {
+        "id": "verify-ctxfw-20261101-001823-8014",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:19:00.204270+08:00",
+        "tool_version": "4.1.1",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install ctxfw 2>&1",
+            "purpose": "install ctxfw via uv tool install ctxfw"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- ctxfw mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call evaluate_spec_axioms --args '{\"brief_text\":\"Test spec with enough content to evaluate. This is a simple test.\"}' -- ctxfw mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=evaluate_spec_axioms content=text text_chars=652",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show MCP handshake succeeding with 5 tools listed and evaluate_spec_axioms returning a QUARANTINED result.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ctxfw-20261101-001823-8014/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ctxfw-20261101-001823-8014/check-1-cmd3.judged.png",
+            "runs/verify/verify-ctxfw-20261101-001823-8014/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.042959,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "ctxfw",
+            "mcp"
+          ],
+          "url": null,
+          "protocol_version": "2024-11-05",
+          "server_name": "context-firewall-mcp",
+          "server_version": "4.1.1",
+          "tools": [
+            "prune_file",
+            "resolve_context_bundle",
+            "evaluate_spec_axioms",
+            "evaluate_patch",
+            "query_audit_ledger"
+          ],
+          "tool_count": 5,
+          "called_tool": "evaluate_spec_axioms",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": null,
+    "client_configs": [],
+    "env_vars": [],
+    "tools": [
+      "ctxfw.resolve_context_bundle",
+      "ctxfw.sara",
+      "evaluate_spec_axioms",
+      "evaluate_patch",
+      "query_audit_ledger"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 93.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 54.1,
+      "signals": {
+        "stars": 7,
+        "monthly_downloads": 1465,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 11,
+        "hn_top_score": 7,
+        "registries_count": 1
+      },
+      "age_days": 50,
+      "packages": [
+        "pypi:ctxfw"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 42.78
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "120ea5b9c29a9d5969bb44e3463fd9e50b32b1659b580bb7f7978caba87ec619",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "High-assurance in-memory Tree-Sitter AST context firewall and pruning MCP server for coding agents"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "For engineering squads requiring FinOps consolidation and automated Pull Request governance:"
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install --upgrade ctxfw"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "ctxfw doctor"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export CTXFW_LICENSE_KEY=\"CTXFW-TEAM-PRO-...\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "pip install --upgrade ctxfw"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "100% Open-Core (`Apache 2.0` Free CLI/MCP)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/heuristicolab/ctxfw",
+      "fetched_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/heuristicolab/ctxfw/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:44:19+08:00"
+    },
+    {
+      "id": "release:v4.1.0",
+      "kind": "release",
+      "url": "https://github.com/heuristicolab/ctxfw/releases/tag/v4.1.0",
+      "fetched_at": "2026-10-31T13:44:19+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "High-assurance in-memory Tree-Sitter AST context firewall and pruning MCP server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "pip install --upgrade ctxfw",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "High-assurance in-memory Tree-Sitter AST context firewall and pruning MCP server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "It combines an **in-memory polyglot AST pruner** with a **deterministic axiomatic intake sieve**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# CTXFW // CONTEXT FIREWALL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`\n   - Windows: `%APPDATA%/Claude/claude_desktop_config.json`\n   - Linux / POSIX:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Guaranteed local execution with zero network telemetry leakage on standard operating mode.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v4.1.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:44:19+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Replaces distance-1 and distance-2+ module implementations with clean interface signatures",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Inspects untrusted tool observations for indirect prompt injection",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Validate local environment readiness, stdio isolation purity, SQLite WAL concurrency",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "**Lakera Guard**, **Palo Alto Networks Prisma AIRS**, **Protect AI Guardian**, **Cloudflare Firewall for AI**) inspect HTTP traffic",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "**Lakera Guard**, **Palo Alto Networks Prisma AIRS**, **Protect AI Guardian**, **Cloudflare Firewall for AI**) inspect HTTP traffic",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "**Lakera Guard**, **Palo Alto Networks Prisma AIRS**, **Protect AI Guardian**, **Cloudflare Firewall for AI**) inspect HTTP traffic",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "**Lakera Guard**, **Palo Alto Networks Prisma AIRS**, **Protect AI Guardian**, **Cloudflare Firewall for AI**) inspect HTTP traffic",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "pipx install ctxfw",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "pipx install ctxfw",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "pipx install ctxfw",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "**100% Open-Core (`Apache 2.0` Free CLI/MCP) + Public Fixed Pricing",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Guaranteed local execution with zero network telemetry leakage on standard operating mode.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Pure isolated JSON-RPC stdio without leaked debug logs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "generated via `ctxfw.resolve_context_bundle` running against 16 internal dependencies",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "Deterministic `ctxfw.sara`**: **100.0% Recall / 0.0% FPR**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "release:v4.1.0",
+      "quote": "squads can optionally enable `evaluate_spec_axioms` and `ctxfw gate` in CI/CD",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "disallowed module imports, and `# type: ignore` bans via `evaluate_patch`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "paired with read-only forensic inspection of `SweGateStore` (`EVL-...`) and `TraceKitStore` (`SES-...`) via `query_audit_ledger`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:25+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:37:52+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

@@ -28,7 +28,7 @@ from dataclasses import asdict, dataclass, field
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from pickfit.schema import COMMAND_MAX, PASSED_LEVELS, is_passed
-from pickfit.verify.mcp import credentials, parse_summary, probe_kind
+from pickfit.verify.mcp import credentials, parse_summary, probe_kind, remote_proxy
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import CommandRecord, FinishArgs
@@ -327,6 +327,174 @@ def unread_scripts(step_ids: list[int], commands: list[CommandRecord]) -> list[U
     return sorted(found, key=lambda u: (u.step_id, u.name))
 
 
+# ---------------------------------------------------------------- copies the box changed
+
+
+# A pass must install what a user would get: a published package, or the project's own source as a
+# cited step fetched it. A directory no cited step fetched (a copy made by an uncited command) or a
+# copy the box edited (sed -i, patch, a rewritten source file) is not that.
+_INSTALLERS = (("uv", "tool", "install"), ("uv", "pip", "install"), ("pip", "install"), ("pip3", "install"),
+               ("pipx", "install"), ("npm", "install"), ("npm", "i"), ("pnpm", "add"), ("pnpm", "install"),
+               ("bun", "add"), ("bun", "install"), ("yarn", "global", "add"), ("cargo", "install"))
+_PATH_OPTIONS = {"--path", "--from", "-e", "--editable"}
+_VALUE_OPTIONS = {"-r", "--requirement", "-c", "--constraint", "-t", "--target", "--prefix", "--root", "--python",
+                  "-p", "--index-url", "-i", "--extra-index-url", "--with", "--registry", "--cache", "--git",
+                  "--branch", "--tag", "--rev", "--features", "--bin", "--version", "--cwd"}
+_SOURCE_FILE = re.compile(r"\.(?:py|js|mjs|cjs|ts|tsx|go|rs|java|kt|rb|php|c|cc|cpp|h|hpp|cs|swift|lua)$")
+_PACKAGE_DIRS = re.compile(r"node_modules/|site-packages/|dist-packages/|\.local/(?:lib|share/uv|share/pipx)/|"
+                           r"\.cargo/registry/")
+_PYTHON = re.compile(r"python(?:3(?:\.\d+)?)?")
+
+
+def _installer_args(words: list[str]) -> list[str] | None:
+    if len(words) > 2 and _PYTHON.fullmatch(_base(words[0])) and words[1:3] == ["-m", "pip"]:
+        words = ["pip", *words[3:]]
+    for prefix in _INSTALLERS:
+        if tuple(words[:len(prefix)]) == prefix:
+            return words[len(prefix):]
+    return None
+
+
+def _is_local(target: str) -> bool:
+    if "://" in target:
+        return target.startswith("file://")
+    return target in (".", "..") or target.startswith(("/", "./", "../", "~/")) or \
+        target.endswith((".whl", ".tgz", ".tar.gz", ".zip"))
+
+
+def local_installs(part: str) -> list[str]:
+    """The local paths a package-manager install in one simple command installs from."""
+    args = _installer_args(_words(part))
+    if args is None:
+        return []
+    targets: list[str] = []
+    take = skip = False
+    for word in args:
+        if take or skip:
+            if take:
+                targets.append(word)
+            take = skip = False
+        elif word in _PATH_OPTIONS:
+            take = True
+        elif word in _VALUE_OPTIONS:
+            skip = True
+        elif "=" in word and word.split("=", 1)[0] in _PATH_OPTIONS:
+            targets.append(word.split("=", 1)[1])
+        elif not word.startswith("-"):
+            targets.append(word)
+    return [t for t in (re.sub(r"\[[^\]]*\]$", "", t) for t in targets) if _is_local(t)]  # ./pkg[extra]
+
+
+def _project(repo_url: str | None) -> str | None:
+    """owner/name of a GitHub project URL, lowercased."""
+    m = re.search(r"github\.com[/:]([^/\s]+/[^/\s#?]+?)(?:\.git)?/?$", repo_url or "")
+    return m.group(1).lower() if m else None
+
+
+_CLONE_VALUE_OPTIONS = {"--depth", "-b", "--branch", "-o", "--origin", "--filter", "--reference", "-c", "--config",
+                        "-j", "--jobs", "--shallow-since", "--shallow-exclude", "--separate-git-dir", "-u"}
+
+
+def _positional(words: list[str], value_options: set[str]) -> list[str]:
+    args: list[str] = []
+    skip = False
+    for word in words:
+        if skip:
+            skip = False
+        elif word in value_options or re.fullmatch(r"\d*(?:>>?|<)", word):  # a value or a redirect's file
+            skip = True
+        elif not word.startswith("-") and not re.match(r"\d*[<>]", word):  # 2>&1, >log
+            args.append(word)
+    return args
+
+
+RELEASE = "*release*"  # a download from the project: an archive whose unpacked directory name is unknown
+
+
+def _fetched_names(parts: list[str], project: str | None) -> set[str]:
+    """Directory and file names cited steps fetched from the project: clones, release and archive downloads."""
+    names: set[str] = set()
+    for part in parts:
+        words = _words(part)
+        if words[:2] == ["git", "clone"] or words[:3] == ["gh", "repo", "clone"]:
+            args = _positional(words[3 if words[0] == "gh" else 2:], _CLONE_VALUE_OPTIONS)
+            if args and (project is None or project in args[0].lower()):
+                names.add(_base(args[1]) if len(args) > 1 else _base(args[0]).removesuffix(".git"))
+        elif (saved := _fetched(words)) is not None:
+            urls = [w for w in words if _URL.match(w) and (project is None or project in w.lower())]
+            if urls:
+                names.update([*map(_base, saved), *(_base(u.split("?", 1)[0]) for u in urls), RELEASE])
+        elif words[:3] == ["gh", "release", "download"]:
+            names.add(RELEASE)
+    return names
+
+
+def _within(path: str, names: set[str], project: str | None) -> bool:
+    """True when a path lies in (or is) something a cited step fetched from the project."""
+    stem = (project or "").split("/")[-1]
+    for part in path.removeprefix("file://").split("/"):
+        if part in ("", ".", "..", "~"):
+            continue
+        if part in names or (RELEASE in names and stem and part.lower().startswith(stem)):
+            return True
+    return False
+
+
+def _edits(part: str) -> list[str]:
+    """Files a simple command edits in place (sed -i, perl -i, patch, git apply); ["."] for the cwd's tree."""
+    words = _words(part)
+    if not words:
+        return []
+    program = _base(words[0])
+    in_place = {"sed": r"-[a-zA-Z]*i\S*|--in-place\S*", "perl": r"-[a-zA-Z]*i\S*"}.get(program)
+    if in_place and any(re.fullmatch(in_place, w) for w in words[1:]):
+        rest = [w for w in words[1:] if not w.startswith("-")]
+        return rest[1:] or ["."]
+    if program == "patch" or words[:2] in (["git", "apply"], ["git", "am"], ["git", "cherry-pick"]):
+        return ["."]
+    return []
+
+
+def modified_copy(step_commands: list[str], check_commands: list[str], repo_url: str | None) -> list[str]:
+    """Why the install is not of what a user would get, or [] when it is.
+
+    step_commands: the cited install steps, in order; check_commands: the checks and their setups.
+    """
+    project = _project(repo_url)
+    names = _fetched_names([part for command in step_commands for _, part in _top_level(command)], project)
+    problems: list[str] = []
+    cwd_fetched = False
+    for command in step_commands:
+        for _, part in _top_level(command):
+            words = _words(part)
+            if words[:1] == ["cd"] and len(words) > 1:
+                cwd_fetched = _within(words[1], names, project)
+            elif words[:1] == ["cp"] and len(words) > 2:  # a plain copy of what was fetched counts as fetched
+                *sources, dest = _positional(words[1:], set())
+                if sources and all(_within(s, names, project) for s in sources):
+                    if dest in (".", "./"):
+                        cwd_fetched = True
+                    else:
+                        names.add(_base(dest))
+            for target in local_installs(part):
+                relative = not target.startswith(("/", "~", "file:"))
+                if not (relative and cwd_fetched or _within(target, names, project)):
+                    problems.append("installs from a local copy no cited step fetched from the project: "
+                                    + _one_line(part))
+    for command, is_step in [*((c, True) for c in step_commands), *((c, False) for c in check_commands)]:
+        for _, part in _top_level(command):
+            ours = [path for path in _edits(part)
+                    if path == "." or _SOURCE_FILE.search(path) and is_step or _PACKAGE_DIRS.search(path)
+                    or _within(path, names, project)]
+            if is_step and _fetched(_words(part)) is None:  # a source file a step writes (not downloads)
+                ours += [path for path in written_paths(part) if _SOURCE_FILE.search(path)
+                         and (_PACKAGE_DIRS.search(path) or _within(path, names, project))]
+            if ours:
+                problems.append(f"changes the tool's own files ({_one_line(part)}): a patched copy is not "
+                                "what a user would install")
+    return list(dict.fromkeys(problems))
+
+
 def masked_exit(command: str) -> str | None:
     """Why the recorded exit code of `command` may not be its real result, or None."""
     parts = _top_level(command)
@@ -494,6 +662,10 @@ def mcp_problems(kind: str, stdout: str) -> list[str]:
         return ["no summary line from pickfit's MCP probe in the output"]
     if not summary.get("ok"):
         return [f"the MCP probe did not complete: {str(summary.get('error') or 'not ok')[:120]}"]
+    launch = summary.get("launch")
+    if isinstance(launch, list) and (remote := remote_proxy([str(w) for w in launch])):
+        return [f"the handshake went to the hosted {remote[1][:120]} through {remote[0]}: the box did not start "
+                "the server, so the check does not pass"]
     if kind == "mcp_call" and not summary.get("called"):
         return ["the MCP probe's tool call did not return a result"]
     return []
@@ -524,10 +696,12 @@ def weaker(a: str, b: str) -> str:
     return a if PASSED_LEVELS.index(a) > PASSED_LEVELS.index(b) else b
 
 
-def log_verdict(finish: FinishArgs, commands: list[CommandRecord], *, mcp: bool = False) -> LogVerdict:
+def log_verdict(finish: FinishArgs, commands: list[CommandRecord], *, mcp: bool = False,
+                repo_url: str | None = None) -> LogVerdict:
     """Decide the level from the command log; the claim is only an upper bound.
 
     mcp: the software is an MCP server, so only pickfit's probe can make it pass.
+    repo_url: the project, so an install from a local copy can be told apart from one of its own source.
     """
     by_id = {c.command_id: c for c in commands if c.command_id is not None}
     problems: list[str] = []
@@ -571,6 +745,13 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord], *, mcp: bool 
                 problems.append(f"step {sid} uses {missing[0]}, which only command {earlier.command_id} wrote; "
                                 f"cite {earlier.command_id} as a step too, or the replay will not have it")
                 break
+
+    check_commands = [by_id[cid].command for test in finish.smoke_tests
+                      for cid in (test.command_id, *test.setup_ids) if cid in by_id]
+    copied = modified_copy([by_id[sid].command for sid in step_ids], check_commands, repo_url)
+    if copied:
+        steps_ok = False
+        problems += copied
 
     checks: list[ResolvedCheck] = []
     has_service = False

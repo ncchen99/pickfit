@@ -1,0 +1,537 @@
+{
+  "schema_version": "software.v1",
+  "slug": "iran-mcp",
+  "repo_id": "gh:1414327429",
+  "name": "iran-mcp",
+  "summary": "Collection of MCP servers giving AI agents access to Iranian shopping, travel, finance, news and public sites.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-skills",
+    "ai-agents",
+    "claude",
+    "claude-code-plugin",
+    "cursor",
+    "digikala",
+    "divar",
+    "farsi",
+    "iran",
+    "llm"
+  ],
+  "use_cases": [
+    "search Digikala and compare sellers and price history",
+    "compare every shop's price for a product on Torob",
+    "find cheapest flights, trains and buses",
+    "find doctors and free appointment slots",
+    "search Iranian news headlines and read full articles"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/sepehr071/iran-mcp",
+    "full_name": "sepehr071/iran-mcp",
+    "created_at": "2026-10-11T12:42:59Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-iran-mcp-20261101-003402-34bb",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install digikala-mcp",
+          "purpose": "install digikala-mcp via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v2.0",
+    "published_at": "2026-10-20T14:47:14Z",
+    "url": "https://github.com/sepehr071/iran-mcp/releases/tag/v2.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:36:25.462252+08:00",
+    "runs": [
+      {
+        "id": "verify-iran-mcp-20261101-003402-34bb",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:36:25.462252+08:00",
+        "tool_version": "0.5.2",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install digikala-mcp",
+            "purpose": "install digikala-mcp via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- digikala-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call dk_gold_prices --args '{}' -- digikala-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=dk_gold_prices content=text text_chars=339",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show digikala-mcp v0.5.2 listing 23 tools with handshake ok and successfully calling dk_gold_prices returning gold prices.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-iran-mcp-20261101-003402-34bb/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-iran-mcp-20261101-003402-34bb/check-1-cmd5.judged.png",
+            "runs/verify/verify-iran-mcp-20261101-003402-34bb/check-2-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.044243,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "digikala-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "digikala-mcp",
+          "server_version": "0.5.2",
+          "tools": [
+            "dk_search",
+            "dk_find_cheapest",
+            "dk_best_for_budget",
+            "dk_suggest",
+            "dk_filters",
+            "dk_categories",
+            "dk_category_products",
+            "dk_brand_products",
+            "dk_seller",
+            "dk_deals",
+            "dk_best_sellers",
+            "dk_fresh_search",
+            "dk_product",
+            "dk_price_history",
+            "dk_reviews",
+            "dk_questions",
+            "dk_similar",
+            "dk_compare",
+            "dk_shortlist",
+            "dk_installments",
+            "dk_plus_plans",
+            "dk_gold_prices",
+            "dk_location"
+          ],
+          "tool_count": 23,
+          "called_tool": "dk_gold_prices",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "uvx digikala-mcp",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add digikala -- uvx digikala-mcp"
+      },
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add --transport http swapwallet https://swapwallet.app/mcp"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"digikala\": { \"command\": \"uvx\", \"args\": [\"digikala-mcp\"] },"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "nw_tech_news"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 87.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.6,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 67.3,
+      "signals": {
+        "stars": 173,
+        "monthly_downloads": null,
+        "forks": 18,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 19,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 28.68
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "3a843e7b62a5533a60f5244bfa9fd270c4f8d6d575f7c86c01def52d79967f1d",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Search, compare prices in Toman, find free slots and today's deals from Claude, Cursor, GitHub Copilot in VS Code or any MCP client."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Give your AI agent the Iranian web."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Every server is a small Python package on PyPI, run with [`uvx`](https://docs.astral.sh/uv/), except"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "claude plugin marketplace add sepehr071/iran-mcp"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "claude mcp add digikala -- uvx digikala-mcp"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "The site servers need no\naccount and no API key."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "When one is blocked, the next takes\n  over."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[![License: MIT](https://img.shields.io/badge/license-MIT-16a34a)](LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/sepehr071/iran-mcp",
+      "fetched_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/sepehr071/iran-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:05:27+08:00"
+    },
+    {
+      "id": "release:v2.0",
+      "kind": "release",
+      "url": "https://github.com/sepehr071/iran-mcp/releases/tag/v2.0",
+      "fetched_at": "2026-10-31T01:05:27+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "36 unofficial, open-source Persian-web MCP servers for Digikala, Torob, Divar, Snappfood, Jabama, MrBilit, Paziresh24, Taaghche",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:11+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Search, compare prices in Toman, find free slots and today's deals from Claude, Cursor, GitHub Copilot in VS Code or any MCP client.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:11+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "36 unofficial, open-source Persian-web MCP servers for Digikala, Torob, Divar, Snappfood, Jabama, MrBilit, Paziresh24, Taaghche",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:11+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Give your AI agent the Iranian web.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:11+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Iran MCP servers: iran-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:11+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:05:27+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Search with feature filters, best picks for a budget, every seller, price history, reviews, deals",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:11+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Every shop's price for a product, price history, deal checks, installments, cheapest shop for a basket",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:11+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Cheapest flights, trains, buses, taxis and hotels; seats and refund rules",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:11+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Doctors, visit prices, reviews, free appointment slots",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:11+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Latest headlines by source and category, keyword search, full article text",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:11+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "claude mcp add --transport http swapwallet https://swapwallet.app/mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:11+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add digikala -- uvx digikala-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:11+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add digikala -- uvx digikala-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:11+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "claude mcp add --transport http swapwallet https://swapwallet.app/mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:11+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/2",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"digikala\": { \"command\": \"uvx\", \"args\": [\"digikala-mcp\"] },",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:11+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "release:v2.0",
+      "quote": "full article text and `nw_tech_news`, the newest technology news read several Digiato pages deep.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:11+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:34+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

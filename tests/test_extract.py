@@ -29,7 +29,8 @@ from pickfit.extract import (
     select_candidates,
 )
 from pickfit.ledger import Caps, Ledger
-from pickfit.schema import ExtractionResult, meta_strict_schema
+from pickfit.meta import OPEN_MODEL
+from pickfit.schema import _NO_MCP, ExtractionResult, meta_strict_schema
 
 README = """# tinyq
 
@@ -296,6 +297,25 @@ def test_run_extract_stores_results_and_spends_through_call_meta(tmp_path: Path,
     assert again["attempted"] == 0
 
 
+def test_run_extract_on_muse_spark_open_stores_its_model(tmp_path: Path, ledger: Ledger) -> None:
+    db_path = tmp_path / "pipeline.db"
+    db = PipelineDB(db_path)
+    add_candidate(db, 1, "someone/tinyq")
+    server = FakeMeta(ok(extraction()))
+    summary = run_extract(limit=5, model="open", db_path=db_path, client=server.client(), ledger=ledger,
+                          runs_dir=tmp_path / "runs", log=lambda line: None)
+    assert summary["model"] == OPEN_MODEL and summary["by_status"] == {"ok": 1}
+    (request,) = server.requests
+    assert request["model"] == OPEN_MODEL and request["text"]["format"]["strict"] is True
+    (row,) = db.extractions()
+    assert row["model"] == OPEN_MODEL
+    assert run_extract(limit=5, model="prod", db_path=db_path, client=FakeMeta().client(), ledger=ledger,
+                       runs_dir=tmp_path / "runs", log=lambda line: None, max_attempts=1)["attempted"] == 1
+    # Done by this model from the same sources: a second "open" run makes no call.
+    assert run_extract(limit=5, model="open", db_path=db_path, client=FakeMeta().client(), ledger=ledger,
+                       runs_dir=tmp_path / "runs", log=lambda line: None)["attempted"] == 0
+
+
 def test_features_only_asks_for_features_and_keeps_the_earlier_extraction(tmp_path: Path, ledger: Ledger) -> None:
     db_path = tmp_path / "pipeline.db"
     db = PipelineDB(db_path)
@@ -428,3 +448,18 @@ def test_select_candidates_orders_tools_first_and_interleaves_categories(tmp_pat
     add_candidate(db, 7, "a/notes-mcp", category="mcp_server")
     assert [c["full_name"] for c in select_candidates(db, model="m", limit=10, categories=["mcp_server"])] == [
         "a/notes-mcp"]
+
+
+def test_enum_lists_keep_known_values_in_any_case_and_drop_the_rest() -> None:
+    # Muse Spark Open on Baseten does not enforce the schema's enums.
+    data = extraction()
+    data["platforms"] = {"value": ["macOS", "Linux", "claude-code", "python", "linux"], "quote": "macOS and Linux"}
+    data["install_methods"][0]["platforms"] = ["Ubuntu", "Windows"]
+    data["mcp"] = {**json.loads(json.dumps(_NO_MCP)),
+                   "transports": {"value": ["stdio", "http", "streamable-http"], "quote": "stdio or HTTP"}}
+    result = ExtractionResult.model_validate(data)
+    assert result.platforms.value == ["macos", "linux"]
+    assert result.install_methods[0].platforms == ["windows"]
+    assert result.mcp.transports.value == ["stdio", "streamable_http"]
+    data["platforms"] = {"value": ["python"], "quote": "python"}
+    assert ExtractionResult.model_validate(data).platforms.value is None  # nothing left: unknown, not a guess

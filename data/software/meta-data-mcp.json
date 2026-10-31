@@ -1,0 +1,730 @@
+{
+  "schema_version": "software.v1",
+  "slug": "meta-data-mcp",
+  "repo_id": "gh:1198867092",
+  "name": "meta-data-mcp",
+  "summary": "Single MCP server that routes data requests to 90 bundled open-data source plugins.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agentic-ai",
+    "agentic-ai-architecture",
+    "ai-data-analysis",
+    "ai-tools",
+    "anthropic-claude",
+    "autonomous-discovery",
+    "claude-code",
+    "data-discovery",
+    "data-science",
+    "datagov"
+  ],
+  "use_cases": [
+    "Find open-data source for FX rates query",
+    "Find open-data source for court rulings query",
+    "Show most recent published CVEs"
+  ],
+  "alternatives_to": [
+    "opendata-mcp"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://www.linzalytics.com",
+  "repo": {
+    "url": "https://github.com/derekslinz/meta-data-mcp",
+    "full_name": "derekslinz/meta-data-mcp",
+    "created_at": "2026-04-01T20:48:35Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "uv"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -LsSf https://astral.sh/uv/install.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Restart the affected MCP client to see the new server"
+      ],
+      "check": null,
+      "first_task": "uv run meta-data-mcp clients"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v3.3.0",
+    "published_at": "2026-08-04T23:56:54Z",
+    "url": "https://github.com/derekslinz/meta-data-mcp/releases/tag/v3.3.0"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "suspected_tool_fault",
+    "checked_at": "2026-11-01T00:22:22.826047+08:00",
+    "runs": [
+      {
+        "id": "verify-meta-data-mcp-20261101-002107-fbbc",
+        "level": "unverified",
+        "unverified_reason": "suspected_tool_fault",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:22:22.826047+08:00",
+        "tool_version": "3.1.0",
+        "install_method": "uv",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "uv tool install meta-data-mcp --force 2>&1",
+            "purpose": "install meta-data-mcp via uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "meta-data-mcp --help 2>&1 | head -100; meta-data-mcp version 2>&1; ~/.local/bin/meta-data-mcp version 2>&1",
+            "expected_signal": "meta-data-mcp version: 3.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "meta-data-mcp version: 3.1.0",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- meta-data-mcp run --transport stdio 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 2,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"error\": \"the server closed stdout before answering initialize\", \"exit\": 1, \"launch\": [\"meta-data-mcp\", \"run\", \"--transport\", \"stdio\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"transport\": \"stdio\", \"url\": null}",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "uv run meta-data-mcp run --transport stdio starts MCP server",
+            "actually_needed": "server crashes at import with pydantic ValidationError for Resource uri AnyUrl('ui://meta-data-mcp/shape/timeseries/v1') should be string",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": "suspected tool fault, not proven: command 5 exits 2 (command 5 shows no error of the tool's own code); it failed again in a fresh box; ValidationError for Resource uri: Input should be a valid string [input_value=AnyUrl('ui://meta-data-mcp/shape/timeseries/v1')]",
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-meta-data-mcp-20261101-002107-fbbc/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.116899
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "sse",
+      "stdio"
+    ],
+    "launch_command": "uv run meta-data-mcp run --transport stdio",
+    "client_configs": [],
+    "env_vars": [
+      {
+        "name": "COURTLISTENER_API_TOKEN",
+        "required": null,
+        "purpose": "CourtListener API access"
+      },
+      {
+        "name": "NVD_API_KEY",
+        "required": null,
+        "purpose": "Raises NVD API rate limits"
+      },
+      {
+        "name": "META_DATA_MCP_CONTACT",
+        "required": null,
+        "purpose": "email used in User-Agent"
+      },
+      {
+        "name": "OPENAQ_API_KEY",
+        "required": null,
+        "purpose": "Enables authenticated OpenAQ API access"
+      },
+      {
+        "name": "OPENSANCTIONS_API_KEY",
+        "required": null,
+        "purpose": "Enables authenticated OpenSanctions API access"
+      },
+      {
+        "name": "UN_COMTRADE_API_KEY",
+        "required": null,
+        "purpose": "Enables higher-tier UN Comtrade API access"
+      },
+      {
+        "name": "META_DATA_MCP_PRELOAD",
+        "required": null,
+        "purpose": "plugins to activate at startup"
+      },
+      {
+        "name": "META_DATA_MCP_AUTH_TOKEN",
+        "required": null,
+        "purpose": "bearer-token authentication"
+      },
+      {
+        "name": "META_DATA_MCP_CITATIONS",
+        "required": null,
+        "purpose": "citation manifest toggle"
+      },
+      {
+        "name": "META_DATA_MCP_PROVENANCE",
+        "required": null,
+        "purpose": "tamper-evidence digest toggle"
+      }
+    ],
+    "tools": [
+      "opendata_providers_find",
+      "opendata_explain_choice",
+      "opendata_domains_list",
+      "opendata_regions_list",
+      "opendata_providers_describe",
+      "opendata_providers_list",
+      "opendata_providers_activate",
+      "opendata_providers_deactivate",
+      "opendata_providers_list_active",
+      "opendata_health_snapshot",
+      "opendata_plugins_draft",
+      "opendata_plugins_create",
+      "opendata_tool_call"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 30.6,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": 178,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 0,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 211,
+      "packages": [
+        "pypi:meta-data-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 47.89
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "d2d74c5139bf267b109ceb3a473ffd4f8637e43d31baf534133854433531eef8",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A single MCP server that transparently routes user requests to 90 open-data sources."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "from your LLM's perspective there is one server and one place to ask"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "You'll need `uv` (a Python package manager)."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install uv\n\n# Linux\ncurl -LsSf https://astral.sh/uv/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "uv run meta-data-mcp setup"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `NVD_API_KEY` | `global_nvd_cve` | Raises NVD API rate limits |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "`uv run meta-data-mcp remove` | Unregister the server from detected MCP client configs"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "`~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/derekslinz/meta-data-mcp",
+      "fetched_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/derekslinz/meta-data-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:05:12+08:00"
+    },
+    {
+      "id": "release:v3.3.0",
+      "kind": "release",
+      "url": "https://github.com/derekslinz/meta-data-mcp/releases/tag/v3.3.0",
+      "fetched_at": "2026-10-31T01:05:12+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A single MCP server that transparently routes user requests to 90 open-data sources.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "You install one server. You get all the data, discoverable through built-in routing tools.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A single MCP server that transparently routes user requests to 90 open-data sources.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A single MCP server that transparently routes user requests to 90 open-data sources.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# meta-data-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "You'll need `uv` (a Python package manager).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:09+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v3.3.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:05:12+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "The LLM calls `opendata_providers_find` (\"FX rates\", \"court rulings\", \"earthquakes near Lisbon\")",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "The LLM calls `opendata_providers_find` (\"FX rates\", \"court rulings\", \"earthquakes near Lisbon\")",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "show me the most recent published CVEs.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "This project was forked from [opendata-mcp](https://github.com/OpenDataMCP/OpenDataMCP)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -LsSf https://astral.sh/uv/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "each wrapping a different open-data API.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Run the server (default SSE; pass `--transport stdio` for Claude Desktop).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "uv run meta-data-mcp run --transport stdio                # stdio",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "COURTLISTENER_API_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "NVD_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "META_DATA_MCP_CONTACT",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "OPENAQ_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "OPENSANCTIONS_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/5",
+      "source_id": "readme",
+      "quote": "UN_COMTRADE_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/6",
+      "source_id": "readme",
+      "quote": "META_DATA_MCP_PRELOAD",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/7",
+      "source_id": "readme",
+      "quote": "META_DATA_MCP_AUTH_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/8",
+      "source_id": "readme",
+      "quote": "META_DATA_MCP_CITATIONS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/9",
+      "source_id": "readme",
+      "quote": "META_DATA_MCP_PROVENANCE",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`opendata_providers_find` (\"FX rates\", \"court rulings\", \"earthquakes near Lisbon\")",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`opendata_explain_choice` | Show the scoring breakdown for a search",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`opendata_domains_list` | Enumerate the controlled domain vocabulary",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`opendata_regions_list` | Enumerate the controlled region vocabulary",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`opendata_providers_describe` | Full metadata for one plugin by id",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`opendata_providers_list` | Paginated dump of the whole registry.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`opendata_providers_activate` | Activate one provider so its tools become callable",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`opendata_providers_deactivate` | Remove an activated provider's tools",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`opendata_providers_list_active` | List currently active providers",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`opendata_health_snapshot` | Return per-provider health scores",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`opendata_plugins_draft` | **Build a validated plugin YAML spec from structured inputs.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`opendata_plugins_create` | **Autonomously create a new plugin.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "`opendata_tool_call` | Proxy-call an activated plugin tool by name",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:38+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:34+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

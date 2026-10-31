@@ -1,0 +1,605 @@
+{
+  "schema_version": "software.v1",
+  "slug": "memtomem",
+  "repo_id": "gh:1194290694",
+  "name": "memtomem",
+  "summary": "Markdown-first long-term memory that indexes notes and code for hybrid keyword and semantic search.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": "beta",
+  "tags": [
+    "agent",
+    "agent-harness",
+    "agent-memory",
+    "ai",
+    "bm25",
+    "claude",
+    "embedding",
+    "harness-engineering",
+    "harness-framework",
+    "knowledge-management"
+  ],
+  "use_cases": [
+    "Index notes once and search them in every agent session",
+    "Index plain markdown notes into searchable knowledge base",
+    "Index an existing notes directory"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://memtomem.com",
+  "repo": {
+    "url": "https://github.com/memtomem/memtomem",
+    "full_name": "memtomem/memtomem",
+    "created_at": "2026-03-28T06:33:51Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.12+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install 'memtomem[all]'",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "mm --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-memtomem-20261101-002434-6815",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install 'memtomem[all]' 2>&1",
+          "purpose": "install memtomem[all] via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.7.0",
+    "published_at": "2026-10-27T15:17:53Z",
+    "url": "https://github.com/memtomem/memtomem/releases/tag/v0.7.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:25:40.851830+08:00",
+    "runs": [
+      {
+        "id": "verify-memtomem-20261101-002434-6815",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:25:40.851830+08:00",
+        "tool_version": "0.7.1",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install 'memtomem[all]' 2>&1",
+            "purpose": "install memtomem[all] via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- memtomem-server 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call mem_status --args '{}' -- memtomem-server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=mem_status content=text text_chars=814",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show memtomem-server handshake with 9 tools and successful mem_status call returning status.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-memtomem-20261101-002434-6815/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-memtomem-20261101-002434-6815/check-1-cmd3.judged.png",
+            "runs/verify/verify-memtomem-20261101-002434-6815/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.039494,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "memtomem-server"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "memtomem",
+          "server_version": "0.7.1",
+          "tools": [
+            "mem_index",
+            "mem_add",
+            "mem_recall",
+            "mem_search",
+            "mem_stats",
+            "mem_status",
+            "mem_list",
+            "mem_read",
+            "mem_do"
+          ],
+          "tool_count": 9,
+          "called_tool": "mem_status",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": "uvx --isolated --from \"memtomem[all]==0.7.0\" memtomem-server",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add memtomem -s user -- uvx --isolated --from \"memtomem[all]==0.7.0\" memtomem-server"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "MEMTOMEM_WEB__MODE",
+        "required": null,
+        "purpose": "web UI mode"
+      },
+      {
+        "name": "MEMTOMEM_LLM__ENABLED",
+        "required": null,
+        "purpose": "enable LLM features"
+      },
+      {
+        "name": "MEMTOMEM_CONTEXT_GATEWAY__EXPERIMENTAL_CLAUDE_PROJECTS_SCAN",
+        "required": null,
+        "purpose": null
+      }
+    ],
+    "tools": [
+      "mem_status",
+      "mem_add",
+      "mem_index",
+      "mem_do"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 92.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 55.4,
+      "signals": {
+        "stars": 20,
+        "monthly_downloads": 1652,
+        "forks": 31,
+        "dependents": null,
+        "release_downloads": 9,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 216,
+      "packages": [
+        "pypi:memtomem"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 41.12
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "34030aa4a5bf8d9f7fc1abbe5cf8934bd677ce81a804035d8960fd78548c9a91",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "memtomem turns your markdown notes, documents, and code into a searchable knowledge base that any AI coding agent can use."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Markdown-first long-term memory for AI coding agents — your files stay yours, and core usage is hook-free by default."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "[![Python 3.12+](https://img.shields.io/badge/python-3.12+-green)](https://python.org)"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "uv tool install 'memtomem[all]'"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "`mm add` writes to your configured user memory directory and indexes the entry immediately. The final command should return the sentence you just added."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "`MEMTOMEM_WEB__MODE=dev` in your shell profile) to expose maintainer pages"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "To upgrade an existing uv tool install, use `mm upgrade` rather than re-running `uv tool install`"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "[Apache License 2.0](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/memtomem/memtomem",
+      "fetched_at": "2026-10-31T13:38:35+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/memtomem/memtomem/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:41:49+08:00"
+    },
+    {
+      "id": "release:v0.7.0",
+      "kind": "release",
+      "url": "https://github.com/memtomem/memtomem/releases/tag/v0.7.0",
+      "fetched_at": "2026-10-31T13:41:49+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Core — MCP server, CLI, Web UI, hybrid search, storage",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "uv tool install 'memtomem[all]'       # or: pipx install 'memtomem[all]'",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Markdown-first, long-term memory infrastructure for AI agents. Hybrid BM25 + semantic search across markdown/code files via MCP.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Markdown-first, long-term memory infrastructure for AI agents. Hybrid BM25 + semantic search across markdown/code files via MCP.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# memtomem",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "which isn't on `$PATH` in fresh shells on macOS/Linux.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "[![Python 3.12+](https://img.shields.io/badge/python-3.12+-green)](https://python.org)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:35+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:35+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:35+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:35+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:35+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.7.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:41:49+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "🧪 **Beta** — the nine core MCP tools, the `mm` CLI, and the format",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Index your notes once, search them in every session",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Write notes as plain `.md` files — memtomem indexes them",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "To bring existing notes into the same index, point `mm index` at a directory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "uv tool install 'memtomem[all]'",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "uv tool install 'memtomem[all]'",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add memtomem -s user -- uvx --isolated --from \"memtomem[all]==0.7.0\" memtomem-server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add memtomem -s user -- uvx --isolated --from \"memtomem[all]==0.7.0\" memtomem-server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "MEMTOMEM_WEB__MODE",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "MEMTOMEM_LLM__ENABLED",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "MEMTOMEM_CONTEXT_GATEWAY__EXPERIMENTAL_CLAUDE_PROJECTS_SCAN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "\"Call the mem_status tool\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "memory operations run on explicit CLI/MCP calls (`mm add`, `mem_add`, `mem_index`, etc.)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "memory operations run on explicit CLI/MCP calls (`mm add`, `mem_add`, `mem_index`, etc.)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`mem_do` meta-tool routes all non-core actions in `core` mode",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:16+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:37:25+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

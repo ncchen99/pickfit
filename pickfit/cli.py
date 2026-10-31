@@ -139,7 +139,7 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
 
     e = sub.add_parser("extract", help="read candidates with a Meta model into ExtractionResult (paid)")
     e.add_argument("--limit", type=int, required=True, help="candidates to extract in this run")
-    e.add_argument("--model", default="dev", help='"dev" (contributor, default), "prod", or a model id')
+    e.add_argument("--model", default="dev", help='"dev" (contributor, default), "prod", "open" (Muse Spark Open on Baseten) or a model id')
     e.add_argument("--effort", default="minimal", help="reasoning effort (default minimal)")
     e.add_argument("--repo", action="append", help="extract this repo id (gh:<id>) or owner/name")
     e.add_argument("--force", action="store_true", help="extract again even if already extracted")
@@ -154,7 +154,7 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     e.set_defaults(func=_extract)
 
     p = sub.add_parser("profiles", help="write data/software/<slug>.json from stored extractions ($0)")
-    p.add_argument("--model", default="prod", help='extractions by this model: "prod" (default), "dev" or an id')
+    p.add_argument("--model", default="prod", help='extractions by this model: "prod" (default), "dev", "open" or an id')
     p.add_argument("--category", action="append", choices=[*LISTED_CATEGORIES, "other"],
                    help="categories to write (repeatable; default " + ", ".join(LISTED_CATEGORIES) + ")")
     p.add_argument("--out", type=Path, default=None, help="output directory (default data/software)")

@@ -11,8 +11,9 @@ import pytest
 import pickfit.env
 from pickfit import meta
 from pickfit.ledger import Caps, Ledger
+from pickfit.meta import OPEN_MODEL
 from pickfit.schema import SoftwareRecord, VerificationRun
-from pickfit.verify.pipeline import verify_task
+from pickfit.verify.pipeline import judge_model_for, verify_task
 from pickfit.verify.result import infer_install_method, write_back
 from pickfit.verify.task import load_fixture
 from verify_fakes import FakeBox, FakeServer, finish, response, run_cmd
@@ -118,6 +119,24 @@ def test_full_pass_is_replayed_offline_and_judged(tmp_path: Path):
     assert json.loads((outcome.evidence_dir / "outcome.json").read_text(encoding="utf-8"))["offline"] is True
     assert lines[-1].startswith("result · graphtty · level function · replayed True · judge working · "
                                 "offline True")
+
+
+def test_an_agent_on_muse_spark_open_keeps_the_judge_on_muse_spark(tmp_path: Path):
+    server = FakeServer(*agent_turns(), judge_answer("working"))
+    outcome, _ = verify(tmp_path, server, Boxes({}), model="open")
+    run = outcome.run
+    assert outcome.passed and run.actor_model == OPEN_MODEL and run.judge.model == "muse-spark-1.3"
+    assert [r["model"] for r in server.requests] == [OPEN_MODEL] * 5 + ["muse-spark-1.3"]
+    assert judge_model_for("open") == judge_model_for(OPEN_MODEL) == "prod"
+    assert judge_model_for("dev") == "dev" and judge_model_for(None) is None
+
+
+def test_watch_and_reverify_stay_on_meta_muse_spark():
+    from pickfit import reverify, watch
+    from pickfit.meta import provider_for, resolve_model
+
+    assert watch.MODEL == reverify.MODEL == "muse-spark-1.3"
+    assert provider_for(resolve_model(watch.MODEL)) == "meta" and judge_model_for(watch.MODEL) == watch.MODEL
 
 
 def test_judge_that_sees_an_error_vetoes_the_pass(tmp_path: Path):
