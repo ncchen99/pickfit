@@ -1,4 +1,4 @@
-"""`pickfit verify`: agent, replay and judge for a fixture or a batch, in Docker, on Modal or in a macOS VM."""
+"""`pickfit verify`: agent, replay and judge for a fixture or a batch, in Docker, on Modal, or in a macOS or Windows VM."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import json
 
 LIFETIME_MARGIN_S = 120  # the box outlives the agent's time limit, so the last turn still has it
 TART_MAX_VMS = 2  # Apple's limit on macOS VMs running at once on one Mac
+VBOX_MAX_VMS = 1  # one Windows base, reset from its snapshot for every box
 
 
 def add_parser(sub: argparse._SubParsersAction) -> None:
@@ -26,8 +27,9 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--data-dir", default=None,
                    help="records to take slugs from and write back to (default data/software)")
     v.add_argument("--dry-run", action="store_true", help="batch: list what would run and why others are skipped")
-    v.add_argument("--runner", choices=["docker", "modal", "tart"], default="docker",
-                   help="local DockerBox (development), ModalBox (gVisor on Modal) or TartBox (macOS VM on this Mac)")
+    v.add_argument("--runner", choices=["docker", "modal", "tart", "vbox"], default="docker",
+                   help="local DockerBox (development), ModalBox (gVisor on Modal), TartBox (macOS VM on this Mac) "
+                        "or VBoxBox (Windows 11 VM in VirtualBox on this PC)")
     v.add_argument("--model", default=None, help='"dev", "prod", or a model id (default: PICKFIT_MODE)')
     v.add_argument("--mode", choices=["chain", "replay"], default=None,
                    help="carry history by previous_response_id (chain) or resend it (replay)")
@@ -48,7 +50,9 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--limits-test", action="store_true",
                    help="no model: check the box's limits (user, metadata, network cut, memory, disk, pids)")
     v.add_argument("--prepare-base", action="store_true",
-                   help="tart: build the base macOS VM the boxes clone (needs `tart pull` of the source image)")
+                   help="tart: build the base macOS VM the boxes clone (needs `tart pull` of the source image); "
+                        "vbox: build the router VM and the Windows base (needs the ISOs in ~/.pickfit/vbox/iso)")
+    v.add_argument("--iso", default=None, help="vbox --prepare-base: the Windows 11 Enterprise evaluation ISO")
     v.set_defaults(func=run)
 
 
@@ -65,6 +69,12 @@ def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", 
         from pickfit.verify.tart_box import TartBox
 
         return lambda run_id, role: TartBox(limits=BoxLimits(lifetime_s=lifetime_s))
+    if runner == "vbox":
+        if gpu:
+            raise ValueError("--gpu needs --runner modal")
+        from pickfit.verify.vbox_box import VBoxBox
+
+        return lambda run_id, role: VBoxBox(limits=BoxLimits(lifetime_s=lifetime_s))
     if runner == "modal":
         from pickfit.verify.modal_box import ModalBox
 
@@ -85,8 +95,17 @@ def run(args: argparse.Namespace) -> int:
     from pickfit.verify.task import load_fixture
 
     if args.prepare_base:
+        if args.runner == "vbox":
+            from pathlib import Path
+
+            from pickfit.verify.vbox_box import ROUTER_VM, VBox, prepare_base, prepare_router
+
+            if VBox()("showvminfo", ROUTER_VM, check=False).returncode != 0:
+                prepare_router()
+            prepare_base(iso=Path(args.iso) if args.iso else None)
+            return 0
         if args.runner != "tart":
-            print("pickfit verify: --prepare-base needs --runner tart")
+            print("pickfit verify: --prepare-base needs --runner tart or vbox")
             return 2
         from pickfit.verify.tart_box import prepare_base
 
@@ -120,6 +139,9 @@ def run(args: argparse.Namespace) -> int:
             print(f"pickfit verify: macOS allows {TART_MAX_VMS} VMs at once; concurrency {args.concurrency} -> "
                   f"{TART_MAX_VMS}")
             args.concurrency = TART_MAX_VMS
+        if args.runner == "vbox" and args.concurrency > VBOX_MAX_VMS:
+            print(f"pickfit verify: one Windows box at a time; concurrency {args.concurrency} -> {VBOX_MAX_VMS}")
+            args.concurrency = VBOX_MAX_VMS
         return _batch(args, make_box, limits)
     outcome = verify_task(load_fixture(args.fixture), make_box, model=args.model, mode=args.mode or DEFAULT_MODE,
                           limits=limits, write=args.write_back, keep_agent_box=args.keep_box)
@@ -173,7 +195,7 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
         print(f"pickfit verify: no pipeline database at {db} (use --db)")
         return 2
     data_dir = Path(args.data_dir) if args.data_dir else DATA_DIR
-    runner = {"tart": "tart-vz"}.get(args.runner)  # macOS runs do not count Linux ones as done
+    runner = {"tart": "tart-vz", "vbox": "vbox"}.get(args.runner)  # macOS/Windows runs do not count Linux ones
     skip = verified_slugs(runs_dir, since=args.since, runner=runner) if args.since else \
         set() if args.force else verified_slugs(runs_dir, runner=runner)
     skip -= recheck_slugs(data_dir, runs_dir)  # a new release since the last attempt, which did not pass
@@ -185,7 +207,8 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
     items, skipped = load_candidates(db, limit=args.batch, repos=repos, categories=args.category,
                                      skip_slugs=skip, known_slugs=known,
                                      known_categories=record_categories(data_dir), gpu=bool(args.gpu),
-                                     os="macos" if args.runner == "tart" else "linux", display=args.display)
+                                     os={"tart": "macos", "vbox": "windows"}.get(args.runner, "linux"),
+                                     display=args.display)
     print(f"batch · {len(items)} to verify · {len(skipped)} set aside · {args.runner}"
           f"{' ' + args.runtime if args.runner == 'modal' else ''}{' + display' if args.display else ''}"
           f"{' + ' + args.gpu if args.gpu else ''} · "

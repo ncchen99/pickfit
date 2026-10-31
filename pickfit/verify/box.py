@@ -113,6 +113,15 @@ class Box(ABC):
     kind: str = "Linux sandbox"
     user_rule: str = "You are not root: no sudo, no apt-get, nothing written outside $HOME and /tmp."
     detach: str = "setsid nohup"  # starts run_background processes in their own session, immune to SIGHUP
+    shell: str = "bash"  # what run_command commands are written in
+
+    def background(self, command: str, port: int | None, wait_s: int, tag: int | str) -> str:
+        """The command that starts `command` in the background for run_background and the replay."""
+        return background_script(command, port, wait_s, tag, detach=self.detach)
+
+    def list_command(self, path: str) -> str:
+        """The command behind the agent's list_dir."""
+        return f"ls -la -- {shlex.quote(path)}"
 
     def describe(self) -> str:
         """The box line of the agent's task: OS, user, paths and what is installed."""

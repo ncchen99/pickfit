@@ -72,7 +72,7 @@ def test_report_numbers(tmp_path: Path) -> None:
     out = tmp_path / "usage.md"
     assert main(["--ledger", str(ledger), "--runs", str(tmp_path / "runs"), "--data", str(tmp_path / "data"),
                  "--out", str(out)]) == 0
-    md = out.read_text()
+    md = out.read_text(encoding="utf-8")
     # 3 billed requests (the 4xx and the local cache hit are not), pipeline budget only
     assert "**3 Meta API requests**" in md and "**$0.0500** in total" in md
     assert "**14,000 input tokens**, 6,000 of them" in md and "**43% cache hit**" in md
@@ -94,5 +94,5 @@ def test_since_limits_days(tmp_path: Path) -> None:
     out = tmp_path / "usage.md"
     main(["--ledger", str(ledger), "--runs", str(tmp_path / "runs"), "--data", str(tmp_path / "data"),
           "--since", "2026-10-29", "--out", str(out)])
-    md = out.read_text()
+    md = out.read_text(encoding="utf-8")
     assert "**2 Meta API requests**" in md and "2026-10-28 |" not in md

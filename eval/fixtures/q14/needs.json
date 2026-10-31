@@ -1,0 +1,53 @@
+[
+  {
+    "item": "Pinned openai Python client",
+    "why": "L2-2: 'through the pinned openai Python client with only base_url changed'. embed_check.py imports it. It runs inside the sandbox (it calls 127.0.0.1) but must not be installed into the answer's environment, so it lives with the grader's Python on the read-only /eval mount.",
+    "candidates": [
+      {
+        "source": "https://pypi.org/project/openai/",
+        "license": "Apache-2.0",
+        "size": "about 1 MB wheel plus dependencies (httpx, pydantic, ...)",
+        "pin": "the latest release on the pin date: openai==X.Y.Z with pip --require-hashes (wheel SHA-256 of it and every dependency) in calibration.md"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "strace (Ubuntu 24.04 package) for the egress monitor",
+    "why": "Shared by every Linux question: listed once in eval/fixtures/_shared/needs.json (strace for _shared/egress.py).",
+    "candidates": [],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "How egress is blocked in phase B",
+    "why": "Settled by 9.3 B.3 (念誠, 2026-10-31): a fresh sandbox from phase A's snapshot (so memory.peak covers phase B only), and the whole of phase B in one eval/fixtures/_shared/egress.py run --block-network (user + network namespace in Modal's gVisor box, tested 2026-10-31: loopback only, DNS fails).",
+    "candidates": [],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Dev image digest (shared by every Linux question)",
+    "why": "eval/README.md section 5: ubuntu:24.04 base, digest recorded.",
+    "candidates": [
+      {
+        "source": "docker.io/library/ubuntu:24.04 plus the eval's own dev-image layer (decided once for all Linux questions)",
+        "license": "Ubuntu image terms; packages under their own licenses",
+        "size": "about 30 MB compressed base",
+        "pin": "image digest sha256:... in calibration.md and in the results"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Grader-side Python 3 inside the sandbox",
+    "why": "service_check.py, embed_check.py, rerank_check.py and the shared _shared/egress.py run inside the sandbox (_shared/mem_peak.sh needs only sh). A standalone interpreter on the read-only /eval mount (with the pinned openai client installed into it) keeps the answer's environment untouched; the dev image's python3 is fine for the stdlib-only scripts if present.",
+    "candidates": [
+      {
+        "source": "https://github.com/astral-sh/python-build-standalone/releases (x86_64-unknown-linux-gnu install_only build)",
+        "license": "PSF-2.0 (plus bundled library licenses)",
+        "size": "about 30 MB",
+        "pin": "release tag + archive SHA-256"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  }
+]

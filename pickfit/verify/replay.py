@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pickfit.verify import gui
-from pickfit.verify.box import Box, BoxError, ExecResult, background_script
+from pickfit.verify.box import Box, BoxError, ExecResult
 from pickfit.verify.features import failed_run
 from pickfit.verify.task import prepare_box
 from pickfit.verify.mcp import is_mcp
@@ -210,8 +210,7 @@ class Replayer:
             return ran
         if cmd.tool == "run_background":
             wait = min(cmd.wait_s or 30, BACKGROUND_WAIT_S)
-            result = self.box.exec(background_script(cmd.command, cmd.port, wait, f"replay-{cmd.command_id}",
-                                                     detach=self.box.detach),
+            result = self.box.exec(self.box.background(cmd.command, cmd.port, wait, f"replay-{cmd.command_id}"),
                                    wait + 15)
         else:
             result = self.box.exec(cmd.command, min(self.timeout, replay_timeout(cmd.seconds), max_s or self.timeout))

@@ -130,7 +130,7 @@ def runs(tmp_path: Path) -> Path:
 
 def traces(runs: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for path in sorted((runs / "traces").glob("*.jsonl"))
-            for line in path.read_text().splitlines()]
+            for line in path.read_text(encoding="utf-8").splitlines()]
 
 
 def call(server: FakeServer, ledger: Ledger, endpoint: str = "chat", body: dict | None = None, **kwargs):
@@ -591,9 +591,9 @@ def test_api_key_never_in_trace_or_cache(ledger: Ledger, runs: Path):
     files = list((runs / "traces").glob("*.jsonl")) + list((runs / "cache").glob("*.json"))
     assert len(files) == 2
     for path in files:
-        text = path.read_text()
+        text = path.read_text(encoding="utf-8")
         assert FAKE_KEY not in text and "LLM_123_abcDEF" not in text
-    assert "[redacted]" in next((runs / "traces").glob("*.jsonl")).read_text()
+    assert "[redacted]" in next((runs / "traces").glob("*.jsonl")).read_text(encoding="utf-8")
 
 
 def test_ping_is_tiny_public_and_uncached(ledger: Ledger, runs: Path):

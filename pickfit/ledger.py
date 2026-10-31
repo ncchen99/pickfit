@@ -86,7 +86,7 @@ class Caps:
     daily_usd: Callable[[date], float]
 
 
-PIPELINE_TOTAL_USD = 115.0
+PIPELINE_TOTAL_USD = 120.0
 PIPELINE_CAPS = Caps(total_usd=PIPELINE_TOTAL_USD, daily_usd=pipeline_daily_cap)
 
 

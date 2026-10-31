@@ -1,4 +1,4 @@
-"""pickfit evaluation runner (eval/README.md sections 4 and 9.1).
+"""pickfit evaluation runner (eval/README.md sections 4, 9.1 and 9.2).
 
 Every run is a new `claude -p` process in a new empty working directory with a
 new empty HOME, so nothing from this Mac's user config (CLAUDE.md, plugins,
@@ -11,7 +11,10 @@ Commands:
   snapshot --label before|after   A3 version record -> eval/results/versions-<label>.json
   run1                            first run, all three groups, order per B1
   reruns                          runs 2 and 3, control and experimental, per B3
-  check --round run1              B2 check of every attempt's version, model and tools
+  haiku                           9.2 C: control and experimental once with the Haiku model
+  bset                            9.2 E: the B question set, control and experimental once
+  cut --item haiku|bset           9.2 F / 9.1 G: record that an item was cut (reason required)
+  check --round ROUND             B2 check of every attempt's version, model and tools
   status                          what has run, what it cost
 
 Run with: uv run --with pyyaml==6.0.2 python eval/runner/run.py <command>
@@ -43,6 +46,9 @@ RUNS = RESULTS / "runs"
 CONFIG_PATH = EVAL / "runner" / "config.json"
 TAIPEI = dt.timezone(dt.timedelta(hours=8))
 GROUPS = ("control", "experimental", "rules_only")
+ROUNDS = ("run1", "run2", "run3", "haiku", "bset")
+QUESTIONS_A = EVAL / "questions.yaml"
+QUESTIONS_B = EVAL / "questions-b.yaml"  # 9.2 E, frozen in dec4cb9
 # B2: only these Anthropic errors make a run invalid (retried). Server errors can arrive mid-stream with no status code.
 API_ERROR = re.compile(r"API Error[^\n]{0,60}\b(5\d\d|429)\b|overloaded|API Error: Server error|Internal server error", re.I)
 API_ERROR_KINDS = {"server_error", "overloaded_error", "rate_limit_error", "api_error"}
@@ -59,10 +65,10 @@ def now() -> str:
     return dt.datetime.now(TAIPEI).isoformat(timespec="seconds")
 
 
-def load_questions() -> list[dict[str, Any]]:
+def load_questions(path: Path = QUESTIONS_A) -> list[dict[str, Any]]:
     import yaml  # uv run --with pyyaml; not a pickfit dependency
 
-    data = yaml.safe_load((EVAL / "questions.yaml").read_text(encoding="utf-8"))
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
     questions = sorted(data["questions"], key=lambda q: q["id"])
     return questions
 
@@ -71,10 +77,20 @@ def load_questions() -> list[dict[str, Any]]:
 
 
 def run1_order(qid: str) -> list[str]:
-    """B1: odd questions start with control, even with experimental; rules-only last."""
-    number = int(qid.lstrip("q"))
+    """B1: odd questions start with control, even with experimental; rules-only last (q01 or b01 alike)."""
+    number = int(re.sub(r"\D", "", qid))
     pair = ["control", "experimental"] if number % 2 else ["experimental", "control"]
     return [*pair, "rules_only"]
+
+
+def pair_order(qid: str) -> list[str]:
+    """9.2 C and E: the B1 order without rules-only."""
+    return [g for g in run1_order(qid) if g != "rules_only"]
+
+
+def round_config(config: dict[str, Any], rnd: str) -> dict[str, Any]:
+    """The configuration a round runs and is checked with: 9.2 C swaps only the model."""
+    return dict(config, model=config["haiku_model"]) if rnd == "haiku" else config
 
 
 def rerun_order(rounds: list[int]) -> list[tuple[str, int]]:
@@ -595,9 +611,73 @@ def cmd_reruns(args, config=None, questions=None, api_key=None, base=None, clock
     return 0
 
 
+# --- 9.2 C and E: the Haiku comparison and the B question set ----------------------
+
+EXTRA_ROUNDS = {
+    # round: (cap key, rounds that must have ended first, what it is)
+    "haiku": ("haiku", ("reruns",), "9.2 C: Haiku comparison, after every 9.1 run"),
+    "bset": ("bset", ("reruns", "haiku"), "9.2 E: B question set, after 9.1 and 9.2 C"),
+}
+
+
+def ended(name: str, base: Path | None = None) -> bool:
+    """A stage is over when it completed, stopped at a pre-registered limit, or was cut (G)."""
+    root = base or RUNS
+    return any((root / f"{name}-{suffix}.json").exists() for suffix in ("complete", "stopped", "cut"))
+
+
+def cmd_extra(rnd: str, args, config=None, questions=None, api_key=None, base=None, log=print) -> int:
+    """9.2 C (haiku) and E (bset): control and experimental once per question, B1 order, own cap.
+
+    Same deployments, Claude Code version, preamble, isolation, timeout and per-run cap as run 1;
+    haiku changes only the model. Invalid runs follow B2; a misconfigured group stops the round.
+    """
+    config = config or load_config()
+    cap_key, after, what = EXTRA_ROUNDS[rnd]
+    questions = questions or load_questions(QUESTIONS_B if rnd == "bset" else QUESTIONS_A)
+    root = base or RUNS
+    if not (root / "run1-complete.json").exists():
+        log(f"run 1 is not complete; {what}.")
+        return 2
+    waiting = [name for name in after if not ended(name, base)]
+    if waiting:
+        log(f"{rnd} waits for {waiting} to complete, stop or be cut ({what}).")
+        return 2
+    if ended(rnd, base) and not (root / f"{rnd}-stopped.json").exists():
+        log(f"{rnd} already ended.")
+        return 0
+    if blocked_by_markers(rnd, base):
+        log(f"a group is misconfigured in {rnd}; void it first (B2).")
+        return 2
+    rcfg = round_config(config, rnd)
+    api_key = api_key or read_api_key()
+    cap = float(config["caps_usd"][cap_key])
+    try:
+        for question in questions:
+            for group in pair_order(question["id"]):
+                run_one_slot(rcfg, question, group, rnd, api_key, cap, [rnd], base, log)
+    except Stop as stop:
+        log(f"{rnd} stopped at {question['id']}: {stop}")
+        write_marker(f"{rnd}-stopped", {"reason": str(stop), "question": question["id"],
+                                         "spent_usd": spent([rnd], base), "cap_usd": cap}, base)
+        return 1
+    (root / f"{rnd}-stopped.json").unlink(missing_ok=True)
+    write_marker(f"{rnd}-complete", {"spent_usd": spent([rnd], base), "cap_usd": cap, "model": rcfg["model"],
+                                      "questions": len(questions)}, base)
+    log(f"{rnd} complete: ${spent([rnd], base):.2f} of ${cap}")
+    return 0
+
+
+def cmd_cut(args, base=None, log=print) -> int:
+    """9.1 G / 9.2 F: an item cut for lack of time, money or hands is recorded, never silent."""
+    write_marker(f"{args.item}-cut", {"item": args.item, "reason": args.reason}, base)
+    log(f"recorded: {args.item} cut ({args.reason})")
+    return 0
+
+
 def cmd_check(args, config=None, base=None, log=print) -> int:
     """B2: every counted attempt's Claude Code version, model and tool list, per group."""
-    config = config or load_config()
+    config = round_config(config or load_config(), args.round)
     root = (base or RUNS) / args.round
     bad = 0
     for meta_path in sorted(root.glob("*/*/attempt-*/meta.json")):
@@ -615,7 +695,7 @@ def cmd_check(args, config=None, base=None, log=print) -> int:
 
 def cmd_status(args, base=None, log=print) -> int:
     root = base or RUNS
-    for rnd in ("run1", "run2", "run3"):
+    for rnd in ROUNDS:
         if not (root / rnd).exists():
             continue
         slots = [(q.name, g.name, attempts(rnd, q.name, g.name, base)) for q in sorted((root / rnd).iterdir()) if q.is_dir()
@@ -700,7 +780,8 @@ def snapshot_record(label: str, config: dict[str, Any]) -> dict[str, Any]:
         "claude_code_version": version,
         "model": config["model"],
         "config_sha256": sha256_file(CONFIG_PATH),
-        "questions_sha256": sha256_file(EVAL / "questions.yaml"),
+        "questions_sha256": sha256_file(QUESTIONS_A),
+        "questions_b_sha256": sha256_file(QUESTIONS_B),
     }
 
 
@@ -739,7 +820,8 @@ def cmd_snapshot(args, log=print) -> int:
 
 
 COMPARED = ("git_head", "data_software_sha256", "served_data_sha256", "pipeline_db_sha256", "funnel_sha256",
-            "evidence_manifest_sha256", "claude_code_version", "model", "config_sha256", "questions_sha256")
+            "evidence_manifest_sha256", "claude_code_version", "model", "config_sha256", "questions_sha256",
+            "questions_b_sha256")
 
 
 def compare_records(before: dict[str, Any], after: dict[str, Any]) -> list[str]:
@@ -777,14 +859,20 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("compare")
     sub.add_parser("run1")
     sub.add_parser("reruns")
+    sub.add_parser("haiku")
+    sub.add_parser("bset")
+    k = sub.add_parser("cut")
+    k.add_argument("--item", required=True, choices=["haiku", "bset"])
+    k.add_argument("--reason", required=True)
     c = sub.add_parser("check")
-    c.add_argument("--round", required=True, choices=["run1", "run2", "run3"])
+    c.add_argument("--round", required=True, choices=list(ROUNDS))
     v = sub.add_parser("void")
-    v.add_argument("--round", required=True, choices=["run1", "run2", "run3"])
+    v.add_argument("--round", required=True, choices=list(ROUNDS))
     v.add_argument("--group", required=True, choices=list(GROUPS))
     sub.add_parser("status")
     args = parser.parse_args(argv)
     handlers = {"snapshot": cmd_snapshot, "compare": cmd_compare, "run1": cmd_run1, "reruns": cmd_reruns,
+                "haiku": lambda a: cmd_extra("haiku", a), "bset": lambda a: cmd_extra("bset", a), "cut": cmd_cut,
                 "check": cmd_check, "void": cmd_void, "status": cmd_status}
     return handlers[args.command](args)
 
