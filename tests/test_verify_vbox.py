@@ -59,8 +59,11 @@ if cmd == "showvminfo":
     for slot in range(1, 9):
         print(f'nic{slot}="{nics.get(str(slot), "none")}"')
     print(f'intnet1="{env("FAKE_INTNET", "pickfit-net")}"')
-    for key, value in json.loads(env("FAKE_SETTINGS", "{}")).items():
-        print(f'{key}="{value}"')
+    settings = dict(json.loads(env("FAKE_FEATURES", "{}"))) if args[1] == "pickfit-win11" else {}
+    settings.update(json.loads(env("FAKE_SETTINGS", "{}")))
+    for key, value in settings.items():
+        if key != env("FAKE_DROP_KEY"):
+            print(f'{key}="{value}"')
 elif cmd == "controlvm":
     v = vm(args[1]); what = args[2]
     if what == "poweroff":
@@ -85,6 +88,8 @@ elif cmd == "snapshot":
 elif cmd == "setextradata":
     vm(args[1])["extra"][args[2]] = args[3]; save()
 elif cmd == "getextradata":
+    if env("FAKE_EXTRADATA_FAIL") and args[2] == "pickfit/session":
+        sys.stderr.write("VBoxManage: error: Could not find a registered machine\n"); sys.exit(1)
     val = vm(args[1])["extra"].get(args[2]); print(f"Value: {val}" if val else "No value set!")
 elif cmd == "modifyvm":
     v = vm(args[1])
@@ -157,6 +162,7 @@ def fake(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     serial = state_dir / "logs" / "pickfit-router-serial.log"
     monkeypatch.setenv("FAKE_SERIAL", str(serial))
     monkeypatch.setenv("FAKE_RULES", RULES)
+    monkeypatch.setenv("FAKE_FEATURES", json.dumps(vb.GUEST_FEATURES_OFF))
     for name, data in (("pickfit-win11", {"base": "pickfit-win11", "windows": "26H2 (build 28000.1)",
                                           "virtualbox": "7.2.22r175245", "build_id": "b1", "hardened": True,
                                           "pwsh": "7.5.4", "python": "3.12.10"}),
@@ -384,9 +390,15 @@ def test_standard_user_check_wants_users_only_medium_integrity_and_no_dangerous_
                           stderr="", seconds=0.1, timed_out=False, truncated=False)
 
     assert _win_standard_user(token())
+    assert _win_standard_user(token(privileges="SeChangeNotifyPrivilege,SeShutdownPrivilege,SeUndockPrivilege,"
+                                               "SeIncreaseWorkingSetPrivilege,SeTimeZonePrivilege"))
     for bad in ({"admin": "True"}, {"builtin": "S-1-5-32-545,S-1-5-32-551"}, {"builtin": "S-1-5-32-544,S-1-5-32-545"},
                 {"integrity": "S-1-16-12288"}, {"privileges": "SeChangeNotifyPrivilege,SeBackupPrivilege"},
-                {"privileges": "SeImpersonatePrivilege"}):
+                {"privileges": "SeChangeNotifyPrivilege,SeTcbPrivilege"},
+                {"privileges": "SeChangeNotifyPrivilege,SeManageVolumePrivilege"},
+                {"privileges": "SeChangeNotifyPrivilege,SeRelabelPrivilege"},
+                {"privileges": "SeShutdownPrivilege"},  # SeChangeNotify missing: the parse is suspect
+                {"privileges": ""}):  # nothing parsed is a failure, not a pass
         assert not _win_standard_user(token(**bad)), bad
 
 
@@ -450,12 +462,117 @@ def test_an_internal_network_other_than_pickfits_is_refused(fake, monkeypatch) -
 
 @pytest.mark.parametrize("setting", [{"clipboard": "bidirectional"}, {"draganddrop": "hosttoguest"},
                                      {"vrde": "on"}, {"usb": "on"}, {"audio": "hda"}, {"uart1": "0x3f8,4"},
-                                     {"SharedFolderNameMachineMapping1": "host"}])
+                                     {"accelerate3d": "on"}, {"SharedFolderNameMachineMapping1": "host"}])
 def test_a_guest_with_a_host_channel_is_refused_before_boot(fake, monkeypatch, setting: dict) -> None:
     monkeypatch.setenv("FAKE_SETTINGS", json.dumps(setting))
     with pytest.raises(BoxError, match="host channels"):
         fake.box().start()
     assert not any(c[:2] == ["startvm", "pickfit-win11"] for c in fake.calls())
+
+
+@pytest.mark.parametrize("key", ["vrde", "clipboard", "accelerate3d", "uart1"])
+def test_a_setting_virtualbox_did_not_print_is_refused(fake, monkeypatch, key: str) -> None:
+    monkeypatch.setenv("FAKE_DROP_KEY", key)
+    with pytest.raises(BoxError, match=rf"{key}=\(not shown\)"):
+        fake.box().start()
+
+
+def test_clipboard_file_transfers_may_be_missing(fake, monkeypatch) -> None:
+    monkeypatch.setenv("FAKE_DROP_KEY", "clipboard_file_transfers")  # absent where VirtualBox lacks the feature
+    box = fake.box()
+    box.start()
+    box.close()
+
+
+def test_a_timed_out_vboxmanage_does_not_carry_its_argv_into_the_traceback() -> None:
+    import traceback
+
+    slow = vb.VBox([sys.executable, "-c", "import time; time.sleep(30)"])
+    secret = "s" + __import__("secrets").token_hex(12)  # built at run time: the traceback's source lines lack it
+    try:
+        slow("guestcontrol", "vm", "run", "--putenv", f"PF_SECRET={secret}", timeout_s=0.5)
+    except BoxError:
+        text = traceback.format_exc()
+    else:
+        pytest.fail("no timeout")
+    assert "timed out" in text and secret not in text and "TimeoutExpired" not in text
+
+
+def test_close_leaves_everything_in_place_when_the_owner_cannot_be_read(fake, monkeypatch) -> None:
+    box = fake.box()
+    box.start()
+    monkeypatch.setenv("FAKE_EXTRADATA_FAIL", "1")
+    box.close()
+    st = fake.state()["pickfit-win11"]
+    assert st["VMState"] == "running" and st["extra"]["pickfit/session"] == box.session
+    assert not vb.HostLock(box._host_lock.path).acquire()  # the lock is still held
+    monkeypatch.delenv("FAKE_EXTRADATA_FAIL")
+    box.close()
+    assert fake.state()["pickfit-win11"]["VMState"] == "poweroff"
+
+
+def test_close_keeps_session_and_lock_when_the_vm_does_not_power_off(fake, monkeypatch) -> None:
+    box = fake.box()
+    box.start()
+
+    def stuck(vm: str, wait_s: float = 60) -> None:
+        raise BoxError(f"{vm} did not power off within {wait_s:.0f}s")
+
+    monkeypatch.setattr(box.vbox, "poweroff", stuck)
+    box.close()
+    st = fake.state()["pickfit-win11"]
+    assert st["VMState"] == "running" and st["extra"]["pickfit/session"] == box.session
+    assert not vb.HostLock(box._host_lock.path).acquire()
+
+
+def test_one_box_at_a_time_through_the_host_lock(fake) -> None:
+    first = fake.box()
+    first.start()
+    second = fake.box()
+    with pytest.raises(BoxError, match="lock"):
+        second.start()
+    assert fake.state()["pickfit-win11"]["extra"]["pickfit/session"] == first.session  # not overwritten
+    first.close()
+    second.start()  # free again once the first box has closed
+    second.close()
+
+
+def test_network_and_files_refuse_a_vm_that_is_no_longer_ours(fake) -> None:
+    box = fake.box()
+    box.start()
+    box.vbox("setextradata", box.base, "pickfit/session", "someone-else")
+    with pytest.raises(BoxError, match="no longer this box's"):
+        box.write_file("x.txt", "x")
+    with pytest.raises(BoxError, match="no longer this box's"):
+        box.set_network(False)
+    with pytest.raises(BoxError, match="no longer this box's"):
+        box.validate_containment()
+    box.vbox("setextradata", box.base, "pickfit/session", box.session)
+    box.close()
+
+
+def test_egress_lookup_never_goes_through_a_proxy(monkeypatch) -> None:
+    seen: list[list[str]] = []
+
+    def run(argv, **kw):
+        seen.append(list(argv))
+        return subprocess.CompletedProcess(argv, 0, "ip=93.184.216.34\n", "")
+
+    monkeypatch.setattr(vb.subprocess, "run", run)
+    monkeypatch.setenv("HTTPS_PROXY", "http://proxy.example:3128")
+    assert vb.host_egress_ipv4() == ["93.184.216.34"]
+    argv = seen[0]
+    assert argv[argv.index("--noproxy") + 1] == "*"
+
+
+def test_password_scan_needs_its_canary_files_and_events() -> None:
+    good = {"scanned": "543", "events": "27215", "canary_hits": "event:Windows PowerShell#12", "pw_hits": ""}
+    assert vb.scan_ok(good)
+    for bad in ({"scanned": "0"}, {"events": "0"}, {"canary_hits": ""}, {"canary_hits": "event:Security#3"},
+                {"pw_hits": "C:\\Windows\\Panther\\unattend.xml"}):
+        assert not vb.scan_ok(good | bad), bad
+    assert not vb.scan_ok({k: v for k, v in good.items() if k != "pw_hits"})
+    assert "$env:PF_CANARY" in vb.ADMIN_SECRET_SCAN
 
 
 def test_the_networks_egress_address_is_blocked_and_probed(fake, monkeypatch) -> None:
@@ -645,7 +762,8 @@ def test_needs_store_is_a_reason_the_agent_can_give_and_the_record_keeps() -> No
 
 
 def test_hardened_check_covers_the_ways_to_admin() -> None:
-    for needle in ("Get-LocalGroup)", "-ne 'S-1-5-32-545'", "EnableLUA", "AutoAdminLogon", "pwsh.path",
+    for needle in ("Get-LocalGroup)", "-ne 'S-1-5-32-545'", "cannot list the members", "EnableLUA", "AutoAdminLogon",
+                   "pwsh.path",
                    "DefaultUserName -ne 'sbx'", "DefaultPassword", "HKEY_USERS", "[PfLsa]::Probe('DefaultPassword')",
                    "Panther\\Unattend", "autounattend.xml", "Win32_CDROMDrive", "fDenyTSConnections", "WinRM",
                    "pickfit\\run.ps1"):

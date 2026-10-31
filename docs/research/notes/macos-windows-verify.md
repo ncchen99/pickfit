@@ -374,7 +374,7 @@ GitHub Actions 沒有採用。改在念誠的 Windows 11 Home 筆電（i5-1135G7
 - 一次只能一個 box。每款工具 6–13 分鐘。
 - `run_background`：agent-history 用它在背景啟動 `serve`，75 秒後 VBoxManage 回 20，跟 sentinel 的 0 對不上，harness 判為不可信（方向是安全的），所以這款沒能宣稱 service 等級。要再查。
 - VirtualBox 安裝程式忽略了參數，裝上了 host-only 網卡與橋接 filter（VBoxNetLwf）。box 沒有用到，每次開機前檢查網卡會拒絕它們。
-- NAT hairpin：10/31 審查後，每次 box 啟動時 host 從 `https://1.1.1.1/cdn-cgi/trace` 讀出這個網路的公網 egress 位址，加進 router 的 drop set（讀不到就不開 box），並探測該位址的 80、443、445。這台所在的網路（39.14.65.90）不經 router 也連不到那個位址，所以「不經 router 連得到」的正向對照在這裡做不出來；能證明它被擋的是 router 自己回報的 drop set（`egress_ip_in_router_block`）。
+- NAT hairpin：10/31 審查後，每次 box 啟動時 host 從 `https://1.1.1.1/cdn-cgi/trace` 讀出這個網路的公網 egress 位址，加進 router 的 drop set（讀不到就不開 box），並探測該位址的 80、443、445。在這台所在的網路上，不經 router 也連不到這個網路的對外位址，所以「不經 router 連得到」的正向對照在這裡做不出來；能證明它被擋的是 router 自己回報的 drop set（`egress_ip_in_router_block`）。
 - tart_box 的 `_agent_failed` 也用 stderr 裡的文字（例如 "is the Tart Guest Agent running?"）判斷 VM 或 agent 是否還在，guest 印得出這些字，跟這次修掉的 vbox 問題一樣；這個分支沒動 tart_box，留待之後改成看 host 端狀態。
 - 主機上還有一個舊的 Oracle Extension Pack 7.0.6（版本不合、無法載入，沒有用到），要不要移除由念誠決定。
 
@@ -423,7 +423,7 @@ GitHub Actions 沒有採用。改在念誠的 Windows 11 Home 筆電（i5-1135G7
 - `--limits-test` **45／45**（`runs/verify/limits-vbox-20261031-183951.json`），冷開機 75 秒。新增與改嚴的檢查與對照都通過：
   - `non_admin`：sbx 的 BUILTIN 只有 S-1-5-32-545、Medium integrity、沒有危險權限；對照：Administrator 被判出。
   - `no_encoded_commands_in_log`：events=214、encoded=0；對照：encoded=8。
-  - `egress_ip_in_router_block`：39.14.65.90 在 router 的 drop set 裡；80／443／445 經 router 都逾時。
+  - `egress_ip_in_router_block`：這個網路的對外位址在 router 的 drop set 裡；它的 80／443／445 經 router 都逾時。
 - 9 款都在這個 base 上重新驗證，等級、版本、裝法都和 5.9 節相同，全部在全新 box 斷網重播通過，judge 都判 working。以下這組是要審的紀錄：
 
   | 工具 | 等級 | 版本 | 裝法 | run |

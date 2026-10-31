@@ -379,11 +379,14 @@ echo pickfit router installed
 # The only network adapters each VM may have ({slot: attachment types}); all other slots must be off.
 ROUTER_NICS = {1: {"intnet"}, 2: {"nat"}}
 GUEST_NICS = {True: {1: {"intnet"}}, False: {1: {"null", "none"}}}
-# showvminfo --machinereadable values the guest VM must have (a missing key counts as the value shown).
+# showvminfo --machinereadable values the guest VM must have. VirtualBox 7.2 prints every one of these (checked
+# on the base, 2026-10-31); a missing one is refused, except clipboard_file_transfers, which exists only where
+# VirtualBox was built with shared-clipboard file transfers.
 GUEST_FEATURES_OFF = {"clipboard": "disabled", "clipboard_file_transfers": "off", "draganddrop": "disabled",
                       "vrde": "off", "usb": "off", "ehci": "off", "xhci": "off", "audio": "none",
                       "uart1": "off", "uart2": "off", "uart3": "off", "uart4": "off", "lpt1": "off", "lpt2": "off",
-                      "teleporterenabled": "off", "recording_enabled": "off"}
+                      "teleporterenabled": "off", "recording_enabled": "off", "accelerate3d": "off"}
+GUEST_FEATURES_OPTIONAL = {"clipboard_file_transfers"}
 
 READY = re.compile(r"PICKFIT_ROUTER_READY rules=(\w+) extra=(\S+) forward=(\d) ipv6_off=(\d) dnsmasq=(\w+) "
                    r"uplink=(\d+)")
@@ -413,10 +416,12 @@ EGRESS_URL = "https://1.1.1.1/cdn-cgi/trace"
 def host_egress_ipv4() -> list[str]:
     """The public address this network goes out from (the home router's WAN side, or the ISP's NAT). Through
     the router a guest could reach it, and with it the home router's admin page or a hairpin NAT. Read with
-    curl, which uses the system's certificate store; fails closed when it cannot be learned."""
+    curl, which uses the system's certificate store, and never through a proxy (HTTPS_PROXY/ALL_PROXY would
+    report the proxy's address, while the router's NAT goes straight out); fails closed when it cannot be
+    learned. Read once per box, when it starts."""
     try:
-        out = subprocess.run(["curl.exe" if sys.platform == "win32" else "curl", "-sS", "-m", "15", EGRESS_URL],
-                             capture_output=True, text=True, timeout=30).stdout
+        out = subprocess.run(["curl.exe" if sys.platform == "win32" else "curl", "-sS", "--noproxy", "*",
+                              "-m", "15", EGRESS_URL], capture_output=True, text=True, timeout=30).stdout
     except (OSError, subprocess.TimeoutExpired) as err:
         raise BoxError(f"cannot learn the network's public address from {EGRESS_URL}: {err}") from err
     m = re.search(r"^ip=(\S+)\s*$", out, re.M)
@@ -456,6 +461,48 @@ def host_lan_targets() -> dict[str, str]:
     return targets
 
 
+class HostLock:
+    """An exclusive lock file on the host, held by a box from its claim to the end of its close(): a second
+    process cannot start a box on the same VM in between. The OS releases it when the process dies."""
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        self._f: Any = None
+
+    def acquire(self) -> bool:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        f = open(self.path, "a+b")
+        try:
+            if sys.platform == "win32":
+                import msvcrt
+
+                f.seek(0)
+                msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            f.close()
+            return False
+        self._f = f
+        return True
+
+    def release(self) -> None:
+        if self._f is None:
+            return
+        try:
+            if sys.platform == "win32":
+                import msvcrt
+
+                self._f.seek(0)
+                msvcrt.locking(self._f.fileno(), msvcrt.LK_UNLCK, 1)
+        except OSError:
+            pass
+        self._f.close()
+        self._f = None
+
+
 class VBox:
     """Thin VBoxManage wrapper; `argv0` is a prefix so tests can point it at a fake."""
 
@@ -468,8 +515,10 @@ class VBox:
         try:
             proc = subprocess.run([*self.argv0, *args], capture_output=True, text=True, timeout=timeout_s,
                                   encoding="utf-8", errors="replace")
-        except subprocess.TimeoutExpired as err:
-            raise BoxError(f"VBoxManage {' '.join(args[:2])} timed out after {timeout_s:.0f}s") from err
+        except subprocess.TimeoutExpired:
+            # `from None`: the TimeoutExpired carries the whole argv, and a guestcontrol argv can carry a
+            # password in --putenv; chained, it would print with any traceback.
+            raise BoxError(f"VBoxManage {' '.join(args[:2])} timed out after {timeout_s:.0f}s") from None
         if check and proc.returncode != 0:
             raise BoxError(f"VBoxManage {' '.join(args[:3])} failed: {proc.stderr.strip()[-400:]}")
         return proc
@@ -521,7 +570,8 @@ class VBox:
         """Refuse a guest that has any channel to the host besides guestcontrol: shared folders, clipboard,
         drag and drop, remote display, USB, audio, serial or parallel ports, teleporting, recording."""
         info = self.info(vm)
-        bad = [f"{k}={info.get(k)}" for k, want in GUEST_FEATURES_OFF.items() if info.get(k, want) != want]
+        bad = [f"{k}={info.get(k, '(not shown)')}" for k, want in GUEST_FEATURES_OFF.items()
+               if info.get(k, want if k in GUEST_FEATURES_OPTIONAL else None) != want]
         bad += [f"shared folder {v}" for k, v in info.items() if k.startswith("SharedFolderName")]
         if bad:
             raise BoxError(f"{vm} has host channels turned on ({', '.join(bad)}); refusing to run")
@@ -648,6 +698,7 @@ class VBoxBox(Box):
         self._timer: threading.Timer | None = None
         self._reaper: subprocess.Popen[bytes] | None = None
         self._lock = threading.Lock()
+        self._host_lock = HostLock(self.state_dir / f"{base}.lock")
 
     def describe(self) -> str:
         m = self.manifest
@@ -677,7 +728,15 @@ class VBoxBox(Box):
             raise BoxError(f"base VM {self.base!r} is not hardened; rebuild it with --prepare-base")
         self.image = image_label(self.manifest, self.router_manifest)
         began = time.monotonic()
-        self._refuse_foreign_run()  # outside the try: a refused start must not tear down the other box
+        # Outside the try: a refused start must not tear down the other box. The lock is held until close().
+        if not self._host_lock.acquire():
+            raise BoxError(f"{self.base} is already running for another box (lock {self._host_lock.path} is "
+                           "held); run one at a time")
+        try:
+            self._refuse_foreign_run()
+        except BaseException:
+            self._host_lock.release()
+            raise
         self.vbox("setextradata", self.base, "pickfit/session", self.session)
         try:
             self.lan = host_lan_targets()
@@ -714,6 +773,7 @@ class VBoxBox(Box):
 
     def _attach(self, *, online: bool) -> None:
         """Offline (and before the guest is booted): NIC detached. Online: the router's internal network."""
+        self._require_owned()
         running = self.vbox.state(self.base) == "running"
         if running:
             if online:
@@ -809,29 +869,40 @@ class VBoxBox(Box):
         self.close()
 
     def close(self) -> None:
-        """Power off and restore the clean snapshot (guest and router), only if the VM is still this box's: a
-        box that lost it (or never got it) leaves the other box alone. Never raises."""
+        """Power off and restore the clean snapshot (guest and router). Leaves the VM alone only when its
+        session reads as another box's. When the owner cannot be read, or the VM does not power off, the
+        reaper, the session and the lock stay, so the VM is still stopped in the end. Never raises."""
         with self._lock:
             self.started = False
             if self._timer is not None:
                 self._timer.cancel()
                 self._timer = None
+            owner = self._owner()
+            if owner is None:
+                self.log(f"vbox: close: cannot read who owns {self.base}; leaving it, its session and the reaper "
+                         "(which powers it off) in place")
+                return
+            if owner and owner != self.session:
+                self.log(f"vbox: close: {self.base} is another box's (session {owner}); left alone")
+                self._stop_reaper()
+                self._host_lock.release()
+                return
             try:
-                owned = self._owned()
+                self.vbox.poweroff(self.base)
+            except BoxError as err:
+                self.log(f"vbox: close: {self.base} did not power off ({err}); the reaper stays")
+                return
+            try:
+                self.vbox.restore(self.base)
             except BoxError as err:
                 self.log(f"vbox: close {self.base}: {err}")
-                owned = False
-            if not owned:
-                self.log(f"vbox: close: {self.base} is not this box's (session {self.session}); left alone")
-            else:
-                for step in (lambda: self.vbox.poweroff(self.base), lambda: self.vbox.restore(self.base),
-                             lambda: self.vbox("setextradata", self.base, "pickfit/session", "")):
-                    try:
-                        step()
-                    except BoxError as err:
-                        self.log(f"vbox: close {self.base}: {err}")
-                self.router.stop()
+            try:
+                self.vbox("setextradata", self.base, "pickfit/session", "")
+            except BoxError as err:
+                self.log(f"vbox: close {self.base}: {err}")
+            self.router.stop()
             self._stop_reaper()
+            self._host_lock.release()
 
     # -- commands and files
 
@@ -851,15 +922,31 @@ class VBoxBox(Box):
         return [*args, "--", "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
                 "-File", RUN_PS1, "-Timeout", str(int(timeout_s)), "-Cwd", cwd, "-Nonce", nonce, "-Shell", shell]
 
+    def _owner(self) -> str | None:
+        """The session in the VM's extradata (which the guest cannot write): '' when none, None when it cannot
+        be read (tried three times)."""
+        for _ in range(3):
+            try:
+                r = self.vbox("getextradata", self.base, "pickfit/session", check=False, timeout_s=30)
+            except BoxError:
+                r = None
+            if r is not None and r.returncode == 0:
+                m = re.search(r"^Value: (\S*)\s*$", r.stdout, re.M)
+                return m.group(1) if m else ""
+            time.sleep(2)
+        return None
+
     def _owned(self) -> bool:
-        """Is the base VM still this box's (its session in the VM's extradata, which the guest cannot write)?"""
-        return self.vbox("getextradata", self.base, "pickfit/session", check=False).stdout.strip() == \
-            f"Value: {self.session}"
+        """Is the base VM still this box's?"""
+        return self._owner() == self.session
+
+    def _require_owned(self) -> None:
+        if not self._owned():
+            raise BoxError(f"{self.base} is no longer this box's (session {self.session}); not touching it")
 
     def _run(self, user: str, command: str, timeout_s: int, cwd: str, *,
              head: int | None = None) -> tuple[int, str, str, bool, bool, float]:
-        if not self._owned():
-            raise BoxError(f"{self.base} is no longer this box's (session {self.session}); not running commands")
+        self._require_owned()
         nonce = secrets.token_hex(8)
         argv = self.run_argv(user, command, timeout_s, cwd, nonce)
         kw = {"head": head, "tail": 0} if head else {}
@@ -906,6 +993,7 @@ class VBoxBox(Box):
 
     def write_file(self, path: str, content: str | bytes) -> None:
         self._require_started()
+        self._require_owned()
         data = content.encode("utf-8") if isinstance(content, str) else content
         target = self._guest_path(path)
         parent = target.rsplit("\\", 1)[0]
@@ -1044,6 +1132,7 @@ class VBoxBox(Box):
     def validate_containment(self) -> list[tuple[str, bool, str, str]]:
         """Positive/negative controls for the limits test (as administrator). Mutates the live network, so
         only the limits test (no untrusted code has run) calls it; leaves the box online behind the router."""
+        self._require_owned()
         results: list[tuple[str, bool, str, str]] = []
 
         def rec(name: str, ok: bool, expect: str, detail: str) -> None:
@@ -1454,16 +1543,23 @@ Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Syste
 # $env:PF_SECRET2: is either (plain, or as an answer file encodes it) in a file sbx or setup could have left
 # readable, or in the event logs (their text, and any base64 command in it decoded)? Prints `pw_hits=` and
 # where.
+# Its control: $env:PF_CANARY is a random value the build just printed through `powershell -EncodedCommand`, so it
+# sits base64-encoded in the 'Windows PowerShell' log; the scan must find it there (the event and base64 path
+# works), must have read files and events at all, and must find neither password. Each log is read for its newest
+# 5000 events.
 ADMIN_SECRET_SCAN = r"""
-$pws = @($env:PF_SECRET, $env:PF_SECRET2); Remove-Item env:PF_SECRET, env:PF_SECRET2
+$pws = @($env:PF_SECRET, $env:PF_SECRET2); $canary = $env:PF_CANARY
+Remove-Item env:PF_SECRET, env:PF_SECRET2, env:PF_CANARY
 $forms = foreach ($pw in $pws) { $pw; foreach ($s in 'Password', 'AdministratorPassword') {
   [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($pw + $s)) } }
 $events = @(Get-WinEvent -ListLog * -ErrorAction SilentlyContinue | Where-Object RecordCount |
   ForEach-Object { Get-WinEvent -LogName $_.LogName -MaxEvents 5000 -ErrorAction SilentlyContinue })
+$canaryHits = @()
 $logHits = foreach ($e in $events) {
   $t = [string]$e.Message + ' ' + (($e.Properties | ForEach-Object { [string]$_.Value }) -join ' ')
   foreach ($m in [regex]::Matches($t, '[A-Za-z0-9+/]{40,}={0,2}')) {
     try { $t += ' ' + [Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($m.Value)) } catch {} }
+  if ($canary -and $t.Contains($canary)) { $canaryHits += "event:$($e.LogName)#$($e.RecordId)" }
   foreach ($x in $forms) { if ($t.Contains($x)) { "event:$($e.LogName)#$($e.RecordId)"; break } } }
 $files = @()
 foreach ($r in 'C:\Windows\Panther', 'C:\Windows\System32\Sysprep', 'C:\Windows\Setup', 'C:\Windows\Temp',
@@ -1477,8 +1573,19 @@ $hits = foreach ($f in $files) {
   foreach ($x in $forms) { if ($t8.Contains($x) -or $t16.Contains($x)) { $f.FullName; break } } }
 "scanned=$($files.Count)"
 "events=$($events.Count)"
+"canary_hits=$($canaryHits -join ';')"
 "pw_hits=$(@(@($hits) + @($logHits)) -join ';')"
 """
+
+
+def scan_ok(scan: dict[str, str]) -> bool:
+    """The password scan passed: it read files and events, found its canary in the Windows PowerShell log,
+    and found neither password anywhere."""
+    def count(key: str) -> int:
+        return int(scan[key]) if scan.get(key, "").isdigit() else 0
+
+    return (count("scanned") > 0 and count("events") > 0 and "event:Windows PowerShell#" in scan.get("canary_hits", "")
+            and "pw_hits" in scan and not scan["pw_hits"])
 
 
 def _raw_ps(vbox: VBox, vm: str, user: str, pwfile: Path, script: str, timeout_s: int = 600,
@@ -1673,14 +1780,19 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
     code, out, err = check_box._admin(HARDENED_CHECK, 180)
     if code != 0:
         raise BoxError(f"the hardened base fails its check: {(out + err).strip()[-400:]}")
+    canary = "pfcanary" + secrets.token_hex(8)  # the scan's control: printed via -EncodedCommand, so it is logged
+    admin("plant the scan's canary",
+          f"& \"$env:SystemRoot\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -EncodedCommand "
+          f"{encode_ps('Write-Output ' + canary)}", 120, lambda c, o: canary in o)
     out = _raw_ps(vbox, name, ADMIN_USER, pw[ADMIN_USER], ADMIN_SECRET_SCAN, 900,
                   env={"PF_SECRET": pw[ADMIN_USER].read_text(encoding="utf-8").strip(),
-                       "PF_SECRET2": pw[WIN_USER].read_text(encoding="utf-8").strip()})[1]
+                       "PF_SECRET2": pw[WIN_USER].read_text(encoding="utf-8").strip(), "PF_CANARY": canary})[1]
     scan = _kv(out)
     log(f"vbox: {name}: password scan: {scan.get('scanned', '?')} files, {scan.get('events', '?')} log events, "
-        f"hits: {scan.get('pw_hits')!r}")
-    if "pw_hits" not in scan or scan["pw_hits"]:
-        raise BoxError(f"a password is left in: {scan.get('pw_hits', out.strip()[-300:])}")
+        f"canary found in {scan.get('canary_hits')!r}, password hits: {scan.get('pw_hits')!r}")
+    if not scan_ok(scan):
+        raise BoxError(f"the password scan did not pass (it must read files and events, find its canary in the "
+                       f"Windows PowerShell log and no password): {out.strip()[-400:]}")
     # The build the snapshot really has (no cumulative updates are installed; Windows Update is off).
     final = _kv(check_box._admin(
         "$v = Get-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion'; "
@@ -1723,7 +1835,8 @@ def image_label(manifest: dict[str, Any], router: dict[str, Any]) -> str:
 HARDENED_CHECK = LSA_TYPE + ANSWER_SCAN + r"""
 $bad = @()
 foreach ($g in Get-LocalGroup) {  # sbx in Users and nowhere else (Backup Operators can read the SECURITY hive)
-  $m = @(Get-LocalGroupMember -SID $g.SID -ErrorAction SilentlyContinue | ForEach-Object { $_.Name.Split('\')[-1] })
+  try { $m = @(Get-LocalGroupMember -SID $g.SID -ErrorAction Stop | ForEach-Object { $_.Name.Split('\')[-1] }) }
+  catch { $bad += "cannot list the members of $($g.Name) ($($g.SID))"; continue }
   if ($m -contains 'sbx' -and $g.SID.Value -ne 'S-1-5-32-545') { $bad += "sbx is in $($g.Name) ($($g.SID))" } }
 if ((Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System').EnableLUA -ne 1) { $bad += 'UAC is off' }
 $wl = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'

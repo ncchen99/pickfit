@@ -246,20 +246,26 @@ WIN_IS_ADMIN = (
     "\"integrity=$(($g | Where-Object SID -like 'S-1-16-*' | ForEach-Object SID) -join ',')\"\n"
     "\"privileges=$((whoami /priv /fo csv | ConvertFrom-Csv | ForEach-Object 'Privilege Name' | Sort-Object) "
     "-join ',')\"\n")
-WIN_BAD_PRIVILEGES = ("SeBackupPrivilege", "SeRestorePrivilege", "SeDebugPrivilege", "SeImpersonatePrivilege",
-                      "SeTakeOwnershipPrivilege", "SeLoadDriverPrivilege")
+# An allowlist: what a standard Windows user holds. Anything else (SeBackup, SeRestore, SeDebug, SeImpersonate,
+# SeTcb, SeCreateToken, SeAssignPrimaryToken, SeManageVolume, SeRelabel, ...) fails the probe.
+WIN_USER_PRIVILEGES = frozenset({"SeChangeNotifyPrivilege", "SeShutdownPrivilege", "SeUndockPrivilege",
+                                 "SeIncreaseWorkingSetPrivilege", "SeTimeZonePrivilege"})
 
 
 def _win_token(r: ExecResult) -> dict[str, str]:
     return {m.group(1): m.group(2).strip() for m in re.finditer(r"^(\w+)=(.*)$", r.stdout, re.M)}
 
 
+def _win_privileges(r: ExecResult) -> set[str]:
+    return set(filter(None, _win_token(r).get("privileges", "").split(",")))
+
+
 def _win_standard_user(r: ExecResult) -> bool:
     t = _win_token(r)
-    privileges = set(filter(None, t.get("privileges", "?").split(",")))
+    privileges = _win_privileges(r)
     return (r.exit_code == 0 and t.get("admin") == "False" and t.get("builtin") == "S-1-5-32-545"
-            and t.get("integrity") == "S-1-16-8192" and "privileges" in t
-            and not privileges & set(WIN_BAD_PRIVILEGES))
+            and t.get("integrity") == "S-1-16-8192" and "SeChangeNotifyPrivilege" in privileges
+            and privileges <= WIN_USER_PRIVILEGES)
 
 
 WIN_HARNESS_WRITE = ("foreach ($p in 'C:\\ProgramData\\pickfit\\run.ps1','C:\\ProgramData\\pickfit\\probe.ps1') { "
@@ -325,12 +331,13 @@ def _windows_probes(box: Box, add: Callable[[ProbeResult], None]) -> None:
     can see what it looks for (run as the administrator, or with the thing planted in this throwaway box).
     Windows has no per-user process, file-size or memory cap; the VM's own RAM and disk are the caps."""
     add(_probe(box, "non_admin", WIN_IS_ADMIN, 60,
-               "not an administrator; BUILTIN groups exactly Users; Medium integrity; none of "
-               + ", ".join(WIN_BAD_PRIVILEGES), _win_standard_user))
+               "not an administrator; BUILTIN groups exactly Users; Medium integrity; privileges only from "
+               + ", ".join(sorted(WIN_USER_PRIVILEGES)) + " (SeChangeNotify present)", _win_standard_user))
     add(_as_admin(box, "non_admin_control", WIN_IS_ADMIN,
-                  "the same check flags the administrator (admin=True, S-1-5-32-544 in its groups)",
+                  "the same check flags the administrator (admin=True, S-1-5-32-544, SeDebug and SeBackup parsed)",
                   lambda r: r.exit_code == 0 and _win_token(r).get("admin") == "True"
-                  and "S-1-5-32-544" in _win_token(r).get("builtin", "") and not _win_standard_user(r)))
+                  and "S-1-5-32-544" in _win_token(r).get("builtin", "")
+                  and {"SeDebugPrivilege", "SeBackupPrivilege"} <= _win_privileges(r) and not _win_standard_user(r)))
     add(_probe(box, "harness_locked", WIN_HARNESS_WRITE, 60, "the box user cannot change the harness scripts",
                lambda r: "writable" not in r.stdout and r.stdout.count("locked") == 3))
     add(_probe(box, "no_logon_secret", win_logon_secrets(), 90,
