@@ -10,7 +10,7 @@
 
 | 項目 | 結果 |
 |---|---|
-| dev image digest、apt snapshot id | |
+| dev image digest、apt snapshot id | `pickfit-eval-l2-dev:4acdd7fff6ab`（`ubuntu:24.04@sha256:78d4744e…2044d`）；沒有 apt snapshot：映像建好時的套件版本整份記在 `eval/results/l2-images.json` 的 `dpkg` |
 | egress | 照 `_shared/calibration.md` 步驟 1、2（各題共用一次） |
 
 ## C. q20 固定版本、模型與使用者環境
@@ -29,11 +29,14 @@
 
 | 項目 | 結果 |
 |---|---|
-| Ollama 版本、asset URL、SHA-256 | |
-| 模型 tag、digest、大小 | |
-| openai 版本、pip freeze（附檔） | |
-| q20 base image digest | |
-| C3 文件連結與預設位址 | |
-| C4、C5 結果 | |
-| C6 錯誤訊息 | |
-| 記錄人、時間、commit | |
+| Ollama 版本、asset URL、SHA-256 | 同 q18：v0.40.13，`ollama-linux-amd64.tar.zst`，`c9490e0f…a75bb6`（下載後核對相同）。以 local-only 模式（`OLLAMA_NO_CLOUD=1`）啟動，伺服器紀錄 `cloud disabled: true`（q18 C6、9.3 C.5） |
+| 模型 tag、digest、大小 | `qwen2.5:0.5b`，`/api/tags` 的 digest `a8b0c51577010a279d933d14c2a8ab4b268079d44c5c8830c0a93900f1827c67`（填回 `pins.env`），397,821,319 位元組；model layer 在沙盒裡算的 sha256 `c5396e06…` 與 PINS.md 相同 |
+| openai 版本、pip freeze（附檔） | `openai==3.42.0`；15 個套件，`eval/results/calibration/q20/q20/pip-freeze.txt`。venv 需要的 `python3-venv` 3.12.3-0ubuntu2.1 與 `python3.12-venv` 3.12.3-1ubuntu0.17 由評分者先裝（使用者原本的環境，不算答案的步驟） |
+| q20 base image digest | 沒有另外建：每次照 C2 在 dev image 沙盒裡裝（核對 sha256 與 digest）後才跑答案的步驟。要存成映像時，由建評測部署的協調 session 記 digest |
+| C3 文件連結與預設位址 | v0.40.13 tag 下的 `docs/faq.mdx`：「Ollama binds 127.0.0.1 port 11434 by default」；`docs/api/openai-compatibility.mdx`：`base_url='http://localhost:11434/v1/'`。實測伺服器紀錄 `Listening on 127.0.0.1:11434`。與 `check_base_url.py` 的 `EXPECTED` 相同，不需要勘誤 |
+| C4、C5 結果 | C4：`check_script_diff.py` exit 0、`check_base_url.py` exit 0、`run_ask.py` pass（exit 0、1.06 秒、回答非空）。C5（一個 `--block-network` 腳本：probe、Ollama、呼叫）：probe 擋住（4 個 TCP、2 個 DNS 都失敗）；呼叫 pass（2.83 秒）；呼叫時段內的 egress report `pass`。整份紀錄有 21 次嘗試，全部是 probe（pid 566）在呼叫前 2 秒故意做的，Ollama 一次都沒有（`c5-egress-all.json`）。所以 README L2-3 的做法寫明只算呼叫時段、probe 不算；時段內的報告是下載紀錄後用同一個 `egress.py report --since/--until` 算的（`c5-egress.json`），`calibrate.sh` 已改成在沙盒裡直接這樣算 |
+| C6 錯誤訊息 | exit 1：`` openai.OpenAIError: Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable. `` |
+| C7 自我測試 | 兩個測試都 `0 failure(s)`，用沙盒裡真的 openai 3.42.0 跑了端到端部分（沒有 skip） |
+| 記錄人、時間、commit | 評測 session（eval-prep-74b711），2026-10-31，Modal 沙盒 `sb-01M68CERZX7G5BZ2NZTCB9134N`（cpu 4、16 GiB）；紀錄 `eval/results/calibration/q20/`；commit 同本檔 |
+
+第一次和 q18、q19 同一個沙盒跑時，C2 的 venv 沒建成（`calibrate.sh` 用 `dpkg-query -W` 判斷 `python3-venv` 已裝，但那只表示 dpkg 知道這個套件），沒有跑到 C3 以後；紀錄在 `eval/results/calibration/ollama-trio/q20-venv-failed/`。修正判斷後單獨重跑，就是上表。

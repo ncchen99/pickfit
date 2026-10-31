@@ -43,7 +43,7 @@ L3（主要答案是否說不用另外裝 proxy／gateway）從答案原文判�
 
 「egress」指**任何連往本機以外的嘗試**：查詢 localhost 以外名稱的 DNS，或對 loopback（127.0.0.0/8、::1）、0.0.0.0、本沙盒自己介面位址以外的 IPv4／IPv6 位址呼叫 connect／sendto／sendmsg（失敗的嘗試、UDP、多播都算）。
 
-定義、做法與判定見 [`_shared/README.md`](../_shared/README.md) 第 1 節（共用工具在沙盒裡的 `$SHARED`）。本題：Ollama 的啟動（label `ollama`，留在背景、一直被記錄）與那一次呼叫（`run_ask.py --egress-dir`，label `blocked`）都用 `egress.py run` 包起來；判定只算呼叫時段（`--since`／`--until`）內的嘗試，Ollama 在那段時間的連線也算。
+定義、做法與判定見 [`_shared/README.md`](../_shared/README.md) 第 1 節（共用工具在沙盒裡的 `$SHARED`）。本題：封鎖網路的那一步用一次 `egress.py run --block-network`（label `blocked`）包住整個腳本：`egress.py probe`、Ollama 的啟動（留在背景、一直被記錄）、那一次呼叫。判定只算呼叫時段（`--since`／`--until`，取 `$W/runs/blocked.json` 的 `start`、`end`）內的嘗試，Ollama 在那段時間的連線也算；probe 自己故意做的連線嘗試在呼叫之前，不算（calibration.md C5）。
 
 **「egress check 通過」**＝ `egress.py report` 的 `result` 是 `pass`。`fail` 列出位址與原始紀錄行；`undetermined` 表示量測沒做好，不能判過、也不算答案的錯。Ollama 本身在封鎖網路時不外連，已在 calibration.md C5 確認。
 
@@ -91,15 +91,19 @@ python3 $F/run_ask.py --script $W/ask.py --python /opt/q20-venv/bin/python \
 做法（沙盒 B：用 A 的快照開機、封鎖網路）：
 
 ```sh
-python3 $SHARED/egress.py probe --json $W/runs/probe.json                                      # exit 0
-python3 $SHARED/egress.py run --out $W/egress --label ollama --sh "STATE=$W/state sh $F/start_ollama.sh"   # Ollama 留在背景，一直被記錄
-T0=$(python3 -c 'import time; print(time.time())')
-python3 $F/run_ask.py --script $W/ask.py --python /opt/q20-venv/bin/python [--env ...] \
-  --egress-dir $W/egress --label blocked --out $W/runs/blocked
-T1=$(python3 -c 'import time; print(time.time())')
-python3 $SHARED/egress.py stop --out $W/egress --kill
-python3 $SHARED/egress.py report --out $W/egress --since $T0 --until $T1 --json $W/runs/egress-report.json
+cat > $W/blocked.sh <<SH
+set -u
+python3 $SHARED/egress.py probe --json $W/runs/probe.json || exit 3            # 必須 exit 0（擋住了）
+STATE=$W/state sh $F/start_ollama.sh || exit 4                                  # 使用者原本的 Ollama，預設位址
+python3 $F/run_ask.py --script $W/ask.py --python /opt/q20-venv/bin/python [--env ...] --out $W/runs/blocked
+SH
+python3 $SHARED/egress.py run --out $W/egress --label blocked --block-network --kill-leftovers --sh "bash $W/blocked.sh"
+W0=$(python3 -c "import json; print(json.load(open('$W/runs/blocked.json'))['start'])")
+W1=$(python3 -c "import json; print(json.load(open('$W/runs/blocked.json'))['end'])")
+python3 $SHARED/egress.py report --out $W/egress --since $W0 --until $W1 --json $W/runs/egress-report.json
 ```
+
+`[--env ...]` 與 L2-2 相同。`egress.py run` exit 3＝probe 顯示沒擋住、4＝Ollama 起不來：量測沒做好，修好後重做這一步，不算答案的錯。
 
 通過：`$W/runs/blocked.json` 的 `pass` 為 true，**而且** egress report 的 `result` 是 `pass`。`undetermined` 時修好量測後重做這一步。
 
