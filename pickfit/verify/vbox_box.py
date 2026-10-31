@@ -458,6 +458,16 @@ class VBox:
             time.sleep(1)
         raise BoxError(f"{vm} did not power off within {wait_s:.0f}s")
 
+    def wait_off(self, vm: str, wait_s: float = 300) -> None:
+        """Wait for the guest to shut itself down; never cut the power. A snapshot of a guest powered off in
+        the middle of its shutdown boots into Windows Recovery ("Windows didn't load correctly")."""
+        deadline = time.monotonic() + wait_s
+        while time.monotonic() < deadline:
+            if self.state(vm) == "poweroff":
+                return
+            time.sleep(2)
+        raise BoxError(f"{vm} did not shut down by itself within {wait_s:.0f}s")
+
     def check_nics(self, vm: str, allowed: dict[int, set[str]]) -> dict[str, str]:
         """Refuse a VM whose NICs differ from `allowed` ({slot: attachment types}); every other slot must
         be 'none'. An internal network must be pickfit's. Bridged or host-only anywhere is refused, so a
@@ -1206,24 +1216,27 @@ PROVISION_WINGET = r"""
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 "release={release}"
+$t = Join-Path $env:TEMP 'pf-winget'
 if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-  $t = Join-Path $env:TEMP 'pf-winget'
   New-Item -ItemType Directory -Force $t | Out-Null
   foreach ($name in {assets}) {
     & curl.exe -fsSL -o (Join-Path $t $name) "https://github.com/microsoft/winget-cli/releases/download/{release}/$name"
     if ($LASTEXITCODE) { "download failed: $name"; exit 5 }
-    "sha256_$($name -replace '[^A-Za-z0-9]','_')=$((Get-FileHash (Join-Path $t $name) -Algorithm SHA256).Hash.ToLower())"
   }
   Expand-Archive -Path (Get-ChildItem $t -Filter '*Dependencies.zip').FullName -DestinationPath "$t\deps" -Force
   $deps = @(Get-ChildItem "$t\deps" -Recurse -Include *.appx, *.msix | Where-Object { $_.FullName -match 'x64' } | ForEach-Object FullName)
   $bundle = (Get-ChildItem $t -Filter *.msixbundle).FullName
-  $sig = Get-AuthenticodeSignature $bundle
-  "bundle_signer=$($sig.SignerCertificate.Subject)"
   $lic = (Get-ChildItem $t -Filter *License1.xml).FullName
   Add-AppxProvisionedPackage -Online -PackagePath $bundle -DependencyPackagePath $deps -LicensePath $lic | Out-Null
   Add-AppxPackage -Path $bundle -DependencyPath $deps -ErrorAction SilentlyContinue
   $env:Path += ";$env:LOCALAPPDATA\Microsoft\WindowsApps"
 }
+# What was installed, also on a resumed build where winget is already there (the files stay in TEMP).
+foreach ($name in {assets}) {
+  $f = Join-Path $t $name
+  if (Test-Path $f) { "sha256_$($name -replace '[^A-Za-z0-9]','_')=$((Get-FileHash $f -Algorithm SHA256).Hash.ToLower())" } }
+$b = Get-ChildItem $t -Filter *.msixbundle -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($b) { "bundle_signer=$((Get-AuthenticodeSignature $b.FullName).SignerCertificate.Subject)" }
 "winget=$(winget --version)"
 """
 
@@ -1539,6 +1552,8 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
                                     "winget": got.get("winget"), "bundle_signer": got.get("bundle_signer"),
                                     "sha256": {k.removeprefix("sha256_"): v for k, v in got.items()
                                                if k.startswith("sha256_")}}
+    if len(manifest["winget_bootstrap"]["sha256"]) != len(WINGET_ASSETS) or not got.get("bundle_signer"):
+        raise BoxError(f"winget's files are not all accounted for: {manifest['winget_bootstrap']}")
     admin("tools (winget)", PROVISION_TOOLS, 3600, lambda c, o: "pip uv pipx -> 0" in o and "pwsh_path=" in o)
     _logon_as(vbox, name, pw, WIN_USER, log)
     deadline = time.monotonic() + 900
@@ -1555,7 +1570,7 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
     manifest.update({k: v for k, v in versions.items() if v and v != "unavailable"})
     admin("hardening", HARDEN, 300, lambda c, o: "hardened-ok" in o)
     admin("shutdown", "shutdown.exe /s /t 5 /f; 'bye'", 60, lambda c, o: True)
-    vbox.poweroff(name, 300)
+    vbox.wait_off(name, 300)
     for port in range(1, 4):  # the install ISO, the additions and the auxiliary (answer file + passwords) ISO
         vbox("storageattach", name, "--storagectl", "SATA", "--port", str(port), "--device", "0",
              "--medium", "none", check=False)
@@ -1588,8 +1603,10 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
     manifest.update(windows=f"{final.get('display', '?')} (build {final.get('build', '?')})",
                     license_status=final.get("license"), windows_update="off")
     admin("shutdown", "shutdown.exe /s /t 5 /f; 'bye'", 60, lambda c, o: True)
-    vbox.poweroff(name, 300)
-    vbox("snapshot", name, "take", SNAPSHOT, "--description", "pickfit Windows base, powered off")
+    vbox.wait_off(name, 300)
+    while vbox("snapshot", name, "showvminfo", SNAPSHOT, check=False).returncode == 0:  # a rebuild replaces it
+        vbox("snapshot", name, "delete", SNAPSHOT, timeout_s=600)
+    vbox("snapshot", name, "take", SNAPSHOT, "--description", "pickfit Windows base, shut down by Windows")
     manifest.update(hardened=True, build_id=secrets.token_hex(6),
                     prepared_at=taipei_now().isoformat(timespec="seconds"))
     manifest_path(name, state).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
