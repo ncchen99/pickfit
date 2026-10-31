@@ -1,0 +1,516 @@
+{
+  "schema_version": "software.v1",
+  "slug": "memcode",
+  "repo_id": "gh:1328657057",
+  "name": "memcode",
+  "summary": "Terminal coding agent that keeps persistent repo memory and runs as self-hosted chat gateway.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent",
+    "ai",
+    "ai-agent",
+    "ai-memory",
+    "claude",
+    "cli",
+    "code-assistant",
+    "codex",
+    "coding-agent",
+    "developer-tools"
+  ],
+  "use_cases": [
+    "pick up where you left off last week in a repo",
+    "fix a bug from Telegram",
+    "draft a plan for codebase change for approval",
+    "keep dependencies current and triage security advisories",
+    "send a voice note to the agent"
+  ],
+  "alternatives_to": [
+    "Hermes",
+    "OpenClaw"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://memcode.ai/docs",
+  "repo": {
+    "url": "https://github.com/memcode-ai/memcode",
+    "full_name": "memcode-ai/memcode",
+    "created_at": "2026-08-09T09:48:41Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "OPENAI_API_KEY",
+      "ANTHROPIC_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-memcode-20261031-000836-edc3",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://memcode.ai/install.sh -o /tmp/install_memcode.sh && ls -l /tmp/install_memcode.sh && wc -c /tmp/install_memcode.sh",
+          "purpose": "Download install script for inspection"
+        },
+        {
+          "command": "script -qec 'sh /tmp/install_memcode.sh' /dev/null < /dev/null",
+          "purpose": "Install memcode with tty stdin to skip prompt"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "memcode version",
+        "expected_signal": "memcode 0.47.4"
+      },
+      "first_task": "memcode version"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.47.4",
+    "published_at": "2026-10-14T15:04:33Z",
+    "url": "https://github.com/memcode-ai/memcode/releases/tag/v0.47.4"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:10:22.438508+08:00",
+    "runs": [
+      {
+        "id": "verify-memcode-20261031-000836-edc3",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:10:22.438508+08:00",
+        "tool_version": "0.47.4",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://memcode.ai/install.sh -o /tmp/install_memcode.sh && ls -l /tmp/install_memcode.sh && wc -c /tmp/install_memcode.sh",
+            "purpose": "Download install script for inspection"
+          },
+          {
+            "command": "script -qec 'sh /tmp/install_memcode.sh' /dev/null < /dev/null",
+            "purpose": "Install memcode with tty stdin to skip prompt"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "memcode version",
+            "expected_signal": "memcode 0.47.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "memcode 0.47.4 (commit fddb90c, built 2026-10-14T14:59:55Z)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "memcode --help",
+            "expected_signal": "Available Commands:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Available Commands:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "memcode doctor",
+            "expected_signal": "repo root:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "repo root: /home/sbx/work (working directory)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "memcode task list",
+            "expected_signal": "No tasks yet.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No tasks yet. Write one at .memcode/tasks/<name>.yaml, or ask memcode to",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://memcode.ai/install.sh | sh",
+            "actually_needed": "Run the installer with stdin on a tty (e.g. script -qec 'sh /tmp/install_memcode.sh' /dev/null) so it takes the non-interactive branch and exits 0; a bare non-interactive run installs the binary but then execs memcode from /dev/tty and exits 2.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show doctor reporting repo root, task list reporting no tasks, and version reporting 0.47.4.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-memcode-20261031-000836-edc3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-memcode-20261031-000836-edc3/check-1-cmd9.judged.png",
+            "runs/verify/verify-memcode-20261031-000836-edc3/check-2-cmd10.judged.png",
+            "runs/verify/verify-memcode-20261031-000836-edc3/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.06321
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 84.4,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 45.6,
+      "signals": {
+        "stars": 18,
+        "monthly_downloads": null,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": 33,
+        "hn_top_score": 3,
+        "registries_count": 0
+      },
+      "age_days": 80,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 45.91
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "b37317a6d658cc8c120859036bec7cfa90b1ab9d290ce2845f23fdba1d1cc2a1",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Most coding agents start every session from zero. memcode keeps a persistent model of your repo in `.memcode`"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "curl -fsSL https://memcode.ai/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Then run `memcode` in a repo."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "MEMCODE_ENDPOINT_URL=http://localhost:11434/v1 memcode      # Ollama, local"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "MIT. See [LICENSE](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/memcode-ai/memcode",
+      "fetched_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/memcode-ai/memcode/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:34:15+08:00"
+    },
+    {
+      "id": "release:v0.47.4",
+      "kind": "release",
+      "url": "https://github.com/memcode-ai/memcode/releases/tag/v0.47.4",
+      "fetched_at": "2026-10-29T02:34:15+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Run `memcode` in a repo and you get a full terminal coding agent.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:13+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Then run `memcode` in a repo.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:13+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Run `memcode` in a repo and you get a full terminal coding agent.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:13+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "memcode keeps a persistent model of your repo in `.memcode`: the subsystems, what you worked on last week",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:13+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "The coding agent that remembers your repo.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:13+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "your OpenAI key (OPENAI_API_KEY)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:13+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/1",
+      "source_id": "readme",
+      "quote": "your Anthropic key (ANTHROPIC_API_KEY)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:13+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.47.4",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:34:15+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Ask it to pick up where you left off last week and it can.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:13+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Fix a bug from Telegram on the train",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:13+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Send the draft to a second model for review first when the stakes are worth it.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:13+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "keep dependencies current, keep security advisories triaged",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:13+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Send a voice note instead of typing.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:13+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Coming from Hermes or OpenClaw?",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:13+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "Coming from Hermes or OpenClaw?",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:13+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "your own API keys, a local endpoint like Ollama, or a hosted memcode account.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:13+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

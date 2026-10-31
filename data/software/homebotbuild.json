@@ -1,0 +1,547 @@
+{
+  "schema_version": "software.v1",
+  "slug": "homebotbuild",
+  "repo_id": "gh:1414832207",
+  "name": "HomeBotBuild",
+  "summary": "Private self-hosted home AI that runs local LLMs offline on your Windows or Linux PC.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "self_hosted_web_app",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-assistant",
+    "emergency-preparedness",
+    "home-assistant",
+    "kiwix",
+    "linux",
+    "local-ai",
+    "local-llm",
+    "offline-ai",
+    "offline-first",
+    "ollama"
+  ],
+  "use_cases": [
+    "chat offline with a local model on your PC",
+    "browse offline Kiwix knowledge libraries",
+    "control Home Assistant devices on your LAN",
+    "manage calendar and household lists",
+    "use voice assistant with wake word and speech output"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://www.puffpai.com",
+  "repo": {
+    "url": "https://github.com/CypherSisters/HomeBotBuild",
+    "full_name": "CypherSisters/HomeBotBuild",
+    "created_at": "2026-10-11T22:46:03Z",
+    "archived": false
+  },
+  "platforms": [
+    "windows",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.10+",
+      "Node 20.19+"
+    ],
+    "system_packages": [],
+    "gpu": "optional",
+    "apple_silicon_only": null,
+    "min_ram_gb": 2.0,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-homebotbuild-20261031-004044-6103",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone https://github.com/CypherSisters/HomeBotBuild.git && ls -la HomeBotBuild/ | head -n 100; echo \"---\"; cat HomeBotBuild/install.sh | wc -l; python3 --version; node --version",
+          "purpose": "clone HomeBotBuild repo"
+        },
+        {
+          "command": "cd HomeBotBuild && bash install.sh --with-dashboard",
+          "purpose": "run installer bash install.sh --with-dashboard"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "source HomeBotBuild/venv/bin/activate && puffpai --help",
+        "expected_signal": "First-run setup wizard"
+      },
+      "first_task": "source HomeBotBuild/venv/bin/activate && puffpai version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 -WithDashboard",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "puffpai setup"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": null,
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:46:42.940714+08:00",
+    "runs": [
+      {
+        "id": "verify-homebotbuild-20261031-004044-6103",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:46:42.940714+08:00",
+        "tool_version": "v1.0.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/CypherSisters/HomeBotBuild.git && ls -la HomeBotBuild/ | head -n 100; echo \"---\"; cat HomeBotBuild/install.sh | wc -l; python3 --version; node --version",
+            "purpose": "clone HomeBotBuild repo"
+          },
+          {
+            "command": "cd HomeBotBuild && bash install.sh --with-dashboard",
+            "purpose": "run installer bash install.sh --with-dashboard"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "source HomeBotBuild/venv/bin/activate && puffpai --help",
+            "expected_signal": "First-run setup wizard",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "setup First-run setup wizard (hardware, brain, the three zones, household,",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "source HomeBotBuild/venv/bin/activate && puffpai version",
+            "expected_signal": "PuffPAI v1.0.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PuffPAI v1.0.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS http://127.0.0.1:8000/health",
+            "expected_signal": "\"status\":\"ok\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"service\":\"PuffPAI API\",\"status\":\"ok\"}",
+            "setup": [
+              {
+                "command": "source HomeBotBuild/venv/bin/activate && python HomeBotBuild/start_api.py",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "no version flag documented; generic check expects --version or --help",
+            "actually_needed": "use `puffpai version` (subcommand); `puffpai --version` exits 2 with 'unrecognized arguments'",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Health endpoint returned status ok and puffpai --help displayed its full command list.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-homebotbuild-20261031-004044-6103/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-homebotbuild-20261031-004044-6103/check-1-cmd8.judged.png",
+            "runs/verify/verify-homebotbuild-20261031-004044-6103/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.104712
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 80.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.9,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 24.4,
+      "signals": {
+        "stars": 10,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 16,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 60.56
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "86eb42608878c44983cc1166f9b3f65a9e37b6dd1f34ef3a6887d2470649bc72",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "HomeBot is a self-hosted, local AI assistant for your family and home that runs"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "local AI assistant for your family and home that runs"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**You need:** a 64-bit Windows 10/11 or Linux PC, Python 3.10+, and"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "install.ps1 -WithDashboard   # Windows\n```\n```bash\nbash install.sh --with-dashboard"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "puffpai setup"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "`PUFFPAI_DATA_DIR` | the writable state root"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Apache-2.0. See [`LICENSE`](LICENSE),"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/CypherSisters/HomeBotBuild",
+      "fetched_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/CypherSisters/HomeBotBuild/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:32:58+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "HomeBot is a self-hosted, local AI assistant",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "for your family and home that runs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "a local LLM through Ollama",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "HomeBot is a self-hosted, local AI assistant for your family and home that runs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# HomeBotBuild: a private, offline-capable home AI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "on a Windows or Linux PC you already own (64-bit Windows 10/11 or Linux)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/prerequisites/min_ram_gb",
+      "source_id": "readme",
+      "quote": "Minimum hardware:** 2 GB of RAM, the floor of the smallest model",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.10+, and",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/1",
+      "source_id": "readme",
+      "quote": "Node 20.19+ for the dashboard build",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "A GPU is optional: the wizard sizes the",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "The first install needs the internet",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "chat, the apps, the knowledge library and the wizard run on your own machine",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Big offline libraries (ZIM) browse like a website",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Do you run one; its address and token, and the Zigbee hub",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "A delete by description removes only what matches",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Music dips for an addressed exchange, not for mere listening.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "bash install.sh --with-dashboard",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 -WithDashboard",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "There is no cloud account and no subscription.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "HomeBot works with the internet off: once it is installed and has a model, chat",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:09+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:59+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

@@ -1,0 +1,565 @@
+{
+  "schema_version": "software.v1",
+  "slug": "puffpaibuildbot",
+  "repo_id": "gh:1421572839",
+  "name": "PuffPAI BuildBot",
+  "summary": "BuildBot builds a private AI bot that runs on your own computer from a plan you approve.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "self_hosted_web_app",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "ai-assistant",
+    "bot-builder",
+    "home-automation",
+    "linux",
+    "local-ai",
+    "local-llm",
+    "macos",
+    "offline-ai",
+    "ollama"
+  ],
+  "use_cases": [
+    "build a garden helper for vegetable beds",
+    "build a bot that knows every dinosaur",
+    "teach bot about tomato diseases in chat",
+    "teach bot about bird songs",
+    "control smart home via Home Assistant"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://www.puffpai.com",
+  "repo": {
+    "url": "https://github.com/CypherSisters/PuffPAIBuildBot",
+    "full_name": "CypherSisters/PuffPAIBuildBot",
+    "created_at": "2026-10-16T03:02:41Z",
+    "archived": false
+  },
+  "platforms": [
+    "windows",
+    "linux",
+    "macos"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.11+",
+      "Node.js 22.12+"
+    ],
+    "system_packages": [
+      "Ollama"
+    ],
+    "gpu": "optional",
+    "apple_silicon_only": null,
+    "min_ram_gb": 2.0,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-puffpaibuildbot-20261031-004325-1559",
+      "method": "script",
+      "steps": [
+        {
+          "command": "rm -rf PuffPAIBuildBot && git clone https://github.com/CypherSisters/PuffPAIBuildBot.git",
+          "purpose": "Clone BuildBot repo"
+        },
+        {
+          "command": "bash PuffPAIBuildBot/install.sh --no-dashboard --no-questions --no-apt",
+          "purpose": "Run installer non-interactive without dashboard"
+        },
+        {
+          "command": "ln -sf /home/sbx/work/PuffPAIBuildBot/puffpai /home/sbx/.local/bin/puffpai",
+          "purpose": "Put puffpai launcher on PATH"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "puffpai version",
+        "expected_signal": "PuffPAI v0.1.0-alpha"
+      },
+      "first_task": "puffpai version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "install.cmd",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "If Windows blocks install, click More info then Run anyway"
+      ],
+      "check": null,
+      "first_task": "puffpai setup"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "hybrid",
+  "last_release": null,
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:47:10.881922+08:00",
+    "runs": [
+      {
+        "id": "verify-puffpaibuildbot-20261031-004325-1559",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:47:10.881922+08:00",
+        "tool_version": "v0.1.0-alpha",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf PuffPAIBuildBot && git clone https://github.com/CypherSisters/PuffPAIBuildBot.git",
+            "purpose": "Clone BuildBot repo"
+          },
+          {
+            "command": "bash PuffPAIBuildBot/install.sh --no-dashboard --no-questions --no-apt",
+            "purpose": "Run installer non-interactive without dashboard"
+          },
+          {
+            "command": "ln -sf /home/sbx/work/PuffPAIBuildBot/puffpai /home/sbx/.local/bin/puffpai",
+            "purpose": "Put puffpai launcher on PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "puffpai version",
+            "expected_signal": "PuffPAI v0.1.0-alpha",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PuffPAI v0.1.0-alpha",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "puffpai outside",
+            "expected_signal": "To see every request from the last day: puffpai outside log",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "To see every request from the last day: puffpai outside log",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "puffpai knowledge status",
+            "expected_signal": "No books yet. Add one with: puffpai sources search",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No books yet. Add one with: puffpai sources search <words>",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "bash install.sh",
+            "actually_needed": "Run non-interactive as: bash install.sh --no-dashboard --no-questions --no-apt; installer then skips dashboard build and leaves Ollama uninstalled with message to install via curl -fsSL https://ollama.com/install.sh | sh (needs password/root). Bot CLI works but cannot answer without Ollama.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "puffpai setup / puffpai start imply puffpai is on PATH after install",
+            "actually_needed": "Link the generated launcher onto PATH: ln -sf /home/sbx/work/PuffPAIBuildBot/puffpai /home/sbx/.local/bin/puffpai. Without this, bare puffpai is command-not-found; only ./puffpai in the checkout exists.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "--version or --help works",
+            "actually_needed": "Use puffpai version (subcommand) and puffpai --help; puffpai --version exits 2 with error unrecognized arguments: --version.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three commands succeeded with expected outputs for outside transparency, empty knowledge status, and version.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-puffpaibuildbot-20261031-004325-1559/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-puffpaibuildbot-20261031-004325-1559/check-1-cmd14.judged.png",
+            "runs/verify/verify-puffpaibuildbot-20261031-004325-1559/check-2-cmd15.judged.png",
+            "runs/verify/verify-puffpaibuildbot-20261031-004325-1559/check-3-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.210397
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 65.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.68,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 29.4,
+      "signals": {
+        "stars": 12,
+        "monthly_downloads": null,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 12,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 46.03
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "20f4eccaa5d0206b4efbae8911e8f347ff83ae657b088a1d112c13fb2945be3d",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "BuildBot makes your own AI bot, on your own computer."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "\"a garden helper for\n   my vegetable beds\", \"a bot that knows every dinosaur\""
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**Required** | **Python 3.11+**"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "bash install.sh                 # Linux; later ./start-bot.sh and ./stop-bot.sh\ninstall.cmd                     # Windows Command Prompt, same as double-clicking"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "`puffpai start` starts your bot and its web page"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "For the whole\nweb, add a free key on the **Sign-up keys** page"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "The [FAQ](docs/FAQ.md) answers the common ones: phones, smart"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Windows, Linux and Mac."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/CypherSisters/PuffPAIBuildBot",
+      "fetched_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/CypherSisters/PuffPAIBuildBot/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:32:58+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Then it builds your bot's web page,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "double-click **install.cmd**.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "The bot's brain runs on your computer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "BuildBot makes your own AI bot, on your own computer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# PuffPAI BuildBot",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "A Windows 10 or 11 PC, a Linux PC, or a Mac with macOS 14 or newer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/prerequisites/min_ram_gb",
+      "source_id": "readme",
+      "quote": "`llama3.2:1b` at **2 GB minimum RAM**, and that number is the real floor",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "**Python 3.11+**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/1",
+      "source_id": "readme",
+      "quote": "**Node.js 22.12+**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "**[Ollama](https://ollama.com)** + a local instruct model",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "A graphics card helps it answer faster. You don't need one.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Afterwards it can run without it.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "\"a garden helper for my vegetable beds\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "\"a bot that knows every dinosaur\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "\"add tomato diseases to you\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "\"teach yourself about bird songs\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Home Assistant and media control",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "bash install.sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "install.cmd",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Toolsmith can use Anthropic with your own key if you choose it; it starts on this computer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:56+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:59+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

@@ -1,0 +1,557 @@
+{
+  "schema_version": "software.v1",
+  "slug": "slivingdoc",
+  "repo_id": "gh:1327612817",
+  "name": "slivingdoc",
+  "summary": "Shared notes for agents with Git-style merges, stored in S3 buckets.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent",
+    "claude",
+    "claude-code",
+    "cli",
+    "codex",
+    "context",
+    "context-engineering",
+    "context-management",
+    "durable-context",
+    "mcp-server"
+  ],
+  "use_cases": [
+    "automatically store agent's context",
+    "pull and commit notes at the same time",
+    "merge concurrent writes without overwrites"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://slivingdoc.dev",
+  "repo": {
+    "url": "https://github.com/baalimago/slivingdoc",
+    "full_name": "baalimago/slivingdoc",
+    "created_at": "2026-08-08T09:49:04Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "SLIVINGDOC_TOKEN"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-slivingdoc-20261031-015206-5d7a",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g slivingdoc 2>&1",
+          "purpose": "install slivingdoc globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "slivingdoc version 2>&1",
+        "expected_signal": "slivingdoc 1.3.1"
+      },
+      "first_task": "slivingdoc version 2>&1"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "freemium",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v1.3.1",
+    "published_at": "2026-10-27T17:52:01Z",
+    "url": "https://github.com/baalimago/slivingdoc/releases/tag/v1.3.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:55:34.813955+08:00",
+    "runs": [
+      {
+        "id": "verify-slivingdoc-20261031-015206-5d7a",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:55:34.813955+08:00",
+        "tool_version": "1.3.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g slivingdoc 2>&1",
+            "purpose": "install slivingdoc globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "slivingdoc version 2>&1",
+            "expected_signal": "slivingdoc 1.3.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "slivingdoc 1.3.1",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "npx -y slivingdoc version",
+            "expected_signal": "slivingdoc 1.3.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "slivingdoc 1.3.1",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- slivingdoc serve 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx -y slivingdoc serve",
+            "actually_needed": "npm install -g slivingdoc then launch with `slivingdoc serve` so the binary is on PATH for offline replay",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "`--login never` turns off browser sign-in",
+            "actually_needed": "probe with default `--login auto` (`slivingdoc serve` with no flags); `--login never` refuses to start without a credential and cannot handshake offline",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show slivingdoc 1.3.1 printed via binary and npx, and MCP serve handshake ok with 2 tools.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-slivingdoc-20261031-015206-5d7a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-slivingdoc-20261031-015206-5d7a/check-1-cmd3.judged.png",
+            "runs/verify/verify-slivingdoc-20261031-015206-5d7a/check-2-cmd7.judged.png",
+            "runs/verify/verify-slivingdoc-20261031-015206-5d7a/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.048817,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "slivingdoc",
+            "serve"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "slivingdoc",
+          "server_version": "1.3.1",
+          "tools": [
+            "notes_commit",
+            "notes_pull"
+          ],
+          "tool_count": 2,
+          "called_tool": null,
+          "offline": false
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "npx -y slivingdoc serve",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add slivingdoc \\\n  --env SLIVINGDOC_TOKEN=<your-api-token> \\\n  -- npx -y slivingdoc serve"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "SLIVINGDOC_TOKEN",
+        "required": null,
+        "purpose": "hosted API token"
+      }
+    ],
+    "tools": [
+      "notes_pull",
+      "notes_commit"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 82.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.8,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 51.4,
+      "signals": {
+        "stars": 7,
+        "monthly_downloads": 1845,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 641,
+        "hn_top_score": 1,
+        "registries_count": 1
+      },
+      "age_days": 83,
+      "packages": [
+        "npm:slivingdoc"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 39.95
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "98603ccf70589440f01e19bce60f3b98b32a6a0122de86317a9a77860f259d92",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Durable context that outlives every session: plain text files that\n    fleets of agents (and their humans) pull and commit at the same time,"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "fleets of agents (and their humans) pull and commit at the same time,"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Point it at an existing S3-compatible bucket that"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npx -y slivingdoc version"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "slivingdoc pull notes"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export AWS_REGION=eu-north-1"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "MIT, see [LICENSE](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/baalimago/slivingdoc",
+      "fetched_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/baalimago/slivingdoc/blob/master/README.md",
+      "fetched_at": "2026-10-31T01:05:51+08:00"
+    },
+    {
+      "id": "release:v1.3.1",
+      "kind": "release",
+      "url": "https://github.com/baalimago/slivingdoc/releases/tag/v1.3.1",
+      "fetched_at": "2026-10-31T01:05:51+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "for how to configure the MCP\nserver in your agentic coder.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:21+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "\"Install\" it via npx:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:21+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "for how to configure the MCP\nserver in your agentic coder.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:21+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Shared notes for your agents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:21+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "claude mcp add slivingdoc",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:21+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "--env SLIVINGDOC_TOKEN=<your-api-token>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:21+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.3.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:05:51+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "automatically store agent's context",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:21+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "pull and commit at the same time,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:21+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "**Merge-safe concurrent writes:** move fast with no fear",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:21+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Free for one space, 10 MB and 250,000 requests a month",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:21+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Store them durably in your own S3-compatible bucket, or let",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:21+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "As stdio MCP client",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:21+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "npx -y slivingdoc serve",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:21+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add slivingdoc \\\n  --env SLIVINGDOC_TOKEN=<your-api-token> \\\n  -- npx -y slivingdoc serve",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:21+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "SLIVINGDOC_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "an agent calling notes_pull and notes_commit over MCP.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "an agent calling notes_pull and notes_commit over MCP.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:21+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:42+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

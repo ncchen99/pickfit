@@ -1,0 +1,588 @@
+{
+  "schema_version": "software.v1",
+  "slug": "ruvnet-brain",
+  "repo_id": "gh:1284449375",
+  "name": "RuvNet Brain",
+  "summary": "Source-grounded companion that helps Claude Code and Codex discover and use RuvNet ecosystem source.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agentdb",
+    "ai-agents",
+    "anthropic-claude",
+    "claude-code",
+    "claude-code-plugin",
+    "knowledge-base",
+    "llm-tools",
+    "mcp",
+    "model-context-protocol",
+    "rag"
+  ],
+  "use_cases": [
+    "Show how Ruflo coordinates agents with implementing source",
+    "Show how RVF stores and queries vectors with source citations",
+    "Compare RuvNet approaches for routing model calls",
+    "Review a project agent workflow and propose smallest verifiable change",
+    "Find RuvNet options for persistent agent memory"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://isovision.ai/ruvnet-brain/",
+  "repo": {
+    "url": "https://github.com/stuinfla/ruvnet-brain",
+    "full_name": "stuinfla/ruvnet-brain",
+    "created_at": "2026-06-29T21:54:32Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js 18 or newer"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npx ruvnet-brain@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "ruvnet-brain --doctor"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-ruvnet-brain-20261031-012317-3799",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g ruvnet-brain@latest",
+          "purpose": "Install ruvnet-brain globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "which ruvnet-brain && ruvnet-brain --help",
+        "expected_signal": "It is safe to re-run at any time"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npx ruvnet-brain@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "ruvnet-brain --doctor"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "local",
+  "last_release": {
+    "tag": "v4.7.23",
+    "published_at": "2026-10-30T15:49:58Z",
+    "url": "https://github.com/stuinfla/ruvnet-brain/releases/tag/v4.7.23"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:25:13.900090+08:00",
+    "runs": [
+      {
+        "id": "verify-ruvnet-brain-20261031-012317-3799",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:25:13.900090+08:00",
+        "tool_version": "4.7.23",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g ruvnet-brain@latest",
+            "purpose": "Install ruvnet-brain globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "which ruvnet-brain && ruvnet-brain --help",
+            "expected_signal": "It is safe to re-run at any time",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "It is safe to re-run at any time. Body updates go live on the next hook/MCP call. Restart only when",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- node /home/sbx/.local/lib/node_modules/ruvnet-brain/plugin/mcp/server.mjs",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx ruvnet-brain@latest",
+            "actually_needed": "npm install -g ruvnet-brain@latest so node plugin/mcp/server.mjs is on disk for stdio probe offline; npx launcher would need network on replay",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "ruvnet-brain --doctor to inspect actual installation",
+            "actually_needed": "ruvnet-brain --doctor exits 1 in a box with no Claude Code/Codex hosts (no-plugin hooks self-check FAILING) and before bundle install reports brain not found; MCP handshake still passes without the bundle",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "--version prints tool version",
+            "actually_needed": "ruvnet-brain --version expects a release tag argument and exits 1; installed version read via npm list -g ruvnet-brain (4.7.23)",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "MCP probe handshakes with 4 tools listed and ruvnet-brain help prints installer usage ending with safe re-run notice.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ruvnet-brain-20261031-012317-3799/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ruvnet-brain-20261031-012317-3799/check-1-cmd7.judged.png",
+            "runs/verify/verify-ruvnet-brain-20261031-012317-3799/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.098287,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "node",
+            "/home/sbx/.local/lib/node_modules/ruvnet-brain/plugin/mcp/server.mjs"
+          ],
+          "url": null,
+          "protocol_version": "2024-11-05",
+          "server_name": "ruvnet-brain",
+          "server_version": "2.0.0",
+          "tools": [
+            "search_ruvnet",
+            "ruvnet_registry_latest",
+            "ruvnet_cli_help",
+            "ruvnet_cli_run"
+          ],
+          "tool_count": 4,
+          "called_tool": null,
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": null,
+    "client_configs": [],
+    "env_vars": [],
+    "tools": [
+      "search_ruvnet"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 70.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.578,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7091,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 83.0,
+      "signals": {
+        "stars": 80,
+        "monthly_downloads": 10142,
+        "forks": 25,
+        "dependents": null,
+        "release_downloads": 1817,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 122,
+      "packages": [
+        "npm:ruvnet-brain"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 11.9
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "488db89ab41c4aad8b8e22efc6f0fa7909e772e1485a2890dfefaf7f18958352",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A source-grounded companion for Claude Code and Codex that helps you find and use Reuven Cohen's (rUv's) RuvNet ecosystem."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Your task in Claude Code / Codex"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "You need Node.js **18 or newer**, npm, and a supported Claude Code or Codex installation."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npx ruvnet-brain@latest"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "How does Ruflo coordinate agents? Show the source that implements it."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Local knowledge retrieval does not require an external embedding API or its API key."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "ruvnet-brain-update --check"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "The installer and local search support macOS, Linux and Windows."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/stuinfla/ruvnet-brain",
+      "fetched_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/stuinfla/ruvnet-brain/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:04:30+08:00"
+    },
+    {
+      "id": "release:v4.7.23",
+      "kind": "release",
+      "url": "https://github.com/stuinfla/ruvnet-brain/releases/tag/v4.7.23",
+      "fetched_at": "2026-10-31T01:04:30+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "delivered through native Claude Code and Codex plugins: the",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Run the installer from your terminal:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "the `search_ruvnet` MCP tool, skills and lifecycle hooks",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A source-grounded companion for Claude Code and Codex that helps you find and use Reuven Cohen's (rUv's) RuvNet ecosystem.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# 🧠 RuvNet Brain",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "The installer and local search support macOS, Linux and Windows.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "You need Node.js **18 or newer**, npm, and a supported Claude Code or Codex installation.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Installation and updates download dependencies and release artifacts;",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v4.7.23",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:04:30+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "How does Ruflo coordinate agents? Show the source that implements it.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Show me how RVF stores and queries vectors. Cite the source,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Compare the RuvNet approaches for routing model calls. Explain",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Review this project's agent workflow. Identify a useful capability",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "I need persistent memory for my agents. Which RuvNet options",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npx ruvnet-brain@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npx ruvnet-brain@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npx ruvnet-brain@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "RuvNet Brain is **MIT licensed**.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "The reader runs locally;",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "the `search_ruvnet` MCP tool, skills and lifecycle hooks that encourage source-grounded work.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:09+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:19+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

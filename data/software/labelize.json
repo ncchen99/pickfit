@@ -1,0 +1,544 @@
+{
+  "schema_version": "software.v1",
+  "slug": "labelize",
+  "repo_id": "gh:1185008461",
+  "name": "Labelize",
+  "summary": "Parses ZPL/EPL/TSPL/CPCL/DPL labels and renders them to PNG or PDF offline.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "android",
+    "barcode",
+    "cli",
+    "cpcl",
+    "dpl",
+    "epl",
+    "image-to-zpl",
+    "label-printer",
+    "labelary",
+    "pdf"
+  ],
+  "use_cases": [
+    "preview shipping label before printing",
+    "batch-convert label templates to PDF for archival",
+    "generate label PNGs on the fly from a microservice",
+    "validate label content in CI with golden-file tests",
+    "add real-time label preview to design tools"
+  ],
+  "alternatives_to": [
+    "Labelary",
+    "Zebra Printer"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://labelize.764629910.workers.dev",
+  "repo": {
+    "url": "https://github.com/GOODBOY008/labelize",
+    "full_name": "GOODBOY008/labelize",
+    "created_at": "2026-03-18T06:29:59Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-labelize-20261031-000542-a71b",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install @goodboy008/labelize-wasm",
+          "purpose": "Install @goodboy008/labelize-wasm via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "node -e \"import('./node_modules/@goodboy008/labelize-wasm/package.json', {with:{type:'json'}}).then(m=>console.log(m.default.version))\"",
+        "expected_signal": "1.10.0"
+      },
+      "first_task": "node -e \"import('./node_modules/@goodboy008/labelize-wasm/package.json', {with:{type:'json'}}).then(m=>console.log(m.default.version))\""
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install @goodboy008/labelize-wasm",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "labelize convert label.zpl"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.10.0",
+    "published_at": "2026-10-28T15:36:57Z",
+    "url": "https://github.com/GOODBOY008/labelize/releases/tag/v1.10.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:06:50.121017+08:00",
+    "runs": [
+      {
+        "id": "verify-labelize-20261031-000542-a71b",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:06:50.121017+08:00",
+        "tool_version": "1.10.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install @goodboy008/labelize-wasm",
+            "purpose": "Install @goodboy008/labelize-wasm via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "node -e \"import('./node_modules/@goodboy008/labelize-wasm/package.json', {with:{type:'json'}}).then(m=>console.log(m.default.version))\"",
+            "expected_signal": "1.10.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.10.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 -c \"d=open('label.png','rb').read(); print('is_png=', d[:8]==bytes.fromhex('89504e470d0a1a0a')); print('size=', len(d))\"",
+            "expected_signal": "PNG magic: 89504e470d0a1a0a",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PNG magic: 89504e470d0a1a0a",
+            "setup": [
+              {
+                "command": "cat > render-test.mjs <<'EOF'\nimport { lz_render } from \"@goodboy008/labelize-wasm/init\";\nimport { writeFileSync } from \"node:fs\";\nconst zpl = Buffer.from(\"^XA^FO50,50^A0N,40,40^FDHello World^FS^XZ\", \"ascii\");\nconst png = lz_render(zpl, 102.0, 152.0, 8, false, false, false);\nwriteFileSync(\"label.png\", png);\nconsole.log(\"PNG bytes:\", png.length);\nconsole.log(\"PNG magic:\", Buffer.from(png.slice(0,8)).toString(\"hex\"));\nEOF\nnode render-test.mjs && ls -l label.png",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cat > encode-test.mjs <<'EOF'\nimport { lz_encode } from \"@goodboy008/labelize-wasm/init\";\nimport { readFileSync, writeFileSync } from \"node:fs\";\nconst source = readFileSync(\"label.png\");\nconst zpl = lz_encode(source, 8, 128, \"zpl\");\nwriteFileSync(\"logo.zpl\", zpl);\nconsole.log(\"ZPL bytes:\", zpl.length);\nconsole.log(new TextDecoder().decode(zpl.slice(0, 120)));\nEOF\nnode encode-test.mjs && ls -l logo.zpl && head -c 300 logo.zpl",
+            "expected_signal": "^GFA",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "^FO0,0^GFA,99960,99960,102,",
+            "setup": [
+              {
+                "command": "cat > render-test.mjs <<'EOF'\nimport { lz_render } from \"@goodboy008/labelize-wasm/init\";\nimport { writeFileSync } from \"node:fs\";\nconst zpl = Buffer.from(\"^XA^FO50,50^A0N,40,40^FDHello World^FS^XZ\", \"ascii\");\nconst png = lz_render(zpl, 102.0, 152.0, 8, false, false, false);\nwriteFileSync(\"label.png\", png);\nconsole.log(\"PNG bytes:\", png.length);\nconsole.log(\"PNG magic:\", Buffer.from(png.slice(0,8)).toString(\"hex\"));\nEOF\nnode render-test.mjs && ls -l label.png && python3 -c \"d=open('label.png','rb').read(); print('is_png=', d[:8]==bytes.fromhex('89504e470d0a1a0a')); print('size=', len(d))\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "labelize convert label.zpl / labelize encode logo.png / labelize serve --port 8080",
+            "actually_needed": "Use the JavaScript WebAssembly API via `import { lz_render, lz_encode } from \"@goodboy008/labelize-wasm/init\"` on Node >=20; no `labelize` binary is installed by this package",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 1.10.0, successful ZPL-to-PNG render with valid PNG magic, and PNG-to-ZPL encode emitting ^GFA.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-labelize-20261031-000542-a71b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-labelize-20261031-000542-a71b/check-1-cmd7.judged.png",
+            "runs/verify/verify-labelize-20261031-000542-a71b/check-2-cmd4.judged.png",
+            "runs/verify/verify-labelize-20261031-000542-a71b/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.073373
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 94.8,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 76.9,
+      "signals": {
+        "stars": 81,
+        "monthly_downloads": 4292,
+        "forks": 30,
+        "dependents": null,
+        "release_downloads": 2223,
+        "hn_top_score": 0,
+        "registries_count": 2
+      },
+      "age_days": 226,
+      "packages": [
+        "npm:@goodboy008/labelize-wasm",
+        "crates:labelize"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 21.9
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "1cbef24be4758d6be4219dd0b6037e656715fbc2461ecd1f35fbebeeb6a71250",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Parse and render ZPL / EPL / TSPL / CPCL / DPL labels to PNG & PDF — fast, offline, open source."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "**Shipping label preview** — see exactly what prints before it hits the printer"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "# Or from source / crates.io (requires a Rust toolchain)"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew tap GOODBOY008/homebrew-labelize && brew install labelize"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "labelize convert label.zpl                    # → label.png (format auto-detected)"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "`serve` mode reads two optional flags; both default to `true`:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[MIT AND BSD-3-Clause](LICENSE) — see [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for embedded assets."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/GOODBOY008/labelize",
+      "fetched_at": "2026-10-30T23:40:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/GOODBOY008/labelize/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:57:57+08:00"
+    },
+    {
+      "id": "release:v1.10.0",
+      "kind": "release",
+      "url": "https://github.com/GOODBOY008/labelize/releases/tag/v1.10.0",
+      "fetched_at": "2026-10-30T23:57:57+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "The same engine ships as a **CLI tool**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:35+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Pick the surface that fits your stack",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:35+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "### Command line (macOS · Linux · Windows)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:35+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "parses **ZPL** (Zebra Programming Language), **EPL** (Eltron Programming Language), **TSPL/TSC**, and **CPCL** (Zebra mobile printers), and **DPL** (Datamax-O'Neil) label data and renders it to **PNG** or **PDF**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:35+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Labelize",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:35+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "### Command line (macOS · Linux · Windows)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:35+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:40:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:40:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:40:29+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:40:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:40:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.10.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:57:57+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "**Shipping label preview** — see exactly what prints before it hits the printer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:35+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "**Warehouse management** — batch-convert label templates to PDF for archival",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:35+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "**E-commerce integrations** — generate label PNGs on the fly from a microservice",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:35+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "**Automated QA** — validate label content in CI/CD with golden-file tests",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:35+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "**Label design tools** — add real-time ZPL/TSPL/CPCL/DPL preview with the library or wasm API",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:35+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "|  | **Labelize** | Labelary (web) | Zebra Printer |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:35+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "|  | **Labelize** | Labelary (web) | Zebra Printer |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:35+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install @goodboy008/labelize-wasm",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:35+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install @goodboy008/labelize-wasm",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:35+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "| Cost | Free | Free / paid tiers | Hardware cost |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:35+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "**Parse and render ZPL / EPL / TSPL / CPCL / DPL labels to PNG & PDF — fast, offline, open source.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:35+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:40:29+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

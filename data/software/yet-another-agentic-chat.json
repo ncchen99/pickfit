@@ -1,0 +1,635 @@
+{
+  "schema_version": "software.v1",
+  "slug": "yet-another-agentic-chat",
+  "repo_id": "gh:1313255816",
+  "name": "YAAC — yet another agentic chat",
+  "summary": "Local radio over MCP letting concurrent AI coding sessions message each other.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-communication",
+    "agent-orchestration",
+    "agentic-ai",
+    "agents",
+    "ai-agents",
+    "claude-code",
+    "communication",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol"
+  ],
+  "use_cases": [
+    "coordinate parallel worktrees on one repo about renames",
+    "pass a task from a chat conversation to a coding session",
+    "broadcast announcements to every session on a channel",
+    "notify a coding session when a long test suite goes green"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://pypi.org/project/yet-another-agentic-chat",
+  "repo": {
+    "url": "https://github.com/amyodov/yet-another-agentic-chat",
+    "full_name": "amyodov/yet-another-agentic-chat",
+    "created_at": "2026-07-27T00:03:28Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "uv"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uvx --from \"yet-another-agentic-chat[chat]\" yaac-chat",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-yet-another-agentic-chat-20261031-012621-1f13",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install \"yet-another-agentic-chat\" 2>&1",
+          "purpose": "install yet-another-agentic-chat with uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uvx --from \"yet-another-agentic-chat[chat]\" yaac-chat",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.6.5",
+    "published_at": "2026-10-30T15:20:43Z",
+    "url": "https://github.com/amyodov/yet-another-agentic-chat/releases/tag/v0.6.5"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:27:24.529858+08:00",
+    "runs": [
+      {
+        "id": "verify-yet-another-agentic-chat-20261031-012621-1f13",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:27:24.529858+08:00",
+        "tool_version": "0.6.5",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install \"yet-another-agentic-chat\" 2>&1",
+            "purpose": "install yet-another-agentic-chat with uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- yet-another-agentic-chat",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call list_channels --args '{}' -- yet-another-agentic-chat",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list_channels content=text text_chars=136",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show MCP handshake ok with 7 tools listed and list_channels returning an empty normal result.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-yet-another-agentic-chat-20261031-012621-1f13/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-yet-another-agentic-chat-20261031-012621-1f13/check-1-cmd4.judged.png",
+            "runs/verify/verify-yet-another-agentic-chat-20261031-012621-1f13/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.038657,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "yet-another-agentic-chat"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "yaac",
+          "server_version": null,
+          "tools": [
+            "list_channels",
+            "join_channel",
+            "send",
+            "check_inbox",
+            "peers",
+            "leave_channel",
+            "dev_connections"
+          ],
+          "tool_count": 7,
+          "called_tool": "list_channels",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "uvx yet-another-agentic-chat",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add yaac -s user -- uvx yet-another-agentic-chat"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"yaac\": {\n      \"command\": \"uvx\",\n      \"args\": [\"yet-another-agentic-chat\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "list_channels",
+      "join_channel",
+      "send",
+      "check_inbox",
+      "peers",
+      "dev_connections",
+      "leave_channel"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 98.0,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.9375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 35.6,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": 264,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 95,
+      "packages": [
+        "pypi:yet-another-agentic-chat"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 63.11
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "2ea2145f31404d75fedba42190dde6d9787baddbfab51bf0f7e186d906b2ebc7",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A radio for agentic coding sessions."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Parallel worktrees on one repo."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "All of these need [uv](https://docs.astral.sh/uv/) on your PATH."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "claude mcp add yaac -s user -- uvx yet-another-agentic-chat"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "agent:  [list_channels] → \"z combinator forum\" (3), \"doom 13\" (1)"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "There is no config file, no environment variable, no port to choose,"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "If your agent seems deaf, tell it to check the inbox."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Runs on macOS, Linux, and Windows — every commit runs the full test suite on"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/amyodov/yet-another-agentic-chat",
+      "fetched_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/amyodov/yet-another-agentic-chat/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:04:00+08:00"
+    },
+    {
+      "id": "release:v0.6.5",
+      "kind": "release",
+      "url": "https://github.com/amyodov/yet-another-agentic-chat/releases/tag/v0.6.5",
+      "fetched_at": "2026-10-31T01:04:00+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "YAAC is a plain stdio MCP server with no client-specific behaviour.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "If you can add a local MCP server, you are\ndone",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "YAAC is a plain stdio MCP server with no client-specific behaviour.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A radio for agentic coding sessions.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# YAAC — yet another agentic chat",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Runs on macOS, Linux, and Windows",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "All of these need [uv](https://docs.astral.sh/uv/) on your PATH.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.6.5",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:04:00+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Two sessions refactor on different\n  branches. The one that renames a field tells the other",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "it\n  passes the task to a Claude Code session over YAAC and collects the result.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "*\"CI is red, hold your pushes\"* — one broadcast reaches\n  every session on the channel.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "One session babysits a slow test suite and messages the coding\n  session when it goes green",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "uvx --from \"yet-another-agentic-chat[chat]\" yaac-chat",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "uvx --from \"yet-another-agentic-chat[chat]\" yaac-chat",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "uvx --from \"yet-another-agentic-chat[chat]\" yaac-chat",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "YAAC is a plain stdio MCP server with no client-specific behaviour.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "command = \"uvx\"\nargs = [\"yet-another-agentic-chat\"]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add yaac -s user -- uvx yet-another-agentic-chat",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"yaac\": {\n      \"command\": \"uvx\",\n      \"args\": [\"yet-another-agentic-chat\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`list_channels()`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`join_channel(channel, name)`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`send(body, name=None)`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`check_inbox()`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`peers()`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`dev_connections()`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`leave_channel()`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:19+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:11+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

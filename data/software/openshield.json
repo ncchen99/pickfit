@@ -1,0 +1,556 @@
+{
+  "schema_version": "software.v1",
+  "slug": "openshield",
+  "repo_id": "gh:1254286195",
+  "name": "OpenShield",
+  "summary": "Open-source AI coding agent in terminal with memory and autonomous mode.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent",
+    "ai",
+    "blackshield",
+    "cli",
+    "coding-assistant",
+    "llm",
+    "rust",
+    "tui"
+  ],
+  "use_cases": [
+    "Start TUI session",
+    "Execute task autonomously",
+    "Search persistent memory",
+    "List available models",
+    "Check token usage and model performance"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://github.com/synthalorian/openshield",
+  "repo": {
+    "url": "https://github.com/Blackshield-Company/openshield",
+    "full_name": "Blackshield-Company/openshield",
+    "created_at": "2026-05-30T11:29:35Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "OPENAI_API_KEY",
+      "ANTHROPIC_API_KEY",
+      "KIMI_API_KEY",
+      "XAI_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install --git https://github.com/Blackshield-Company/openshield --locked",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "openshield models"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-openshield-20261031-002336-68d0",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/Blackshield-Company/openshield/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
+          "purpose": "Download install script for reading"
+        },
+        {
+          "command": "bash /tmp/install.sh",
+          "purpose": "Run installer script (candidate 1)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "openshield --version",
+        "expected_signal": "openshield 1.2.2"
+      },
+      "first_task": "openshield models"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v1.2.2",
+    "published_at": "2026-10-21T01:38:14Z",
+    "url": "https://github.com/Blackshield-Company/openshield/releases/tag/v1.2.2"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:24:33.923000+08:00",
+    "runs": [
+      {
+        "id": "verify-openshield-20261031-002336-68d0",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:24:33.923000+08:00",
+        "tool_version": "1.2.2",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/Blackshield-Company/openshield/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
+            "purpose": "Download install script for reading"
+          },
+          {
+            "command": "bash /tmp/install.sh",
+            "purpose": "Run installer script (candidate 1)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "openshield --version",
+            "expected_signal": "openshield 1.2.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "openshield 1.2.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "openshield --help",
+            "expected_signal": "Usage: openshield [COMMAND]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: openshield [COMMAND]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "openshield models",
+            "expected_signal": "Available Models",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "🛡 Available Models",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "openshield config",
+            "expected_signal": "providers.local",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[providers.local]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "openshield stats",
+            "expected_signal": "OpenShield Stats",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "🛡 OpenShield Stats",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exit 0 showing models list, config dump, and version 1.2.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-openshield-20261031-002336-68d0/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-openshield-20261031-002336-68d0/check-1-cmd5.judged.png",
+            "runs/verify/verify-openshield-20261031-002336-68d0/check-2-cmd6.judged.png",
+            "runs/verify/verify-openshield-20261031-002336-68d0/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.047562
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 86.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 30.1,
+      "signals": {
+        "stars": 7,
+        "monthly_downloads": null,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 753,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 153,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 60.32
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "8cce931afb4455703aadd794b54953adb5d37ecb99405cf41fc9bcb727888645",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "AI coding agent in your terminal. Rust. Open source. Any provider."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/Blackshield-Company/openshield/main/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "openshield chat \"What is 2+2?\""
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "For cloud models, set one API key environment variable before starting: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `KIMI_API_KEY`, or `XAI_API_KEY`."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "If the context is too small, OpenShield reports `Context window exceeded` and exits non-zero."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Apache License 2.0. See [LICENSE](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Blackshield-Company/openshield",
+      "fetched_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Blackshield-Company/openshield/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:06:10+08:00"
+    },
+    {
+      "id": "release:v1.2.2",
+      "kind": "release",
+      "url": "https://github.com/Blackshield-Company/openshield/releases/tag/v1.2.2",
+      "fetched_at": "2026-10-31T00:06:10+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "AI coding agent in your terminal. Rust. Open source. Any provider.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "openshield setup    # Configure providers and models",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "AI coding agent in your terminal. Rust. Open source. Any provider.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "AI coding agent in your terminal. Rust. Open source. Any provider.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1 align=\"center\">OpenShield</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Downloads the prebuilt binary for your platform (Linux x86_64/aarch64, macOS x86_64/arm64)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `KIMI_API_KEY`, or `XAI_API_KEY`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/1",
+      "source_id": "readme",
+      "quote": "`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `KIMI_API_KEY`, or `XAI_API_KEY`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/2",
+      "source_id": "readme",
+      "quote": "`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `KIMI_API_KEY`, or `XAI_API_KEY`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/3",
+      "source_id": "readme",
+      "quote": "`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `KIMI_API_KEY`, or `XAI_API_KEY`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.2.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:06:10+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Start TUI session",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Execute task autonomously",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Search persistent memory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "List available models",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Token usage and model performance",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install --git https://github.com/Blackshield-Company/openshield --locked",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/Blackshield-Company/openshield/main/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Works with any OpenAI-compatible API. OpenRouter, llama-swap, xAI, local servers.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:50+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:42:22+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

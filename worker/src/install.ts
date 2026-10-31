@@ -3,9 +3,10 @@
  * sandbox, or done by hand on a real machine). No model call. README claims
  * that were never run are not in the index, so they cannot leak out here.
  */
-import { bestGuide, type Arch, type Catalog, type OS } from './catalog.ts';
+import { bestGuide, type Arch, type Catalog, type GuiEvidence, type OS } from './catalog.ts';
 import { ranSentence } from './evidence.ts';
 import { newId, REC_ID } from './events.ts';
+import { clientConfig, type McpClientConfig } from './mcpconfig.ts';
 
 export interface InstallInput {
   slug: string;
@@ -38,6 +39,8 @@ export interface InstallOutput {
     evidence_url: string | null;
     /** true: its checks passed again with the network off after install; false: they needed it. */
     works_offline: boolean | null;
+    /** A GUI app's launch as pickfit saw it (level stays install); null for anything else. */
+    gui: GuiEvidence | null;
   };
   applies_to_user_system: {
     match: 'exact' | 'same_os_other_arch' | 'other_os' | 'none';
@@ -55,13 +58,15 @@ export interface InstallOutput {
   first_task: string | null;
   first_task_setup: { command: string; run_in_background: boolean }[];
   known_issues: { readme_said: string; actually_needed: string; kind: PitfallKind | null }[];
+  /** MCP servers: how to add it to an MCP client, from the launch command the run started; null otherwise. */
+  mcp_client_config: McpClientConfig | null;
   warnings: string[];
   sources: string[];
 }
 
 export class UnknownSlugError extends Error {}
 
-const PIPE_TO_SHELL = /\|\s*(sudo\s+)?(ba|z)?sh\b/;
+export const PIPE_TO_SHELL = /\|\s*(sudo\s+)?(ba|z)?sh\b/;
 
 export function installGuide(catalog: Catalog, input: InstallInput): InstallOutput {
   const entry = catalog.bySlug.get(input.slug);
@@ -122,6 +127,7 @@ export function installGuide(catalog: Catalog, input: InstallInput): InstallOutp
       tool_version: run?.tool_version ?? null,
       evidence_url: run?.evidence_url ?? null,
       works_offline: guide?.works_offline ?? null,
+      gui: run?.gui ?? null,
     },
     applies_to_user_system: { match, note },
     steps,
@@ -135,6 +141,7 @@ export function installGuide(catalog: Catalog, input: InstallInput): InstallOutp
       actually_needed: p.actually_needed,
       kind: PITFALL_KINDS.includes(p.kind as PitfallKind) ? (p.kind as PitfallKind) : null,
     })),
+    mcp_client_config: clientConfig(entry, guide),
     warnings,
     sources: entry.sources,
   };

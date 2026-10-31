@@ -1,0 +1,116 @@
+[
+  {
+    "item": "Frozen 60-second Mandarin clip with its reference transcript",
+    "why": "L2-2 to L2-6. Decided by 念誠 on 2026-10-28 (eval/README.md section 8): a CC0 public Chinese recording, with transcript and source. Not fetched here. build_clip.py turns the chosen source into clip/clip.wav (16 kHz mono 16-bit PCM, exactly 60.000 s; about 1.9 MB, over the 1 MB aim because WAV is the one input every speech CLI reads), clip/warmup.wav (first 10 s), clip/reference.txt and clip/SOURCE.json. The reference must contain at least 60 script-differing characters and about 55 s of speech, so that 50 s of cue coverage is reachable. Clips are chosen by a rule fixed before anyone listens to or transcribes them (calibration.md), never by trying a tool on them.",
+    "candidates": [
+      {
+        "source": "Mozilla Common Voice, Chinese (Taiwan) zh-TW subset, validated clips: https://commonvoice.mozilla.org/zh-TW/datasets (dataset downloads may now be served through the Mozilla Data Collective; use whichever the site points to on the download date)",
+        "license": "CC0-1.0 (dataset); the download page asks users not to try to identify speakers",
+        "size": "only about 12-15 clips of about 5 s are kept (tens of KB each as MP3); the downloaded archive is much larger",
+        "pin": "corpus version name + each kept clip's file name + SHA-256 of each MP3 + its sentence text from validated.tsv, all in SOURCE.json via build_clip.py concat; Traditional-script sentences, Taiwanese Mandarin speakers"
+      },
+      {
+        "source": "Mozilla Common Voice, Chinese (China) zh-CN subset, validated clips: https://commonvoice.mozilla.org/zh-CN/datasets",
+        "license": "CC0-1.0",
+        "size": "as above",
+        "pin": "as above; the sentences are in Simplified script, so reference stats are computed after OpenCC s2tw (zh_score.py ref-stats does this); mainland accents"
+      },
+      {
+        "source": "LibriVox: one solo Mandarin reading of a public-domain modern vernacular text (catalogue at https://librivox.org/ filtered by language Chinese; the files are on archive.org)",
+        "license": "LibriVox dedicates its recordings to the public domain; confirm the item's archive.org record states CC0 or the Creative Commons public-domain dedication before using it, since 念誠's decision says CC0",
+        "size": "one chapter MP3 (tens of MB) of which a 60 s window is kept",
+        "pin": "archive.org identifier + file name + SHA-256 + start offset, via build_clip.py cut; reference = the published text of that passage, corrected by ear to what is actually read"
+      }
+    ],
+    "decision_needed_by": "念誠",
+    "chosen": "LibriVox, 念誠 2026-10-31 (relayed by the coordination session): archive.org item call_to_arms_jl_librivox, file calltoarms_06_lu.mp3 (呐喊 - Call to Arms, 06 一件小事, read by Jing Li), 4,208,942 bytes, md5 a284f268bc8edee002d12ae1ccfe5864 and sha1 4d27b7e3691f30076d3f72e5d11bce30f330d046 equal archive.org's metadata, sha256 3fb8a83babca98710097bd0fd7a075fd72098c7bfc7736987274603d8aa656e3. License: public domain (archive.org licenseurl Creative Commons Public Domain Mark 1.0; LibriVox: 'LibriVox recordings are Public Domain in the USA.'), not a CC0 dedication. Window: 60.000 s from 45.000 s. Reference text: Project Gutenberg #27166 (吶喊), corrected by ear by 念誠. Full provenance in source_librivox.json; calibration.md section 1."
+  },
+  {
+    "item": "Pinned OpenCC (the shared OpenCC scorer, also used by q11)",
+    "why": "L2-3 converts reference and output to Traditional; L2-4 is the shared scorer of eval/README.md section 5. Both use eval/fixtures/_shared/zh_script.py with one pinned set of OpenCC dictionary files, listed once in eval/fixtures/_shared/needs.json (no OpenCC package).",
+    "candidates": [],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Pinned SRT parser",
+    "why": "L2-2: 'parses with the pinned SRT parser'. srt_check.py uses the srt package's parse() and adds the sequence, timing and coverage checks itself.",
+    "candidates": [
+      {
+        "source": "https://pypi.org/project/srt/",
+        "license": "MIT",
+        "size": "under 50 KB, pure Python",
+        "pin": "srt==X.Y.Z (3.5.3 was current when last known; confirm) + wheel SHA-256"
+      },
+      {
+        "source": "https://pypi.org/project/pysrt/",
+        "license": "GPL-3.0",
+        "size": "small, pure Python",
+        "pin": "version + SHA-256 (srt_check.py would need a small adapter)"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "openai-whisper 'small' baseline for the speed item",
+    "why": "L2-5 compares against openai-whisper 'small' with default settings, in its own container. baseline/run_baseline.sh installs and runs it; it refuses to run until every pin is set.",
+    "candidates": [
+      {
+        "source": "https://pypi.org/project/openai-whisper/",
+        "license": "MIT",
+        "size": "small (code); the checkpoint is separate",
+        "pin": "WHISPER_VERSION = latest release on the pin date"
+      },
+      {
+        "source": "https://download.pytorch.org/whl/cpu (torch CPU wheel for cp312 manylinux x86_64)",
+        "license": "BSD-3-Clause",
+        "size": "about 200 MB",
+        "pin": "TORCH_VERSION + TORCH_INDEX_URL; record pip freeze from the setup run"
+      },
+      {
+        "source": "the 'small' checkpoint URL listed in openai-whisper's source (_MODELS in whisper/__init__.py); the path contains the file's SHA-256",
+        "license": "MIT",
+        "size": "about 460 MB",
+        "pin": "SMALL_PT_SHA256 (run_baseline.sh checks it after the warm-up download)"
+      },
+      {
+        "source": "Ubuntu 24.04 package ffmpeg (needed by openai-whisper to read audio)",
+        "license": "LGPL-2.1-or-later / GPL-2.0-or-later",
+        "size": "about 100 MB with dependencies",
+        "pin": "package version from apt-cache policy on the pin date"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "ffmpeg for building the clip (calibration only)",
+    "why": "build_clip.py reads 16 kHz mono 16-bit WAV; the source MP3s are decoded once with ffmpeg on 念誠's machine before the clip is committed.",
+    "candidates": [
+      {
+        "source": "the ffmpeg already installed on 念誠's Mac (Homebrew) or the Ubuntu package",
+        "license": "LGPL-2.1-or-later / GPL-2.0-or-later",
+        "size": "n/a",
+        "pin": "`ffmpeg -version` first line recorded in SOURCE.json notes / calibration.md"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "strace and the egress block (same as q14 and q16)",
+    "why": "Settled by 9.3 B.2-B.3 (念誠, 2026-10-31): strace is in the dev image before any answer runs, and egress is blocked with eval/fixtures/_shared/egress.py run --block-network (user + network namespace in Modal's gVisor box, tested 2026-10-31: loopback only, DNS fails). The same method for the answer and the baseline container.",
+    "candidates": [],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Dev image digest and grader-side Python (shared by every Linux question)",
+    "why": "eval/README.md section 5. _shared/egress.py and check_no_torch.sh run inside the sandbox; the scorers run outside it.",
+    "candidates": [
+      {
+        "source": "docker.io/library/ubuntu:24.04 plus the eval's own dev-image layer; python3 from the image or a standalone build on the read-only /eval mount (https://github.com/astral-sh/python-build-standalone/releases)",
+        "license": "Ubuntu image terms; PSF-2.0",
+        "size": "about 30 MB each",
+        "pin": "image digest; release tag + archive SHA-256"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  }
+]

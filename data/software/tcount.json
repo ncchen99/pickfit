@@ -1,0 +1,563 @@
+{
+  "schema_version": "software.v1",
+  "slug": "tcount",
+  "repo_id": "gh:1144653452",
+  "name": "tcount",
+  "summary": "Local token counter for LLM files, directories and stdin via CLI and Go library.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "anthropic",
+    "bpe",
+    "claude",
+    "cli",
+    "context-window",
+    "gemini",
+    "go",
+    "go-library",
+    "golang",
+    "gpt"
+  ],
+  "use_cases": [
+    "Count tokens in a file",
+    "Count tokens across an entire directory tree",
+    "Check context-window usage for a model",
+    "Count piped prompt tokens for scripts",
+    "Output token counts as JSON for scripting"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://pkg.go.dev/github.com/lancekrogers/tcount",
+  "repo": {
+    "url": "https://github.com/lancekrogers/tcount",
+    "full_name": "lancekrogers/tcount",
+    "created_at": "2026-01-28T22:32:12Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install lancekrogers/tap/tcount",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "tcount myfile.txt"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-tcount-20261030-234458-2d48",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @obedience-corp/tcount",
+          "purpose": "install tcount via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "tcount --version",
+        "expected_signal": "tcount version 0.7.0"
+      },
+      "first_task": "tcount myfile.txt"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/lancekrogers/tcount/cmd/tcount@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "tcount myfile.txt"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.7.0",
+    "published_at": "2026-09-12T22:11:57Z",
+    "url": "https://github.com/lancekrogers/tcount/releases/tag/v0.7.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:45:41.572639+08:00",
+    "runs": [
+      {
+        "id": "verify-tcount-20261030-234458-2d48",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:45:41.572639+08:00",
+        "tool_version": "0.7.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @obedience-corp/tcount",
+            "purpose": "install tcount via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "tcount --version",
+            "expected_signal": "tcount version 0.7.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tcount version 0.7.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tcount --help",
+            "expected_signal": "--model string specific model to use",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "--model string specific model to use",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tcount myfile.txt",
+            "expected_signal": "Token Count Report for: myfile.txt",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Token Count Report for: myfile.txt",
+            "setup": [
+              {
+                "command": "printf 'Hello, world! This is a test file for tcount token counting.\\n' > myfile.txt && printf '# Sample Prompt\\n\\nCount the tokens in this prompt file for testing tcount.\\n' > prompt.md && printf '# Sample Document\\n\\nThis document is used to test JSON output of tcount.\\n' > document.md && ls -la *.txt *.md",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "tcount --model gpt-5 prompt.md",
+            "expected_signal": "o200k_base (gpt-5)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ o200k_base (gpt-5) │ 16 │ Exact │ <0.1% of 400K │",
+            "setup": [
+              {
+                "command": "printf 'Hello, world! This is a test file for tcount token counting.\\n' > myfile.txt && printf '# Sample Prompt\\n\\nCount the tokens in this prompt file for testing tcount.\\n' > prompt.md && printf '# Sample Document\\n\\nThis document is used to test JSON output of tcount.\\n' > document.md && ls -la *.txt *.md",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "tcount --json document.md",
+            "expected_signal": "\"file_path\": \"document.md\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"file_path\": \"document.md\",",
+            "setup": [
+              {
+                "command": "printf 'Hello, world! This is a test file for tcount token counting.\\n' > myfile.txt && printf '# Sample Prompt\\n\\nCount the tokens in this prompt file for testing tcount.\\n' > prompt.md && printf '# Sample Document\\n\\nThis document is used to test JSON output of tcount.\\n' > document.md && ls -la *.txt *.md",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show token count reports and version output matching the expected signals.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tcount-20261030-234458-2d48/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tcount-20261030-234458-2d48/check-1-cmd5.judged.png",
+            "runs/verify/verify-tcount-20261030-234458-2d48/check-2-cmd6.judged.png",
+            "runs/verify/verify-tcount-20261030-234458-2d48/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.036949
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 90.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 35.2,
+      "signals": {
+        "stars": 8,
+        "monthly_downloads": 38,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 278,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 272,
+      "packages": [
+        "npm:@obedience-corp/tcount"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 58.45
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:55:13.257428+08:00",
+      "sources_sha": "21d8a12ba96ebede1cd7a5ceb018b8a99b36fbd8e9d26321f408ac190f6712fb",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A fast token counter for LLM workflows that runs entirely on your machine: no API keys, no network calls, nothing leaves your disk."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "A fast token counter for LLM workflows that runs entirely on your machine"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Requires [just](https://github.com/casey/just) for the build system."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "npm install -g @obedience-corp/tcount"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ tcount --model gpt-5 tokenizer.go\n\nToken Count Report for: tokenizer.go"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Set `TCOUNT_CACHE_DIR` to choose a different parent;"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "MIT License. See [LICENSE](LICENSE) for details."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/lancekrogers/tcount",
+      "fetched_at": "2026-10-29T02:29:05+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/lancekrogers/tcount/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:33:02+08:00"
+    },
+    {
+      "id": "release:v0.7.0",
+      "kind": "release",
+      "url": "https://github.com/lancekrogers/tcount/releases/tag/v0.7.0",
+      "fetched_at": "2026-10-29T02:33:02+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "the same engine ships as a command and as an importable package",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:54+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "tcount myfile.txt",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:54+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "from a single CLI or as a Go library.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:54+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A fast token counter for LLM workflows that runs entirely on your machine: no API keys, no network calls",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:54+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# tcount",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:54+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Pre-built binaries for macOS, Linux, and Windows are available",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:54+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "counting never touches the network",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:54+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:05+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:05+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:05+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:05+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:05+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.7.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:33:02+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "# Count tokens in a file",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:54+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Count an entire directory tree (TTY shows live progress while counting)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:54+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "see what percentage of a model's context you're consuming",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:54+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "cat prompt.md | tcount --model gpt-4o --tokens",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:54+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "JSON output for scripting",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:54+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install lancekrogers/tap/tcount",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:54+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g @obedience-corp/tcount",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:54+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/lancekrogers/tcount/cmd/tcount@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:54+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "**100% local** — counting never touches the network",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:42:54+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:05+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

@@ -1,0 +1,591 @@
+{
+  "schema_version": "software.v1",
+  "slug": "moca",
+  "repo_id": "gh:1402891799",
+  "name": "Mo Coding Agent (moca)",
+  "summary": "Provider-agnostic terminal coding agent in one Go binary with eight tools and editor protocol support.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "acp",
+    "agent-client-protocol",
+    "ai-agents",
+    "claude-code",
+    "cli",
+    "coding-agent",
+    "developer-tools",
+    "golang",
+    "llm",
+    "mcp"
+  ],
+  "use_cases": [
+    "fix the failing test in a project",
+    "write an implementation plan without changing code",
+    "execute a written implementation plan step by step",
+    "search the web and fetch pages without API key",
+    "drive the agent from Zed, VS Code or Paseo via ACP"
+  ],
+  "alternatives_to": [
+    "Claude Code",
+    "OpenCode",
+    "pi"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/adeotek/moca",
+    "full_name": "adeotek/moca",
+    "created_at": "2026-10-03T08:32:55Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "OPENCODE_API_KEY",
+      "ANTHROPIC_API_KEY",
+      "OPENAI_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install adeotek/tap/moca",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "moca config sample"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-moca-20261031-002420-24fc",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/adeotek/moca/main/install.sh -o /tmp/moca-install.sh",
+          "purpose": "Download moca install script"
+        },
+        {
+          "command": "bash /tmp/moca-install.sh",
+          "purpose": "Install moca via install script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "moca --version",
+        "expected_signal": "moca v0.7.12"
+      },
+      "first_task": "moca config sample"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://raw.githubusercontent.com/adeotek/moca/main/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "moca config sample"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.7.12",
+    "published_at": "2026-10-30T09:54:33Z",
+    "url": "https://github.com/adeotek/moca/releases/tag/v0.7.12"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:25:42.960087+08:00",
+    "runs": [
+      {
+        "id": "verify-moca-20261031-002420-24fc",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:25:42.960087+08:00",
+        "tool_version": "v0.7.12",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/adeotek/moca/main/install.sh -o /tmp/moca-install.sh",
+            "purpose": "Download moca install script"
+          },
+          {
+            "command": "bash /tmp/moca-install.sh",
+            "purpose": "Install moca via install script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "moca --version",
+            "expected_signal": "moca v0.7.12",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "moca v0.7.12",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "moca --help",
+            "expected_signal": "moca — a coding agent for the terminal",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "moca — a coding agent for the terminal",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "moca config sample",
+            "expected_signal": "\"log\": { \"level\": \"info\" }",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"log\": { \"level\": \"info\" } // \"info\" | \"debug\" | \"off\"",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "moca config check",
+            "expected_signal": "no issues",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no issues",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "moca update --check",
+            "expected_signal": "is up to date",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "moca v0.7.12 is up to date (latest release v0.7.12).",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show expected outputs: sample config with log level info, config check reporting no issues, and version v0.7.12.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-moca-20261031-002420-24fc/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-moca-20261031-002420-24fc/check-1-cmd5.judged.png",
+            "runs/verify/verify-moca-20261031-002420-24fc/check-2-cmd6.judged.png",
+            "runs/verify/verify-moca-20261031-002420-24fc/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.045159
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 94.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 25.7,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 614,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 27,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 69.92
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "b06f3407fd611fd7ec9186c3eb4f39a938b486ab82f48c731f51c253f7ace903",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "moca — a coding agent in one Go binary: eight frozen tools, ACP so editors can drive it, MCP without prompt bloat"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "A small, fast, provider-agnostic coding agent for the terminal"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "One command, no toolchain."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/adeotek/moca/main/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "moca                            # TUI in the current directory"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "\"opencode-go\": { \"auth\": \"api_key\", \"apiKey\": \"env:OPENCODE_API_KEY\" },"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "moca update           # replace the binary with the latest release package for this platform"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Packages for **linux, darwin and windows on amd64 and arm64** are on the [releases page](https://github.com/adeotek/moca/releases)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/adeotek/moca",
+      "fetched_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/adeotek/moca/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:57:40+08:00"
+    },
+    {
+      "id": "release:v0.7.12",
+      "kind": "release",
+      "url": "https://github.com/adeotek/moca/releases/tag/v0.7.12",
+      "fetched_at": "2026-10-30T23:57:40+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A small, fast, provider-agnostic coding agent for the terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "A small, fast, provider-agnostic coding agent for the terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A small, fast, provider-agnostic coding agent for the terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A small, fast, provider-agnostic coding agent for the terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Mo Coding Agent (moca)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Packages for **linux, darwin and windows on amd64 and arm64**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "`opencode-go` | `OPENCODE_API_KEY`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/1",
+      "source_id": "readme",
+      "quote": "`anthropic` | `ANTHROPIC_API_KEY`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/2",
+      "source_id": "readme",
+      "quote": "`openai` | `OPENAI_API_KEY`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.7.12",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:57:40+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "moca --mode auto -p \"fix the failing test\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "moca --mode plan -p \"add a --json flag\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "moca execute docs/plans/add-json-flag.md",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Web search + fetch built in",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "`moca acp` speaks the Agent Client Protocol, so Zed, VS Code and Paseo can drive it.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "inspired by Claude Code, OpenCode and Pi",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "inspired by Claude Code, OpenCode and Pi",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "inspired by Claude Code, OpenCode and Pi",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install adeotek/tap/moca",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/adeotek/moca/main/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://raw.githubusercontent.com/adeotek/moca/main/install.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "It runs on Claude, ChatGPT (subscription login included), OpenCode Go and Zen, OpenRouter, Ollama, or any OpenAI-compatible endpoint.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:19+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:40:20+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

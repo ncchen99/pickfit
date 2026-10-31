@@ -16,12 +16,19 @@
   "vars": {
     "MATCH_MODE": "model",
     "META_DAILY_CAP_USD": "3",
-    "META_TOTAL_CAP_USD": "20",
+    "META_TOTAL_CAP_USD": "15",
     "META_TIMEOUT_MS": "25000",
     "SUBMIT_HOURLY_CAP": "20",
     "TOOLS": "all",
-    "ALLOWED_HOSTS": "pickfit-mcp.ncchen99.workers.dev"
+    "ALLOWED_HOSTS": "pickfit-mcp.ncchen99.workers.dev",
+    // The product web page (src/web.ts): it stops calling Meta at $2 of the $3 daily cap, leaving $1 for agents.
+    "WEB_SEARCH": "on",
+    "WEB_DAILY_CAP_USD": "2"
   },
+  // Web searches per visitor per minute (src/web.ts SEARCHES_PER_MINUTE); counted per Cloudflare location.
+  "ratelimits": [
+    { "name": "WEB_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 6, "period": 60 } }
+  ],
   "observability": { "enabled": true },
   // Evaluation deployments: same code, same bundled data, settings only.
   // `uv run pickfit publish --env <name>`; do not publish an env again while
@@ -46,8 +53,15 @@
         "META_TOTAL_CAP_USD": "10",
         "META_TIMEOUT_MS": "25000",
         "SUBMIT_HOURLY_CAP": "0",
-        "ALLOWED_HOSTS": ""
-      }
+        "ALLOWED_HOSTS": "",
+        // No web page: an evaluation deployment serves /mcp and the JSON health check only.
+        "WEB_SEARCH": "off",
+        "WEB_DAILY_CAP_USD": "0"
+      },
+      // Unused while WEB_SEARCH is off; listed because wrangler does not inherit ratelimits into an env.
+      "ratelimits": [
+        { "name": "WEB_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 6, "period": 60 } }
+      ]
     },
     // The rules-only arm: same tools and data, no model call (caps at 0 as a second guard).
     "eval-rules": {
@@ -66,8 +80,15 @@
         "META_TOTAL_CAP_USD": "0",
         "META_TIMEOUT_MS": "25000",
         "SUBMIT_HOURLY_CAP": "0",
-        "ALLOWED_HOSTS": ""
-      }
+        "ALLOWED_HOSTS": "",
+        // No web page: an evaluation deployment serves /mcp and the JSON health check only.
+        "WEB_SEARCH": "off",
+        "WEB_DAILY_CAP_USD": "0"
+      },
+      // Unused while WEB_SEARCH is off; listed because wrangler does not inherit ratelimits into an env.
+      "ratelimits": [
+        { "name": "WEB_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 6, "period": 60 } }
+      ]
     }
   }
 }

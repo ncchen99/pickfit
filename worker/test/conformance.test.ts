@@ -24,6 +24,12 @@ function index(): unknown {
   Object.assign(entry('fixture-llm-runner').install.linux.pitfalls[0], { kind: 'surprise', seen_in: 'step 2' });
   entry('fixture-cloud-summarize').install = {};
   entry('fixture-json-query').repo_url = 'https://github.com/example/json-query';
+  // A GUI app's launch on its Linux run.
+  const chat = entry('fixture-chat-tui');
+  const gui = { tier: 'ui_rendered', screen: 'main_ui', display: 'Xvfb 1280x800x24, no window manager, no GPU', launch_offline: true };
+  chat.kind = 'desktop_app';
+  chat.install.linux.run.gui = gui;
+  for (const run of chat.verification.passed_runs) if (run.os === 'linux') run.gui = gui;
   return data;
 }
 
@@ -123,6 +129,34 @@ test('find_software conforms: picks, a clarifying question, empty, no candidates
   assert.ok(rules.clarifying_question); // no OS given, and the picks run on different ones
 });
 
+test('find_software conforms with the rules fit labels: good, partial, weak and none; the model path has none of it', async () => {
+  const off = server({ MATCH_MODE: 'off' });
+  const schemas = await validators(off);
+  const call = (label: string, need: string) => conforming(off, schemas, label, 'find_software', { need });
+  const good = await call('rules: good match', 'run a language model offline on my laptop');
+  assert.equal(good.match_quality, 'good');
+  assert.equal(good.picks[0].match.quality, 'good');
+  const partial = await call('rules: partial match', 'transcribe audio into a json summary for git');
+  assert.equal(partial.match_quality, 'partial');
+  assert.deepEqual(partial.picks[0].match, { quality: 'partial', covers: ['transcribe', 'audio'], missing: ['json', 'summary', 'git'] });
+  assert.match(partial.picks[0].tradeoffs[0], /mentions transcribe, audio but not json, summary, git/);
+  const none = await call('rules: no good match', 'search my Notion pages');
+  assert.equal(none.match_quality, 'none');
+  assert.deepEqual(none.picks.map((p: any) => p.match.quality), ['weak', 'weak', 'weak']); // still listed
+  assert.match(none.coverage_note, /pickfit has no verified tool that clearly does this job/);
+
+  const s = server({ MODEL_API_KEY: 'k', META_TIMEOUT_MS: '2000' });
+  const modelSchemas = await validators(s);
+  s.answers(() => metaResponse(answer()));
+  const model = await conforming(s, modelSchemas, 'model picks', 'find_software', LLM);
+  assert.ok(!('match_quality' in model));
+  assert.ok(model.picks.every((p: any) => !('match' in p)));
+  s.answers(() => Response.json({ error: { code: 'unavailable' } }, { status: 503 }));
+  const degraded = await conforming(s, modelSchemas, 'degraded: rules decide', 'find_software', LLM);
+  assert.equal(degraded.matched_by, 'rules');
+  assert.ok(degraded.match_quality);
+});
+
 test('find_alternatives conforms: keep_current true, a better pick, and rules', async () => {
   const s = server({ MODEL_API_KEY: 'k', META_TIMEOUT_MS: '2000' });
   const schemas = await validators(s);
@@ -172,6 +206,40 @@ test('get_install_guide conforms: pitfalls, setup, no pitfalls, another OS or ar
   );
   const never = await call('never run', { slug: 'fixture-cloud-summarize', os: 'linux' });
   assert.deepEqual([never.verification.status, never.steps, never.verify], ['unverified', [], null]);
+
+  const gui = await call('a GUI app with its launch evidence', { slug: 'fixture-chat-tui', os: 'linux' });
+  assert.deepEqual([gui.verification.level, gui.verification.gui.tier, gui.verification.gui.screen], ['install', 'ui_rendered', 'main_ui']);
+  assert.match(gui.how_we_know, /judged that its main screen rendered/);
+  assert.equal(tagged.verification.gui, null);
+
+  const mcp = await call('an MCP server with a client config', { slug: 'fixture-notes-mcp', os: 'linux' });
+  assert.ok(mcp.mcp_client_config.claude_code.startsWith('claude mcp add fixture-notes-mcp'));
+  assert.equal(plain.mcp_client_config, null);
+  const elsewhere = await call('an MCP server checked on another OS', { slug: 'fixture-notes-mcp', os: 'macos' });
+  assert.equal(elsewhere.applies_to_user_system.match, 'other_os');
+});
+
+test('find_software conforms for the mcp_server category', async () => {
+  const off = server({ MATCH_MODE: 'off' });
+  const out = await conforming(off, await validators(off), 'rules, mcp_server', 'find_software', {
+    need: 'search my Markdown notes from Claude Code',
+    category: 'mcp_server',
+    os: 'linux',
+  });
+  assert.deepEqual(out.picks.map((p: any) => p.slug), ['fixture-notes-mcp']);
+});
+
+test('find_software conforms with a GUI app among the picks; its verification carries the launch', async () => {
+  const off = server({ MATCH_MODE: 'off' });
+  const out = await conforming(off, await validators(off), 'rules, a GUI app', 'find_software', {
+    need: 'chat with a local language model',
+    os: 'linux',
+  });
+  const chat = out.picks.find((p: any) => p.slug === 'fixture-chat-tui');
+  assert.ok(chat, `picks: ${out.picks.map((p: any) => p.slug)}`);
+  assert.deepEqual([chat.verification.level, chat.verification.gui.tier], ['install', 'ui_rendered']);
+  assert.match(chat.how_we_know, /opened a window of its own on a virtual display/);
+  assert.ok(out.picks.filter((p: any) => p !== chat).every((p: any) => p.verification.gui === null));
 });
 
 test('report_outcome conforms: counted with a reverify, deduplicated, not counted, replaced', async () => {

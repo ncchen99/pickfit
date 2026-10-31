@@ -1,0 +1,699 @@
+{
+  "schema_version": "software.v1",
+  "slug": "rms-memory-mcp",
+  "repo_id": "gh:1290061411",
+  "name": "RMS Memory MCP",
+  "summary": "Persistent local-first MCP memory server giving AI coding agents a shared Markdown vault with semantic search.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-tools",
+    "context-management",
+    "context-management-system",
+    "lancedb",
+    "local-first",
+    "mcp-server",
+    "mcp-tools",
+    "memory",
+    "rag",
+    "rust"
+  ],
+  "use_cases": [
+    "search Markdown project memory",
+    "persist architectural decisions and rules",
+    "read a memory document by path",
+    "run vault health diagnostics",
+    "export vault as llms.txt"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://rms-ds.com/",
+  "repo": {
+    "url": "https://github.com/max-ramas/rms-memory-mcp",
+    "full_name": "max-ramas/rms-memory-mcp",
+    "created_at": "2026-07-05T14:35:08Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew tap max-ramas/tap",
+          "purpose": null
+        },
+        {
+          "command": "brew install rms-memory-mcp",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "rms-memory doctor"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-rms-memory-mcp-20261031-014105-8874",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/max-ramas/rms-memory-mcp/master/scripts/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -l /tmp/install.sh",
+          "purpose": "Download install script for inspection"
+        },
+        {
+          "command": "bash /tmp/install.sh",
+          "purpose": "Run install script to install binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "rms-memory --version && rms-memory --help",
+        "expected_signal": "rms-memory 1.3.2"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install rms-memory-mcp",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "rms-memory doctor"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.3.2",
+    "published_at": "2026-10-28T15:45:29Z",
+    "url": "https://github.com/max-ramas/rms-memory-mcp/releases/tag/v1.3.2"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:41:55.244093+08:00",
+    "runs": [
+      {
+        "id": "verify-rms-memory-mcp-20261031-014105-8874",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:41:55.244093+08:00",
+        "tool_version": "1.3.2",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/max-ramas/rms-memory-mcp/master/scripts/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -l /tmp/install.sh",
+            "purpose": "Download install script for inspection"
+          },
+          {
+            "command": "bash /tmp/install.sh",
+            "purpose": "Run install script to install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "rms-memory --version && rms-memory --help",
+            "expected_signal": "rms-memory 1.3.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "rms-memory 1.3.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "RMS_MEMORY_NO_UPDATE_CHECK=1 python3 ~/.pickfit/mcp_probe.py -- rms-memory serve",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "RMS_MEMORY_NO_UPDATE_CHECK=1 python3 ~/.pickfit/mcp_probe.py --call rms_projects --args '{}' -- rms-memory serve",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=rms_projects content=text text_chars=2",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 19 tools, successful rms_projects tool call returning [], and CLI version 1.3.2 with full help.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-rms-memory-mcp-20261031-014105-8874/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-rms-memory-mcp-20261031-014105-8874/check-1-cmd4.judged.png",
+            "runs/verify/verify-rms-memory-mcp-20261031-014105-8874/check-2-cmd5.judged.png",
+            "runs/verify/verify-rms-memory-mcp-20261031-014105-8874/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.042294,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "rms-memory",
+            "serve"
+          ],
+          "url": null,
+          "protocol_version": "2025-06-18",
+          "server_name": "rms-memory",
+          "server_version": "1.3.2",
+          "tools": [
+            "rms_search",
+            "rms_code_search",
+            "rms_read",
+            "rms_write",
+            "rms_file_history",
+            "rms_graph",
+            "rms_doctor",
+            "rms_reindex",
+            "rms_sync",
+            "rms_wiki_pack",
+            "rms_projects",
+            "rms_overview",
+            "rms_prune",
+            "rms_hygiene",
+            "rms_checkpoint_save",
+            "rms_checkpoint_done",
+            "rms_checkpoint_load",
+            "rms_checkpoint_query",
+            "rms_system_instructions"
+          ],
+          "tool_count": 19,
+          "called_tool": "rms_projects",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "rms-memory serve",
+    "client_configs": [],
+    "env_vars": [
+      {
+        "name": "RMS_MEMORY_NO_UPDATE_CHECK",
+        "required": null,
+        "purpose": "disables update check"
+      },
+      {
+        "name": "RMS_MEMORY_MODEL_IDLE_SECS",
+        "required": null,
+        "purpose": "idle model release time"
+      }
+    ],
+    "tools": [
+      "rms-memory_rms_search",
+      "rms-memory_rms_code_search",
+      "rms-memory_rms_read",
+      "rms-memory_rms_write",
+      "rms-memory_rms_file_history",
+      "rms-memory_rms_graph",
+      "rms-memory_rms_doctor"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 96.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 66.9,
+      "signals": {
+        "stars": 61,
+        "monthly_downloads": 41,
+        "forks": 4,
+        "dependents": null,
+        "release_downloads": 219,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 117,
+      "packages": [
+        "crates:rms-memory-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 31.81
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "fe457e0c4160749b2346f85bfdb03539ed550214b1b1e301d8fcc855e1734942",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "**Persistent, local-first memory for your AI coding agents.**"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "**Persistent, local-first memory for your AI coding agents.**"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Installs a prebuilt binary — no Rust toolchain required."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/max-ramas/rms-memory-mcp/master/scripts/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "rms-memory install"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "(`RMS_MEMORY_NO_UPDATE_CHECK=1` disables it)"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "| `rms-memory uninstall` | Removes the server from all discovered IDE configurations. |"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/max-ramas/rms-memory-mcp",
+      "fetched_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/max-ramas/rms-memory-mcp/blob/master/README.md",
+      "fetched_at": "2026-10-31T01:05:47+08:00"
+    },
+    {
+      "id": "release:v1.3.2",
+      "kind": "release",
+      "url": "https://github.com/max-ramas/rms-memory-mcp/releases/tag/v1.3.2",
+      "fetched_at": "2026-10-31T01:05:47+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Starts the JSON-RPC stdio server (auto-triggered by your IDE)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "brew install rms-memory-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "MCP Tools Exposed",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Persistent, local, cross-IDE memory for AI agents — markdown source of truth, LanceDB-powered semantic search, zero cloud dependency",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# 🧠 RMS Memory MCP",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "platform-macOS%20%7C%20Linux%20%7C%20Windows",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:44+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.3.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:05:47+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Searches Markdown memory by default.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Persists new decisions, constraints, or rules.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Reads the full contents of a document found via <code>rms_search</code>.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Eight-point vault health report",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Compiles the current vault into a single `llms.txt` payload.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew tap max-ramas/tap",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/install/macos/steps/1",
+      "source_id": "readme",
+      "quote": "brew install rms-memory-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/max-ramas/rms-memory-mcp/master/scripts/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install rms-memory-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "The MCP server stays 100% free and standalone either way.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "github_api",
+      "quote": "zero cloud dependency",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "`rms-memory serve --http` serves MCP Streamable HTTP on `127.0.0.1:7337/mcp`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "`rms-memory serve [--http] [--port 7337]`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "RMS_MEMORY_NO_UPDATE_CHECK",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "RMS_MEMORY_MODEL_IDLE_SECS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "<code>rms-memory_rms_search</code>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "<code>rms-memory_rms_code_search</code>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "<code>rms-memory_rms_read</code>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "<code>rms-memory_rms_write</code>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "<code>rms-memory_rms_file_history</code>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "<code>rms-memory_rms_graph</code>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "<code>rms-memory_rms_doctor</code>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:13+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:42+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

@@ -1,0 +1,462 @@
+{
+  "schema_version": "software.v1",
+  "slug": "joyboy",
+  "repo_id": "gh:1212849608",
+  "name": "JoyBoy",
+  "summary": "Local-first AI workstation for chat, coding, image generation, editing, video and model management.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "self_hosted_web_app",
+  "audience": "end_user",
+  "maturity": "alpha",
+  "tags": [
+    "8gb-vram",
+    "ai-assistant",
+    "ai-harness",
+    "ai-workstation",
+    "chatgpt-alternative",
+    "civitai",
+    "image-editing",
+    "image-generation",
+    "inpainting",
+    "llm-harness"
+  ],
+  "use_cases": [
+    "Private local chat",
+    "Text-to-image generation",
+    "Local image inpainting",
+    "Image-to-video generation",
+    "Video continuation"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://github.com/Senzo13/JoyBoy",
+  "repo": {
+    "url": "https://github.com/Senzo13/JoyBoy",
+    "full_name": "Senzo13/JoyBoy",
+    "created_at": "2026-04-16T19:46:48Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.11"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "start_windows.bat",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "hybrid",
+  "last_release": null,
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "needs_more_resources",
+    "checked_at": "2026-10-31T00:10:40.034609+08:00",
+    "runs": [
+      {
+        "id": "verify-joyboy-20261031-000847-6d02",
+        "level": "unverified",
+        "unverified_reason": "needs_more_resources",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:10:40.034609+08:00",
+        "tool_version": null,
+        "install_method": "source",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "git clone https://github.com/Senzo13/JoyBoy.git JoyBoy-src",
+            "purpose": "Clone JoyBoy repo to get launcher"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "pip install --quiet flask requests python-dotenv psutil && python3 JoyBoy-src/scripts/bootstrap.py doctor --json",
+            "expected_signal": "\"ready\": true",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "\"ready\": true,",
+            "setup": [
+              {
+                "command": "git clone https://github.com/Senzo13/JoyBoy.git JoyBoy-src",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "./start_linux.sh / ./setup_linux.sh for Linux",
+            "actually_needed": "setup_linux.sh exits 1 with '[ERROR] nvidia-smi not found' on a machine without NVIDIA GPU; it is the CUDA/cloud-GPU full-setup path, not the default Linux launch",
+            "kind": "note"
+          },
+          {
+            "readme_said": "./start_linux.sh then open http://127.0.0.1:7860",
+            "actually_needed": "start_linux.sh creates a venv and runs scripts/bootstrap.py setup which pip-installs ~40 entries from scripts/requirements.txt (torch, torchvision, torchaudio, diffusers, transformers, mediapipe, insightface, basicsr, plus triton/flash_attn) and web/app.py auto-installs requirements.txt on startup;…",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Doctor and onboarding check dependencies, GPU profile, providers",
+            "actually_needed": "scripts/bootstrap.py doctor --json runs with system Python plus flask/requests and reports status warning / ready true without torch or ollama; GPU and model checks report missing torch/ollama modules",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-joyboy-20261031-000847-6d02/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.147669
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.5,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.86,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 41.0,
+      "signals": {
+        "stars": 19,
+        "monthly_downloads": null,
+        "forks": 7,
+        "dependents": null,
+        "release_downloads": 62,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 196,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 40.71
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "4f68abf1b9dcdfc9e784de2acff3498ad054b86ed86c77fb18612979102bb99e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "JoyBoy is a local-first AI workstation for chat, coding, image generation, image editing, video experiments, model management, MCP tools"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "- Private local chat."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "checks required dependencies"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "./start_linux.sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "./start_mac.command"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "You only need provider keys for gated downloads or cloud models."
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "If CUDA is expected but JoyBoy reports CPU-only PyTorch, rerun the launcher and choose the full setup/repair path."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Apache License 2.0. See [LICENSE](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Senzo13/JoyBoy",
+      "fetched_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Senzo13/JoyBoy/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:32:45+08:00"
+    },
+    {
+      "id": "release:v0.2.0-alpha.2",
+      "kind": "release",
+      "url": "https://github.com/Senzo13/JoyBoy/releases/tag/v0.2.0-alpha.2",
+      "fetched_at": "2026-10-29T02:32:45+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "http://127.0.0.1:7860",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:01+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Launch from one script per platform.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:01+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "can stay fully local by default with Ollama and local media models",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:01+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**JoyBoy is a local-first AI workstation for chat, coding, image generation, image editing, video experiments, model management, MCP tools, and optional extensions.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:01+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# JoyBoy",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:01+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "python-3.11%2B",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:01+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "release:v0.2.0-alpha.2",
+      "quote": "This is an alpha prerelease.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:01+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Private local chat.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:01+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Text-to-image.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:01+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Local inpainting.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:01+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Image-to-video.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:01+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Video continuation.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:01+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "start_windows.bat",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:01+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "can stay fully local by default with Ollama and local media models, while still letting you connect API providers",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:01+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:59+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

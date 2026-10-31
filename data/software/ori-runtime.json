@@ -1,0 +1,566 @@
+{
+  "schema_version": "software.v1",
+  "slug": "ori-runtime",
+  "repo_id": "gh:1193871043",
+  "name": "Ori",
+  "summary": "Offline-capable agentic IoT runtime that reasons about sensor data and acts under tiered authority.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "agent-of-things",
+    "agentic-ai",
+    "agentic-iot",
+    "ai-agents",
+    "ai-safety",
+    "cyber-physical-systems",
+    "edge-ai",
+    "edge-computing",
+    "edge-runtime",
+    "energy-management"
+  ],
+  "use_cases": [
+    "switch to inverter power on grid instability",
+    "propose opening safety circuit on critical fault",
+    "monitor PC system health on a laptop via psutil"
+  ],
+  "alternatives_to": [
+    "Grafana",
+    "AWS IoT Core"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://oriplatform.dev",
+  "repo": {
+    "url": "https://github.com/ori-platform/ori-runtime",
+    "full_name": "ori-platform/ori-runtime",
+    "created_at": "2026-03-27T17:05:07Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.11"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pip",
+      "steps": [
+        {
+          "command": "python -m pip install \"ori-runtime[eval] @ git+https://github.com/ori-platform/ori-runtime.git@<commit-or-tag>\"",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "pytest tests/ -v"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-ori-runtime-20261031-002138-743f",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "rm -rf ori-src && git clone https://github.com/ori-platform/ori-runtime.git ori-src",
+          "purpose": "clone ori-runtime source"
+        },
+        {
+          "command": "cd ori-src && python3 -m pip install -e \".[runtime,dev]\"",
+          "purpose": "pip install editable with runtime and dev extras"
+        },
+        {
+          "command": "python3 -m pip install aiomqtt",
+          "purpose": "install missing aiomqtt needed by tests"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "python -m ori.runtime --help",
+        "expected_signal": "Ori Runtime"
+      },
+      "first_task": "cd ori-src && python -m pytest tests/test_rule_engine.py -v"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v2.5.0",
+    "published_at": "2026-10-02T13:56:08Z",
+    "url": "https://github.com/ori-platform/ori-runtime/releases/tag/v2.5.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:34:22.816947+08:00",
+    "runs": [
+      {
+        "id": "verify-ori-runtime-20261031-002138-743f",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:34:22.816947+08:00",
+        "tool_version": "2.5.0",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf ori-src && git clone https://github.com/ori-platform/ori-runtime.git ori-src",
+            "purpose": "clone ori-runtime source"
+          },
+          {
+            "command": "cd ori-src && python3 -m pip install -e \".[runtime,dev]\"",
+            "purpose": "pip install editable with runtime and dev extras"
+          },
+          {
+            "command": "python3 -m pip install aiomqtt",
+            "purpose": "install missing aiomqtt needed by tests"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python -m ori.runtime --help",
+            "expected_signal": "Ori Runtime",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Ori Runtime",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd ori-src && python -m pytest tests/test_rule_engine.py -v",
+            "expected_signal": "143 passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "======================================= 143 passed in 0.75s ========================================",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd ori-src && python scripts/pc_health_report.py",
+            "expected_signal": "Skill loaded: pc-system-health",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ Skill loaded: pc-system-health v0.1.0 (8 triggers)\u001b[0m",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "python -m pip install \"ori-runtime[eval] @ git+https://github.com/ori-platform/ori-runtime.git@<commit-or-tag>\" with literal <commit-or-tag> placeholder",
+            "actually_needed": "use concrete tag/checkout or clone then pip install -e \".[runtime,dev]\"; candidate 2 was used",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "python -m pip install -e \".[runtime,dev]\" then pytest tests/ -v works",
+            "actually_needed": "python3 -m pip install aiomqtt before pytest",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "pytest tests/ -v as full-suite smoke test",
+            "actually_needed": "run pytest tests/test_rule_engine.py -v (143 passed) or scripts/pc_health_report.py; full suite did not finish in 600s (killed at ~77%)",
+            "kind": "note"
+          },
+          {
+            "readme_said": "bash scripts/smoke-runtime-local.sh",
+            "actually_needed": "scripts/smoke-runtime-local.sh requires a .venv directory and a local-SLM config; verified with system python via scripts/pc_health_report.py instead",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show PC health report loading pc-system-health skill and runtime help displaying Ori Runtime usage.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ori-runtime-20261031-002138-743f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ori-runtime-20261031-002138-743f/check-1-cmd13.judged.png",
+            "runs/verify/verify-ori-runtime-20261031-002138-743f/check-2-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.119757
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 70.5,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.578,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.9737,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 44.1,
+      "signals": {
+        "stars": 17,
+        "monthly_downloads": null,
+        "forks": 6,
+        "dependents": null,
+        "release_downloads": 470,
+        "hn_top_score": 1,
+        "registries_count": 0
+      },
+      "age_days": 215,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 39.41
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "1fd5f35088455f83ee9b66aa5ff9225644c0adb5123adade0c90d10262929fb5",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Ori is an open-source **agentic IoT runtime** that gives physical devices **tiered autonomous reasoning**"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "| Rule engine only (Tier 1) | Raspberry Pi 3B+ or equivalent | 1GB  | No local SLM."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "python -m pip install -e \".[runtime,dev]\""
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "python -m ori.runtime --config ori.local.yaml"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "export ORI_AUTOLOAD_DOTENV=true"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "`ori-runtime: command not found`:"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "**Apache 2.0. Forever free.**"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ori-platform/ori-runtime",
+      "fetched_at": "2026-10-30T23:51:03+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ori-platform/ori-runtime/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:32:43+08:00"
+    },
+    {
+      "id": "release:v2.5.0",
+      "kind": "release",
+      "url": "https://github.com/ori-platform/ori-runtime/releases/tag/v2.5.0",
+      "fetched_at": "2026-10-29T02:32:43+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Ori is an open-source **agentic IoT runtime** that gives physical devices **tiered autonomous reasoning**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Runs on a $55 Raspberry Pi.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Tier 2  LOCAL SLM      3-8 seconds  · offline-capable   · everyday reasoning",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "An open-source, offline-capable agentic IoT runtime with physical actuation trust.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "Ori — the agentic IoT runtime for infrastructure intelligence",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "runs%20on-Raspberry%20Pi%20·%20Linux%20·%20macOS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "python-3.11%2B",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "keep working without the internet",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:03+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:03+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:03+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:03+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:03+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.5.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:32:43+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "Current channel: Stable (`2.5.x`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Grid voltage dropped to 174V. I have switched to\ninverter power automatically.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Open the installer-wired safety circuit to cut power to the protected load.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "pc-system-health** skill runs on any laptop using `psutil`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Not a monitoring dashboard like Grafana — Ori acts, not just displays",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "Not a cloud IoT platform like AWS IoT Core — Ori keeps an offline-capable safety core",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "python -m pip install \"ori-runtime[eval] @ git+https://github.com/ori-platform/ori-runtime.git@<commit-or-tag>\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "python -m pip install \"ori-runtime[eval] @ git+https://github.com/ori-platform/ori-runtime.git@<commit-or-tag>\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Apache 2.0. Forever free.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Offline-first with an offline-capable safety core; gateway escalation is optional.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:25+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:59+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

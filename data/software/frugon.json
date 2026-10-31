@@ -1,0 +1,553 @@
+{
+  "schema_version": "software.v1",
+  "slug": "frugon",
+  "repo_id": "gh:1275548357",
+  "name": "Frugon",
+  "summary": "Local tool that prices LLM call logs and recommends cheaper model routing.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "anthropic",
+    "cli",
+    "cost-optimization",
+    "finops",
+    "llm",
+    "llmops",
+    "local-first",
+    "openai",
+    "python"
+  ],
+  "use_cases": [
+    "analyze LLM call logs to estimate savings from switching models",
+    "recommend which calls to route to cheaper models",
+    "capture live LLM calls via local proxy to JSONL",
+    "write shareable cost savings report as HTML or markdown",
+    "list candidate models available for cost comparison"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://frugon.rodiun.io",
+  "repo": {
+    "url": "https://github.com/Rodiun/frugon",
+    "full_name": "Rodiun/frugon",
+    "created_at": "2026-06-20T20:53:20Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "python 3.10-3.13"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": [
+      "OPENAI_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uvx frugon analyze ./logs.jsonl",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "frugon analyze --demo"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-frugon-20261031-023714-2aff",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install frugon && frugon --version",
+          "purpose": "Permanent install via uv tool install frugon"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "frugon --version",
+        "expected_signal": "frugon 0.2.6"
+      },
+      "first_task": "frugon analyze --demo"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uvx frugon analyze ./logs.jsonl",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "frugon analyze --demo"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.2.6",
+    "published_at": "2026-07-20T23:28:17Z",
+    "url": "https://github.com/Rodiun/frugon/releases/tag/v0.2.6"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:38:18.955946+08:00",
+    "runs": [
+      {
+        "id": "verify-frugon-20261031-023714-2aff",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:38:18.955946+08:00",
+        "tool_version": "frugon 0.2.6",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install frugon && frugon --version",
+            "purpose": "Permanent install via uv tool install frugon"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "frugon --version",
+            "expected_signal": "frugon 0.2.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "frugon 0.2.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "frugon --help",
+            "expected_signal": "Usage: frugon [OPTIONS] COMMAND [ARGS]...",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: frugon [OPTIONS] COMMAND [ARGS]...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "frugon analyze --demo",
+            "expected_signal": "56,100 calls",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ Analyzed 56,100 calls · baseline gpt-5.5 (your current model) │",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show demo cost analysis of 56,100 calls with savings breakdown and version output frugon 0.2.6.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-frugon-20261031-023714-2aff/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-frugon-20261031-023714-2aff/check-1-cmd4.judged.png",
+            "runs/verify/verify-frugon-20261031-023714-2aff/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.033556
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 96.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 87.5,
+      "signals": {
+        "stars": 217,
+        "monthly_downloads": 74,
+        "forks": 12,
+        "dependents": null,
+        "release_downloads": 50,
+        "hn_top_score": 67,
+        "registries_count": 1
+      },
+      "age_days": 131,
+      "packages": [
+        "pypi:frugon"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 12.01
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:43:57.550284+08:00",
+      "sources_sha": "7a2f568c4bdb1d558916b3f11d77a9bca04f44f06f9985877dd520a5875a677b",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Free, local, open-source LLM cost analyzer - see where your LLM bill leaks, on your machine."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "- **Agent builders** — your GPT-4o agents are expensive; most easy hops don't need them."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "[![Python](https://img.shields.io/badge/python-3.10%20%E2%80%93%203.13-blue.svg)](https://github.com/Rodiun/frugon)"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "uv tool install frugon          # or: pipx install frugon / pip install frugon"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "frugon analyze ./logs.jsonl     # see the cost breakdown and routing recommendation"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "`--measure` needs `pip install 'frugon[measure]'` and a provider API key (`OPENAI_API_KEY`, etc.)"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "uvx frugon@latest          # or:  uv tool upgrade frugon  /  pipx upgrade frugon  /  pip install -U frugon"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Built by [Rodiun](https://rodiun.io). MIT licensed."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Rodiun/frugon",
+      "fetched_at": "2026-10-30T23:52:01+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Rodiun/frugon/blob/main/README.md",
+      "fetched_at": "2026-10-31T02:11:20+08:00"
+    },
+    {
+      "id": "release:v0.2.6",
+      "kind": "release",
+      "url": "https://github.com/Rodiun/frugon/releases/tag/v0.2.6",
+      "fetched_at": "2026-10-31T02:11:20+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "frugon analyze ./logs.jsonl",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "## Install & run",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "frugon analyze ./logs.jsonl",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Free, local, open-source LLM cost analyzer. Point Frugon at your LLM call logs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Frugon",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "[![Platforms](https://img.shields.io/badge/platforms-macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-blue.svg)](https://github.com/Rodiun/frugon)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "[![Python](https://img.shields.io/badge/python-3.10%20%E2%80%93%203.13-blue.svg)](https://github.com/Rodiun/frugon)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "**Cost analysis** — fully local, no LLM calls, no network.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "needs `pip install 'frugon[measure]'` and a provider API key (`OPENAI_API_KEY`, etc.)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:52:01+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:52:01+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:52:01+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:52:01+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:52:01+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.2.6",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T02:11:20+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Point Frugon at your LLM call logs\nand see — on your machine — how much you'd save by switching or routing models.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "\"move these X% of calls to a cheaper model and save ~$Y/mo; keep the hard Z% where they are.\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "`frugon capture` is a local HTTP proxy that sits between your app and your provider.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "add `--report savings.html` (or `.md`) to write a clean, shareable report",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Run `frugon models` to see the model names available for `--candidates`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "uvx frugon analyze ./logs.jsonl",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "uvx frugon analyze ./logs.jsonl",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "uvx frugon analyze ./logs.jsonl",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Free, local, open-source LLM cost analyzer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Your data never leaves your machine. Your keys go straight to your own providers.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:29+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:52:01+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

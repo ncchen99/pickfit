@@ -108,6 +108,7 @@ class Box(ABC):
     workdir: str = BOX_WORKDIR
     network_enabled: bool = True
     gpu: str | None = None  # e.g. "T4" when the box has an NVIDIA GPU
+    display: str | None = None  # e.g. ":99" when an X server runs for GUI apps (gui.py)
     # How the agent's instructions name the box and the box user's limits.
     kind: str = "Linux sandbox"
     user_rule: str = "You are not root: no sudo, no apt-get, nothing written outside $HOME and /tmp."
@@ -124,10 +125,12 @@ class Box(ABC):
 
     def describe(self) -> str:
         """The box line of the agent's task: OS, user, paths and what is installed."""
+        screen = (f"A virtual display (X server {self.display}, 1280x800, no window manager, no GPU) runs for GUI "
+                  "apps: start one with launch_gui." if self.display else "No GUI.")
         return (f"Box: Debian-based Linux {self.arch}, user sbx (uid 1000, not root, no sudo), HOME={self.home}, "
                 f"work dir {self.workdir}. PATH starts with ~/.local/bin. Installed: python3.12 with pip, uv, pipx; "
                 "node 22 with npm (global prefix ~/.local); git, curl, unzip, xz, zstd. Network: on. No API keys, "
-                "no accounts, no GUI.")
+                f"no accounts. {screen}")
 
     @abstractmethod
     def start(self) -> None:
@@ -144,6 +147,15 @@ class Box(ABC):
     @abstractmethod
     def read_file(self, path: str, max_bytes: int = 64_000) -> bytes:
         """The first `max_bytes` of a file; BoxError if it cannot be read."""
+
+    def harness_exec(self, argv: list[str], timeout_s: int, *, as_uid: int | None = None,
+                     stdin: bytes | None = None) -> ExecResult:
+        """Run argv for pickfit itself, out of the box user's reach: as root, or as `as_uid`."""
+        raise BoxError(f"{type(self).__name__} cannot run pickfit's own commands apart from the box user")
+
+    def harness_read(self, path: str, max_bytes: int) -> bytes:
+        """A file of pickfit's own (evidence the box user cannot touch), read as root."""
+        raise BoxError(f"{type(self).__name__} cannot read pickfit's own files apart from the box user")
 
     @abstractmethod
     def set_network(self, enabled: bool) -> None:

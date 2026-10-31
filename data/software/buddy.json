@@ -1,0 +1,658 @@
+{
+  "schema_version": "software.v1",
+  "slug": "buddy",
+  "repo_id": "gh:1206186969",
+  "name": "Buddy",
+  "summary": "Local-first MCP virtual pet that persists across sessions and reacts to coding work.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "ai-agents",
+    "ai-pet",
+    "anthropic",
+    "anthropic-buddy",
+    "buddy",
+    "claude",
+    "claude-code",
+    "claude-code-buddy",
+    "claude-code-buddy-pet"
+  ],
+  "use_cases": [],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/fiorastudio/buddy",
+    "full_name": "fiorastudio/buddy",
+    "created_at": "2026-04-09T17:01:55Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "node 18+"
+    ],
+    "system_packages": [
+      "git"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/fiorastudio/buddy/master/install.sh | bash",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-buddy-20261031-014350-76a9",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/fiorastudio/buddy/master/install.sh -o /tmp/install-buddy.sh && wc -c /tmp/install-buddy.sh && head -c 500 /tmp/install-buddy.sh",
+          "purpose": "download install.sh for inspection before running"
+        },
+        {
+          "command": "bash /tmp/install-buddy.sh --no-onboard",
+          "purpose": "install Buddy via official script with --no-onboard"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://raw.githubusercontent.com/fiorastudio/buddy/master/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.0.6",
+    "published_at": "2026-04-29T19:30:59Z",
+    "url": "https://github.com/fiorastudio/buddy/releases/tag/v1.0.6"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:45:48.359271+08:00",
+    "runs": [
+      {
+        "id": "verify-buddy-20261031-014350-76a9",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:45:48.359271+08:00",
+        "tool_version": "1.0.6",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/fiorastudio/buddy/master/install.sh -o /tmp/install-buddy.sh && wc -c /tmp/install-buddy.sh && head -c 500 /tmp/install-buddy.sh",
+            "purpose": "download install.sh for inspection before running"
+          },
+          {
+            "command": "bash /tmp/install-buddy.sh --no-onboard",
+            "purpose": "install Buddy via official script with --no-onboard"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ls ~/.buddy/server/dist/server/index.js && node --version && python3 ~/.pickfit/mcp_probe.py -- node /home/sbx/.buddy/server/dist/server/index.js",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call buddy_status --args '{}' -- node /home/sbx/.buddy/server/dist/server/index.js",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=buddy_status content=text text_chars=51",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call buddy_hatch --args '{\"name\":\"PickfitTest\"}' -- node /home/sbx/.buddy/server/dist/server/index.js",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=buddy_hatch content=text,text text_chars=1979",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Requires node 18+ and git",
+            "actually_needed": "Node 20+ is required; installer exits if major version <20 because better-sqlite3 dropped Node 18/19 support",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "curl ... | bash installs and auto-configures clients",
+            "actually_needed": "Symlink to /usr/local/bin fails without root; launch MCP server via full path: node ~/.buddy/server/dist/server/index.js",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "one-line curl|bash install",
+            "actually_needed": "Installer clones https://github.com/fiorastudio/buddy.git and runs npm install/build, fetching ~282 npm packages plus a prebuilt better-sqlite3 native binary at install time, which cannot be fully pre-read",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show Buddy MCP server initializing with 13 tools and successfully completing buddy_status and buddy_hatch tool calls.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-buddy-20261031-014350-76a9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-buddy-20261031-014350-76a9/check-1-cmd3.judged.png",
+            "runs/verify/verify-buddy-20261031-014350-76a9/check-2-cmd4.judged.png",
+            "runs/verify/verify-buddy-20261031-014350-76a9/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.086549,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "node",
+            "/home/sbx/.buddy/server/dist/server/index.js"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "buddy",
+          "server_version": "1.0.6",
+          "tools": [
+            "buddy_hatch",
+            "buddy_status",
+            "buddy_remember",
+            "buddy_dream",
+            "buddy_respawn",
+            "buddy_observe",
+            "buddy_pet",
+            "buddy_mute",
+            "buddy_unmute",
+            "buddy_mode",
+            "buddy_forget",
+            "buddy_reasoning_status",
+            "buddy_share"
+          ],
+          "tool_count": 13,
+          "called_tool": "buddy_status",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": null,
+    "client_configs": [],
+    "env_vars": [],
+    "tools": [
+      "buddy_hatch",
+      "buddy_status",
+      "buddy_observe",
+      "buddy_pet",
+      "buddy_remember",
+      "buddy_dream",
+      "buddy_mute",
+      "buddy_unmute",
+      "buddy_share",
+      "buddy_respawn",
+      "buddy_mode",
+      "buddy_forget",
+      "buddy_reasoning_status"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 77.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.86,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 77.4,
+      "signals": {
+        "stars": 116,
+        "monthly_downloads": null,
+        "forks": 21,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 4,
+        "registries_count": 0
+      },
+      "age_days": 204,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 17.45
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "47ec106d8694fbe8025d93de620d54d377b562b177864f7d4b1f7009857bd889",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Persistent memory, XP evolutions, 21 species, and context-aware feedback for Claude Code CLI"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "It is part rescue mission, part developer tool, and part long-lived terminal creature"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requires `node` 18+ and `git`. Use `--no-onboard` to skip the wizard in CI."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/fiorastudio/buddy/master/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "buddy_mode voice=backseat      # personality reactions only"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "No separate endpoint, no additional API key, and no hidden OAuth hop."
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "Re-run the one-liner installer:"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[![License](https://img.shields.io/badge/license-MIT-ffd166?style=flat-square)](LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/fiorastudio/buddy",
+      "fetched_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/fiorastudio/buddy/blob/master/README.md",
+      "fetched_at": "2026-10-31T01:07:00+08:00"
+    },
+    {
+      "id": "release:v1.0.6",
+      "kind": "release",
+      "url": "https://github.com/fiorastudio/buddy/releases/tag/v1.0.6",
+      "fetched_at": "2026-10-31T01:07:00+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Buddy is a standalone MCP server.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "The installer will guide you through onboarding:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Buddy is an MCP server, not a one-client hack",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Buddy is a local-first MCP companion that persists across sessions and clients, reacts to your work",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Buddy: A Virtual Pet for Your AI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "release:v1.0.6",
+      "quote": "# macOS/Linux\ncurl -fsSL https://raw.githubusercontent.com/fiorastudio/buddy/master/install.sh | bash\n\n# Windows (PowerShell)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires `node` 18+ and `git`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Requires `node` 18+ and `git`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.0.6",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:07:00+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/fiorastudio/buddy/master/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/fiorastudio/buddy/master/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://raw.githubusercontent.com/fiorastudio/buddy/master/install.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Everything stays local. Claim snippets (240 chars each, plaintext) live in `~/.buddy/buddy.db`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "| `buddy_hatch` | Hatch a new buddy, optionally choosing a name or species |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "| `buddy_status` | Show current stats, mood, and card art |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "| `buddy_observe` | React to completed work. Fire on hooks |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "| `buddy_pet` | Pet your buddy |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "| `buddy_remember` | Save a memory (Not yet robust) |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "| `buddy_dream` | Consolidate memories (Placeholder) |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "| `buddy_mute` | Pause reactions |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "| `buddy_unmute` | Resume reactions |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "| `buddy_share` | Generate a shareable PNG snapshot of your buddy's current status and card art.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "| `buddy_respawn` | Reset and start over |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "| `buddy_mode` | Set voice and Guard independently.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "| `buddy_forget` | Purge stored reasoning data.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "| `buddy_reasoning_status` | Inspect what guard mode has stored",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:35+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:50:29+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

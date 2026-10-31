@@ -1,0 +1,584 @@
+{
+  "schema_version": "software.v1",
+  "slug": "claudette",
+  "repo_id": "gh:1214300796",
+  "name": "Claudette",
+  "summary": "Air-gapped Rust coding agent that runs local Ollama/LM Studio models offline.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agent",
+    "air-gapped",
+    "benchmark",
+    "cli",
+    "coding-agent",
+    "developer-tools",
+    "llm",
+    "llm-evaluation",
+    "lm-studio",
+    "local-first"
+  ],
+  "use_cases": [
+    "audit a repo read-only and write ranked findings to REPORT.md",
+    "send editor selection or open file to agent from VS Code",
+    "clone a repo, branch, commit, push and open a pull request"
+  ],
+  "alternatives_to": [
+    "opencode",
+    "Aider",
+    "OpenHands",
+    "Cline",
+    "Continue"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://github.com/mrdushidush/claudette",
+  "repo": {
+    "url": "https://github.com/mrdushidush/claudette",
+    "full_name": "mrdushidush/claudette",
+    "created_at": "2026-04-18T11:39:39Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Rust toolchain"
+    ],
+    "system_packages": [],
+    "gpu": "optional",
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install mrdushidush/tap/claudette",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "claudette --offline --doctor"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-claudette-20261031-000049-ff22",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/mrdushidush/claudette/main/install.sh -o /tmp/install-claudette.sh && ls -l /tmp/install-claudette.sh && wc -c /tmp/install-claudette.sh",
+          "purpose": "Download install script for reading before running"
+        },
+        {
+          "command": "sh /tmp/install-claudette.sh",
+          "purpose": "Install claudette via README script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "claudette --version",
+        "expected_signal": "claudette 0.18.1"
+      },
+      "first_task": "claudette --offline --doctor"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "iwr -useb https://raw.githubusercontent.com/mrdushidush/claudette/main/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "claudette --offline --doctor"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.18.1",
+    "published_at": "2026-10-09T10:11:11Z",
+    "url": "https://github.com/mrdushidush/claudette/releases/tag/v0.18.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:01:36.694734+08:00",
+    "runs": [
+      {
+        "id": "verify-claudette-20261031-000049-ff22",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:01:36.694734+08:00",
+        "tool_version": "0.18.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/mrdushidush/claudette/main/install.sh -o /tmp/install-claudette.sh && ls -l /tmp/install-claudette.sh && wc -c /tmp/install-claudette.sh",
+            "purpose": "Download install script for reading before running"
+          },
+          {
+            "command": "sh /tmp/install-claudette.sh",
+            "purpose": "Install claudette via README script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "claudette --version",
+            "expected_signal": "claudette 0.18.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "claudette 0.18.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "claudette --help",
+            "expected_signal": "--doctor",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "then finish with a --doctor pass. Needs a terminal;",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "claudette --offline --doctor",
+            "expected_signal": "allow localhost",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "✓ allow localhost",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/mrdushidush/claudette/main/install.sh | sh",
+            "actually_needed": "the installer downloads a prebuilt binary tarball (claudette-v0.18.1-x86_64-unknown-linux-gnu.tar.gz + .sha256) from GitHub releases at run time and SHA256-verifies it; that binary cannot be read as text before running",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Doctor runs in offline mode and correctly reports failed probes with exit 1, and version prints claudette 0.18.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-claudette-20261031-000049-ff22/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-claudette-20261031-000049-ff22/check-1-cmd5.judged.png",
+            "runs/verify/verify-claudette-20261031-000049-ff22/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.04955
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 90.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 41.0,
+      "signals": {
+        "stars": 19,
+        "monthly_downloads": null,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": 262,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 195,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 53.22
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "c5a3606afaf382b9b0a803691033cda3af26d4499f64c5c3e932592eb5781e11",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "An air-gapped AI coding agent in one Rust binary - run it `--offline` and your code physically cannot leave the machine."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "install Ollama from ollama.com first"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "cargo install claudette        # needs a Rust toolchain"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "claudette \"hello — what can you do?\""
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "`claudette --offline` (or `CLAUDETTE_OFFLINE=1`) hard-blocks every outbound call"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "[docs/troubleshooting.md](docs/troubleshooting.md) - symptom-keyed fixes (silent hang, model-reload 400, recall 501, not_configured)"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Dual-licensed under **MIT** ([LICENSE-MIT](LICENSE-MIT)) **OR Apache-2.0**"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/mrdushidush/claudette",
+      "fetched_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/mrdushidush/claudette/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:34:03+08:00"
+    },
+    {
+      "id": "release:v0.18.1",
+      "kind": "release",
+      "url": "https://github.com/mrdushidush/claudette/releases/tag/v0.18.1",
+      "fetched_at": "2026-10-29T02:34:03+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Conversational shell; autosaves every turn",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "claudette \"hello — what can you do?\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "side-by-side vs. opencode / Aider / OpenHands / Cline / Continue",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Air-gapped coding agent in one Rust binary: a model on your own GPU (Ollama/LM Studio), --offline enforced by tests.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Claudette",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/mrdushidush/claudette/main/install.sh | sh   # Linux / macOS\niwr -useb https://raw.githubusercontent.com/mrdushidush/claudette/main/install.ps1 | iex  # Windows (PowerShell)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "cargo install claudette        # needs a Rust toolchain",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "No GPU? The 4B model runs on plain CPU.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "run it `--offline` and your code physically cannot leave the machine.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.18.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:34:03+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Unattended read-only repo audit → verified findings + `REPORT.md`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Send a selection or the open file to Claudette without leaving the editor",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "branches, commits, pushes, and opens the PR - one tool chain",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "side-by-side vs. opencode / Aider / OpenHands / Cline / Continue",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "side-by-side vs. opencode / Aider / OpenHands / Cline / Continue",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "side-by-side vs. opencode / Aider / OpenHands / Cline / Continue",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "side-by-side vs. opencode / Aider / OpenHands / Cline / Continue",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/alternatives_to/4",
+      "source_id": "readme",
+      "quote": "side-by-side vs. opencode / Aider / OpenHands / Cline / Continue",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install mrdushidush/tap/claudette",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/mrdushidush/claudette/main/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "iwr -useb https://raw.githubusercontent.com/mrdushidush/claudette/main/install.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "They reach third-party services, so they are **not** in the default coding-only build.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:39+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

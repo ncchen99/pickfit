@@ -1,0 +1,542 @@
+{
+  "schema_version": "software.v1",
+  "slug": "cli",
+  "repo_id": "gh:1164601546",
+  "name": "ark",
+  "summary": "CLI to manage Ark genomic enclaves, their data, apps, and firmware.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ark",
+    "bioinformatics",
+    "cli",
+    "dark-bio",
+    "genomics",
+    "privacy"
+  ],
+  "use_cases": [
+    "find connected Ark hardware and running emulators",
+    "show Ark serial, firmware, pairing and lock status",
+    "upload variant calls file to the Ark",
+    "run a WASM app on the Ark and save its report"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://dark.bio",
+  "repo": {
+    "url": "https://github.com/dark-bio/cli",
+    "full_name": "dark-bio/cli",
+    "created_at": "2026-02-23T09:19:59Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install dark-bio/tap/ark-cli",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Plug in your Ark hardware device",
+        "Press the Ark button with the pin that came with the Ark",
+        "Pair the Ark with Ark Companion on a phone and approve on the phone"
+      ],
+      "check": null,
+      "first_task": "ark devices"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-cli-20261031-002011-c7c1",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/dark-bio/cli/releases/latest/download/ark-installer.sh -o /tmp/ark-installer.sh && ls -l /tmp/ark-installer.sh && wc -c /tmp/ark-installer.sh",
+          "purpose": "Download installer script for inspection"
+        },
+        {
+          "command": "sh /tmp/ark-installer.sh",
+          "purpose": "Run installer script to install ark"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ark --version",
+        "expected_signal": "ark 0.5.0"
+      },
+      "first_task": "ark completions bash"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install darkbio-ark --locked",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Plug in your Ark hardware device",
+        "Press the Ark button with the pin that came with the Ark",
+        "Pair the Ark with Ark Companion on a phone and approve on the phone"
+      ],
+      "check": null,
+      "first_task": "ark devices"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.5.0",
+    "published_at": "2026-10-20T08:13:21Z",
+    "url": "https://github.com/dark-bio/cli/releases/tag/v0.5.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:21:12.498875+08:00",
+    "runs": [
+      {
+        "id": "verify-cli-20261031-002011-c7c1",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:21:12.498875+08:00",
+        "tool_version": "0.5.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/dark-bio/cli/releases/latest/download/ark-installer.sh -o /tmp/ark-installer.sh && ls -l /tmp/ark-installer.sh && wc -c /tmp/ark-installer.sh",
+            "purpose": "Download installer script for inspection"
+          },
+          {
+            "command": "sh /tmp/ark-installer.sh",
+            "purpose": "Run installer script to install ark"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ark --version",
+            "expected_signal": "ark 0.5.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ark 0.5.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ark --help",
+            "expected_signal": "Command line interface to Ark enclaves",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Command line interface to Ark enclaves",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ark completions bash",
+            "expected_signal": "complete -F _ark",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "complete -F _ark -o nosort -o bashdefault -o default ark",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ark devices",
+            "expected_signal": "no Arks found",
+            "exit_code": 3,
+            "passed": true,
+            "observed_excerpt": "error[no-device]: no Arks found; discovery was incomplete",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://github.com/dark-bio/cli/releases/latest/download/ark-installer.sh | sh",
+            "actually_needed": "Installer downloads prebuilt binary ark-0.5.0-linux-amd64 and LICENSES.txt from GitHub releases; the binary cannot be read as text before running",
+            "kind": "note"
+          },
+          {
+            "readme_said": "ark devices # find the Ark; ark status # serial, firmware, pairing and lock",
+            "actually_needed": "ark devices and ark status correctly report error[no-device] and exit 3 when no Ark hardware or emulator is present; pairing/unlock/data/run steps need Ark hardware plus phone approval and cannot be tested here",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show bash completions containing complete -F _ark, devices reporting no Arks found, and version reporting ark 0.5.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-cli-20261031-002011-c7c1/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-cli-20261031-002011-c7c1/check-1-cmd8.judged.png",
+            "runs/verify/verify-cli-20261031-002011-c7c1/check-2-cmd5.judged.png",
+            "runs/verify/verify-cli-20261031-002011-c7c1/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.041243
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 85.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 35.8,
+      "signals": {
+        "stars": 7,
+        "monthly_downloads": 51,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 102,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 249,
+      "packages": [
+        "crates:darkbio-ark"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 54.63
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "7c17e2c42ff3092a95a007e789c9ed344ff7018599402c25a65f03038667bd90",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "`ark` is the command line interface to [Ark](https://dark.bio) enclaves."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "**Built for people. Ready for agents.**"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Plug in your Ark, or [start an emulated one](#emulated-arks), and run:"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "brew install dark-bio/tap/ark-cli      # stable releases"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "ark devices                       # find the Ark"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "[`errors`](src/help/errors.md) | Every error code, its next step and when another run helps"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Licensed under the [BSD 3-Clause License](https://github.com/dark-bio/cli/blob/main/LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/dark-bio/cli",
+      "fetched_at": "2026-10-30T23:41:39+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/dark-bio/cli/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:03:54+08:00"
+    },
+    {
+      "id": "release:v0.5.0",
+      "kind": "release",
+      "url": "https://github.com/dark-bio/cli/releases/tag/v0.5.0",
+      "fetched_at": "2026-10-31T00:03:54+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "`ark` is the command line interface to [Ark](https://dark.bio) enclaves.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:35+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "**Built for people. Ready for agents.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:35+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "`ark` is the command line interface to [Ark](https://dark.bio) enclaves.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:35+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "`ark` is the command line interface to [Ark](https://dark.bio) enclaves. An",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:35+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "`ark` is the command line interface to [Ark](https://dark.bio) enclaves.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:35+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "release:v0.5.0",
+      "quote": "assets: ark-0.5.0-linux-amd64, ark-0.5.0-linux-arm64, ark-0.5.0-macos-amd64, ark-0.5.0-macos-arm64, ark-0.5.0-windows-amd64.exe",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:35+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:39+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:39+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:39+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:39+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:39+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.5.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:03:54+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "`ark devices` | Lists hardware Arks and running emulators | nobody",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:35+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "`ark status` | Shows serial, firmware, pairing and lock, offline | nobody",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:35+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "ark data upload calls.vcf.gz      # your variant calls, approved on your phone",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:35+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "ark run my.wasm > report.md       # approve on your phone, then release the report",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:35+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install dark-bio/tap/ark-cli",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:35+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://github.com/dark-bio/cli/releases/latest/download/ark-installer.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:35+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install darkbio-ark --locked",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:35+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "`ark` talks to the Ark and the Dark Bio cloud, and it cannot approve anything",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:35+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:41:39+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

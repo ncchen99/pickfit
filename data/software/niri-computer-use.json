@@ -1,0 +1,660 @@
+{
+  "schema_version": "software.v1",
+  "slug": "niri-computer-use",
+  "repo_id": "gh:1407753403",
+  "name": "niri-computer-use",
+  "summary": "MCP server letting AI agents observe and drive a niri Wayland desktop.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": "prototype",
+  "tags": [
+    "ai-agents",
+    "computer-use",
+    "mcp",
+    "model-context-protocol",
+    "niri",
+    "rust",
+    "wayland"
+  ],
+  "use_cases": [],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://ayagmar.github.io/niri-computer-use/",
+  "repo": {
+    "url": "https://github.com/ayagmar/niri-computer-use",
+    "full_name": "ayagmar/niri-computer-use",
+    "created_at": "2026-10-06T18:18:01Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Rust 1.99 or newer"
+    ],
+    "system_packages": [
+      "grim",
+      "loginctl",
+      "notify-send",
+      "libxkbcommon-dev"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-niri-computer-use-20261031-012317-0ed3",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/ayagmar/niri-computer-use/releases/latest/download/install.sh -o /tmp/ncu-install.sh && ls -l /tmp/ncu-install.sh",
+          "purpose": "Download install script only"
+        },
+        {
+          "command": "mkdir -p ~/.local/lib ~/.local/debxkb && curl -fsSL https://ftp.debian.org/debian/pool/main/libx/libxkbcommon/libxkbcommon0_1.7.0-2_amd64.deb -o /tmp/libxkbcommon0.deb && dpkg-deb -x /tmp/libxkbcommon0.deb ~/.local/debxkb && find ~/.local/debxkb -name \"*.so*\" -ls && cp -P ~/.local/debxkb/usr/lib/x86_64-linux-gnu/libxkbcommon.so* ~/.local/lib/ && ls -l ~/.local/lib/",
+          "purpose": "Fetch and extract libxkbcommon locally"
+        },
+        {
+          "command": "export LD_LIBRARY_PATH=\"$HOME/.local/lib:${LD_LIBRARY_PATH:-}\" && NCU_REGISTER=0 sh /tmp/ncu-install.sh",
+          "purpose": "Retry install with local lib path"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "LD_LIBRARY_PATH=\"$HOME/.local/lib:${LD_LIBRARY_PATH:-}\" ~/.local/bin/niri-computer-use --version",
+        "expected_signal": "niri-computer-use 0.1.5"
+      },
+      "first_task": "LD_LIBRARY_PATH=\"$HOME/.local/lib:${LD_LIBRARY_PATH:-}\" ~/.local/bin/niri-computer-use status"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.1.5",
+    "published_at": "2026-10-18T04:43:27Z",
+    "url": "https://github.com/ayagmar/niri-computer-use/releases/tag/v0.1.5"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:24:43.009915+08:00",
+    "runs": [
+      {
+        "id": "verify-niri-computer-use-20261031-012317-0ed3",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:24:43.009915+08:00",
+        "tool_version": "0.1.5",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/ayagmar/niri-computer-use/releases/latest/download/install.sh -o /tmp/ncu-install.sh && ls -l /tmp/ncu-install.sh",
+            "purpose": "Download install script only"
+          },
+          {
+            "command": "mkdir -p ~/.local/lib ~/.local/debxkb && curl -fsSL https://ftp.debian.org/debian/pool/main/libx/libxkbcommon/libxkbcommon0_1.7.0-2_amd64.deb -o /tmp/libxkbcommon0.deb && dpkg-deb -x /tmp/libxkbcommon0.deb ~/.local/debxkb && find ~/.local/debxkb -name \"*.so*\" -ls && cp -P ~/.local/debxkb/usr/lib/x86_64-linux-gnu/libxkbcommon.so* ~/.local/lib/ && ls -l ~/.local/lib/",
+            "purpose": "Fetch and extract libxkbcommon locally"
+          },
+          {
+            "command": "export LD_LIBRARY_PATH=\"$HOME/.local/lib:${LD_LIBRARY_PATH:-}\" && NCU_REGISTER=0 sh /tmp/ncu-install.sh",
+            "purpose": "Retry install with local lib path"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "LD_LIBRARY_PATH=\"$HOME/.local/lib:${LD_LIBRARY_PATH:-}\" ~/.local/bin/niri-computer-use --version",
+            "expected_signal": "niri-computer-use 0.1.5",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "niri-computer-use 0.1.5",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "LD_LIBRARY_PATH=\"$HOME/.local/lib:${LD_LIBRARY_PATH:-}\" ~/.local/bin/niri-computer-use status",
+            "expected_signal": "niri_unavailable",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"error\": \"niri_unavailable\",",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "LD_LIBRARY_PATH=\"$HOME/.local/lib:${LD_LIBRARY_PATH:-}\" python3 ~/.pickfit/mcp_probe.py --timeout 120 -- ~/.local/bin/niri-computer-use serve",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "LD_LIBRARY_PATH=\"$HOME/.local/lib:${LD_LIBRARY_PATH:-}\" python3 ~/.pickfit/mcp_probe.py --call status --args '{}' --timeout 120 -- ~/.local/bin/niri-computer-use serve",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=status content=text text_chars=2484",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://github.com/ayagmar/niri-computer-use/releases/latest/download/install.sh | sh installs the release binary",
+            "actually_needed": "Manually fetched libxkbcommon0_1.7.0-2_amd64.deb from ftp.debian.org, extracted with dpkg-deb -x to ~/.local/debxkb, copied libxkbcommon.so.0* to ~/.local/lib, and ran the install script and every niri-computer-use invocation with LD_LIBRARY_PATH=$HOME/.local/lib",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "install script installs the release binary checked against its .sha256",
+            "actually_needed": "install.sh downloads a compiled binary tarball (niri-computer-use-0.1.5-x86_64-linux.tar.gz + .sha256) which was verified by checksum but cannot be read as a script",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show status JSON reporting missing runtime, MCP serve handshake ok with 17 tools, and version 0.1.5 printed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-niri-computer-use-20261031-012317-0ed3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-niri-computer-use-20261031-012317-0ed3/check-2-cmd12.judged.png",
+            "runs/verify/verify-niri-computer-use-20261031-012317-0ed3/check-3-cmd10.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.097978,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "~/.local/bin/niri-computer-use",
+            "serve"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "niri-computer-use",
+          "server_version": "0.1.5",
+          "tools": [
+            "acquire_desktop",
+            "click",
+            "clipboard_read",
+            "close_window",
+            "desktop_state",
+            "drag",
+            "focus",
+            "key",
+            "launch",
+            "niri_action",
+            "pointer_move",
+            "release_desktop",
+            "screenshot",
+            "scroll",
+            "status",
+            "type_text",
+            "wait_for"
+          ],
+          "tool_count": 17,
+          "called_tool": "status",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "~/.local/bin/niri-computer-use serve",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add --scope user niri-computer-use -- ~/.local/bin/niri-computer-use serve"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "status",
+      "desktop_state",
+      "acquire_desktop",
+      "focus",
+      "click",
+      "key",
+      "type_text",
+      "release_desktop"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 79.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 41.0,
+      "signals": {
+        "stars": 6,
+        "monthly_downloads": 25,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 210,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 23,
+      "packages": [
+        "crates:niri-computer-use"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 46.67
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "a5869cc36e65cfde546b3ace9c419dae467b7880bc516bdf6a2e61c4a58a70bc",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Let Claude Code, Codex, Pi or any MCP agent see and drive your [niri](https://github.com/niri-wm/niri) desktop"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Let Claude Code, Codex, Pi or any MCP agent see and drive your [niri](https://github.com/niri-wm/niri) desktop"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Either way you need niri 26.04, and `grim` and `loginctl` at run time, plus `notify-send` if you turn on `confirm_lease`."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://github.com/ayagmar/niri-computer-use/releases/latest/download/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "`status` prints a readiness report as JSON; `niri.compat` should be `ok`."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "[Configuration](https://ayagmar.github.io/niri-computer-use/concepts/configuration/): `policy.toml`, launch presets and desktop entries, the deny list,"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "| Update | Run the script again | Run `cargo install` again |"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "MIT. See [LICENSE](https://github.com/ayagmar/niri-computer-use/blob/main/LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ayagmar/niri-computer-use",
+      "fetched_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ayagmar/niri-computer-use/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:04:36+08:00"
+    },
+    {
+      "id": "release:v0.1.5",
+      "kind": "release",
+      "url": "https://github.com/ayagmar/niri-computer-use/releases/tag/v0.1.5",
+      "fetched_at": "2026-10-31T01:04:36+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "It offers up to 22 tools over stdio",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Let Claude Code, Codex, Pi or any MCP agent see and drive your [niri](https://github.com/niri-wm/niri) desktop",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "It offers up to 22 tools over stdio",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "MCP server for AI agents to observe and drive a niri Wayland desktop. Early development.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# niri-computer-use",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Release builds exist for x86_64 and aarch64 Linux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "With Rust 1.99 or newer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "`grim` and `loginctl` at run time",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "`grim` and `loginctl` at run time",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/2",
+      "source_id": "readme",
+      "quote": "plus `notify-send` if you turn on `confirm_lease`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/3",
+      "source_id": "readme",
+      "quote": "`libxkbcommon-dev` on Debian and Ubuntu",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.1.5",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:04:36+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "It is in early development.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://github.com/ayagmar/niri-computer-use/releases/latest/download/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Your real desktop, not a VM.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "It offers up to 22 tools over stdio",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add --scope user niri-computer-use -- ~/.local/bin/niri-computer-use serve",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add --scope user niri-computer-use -- ~/.local/bin/niri-computer-use serve",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "status",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "desktop_state",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "acquire_desktop",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "focus             {\"window_id\": 11, …}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "click             {\"x\": 979, \"y\": 88, …}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "key               {\"keys\": [\"shift+Right\", \"ctrl+alt+n\"], …}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "type_text         {\"text\": \"release-0.1\", \"submit\": true, …}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "release_desktop   {\"restore_focus\": true}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:13:28+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:19+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

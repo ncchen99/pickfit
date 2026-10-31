@@ -16,6 +16,49 @@ export interface RunSummary {
   checked_at: string;
   tool_version: string | null;
   evidence_url: string | null;
+  /** A GUI app's launch on pickfit's virtual display; absent or null for anything else. */
+  gui?: GuiEvidence | null;
+}
+
+/**
+ * What pickfit saw when a GUI app launched on a virtual display (verification.runs[].gui). The window
+ * title is the app's own text and is not in the index. A launch supports level install only.
+ */
+export interface GuiEvidence {
+  /** window: a window of the app's own process (per the X server); ui_rendered: the screen judge saw the app's own UI. */
+  tier: 'window' | 'ui_rendered';
+  /** What a separate model saw in a screenshot of the app's own windows. */
+  screen: 'main_ui' | 'first_run' | 'sign_in_wall' | 'crash_or_error' | 'blank_or_loading' | 'other';
+  display: string;
+  /** The launch passed again with the network off in the fresh-sandbox replay. */
+  launch_offline: boolean | null;
+}
+
+/** What a fresh sandbox saw when pickfit's MCP probe started the server (verification.runs[].mcp). */
+export interface McpHandshake {
+  transport: 'stdio' | 'streamable_http' | 'sse';
+  /** argv that started the server, as the replay ran it. */
+  launch: string[];
+  /** streamable_http: the local URL the probe posted to. */
+  url?: string | null;
+  protocol_version: string | null;
+  server_name: string | null;
+  server_version: string | null;
+  /** Tool names from tools/list, reduced to safe characters by the probe. */
+  tools: string[];
+  tool_count: number;
+  /** A tool tools/call ran without an error (level service). */
+  called_tool: string | null;
+  offline: boolean | null;
+}
+
+/** The README's MCP facts (record.mcp): claims, not run. */
+export interface McpFacts {
+  transports: string[];
+  launch_command: string | null;
+  client_configs: { client: string; snippet: string }[];
+  env_vars: { name: string; required: boolean | null; purpose: string | null }[];
+  tools: string[];
 }
 
 export interface InstallGuide {
@@ -32,6 +75,8 @@ export interface InstallGuide {
   /** kind arrives with the P3 pitfall tags; older runs have none. */
   pitfalls: { readme_said: string; actually_needed: string; kind?: string | null }[];
   run: RunSummary;
+  /** MCP servers: the handshake of this run; null or absent for other software. */
+  mcp?: McpHandshake | null;
 }
 
 export interface Entry {
@@ -39,7 +84,7 @@ export interface Entry {
   name: string;
   summary: string;
   why_worth_it: string | null;
-  category: 'dev_cli' | 'local_ai' | 'other';
+  category: 'dev_cli' | 'local_ai' | 'mcp_server' | 'other';
   kind: string;
   maturity: string | null;
   tags: string[];
@@ -69,6 +114,8 @@ export interface Entry {
     passed_runs: RunSummary[];
   };
   install: Partial<Record<OS, InstallGuide>>;
+  /** MCP servers only: what the README says about using it from an MCP client. */
+  mcp?: McpFacts | null;
   scores: {
     quality: number | null;
     popularity: number | null;
@@ -97,6 +144,9 @@ export function loadCatalog(data: unknown): Catalog {
   }
   return { ...raw, bySlug: new Map(raw.entries.map((entry) => [entry.slug, entry])) };
 }
+
+/** Tool names compared without case, spaces or punctuation ("LM Studio" = "lm-studio"). */
+export const nameKey = (text: string) => text.toLowerCase().replace(/[^a-z0-9]/g, '');
 
 const LEVEL_ORDER = ['inference', 'service', 'function', 'install'];
 

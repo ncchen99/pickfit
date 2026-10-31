@@ -333,3 +333,61 @@ README 列出每一題兩組的結果，**包括輸的題與兩組都沒過的�
   11. Muse Spark 第三評分者
   12. 小模型對照
   13. Mac 題的 VM 紀錄
+
+### 9.3 開跑前追加：L2 的環境與固定項、評分者、揭露（2026-10-31）
+
+本節和 9.1、9.2 一樣，是開跑前追加的事先登記，在任何一組開跑前 commit，commit 時間就是登記時間。它不改題目、檢查項目與 D 的門檻，只把第 5、8 節在 L2 的做法寫定；兩組、所有次數一體適用。念誠 2026-10-31 決定本節各項。文中的實測都在 2026-10-31 的 L2 沙盒做，紀錄在各題的 `calibration.md` 與 `eval/results/calibration/`。
+
+#### A. 共同原則
+
+題目的檢查項目自己寫明了環境或固定物（映像內容、測試模型、機器）時，以檢查項目為準；沒寫的，照第 5 節（照答案原樣，評分者不換模型、不補步驟）。每一處照本節所做的替換，都記在該題的檢查紀錄，報告列出。
+
+#### B. Linux 的 L2 環境
+
+1. **映像**：Modal Sandbox（x86_64，gVisor）。三個變體都從同一個以 digest 固定的 `ubuntu:24.04`（linux/amd64 `sha256:78d4744ead1f5b19b04d0df558ab182a5300903900755e515b2ca4d10eb2044d`）建出，Modal 不另外加 Python；紀錄在 `eval/results/l2-images.json`：
+   - `dev`：加 python3（3.12.3）、git（2.43.0）、ca-certificates、curl（8.5.0）、strace（6.8）。q03、q10 以外的 Linux 題都用它。
+   - `base`：原樣。q03 用（它的檢查項目要求安裝後 `command -v python3 java node` 什麼都不印）。
+   - `base-git`：只加 git。q10 用（它的檢查項目寫「base image (git only)」）。
+2. **strace**（沒有對外連線的檢查要用）：`dev` 在任何答案執行前就裝在映像裡；`base`、`base-git` 只在答案的步驟全部跑完、開始檢查前才由評分者安裝。任何變體裡，strace 存在與否都不算答案的對或錯，任何檢查都不把它算進去。
+3. **擋外連**（題目寫 with egress blocked 時）：用連 DNS 也擋住的方法，開跑前用 egress 自我測試證明：正向對照（網路開著時，查公開名稱、連公開位址都成功）、反向對照（擋住後兩者都失敗）、追蹤本身（`egress.py selftest` 抓得到連 TEST-NET、查 `.invalid` 名稱、背景程序稍後的連線）。DNS 擋不住時要照實寫明，那時以 strace 紀錄裡的查名稱次數判定（任何查名稱都算一次對外連線嘗試）。
+   **結果**：Modal 沙盒裡 root 沒有 CAP_SYS_ADMIN，單純的 network namespace 不准建；`egress.py run --block-network` 改建 user＋network namespace（所有 uid、gid 對應成自己），裡面只有 loopback。正向對照：網路開著時公開位址連得到、DNS 會回答；反向對照：namespace 裡公開位址與 DNS 都失敗；strace 在 namespace 裡照樣記到每一次查名稱。所以採用 `--block-network`，DNS 也擋住，不需要退回 Modal 的擋網路（`eval/fixtures/_shared/calibration.md` 步驟 1、2）。每一次 `--block-network` 是新的 namespace，要互相連線的步驟（服務與它的用戶端）寫進同一個腳本、用一次跑完。沒有為了讓自我測試通過而放寬任何檢查。
+4. **固定版本**：校準與 L2 用的工具（三個 agent CLI、Node.js、測試模型、Ollama、OpenCC 字典檔、字型、openai 與 srt 套件等）一律從官方來源下載到沙盒，以版本號與 sha256 固定，不 commit 進 repo；清單與 sha256 在 `eval/fixtures/PINS.md`（35 個檔在 dev image 沙盒下載後算 sha256，與來源公布的值 0 個不一致；之後 q19 換模型校準時另加 2 個 Ollama 模型，也在沙盒裡算過、相同；Docker 映像只記 digest）。
+5. **CPU 與記憶體**（`_shared/calibration.md` 步驟 4）：Modal 的 `cpu=4` 給 4 個 CPU（`nproc` 4），`cpu=8` 給 8 個。記憶體 cgroup 是 v1：沒有峰值計數（`memory.peak`、`memory.max_usage_in_bytes`）、沒有 `memory.stat`、沒有 OOM 計數，只有 `memory.usage_in_bytes`；它跟著程序自己配置的記憶體走（配置 600 MiB 時 634 MB），不含讀檔的 page cache（`cat` 2 GB 的檔時最大 2.2 MB）。所以 `mem_peak.sh` 用每 0.2 秒取樣的 `usage_in_bytes`（`method` 記為 `sampled memory.current`）；比 0.2 秒還短的尖峰可能漏掉，報告照實寫明。超過硬上限時整個沙盒結束（Modal 回報 returncode 137），不是只有那個程序被 kill：這記為那一步被 OOM kill。
+   - q03：照它的校準步驟 3，page cache 不計入 → 用規則 A（題目原文：memory.peak ≤ 1,000,000,000，以取樣值判定），沙盒 cpu=4、不設硬上限；不用規則 B 的硬上限。
+   - q14：照它的檢查項目，4 vCPU、8 GiB 硬上限，取樣值 < 8,589,934,592、沒有 OOM kill。
+
+#### C. q18–q20 的測試模型（第 3 項）
+
+1. 這三題的 [L2] 檢查項目寫明了用固定的測試模型（q18、q19「the frozen tool-calling fixture model」，q20「the frozen small model」），所以照 A，答案指定的模型名在這三題 L2 換成 `pins.env` 的固定模型；答案要另外下載別的模型的步驟不執行。每一處替換記在檢查紀錄。
+2. 其他題一律用答案指定的模型（第 5 節）。
+3. 報告寫明：這三題的 L2 量的是答案的用戶端或設定方法接上固定模型能不能用，不是答案推薦的模型本身。
+4. **校準**（各題 `calibration.md`；最後的設定是 8 vCPU、16 GiB，見下面 q19）：
+   - q18：`llama3.2:3b`，經 Ollama 自己的 API 與經 logging proxy 的工具呼叫都是 3/3（4 vCPU 與 8 vCPU 都是）。
+   - q19：第 1 個候選 `llama3.2:3b` 的參考 harness 0/3（把那句話原樣寫進 `hello.py`，或把工具呼叫寫成一般文字），所以照本節在任何一組開跑前換模型，選法先寫進 `q19/calibration.md` 再跑：`qwen2.5:7b` 3/3、`qwen3:4b` 2/3（第 3 次超過 900 秒）→ 採用 `qwen2.5:7b`。它處理約 17,000 token 的長提示在 4 vCPU 上要 758 秒，超過該檔設的 600 秒參考線（真的 coding agent 可能來不及在 15 分鐘內完成）；同樣的模型、同樣 3 次在 8 vCPU 上 348 秒、仍 3/3。所以 **q18–q20 的 L2 沙盒（兩組）都用 8 vCPU、16 GiB**（這三題的檢查項目都沒寫 CPU 數；q17 的檢查項目寫 4 vCPU，不變），q18、q20 也在 8 vCPU 重新校準過。q18、q19 用不同的固定模型。
+   - q20：`qwen2.5:0.5b`，網路開著與封鎖時同一個呼叫都成功；封鎖時呼叫時段內沒有任何對外連線嘗試（4 vCPU 與 8 vCPU 都是）。
+5. 測試環境的 Ollama 以它文件寫的 local-only 模式啟動（`OLLAMA_NO_CLOUD=1`，寫在各題啟動固定服務的腳本裡）。校準時沒有這個設定，`ollama serve` 一啟動就自己連 ollama.com:443（q18 C6）；這是測試環境的設定，兩組相同，不是答案的步驟。它只加在評分者啟動腳本裡那一個 `ollama serve` 指令前面（不 export，也不用會影響同一使用者所有 Ollama 的 `~/.ollama/server.json`）；答案自己的步驟啟動的 Ollama 或任何其他伺服器照原樣執行、不帶這個設定，它們的任何對外連線都算答案的（`eval/fixtures/_shared/test_ollama_scope.py` 檢查這一點）。
+
+#### D. q11 的硬體（第 4 項）
+
+q11 在念誠的 Apple M5、24 GiB Mac 上跑（不是檢查項目寫的 16 GB）。記憶體那一項以實測的記憶體峰值（所有步驟啟動的程序 footprint 加總峰值）對照題目的 12 GB 上限判定，不做模擬；報告照實寫明硬體，並註明 16 GB 機器上的速度與記憶體壓力可能不同。晶片、記憶體、macOS 版本記在 `q11/calibration.md`。
+
+#### E. Mac 題的起始環境（第 5 項）
+
+q08、q11、q12 在念誠另開的乾淨 macOS 使用者帳號裡跑（帳號由念誠自己建），帳號裡只裝 Homebrew；每題跑前、跑後各拍一次快照，照 `eval/fixtures/_mac/CHECKLIST.md` 的清單做與還原。
+
+#### F. 固定隨機性（第 7 項）
+
+1. **受測工具的模型輸出**（第 5 節「判讀模型輸出的檢查」，q11、q15、q16 等）：評分者只能用工具自己的文件寫明的環境變數或設定檔固定 seed 或 temperature，不加旗標、不改答案的指令。兩組用同樣的設定。文件沒寫這種方式、或設定套不上時，跑 3 次、2 次過算過。每一次用了哪個設定（或沒有），記在檢查紀錄。q11、q15、q16 的 README 都照這條寫。
+2. **評分者自己的抽樣與排序**（盲測偏好的 A／B 順序、盲評的答案與項目順序）：一個整數 seed **20261102**，commit 後不再改。每個用途用自己的 seed：`sha256("20261102:<用途>")` 的前 16 個十六進位字（64 位元），用途名稱固定為 `prefer:<round>`、`answers:<rounds 以逗號連接>`、`l1-batch:<A 或 B>`（`eval/runner/blind.py` 的 `EVAL_SEED`、`use_seed`）。每份表單與 key 印出 seed、用途、導出的 seed 與 key 的 sha256。q16 意義檢查的 5 句在出題時已用 `manifest.json` 寫死的規則選好（依 sha256(`q16-meaning-v1` + 換行 + 句子編號) 排序取前 5），在看到任何答案前就 commit，不重抽。9.2 E 的 B 題組抽樣照 9.2 E.2，由那個 session 先 commit 自己的種子。
+3. 受測 agent（Claude Code）沒有 seed，`claude-opus-5-5` 不接受 temperature：照 9.1，雜訊由每題每組第 1 次與 2 次補充重跑描述，不另外固定。
+4. 測試資料的產生器已用凍結的 seed；2026-10-31 重跑都與 commit 的檔案或記下的雜湊相同（`eval/fixtures/README.md`）。
+
+#### G. 「git diff 改了幾行」的算法
+
+q07（at most 3 changed lines）與 q09（changes at most 5 lines）用同一個算法（`eval/fixtures/_shared/git_diff_lines.py`）：先 `git add -A`，看 `git diff --cached -M` 相對於改動前的 commit，每個 hunk 取（刪掉的行數，加上的行數）較大者，所有 hunk 加總。原地改一行算 1 行；只搬移不改內容的檔算 0 行；二進位改動沒有行數，算不過。兩題的門檻不變（3 行、5 行）。
+
+#### H. 評分模型與揭露
+
+1. C4 的 Claude 第二評分者固定為 `claude-opus-5-5`、effort high（`eval/runner/config.json`），在評分開始前固定。這個模型不接受 temperature，固定的是模型 ID 與 effort。
+2. 揭露：第二評分者和受測 agent 是同一個模型。若有偏好自己文字的傾向，最可能偏向對照組的答案（純 Claude 的文字）。評分時看不到組別、次數與模型（盲評）；結果以念誠的判定為準；Muse Spark Open（Baseten）另外做第三份獨立的描述（9.2 B）。
+3. 揭露：第二批 MCP server（11/1）的驗證 agent 由 Baseten 上的 Muse Spark Open 執行；抽取、評審與計分仍用 muse-spark-1.3，每筆紀錄寫明各階段用的模型。它和第三評分者是同一個模型來源；第三評分者只做描述、看到的是去識別的答案，不決定任何結果。

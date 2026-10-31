@@ -1,0 +1,562 @@
+{
+  "schema_version": "software.v1",
+  "slug": "lazydb",
+  "repo_id": "gh:1348326484",
+  "name": "LazyDB",
+  "summary": "Keyboard-first terminal workspace to browse databases and write SQL with MCP support.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": "beta",
+  "tags": [
+    "coding-agent",
+    "database",
+    "db",
+    "mcp",
+    "mcp-server",
+    "remote",
+    "terminal",
+    "tui"
+  ],
+  "use_cases": [
+    "browse schemas, table data, and Redis keys",
+    "inspect MongoDB documents",
+    "write SQL with Vim-style editing and completion",
+    "give coding agents database access via local MCP server"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/yelog/lazydb",
+    "full_name": "yelog/lazydb",
+    "created_at": "2026-08-27T09:54:19Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "Oracle Instant Client",
+      "DuckDB optional C API runtime"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install yelog/tap/lazydb",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-lazydb-20261031-001913-99a4",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://lazydb.yelog.org/install.sh -o /tmp/install-lazydb.sh && ls -l /tmp/install-lazydb.sh && wc -c /tmp/install-lazydb.sh",
+          "purpose": "Download install script for reading first"
+        },
+        {
+          "command": "sh /tmp/install-lazydb.sh --mcp-setup skip",
+          "purpose": "Install lazydb with script, skipping MCP prompt"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "lazydb --version",
+        "expected_signal": "lazydb 0.2.3"
+      },
+      "first_task": "lazydb doctor"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"irm https://lazydb.yelog.org/install.ps1.txt -ErrorAction Stop | iex\"",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.2.3",
+    "published_at": "2026-10-30T12:08:10Z",
+    "url": "https://github.com/yelog/lazydb/releases/tag/v0.2.3"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:20:44.873590+08:00",
+    "runs": [
+      {
+        "id": "verify-lazydb-20261031-001913-99a4",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:20:44.873590+08:00",
+        "tool_version": "0.2.3",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://lazydb.yelog.org/install.sh -o /tmp/install-lazydb.sh && ls -l /tmp/install-lazydb.sh && wc -c /tmp/install-lazydb.sh",
+            "purpose": "Download install script for reading first"
+          },
+          {
+            "command": "sh /tmp/install-lazydb.sh --mcp-setup skip",
+            "purpose": "Install lazydb with script, skipping MCP prompt"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lazydb --version",
+            "expected_signal": "lazydb 0.2.3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lazydb 0.2.3",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lazydb --help",
+            "expected_signal": "A keyboard-first terminal database IDE",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "A keyboard-first terminal database IDE",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lazydb doctor",
+            "expected_signal": "LazyDB doctor: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "LazyDB doctor: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lazydb capabilities",
+            "expected_signal": "drivers: postgres,mysql,mariadb,oracle,sqlserver,sqlite,duckdb,redis,valkey,mongodb,clickhouse",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "drivers: postgres,mysql,mariadb,oracle,sqlserver,sqlite,duckdb,redis,valkey,mongodb,clickhouse",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lazydb version --json",
+            "expected_signal": "\"version\":\"0.2.3\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"version\":\"0.2.3\",\"cli_api\":1,\"revision\":null,\"drivers\":[\"postgres\",\"mysql\",\"mariadb\",\"oracle\",\"sqlserver\",\"sqlite\",\"duckdb\",\"redis\",\"valkey\",\"mongodb\",\"clickhouse\"]}",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://lazydb.yelog.org/install.sh | sh",
+            "actually_needed": "Downloaded to /tmp/install-lazydb.sh, read it, then ran sh /tmp/install-lazydb.sh --mcp-setup skip; installer verified sha256 and reported lazydb 0.2.3 installed",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "start LazyDB with lazydb",
+            "actually_needed": "Verified offline with non-interactive subcommands (lazydb doctor, lazydb capabilities, lazydb version --json); the bare lazydb entry point launches an interactive TUI that needs a terminal",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show LazyDB succeeding with doctor ok, full driver list, and version 0.2.3.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lazydb-20261031-001913-99a4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lazydb-20261031-001913-99a4/check-1-cmd7.judged.png",
+            "runs/verify/verify-lazydb-20261031-001913-99a4/check-2-cmd8.judged.png",
+            "runs/verify/verify-lazydb-20261031-001913-99a4/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.073421
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 86.8,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.75,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 55.9,
+      "signals": {
+        "stars": 66,
+        "monthly_downloads": null,
+        "forks": 5,
+        "dependents": null,
+        "release_downloads": 856,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 64,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 38.28
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "274dc8d92f075fa59123c10d59c1ff99e974aa65b00a97f883d4b177d82cb097",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A keyboard-first database workspace for your terminal, built in Rust."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Oracle requires Oracle Instant Client."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://lazydb.yelog.org/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "lazydb"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Configure connections, credentials, themes, or clipboard behavior"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "If icons render incorrectly, start with `lazydb --icons unicode` or"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/yelog/lazydb",
+      "fetched_at": "2026-10-30T23:43:09+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/yelog/lazydb/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:04:38+08:00"
+    },
+    {
+      "id": "release:v0.2.3",
+      "kind": "release",
+      "url": "https://github.com/yelog/lazydb/releases/tag/v0.2.3",
+      "fetched_at": "2026-10-31T00:04:38+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A beautiful and convenient TUI database client with MCP support.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:12+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "then start\nLazyDB:\n\n```sh\nlazydb",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:12+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A keyboard-first database workspace for your terminal, built in Rust.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:12+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A keyboard-first database workspace for your terminal, built in Rust.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:12+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# LazyDB",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:12+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "**macOS / Linux**\n\n```sh\ncurl -fsSL https://lazydb.yelog.org/install.sh | sh\n```\n\n**Windows (PowerShell, x86_64)**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:12+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Oracle requires Oracle Instant Client.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:12+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "DuckDB requires an optional C API runtime",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:12+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:43:09+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:43:09+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:43:09+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:43:09+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.2.3",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:04:38+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "LazyDB is in beta.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:12+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "- **Explore databases** — browse schemas, table data, Redis/Valkey keys, and",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:12+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "MongoDB documents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:12+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "- **Write SQL** — use Vim-style editing, catalog-aware completion, and multiple",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:12+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Give Claude Code, Codex, or OpenCode access to the current project's database",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:12+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install yelog/tap/lazydb",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:12+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://lazydb.yelog.org/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:12+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"irm https://lazydb.yelog.org/install.ps1.txt -ErrorAction Stop | iex\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:12+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "through a local MCP server.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:12+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:41:48+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

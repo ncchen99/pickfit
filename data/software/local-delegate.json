@@ -1,0 +1,727 @@
+{
+  "schema_version": "software.v1",
+  "slug": "local-delegate",
+  "repo_id": "gh:1292792456",
+  "name": "local-delegate",
+  "summary": "MCP server that offloads mechanical text tasks to a local LLM to save Claude quota.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-tools",
+    "claude-code",
+    "codex",
+    "hooks",
+    "mcp-server",
+    "model-context-protocol",
+    "opencode",
+    "skills"
+  ],
+  "use_cases": [
+    "summarize a huge log via local LLM",
+    "summarize text or file",
+    "classify text into one label",
+    "extract fields to validated object",
+    "translate text or file"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://zahirinatzuke.github.io/local-delegate/",
+  "repo": {
+    "url": "https://github.com/ZahiriNatZuke/local-delegate",
+    "full_name": "ZahiriNatZuke/local-delegate",
+    "created_at": "2026-07-07T21:16:16Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.11"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-local-delegate-20261031-014253-3b8a",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install local-delegate-mcp && local-delegate --help",
+          "purpose": "install local-delegate-mcp with uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "local-delegate --version",
+        "expected_signal": "local-delegate 0.46.0"
+      },
+      "first_task": "local-delegate install --dry-run"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.46.0",
+    "published_at": "2026-10-29T18:13:21Z",
+    "url": "https://github.com/ZahiriNatZuke/local-delegate/releases/tag/v0.46.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:44:04.499482+08:00",
+    "runs": [
+      {
+        "id": "verify-local-delegate-20261031-014253-3b8a",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:44:04.499482+08:00",
+        "tool_version": "0.46.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install local-delegate-mcp && local-delegate --help",
+            "purpose": "install local-delegate-mcp with uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "local-delegate --version",
+            "expected_signal": "local-delegate 0.46.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "local-delegate 0.46.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "local-delegate install --dry-run",
+            "expected_signal": "Nothing was written.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "under /home/sbx. Nothing was written.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "local-delegate doctor",
+            "expected_signal": "Result: 2 warning(s)",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "Result: 2 warning(s) — check [MISS] and [WARN] above.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- local-delegate",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call local_status --args '{}' -- local-delegate",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=local_status content=text text_chars=1177",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show dry-run reporting Nothing was written, doctor exiting 1 with Result: 2 warning(s), and --version printing local-delegate 0.46.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-local-delegate-20261031-014253-3b8a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-local-delegate-20261031-014253-3b8a/check-1-cmd4.judged.png",
+            "runs/verify/verify-local-delegate-20261031-014253-3b8a/check-2-cmd5.judged.png",
+            "runs/verify/verify-local-delegate-20261031-014253-3b8a/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.050015,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "local-delegate"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "local-delegate",
+          "server_version": "0.46.0",
+          "tools": [
+            "local_summarize",
+            "local_classify",
+            "local_extract",
+            "local_boilerplate",
+            "local_delegate",
+            "local_lint_summary",
+            "local_commit_msg",
+            "local_translate",
+            "local_explain_code",
+            "local_describe_image",
+            "local_status"
+          ],
+          "tool_count": 11,
+          "called_tool": "local_status",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "uvx local-delegate-mcp serve",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"local-delegate\": {\n      \"command\": \"uvx\",\n      \"args\": [\"local-delegate-mcp\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "LOCAL_DELEGATE_BASE_URL",
+        "required": null,
+        "purpose": "OpenAI-compatible endpoint URL"
+      },
+      {
+        "name": "LOCAL_DELEGATE_API_KEY",
+        "required": null,
+        "purpose": "Bearer token if endpoint requires it"
+      },
+      {
+        "name": "LOCAL_DELEGATE_MODEL_MECHANICAL",
+        "required": null,
+        "purpose": "Model for mechanical tasks"
+      },
+      {
+        "name": "LOCAL_DELEGATE_MODEL_LONG",
+        "required": null,
+        "purpose": "Model for long documents"
+      },
+      {
+        "name": "LOCAL_DELEGATE_MODEL_CODE",
+        "required": null,
+        "purpose": "Model for code"
+      },
+      {
+        "name": "LOCAL_DELEGATE_MODEL_VISION",
+        "required": null,
+        "purpose": "Vision model"
+      }
+    ],
+    "tools": [
+      "local_summarize",
+      "local_classify",
+      "local_extract",
+      "local_boilerplate",
+      "local_delegate",
+      "local_lint_summary",
+      "local_commit_msg",
+      "local_translate",
+      "local_explain_code",
+      "local_describe_image",
+      "local_status"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 94.8,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 44.5,
+      "signals": {
+        "stars": 8,
+        "monthly_downloads": 1639,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": 27,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 114,
+      "packages": [
+        "pypi:local-delegate-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 52.61
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "87e4d90ad3319e7166e75e2e9ee796916cd4bcb7592654e6568e293db9294202",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "**Delega tareas mecánicas texto→texto a un LLM local para conservar la cuota de tu suscripción de Claude.**"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Añádelo a tu config de MCP (Claude Desktop / Claude Code) en modo compatible `stdio`:"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**Python 3.11+** — con `uvx` no tienes que instalarlo tú, lo resuelve él"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "uv tool install local-delegate-mcp          # deja `local-delegate` en el PATH"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "local-delegate install --dry-run            # muestra exactamente qué tocaría"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `LOCAL_DELEGATE_BASE_URL` | `http://127.0.0.1:9292/v1` | Endpoint OpenAI-compatible |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "toca configuración ajena y se revierte con `local-delegate uninstall`"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ZahiriNatZuke/local-delegate",
+      "fetched_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ZahiriNatZuke/local-delegate/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:03:58+08:00"
+    },
+    {
+      "id": "release:v0.46.0",
+      "kind": "release",
+      "url": "https://github.com/ZahiriNatZuke/local-delegate/releases/tag/v0.46.0",
+      "fetched_at": "2026-10-31T01:03:58+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Un servidor MCP (`stdio` o daemon HTTP compartido)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Añádelo a tu config de MCP (Claude Desktop / Claude Code)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Un servidor MCP (`stdio` o daemon HTTP compartido)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "MCP that delegates mechanical text tasks to a local OpenAI-compatible LLM endpoint to conserve Claude subscription quota.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# local-delegate",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "**Python 3.11+**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.46.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:03:58+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "resumir un log enorme",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Resume texto o archivo; `focus` opcional",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Devuelve UNA etiqueta de una lista",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Extrae campos → **objeto validado**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Traduce texto o archivo",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "corren en un LLM **local**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Un servidor MCP (`stdio` o daemon HTTP compartido)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "uvx local-delegate-mcp serve",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"local-delegate\": {\n      \"command\": \"uvx\",\n      \"args\": [\"local-delegate-mcp\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "LOCAL_DELEGATE_BASE_URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "LOCAL_DELEGATE_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "LOCAL_DELEGATE_MODEL_MECHANICAL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "LOCAL_DELEGATE_MODEL_LONG",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "LOCAL_DELEGATE_MODEL_CODE",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/5",
+      "source_id": "readme",
+      "quote": "LOCAL_DELEGATE_MODEL_VISION",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`local_summarize` | Resume texto o archivo",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`local_classify` | Devuelve UNA etiqueta de una lista",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`local_extract` | Extrae campos",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`local_boilerplate` | Genera código desde una spec",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`local_delegate` | Escape genérico texto→texto",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`local_lint_summary` | Resume logs de lint/tests/CI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`local_commit_msg` | Mensaje de commit desde un diff",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`local_translate` | Traduce texto o archivo",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`local_explain_code` | Explica código en prosa",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`local_describe_image` | Describe una imagen",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`local_status` | Diagnóstico de solo lectura",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:55+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:11+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

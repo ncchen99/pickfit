@@ -1,0 +1,78 @@
+[
+  {
+    "item": "Pinned Ollama for Linux x86_64 (the user's existing runner), same pin as q18",
+    "why": "L2-2 and L2-3 need 'a pinned Ollama'. start_ollama.sh runs it at its own default address (OLLAMA_HOST unset), because L2-1 checks the answer's base_url against the runner's documented default.",
+    "candidates": [
+      {
+        "source": "https://github.com/ollama/ollama/releases (Linux amd64 archive of one tagged release)",
+        "license": "MIT",
+        "size": "about 1.5-2 GB archive (to confirm at pin time)",
+        "pin": "same tag, asset URL and SHA-256 as q18's pins.env; setup_pinned_ollama.sh checks the hash"
+      },
+      {
+        "source": "Docker Hub ollama/ollama:<version> (copy the binary and libraries into the dev image)",
+        "license": "MIT",
+        "size": "about 2-3 GB image",
+        "pin": "pull by digest and record it"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Frozen small model (Ollama tag) for the chat completion",
+    "why": "L2-2 needs 'the frozen small model pulled'. Any chat model works (no tool calls); smaller is faster on CPU.",
+    "candidates": [
+      {
+        "source": "Ollama library qwen2.5:0.5b",
+        "license": "Apache-2.0",
+        "size": "about 400 MB",
+        "pin": "pull the tag, record the digest from GET /api/tags in pins.env (FIXTURE_MODEL_DIGEST); bake the model store into the q20 base image"
+      },
+      {
+        "source": "Ollama library smollm2:360m",
+        "license": "Apache-2.0",
+        "size": "about 700 MB (to confirm)",
+        "pin": "same as above"
+      },
+      {
+        "source": "Ollama library llama3.2:1b",
+        "license": "Llama 3.2 Community License (not OSI)",
+        "size": "about 1.3 GB",
+        "pin": "same as above"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "The user's Python environment: the official openai package, pinned, in a venv",
+    "why": "The frozen script uses the official openai package (prompt). The package version decides how OpenAI() reads OPENAI_BASE_URL / OPENAI_API_KEY and what happens when no key is set, which L2-2 tests by running with OPENAI_API_KEY unset. While writing the fixtures, script/ask.py was run offline against a fake server with openai 3.40.0 (from the local uv cache): it works with base_url + api_key, and fails with 'api_key' in the error when no key is given.",
+    "candidates": [
+      {
+        "source": "PyPI `openai` (https://pypi.org/project/openai/), latest release at freeze",
+        "license": "Apache-2.0",
+        "size": "about 1 MB wheel plus dependencies (httpx, pydantic, anyio, jiter, distro, sniffio, tqdm, typing-extensions): about 15 MB installed",
+        "pin": "OPENAI_PKG_VERSION in pins.env; setup_user_env.sh installs `openai==<version>` and writes `pip freeze --all` to the state folder; commit that list with calibration.md"
+      },
+      {
+        "source": "Ubuntu 24.04 apt package `python3-venv` (to create the venv)",
+        "license": "PSF-2.0",
+        "size": "a few MB",
+        "pin": "same apt snapshot id as the dev image"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "dev image: the clean Linux environment for every L2 check (base image, packages, user)",
+    "why": "Settled by 9.3 B (念誠, 2026-10-31): every Linux question but q03 and q10 uses the dev image (ubuntu:24.04 + python3, git, ca-certificates, curl, strace), built and recorded in eval/results/l2-images.json. Fixture infrastructure this question names (the pinned Ollama and model) is installed by the grader from eval/fixtures/PINS.md, not baked into the image.",
+    "candidates": [],
+    "proposal": "Packages: python3, python3-venv, ca-certificates, curl, sudo, strace. User `dev`. q20 base image = dev image + pinned Ollama + small model store + /opt/q20-venv + ~/ask.py.",
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "strace in the dev image (the egress check)",
+    "why": "Shared by every Linux question: listed once in eval/fixtures/_shared/needs.json (strace for _shared/egress.py).",
+    "candidates": [],
+    "decision_needed_by": "念誠"
+  }
+]

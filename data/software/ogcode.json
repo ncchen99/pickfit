@@ -1,0 +1,588 @@
+{
+  "schema_version": "software.v1",
+  "slug": "ogcode",
+  "repo_id": "gh:1226383350",
+  "name": "ogcode",
+  "summary": "Local-first AI coding agent that maps codebases, uses tools and ships changes from browser.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agentic",
+    "ai-agent",
+    "ai-assistant",
+    "automation",
+    "code-generation",
+    "coding-agent",
+    "coding-assistant",
+    "computer-use",
+    "developer-tools",
+    "go"
+  ],
+  "use_cases": [
+    "understand unfamiliar code via project mapping",
+    "implement features and fixes across files",
+    "run builds and tests and investigate failures",
+    "research the web with search and page reading",
+    "build semantic project index"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://ogcode.in",
+  "repo": {
+    "url": "https://github.com/prasenjeet-symon/ogcode",
+    "full_name": "prasenjeet-symon/ogcode",
+    "created_at": "2026-05-01T10:24:31Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Go",
+      "Ollama"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": [
+      "ANTHROPIC_API_KEY",
+      "OPENAI_API_KEY",
+      "OPENROUTER_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-ogcode-20261031-023713-61ea",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://ogcode.in/install.sh -o /tmp/ogcode-install.sh && wc -c /tmp/ogcode-install.sh && head -c 2000 /tmp/ogcode-install.sh",
+          "purpose": "Download install script for inspection"
+        },
+        {
+          "command": "INSTALL_DIR=\"$HOME/.local/bin\" sh /tmp/ogcode-install.sh",
+          "purpose": "Install ogcode to user bin dir"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ogcode version",
+        "expected_signal": "ogcode v0.54.0"
+      },
+      "first_task": "ogcode version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://ogcode.in/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "ogcode"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "AGPL-3.0",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.54.0",
+    "published_at": "2026-10-28T16:03:38Z",
+    "url": "https://github.com/prasenjeet-symon/ogcode/releases/tag/v0.54.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:38:21.670787+08:00",
+    "runs": [
+      {
+        "id": "verify-ogcode-20261031-023713-61ea",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:38:21.670787+08:00",
+        "tool_version": "v0.54.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://ogcode.in/install.sh -o /tmp/ogcode-install.sh && wc -c /tmp/ogcode-install.sh && head -c 2000 /tmp/ogcode-install.sh",
+            "purpose": "Download install script for inspection"
+          },
+          {
+            "command": "INSTALL_DIR=\"$HOME/.local/bin\" sh /tmp/ogcode-install.sh",
+            "purpose": "Install ogcode to user bin dir"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ogcode version",
+            "expected_signal": "ogcode v0.54.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ogcode v0.54.0 (linux/amd64)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ogcode --help",
+            "expected_signal": "Agentic coding assistant with web UI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Agentic coding assistant with web UI",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -fsSL http://localhost:9595/v1/models",
+            "expected_signal": "<title>ogcode</title>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "<title>ogcode</title>",
+            "setup": [
+              {
+                "command": "ogcode serve -p 9595",
+                "background": true,
+                "port": 9595
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://ogcode.in/install.sh | sh",
+            "actually_needed": "INSTALL_DIR=\"$HOME/.local/bin\" sh /tmp/ogcode-install.sh; default /usr/local/bin is not writable without sudo in this box",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "--version works to check version",
+            "actually_needed": "ogcode version prints version; ogcode --version exits 1 with unknown flag",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "ogcode index builds the semantic project index",
+            "actually_needed": "ogcode index exits 1 requiring ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY or OLLAMA_API_KEY; server UI works without a key",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show the server returning HTML containing <title>ogcode</title> and the CLI printing ogcode v0.54.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ogcode-20261031-023713-61ea/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ogcode-20261031-023713-61ea/check-1-cmd11.judged.png",
+            "runs/verify/verify-ogcode-20261031-023713-61ea/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.062903
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 80.7,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.4842,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 72.9,
+      "signals": {
+        "stars": 145,
+        "monthly_downloads": null,
+        "forks": 15,
+        "dependents": null,
+        "release_downloads": 480,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 182,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 21.87
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:43:57.550284+08:00",
+      "sources_sha": "7990cfb23f83ae37dfdc3581dc1aa6db93d396fb20a95e285a60fc97b7f8754b",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Ogcode is an AI agent that understands your codebase, uses real tools, researches the web, remembers decisions, plans complex work, and ships changes, all from your browser."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "**Build and fix software**: implement features and fixes across files, run your builds and tests"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "`CGO_ENABLED=1` is required when building from source: the Swift tree-sitter binding is cgo."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "go install github.com/prasenjeet-symon/ogcode@latest   # any OS with Go"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "`ogcode run \"fix the failing test\"` runs a one-shot prompt non-interactively and prints to stdout"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `ANTHROPIC_API_KEY` | Anthropic / Claude |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "**[GNU AGPL v3.0](LICENSE)**: free and open source for running, modifying, and self-hosting Ogcode."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/prasenjeet-symon/ogcode",
+      "fetched_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/prasenjeet-symon/ogcode/blob/main/README.md",
+      "fetched_at": "2026-10-31T02:09:55+08:00"
+    },
+    {
+      "id": "release:v0.54.0",
+      "kind": "release",
+      "url": "https://github.com/prasenjeet-symon/ogcode/releases/tag/v0.54.0",
+      "fetched_at": "2026-10-31T02:09:55+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "ogcode            # serves the UI on http://localhost:9595",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Start it and open the web interface:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "The open-source, self-hostable AI coding agent.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Ogcode is an AI agent that understands your codebase, uses real tools, researches the web, remembers decisions, plans complex work, and ships changes, all from your browser.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "alt=\"ogcode\" width=\"180\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "brew tap prasenjeet-symon/tap && brew install ogcode   # macOS and Linux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "go install github.com/prasenjeet-symon/ogcode@latest   # any OS with Go",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/1",
+      "source_id": "readme",
+      "quote": "Use a local model with [Ollama](https://ollama.com), no API key needed:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "built-in web search and page reading",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "`ANTHROPIC_API_KEY`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/1",
+      "source_id": "readme",
+      "quote": "`OPENAI_API_KEY`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/2",
+      "source_id": "readme",
+      "quote": "`OPENROUTER_API_KEY`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.54.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T02:09:55+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "**Understand unfamiliar code**: Ogcode maps a project before reading it",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "implement features and fixes across files, run your builds and tests",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "run your builds and tests, and investigate failures",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "built-in web search and page reading",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "`ogcode index` builds the semantic project index",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://ogcode.in/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://ogcode.in/install.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "free and open source for running, modifying, and self-hosting Ogcode.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Your computer, your models, your data, your rules.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:46+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:51:37+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

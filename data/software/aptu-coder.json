@@ -1,0 +1,721 @@
+{
+  "schema_version": "software.v1",
+  "slug": "aptu-coder",
+  "repo_id": "gh:1168822754",
+  "name": "aptu-coder",
+  "summary": "MCP code-intelligence server that gives agents symbol tables and call graphs via tree-sitter.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "aptu",
+    "ast",
+    "call-graph",
+    "code-analysis",
+    "developer-tools",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "rust"
+  ],
+  "use_cases": [
+    "map directory structure of a codebase",
+    "extract symbols from source files",
+    "trace call graphs for a named symbol"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/clouatre-labs/aptu-coder",
+    "full_name": "clouatre-labs/aptu-coder",
+    "created_at": "2026-02-27T20:53:09Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install clouatre-labs/tap/aptu-coder",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "aptu-coder --port 49200"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-aptu-coder-20261031-013958-02f7",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "cd /tmp && rm -f aptu-coder.tar.gz aptu-coder.sha256 && curl -fsSL -O https://github.com/clouatre-labs/aptu-coder/releases/download/v0.41.1/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz && curl -fsSL -O https://github.com/clouatre-labs/aptu-coder/releases/download/v0.41.1/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz.sha256 && sha256sum -c aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz.sha256 && tar tzf aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz",
+          "purpose": "download verified release tarball"
+        },
+        {
+          "command": "tar xzf /tmp/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz -C /tmp && install -m 755 /tmp/aptu-coder ~/.local/bin/aptu-coder && ~/.local/bin/aptu-coder --version",
+          "purpose": "extract and install binary to PATH"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "aptu-coder --help",
+        "expected_signal": "Usage: aptu-coder"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.41.0",
+    "published_at": "2026-10-30T15:38:24Z",
+    "url": "https://github.com/clouatre-labs/aptu-coder/releases/tag/v0.41.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:41:05.230567+08:00",
+    "runs": [
+      {
+        "id": "verify-aptu-coder-20261031-013958-02f7",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:41:05.230567+08:00",
+        "tool_version": "0.41.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /tmp && rm -f aptu-coder.tar.gz aptu-coder.sha256 && curl -fsSL -O https://github.com/clouatre-labs/aptu-coder/releases/download/v0.41.1/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz && curl -fsSL -O https://github.com/clouatre-labs/aptu-coder/releases/download/v0.41.1/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz.sha256 && sha256sum -c aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz.sha256 && tar tzf aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz",
+            "purpose": "download verified release tarball"
+          },
+          {
+            "command": "tar xzf /tmp/aptu-coder-0.41.1-x86_64-unknown-linux-musl.tar.gz -C /tmp && install -m 755 /tmp/aptu-coder ~/.local/bin/aptu-coder && ~/.local/bin/aptu-coder --version",
+            "purpose": "extract and install binary to PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "aptu-coder --help",
+            "expected_signal": "Usage: aptu-coder",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: aptu-coder [OPTIONS]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- aptu-coder",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call analyze_directory --args '{\"path\": \"/home/sbx/work\"}' -- aptu-coder",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=analyze_directory content=text text_chars=176",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo binstall aptu-coder (no Rust required) / cargo install aptu-coder",
+            "actually_needed": "downloaded and verified the prebuilt x86_64-unknown-linux-musl tarball from GitHub releases (v0.41.1) and installed the single 'aptu-coder' binary to ~/.local/bin; no Rust toolchain used",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 8 tools, successful analyze_directory call returning file summary, and --help usage output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-aptu-coder-20261031-013958-02f7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-aptu-coder-20261031-013958-02f7/check-1-cmd7.judged.png",
+            "runs/verify/verify-aptu-coder-20261031-013958-02f7/check-2-cmd8.judged.png",
+            "runs/verify/verify-aptu-coder-20261031-013958-02f7/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.053168,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "aptu-coder"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "aptu-coder",
+          "server_version": "0.41.1",
+          "tools": [
+            "analyze_directory",
+            "analyze_file",
+            "analyze_module",
+            "analyze_symbol",
+            "edit_overwrite",
+            "edit_replace",
+            "exec_command",
+            "verify_anchors"
+          ],
+          "tool_count": 8,
+          "called_tool": "analyze_directory",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "aptu-coder",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add --transport stdio aptu-coder -- aptu-coder"
+      },
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add --transport http aptu-coder http://127.0.0.1:49200/mcp"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"aptu-coder\": {\n      \"command\": \"aptu-coder\",\n      \"args\": []\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "APTU_CODER_PORT",
+        "required": null,
+        "purpose": "Port for streamable HTTP mode."
+      },
+      {
+        "name": "APTU_CODER_BEARER_TOKEN",
+        "required": null,
+        "purpose": "Bearer token for Streamable HTTP transport authentication."
+      },
+      {
+        "name": "APTU_CODER_DISK_CACHE_DIR",
+        "required": null,
+        "purpose": "Directory shared by the L2 call-graph cache"
+      },
+      {
+        "name": "APTU_CODER_DISK_CACHE_DISABLED",
+        "required": null,
+        "purpose": "disable the L2 call-graph disk cache"
+      },
+      {
+        "name": "APTU_CODER_DISK_CACHE_MAX_BYTES",
+        "required": null,
+        "purpose": "Max size in bytes for the structural-graph disk cache."
+      },
+      {
+        "name": "APTU_SHELL",
+        "required": null,
+        "purpose": "Shell for `exec_command`."
+      }
+    ],
+    "tools": [
+      "analyze_directory",
+      "analyze_file",
+      "analyze_module",
+      "analyze_symbol",
+      "edit_overwrite",
+      "edit_replace",
+      "exec_command",
+      "verify_anchors"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 86.6,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 29.0,
+      "signals": {
+        "stars": 6,
+        "monthly_downloads": null,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": 702,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 244,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 61.49
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "081324a239e58d2092c2aec86e7de9bfaa7a52c95cdb977a1ebf673a4e2575e9",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A Model Context Protocol (MCP) code-intelligence server that gives AI coding agents pre-parsed symbol tables and call graphs instead of raw file bytes"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "aptu-coder is a comprehension layer for coding agents"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "### cargo install (requires Rust toolchain)"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install clouatre-labs/tap/aptu-coder"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "brew services start aptu-coder"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `APTU_CODER_PORT` | unset | Port for streamable HTTP mode."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Update: `brew upgrade aptu-coder`"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Apache-2.0. See [LICENSE]"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/clouatre-labs/aptu-coder",
+      "fetched_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/clouatre-labs/aptu-coder/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:03:39+08:00"
+    },
+    {
+      "id": "release:v0.41.0",
+      "kind": "release",
+      "url": "https://github.com/clouatre-labs/aptu-coder/releases/tag/v0.41.0",
+      "fetched_at": "2026-10-31T01:03:39+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A Model Context Protocol (MCP) code-intelligence server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "brew install clouatre-labs/tap/aptu-coder",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A Model Context Protocol (MCP) code-intelligence server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A Model Context Protocol (MCP) code-intelligence server that gives AI coding agents pre-parsed symbol tables and call graphs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1 align=\"center\">aptu-coder</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "### Homebrew (macOS and Linux)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.41.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:03:39+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "mapping directory structure, extracting symbols, and tracing call graphs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "mapping directory structure, extracting symbols, and tracing call graphs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "mapping directory structure, extracting symbols, and tracing call graphs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install clouatre-labs/tap/aptu-coder",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo binstall aptu-coder",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "parses the codebase into a structural graph on-device with tree-sitter and serves it locally over MCP",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Two transports are available.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "\"command\": \"aptu-coder\",",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add --transport stdio aptu-coder -- aptu-coder",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "claude mcp add --transport http aptu-coder http://127.0.0.1:49200/mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/2",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"aptu-coder\": {\n      \"command\": \"aptu-coder\",\n      \"args\": []\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "APTU_CODER_PORT",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "APTU_CODER_BEARER_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "APTU_CODER_DISK_CACHE_DIR",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "APTU_CODER_DISK_CACHE_DISABLED",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "APTU_CODER_DISK_CACHE_MAX_BYTES",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/5",
+      "source_id": "readme",
+      "quote": "APTU_SHELL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`analyze_directory` | Directory tree with LOC",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`analyze_file` | Functions, classes, and imports",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`analyze_module` | Lightweight function and import index",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`analyze_symbol` | Call graph for a named symbol",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`edit_overwrite` | Create or overwrite a file",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`edit_replace` | Replace a unique exact text block",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`exec_command` | Run a shell command",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`verify_anchors` | Batch-verify path:line",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:43+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:11+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

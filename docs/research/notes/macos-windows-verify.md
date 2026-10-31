@@ -367,7 +367,9 @@ GitHub Actions 沒有採用。改在念誠的 Windows 11 Home 筆電（i5-1135G7
 - 主機要關掉 Hyper-V 與 Memory Integrity，VirtualBox 才走 VT-x。走 NEM 時多 vCPU 會凍住（見 5.8）。
 - 評估版授權 90 天（約到 2027-01-29），過期後每小時關機，要重建 base。Windows Update 關閉，所以快照停在 26100.1742，沒有累積更新，跟一般使用者的電腦不同。
 - winget 由 pickfit 從 GitHub release 安裝（LTSC 沒有 Store），版本與雜湊記在 manifest。只能從 Store 裝的工具記為 `needs_store` 未驗證。
-- 沒有 Docker：要 Docker 的功能驗證不到。
+- 沒有 Docker：要 Docker 的功能驗證不到。例如 alysiscode 的 `alysis sandbox doctor --smoke` 要 Docker Desktop，在 box 裡回 not ready，記為 note。
+- martty：npm 只裝 `martty-cli`（`martty-cli.ps1` shim），`martty` 指令要第一次互動啟動 TUI 才出現，所以紀錄用 `martty-cli`。
+- MCP 驗證（main 的 `mcp_probe.py`）用 POSIX 訊號（SIGKILL）停伺服器，只在 Linux box 裡跑。它的 7 個測試在 Windows 主機上標為 POSIX-only 跳過；Windows box 還不能驗證 MCP 工具。
 - 沒有單一使用者的記憶體、程序數或檔案大小上限，VM 的 6 GB RAM 和磁碟就是上限。
 - 一次只能一個 box。每款工具 6–13 分鐘。
 - `run_background`：agent-history 用它在背景啟動 `serve`，75 秒後 VBoxManage 回 20，跟 sentinel 的 0 對不上，harness 判為不可信（方向是安全的），所以這款沒能宣稱 service 等級。要再查。

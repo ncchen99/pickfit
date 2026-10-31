@@ -1,0 +1,587 @@
+{
+  "schema_version": "software.v1",
+  "slug": "semrel",
+  "repo_id": "gh:1247012080",
+  "name": "semrel",
+  "summary": "Go tool that automates semantic releases by computing SemVer from commits and publishing versions.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ci-cd",
+    "cli",
+    "devops",
+    "go",
+    "golang",
+    "release-automation",
+    "semantic-release",
+    "semrel",
+    "semver"
+  ],
+  "use_cases": [
+    "compute next SemVer version from Conventional Commits",
+    "generate Keep-a-Changelog release notes",
+    "validate commits against Conventional Commits"
+  ],
+  "alternatives_to": [
+    "semantic-release",
+    "GoReleaser",
+    "release-please",
+    "release-it",
+    "changesets"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://www.semrel.io",
+  "repo": {
+    "url": "https://github.com/SemRels/semrel",
+    "full_name": "SemRels/semrel",
+    "created_at": "2026-05-22T20:01:27Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/SemRels/semrel/cmd/semrel@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "semrel --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-semrel-20261031-002218-1c6c",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -sSL -o /tmp/semrel.tar.gz https://github.com/SemRels/semrel/releases/download/v0.28.3/semrel_0.28.3_linux_amd64.tar.gz && tar -tzf /tmp/semrel.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/semrel.tar.gz -C ~/.local/bin && chmod +x ~/.local/bin/semrel && ls -l ~/.local/bin/semrel",
+          "purpose": "Download versioned semrel_0.28.3_linux_amd64.tar.gz and install binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "semrel --version",
+        "expected_signal": "semrel version v0.28.3"
+      },
+      "first_task": "semrel doctor"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/SemRels/semrel/cmd/semrel@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "semrel --version"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.28.3",
+    "published_at": "2026-10-22T21:33:23Z",
+    "url": "https://github.com/SemRels/semrel/releases/tag/v0.28.3"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:24:05.238830+08:00",
+    "runs": [
+      {
+        "id": "verify-semrel-20261031-002218-1c6c",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:24:05.238830+08:00",
+        "tool_version": "v0.28.3+dirty",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sSL -o /tmp/semrel.tar.gz https://github.com/SemRels/semrel/releases/download/v0.28.3/semrel_0.28.3_linux_amd64.tar.gz && tar -tzf /tmp/semrel.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/semrel.tar.gz -C ~/.local/bin && chmod +x ~/.local/bin/semrel && ls -l ~/.local/bin/semrel",
+            "purpose": "Download versioned semrel_0.28.3_linux_amd64.tar.gz and install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "semrel --version",
+            "expected_signal": "semrel version v0.28.3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "semrel version v0.28.3+dirty",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "semrel --help",
+            "expected_signal": "semrel automates software releases",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "semrel automates software releases by analysing Conventional Commits,",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "semrel doctor",
+            "expected_signal": "no config file found",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "✗ config-file no config file found (.semrel.yaml / .semrel.yml / .semrel.toml / .semrel.json)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/semrel-demo && semrel release --dry-run",
+            "expected_signal": "Next version : v0.1.0",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "Branch \"master\" is not configured for release — skipping.",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/semrel-demo && mkdir -p /tmp/semrel-demo && cd /tmp/semrel-demo && git init -q && git config user.email \"test@example.com\" && git config user.name \"test\" && semrel config init --no-interactive && echo \"hello\" > hello.txt && git add -A && git commit -qm \"feat: initial commit\" && git log --oneline && cat .semrel.yaml",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/semrel-demo && cat > .semrel.yaml <<'YAML'\nschemaVersion: 1\nbranches:\n  - name: main\ntagPrefix: \"v\"\nrules:\n  - type: feat\n    bump: minor\n  - type: fix\n    bump: patch\nYAML\ncat .semrel.yaml && semrel doctor; semrel release --dry-run",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -sSL https://github.com/SemRels/semrel/releases/latest/download/semrel_linux_amd64.tar.gz | tar -xz semrel",
+            "actually_needed": "use versioned asset https://github.com/SemRels/semrel/releases/download/v0.28.3/semrel_0.28.3_linux_amd64.tar.gz (asset names are semrel_<version>_linux_amd64.tar.gz); tarball lists ./semrel ./README.md ./CHANGELOG.md ./LICENSE",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "sudo mv semrel /usr/local/bin/",
+            "actually_needed": "extract to and run from ~/.local/bin/semrel without sudo (no root in box)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "semrel doctor and semrel release --dry-run work right after semrel config init",
+            "actually_needed": "init a git repo, run semrel config init --no-interactive, rename branch to main, then replace generated .semrel.yaml with minimal plugin-free config (no condition-github-actions) otherwise doctor reports missing plugins and release --dry-run fails with condition-github-actions requires GitHub Actio…",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show semrel doctor reporting no config file found with exit 1 as expected, and semrel --version printing v0.28.3+dirty.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-semrel-20261031-002218-1c6c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-semrel-20261031-002218-1c6c/check-1-cmd8.judged.png",
+            "runs/verify/verify-semrel-20261031-002218-1c6c/check-2-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.118289
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 73.5,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6141,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8824,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 41.6,
+      "signals": {
+        "stars": 18,
+        "monthly_downloads": null,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 2452,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 160,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 42.92
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "e185fcd1d3145b5562f5b0e9d762f7761560c3e2cfc81aed5a853222510d6b19",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "**semrel** is an open-source, zero-dependency **semantic release** and **Semantic Versioning (SemVer)** automation engine written in Go."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "**The zero-dependency, Go-native open-source alternative to `semantic-release`, `GoReleaser`, `release-please`, `release-it`, and `changesets`.**"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "**None (~12 MB static binary)**"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "curl -sSL https://github.com/SemRels/semrel/releases/latest/download/semrel_linux_amd64.tar.gz | tar -xz semrel"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "make local-demo"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "      token: \"${env.GITHUB_TOKEN}\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "semrel update"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Apache 2.0 — see [LICENSE](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/SemRels/semrel",
+      "fetched_at": "2026-10-30T23:41:39+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/SemRels/semrel/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:04:06+08:00"
+    },
+    {
+      "id": "release:v0.28.3",
+      "kind": "release",
+      "url": "https://github.com/SemRels/semrel/releases/tag/v0.28.3",
+      "fetched_at": "2026-10-31T00:04:06+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Shipped as a single static binary (~12 MB) with **zero Node.js runtime overhead**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Shipped as a single static binary (~12 MB) with **zero Node.js runtime overhead**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Run the full semantic release pipeline from commit analysis through tagging, packaging, publishing, and hooks.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**semrel** is an open-source, zero-dependency **semantic release** and **Semantic Versioning (SemVer)** automation engine written in Go.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# semrel — Semantic Release Automation Without Node.js",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Static Binary Download (Linux, macOS, Windows)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:39+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:39+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:39+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:39+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:39+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.28.3",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:04:06+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "computes the next SemVer version (`major`, `minor`, `patch`, or prerelease)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "generates Keep-a-Changelog Markdown/HTML release notes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Validate commits since the last tag against Conventional Commits.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "The zero-dependency, Go-native open-source alternative to `semantic-release`, `GoReleaser`, `release-please`, `release-it`, and `changesets`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "The zero-dependency, Go-native open-source alternative to `semantic-release`, `GoReleaser`, `release-please`, `release-it`, and `changesets`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "The zero-dependency, Go-native open-source alternative to `semantic-release`, `GoReleaser`, `release-please`, `release-it`, and `changesets`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "The zero-dependency, Go-native open-source alternative to `semantic-release`, `GoReleaser`, `release-please`, `release-it`, and `changesets`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/alternatives_to/4",
+      "source_id": "readme",
+      "quote": "The zero-dependency, Go-native open-source alternative to `semantic-release`, `GoReleaser`, `release-please`, `release-it`, and `changesets`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/SemRels/semrel/cmd/semrel@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -sSL https://github.com/SemRels/semrel/releases/latest/download/semrel_linux_amd64.tar.gz | tar -xz semrel",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/SemRels/semrel/cmd/semrel@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "**✅ Apache 2.0 ($0 forever)**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "publishes to package and container registries, and creates releases on GitHub (including GHES), GitLab, Gitea/Forgejo, and Bitbucket",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:36+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:41:39+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

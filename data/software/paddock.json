@@ -1,0 +1,585 @@
+{
+  "schema_version": "software.v1",
+  "slug": "paddock",
+  "repo_id": "gh:1356375344",
+  "name": "Paddock",
+  "summary": "Rust inference server for open models on NVIDIA and Apple Silicon with APIs and Studio.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "aimodels",
+    "blackwell",
+    "cuda",
+    "inference",
+    "inference-engine",
+    "inference-optimization",
+    "macos",
+    "metal",
+    "mlx"
+  ],
+  "use_cases": [
+    "downloading and managing models",
+    "comparing models side by side",
+    "read a page as text with boxes",
+    "generate pictures from a text prompt",
+    "transcribe live audio in 40 locales"
+  ],
+  "alternatives_to": [
+    "llama.cpp",
+    "vLLM",
+    "SGLang"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/truespar/paddock",
+    "full_name": "truespar/paddock",
+    "created_at": "2026-09-03T19:52:35Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Rust, current stable",
+      "Node and npm"
+    ],
+    "system_packages": [
+      "cmake and a C/C++ compiler"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-paddock-20261031-000208-b0f5",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/paddock-bin /tmp/paddock-dl && curl -fL -o /tmp/paddock-dl/paddock.tar.gz https://github.com/truespar/paddock/releases/download/v0.1.19/paddock-0.1.19-x86_64-linux.tar.gz && ls -lh /tmp/paddock-dl/",
+          "purpose": "Download Linux x86_64 binary release"
+        },
+        {
+          "command": "tar -xzf /tmp/paddock-dl/paddock.tar.gz -C ~/paddock-bin",
+          "purpose": "Extract portable binaries"
+        },
+        {
+          "command": "ln -sf ~/paddock-bin/paddock-0.1.19-x86_64-linux/paddock ~/.local/bin/paddock && ln -sf ~/paddock-bin/paddock-0.1.19-x86_64-linux/paddock-runner ~/.local/bin/paddock-runner && ls -l ~/.local/bin/paddock* && paddock --version",
+          "purpose": "Install paddock and paddock-runner to PATH"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ln -sf ~/paddock-bin/paddock-0.1.19-x86_64-linux/paddock ~/.local/bin/paddock && ln -sf ~/paddock-bin/paddock-0.1.19-x86_64-linux/paddock-runner ~/.local/bin/paddock-runner && ls -l ~/.local/bin/paddock* && paddock --version",
+        "expected_signal": "paddock 0.1.19"
+      },
+      "first_task": "curl -sk https://127.0.0.1:11500/"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.1.19",
+    "published_at": "2026-10-25T16:10:32Z",
+    "url": "https://github.com/truespar/paddock/releases/tag/v0.1.19"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:03:59.193332+08:00",
+    "runs": [
+      {
+        "id": "verify-paddock-20261031-000208-b0f5",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:03:59.193332+08:00",
+        "tool_version": "0.1.19 (g9aa69660)",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/paddock-bin /tmp/paddock-dl && curl -fL -o /tmp/paddock-dl/paddock.tar.gz https://github.com/truespar/paddock/releases/download/v0.1.19/paddock-0.1.19-x86_64-linux.tar.gz && ls -lh /tmp/paddock-dl/",
+            "purpose": "Download Linux x86_64 binary release"
+          },
+          {
+            "command": "tar -xzf /tmp/paddock-dl/paddock.tar.gz -C ~/paddock-bin",
+            "purpose": "Extract portable binaries"
+          },
+          {
+            "command": "ln -sf ~/paddock-bin/paddock-0.1.19-x86_64-linux/paddock ~/.local/bin/paddock && ln -sf ~/paddock-bin/paddock-0.1.19-x86_64-linux/paddock-runner ~/.local/bin/paddock-runner && ls -l ~/.local/bin/paddock* && paddock --version",
+            "purpose": "Install paddock and paddock-runner to PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ln -sf ~/paddock-bin/paddock-0.1.19-x86_64-linux/paddock ~/.local/bin/paddock && ln -sf ~/paddock-bin/paddock-0.1.19-x86_64-linux/paddock-runner ~/.local/bin/paddock-runner && ls -l ~/.local/bin/paddock* && paddock --version",
+            "expected_signal": "paddock 0.1.19",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "paddock 0.1.19 (g9aa69660)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "paddock --help",
+            "expected_signal": "Usage: paddock",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: paddock [OPTIONS] [COMMAND]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -sk https://127.0.0.1:11500/",
+            "expected_signal": "<title>Paddock Studio</title>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "<title>Paddock Studio</title>",
+            "setup": [
+              {
+                "command": "paddock --port 11500",
+                "background": true,
+                "port": 11500
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "paddock ps",
+            "expected_signal": "no models running",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no models running (start one: paddock serve <model>)",
+            "setup": [
+              {
+                "command": "paddock --port 11500",
+                "background": true,
+                "port": 11500
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo build --release -p paddock-manager -p paddock-runner",
+            "actually_needed": "Used prebuilt paddock-0.1.19-x86_64-linux.tar.gz from GitHub releases and symlinked paddock and paddock-runner into ~/.local/bin; box has node/npm only, no rustc/cargo/cmake/gcc and installing a Rust toolchain is forbidden",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "AI inference server for NVIDIA GPUs and Apple Silicon",
+            "actually_needed": "Manager runs without GPU and serves Studio at https://127.0.0.1:11500 over TLS with self-signed cert (curl -k needed); log warns 'no usable graphics card ... models cannot run' so no runner inference was attempted",
+            "kind": "note"
+          },
+          {
+            "readme_said": "OpenAI/Anthropic API on the manager port",
+            "actually_needed": "Manager has no /v1/models or /api/health (both return not_found_error) and no /openapi.json; health is Studio HTML at / and status via `paddock ps` because clients talk to runners directly, manager is never a proxy",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show Paddock Studio HTML served, paddock ps reporting no models, and paddock 0.1.19 version.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-paddock-20261031-000208-b0f5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-paddock-20261031-000208-b0f5/check-1-cmd13.judged.png",
+            "runs/verify/verify-paddock-20261031-000208-b0f5/check-2-cmd14.judged.png",
+            "runs/verify/verify-paddock-20261031-000208-b0f5/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.148565
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 73.9,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.765,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.55,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.75,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 71.8,
+      "signals": {
+        "stars": 144,
+        "monthly_downloads": null,
+        "forks": 23,
+        "dependents": null,
+        "release_downloads": 257,
+        "hn_top_score": 2,
+        "registries_count": 0
+      },
+      "age_days": 54,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 20.84
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "5f0139801d25a05220e20d746b3eaad7dc07c819c71820a4721b3cb82343e666",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "AI inference server written in Rust, for NVIDIA GPUs and for Apple Silicon, with an OpenAI and"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Paddock is aimed at making it easier for organizations and companies to run open models"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "On NVIDIA systems, users only need the NVIDIA driver."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "cargo build --release -p paddock-manager -p paddock-runner"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "paddock-runner --model <model>.gguf --kernel-pack packs/cuda/build/pd-cuda-sm86.dll"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "No account for the local path, ever."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Paddock is dual-licensed under the [MIT licence](LICENSE-MIT) and the"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/truespar/paddock",
+      "fetched_at": "2026-10-30T23:51:17+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/truespar/paddock/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:32:15+08:00"
+    },
+    {
+      "id": "release:v0.1.19",
+      "kind": "release",
+      "url": "https://github.com/truespar/paddock/releases/tag/v0.1.19",
+      "fetched_at": "2026-10-29T02:32:15+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "AI inference server written in Rust, for NVIDIA GPUs and for Apple Silicon",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Run `paddock` for the manager and browser-based Studio.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "AI inference server written in Rust, for NVIDIA GPUs and for Apple Silicon",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "AI inference server written in Rust, for NVIDIA GPUs and for Apple Silicon, with an OpenAI and",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Paddock",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "**Platforms:** Windows and Linux on x64, Linux arm64 on the NVIDIA DGX Spark,\n  and macOS on Apple Silicon with a native Swift app.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Rust, current stable",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/1",
+      "source_id": "readme",
+      "quote": "Node and npm",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "cmake and a C/C++ compiler",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "test them against any cloud model through OpenRouter",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:17+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:17+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:17+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:17+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.1.19",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:32:15+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "downloading and managing models, running them,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "comparing them side by side, and serving them.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "reads a page as text, or as\n  labelled blocks with their boxes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "pictures from a text prompt, and edits of a picture you",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "live transcripts that are\n  never revised, in 40 languages and locales.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "We currently beat llama.cpp, vLLM, SGLang on tested RTX PRO 6000",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "We currently beat llama.cpp, vLLM, SGLang on tested RTX PRO 6000",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "We currently beat llama.cpp, vLLM, SGLang on tested RTX PRO 6000",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Paddock is dual-licensed under the [MIT licence](LICENSE-MIT) and the",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "a model running on\nyour own box against one behind OpenRouter or any other OpenAI-compatible\nendpoint, same prompt, same view.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:02+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:43+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

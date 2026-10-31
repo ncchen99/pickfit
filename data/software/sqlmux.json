@@ -1,0 +1,509 @@
+{
+  "schema_version": "software.v1",
+  "slug": "sqlmux",
+  "repo_id": "gh:1394869654",
+  "name": "sqlmux",
+  "summary": "Tmux-style terminal database client with Vim keybindings for PostgreSQL, MySQL, Redis and more.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "sql",
+    "tmux",
+    "tui"
+  ],
+  "use_cases": [
+    "edit table cells and save changes in one transaction",
+    "export table data to CSV or JSON",
+    "browse and edit Redis keys as tables",
+    "view table page or query result as JSON"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/kackerx/sqlmux",
+    "full_name": "kackerx/sqlmux",
+    "created_at": "2026-09-29T09:55:26Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Go 1.26+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install kackerx/tap/sqlmux",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "sqlmux ./app.db"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-sqlmux-20261031-002044-f725",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g sqlmux",
+          "purpose": "Install sqlmux via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "sqlmux --version",
+        "expected_signal": "sqlmux v0.7.0"
+      },
+      "first_task": "sqlmux keys"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g sqlmux",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "sqlmux ./app.db"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.7.0",
+    "published_at": "2026-10-26T15:27:04Z",
+    "url": "https://github.com/kackerx/sqlmux/releases/tag/v0.7.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:21:43.961314+08:00",
+    "runs": [
+      {
+        "id": "verify-sqlmux-20261031-002044-f725",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:21:43.961314+08:00",
+        "tool_version": "v0.7.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g sqlmux",
+            "purpose": "Install sqlmux via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "sqlmux --version",
+            "expected_signal": "sqlmux v0.7.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "sqlmux v0.7.0 (dbfed2b, 2026-10-26T15:17:31Z)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sqlmux keys",
+            "expected_signal": "grid.transpose",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "| grid | `T` | grid.transpose |",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sqlmux keys --format toml",
+            "expected_signal": "[keys.global]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[keys.global]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "sqlmux ./app.db, sqlmux postgres://..., sqlmux",
+            "actually_needed": "Use documented non-interactive subcommand `sqlmux keys` (or `sqlmux keys --format toml`) for verification; the three listed open commands launch an interactive tmux-style TUI requiring a TTY and cannot run in this non-interactive box.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "--version or --help works",
+            "actually_needed": "Use `sqlmux --version` (exit 0); `sqlmux --help` prints usage to stderr and exits 1 with `flag: help requested`.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "sqlmux lists keybindings as table and TOML and prints version v0.7.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-sqlmux-20261031-002044-f725/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-sqlmux-20261031-002044-f725/check-1-cmd4.judged.png",
+            "runs/verify/verify-sqlmux-20261031-002044-f725/check-2-cmd6.judged.png",
+            "runs/verify/verify-sqlmux-20261031-002044-f725/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.046056
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 90.3,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.75,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 78.5,
+      "signals": {
+        "stars": 210,
+        "monthly_downloads": 521,
+        "forks": 13,
+        "dependents": null,
+        "release_downloads": 416,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 31,
+      "packages": [
+        "npm:sqlmux"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 19.41
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "80477faffb4b912fdb02753386faf51bb1cb395b55d7306e2124a79417b5f495",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A tmux-style terminal database client with Vim keybindings for PostgreSQL, MySQL, Redis, and more."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "If you live in tmux and vim,"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "With Go 1.26+ and [just](https://github.com/casey/just): `just build` puts the binary in `bin/`"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install kackerx/tap/sqlmux"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "sqlmux ./app.db                                       # a SQLite file"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "put `icons = \"ascii\"` in `~/.config/sqlmux/config.toml`."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "The old console window (conhost) is not supported; use Windows Terminal."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "| Binaries | macOS, Linux and Windows, amd64 and arm64, on the [Releases page](https://github.com/kackerx/sqlmux/releases), with `checksums.txt` |"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/kackerx/sqlmux",
+      "fetched_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/kackerx/sqlmux/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:06:31+08:00"
+    },
+    {
+      "id": "release:v0.7.0",
+      "kind": "release",
+      "url": "https://github.com/kackerx/sqlmux/releases/tag/v0.7.0",
+      "fetched_at": "2026-10-31T00:06:31+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A tmux-style terminal database client with Vim keybindings",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "brew install kackerx/tap/sqlmux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A tmux-style terminal database client with Vim keybindings",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A tmux-style terminal database client with Vim keybindings for PostgreSQL, MySQL, Redis, and more.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "alt=\"sqlmux\" width=\"380\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Binaries | macOS, Linux and Windows, amd64 and arm64",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Go 1.26+",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.7.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:06:31+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Change cells, add and delete rows, then `C-s` saves everything in one transaction.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "export to CSV or JSON",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "each key (string, hash, list, set, zset, stream, RedisJSON) as an editable table",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "**JSON view** (`gj`) of a table page or a result",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install kackerx/tap/sqlmux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g sqlmux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g sqlmux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:42:22+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

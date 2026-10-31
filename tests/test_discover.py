@@ -77,10 +77,10 @@ def no_sleep(monkeypatch: pytest.MonkeyPatch) -> list[float]:
 def test_build_queries_fills_dates_per_category() -> None:
     queries = build_queries(date(2026, 10, 28), pushed_days=14)
     ids = [q.id for q in queries]
-    assert ids[:6] == [
-        "dev_cli:cli", "dev_cli:tui", "dev_cli:terminal",
-        "local_ai:local-llm", "local_ai:ollama", "local_ai:llama-cpp",
-    ]
+    assert ids[:3] == ["dev_cli:cli", "dev_cli:tui", "dev_cli:terminal"]
+    first_local = ids.index("local_ai:local-llm")
+    assert ids[first_local:first_local + 3] == ["local_ai:local-llm", "local_ai:ollama", "local_ai:llama-cpp"]
+    assert {q.category for q in queries[:first_local]} == {"dev_cli"}
     assert len(ids) == len(set(ids))
     assert queries[0].q == ("topic:cli created:>=2026-01-01 pushed:>=2026-10-14 stars:5..300 "
                             "fork:false archived:false")
@@ -159,6 +159,17 @@ def test_rate_limit_too_far_away_fails(tmp_path: Path, monkeypatch: pytest.Monke
                                               {"x-ratelimit-remaining": "0", "x-ratelimit-reset": "5000"}))
     with pytest.raises(GitHubError, match="rate limited"):
         fake.client(tmp_path).releases("someone/tinyq")
+
+
+def test_a_longer_rate_limit_wait_can_be_allowed(tmp_path: Path, no_sleep: list[float],
+                                                  monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(gh_module.time, "time", lambda: 1000.0)
+    replies = [json_response({"message": "API rate limit exceeded"}, 403,
+                             {"x-ratelimit-remaining": "0", "x-ratelimit-reset": "4600"}),
+               json_response([])]
+    fake = FakeGitHub(lambda r: replies.pop(0))
+    assert fake.client(tmp_path, rate_limit_max_wait_s=3700).releases("someone/tinyq") == []
+    assert no_sleep == [3601.0]
 
 
 def test_server_errors_retry_then_raise_without_token(tmp_path: Path) -> None:

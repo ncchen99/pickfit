@@ -1,0 +1,367 @@
+{
+  "schema_version": "software.v1",
+  "slug": "renfield",
+  "repo_id": "gh:1135156992",
+  "name": "Renfield",
+  "summary": "Self-hosted AI assistant with voice satellites, tool integrations and offline RAG.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "self_hosted_web_app",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-assistant",
+    "docker",
+    "knowledge-base",
+    "knowledge-graph",
+    "mcp",
+    "offline-first",
+    "ollama",
+    "presence-detection",
+    "privacy",
+    "pwa"
+  ],
+  "use_cases": [],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/ebongard/renfield",
+    "full_name": "ebongard/renfield",
+    "created_at": "2026-01-15T18:05:46Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v2.24.0",
+    "published_at": "2026-08-31T11:36:56Z",
+    "url": "https://github.com/ebongard/renfield/releases/tag/v2.24.0"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "needs_container",
+    "checked_at": "2026-10-30T23:48:00.428600+08:00",
+    "runs": [
+      {
+        "id": "verify-renfield-20261030-234708-3480",
+        "level": "unverified",
+        "unverified_reason": "needs_container",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:48:00.428600+08:00",
+        "tool_version": null,
+        "install_method": "source",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "git clone https://github.com/ebongard/renfield.git && ls renfield | head -n 50; echo ---; ls renfield/backend 2>&1 | head -n 50",
+            "purpose": "clone renfield source"
+          },
+          {
+            "command": "cp renfield/.env.example renfield/.env && ls -l renfield/.env && head -n 20 renfield/.env",
+            "purpose": "copy example env config"
+          }
+        ],
+        "smoke_tests": [],
+        "pitfalls": [
+          {
+            "readme_said": "cp .env.example .env; docker compose up -d; docker exec -it renfield-ollama ollama pull qwen3:8b",
+            "actually_needed": "Docker engine is not installed (docker: command not found) so 'docker compose up -d' and 'docker exec ollama pull' cannot run here; backend also requires postgres+redis+Ollama services from compose",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-renfield-20261030-234708-3480/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.089919
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 68.8,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 48.2,
+      "signals": {
+        "stars": 42,
+        "monthly_downloads": null,
+        "forks": 7,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 287,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 35.64
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:55:13.257428+08:00",
+      "sources_sha": "86f9451e835c1f9dca4933a2177af7c30797d844212ac272fd7c81bcd36deb43",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "**Self-hosted AI assistant with voice satellites, 100+ tool integrations, and full offline capability.**"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "git clone https://github.com/ebongard/renfield.git && cd renfield"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Open **http://localhost:3000** and start chatting."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "All settings via `.env`, loaded by Pydantic Settings. See [docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md) for the full reference."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "MIT License — see [LICENSE](LICENSE) file."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ebongard/renfield",
+      "fetched_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ebongard/renfield/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:30:06+08:00"
+    },
+    {
+      "id": "release:v2.24.0",
+      "kind": "release",
+      "url": "https://github.com/ebongard/renfield/releases/tag/v2.24.0",
+      "fetched_at": "2026-10-29T02:30:06+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "**Self-hosted AI assistant with voice satellites, 100+ tool integrations, and full offline capability.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:33+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Open **http://localhost:3000** and start chatting.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:33+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Runs entirely on your hardware. No cloud dependencies.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:33+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Self-hosted AI assistant with voice satellites, 100+ tool integrations, RAG knowledge base, and full offline capability.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:33+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Renfield",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:33+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:27:54+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.24.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:30:06+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "MIT License — see [LICENSE](LICENSE) file.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:33+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Runs entirely on your hardware. No cloud dependencies. Your data never leaves your network.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:33+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-28T19:03:31+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

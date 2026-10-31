@@ -1,0 +1,564 @@
+{
+  "schema_version": "software.v1",
+  "slug": "hako-code",
+  "repo_id": "gh:1231499119",
+  "name": "hako-code",
+  "summary": "Single-file C terminal coding agent for local and cloud models with gated tools.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agentic-ai",
+    "ai-agent",
+    "anthropic-claude",
+    "c99",
+    "claude-code-alternative",
+    "cli",
+    "coding-agent",
+    "developer-tools",
+    "hako",
+    "llms"
+  ],
+  "use_cases": [
+    "list files in a directory",
+    "summarize README.md",
+    "score tool-call reliability with bench"
+  ],
+  "alternatives_to": [
+    "Hermes",
+    "Claude Code"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://mithraeum.studio",
+  "repo": {
+    "url": "https://github.com/mithraeums/hako-code",
+    "full_name": "mithraeums/hako-code",
+    "created_at": "2026-05-07T02:44:54Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "curl"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://mithraeums.github.io/hako.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "hako -p \"summarize README.md\""
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-hako-code-20261031-004203-0a8f",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://mithraeums.github.io/hako.sh -o /tmp/hako.sh && ls -l /tmp/hako.sh && wc -c /tmp/hako.sh",
+          "purpose": "Download hako.sh installer proxy"
+        },
+        {
+          "command": "curl -fsSL \"https://raw.githubusercontent.com/mithraeums/hako-code/main/install.sh\" -o /tmp/hako-install.sh && wc -c /tmp/hako-install.sh && ls -l /tmp/hako-install.sh",
+          "purpose": "Download real install.sh target"
+        },
+        {
+          "command": "sh /tmp/hako-install.sh",
+          "purpose": "Install hako release binary with sha256 verify"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "hako --version",
+        "expected_signal": "hako v0.2.10"
+      },
+      "first_task": "python3 -c \"data=open('/tmp/hako-index.html').read(); print('<title>hako</title>' if '<title>hako</title>' in data else 'missing'); print(len(data))\""
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "GPL-3.0",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.2.10",
+    "published_at": "2026-10-28T23:45:50Z",
+    "url": "https://github.com/mithraeums/hako-code/releases/tag/v0.2.10"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:43:33.242944+08:00",
+    "runs": [
+      {
+        "id": "verify-hako-code-20261031-004203-0a8f",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:43:33.242944+08:00",
+        "tool_version": "hako v0.2.10 (build Oct 28 2026 23:44:33)",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://mithraeums.github.io/hako.sh -o /tmp/hako.sh && ls -l /tmp/hako.sh && wc -c /tmp/hako.sh",
+            "purpose": "Download hako.sh installer proxy"
+          },
+          {
+            "command": "curl -fsSL \"https://raw.githubusercontent.com/mithraeums/hako-code/main/install.sh\" -o /tmp/hako-install.sh && wc -c /tmp/hako-install.sh && ls -l /tmp/hako-install.sh",
+            "purpose": "Download real install.sh target"
+          },
+          {
+            "command": "sh /tmp/hako-install.sh",
+            "purpose": "Install hako release binary with sha256 verify"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "hako --version",
+            "expected_signal": "hako v0.2.10",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hako v0.2.10 (build Oct 28 2026 23:44:33)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "hako --help",
+            "expected_signal": "usage: hako [options]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: hako [options]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 -c \"data=open('/tmp/hako-index.html').read(); print('<title>hako</title>' if '<title>hako</title>' in data else 'missing'); print(len(data))\"",
+            "expected_signal": "<title>hako</title>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "<title>hako</title>",
+            "setup": [
+              {
+                "command": "hako --serve --port 8787",
+                "background": true,
+                "port": 8787
+              },
+              {
+                "command": "curl -fsSL http://127.0.0.1:8787/ -o /tmp/hako-index.html && wc -c /tmp/hako-index.html && grep -c hako /tmp/hako-index.html",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://mithraeums.github.io/hako.sh | sh",
+            "actually_needed": "hako.sh is a 239-byte proxy that execs https://raw.githubusercontent.com/mithraeums/hako-code/main/install.sh; downloaded and read both before running sh /tmp/hako-install.sh",
+            "kind": "note"
+          },
+          {
+            "readme_said": "hako -p \"summarize README.md\"",
+            "actually_needed": "with no provider configured, one-shot mode prints the prompt then errors 'no provider configured (~/.hakorc or /provider)' on stderr and exits 1; needs hakm weights or a cloud :login first",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "hako --update",
+            "actually_needed": "on this box hako --update exited 1 with 'update: could not fetch latest release (network? rate limit?)' even though curl to the same GitHub releases API succeeded and the installed v0.2.10 is already latest",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show index HTML contains <title>hako</title> and hako --version prints hako v0.2.10.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-hako-code-20261031-004203-0a8f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-hako-code-20261031-004203-0a8f/check-1-cmd14.judged.png",
+            "runs/verify/verify-hako-code-20261031-004203-0a8f/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.096556
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 82.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.6,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 32.4,
+      "signals": {
+        "stars": 14,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 133,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 176,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 55.57
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "cbe144877c7f1c77fed300cd3a1b8e7658c7762fcd593f781a19d43aa63b8386",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A standalone terminal agent in a single C file. Model agnostic (13 providers + local hako), skill-driven, tool permission gated."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Deps: libc + pthread + `curl(1)` on PATH. No third-party libraries linked."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://mithraeums.github.io/hako.sh | sh       # the agent"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "hako -p \"summarize README.md\""
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Resolution order: `HAKO_API_KEY` env → `<PROVIDER>_API_KEY` env → `~/.hako/credentials` (per provider)."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "hako --update           # check + atomic-replace if newer"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "<a href=\"LICENSE\">— SEE LICENSE —</a> &nbsp;·&nbsp; GPL-3.0"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/mithraeums/hako-code",
+      "fetched_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/mithraeums/hako-code/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:57:01+08:00"
+    },
+    {
+      "id": "release:v0.2.10",
+      "kind": "release",
+      "url": "https://github.com/mithraeums/hako-code/releases/tag/v0.2.10",
+      "fetched_at": "2026-10-30T23:57:01+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A standalone terminal agent in a single C file.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:14+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "hako                                                   # finds them and runs locally",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:14+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A standalone terminal agent in a single C file.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:14+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A standalone terminal agent in a single C file. Model agnostic (13 providers + local hako), skill-driven, tool permission gated. No node, no python.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:14+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "hako-code — a standalone agent for the inner chamber",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:14+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "<td align=\"center\"><b>macOS</b><br/><sub>universal2 · arm64 + x86_64</sub></td>\n    <td align=\"center\"><b>Linux</b>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:14+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Deps: libc + pthread + `curl(1)` on PATH. No third-party libraries linked.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:14+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "works with no network",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:14+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.2.10",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:57:01+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "list files in this directory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:14+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "hako -p \"summarize README.md\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:14+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "hako --bench tools/bench/tools-v1.jsonl",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:14+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Hermes pulls Python 3.11, Node, `uv`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:14+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "Claude Code and its\nneighbours want Node and npm.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:14+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://mithraeums.github.io/hako.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:14+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://mithraeums.github.io/hako.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:14+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "<img src=\"https://img.shields.io/badge/license-GPL--3.0-2636c4?style=flat-square&labelColor=14130f\" alt=\"GPL-3.0\"/>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:14+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "14 cloud providers when you want them.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:14+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

@@ -1,0 +1,527 @@
+{
+  "schema_version": "software.v1",
+  "slug": "zonetimeline-tui",
+  "repo_id": "gh:1200887386",
+  "name": "Zone Timeline (TUI)",
+  "summary": "Terminal tool that visually compares time zones to find overlapping working hours.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "rust",
+    "timeline",
+    "timezones",
+    "tui"
+  ],
+  "use_cases": [
+    "see where working hours overlap across zones",
+    "find meeting slots without mental arithmetic",
+    "list supported timezone names",
+    "render a text timeline for scripts and pipes",
+    "manage zone list interactively"
+  ],
+  "alternatives_to": [
+    "zonetimeline"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/findyourexit/zonetimeline-tui",
+    "full_name": "findyourexit/zonetimeline-tui",
+    "created_at": "2026-04-04T00:15:23Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Rust 1.88 or newer"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-zonetimeline-tui-20261031-004833-bf12",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/ztl.tar.gz https://github.com/findyourexit/zonetimeline-tui/releases/download/v0.4.1/ztl-0.4.1-x86_64-unknown-linux-gnu.tar.gz && tar tzf /tmp/ztl.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/ztl.tar.gz -C /tmp && ls -R /tmp/ztl* 2>&1; ls -l /tmp/*.tar.gz; find /tmp -maxdepth 3 -name \"ztl\" -type f -ls",
+          "purpose": "Download Linux x86_64 release tarball and extract"
+        },
+        {
+          "command": "install -m 755 /tmp/ztl-0.4.1-x86_64-unknown-linux-gnu/ztl ~/.local/bin/ztl && export PATH=\"$HOME/.local/bin:$PATH\" && ztl --version && ztl --help",
+          "purpose": "Install ztl binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ztl --version",
+        "expected_signal": "ztl 0.4.1"
+      },
+      "first_task": "ztl list"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install --locked --git https://github.com/findyourexit/zonetimeline-tui",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "ztl list"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.4.1",
+    "published_at": "2026-09-24T13:14:03Z",
+    "url": "https://github.com/findyourexit/zonetimeline-tui/releases/tag/v0.4.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:49:27.196839+08:00",
+    "runs": [
+      {
+        "id": "verify-zonetimeline-tui-20261031-004833-bf12",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:49:27.196839+08:00",
+        "tool_version": "0.4.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/ztl.tar.gz https://github.com/findyourexit/zonetimeline-tui/releases/download/v0.4.1/ztl-0.4.1-x86_64-unknown-linux-gnu.tar.gz && tar tzf /tmp/ztl.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/ztl.tar.gz -C /tmp && ls -R /tmp/ztl* 2>&1; ls -l /tmp/*.tar.gz; find /tmp -maxdepth 3 -name \"ztl\" -type f -ls",
+            "purpose": "Download Linux x86_64 release tarball and extract"
+          },
+          {
+            "command": "install -m 755 /tmp/ztl-0.4.1-x86_64-unknown-linux-gnu/ztl ~/.local/bin/ztl && export PATH=\"$HOME/.local/bin:$PATH\" && ztl --version && ztl --help",
+            "purpose": "Install ztl binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ztl --version",
+            "expected_signal": "ztl 0.4.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ztl 0.4.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ztl --help",
+            "expected_signal": "Usage: ztl [OPTIONS] [COMMAND]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: ztl [OPTIONS] [COMMAND]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ztl list",
+            "expected_signal": "Europe/London",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Europe/London",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ztl --plain --zones UTC,Europe/London,America/New_York --time 07:30 --nhours 12",
+            "expected_signal": "America/New_York:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "America/New_York: 2026-10-30 03:30:00",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install --locked --git https://github.com/findyourexit/zonetimeline-tui (Requires Rust 1.88 or newer)",
+            "actually_needed": "Used pre-built Linux x86_64 tarball from GitHub Releases (ztl-0.4.1-x86_64-unknown-linux-gnu.tar.gz) extracted and installed to ~/.local/bin/ztl because the box has no Rust toolchain and installing one is not allowed",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show a long zone list, a three-zone 12-hour timeline with conversions, and version 0.4.1 printed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-zonetimeline-tui-20261031-004833-bf12/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-zonetimeline-tui-20261031-004833-bf12/check-1-cmd6.judged.png",
+            "runs/verify/verify-zonetimeline-tui-20261031-004833-bf12/check-2-cmd7.judged.png",
+            "runs/verify/verify-zonetimeline-tui-20261031-004833-bf12/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.043771
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 82.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 60.1,
+      "signals": {
+        "stars": 73,
+        "monthly_downloads": 11,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 240,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 209,
+      "packages": [
+        "crates:zonetimeline-tui"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 33.0
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "6a52ec317a638269b8ebe3d4ed31efb3f1caca84534ff56d8ab886f03d2984fb",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A terminal tool for visually comparing time zones — built for distributed teams."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "built for distributed teams."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Requires Rust 1.88 or newer."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "brew install ztl"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "ztl --plain --zones UTC,Europe/London,America/New_York --time 07:30 --nhours 12"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "The primary config path is `<platform-config-dir>/zonetimeline-tui/config.toml`."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[MIT](LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/findyourexit/zonetimeline-tui",
+      "fetched_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/findyourexit/zonetimeline-tui/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:06:03+08:00"
+    },
+    {
+      "id": "release:v0.4.1",
+      "kind": "release",
+      "url": "https://github.com/findyourexit/zonetimeline-tui/releases/tag/v0.4.1",
+      "fetched_at": "2026-10-31T00:06:03+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Launch the interactive TUI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Launch the TUI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A terminal tool for visually comparing time zones — built for distributed teams.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A terminal tool for visually comparing time zones — built for distributed teams.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Zone Timeline (TUI)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "- macOS (Apple Silicon and Intel)\n- Linux (`x86_64` and `aarch64`)\n- Windows (`x86_64`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires Rust 1.88 or newer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.4.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:06:03+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "See at a glance where working hours overlap across zones",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "find meeting slots without mental arithmetic",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Print supported timezone names and exit",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Render a text timeline and exit",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "manage your zone list interactively",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "The closest was the original [`zonetimeline`](https://github.com/jvrsantacruz/zonetimeline)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install --locked --git https://github.com/findyourexit/zonetimeline-tui",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install --locked --git https://github.com/findyourexit/zonetimeline-tui",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Ships as a single binary with both a rich TUI and a plain-text mode for scripts and pipes.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:49+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:42:22+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

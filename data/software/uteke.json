@@ -1,0 +1,544 @@
+{
+  "schema_version": "software.v1",
+  "slug": "uteke",
+  "repo_id": "gh:1252865556",
+  "name": "Uteke",
+  "summary": "Local-first memory engine that stores, recalls, and searches memories for AI agents offline.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-memory",
+    "ai",
+    "ai-agents",
+    "cli",
+    "cli-tool",
+    "embeddings",
+    "hnsw",
+    "llm",
+    "local-first",
+    "mcp"
+  ],
+  "use_cases": [
+    "store a memory from the command line",
+    "recall memories by meaning and keyword",
+    "share memories across agents in rooms"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://codecora.dev",
+  "repo": {
+    "url": "https://github.com/codecoradev/uteke",
+    "full_name": "codecoradev/uteke",
+    "created_at": "2026-05-29T00:27:31Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install codecoradev/tap/uteke",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "uteke remember \"Deploy v2.1 to staging at 3pm\""
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-uteke-20261031-001540-99f4",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -sSL codecora.dev/uteke/install -o /tmp/uteke-install.sh && ls -l /tmp/uteke-install.sh && wc -c /tmp/uteke-install.sh",
+          "purpose": "Download install script for review"
+        },
+        {
+          "command": "sh /tmp/uteke-install.sh",
+          "purpose": "Install uteke via reviewed script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "uteke --version",
+        "expected_signal": "uteke 0.22.1"
+      },
+      "first_task": "uteke remember \"Deploy v2.1 to staging at 3pm\""
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -sSL codecora.dev/uteke/install | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "uteke remember \"Deploy v2.1 to staging at 3pm\""
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.22.1",
+    "published_at": "2026-10-30T10:06:19Z",
+    "url": "https://github.com/codecoradev/uteke/releases/tag/v0.22.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:19:07.137473+08:00",
+    "runs": [
+      {
+        "id": "verify-uteke-20261031-001540-99f4",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:19:07.137473+08:00",
+        "tool_version": "0.22.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sSL codecora.dev/uteke/install -o /tmp/uteke-install.sh && ls -l /tmp/uteke-install.sh && wc -c /tmp/uteke-install.sh",
+            "purpose": "Download install script for review"
+          },
+          {
+            "command": "sh /tmp/uteke-install.sh",
+            "purpose": "Install uteke via reviewed script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "uteke --version",
+            "expected_signal": "uteke 0.22.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "uteke 0.22.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "uteke --help",
+            "expected_signal": "Options:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Options:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "uteke remember \"Deploy v2.1 to staging at 3pm\"",
+            "expected_signal": "Memory stored",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ Memory stored",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "uteke recall \"when do we deploy?\"",
+            "expected_signal": "Deploy v2.1 to staging at 3pm",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1. [mem] (score: 0.169) Deploy v2.1 to staging at 3pm",
+            "setup": [
+              {
+                "command": "uteke remember \"Deploy v2.1 to staging at 3pm\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -sSL codecora.dev/uteke/install | sh",
+            "actually_needed": "installer downloads prebuilt binary tarball uteke-x86_64-unknown-linux-gnu-v0.22.1.tar.gz plus checksums from GitHub releases, which cannot be read/audited as text",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show memory stored with ID, successful recall of the deploy fact, and version 0.22.1 output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-uteke-20261031-001540-99f4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-uteke-20261031-001540-99f4/check-1-cmd5.judged.png",
+            "runs/verify/verify-uteke-20261031-001540-99f4/check-2-cmd6.judged.png",
+            "runs/verify/verify-uteke-20261031-001540-99f4/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.060588
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 98.0,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.9375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 77.5,
+      "signals": {
+        "stars": 279,
+        "monthly_downloads": null,
+        "forks": 31,
+        "dependents": null,
+        "release_downloads": 715,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 154,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 22.05
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "d44f5bbcce63457ae53adc39576e1716eae472ac59560ddc15cd91bec76e0d20",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Local-first memory engine for AI agents. Store, recall, and search memories with semantic embeddings."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "**🤖 Building AI agents?** Give them persistent memory without cloud dependencies."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "No API keys, no Python, no cloud required."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "# Install (macOS, Linux, Windows)\ncurl -sSL codecora.dev/uteke/install | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "uteke remember \"Deploy v2.1 to staging at 3pm\""
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "`UTEKE_NO_UPDATE_CHECK` (any value) and `update_check = false` in the global `uteke.toml`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "`brew upgrade codecoradev/tap/uteke`, `cargo install"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[Apache License 2.0](LICENSE). Use it, fork it, ship it."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/codecoradev/uteke",
+      "fetched_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/codecoradev/uteke/blob/develop/README.md",
+      "fetched_at": "2026-10-31T00:00:07+08:00"
+    },
+    {
+      "id": "release:v0.22.1",
+      "kind": "release",
+      "url": "https://github.com/codecoradev/uteke/releases/tag/v0.22.1",
+      "fetched_at": "2026-10-31T00:00:07+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "uteke remember \"Deploy v2.1 to staging at 3pm\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:48+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "# Install (macOS, Linux, Windows)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:48+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "All from the command line.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:48+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Local-first memory engine for AI agents. Store, recall, and search memories with semantic embeddings.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:48+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1 align=\"center\">Uteke</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:48+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "# Install (macOS, Linux, Windows)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:48+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "After that, zero network calls.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:48+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.22.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:00:07+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "uteke remember \"Deploy v2.1 to staging at 3pm\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:48+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "# Search it back: by meaning AND by keyword",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:48+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Multiple agents read/write to the same room with author attribution.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:48+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install codecoradev/tap/uteke",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:48+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -sSL codecora.dev/uteke/install | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:48+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "curl -sSL codecora.dev/uteke/install | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:48+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "| Price | Free | *Coming soon* |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:48+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "github_api",
+      "quote": "Single Rust binary, zero config, fully offline.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:48+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:40:46+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

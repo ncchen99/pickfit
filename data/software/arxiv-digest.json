@@ -1,0 +1,410 @@
+{
+  "schema_version": "software.v1",
+  "slug": "arxiv-digest",
+  "repo_id": "gh:1305049113",
+  "name": "arxiv-digest",
+  "summary": "Searches, filters and ranks arXiv papers to generate concise readable digests.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "artificial-intelligence",
+    "arxiv-papers",
+    "automation",
+    "cli",
+    "llm",
+    "machine-learning",
+    "markdown",
+    "ollama",
+    "papers",
+    "python3"
+  ],
+  "use_cases": [],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/saeedrafsharx/arxiv-digest",
+    "full_name": "saeedrafsharx/arxiv-digest",
+    "created_at": "2026-07-18T16:16:29Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-arxiv-digest-20261031-004250-416b",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone https://github.com/saeedrafsharx/arxiv-digest /home/sbx/arxiv-digest",
+          "purpose": "clone upstream repo to get source"
+        },
+        {
+          "command": "uv tool install /home/sbx/arxiv-digest",
+          "purpose": "install via uv"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "arxd --help",
+        "expected_signal": "Get arxiv papers in a gist"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.1.1",
+    "published_at": "2026-07-18T19:37:56Z",
+    "url": "https://github.com/saeedrafsharx/arxiv-digest/releases/tag/v0.1.1"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:44:49.061453+08:00",
+    "runs": [
+      {
+        "id": "verify-arxiv-digest-20261031-004250-416b",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:44:49.061453+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/saeedrafsharx/arxiv-digest /home/sbx/arxiv-digest",
+            "purpose": "clone upstream repo to get source"
+          },
+          {
+            "command": "uv tool install /home/sbx/arxiv-digest",
+            "purpose": "install via uv"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "arxd --help",
+            "expected_signal": "Get arxiv papers in a gist",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Get arxiv papers in a gist",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "arxd search --help",
+            "expected_signal": "Topic to search",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "query Topic to search",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "~/.local/share/uv/tools/arxiv-digest/bin/python -c \"from pathlib import Path; from arxiv_digest.parse import parse_xml; from arxiv_digest.render import render_markdown; xml=Path('/tmp/arxiv-digest/tests/fixtures/arxiv_response.xml').read_text(); papers=parse_xml(xml); print(f'Parsed {len(papers)} papers'); render_markdown(papers, '/tmp/offline_digest.md'); print(Path('/tmp/offline_digest.md').read_text()[:2500])\"",
+            "expected_signal": "Found **10 papers**",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "FileNotFoundError: [Errno 2] No such file or directory: '/tmp/arxiv-digest/tests/fixtures/arxiv_response.xml'",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "uv tool install .",
+            "actually_needed": "git clone repo first; work dir contained only README.md, then run uv tool install from the cloned repo root",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "uv tool install . with system Python",
+            "actually_needed": "uv automatically provisioned Python 3.15 for the tool despite box python3.12 and requires-python >=3.13",
+            "kind": "tool_handled"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows arxd help output with usage and the tagline Get arxiv papers in a gist.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-arxiv-digest-20261031-004250-416b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-arxiv-digest-20261031-004250-416b/check-1-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.125892
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 58.5,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.3125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 22.3,
+      "signals": {
+        "stars": 6,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 102,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 45.45
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "a3b68c5381790ed9cd8e83c6d971272ca11e383654891cac2391310013b73449",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A CLI tool to search, filter, rank, and generate concise digests of arXiv papers."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "uv tool install ."
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Use `--summarize` to generate a short AI summary for each paper."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "[arxiv_digest]\nkeywords = [\"transformers\", \"reasoning\"]\nmax_results = 10"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 0,
+          "quote": null
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/saeedrafsharx/arxiv-digest",
+      "fetched_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/saeedrafsharx/arxiv-digest/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:34:12+08:00"
+    },
+    {
+      "id": "release:v0.1.1",
+      "kind": "release",
+      "url": "https://github.com/saeedrafsharx/arxiv-digest/releases/tag/v0.1.1",
+      "fetched_at": "2026-10-29T02:34:12+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A CLI tool to search, filter, rank, and generate concise digests of arXiv papers.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:00+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "uv tool install .",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:00+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A CLI tool to search, filter, rank, and generate concise digests of arXiv papers.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:00+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A CLI tool to search, filter, rank, and generate concise digests of arXiv papers.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:00+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# arxiv-digest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:37:00+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.1.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:34:12+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

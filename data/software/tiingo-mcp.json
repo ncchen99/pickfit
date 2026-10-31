@@ -1,0 +1,879 @@
+{
+  "schema_version": "software.v1",
+  "slug": "tiingo-mcp",
+  "repo_id": "gh:1209848977",
+  "name": "tiingo-mcp",
+  "summary": "Rust MCP server that provides Tiingo stock, forex, crypto, news and fundamentals data.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "ai-agents",
+    "claude-code",
+    "claude-desktop",
+    "crates-io",
+    "crypto",
+    "finance",
+    "financial-data",
+    "forex",
+    "market-data"
+  ],
+  "use_cases": [
+    "retrieve historical EOD stock prices and volume",
+    "get current forex bid and ask quotes",
+    "get current crypto prices",
+    "search financial news articles",
+    "retrieve company financial statements"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://crates.io/crates/tiingo-mcp",
+  "repo": {
+    "url": "https://github.com/major7apps/tiingo-mcp",
+    "full_name": "major7apps/tiingo-mcp",
+    "created_at": "2026-04-13T20:59:00Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Rust >=1.88"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "Tiingo API key"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install major7apps/tiingo-mcp/tiingo-mcp",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Create a Tiingo API key at api.tiingo.com"
+      ],
+      "check": null,
+      "first_task": "tiingo-mcp --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-tiingo-mcp-20261031-015041-e688",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/major7apps/tiingo-mcp/releases/latest/download/tiingo-mcp-installer.sh -o /tmp/tiingo-mcp-installer.sh",
+          "purpose": "download installer script"
+        },
+        {
+          "command": "sh /tmp/tiingo-mcp-installer.sh",
+          "purpose": "run installer script"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && cp ~/.cargo/bin/tiingo-mcp ~/.local/bin/tiingo-mcp",
+          "purpose": "copy binary to PATH dir"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "tiingo-mcp --version",
+        "expected_signal": "tiingo-mcp 2.3.0"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "powershell -ExecutionPolicy ByPass -c \"irm https://github.com/major7apps/tiingo-mcp/releases/latest/download/tiingo-mcp-installer.ps1 | iex\"",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Create a Tiingo API key at api.tiingo.com"
+      ],
+      "check": null,
+      "first_task": "tiingo-mcp --version"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v2.3.0",
+    "published_at": "2026-10-17T21:47:11Z",
+    "url": "https://github.com/major7apps/tiingo-mcp/releases/tag/v2.3.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:51:48.107987+08:00",
+    "runs": [
+      {
+        "id": "verify-tiingo-mcp-20261031-015041-e688",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:51:48.107987+08:00",
+        "tool_version": "2.3.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/major7apps/tiingo-mcp/releases/latest/download/tiingo-mcp-installer.sh -o /tmp/tiingo-mcp-installer.sh",
+            "purpose": "download installer script"
+          },
+          {
+            "command": "sh /tmp/tiingo-mcp-installer.sh",
+            "purpose": "run installer script"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && cp ~/.cargo/bin/tiingo-mcp ~/.local/bin/tiingo-mcp",
+            "purpose": "copy binary to PATH dir"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "tiingo-mcp --version",
+            "expected_signal": "tiingo-mcp 2.3.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tiingo-mcp 2.3.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- tiingo-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "install script installs into Cargo binary directory ~/.cargo/bin and follow instructions to update PATH",
+            "actually_needed": "installer placed binary in ~/.cargo/bin which is not on the box PATH; copied it to ~/.local/bin (which is on PATH) so `tiingo-mcp` launches without extra PATH setup",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "install step 2 runs tiingo-mcp-installer.sh",
+            "actually_needed": "nothing to change; a note: the box ran tiingo-mcp-installer.sh, downloaded, without reading it first, so pickfit did not inspect it",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "MCP probe completed handshake listing 38 tools and CLI reported version 2.3.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tiingo-mcp-20261031-015041-e688/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tiingo-mcp-20261031-015041-e688/check-1-cmd10.judged.png",
+            "runs/verify/verify-tiingo-mcp-20261031-015041-e688/check-2-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.071829,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "tiingo-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "Tiingo?MCP?Server",
+          "server_version": "2.3.0",
+          "tools": [
+            "get_boats_prices",
+            "get_boats_snapshot",
+            "get_bulk_eod_prices",
+            "get_company_meta",
+            "get_crypto_metadata",
+            "get_crypto_prices",
+            "get_crypto_quote",
+            "get_crypto_yield_metrics",
+            "get_crypto_yield_platforms",
+            "get_crypto_yield_pools",
+            "get_crypto_yield_ticks",
+            "get_daily_fundamentals",
+            "get_distributions_by_ex_date",
+            "get_dividend_yield",
+            "get_dividends",
+            "get_equity_intraday_prices",
+            "get_equity_realtime_snapshot",
+            "get_financial_statements",
+            "get_forex_prices",
+            "get_forex_quote",
+            "get_forex_quotes",
+            "get_fund_fee_metrics",
+            "get_fund_metadata",
+            "get_fundamentals_definitions",
+            "get_iex_market_snapshot",
+            "get_intraday_prices",
+            "get_news",
+            "get_realtime_price",
+            "get_splits",
+            "get_splits_by_ex_date",
+            "get_stock_metadata",
+            "get_stock_prices",
+            "get_ticker_metadata",
+            "poll_market_data_subscription",
+            "search_tiingo_assets",
+            "start_market_data_subscription",
+            "stop_market_data_subscription",
+            "update_market_data_subscription"
+          ],
+          "tool_count": 38,
+          "called_tool": null,
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "tiingo-mcp",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"tiingo\": {\n      \"command\": \"tiingo-mcp\",\n      \"args\": [],\n      \"env\": { \"TIINGO_API_KEY\": \"your-api-key-here\" }\n    }\n  }\n}"
+      },
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add tiingo --env TIINGO_API_KEY=your-api-key-here -- tiingo-mcp"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "TIINGO_API_KEY",
+        "required": true,
+        "purpose": "Tiingo API key"
+      },
+      {
+        "name": "RUST_LOG",
+        "required": null,
+        "purpose": "log level"
+      }
+    ],
+    "tools": [
+      "get_stock_metadata",
+      "get_stock_prices",
+      "get_bulk_eod_prices",
+      "get_realtime_price",
+      "get_intraday_prices",
+      "get_forex_quote",
+      "get_forex_quotes",
+      "get_forex_prices",
+      "get_crypto_quote",
+      "get_crypto_prices",
+      "get_crypto_metadata",
+      "get_news",
+      "get_fundamentals_definitions",
+      "get_financial_statements",
+      "get_daily_fundamentals",
+      "get_dividends",
+      "get_splits",
+      "start_market_data_subscription",
+      "poll_market_data_subscription",
+      "stop_market_data_subscription"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 80.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.68,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 42.8,
+      "signals": {
+        "stars": 11,
+        "monthly_downloads": 29,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": 171,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 199,
+      "packages": [
+        "crates:tiingo-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 45.82
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "7a3d4c99db11bbf721c066cb02a826848a71ac928a543aaeba0e9dd1cded74e3",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "`tiingo-mcp` is a Rust [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server for stock market data from [Tiingo](https://www.tiingo.com)."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Use it with Claude Code, Claude Desktop, or another MCP client to request stock prices, forex rates, crypto prices"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "You need a Tiingo API key, and access to each dataset depends on the features enabled for your key."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install major7apps/tiingo-mcp/tiingo-mcp"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "tiingo-mcp --version"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "\"env\": { \"TIINGO_API_KEY\": \"your-api-key-here\" }"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "To remove the server, run `brew uninstall major7apps/tiingo-mcp/tiingo-mcp`."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Prebuilt binaries are available for macOS, Linux, and Windows, so you can install the server without Rust."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/major7apps/tiingo-mcp",
+      "fetched_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/major7apps/tiingo-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:05:13+08:00"
+    },
+    {
+      "id": "release:v2.3.0",
+      "kind": "release",
+      "url": "https://github.com/major7apps/tiingo-mcp/releases/tag/v2.3.0",
+      "fetched_at": "2026-10-31T01:05:13+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "`tiingo-mcp` is a Rust [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "so you can install the server without Rust.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "`tiingo-mcp` is a Rust [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "to request stock prices, forex rates, crypto prices, fund data, financial news, and company fundamentals.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "`tiingo-mcp` is a Rust [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Prebuilt binaries are available for macOS, Linux, and Windows",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "If you have Rust 1.88 or newer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "The subscription tools open WebSocket connections to Tiingo",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "You need a Tiingo API key",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.3.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:05:13+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Historical raw and adjusted EOD prices and volume, with dividends, splits, optional columns and sorting",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Current best bid and ask for one currency pair",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Current prices for one or more crypto tickers, with exchange and interval filters",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Search financial news articles by ticker, tag, source, or date",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Income statements, balance sheets and cash flow statements, with as-reported filings and date sorting",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install major7apps/tiingo-mcp/tiingo-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/major7apps/tiingo-mcp/releases/latest/download/tiingo-mcp-installer.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "powershell -ExecutionPolicy ByPass -c \"irm https://github.com/major7apps/tiingo-mcp/releases/latest/download/tiingo-mcp-installer.ps1 | iex\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "for stock market data from [Tiingo](https://www.tiingo.com).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "The server talks to its MCP client over stdio",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "\"command\": \"tiingo-mcp\",",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"tiingo\": {\n      \"command\": \"tiingo-mcp\",\n      \"args\": [],\n      \"env\": { \"TIINGO_API_KEY\": \"your-api-key-here\" }\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "claude mcp add tiingo --env TIINGO_API_KEY=your-api-key-here -- tiingo-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "TIINGO_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "RUST_LOG",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`get_stock_metadata`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`get_stock_prices`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`get_bulk_eod_prices`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`get_realtime_price`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`get_intraday_prices`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`get_forex_quote`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`get_forex_quotes`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`get_forex_prices`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`get_crypto_quote`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`get_crypto_prices`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`get_crypto_metadata`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`get_news`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "`get_fundamentals_definitions`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "`get_financial_statements`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/14",
+      "source_id": "readme",
+      "quote": "`get_daily_fundamentals`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/15",
+      "source_id": "readme",
+      "quote": "`get_dividends`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/16",
+      "source_id": "readme",
+      "quote": "`get_splits`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/17",
+      "source_id": "readme",
+      "quote": "`start_market_data_subscription`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/18",
+      "source_id": "readme",
+      "quote": "`poll_market_data_subscription`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    },
+    {
+      "field": "/mcp/tools/19",
+      "source_id": "readme",
+      "quote": "`stop_market_data_subscription`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:32+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:34+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

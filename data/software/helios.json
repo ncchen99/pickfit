@@ -1,0 +1,432 @@
+{
+  "schema_version": "software.v1",
+  "slug": "helios",
+  "repo_id": "gh:1347937150",
+  "name": "Helios",
+  "summary": "Readable PyTorch engine that serves Qwen3-4B locally with batching and paged attention.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": "prototype",
+  "tags": [
+    "continuous-batching",
+    "cuda",
+    "inference-engine",
+    "kv-cache",
+    "llm-inference",
+    "paged-attention",
+    "pytorch",
+    "qwen3"
+  ],
+  "use_cases": [
+    "serve OpenAI-style chat completions locally",
+    "batch concurrent chat requests continuously",
+    "benchmark concurrent inference with timing data"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/sidmanale643/helios",
+    "full_name": "sidmanale643/helios",
+    "created_at": "2026-08-27T01:10:52Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.11"
+    ],
+    "system_packages": [],
+    "gpu": "required",
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": null,
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "needs_gpu",
+    "checked_at": "2026-10-31T00:21:47.885850+08:00",
+    "runs": [
+      {
+        "id": "verify-helios-20261031-001912-695a",
+        "level": "unverified",
+        "unverified_reason": "needs_gpu",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:21:47.885850+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "source",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "git clone https://github.com/sidmanale643/helios.git helios 2>&1 && ls -la helios 2>&1 && cat helios/pyproject.toml 2>&1",
+            "purpose": "Clone Helios repository"
+          },
+          {
+            "command": "cd helios && uv sync 2>&1",
+            "purpose": "Install dependencies with uv sync"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd helios && ls .venv/bin/helios && uv run python -c \"import torch, helios; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))\"",
+            "expected_signal": "2.13.0+cu130",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2.13.0+cu130",
+            "setup": [
+              {
+                "command": "git clone https://github.com/sidmanale643/helios.git helios 2>&1 && ls -la helios 2>&1 && cat helios/pyproject.toml 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd helios && uv sync 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "An Ampere or newer NVIDIA GPU (SM80+) with FP16 or BF16 support",
+            "actually_needed": "Box has Tesla T4 compute capability 7.5; src/helios/runtime/generate.py raises 'Paged attention requires an SM80+ GPU and FP16 or BF16' when capability major < 8, so server cannot start here",
+            "kind": "note"
+          },
+          {
+            "readme_said": "HELIOS_MODEL_ID defaults to Qwen/Qwen3-4B; model field must match loaded model",
+            "actually_needed": "Only Qwen/Qwen3-4B architecture is implemented; tiny GGUF/SmolLM2 models under 300 MB cannot be substituted for an inference check, and full weights (~8 GB) exceed this box's 2 GB host RAM and 20-minute budget",
+            "kind": "note"
+          },
+          {
+            "readme_said": "uv run helios starts the server",
+            "actually_needed": "helios entry point (helios.main:main) takes no arguments and starts the server; there is no --version or --help flag to confirm install",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-helios-20261031-001912-695a/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.084784
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 67.0,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.6,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 35.1,
+      "signals": {
+        "stars": 18,
+        "monthly_downloads": null,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 62,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 43.48
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "40132ae0d437ff4a6fe84628bbc44d1d792b5f68cad4bbe63739597dab2f622e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A small, readable PyTorch inference engine for Qwen3-4B with continuous batching, native paged attention,"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "This is an inference-engineering learning project, not a production serving"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- Python 3.11 or newer\n- [uv](https://docs.astral.sh/uv/)\n- PyTorch 2.13 or newer"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "git clone https://github.com/sidmanale643/helios.git"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "The health response includes the loaded model revision, warmed batch sizes,"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "`HELIOS_MAX_BATCH_SIZE` | `8` | Maximum number of concurrently active continuous requests."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Helios is released under the [Apache License 2.0](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/sidmanale643/helios",
+      "fetched_at": "2026-10-30T23:49:27+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/sidmanale643/helios/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:32:14+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "the server listens on `http://127.0.0.1:8000`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:45+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "uv run helios",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:45+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "inference engine for running\n[Qwen3-4B](https://huggingface.co/Qwen/Qwen3-4B) on a local NVIDIA GPU",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:45+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A small, readable PyTorch inference engine for Qwen3-4B with continuous batching, native paged attention, prefix caching, and an OpenAI-compatible chat completions API.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:45+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Helios",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:45+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.11 or newer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:45+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "An Ampere or newer NVIDIA GPU (SM80+) with FP16 or BF16 support",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:45+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Internet access on first run to download the model snapshot from Hugging Face",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:45+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:27+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:27+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:27+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:27+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "This is an inference-engineering learning project, not a production serving",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:45+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "A non-streaming OpenAI-style chat completions endpoint",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:45+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Continuous batching of concurrent requests",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:45+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "A concurrent HTTP benchmark with per-request and aggregate timing data",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:45+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "on a local NVIDIA GPU",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:45+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:43+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

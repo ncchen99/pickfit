@@ -1,0 +1,561 @@
+{
+  "schema_version": "software.v1",
+  "slug": "rgx",
+  "repo_id": "gh:1436557745",
+  "name": "rgx",
+  "summary": "Ripgrep-compatible CLI that searches text inside PDFs, Office docs, archives, email and model files.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-tools",
+    "archive",
+    "cli",
+    "developer-tools",
+    "email",
+    "full-text-search",
+    "gguf",
+    "grep",
+    "llm",
+    "llm-tools"
+  ],
+  "use_cases": [
+    "search inside PDFs and .docx for text",
+    "search inside archives for text",
+    "search inside an LLM checkpoint",
+    "search plain source code with ripgrep flags"
+  ],
+  "alternatives_to": [
+    "rga",
+    "ripgrep"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/danalec/rgx",
+    "full_name": "danalec/rgx",
+    "created_at": "2026-10-28T03:33:27Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install rgx",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "rgx --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-rgx-20261031-021805-b7d1",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/danalec/rgx/releases/download/rgx-v0.1.1/rgx-v0.1.1-x86_64-linux-gnu.tar.gz -o /tmp/rgx-clean.tar.gz",
+          "purpose": "Download Linux glibc tarball"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && tar xzf /tmp/rgx-clean.tar.gz -C /tmp && cp /tmp/rgx-v0.1.1-x86_64-linux-gnu/rgx ~/.local/bin/rgx && chmod +x ~/.local/bin/rgx",
+          "purpose": "Extract rgx binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "rgx --version",
+        "expected_signal": "rgx 0.1.1"
+      },
+      "first_task": "rgx \"fn main\" -t rust --sort path ."
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://raw.githubusercontent.com/danalec/rgx/main/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "rgx --version"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "local",
+  "last_release": {
+    "tag": "rgx-v0.1.1",
+    "published_at": "2026-10-28T16:57:27Z",
+    "url": "https://github.com/danalec/rgx/releases/tag/rgx-v0.1.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:19:12.657371+08:00",
+    "runs": [
+      {
+        "id": "verify-rgx-20261031-021805-b7d1",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:19:12.657371+08:00",
+        "tool_version": "0.1.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/danalec/rgx/releases/download/rgx-v0.1.1/rgx-v0.1.1-x86_64-linux-gnu.tar.gz -o /tmp/rgx-clean.tar.gz",
+            "purpose": "Download Linux glibc tarball"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && tar xzf /tmp/rgx-clean.tar.gz -C /tmp && cp /tmp/rgx-v0.1.1-x86_64-linux-gnu/rgx ~/.local/bin/rgx && chmod +x ~/.local/bin/rgx",
+            "purpose": "Extract rgx binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "rgx --version",
+            "expected_signal": "rgx 0.1.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "rgx 0.1.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rgx --help",
+            "expected_signal": "--engine <engine>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "--engine <engine> search engine: auto (adaptive detector), tv (pack store), rgx (in-process SIMD)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rgx \"fn main\" -t rust --sort path .",
+            "expected_signal": "./hello.rs:fn main() {",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "./hello.rs:fn main() {",
+            "setup": [
+              {
+                "command": "cat > hello.rs <<'EOF'\nfn main() {\n    println!(\"hello\");\n}\nEOF\nprintf 'hidden_dim 4096\\ntensor: weight\\n' > model.gguf\nls -l hello.rs model.gguf && cat hello.rs && cat model.gguf",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "rgx \"hidden_dim\" model.gguf",
+            "expected_signal": "hidden_dim 4096",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hidden_dim 4096",
+            "setup": [
+              {
+                "command": "cat > hello.rs <<'EOF'\nfn main() {\n    println!(\"hello\");\n}\nEOF\nprintf 'hidden_dim 4096\\ntensor: weight\\n' > model.gguf\nls -l hello.rs model.gguf && cat hello.rs && cat model.gguf",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "irm https://raw.githubusercontent.com/danalec/rgx/main/install.ps1 | iex",
+            "actually_needed": "Used Linux glibc tarball rgx-v0.1.1-x86_64-linux-gnu.tar.gz from the release page and copied rgx to ~/.local/bin; install.ps1 is Windows-only (downloads x86_64-windows.zip, installs rgx.exe via PowerShell)",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "cargo install rgx-search",
+            "actually_needed": "Skipped cargo install rgx-search: box has no Rust toolchain and installing one is not allowed, so used prebuilt Linux binary instead",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show rgx finding the Rust match, extracting GGUF metadata, and printing version 0.1.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-rgx-20261031-021805-b7d1/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-rgx-20261031-021805-b7d1/check-1-cmd7.judged.png",
+            "runs/verify/verify-rgx-20261031-021805-b7d1/check-2-cmd8.judged.png",
+            "runs/verify/verify-rgx-20261031-021805-b7d1/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.082159
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 77.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7225,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 36.8,
+      "signals": {
+        "stars": 12,
+        "monthly_downloads": 8,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 9,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 2,
+      "packages": [
+        "crates:rgx-search"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 48.73
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:43:57.550284+08:00",
+      "sources_sha": "b0533b0827f148792de26e97c2582cf9e3c44246b4400f0ace884bb24a85fb29",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "High-performance full-text search across PDFs, Office documents, ZIP archives, email, media metadata and GGUF/LLM model files."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Take it when you are scripting, dropping it into a pipeline that already"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "ripgrep-compatible CLI, zero external dependencies."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "irm https://raw.githubusercontent.com/danalec/rgx/main/install.ps1 | iex"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "rgx \"invoice total\" ~/Documents        # inside PDFs and .docx"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "**`.rgxrc`** — read *before* argv, so a CLI flag always wins."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "If rgx seems to ignore a flag you passed, look here first."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "**Apache-2.0**, and nothing else — per file: every file in this repository"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/danalec/rgx",
+      "fetched_at": "2026-10-30T23:48:39+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/danalec/rgx/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:04:14+08:00"
+    },
+    {
+      "id": "release:rgx-v0.1.1",
+      "kind": "release",
+      "url": "https://github.com/danalec/rgx/releases/tag/rgx-v0.1.1",
+      "fetched_at": "2026-10-31T01:04:14+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "one binary: `rgx PATTERN [PATHS]`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:59+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "one binary: `rgx PATTERN [PATHS]`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:59+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "ripgrep-compatible CLI, zero external dependencies.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:59+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "High-performance full-text search across PDFs, Office documents, ZIP archives, email, media metadata and GGUF/LLM model files.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:59+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# rgx",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:59+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "| job | Windows | Linux / macOS |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:59+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:39+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:39+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:39+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:39+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:rgx-v0.1.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:04:14+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "rgx \"invoice total\" ~/Documents        # inside PDFs and .docx",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:59+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "rgx \"password\" secrets.tar.gz .env.bak # inside archives",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:59+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "rgx \"hidden_dim\" model.gguf            # inside an LLM checkpoint",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:59+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "rgx \"fn main\" -t rust --sort path .    # plain source: the flags you already know",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:59+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "That is the whole difference from [rga](https://github.com/phiresky/ripgrep-all), which reaches the same",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:59+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "Same flags, same `path:line:text` output, same exit codes (0/1/2), so it drops",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:59+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install rgx",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:59+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install rgx-search",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:59+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://raw.githubusercontent.com/danalec/rgx/main/install.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:59+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Every adapter runs **in-process** — bytes in, searchable text out.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:59+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:45:35+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

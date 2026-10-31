@@ -1,0 +1,484 @@
+{
+  "schema_version": "software.v1",
+  "slug": "scafld",
+  "repo_id": "gh:1178518097",
+  "name": "scafld",
+  "summary": "Deterministic protocol that hardens specs, governs phased builds, and gates completion with adversarial review.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "automation",
+    "cli",
+    "go",
+    "workflow"
+  ],
+  "use_cases": [
+    "question the plan before the code",
+    "run the adversarial review gate",
+    "sign an ed25519 receipt on clean pass",
+    "re-check signed receipt in CI",
+    "summarize session-derived quality metrics"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://auscaster.com/scafld",
+  "repo": {
+    "url": "https://github.com/auscaster/scafld",
+    "full_name": "auscaster/scafld",
+    "created_at": "2026-03-11T05:12:48Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-scafld-20261031-001928-3dac",
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install scafld 2>&1",
+          "purpose": "pipx install scafld"
+        },
+        {
+          "command": "scafld --version 2>&1",
+          "purpose": "fetch cached native binary via first run"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "scafld --help 2>&1",
+        "expected_signal": "scafld - deterministic protocol for multi-phase agent work"
+      },
+      "first_task": "mkdir -p /tmp/scafld-demo && cd /tmp/scafld-demo && scafld init 2>&1"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v2.5.10",
+    "published_at": "2026-10-29T08:55:24Z",
+    "url": "https://github.com/auscaster/scafld/releases/tag/v2.5.10"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:20:43.853641+08:00",
+    "runs": [
+      {
+        "id": "verify-scafld-20261031-001928-3dac",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:20:43.853641+08:00",
+        "tool_version": "2.5.10",
+        "install_method": "pipx",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pipx install scafld 2>&1",
+            "purpose": "pipx install scafld"
+          },
+          {
+            "command": "scafld --version 2>&1",
+            "purpose": "fetch cached native binary via first run"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "scafld --help 2>&1",
+            "expected_signal": "scafld - deterministic protocol for multi-phase agent work",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "scafld - deterministic protocol for multi-phase agent work",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/scafld-demo && cd /tmp/scafld-demo && scafld init 2>&1",
+            "expected_signal": "initialized scafld workspace: /tmp/scafld-demo",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "initialized scafld workspace: /tmp/scafld-demo",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/scafld-demo && scafld plan add-cache 2>&1",
+            "expected_signal": "created draft spec:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "created draft spec: /tmp/scafld-demo/.scafld/specs/drafts/add-cache.md",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/scafld-demo && cd /tmp/scafld-demo && scafld init 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/scafld-demo && scafld list 2>&1",
+            "expected_signal": "add-cache draft add-cache",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "add-cache draft add-cache",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/scafld-demo && cd /tmp/scafld-demo && scafld init 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/scafld-demo && scafld plan add-cache 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pipx install scafld",
+            "actually_needed": "first scafld invocation downloads the version-pinned native Go binary from GitHub Releases into ~/.cache/scafld/bin/<version>/ and verifies checksums.txt, so the first run needs network even though pipx install succeeds offline of that asset",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show help text, successful workspace init, and draft spec creation with no errors.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-scafld-20261031-001928-3dac/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-scafld-20261031-001928-3dac/check-1-cmd3.judged.png",
+            "runs/verify/verify-scafld-20261031-001928-3dac/check-2-cmd5.judged.png",
+            "runs/verify/verify-scafld-20261031-001928-3dac/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.05976
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 80.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 52.7,
+      "signals": {
+        "stars": 15,
+        "monthly_downloads": 310,
+        "forks": 8,
+        "dependents": null,
+        "release_downloads": 2839,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 233,
+      "packages": [
+        "pypi:scafld"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 37.93
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "f191a8036ebb4fa768860c76a69c892ec4066f055914039908b32796292f5795",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A deterministic protocol for multi-phase agent work."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "It makes the careful engineer's habit automatic and unskippable"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Gemini review requires an authenticated Gemini CLI."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/auscaster/scafld/main/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "scafld init"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Fresh workspaces use `provider: auto`, selecting an installed external"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "`scafld update` refreshes managed core assets and unmarked prompt copies."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "scafld_2.5.10_darwin_amd64, scafld_2.5.10_darwin_arm64, scafld_2.5.10_linux_amd64"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/auscaster/scafld",
+      "fetched_at": "2026-10-30T23:41:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/auscaster/scafld/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:03:18+08:00"
+    },
+    {
+      "id": "release:v2.5.10",
+      "kind": "release",
+      "url": "https://github.com/auscaster/scafld/releases/tag/v2.5.10",
+      "fetched_at": "2026-10-31T00:03:18+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "scafld init",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/auscaster/scafld/main/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "topics: ai-agents, automation, cli, go, workflow",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**A deterministic protocol for multi-phase agent work.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# scafld",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:31+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:31+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.5.10",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:03:18+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "question the\nplan before the code, then review the diff cold",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "run the adversarial review gate",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "signs an ed25519 receipt on a\nclean pass",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "re-checks that receipt in CI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "summarize session-derived quality metrics",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:33+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:41:31+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

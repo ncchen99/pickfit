@@ -1,0 +1,468 @@
+{
+  "schema_version": "software.v1",
+  "slug": "tyloquant",
+  "repo_id": "gh:1311250427",
+  "name": "MFQ",
+  "summary": "MFQ quantizes large models and runs them locally with native CUDA and Metal runtimes.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "apple-silicon",
+    "cuda",
+    "deepseek",
+    "gemma",
+    "gguf",
+    "llm",
+    "llm-inference",
+    "llm-quantization",
+    "local-llm",
+    "low-bit"
+  ],
+  "use_cases": [
+    "run large models on local hardware",
+    "download and run models in MFQ Studio",
+    "serve models via OpenAI-compatible API"
+  ],
+  "alternatives_to": [
+    "Strata",
+    "llama.cpp",
+    "oMLX"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/Tylogi/TyloQuant",
+    "full_name": "Tylogi/TyloQuant",
+    "created_at": "2026-07-24T16:57:46Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-tyloquant-20261031-001723-b726",
+      "method": "source",
+      "steps": [
+        {
+          "command": "rm -rf MFQ && git clone https://github.com/Tylogi/MFQ.git MFQ",
+          "purpose": "Clone MFQ source per README"
+        },
+        {
+          "command": "cd MFQ && uv sync",
+          "purpose": "Install Python dependencies with uv sync"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && ln -sf /home/sbx/work/MFQ/.venv/bin/mfq ~/.local/bin/mfq && test -x ~/.local/bin/mfq",
+          "purpose": "Put built mfq entry point on PATH"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mfq --version",
+        "expected_signal": "mfq 0.1.0"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.4.0",
+    "published_at": "2026-10-17T16:15:24Z",
+    "url": "https://github.com/Tylogi/TyloQuant/releases/tag/v0.4.0"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:19:36.756011+08:00",
+    "runs": [
+      {
+        "id": "verify-tyloquant-20261031-001723-b726",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:19:36.756011+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf MFQ && git clone https://github.com/Tylogi/MFQ.git MFQ",
+            "purpose": "Clone MFQ source per README"
+          },
+          {
+            "command": "cd MFQ && uv sync",
+            "purpose": "Install Python dependencies with uv sync"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && ln -sf /home/sbx/work/MFQ/.venv/bin/mfq ~/.local/bin/mfq && test -x ~/.local/bin/mfq",
+            "purpose": "Put built mfq entry point on PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mfq --version",
+            "expected_signal": "mfq 0.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mfq 0.1.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd MFQ && uv run mfq --help",
+            "expected_signal": "Mixed Format Quantization",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Mixed Format Quantization toolchain.",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "uv run mfq build --backend auto",
+            "actually_needed": "NVIDIA CUDA Toolkit 12+ with nvcc (Linux/Windows) or Apple silicon Metal on macOS; this Linux x86_64 box has neither, so 'uv run mfq build --backend auto' exits 1 with BuildError: no supported inference accelerator was detected",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows `mfq --version` printing `mfq 0.1.0`.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tyloquant-20261031-001723-b726/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tyloquant-20261031-001723-b726/check-1-cmd12.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.142294
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 63.8,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 69.4,
+      "signals": {
+        "stars": 94,
+        "monthly_downloads": null,
+        "forks": 15,
+        "dependents": null,
+        "release_downloads": 189,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 97,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 19.52
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "d56375e7b450b76913007eb92e37b89c820971dc1c69a35c5cbb4866e4f98831",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "MFQ is a quantization and inference system for running large models on local"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "or connect applications and agents through OpenAI- and Anthropic-compatible APIs."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "MFQ requires Git, [uv](https://docs.astral.sh/uv/), CMake 3.26+, and a"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "git clone https://github.com/Tylogi/MFQ.git MFQ"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "uv run mfq serve"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "uv run mfq serve --model /models/model.mfq"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "alt=\"Apache 2.0 license\">\n  <img src=\"https://img.shields.io/badge/runtime-C%2B%2B-black\" alt=\"C++ runtime\">\n  <img src=\"https://img.shields.io/badge/backends-CUDA"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Tylogi/TyloQuant",
+      "fetched_at": "2026-10-30T23:51:11+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Tylogi/TyloQuant/blob/master/README.md",
+      "fetched_at": "2026-10-30T23:55:40+08:00"
+    },
+    {
+      "id": "release:v0.4.0",
+      "kind": "release",
+      "url": "https://github.com/Tylogi/TyloQuant/releases/tag/v0.4.0",
+      "fetched_at": "2026-10-30T23:55:40+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "uv run mfq serve",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:41+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Download and run models in **MFQ Studio**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:41+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "running large models on local\nhardware",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:41+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "MFQ is a quantization and inference system for running large models on local\nhardware.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:41+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# MFQ",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:41+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:11+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:11+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:11+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:11+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.4.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:55:40+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "running large models on local\nhardware",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:41+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Download and run models in **MFQ Studio**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:41+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "MFQ Server exposes OpenAI- and\nAnthropic-compatible APIs for applications and agents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:41+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "The chart compares MFQ, Strata, llama.cpp and oMLX on the same",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:41+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "The chart compares MFQ, Strata, llama.cpp and oMLX on the same",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:41+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "The chart compares MFQ, Strata, llama.cpp and oMLX on the same",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:41+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "running large models on local\nhardware",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:41+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:11+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

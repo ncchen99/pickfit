@@ -1,0 +1,602 @@
+{
+  "schema_version": "software.v1",
+  "slug": "eidetic-engine-cli",
+  "repo_id": "gh:1224408143",
+  "name": "Eidetic Engine (`ee`)",
+  "summary": "Rust CLI providing durable local-first searchable memory for coding agents.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "cli",
+    "coding-agents",
+    "developer-tools",
+    "memory",
+    "rust"
+  ],
+  "use_cases": [
+    "pack durable memories into context for a task",
+    "search memories with explainable scores",
+    "store durable procedural rules",
+    "import cass session history as evidence",
+    "inspect provenance for a memory"
+  ],
+  "alternatives_to": [
+    "Chroma, Qdrant",
+    "MCP memory server",
+    "Plain notes / CLAUDE.md"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/Dicklesworthstone/eidetic_engine_cli",
+    "full_name": "Dicklesworthstone/eidetic_engine_cli",
+    "created_at": "2026-04-29T08:51:51Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "nightly Rust toolchain"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo +nightly install eidetic-engine --version 0.18.0 --locked",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "ee --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-eidetic-engine-cli-20261031-000542-23fb",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/Dicklesworthstone/eidetic_engine_cli/releases/download/v0.18.0/install.sh -o /tmp/install-ee.sh && ls -l /tmp/install-ee.sh && head -c 2000 /tmp/install-ee.sh",
+          "purpose": "Download release installer script only"
+        },
+        {
+          "command": "export EE_VERSION=v0.18.0 && bash /tmp/install-ee.sh --easy-mode --verify --no-gum 2>&1",
+          "purpose": "Install ee v0.18.0 binary via release installer"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ee --version",
+        "expected_signal": "ee 0.18.0"
+      },
+      "first_task": "ee doctor --json"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo +nightly install eidetic-engine --version 0.18.0 --locked",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "ee --version"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.18.0",
+    "published_at": "2026-10-14T16:25:25Z",
+    "url": "https://github.com/Dicklesworthstone/eidetic_engine_cli/releases/tag/v0.18.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:07:11.452600+08:00",
+    "runs": [
+      {
+        "id": "verify-eidetic-engine-cli-20261031-000542-23fb",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:07:11.452600+08:00",
+        "tool_version": "0.18.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/Dicklesworthstone/eidetic_engine_cli/releases/download/v0.18.0/install.sh -o /tmp/install-ee.sh && ls -l /tmp/install-ee.sh && head -c 2000 /tmp/install-ee.sh",
+            "purpose": "Download release installer script only"
+          },
+          {
+            "command": "export EE_VERSION=v0.18.0 && bash /tmp/install-ee.sh --easy-mode --verify --no-gum 2>&1",
+            "purpose": "Install ee v0.18.0 binary via release installer"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ee --version",
+            "expected_signal": "ee 0.18.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ee 0.18.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ee doctor --json",
+            "expected_signal": "\"command\":\"doctor\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"schema\":\"ee.response.v2\",\"success\":true,\"degraded\":[],\"fields\":\"doctor_concise\",\"data\":{\"command\":\"doctor\",\"mode\":\"concise\",\"version\":\"0.18.0\",\"posture\":\"degraded_recoverable\",\"healthy\":false,\"fullCommand\":\"ee doctor --full --json\",\"coreChecks\":[{\"name\":\"runtime\",\"tier\":\"core\",\"severity\":\"ok\",\"me…",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ee capabilities --json",
+            "expected_signal": "availableCommands",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "se,\"source\":\"unset\"},{\"name\":\"EE_E2E_RETENTION_MANIFEST\",\"category\":\"paths\",\"controls\":\"Override the retained-artifact manifest path used by diagnostics.\",\"defaultValue\":null,\"isSet\":false,\"source\":\"unset\"},{\"name\":\"EE_EMBED_BACKEND\",\"category\":\"embeddings\",\"controls\":\"Select the embedding backend:…",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ee search \"clippy warnings as errors\" --workspace /tmp/ee-smoke --limit 5 --json 2>&1",
+            "expected_signal": "\"resultCount\":1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"schema\":\"ee.response.v2\",\"success\":true,\"data\":{\"command\":\"search\",\"status\":\"success\",\"embed_backend\":\"neural_local\",\"query\":\"clippy warnings as errors\",\"request\":{\"sourceMode\":\"hybrid\",\"strictSourceMode\":false,\"memoryScope\":\"swarm\",\"strictScope\":false},\"scopeStats\":{\"scopeApplied\":\"swarm\",\"stric…",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/ee-smoke && ee init --workspace /tmp/ee-smoke 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "ee remember \"This project treats clippy warnings as errors with pedantic and nursery enabled.\" --workspace /tmp/ee-smoke --level procedural --kind rule --json 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "ee index rebuild --workspace /tmp/ee-smoke --json 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo +nightly install eidetic-engine --version 0.18.0 --locked",
+            "actually_needed": "Skipped ranked candidate 1 (cargo +nightly install eidetic-engine --version 0.18.0 --locked) because the box has no Rust toolchain and rules forbid installing Rust/Go toolchains; used the README's release installer script (install.sh v0.18.0, binary install) instead.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Release installer downloads and checksum-verifies the release binary",
+            "actually_needed": "Installer fetches a compiled tarball (ee-x86_64-unknown-linux-musl.tar.xz) plus its .sha256 at install time; that binary payload cannot be pre-read as text, only the install.sh script was read before running.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Quick Example runs remember then search/pack with no index rebuild (rebuild only shown after cass import)",
+            "actually_needed": "After ee remember, ee search returned degraded index_incompatible (stored vector producer mismatch) and required ee index rebuild --workspace /tmp/ee-smoke --json before search returned the memory.",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show doctor JSON with command doctor, capabilities JSON with 557 availableCommands, and version ee 0.18.0, all with exit 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-eidetic-engine-cli-20261031-000542-23fb/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-eidetic-engine-cli-20261031-000542-23fb/check-1-cmd4.judged.png",
+            "runs/verify/verify-eidetic-engine-cli-20261031-000542-23fb/check-2-cmd5.judged.png",
+            "runs/verify/verify-eidetic-engine-cli-20261031-000542-23fb/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.083953
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 87.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 65.0,
+      "signals": {
+        "stars": 55,
+        "monthly_downloads": 21,
+        "forks": 6,
+        "dependents": null,
+        "release_downloads": 16142,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 184,
+      "packages": [
+        "crates:eidetic-engine"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 30.45
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "3267f4fc9891d0cc6ddd10929d84f3872c1362fe43667113236bb5d32b7bcdfb",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Durable, local-first, explainable memory for coding agents."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "is callable from any shell: Claude Code hooks, Codex shell-outs"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Requires a nightly Rust toolchain."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install Dicklesworthstone/tap/ee"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ ee init --workspace .\n✓ database opened at ~/.local/share/ee/ee.db"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "No cloud service or paid LLM API is required."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "When upgrading from a version earlier than 0.15.0, rebuild each workspace's semantic index with"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "License: MIT+Rider"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Dicklesworthstone/eidetic_engine_cli",
+      "fetched_at": "2026-10-30T23:45:09+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Dicklesworthstone/eidetic_engine_cli/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:57:26+08:00"
+    },
+    {
+      "id": "release:v0.18.0",
+      "kind": "release",
+      "url": "https://github.com/Dicklesworthstone/eidetic_engine_cli/releases/tag/v0.18.0",
+      "fetched_at": "2026-10-30T23:57:26+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "ee` is a Rust CLI that gives agents a durable, searchable memory layer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Single-binary install",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "developer-tools",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Durable, local-first, explainable memory for coding agents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "Eidetic Engine (`ee`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "cover macOS (`aarch64`, `x86_64`), Linux (`aarch64` and `x86_64` GNU,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires a nightly Rust toolchain.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Network | Everything (we are local-first)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:45:09+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:45:09+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:45:09+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:45:09+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.18.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:57:26+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "ee pack \"prepare release for this project\" --workspace . --max-tokens 4000 --format markdown",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "ee search \"<specific question>\" --workspace . --limit 20 --explain --json",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "ee remember \"<durable lesson>\" --workspace . --level procedural --kind rule --json",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Mines your existing `cass` corpus (Claude Code, Codex, Cursor, Gemini, ChatGPT) for evidence",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "ee why <memory-id> --workspace . --json",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Vector DB (Chroma, Qdrant)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "MCP memory server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "Plain notes / CLAUDE.md",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "cargo +nightly install eidetic-engine --version 0.18.0 --locked",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo +nightly install eidetic-engine --version 0.18.0 --locked",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo +nightly install eidetic-engine --version 0.18.0 --locked",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "No cloud service or paid LLM API is required.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:40:20+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

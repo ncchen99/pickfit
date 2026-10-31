@@ -1,0 +1,519 @@
+{
+  "schema_version": "software.v1",
+  "slug": "filo",
+  "repo_id": "gh:1308881068",
+  "name": "Filo",
+  "summary": "Self-hosted AI chat for adult self-reflection in terminal and Telegram.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "alpha",
+  "tags": [
+    "ai",
+    "ai-agent",
+    "chatbot",
+    "cli",
+    "encrypted",
+    "llm",
+    "local-first",
+    "long-term-memory",
+    "mental-health",
+    "mental-wellbeing"
+  ],
+  "use_cases": [
+    "chat privately for self-reflection in the terminal",
+    "start a terminal chat with selectable memory mode",
+    "take an optional WHO-5 self-check in chat"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/matteodante/filo",
+    "full_name": "matteodante/filo",
+    "created_at": "2026-07-22T13:52:25Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "personal ChatGPT Plus/Pro account"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -LsSf https://raw.githubusercontent.com/matteodante/filo/main/install.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "filo doctor"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-filo-20261031-002612-a16e",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -LsSf https://github.com/matteodante/filo/archive/refs/tags/v0.4.0.tar.gz -o /tmp/filo-0.4.0.tar.gz && ls -lh /tmp/filo-0.4.0.tar.gz && mkdir -p /tmp/filo-src && tar -xzf /tmp/filo-0.4.0.tar.gz -C /tmp/filo-src --strip-components=1 && ls /tmp/filo-src && cat /tmp/filo-src/pyproject.toml",
+          "purpose": "Download pinned v0.4.0 source tarball and extract it"
+        },
+        {
+          "command": "uv export --project /tmp/filo-src --frozen --no-dev --no-emit-project --no-hashes --quiet --output-file /tmp/filo-locked.txt && grep -v \"^torch==.*sys_platform != 'linux'\" /tmp/filo-locked.txt > /tmp/filo-constraints.txt && cat /tmp/filo-constraints.txt && uv tool install --force --python 3.12 --constraints /tmp/filo-constraints.txt /tmp/filo-src",
+          "purpose": "Install Filo with locked CPU constraints via uv tool install"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "filo --help",
+        "expected_signal": "Experimental AI conversation CLI"
+      },
+      "first_task": "filo doctor"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "powershell -ExecutionPolicy Bypass -c \"irm https://raw.githubusercontent.com/matteodante/filo/main/install.ps1 | iex\"",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "filo doctor"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "AGPL-3.0",
+  "processing": null,
+  "last_release": null,
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:28:25.281830+08:00",
+    "runs": [
+      {
+        "id": "verify-filo-20261031-002612-a16e",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:28:25.281830+08:00",
+        "tool_version": "0.4.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -LsSf https://github.com/matteodante/filo/archive/refs/tags/v0.4.0.tar.gz -o /tmp/filo-0.4.0.tar.gz && ls -lh /tmp/filo-0.4.0.tar.gz && mkdir -p /tmp/filo-src && tar -xzf /tmp/filo-0.4.0.tar.gz -C /tmp/filo-src --strip-components=1 && ls /tmp/filo-src && cat /tmp/filo-src/pyproject.toml",
+            "purpose": "Download pinned v0.4.0 source tarball and extract it"
+          },
+          {
+            "command": "uv export --project /tmp/filo-src --frozen --no-dev --no-emit-project --no-hashes --quiet --output-file /tmp/filo-locked.txt && grep -v \"^torch==.*sys_platform != 'linux'\" /tmp/filo-locked.txt > /tmp/filo-constraints.txt && cat /tmp/filo-constraints.txt && uv tool install --force --python 3.12 --constraints /tmp/filo-constraints.txt /tmp/filo-src",
+            "purpose": "Install Filo with locked CPU constraints via uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "filo --help",
+            "expected_signal": "Experimental AI conversation CLI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Experimental AI conversation CLI",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "filo doctor",
+            "expected_signal": "Protocol: filo.transdiagnostic (experimental)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Protocol: filo.transdiagnostic (experimental)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "filo protocol validate",
+            "expected_signal": "Hash validation: OK",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Hash validation: OK",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "filo privacy show",
+            "expected_signal": "Default memory mode: standard",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Default memory mode: standard",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -LsSf https://raw.githubusercontent.com/matteodante/filo/main/install.sh | sh installs and finishes with `filo doctor`",
+            "actually_needed": "Manual replicate of install.sh steps without its interactive guard: download v0.4.0 tarball, `uv export` to constraints, `uv tool install --force --python 3.12 --constraints <file> <src>`; `filo doctor`, `filo protocol validate` and `filo privacy show` then work with no setup.",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show filo doctor, protocol validate, and --help all succeeding with their expected signals.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-filo-20261031-002612-a16e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-filo-20261031-002612-a16e/check-1-cmd9.judged.png",
+            "runs/verify/verify-filo-20261031-002612-a16e/check-2-cmd10.judged.png",
+            "runs/verify/verify-filo-20261031-002612-a16e/check-3-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.07263
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 80.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.68,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 28.0,
+      "signals": {
+        "stars": 7,
+        "monthly_downloads": null,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": 8,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 98,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 57.67
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "2b1c552c45fc85e94b04def78e2849479830b23d50947a66dea8379201d51db2",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "**Experimental, self-hosted AI conversation for adult self-reflection.**"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "for technical\ncontributors and informed self-hosters"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "The installer needs no administrator privileges, existing Python, or Git checkout."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -LsSf https://raw.githubusercontent.com/matteodante/filo/main/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "filo chat --memory-mode standard"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "set `FILO_LOCAL_BASE_URL` when that"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "When a reply fails, Filo says why and what to do:"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[AGPL-3.0-or-later](LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/matteodante/filo",
+      "fetched_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/matteodante/filo/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:34:12+08:00"
+    },
+    {
+      "id": "release:v0.4.0",
+      "kind": "release",
+      "url": "https://github.com/matteodante/filo/releases/tag/v0.4.0",
+      "fetched_at": "2026-10-29T02:34:12+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Filo runs in a terminal or one private, allowlisted Telegram chat.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:39+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "release:v0.4.0",
+      "quote": "installs the `filo` command as an isolated tool",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:39+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Experimental, self-hosted AI conversation for adult self-reflection.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:39+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Filo",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:39+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "macOS or Linux:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:39+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "The supported first-alpha provider is a personal ChatGPT Plus/Pro account through the experimental",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:39+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "release:v0.4.0",
+      "quote": "adult-only self-hosted alpha for technical",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:39+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Filo runs in a terminal or one private, allowlisted Telegram chat.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:39+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "filo chat --memory-mode standard",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:39+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "/wellbeing",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:39+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -LsSf https://raw.githubusercontent.com/matteodante/filo/main/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:39+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -LsSf https://raw.githubusercontent.com/matteodante/filo/main/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:39+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "powershell -ExecutionPolicy Bypass -c \"irm https://raw.githubusercontent.com/matteodante/filo/main/install.ps1 | iex\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:39+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "release:v0.4.0",
+      "quote": "Filo is an experimental, free, non-commercial, adult-only self-hosted alpha",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:39+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

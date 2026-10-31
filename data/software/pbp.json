@@ -1,0 +1,541 @@
+{
+  "schema_version": "software.v1",
+  "slug": "pbp",
+  "repo_id": "gh:1170556301",
+  "name": "PBP — Persönliches Bewerbungs-Portal",
+  "summary": "Local job assistant for the DACH market to search jobs, track applications, and analyze CVs.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "ai",
+    "automation",
+    "bewerbung",
+    "claude",
+    "claude-desktop",
+    "dach",
+    "job-application",
+    "job-search",
+    "jobsuche",
+    "ki-assistent"
+  ],
+  "use_cases": [
+    "manage job applications in a pipeline with status and follow-ups",
+    "search job listings automatically and rank them with scores",
+    "analyze CV impact from recruiter and ATS perspectives",
+    "prepare for job interviews with simulated interviewer",
+    "track appointments and interviews in a calendar"
+  ],
+  "alternatives_to": [
+    "Excel application tracker"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://github.com/MadGapun/PBP/wiki",
+  "repo": {
+    "url": "https://github.com/MadGapun/PBP",
+    "full_name": "MadGapun/PBP",
+    "created_at": "2026-03-02T08:58:33Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.11"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-pbp-20261031-023655-d367",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone --branch v1.8.0 --depth 1 https://github.com/MadGapun/PBP.git && ls -la PBP && ls -la PBP/installer/",
+          "purpose": "Clone PBP v1.8.0 source"
+        },
+        {
+          "command": "cd PBP && bash installer/install.sh",
+          "purpose": "Build/install via bash installer/install.sh"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "PBP/.venv/bin/python -c \"import bewerbungs_assistent; print(bewerbungs_assistent.__version__)\"",
+        "expected_signal": "1.8.0"
+      },
+      "first_task": "PBP/.venv/bin/python -c \"import bewerbungs_assistent; print(bewerbungs_assistent.__version__)\""
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v1.8.0",
+    "published_at": "2026-10-23T20:07:22Z",
+    "url": "https://github.com/MadGapun/PBP/releases/tag/v1.8.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:41:20.746163+08:00",
+    "runs": [
+      {
+        "id": "verify-pbp-20261031-023655-d367",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:41:20.746163+08:00",
+        "tool_version": "1.8.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --branch v1.8.0 --depth 1 https://github.com/MadGapun/PBP.git && ls -la PBP && ls -la PBP/installer/",
+            "purpose": "Clone PBP v1.8.0 source"
+          },
+          {
+            "command": "cd PBP && bash installer/install.sh",
+            "purpose": "Build/install via bash installer/install.sh"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "PBP/.venv/bin/python -c \"import bewerbungs_assistent; print(bewerbungs_assistent.__version__)\"",
+            "expected_signal": "1.8.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.8.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "PBP/.venv/bin/python PBP/_selftest.py",
+            "expected_signal": "Alle Tests bestanden",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[TEST] Alle Tests bestanden",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -sf --max-time 5 http://127.0.0.1:8201/api/health",
+            "expected_signal": "\"pbp_version\":\"1.8.0\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"pbp_version\":\"1.8.0\",\"python_version\":\"3.12.16\",\"platform\":\"Linux\",\"platform_detail\":\"Linux-4.19.0-gvisor-x86_64-with-glibc2.41\",\"data_dir\":\"/home/sbx/.bewerbungs-assistent\",\"db_size_bytes\":4096,\"db_size_mb\":0.0,\"document_count\":0,\"modules\":{\"httpx\":\"0.28.1\",\"playwright\":\"installed\",\"docx\":\"1.2.0…",
+            "setup": [
+              {
+                "command": "BA_DASHBOARD_PORT=8201 PBP_KEIN_BROWSER=1 BA_DATA_DIR=/home/sbx/.bewerbungs-assistent PBP/.venv/bin/python PBP/start_dashboard.py",
+                "background": true,
+                "port": 8201
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "bash installer/install.sh installs PBP",
+            "actually_needed": "Use PBP/.venv/bin/python directly (e.g. PBP/.venv/bin/python -c \"import bewerbungs_assistent; print(...)\"); the venv bin dir is not added to PATH by the installer.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "CLI command bewerbungs-assistent available after install",
+            "actually_needed": "bewerbungs-assistent entry point is a FastMCP stdio server: running with --help starts the MCP server and waits on stdin (timed out after 30s); version is obtained via python -c import bewerbungs_assistent or /api/health pbp_version.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "PBP runs via Claude Desktop (free app)",
+            "actually_needed": "On Linux without Claude Desktop the installer warns 'Claude Desktop Config-Verzeichnis nicht gefunden' and continues; dashboard and selftest work standalone without Claude, manual MCP config via .venv/bin/python _setup_claude.py after installing Claude Code.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 1.8.0 printed, self-test reporting Alle Tests bestanden, and health API returning pbp_version 1.8.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-pbp-20261031-023655-d367/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-pbp-20261031-023655-d367/check-1-cmd8.judged.png",
+            "runs/verify/verify-pbp-20261031-023655-d367/check-2-cmd5.judged.png",
+            "runs/verify/verify-pbp-20261031-023655-d367/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.104865
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 89.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.9,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 26.7,
+      "signals": {
+        "stars": 7,
+        "monthly_downloads": null,
+        "forks": 4,
+        "dependents": null,
+        "release_downloads": 18,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 242,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 65.31
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:43:57.550284+08:00",
+      "sources_sha": "e1c38ce749fb780da1b7bcd807383fe360beccd40dfeb956e1515e99842ac933",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Local AI job application assistant for the German-speaking job market (DACH) — job search, application tracking, CV analysis."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Es ist gemacht für den deutschsprachigen Raum. Wer gerade keine Bewerbung schreiben muss, braucht es nicht."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**Voraussetzungen:** Windows 10/11 (64-Bit), Internetverbindung, [Claude Desktop](https://claude.ai/download)"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "git clone --branch v1.8.0 --depth 1 https://github.com/MadGapun/PBP.git && cd PBP && bash installer/install.sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "\"Starte die Ersterfassung\""
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Detaillierte Anleitungen, Claude Desktop Config und Fehlerbehebung:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "Doppelklick auf `DEINSTALLIEREN.bat` im PBP-Ordner — oder"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "(LICENSE)\n[![Plattformen](https://img.shields.io/badge/Plattformen-Windows_%7C_macOS_%7C_Linux-blue.svg)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/MadGapun/PBP",
+      "fetched_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/MadGapun/PBP/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:09:13+08:00"
+    },
+    {
+      "id": "release:v1.8.0",
+      "kind": "release",
+      "url": "https://github.com/MadGapun/PBP/releases/tag/v1.8.0",
+      "fetched_at": "2026-10-31T01:09:13+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "MCP server for Claude Desktop, self-hosted, no cloud.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:47+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "ZIP herunterladen und `INSTALLIEREN.bat` doppelklicken",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:47+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Local AI job application assistant for the German-speaking job market (DACH) — job search, application tracking, CV analysis.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:47+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "PBP — Persönliches Bewerbungs-Portal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:47+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Plattformen-Windows_%7C_macOS_%7C_Linux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:47+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.11+ installieren",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:47+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Voraussetzungen:** Windows 10/11 (64-Bit), Internetverbindung, [Claude Desktop]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:47+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:37+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.8.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:09:13+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "release:v1.8.0",
+      "quote": "1.8.0 ist die neue stabile Version und löst die Linie 1.7 ab",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:47+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Bewerbungen verwalten: Pipeline, Status und Nachfassen",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:47+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Stellenanzeigen automatisch durchsuchen und mit Score bewerten",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:47+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "lass deinen Lebenslauf prüfen: Wie wirkt er auf einen Personalberater",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:47+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "so kannst du jedes Vorstellungsgespräch vorbereiten: Claude spielt den Interviewer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:47+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Termine und Vorstellungsgespräche im Kalender",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:47+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Wer nur eine übersichtliche Alternative zur Bewerbungsübersicht in Excel sucht",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:47+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "PBP selbst kostet nichts.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:47+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Gespeichert wird lokal auf deinem Rechner; was du mit Claude bearbeitest, geht an Anthropic.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:47+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:47:20+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

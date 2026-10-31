@@ -1,0 +1,564 @@
+{
+  "schema_version": "software.v1",
+  "slug": "model-orchestrator",
+  "repo_id": "gh:1356502919",
+  "name": "model-orchestrator",
+  "summary": "Routes coding-agent tasks to cheaper or stronger models using editable rules, subagents, and a CLI runner.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-orchestration",
+    "ai-agents",
+    "ai-orchestration",
+    "anthropic",
+    "claude-code",
+    "claude-code-hooks",
+    "cli",
+    "codex",
+    "coding-agents",
+    "cost-optimization"
+  ],
+  "use_cases": [
+    "route routine coding work to cheaper models",
+    "delegate scoped work to another AI CLI lane via brief",
+    "get a model routing suggestion for a task",
+    "summarize local routing split and subagent activity",
+    "run acceptance checks against delegated work"
+  ],
+  "alternatives_to": [
+    "LiteLLM",
+    "Portkey",
+    "OpenRouter",
+    "claude-code-router"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://model-orchestrator.aunysillyme.dev",
+  "repo": {
+    "url": "https://github.com/aunysillyme/model-orchestrator",
+    "full_name": "aunysillyme/model-orchestrator",
+    "created_at": "2026-09-03T22:59:47Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "node>=18"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g model-orchestrator",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Follow the remaining sign-in or setup steps printed after install"
+      ],
+      "check": null,
+      "first_task": "npx model-orchestrator --list"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-model-orchestrator-20261031-004025-476a",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g model-orchestrator",
+          "purpose": "Install via npm global"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "model-orchestrator --help",
+        "expected_signal": "--level 1|2|3"
+      },
+      "first_task": "npx model-orchestrator --list"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.1.2",
+    "published_at": "2026-10-22T18:49:17Z",
+    "url": "https://github.com/aunysillyme/model-orchestrator/releases/tag/v1.1.2"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:41:21.001824+08:00",
+    "runs": [
+      {
+        "id": "verify-model-orchestrator-20261031-004025-476a",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:41:21.001824+08:00",
+        "tool_version": "1.1.2",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g model-orchestrator",
+            "purpose": "Install via npm global"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "model-orchestrator --help",
+            "expected_signal": "--level 1|2|3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "--level 1|2|3 1 beginner (one agent), 2 intermediate (many CLIs), 3 advanced (plus a VM)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "model-orchestrator --version",
+            "expected_signal": "1.1.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.1.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "npx model-orchestrator --list",
+            "expected_signal": "metered API providers (--apis a,b, level 3 gateway only):",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "metered API providers (--apis a,b, level 3 gateway only):",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "aunx --help",
+            "expected_signal": "aunx: model router tools for AI coding agents",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "aunx: model router tools for AI coding agents",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "aunx cli-run --doctor",
+            "expected_signal": "doctor: 6 enabled lane(s): grok, codex, agy, hermes, qwen, claude",
+            "exit_code": 10,
+            "passed": true,
+            "observed_excerpt": "doctor: 6 enabled lane(s): grok, codex, agy, hermes, qwen, claude",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exit as expected and show the catalog with metered APIs, the doctor lane list, and the help usage.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-model-orchestrator-20261031-004025-476a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-model-orchestrator-20261031-004025-476a/check-1-cmd4.judged.png",
+            "runs/verify/verify-model-orchestrator-20261031-004025-476a/check-2-cmd6.judged.png",
+            "runs/verify/verify-model-orchestrator-20261031-004025-476a/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.04519
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 94.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 53.1,
+      "signals": {
+        "stars": 19,
+        "monthly_downloads": 2858,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": 1,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 54,
+      "packages": [
+        "npm:model-orchestrator"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 44.13
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "3abd8fe968dff20c396ec22b60500ce4cc6122a5305835864db69e49d5f391b6",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Model router for AI coding agents: routes routine work to cheaper models with routing rules, 8 subagents, hooks and a CLI runner"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "| Beginner | One agent or chat app | Task classification, model tiers, a task brief, acceptance checks and build protocols |"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Node 18 or newer, with zero runtime dependencies."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npx model-orchestrator"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "npx model-orchestrator --yes --level 2 --ais claude-code,codex --primary claude-code --project . --dir ./ai-orchestrator --dry"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "**What's left for you:** follow the remaining sign-in or setup steps printed at the end."
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "Run `npx model-orchestrator --uninstall --dir ./ai-orchestrator --project .` (add `--dry` to preview)."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Works on macOS and Linux; the level 3 box templates assume Ubuntu."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/aunysillyme/model-orchestrator",
+      "fetched_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/aunysillyme/model-orchestrator/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:34:18+08:00"
+    },
+    {
+      "id": "release:v1.1.2",
+      "kind": "release",
+      "url": "https://github.com/aunysillyme/model-orchestrator/releases/tag/v1.1.2",
+      "fetched_at": "2026-10-29T02:34:18+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "hooks and a CLI runner",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "npm install -g model-orchestrator",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "aunx cli-run '<lane>' --brief TASK_BRIEF.md",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Model router for AI coding agents: routes routine work to cheaper models with routing rules, 8 subagents, hooks and a CLI runner",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# model-orchestrator",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Works on macOS and Linux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Node 18 or newer, with zero runtime dependencies.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.1.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:34:18+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "github_api",
+      "quote": "routes routine work to cheaper models with routing rules",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "aunx cli-run '<lane>' --brief TASK_BRIEF.md",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "aunx route \"rename this file\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "aunx route-metrics --summary",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "aunx checks run ACCEPTANCE_CHECKS.json",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "An HTTP proxy or gateway such as LiteLLM, Portkey, OpenRouter or claude-code-router swaps the model per request underneath the agent.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "An HTTP proxy or gateway such as LiteLLM, Portkey, OpenRouter or claude-code-router swaps the model per request underneath the agent.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "An HTTP proxy or gateway such as LiteLLM, Portkey, OpenRouter or claude-code-router swaps the model per request underneath the agent.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "An HTTP proxy or gateway such as LiteLLM, Portkey, OpenRouter or claude-code-router swaps the model per request underneath the agent.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g model-orchestrator",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g model-orchestrator",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "npx model-orchestrator` is free and adds project activation",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:27+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

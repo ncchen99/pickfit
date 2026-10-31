@@ -19,7 +19,7 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--repo", action="append", help="batch: only this repo id (gh:<id>) or owner/name")
     v.add_argument("--records", action="store_true",
                    help="batch: only candidates that have a record in --data-dir (the profiles)")
-    v.add_argument("--category", action="append", choices=["dev_cli", "local_ai"],
+    v.add_argument("--category", action="append", choices=["dev_cli", "local_ai", "mcp_server"],
                    help="batch: only this category (repeatable)")
     v.add_argument("--force", action="store_true", help="batch: also tools that already have a run")
     v.add_argument("--since", metavar="YYYYmmdd-HHMMSS",
@@ -36,6 +36,10 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--max-turns", type=int, default=None, help="turn limit (default 25)")
     v.add_argument("--gpu", choices=["T4", "L4", "A10"], default=None,
                    help="Modal: give each box this NVIDIA GPU (for tools whose core job needs one)")
+    v.add_argument("--runtime", choices=["gvisor", "vm"], default="gvisor",
+                   help="Modal: gVisor (default) or a microVM; a VM also drops DNS while the network is off")
+    v.add_argument("--display", action="store_true",
+                   help="Modal: a virtual display (Xvfb) and launch_gui, so GUI apps can be launched and judged")
     v.add_argument("--platform", default="linux/amd64", help="Docker platform (Modal runs x86_64)")
     v.add_argument("--keep-box", action="store_true", help="Docker: leave the agent's container running")
     v.add_argument("--write-back", action="store_true",
@@ -49,10 +53,13 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.set_defaults(func=run)
 
 
-def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", gpu: str | None = None):
+def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", gpu: str | None = None,
+                runtime: str = "gvisor", display: bool = False):
     """(run_id, role) -> an unstarted box of the chosen runner."""
     from pickfit.verify.box import BoxLimits, DockerBox
 
+    if runner != "modal" and (runtime != "gvisor" or display):
+        raise ValueError("--runtime and --display need --runner modal")
     if runner == "tart":
         if gpu:
             raise ValueError("--gpu needs --runner modal")
@@ -69,7 +76,8 @@ def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", 
         from pickfit.verify.modal_box import ModalBox
 
         return lambda run_id, role: ModalBox(tags={"pickfit.run": run_id, "pickfit.role": role},
-                                             limits=BoxLimits(lifetime_s=lifetime_s), gpu=gpu)
+                                             limits=BoxLimits(lifetime_s=lifetime_s), gpu=gpu, runtime=runtime,
+                                             display=display)
     if gpu:
         raise ValueError("--gpu needs --runner modal")
     return lambda run_id, role: DockerBox(platform=platform, labels={"pickfit.run": run_id, "pickfit.role": role},
@@ -100,11 +108,15 @@ def run(args: argparse.Namespace) -> int:
 
         prepare_base()
         return 0
+    if (args.runtime != "gvisor" or args.display) and args.runner != "modal":
+        print("pickfit verify: --runtime and --display need --runner modal")
+        return 2
     if args.limits_test:
         from pickfit.verify.agent import _runs_dir
         from pickfit.verify.limits import limits_test
 
-        results, _ = limits_test(box_factory(args.runner, 900, platform=args.platform), _runs_dir(None))
+        results, _ = limits_test(box_factory(args.runner, 900, platform=args.platform, runtime=args.runtime,
+                                             display=args.display), _runs_dir(None))
         return 0 if all(r.ok for r in results) else 1
     if not args.fixture and not args.batch:
         print("pickfit verify: give --fixture or --batch N")
@@ -116,7 +128,7 @@ def run(args: argparse.Namespace) -> int:
         print("pickfit verify: --gpu needs --runner modal")
         return 2
     make_box = box_factory(args.runner, int(limits.max_seconds) + LIFETIME_MARGIN_S, platform=args.platform,
-                           gpu=args.gpu)
+                           gpu=args.gpu, runtime=args.runtime, display=args.display)
     if args.batch:
         if args.runner == "tart" and args.concurrency > TART_MAX_VMS:
             print(f"pickfit verify: macOS allows {TART_MAX_VMS} VMs at once; concurrency {args.concurrency} -> "
@@ -138,7 +150,14 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
     from pickfit.discover.run import pipeline_db_path
     from pickfit.meta import resolve_model
     from pickfit.verify.agent import DEFAULT_MODE, _runs_dir
-    from pickfit.verify.batch import load_candidates, recheck_slugs, record_slugs, run_batch, verified_slugs
+    from pickfit.verify.batch import (
+        load_candidates,
+        recheck_slugs,
+        record_categories,
+        record_slugs,
+        run_batch,
+        verified_slugs,
+    )
     from pickfit.verify.pipeline import verify_task
     from pickfit.verify.result import DATA_DIR
 
@@ -158,9 +177,12 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
         print(f"pickfit verify: no records in {data_dir}")
         return 2
     items, skipped = load_candidates(db, limit=args.batch, repos=repos, categories=args.category,
-                                     skip_slugs=skip, known_slugs=known, gpu=bool(args.gpu),
-                                     os={"tart": "macos", "vbox": "windows"}.get(args.runner, "linux"))
+                                     skip_slugs=skip, known_slugs=known,
+                                     known_categories=record_categories(data_dir), gpu=bool(args.gpu),
+                                     os={"tart": "macos", "vbox": "windows"}.get(args.runner, "linux"),
+                                     display=args.display)
     print(f"batch · {len(items)} to verify · {len(skipped)} set aside · {args.runner}"
+          f"{' ' + args.runtime if args.runner == 'modal' else ''}{' + display' if args.display else ''}"
           f"{' + ' + args.gpu if args.gpu else ''} · "
           f"concurrency {args.concurrency} · {resolve_model(args.model)}")
     for item in items:
@@ -173,14 +195,15 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
     if args.runner == "modal":  # build or fetch the image once, not in every thread
         from pickfit.verify.modal_box import ensure_published_image
 
-        ensure_published_image()
+        ensure_published_image(runtime=args.runtime, display=args.display)
 
     def verify(task, log):
         return verify_task(task, make_box, model=args.model, mode=args.mode or DEFAULT_MODE, limits=limits,
                            runs_dir=runs_dir, log=log, write=args.write_back, data_dir=data_dir)
 
     summary = run_batch(items, verify, concurrency=args.concurrency, runs_dir=runs_dir,
-                        meta={"db": str(db), "runner": args.runner, "gpu": args.gpu, "model": resolve_model(args.model),
+                        meta={"db": str(db), "runner": args.runner, "runtime": args.runtime, "display": args.display,
+                              "gpu": args.gpu, "model": resolve_model(args.model),
                               "skipped": skipped})
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     return 0

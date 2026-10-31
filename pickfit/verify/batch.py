@@ -3,9 +3,9 @@
 Candidates come from the pipeline database (runs/pipeline.db, or --db), opened
 read-only: a candidate that passed the rules and has a finished extraction
 (muse-spark-1.3 preferred over the contributor model). Before any box starts,
-the program sets aside what the box cannot verify (GUI apps, browser
-extensions, GPU only, another OS only, Apple Silicon only in a Linux box, no
-install path the box can run) with the reason, and skips slugs that already
+the program sets aside what the box cannot verify (GUI apps unless the boxes
+have a display, browser extensions, GPU only, another OS only, Apple Silicon
+only in a Linux box, no install path the box can run) with the reason, and skips slugs that already
 have a run on the same runner unless --force.
 
 The rest are ranked demo-first: tools a user runs (CLI, TUI, local server)
@@ -87,10 +87,13 @@ def demo_priority(ex: ExtractionResult) -> int:
     return score
 
 
-def not_in_box(ex: ExtractionResult, *, gpu: bool = False, os: str = "linux") -> str | None:
-    """Why a box running `os` (with an NVIDIA GPU when `gpu`) cannot verify this at all, or None."""
+def not_in_box(ex: ExtractionResult, *, gpu: bool = False, os: str = "linux", display: bool = False) -> str | None:
+    """Why a box running `os` (with an NVIDIA GPU when `gpu`, a virtual display when `display`) cannot verify
+    this at all, or None."""
     kind = ex.kind.value
-    if kind in NOT_IN_BOX_KINDS:
+    if kind == "desktop_app" and display and os == "linux":
+        pass
+    elif kind in NOT_IN_BOX_KINDS:
         return NOT_IN_BOX_KINDS[kind]
     if kind is not None and kind not in TOOL_KINDS:
         return f"not a tool ({kind})"
@@ -115,6 +118,18 @@ def _connect_ro(db: Path) -> sqlite3.Connection:
     conn = sqlite3.connect(f"file:{db}?mode=ro", uri=True, timeout=30)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def record_categories(data_dir: Path) -> dict[str, str]:
+    """repo_id -> category of the records already in data/software: a record's category wins."""
+    found: dict[str, str] = {}
+    for path in sorted(data_dir.glob("*.json")):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            found[data["repo_id"]] = data["category"]
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+    return found
 
 
 def record_slugs(data_dir: Path) -> dict[str, str]:
@@ -154,13 +169,16 @@ def recheck_slugs(data_dir: Path, runs_dir: Path) -> set[str]:
 
 def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
                     categories: list[str] | None = None, skip_slugs: set[str] | None = None,
-                    known_slugs: dict[str, str] | None = None, gpu: bool = False,
-                    os: str = "linux") -> tuple[list[BatchItem], list[dict[str, Any]]]:
+                    known_slugs: dict[str, str] | None = None, known_categories: dict[str, str] | None = None,
+                    gpu: bool = False, os: str = "linux", display: bool = False
+                    ) -> tuple[list[BatchItem], list[dict[str, Any]]]:
     """Ranked batch items (at most `limit`) and the candidates set aside, with reasons.
 
-    known_slugs (repo_id -> slug, from record_slugs) wins over a slug made from the name.
+    known_slugs (repo_id -> slug, from record_slugs) wins over a slug made from the name, and
+    known_categories (from record_categories) over the extraction's category.
     gpu: the boxes have an NVIDIA GPU, so tools that require one are not set aside.
     os: what the boxes run (linux, or macos for TartBox).
+    display: the boxes have a virtual display, so GUI apps are not set aside (Linux).
     """
     skip_slugs = skip_slugs or set()
     known_slugs = known_slugs or {}
@@ -182,16 +200,24 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
     for row in sorted(best.values(), key=lambda r: r["full_name"].lower()):
         if wanted and row["repo_id"].lower() not in wanted and row["full_name"].lower() not in wanted:
             continue
-        if categories and row["category"] not in categories:
-            continue
-        slug = known_slugs.get(row["repo_id"]) or slug_for(row["full_name"], taken)
-        note = {"repo_id": row["repo_id"], "full_name": row["full_name"], "slug": slug}
         try:
             ex = ExtractionResult.model_validate_json(row["result"])
         except ValidationError as err:
-            skipped.append({**note, "reason": f"extraction does not validate: {str(err)[:120]}"})
+            ex = None
+            invalid = f"extraction does not validate: {str(err)[:120]}"
+        # The record's category: the record's own, else the extraction's, else the discovery query's (as
+        # profiles.py decides). A record verified as a CLI tool is not checked as an MCP server.
+        category = (known_categories or {}).get(row["repo_id"]) or (ex.category.value if ex else None) \
+            or row["category"]
+        recorded = row["repo_id"] in (known_categories or {})
+        if categories and category not in categories and (recorded or row["category"] not in categories):
+            continue  # a record's own category decides; without one, the query's may match too
+        slug = known_slugs.get(row["repo_id"]) or slug_for(row["full_name"], taken)
+        note = {"repo_id": row["repo_id"], "full_name": row["full_name"], "slug": slug}
+        if ex is None:
+            skipped.append({**note, "reason": invalid})
             continue
-        why = not_in_box(ex, gpu=gpu, os=os)
+        why = not_in_box(ex, gpu=gpu, os=os, display=display)
         if why:
             skipped.append({**note, "reason": why})
             continue
@@ -203,8 +229,8 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
             continue
         repo = json.loads(row["repo"] or "{}")
         url = repo.get("html_url") or f"https://github.com/{row['full_name']}"
-        task = VerifyTask(slug=slug, repo_url=url, readme=row["readme"], extraction=ex)
-        items.append(BatchItem(task, row["repo_id"], row["full_name"], row["category"], ex.kind.value,
+        task = VerifyTask(slug=slug, repo_url=url, readme=row["readme"], extraction=ex, category=category)
+        items.append(BatchItem(task, row["repo_id"], row["full_name"], category, ex.kind.value,
                                demo_priority(ex), row["model"]))
     items.sort(key=lambda i: (-i.priority, i.full_name.lower()))
     return items[:limit], skipped

@@ -1,0 +1,694 @@
+{
+  "schema_version": "software.v1",
+  "slug": "seo-audit",
+  "repo_id": "gh:1306490490",
+  "name": "SEO Console",
+  "summary": "MCP server that joins Search Console data with a site crawl for prioritized technical SEO audits.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-seo",
+    "backlink-analysis",
+    "claude",
+    "crawler",
+    "dataforseo",
+    "google-search-console",
+    "keyword-research",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol"
+  ],
+  "use_cases": [
+    "run a technical SEO audit on a site",
+    "show keyword cannibalisation with evidence",
+    "diff two crawls to detect changes",
+    "find link prospects linking to rivals",
+    "export a shareable HTML audit report"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://houtini.com/articles/how-to-do-a-technical-seo-audit-with-claude/",
+  "repo": {
+    "url": "https://github.com/houtini-ai/seo-audit",
+    "full_name": "houtini-ai/seo-audit",
+    "created_at": "2026-07-20T10:31:09Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js 20 or newer"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "Google Search Console service-account key"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-seo-audit-20261031-014931-139a",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @houtini/seo-audit-console@0.5.1",
+          "purpose": "install seo-audit-console globally"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.5.1",
+    "published_at": "2026-08-14T08:32:21Z",
+    "url": "https://github.com/houtini-ai/seo-audit/releases/tag/v0.5.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:52:06.938033+08:00",
+    "runs": [
+      {
+        "id": "verify-seo-audit-20261031-014931-139a",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:52:06.938033+08:00",
+        "tool_version": "0.5.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @houtini/seo-audit-console@0.5.1",
+            "purpose": "install seo-audit-console globally"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- seo-audit-console",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call list_checks --args '{}' -- seo-audit-console",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list_checks content=text text_chars=9",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx -y @houtini/seo-audit-console@0.5.1",
+            "actually_needed": "npm install -g @houtini/seo-audit-console@0.5.1 so seo-audit-console is on PATH and works with network off",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "GOOGLE_APPLICATION_CREDENTIALS alone is the whole core audit (required first line)",
+            "actually_needed": "server starts with no GOOGLE_APPLICATION_CREDENTIALS set, logs GSC disabled, and still answers initialize/tools/list plus local tools like list_checks",
+            "kind": "note"
+          },
+          {
+            "readme_said": "seo-audit-console --help shows help",
+            "actually_needed": "seo-audit-console starts an MCP stdio server and waits on stdin instead of printing help and exiting",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both probes show successful MCP handshake with 48 tools listed and list_checks returning 93 checks.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-seo-audit-20261031-014931-139a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-seo-audit-20261031-014931-139a/check-1-cmd4.judged.png",
+            "runs/verify/verify-seo-audit-20261031-014931-139a/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.043772,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "seo-audit-console"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "seo-audit-console",
+          "server_version": "0.5.1",
+          "tools": [
+            "seo_audit_help",
+            "composition_cookbook",
+            "list_checks",
+            "list_templates",
+            "data_location",
+            "data_storage",
+            "run_audit",
+            "query_audit",
+            "query_data",
+            "score_passages",
+            "draft_content",
+            "detect_changes",
+            "check_agent_readiness",
+            "fix_finding",
+            "normalize_url",
+            "list_properties",
+            "refresh_property",
+            "sync_gsc",
+            "check_sync_status",
+            "inspect_urls",
+            "start_crawl",
+            "check_crawl_status",
+            "keyword_volume",
+            "related_terms",
+            "suggest_pages",
+            "content_opportunities",
+            "recon_targets",
+            "save_recon_todo",
+            "recon_todos",
+            "keyword_list",
+            "search_intent",
+            "page_lighthouse",
+            "competitors_domain",
+            "page_intersection",
+            "domain_visibility",
+            "top_pages",
+            "ranked_keywords",
+            "serp_features",
+            "market_sizing",
+            "topic_gaps",
+            "get_dashboard",
+            "get_dashboard_data",
+            "export_report",
+            "serve_dashboard",
+            "pull_backlinks",
+            "link_intersect",
+            "resolve_entities",
+            "track_ranks"
+          ],
+          "tool_count": 48,
+          "called_tool": "list_checks",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": "npx -y @houtini/seo-audit-console@0.5.1",
+    "client_configs": [
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"seo-audit-console\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@houtini/seo-audit-console\"],"
+      },
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add seo-audit-console --env GOOGLE_APPLICATION_CREDENTIALS=C:/path/to/service-account.json -- npx -y @houtini/seo-audit-console"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "GOOGLE_APPLICATION_CREDENTIALS",
+        "required": true,
+        "purpose": "Google Search Console service-account key"
+      },
+      {
+        "name": "DATAFORSEO_USERNAME",
+        "required": false,
+        "purpose": "DataForSEO login"
+      },
+      {
+        "name": "DATAFORSEO_PASSWORD",
+        "required": false,
+        "purpose": "DataForSEO login"
+      },
+      {
+        "name": "MAJESTIC_API_KEY",
+        "required": false,
+        "purpose": "Trust Flow link data"
+      },
+      {
+        "name": "CRUX_API_KEY",
+        "required": false,
+        "purpose": "field Core Web Vitals"
+      }
+    ],
+    "tools": [
+      "run_audit",
+      "get_dashboard",
+      "open_dashboard",
+      "export_report"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 96.5,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.9375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.75,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 78.6,
+      "signals": {
+        "stars": 88,
+        "monthly_downloads": 2339,
+        "forks": 7,
+        "dependents": null,
+        "release_downloads": 5,
+        "hn_top_score": 2,
+        "registries_count": 1
+      },
+      "age_days": 102,
+      "packages": [
+        "npm:@houtini/seo-audit-console"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 20.65
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "89574e030b27380d30bd9312af5d324529c1fc31b2594f03d86d95c9e9796d6f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "SEO Audit Console runs inside Claude, pulls your **Google Search Console** history, crawls your site properly, and joins the two"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "The SEO consultant who wants the collection and checking automated so the thinking time survives."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "You need Node.js 20 or newer and a Search Console property you own."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "claude mcp add seo-audit-console --env GOOGLE_APPLICATION_CREDENTIALS=C:/path/to/service-account.json -- npx -y @houtini/seo-audit-console"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "you  › run an SEO audit on mysite.com\n\n     ⣾ search console  1.8M rows synced (19s - incremental)"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "\"GOOGLE_APPLICATION_CREDENTIALS\": \"C:/path/to/service-account.json\","
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "that account's email has to be **added as a user on your property** in Search Console, or the tool can't see any of your data."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=flat-square)](./LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/houtini-ai/seo-audit",
+      "fetched_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/houtini-ai/seo-audit/blob/master/README.md",
+      "fetched_at": "2026-10-31T01:06:43+08:00"
+    },
+    {
+      "id": "release:v0.5.1",
+      "kind": "release",
+      "url": "https://github.com/houtini-ai/seo-audit/releases/tag/v0.5.1",
+      "fetched_at": "2026-10-31T01:06:43+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Free SEO Audit MCP server for Claude - captures and stores all the raw data",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "run inside Claude.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Model Context Protocol](https://modelcontextprotocol.io) server that merges",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "pulls your **Google Search Console** history, crawls your site properly, and joins the two",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# SEO Console - the technical/content/research/opportunity SEO audit MCP server for Claude",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "You need Node.js 20 or newer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "release:v0.5.1",
+      "quote": "Only the Google Search Console service-account key is required",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.5.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:06:43+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "run an SEO audit on mysite.com",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "\"Show me the cannibalisation findings with evidence\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "\"Detect changes on mysite.com\" diffs your two most recent crawls",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "\"Link intersect for mysite.com vs rival1.com, rival2.com\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "\"export the report for mysite.com\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "github_api",
+      "quote": "Free SEO Audit MCP server for Claude",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Your data stays on your machine.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "release:v0.5.1",
+      "quote": "npx -y @houtini/seo-audit-console@0.5.1",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"seo-audit-console\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@houtini/seo-audit-console\"],",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "claude mcp add seo-audit-console --env GOOGLE_APPLICATION_CREDENTIALS=C:/path/to/service-account.json -- npx -y @houtini/seo-audit-console",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "GOOGLE_APPLICATION_CREDENTIALS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "DATAFORSEO_USERNAME",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "DATAFORSEO_PASSWORD",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "MAJESTIC_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "CRUX_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`run_audit` executes **143 checks** over the joined data",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "The dashboard drawn inside the conversation (`get_dashboard`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "(`open_dashboard`). Click it.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "One self-contained HTML file (`export_report`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:33+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:50:13+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

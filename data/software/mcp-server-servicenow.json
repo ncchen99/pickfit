@@ -1,0 +1,728 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mcp-server-servicenow",
+  "repo_id": "gh:1152294473",
+  "name": "ServiceNow MCP Server",
+  "summary": "MCP server that connects AI clients to ServiceNow tables, CMDB, schema and update sets.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-skills",
+    "ai-agents",
+    "claude-code",
+    "cmdb",
+    "codex",
+    "fastmcp",
+    "github-copilot",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol"
+  ],
+  "use_cases": [
+    "list fields of cmdb_ci_server including inherited ones",
+    "check who holds admin and direct role grants",
+    "review an update set before promotion",
+    "find server CIs missing IP address or owner",
+    "count open incidents per assignment group"
+  ],
+  "alternatives_to": [
+    "ServiceNow's own MCP servers"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://pypi.org/project/mcp-server-servicenow/",
+  "repo": {
+    "url": "https://github.com/jschuller/mcp-server-servicenow",
+    "full_name": "jschuller/mcp-server-servicenow",
+    "created_at": "2026-02-07T17:01:55Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v0.9.3",
+    "published_at": "2026-10-29T01:20:08Z",
+    "url": "https://github.com/jschuller/mcp-server-servicenow/releases/tag/v0.9.3"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "needs_account",
+    "checked_at": "2026-10-31T01:28:00.065224+08:00",
+    "runs": [
+      {
+        "id": "verify-mcp-server-servicenow-20261031-012724-502d",
+        "level": "unverified",
+        "unverified_reason": "needs_account",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:28:00.065224+08:00",
+        "tool_version": "0.9.3",
+        "install_method": "uv",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "uv tool install mcp-server-servicenow 2>&1",
+            "purpose": "install via uv tool"
+          }
+        ],
+        "smoke_tests": [],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-mcp-server-servicenow-20261031-012724-502d/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.049341
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "uvx mcp-server-servicenow",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add servicenow \\\n  -e SERVICENOW_INSTANCE_URL=https://devNNNNNN.service-now.com \\\n  -e SERVICENOW_USERNAME=mcp.integration \\\n  -e SERVICENOW_PASSWORD=\"$SERVICENOW_PASSWORD\" \\\n  -- uvx mcp-server-servicenow"
+      },
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"servicenow\": {\n      \"command\": \"uvx\",\n      \"args\": [\"mcp-server-servicenow\"],\n      \"env\": {\n        \"SERVICENOW_INSTANCE_URL\": \"https://devNNNNNN.service-now.com\",\n        \"SERVICENOW_USERNAME\": \"mcp.integration\",\n        \"SERVICENOW_PASSWORD\": \"your-password\"\n      }\n    }\n  }\n}"
+      },
+      {
+        "client": "vscode",
+        "snippet": "{\n  \"inputs\": [\n    { \"type\": \"promptString\", \"id\": \"servicenow-url\", \"description\": \"ServiceNow instance URL, e.g. https://devNNNNNN.service-now.com\" },\n    { \"type\": \"promptString\", \"id\": \"servicenow-password\", \"description\": \"Password for mcp.integration\", \"password\": true }\n  ],\n  \"servers\": {\n    \"servicenow\": {\n      \"type\": \"stdio\",\n      \"command\": \"uvx\",\n      \"args\": [\"mcp-server-servicenow\"],\n      \"env\": {\n        \"SERVICENOW_INSTANCE_URL\": \"${input:servicenow-url}\",\n        \"SERVICENOW_USERNAME\": \"mcp.integration\",\n        \"SERVICENOW_PASSWORD\": \"${input:servicenow-password}\"\n      }\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "SERVICENOW_INSTANCE_URL",
+        "required": true,
+        "purpose": "ServiceNow instance URL"
+      },
+      {
+        "name": "SERVICENOW_USERNAME",
+        "required": true,
+        "purpose": "ServiceNow integration user"
+      },
+      {
+        "name": "SERVICENOW_PASSWORD",
+        "required": true,
+        "purpose": "Password for integration user"
+      },
+      {
+        "name": "SERVICENOW_SKILLS",
+        "required": null,
+        "purpose": "turn packaged skills on or off"
+      }
+    ],
+    "tools": [
+      "list_records",
+      "get_record",
+      "create_record",
+      "update_record",
+      "delete_record",
+      "aggregate_records",
+      "list_ci",
+      "get_ci",
+      "create_ci",
+      "update_ci",
+      "get_ci_relationships",
+      "get_table_schema",
+      "get_current_user",
+      "get_system_properties",
+      "find_references",
+      "list_update_sets",
+      "get_update_set",
+      "create_update_set",
+      "set_current_update_set",
+      "list_update_set_changes"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.5,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.65,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 57.3,
+      "signals": {
+        "stars": 26,
+        "monthly_downloads": 1362,
+        "forks": 10,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 265,
+      "packages": [
+        "pypi:mcp-server-servicenow"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 29.46
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "1981afefd630ef6685d6c0bf1e6069de1a7a3ac14ead60709b97f9cd8849b22a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "query any table, read schema and CMDB, review update sets."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "On a company instance, ask your ServiceNow admin for the user in step 2."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "You need [uv](https://docs.astral.sh/uv/getting-started/installation/)"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "uvx mcp-server-servicenow"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "prints one line per check (instance reachable, identity, roles, table read, schema, aggregates)"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "-e SERVICENOW_INSTANCE_URL=https://devNNNNNN.service-now.com"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "`Got HTML instead of JSON`"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Free, MIT, works on a free developer instance."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/jschuller/mcp-server-servicenow",
+      "fetched_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/jschuller/mcp-server-servicenow/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:06:09+08:00"
+    },
+    {
+      "id": "release:v0.9.3",
+      "kind": "release",
+      "url": "https://github.com/jschuller/mcp-server-servicenow/releases/tag/v0.9.3",
+      "fetched_at": "2026-10-31T01:06:09+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "ServiceNow MCP server for Claude Code, GitHub Copilot, Codex and any MCP client",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "`uvx mcp-server-servicenow` gives an AI assistant the ServiceNow developer data plane",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Connect Claude Code, GitHub Copilot, Codex, opencode, Antigravity or any MCP client to ServiceNow:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Connect Claude Code, GitHub Copilot, Codex, opencode, Antigravity or any MCP client to ServiceNow:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1 align=\"center\">ServiceNow MCP Server</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "prints one line per check (instance reachable, identity, roles, table read, schema, aggregates)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:51+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.9.3",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:06:09+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "*\"Which fields does `cmdb_ci_server` have, including inherited ones?\"*",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "*\"Who holds admin, and which roles are granted directly instead of through a group?\"*",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "*\"Review update set 'Q3 fixes' before I promote it.\"*",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "*\"Which server CIs are missing an IP address or an owner?\"*",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "*\"How many open incidents does each assignment group have?\"*",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "It runs alongside ServiceNow's own MCP servers ([how they differ]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "github_api",
+      "quote": "Free, MIT, works on a free developer instance.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "the server talks only to your instance; no telemetry",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "<!-- mcp-server: servicenow | tools: 20 | resources: 5 | skills: 4 | transport: stdio,streamable-http | auth: basic,oauth,api_key | framework: fastmcp-4.1 -->",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "`uvx mcp-server-servicenow` gives an AI assistant the ServiceNow developer data plane",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add servicenow \\\n  -e SERVICENOW_INSTANCE_URL=https://devNNNNNN.service-now.com \\\n  -e SERVICENOW_USERNAME=mcp.integration \\\n  -e SERVICENOW_PASSWORD=\"$SERVICENOW_PASSWORD\" \\\n  -- uvx mcp-server-servicenow",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"servicenow\": {\n      \"command\": \"uvx\",\n      \"args\": [\"mcp-server-servicenow\"],\n      \"env\": {\n        \"SERVICENOW_INSTANCE_URL\": \"https://devNNNNNN.service-now.com\",\n        \"SERVICENOW_USERNAME\": \"mcp.integration\",\n        \"SERVICENOW_PASSWORD\": \"your-password\"\n      }\n   ",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/2",
+      "source_id": "readme",
+      "quote": "{\n  \"inputs\": [\n    { \"type\": \"promptString\", \"id\": \"servicenow-url\", \"description\": \"ServiceNow instance URL, e.g. https://devNNNNNN.service-now.com\" },\n    { \"type\": \"promptString\", \"id\": \"servicenow-password\", \"description\": \"Password for mcp.integration\", \"password\": true }\n  ],\n  \"servers\": {\n ",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "SERVICENOW_INSTANCE_URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "SERVICENOW_USERNAME",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "SERVICENOW_PASSWORD",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "SERVICENOW_SKILLS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`list_records` `get_record` `create_record` `update_record` `delete_record` `aggregate_records`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`list_records` `get_record` `create_record` `update_record` `delete_record` `aggregate_records`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`list_records` `get_record` `create_record` `update_record` `delete_record` `aggregate_records`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`list_records` `get_record` `create_record` `update_record` `delete_record` `aggregate_records`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`list_records` `get_record` `create_record` `update_record` `delete_record` `aggregate_records`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`list_records` `get_record` `create_record` `update_record` `delete_record` `aggregate_records`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`list_ci` `get_ci` `create_ci` `update_ci` `get_ci_relationships`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`list_ci` `get_ci` `create_ci` `update_ci` `get_ci_relationships`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`list_ci` `get_ci` `create_ci` `update_ci` `get_ci_relationships`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`list_ci` `get_ci` `create_ci` `update_ci` `get_ci_relationships`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`list_ci` `get_ci` `create_ci` `update_ci` `get_ci_relationships`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`get_table_schema` `get_current_user` `get_system_properties` `find_references`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "`get_table_schema` `get_current_user` `get_system_properties` `find_references`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "`get_table_schema` `get_current_user` `get_system_properties` `find_references`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/14",
+      "source_id": "readme",
+      "quote": "`get_table_schema` `get_current_user` `get_system_properties` `find_references`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/15",
+      "source_id": "readme",
+      "quote": "`list_update_sets` `get_update_set` `create_update_set` `set_current_update_set` `list_update_set_changes`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/16",
+      "source_id": "readme",
+      "quote": "`list_update_sets` `get_update_set` `create_update_set` `set_current_update_set` `list_update_set_changes`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/17",
+      "source_id": "readme",
+      "quote": "`list_update_sets` `get_update_set` `create_update_set` `set_current_update_set` `list_update_set_changes`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/18",
+      "source_id": "readme",
+      "quote": "`list_update_sets` `get_update_set` `create_update_set` `set_current_update_set` `list_update_set_changes`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/19",
+      "source_id": "readme",
+      "quote": "`list_update_sets` `get_update_set` `create_update_set` `set_current_update_set` `list_update_set_changes`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:15:39+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:50+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

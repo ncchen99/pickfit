@@ -1,0 +1,530 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mnemoteca",
+  "repo_id": "gh:1176154170",
+  "name": "Mnemoteca",
+  "summary": "Local CLI that stores short memories and retrieves them with hybrid search.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-memory",
+    "llm",
+    "local-first",
+    "mnemoteca",
+    "semantic-search",
+    "sqlite",
+    "vector-search"
+  ],
+  "use_cases": [
+    "store a short memory text",
+    "search stored memories with hybrid search",
+    "list stored documents",
+    "export a collection to JSONL",
+    "import a collection from JSONL"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/RunWield/mnemoteca",
+    "full_name": "RunWield/mnemoteca",
+    "created_at": "2026-03-08T17:33:36Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Go 1.21+"
+    ],
+    "system_packages": [
+      "GCC"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/RunWield/mnemoteca/main/install.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Make sure ~/.local/bin is on your PATH"
+      ],
+      "check": null,
+      "first_task": "mnemoteca --help"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mnemoteca-20261031-021912-d67f",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/RunWield/mnemoteca/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
+          "purpose": "Download install script for reading"
+        },
+        {
+          "command": "sh /tmp/install.sh",
+          "purpose": "Install mnemoteca via install script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mnemoteca --help",
+        "expected_signal": "Mnemoteca - Local Document Storage & Retrieval"
+      },
+      "first_task": "mnemoteca version"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.3.4",
+    "published_at": "2026-10-06T17:42:53Z",
+    "url": "https://github.com/RunWield/mnemoteca/releases/tag/v0.3.4"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:20:07.000016+08:00",
+    "runs": [
+      {
+        "id": "verify-mnemoteca-20261031-021912-d67f",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:20:07.000016+08:00",
+        "tool_version": "0.3.4",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/RunWield/mnemoteca/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
+            "purpose": "Download install script for reading"
+          },
+          {
+            "command": "sh /tmp/install.sh",
+            "purpose": "Install mnemoteca via install script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mnemoteca --help",
+            "expected_signal": "Mnemoteca - Local Document Storage & Retrieval",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Mnemoteca - Local Document Storage & Retrieval",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mnemoteca version",
+            "expected_signal": "mnemoteca 0.3.4 (linux/amd64)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mnemoteca 0.3.4 (linux/amd64)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mnemoteca list",
+            "expected_signal": "No documents in collection \"work\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No documents in collection \"work\"",
+            "setup": [
+              {
+                "command": "mnemoteca init",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mnemoteca stats",
+            "expected_signal": "Mnemoteca Statistics",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Mnemoteca Statistics",
+            "setup": [
+              {
+                "command": "mnemoteca init",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "mnemoteca list",
+            "actually_needed": "run `mnemoteca init` first to create the default collection, then `mnemoteca list` prints `No documents in collection \"work\"`",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three commands succeeded, showing empty collection notice, database statistics, and full help text.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mnemoteca-20261031-021912-d67f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mnemoteca-20261031-021912-d67f/check-1-cmd7.judged.png",
+            "runs/verify/verify-mnemoteca-20261031-021912-d67f/check-2-cmd8.judged.png",
+            "runs/verify/verify-mnemoteca-20261031-021912-d67f/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.062915
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 94.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 47.1,
+      "signals": {
+        "stars": 30,
+        "monthly_downloads": null,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": 1250,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 236,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 49.78
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:43:57.550284+08:00",
+      "sources_sha": "607bfbedfd837d598c3d4fa228bd900f631bea379f5503787b4aeed964fd86e4",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Mnemoteca is a local document storage and retrieval CLI built in Go. Store short"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Mnemoteca — local memory for every agent."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "For the one-command install, you need `sh`, `curl` or `wget`, and `tar`."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "brew install gandazgul/tap/mnemoteca"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "mnemoteca add \"Go is a statically typed programming language\""
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "MNEMOTECA_CONFIG=./configs/jina-v5-text-nano-retrieval.yaml mnemoteca search \"query\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "operation was canceled before Mnemoteca starts"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "MIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/RunWield/mnemoteca",
+      "fetched_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/RunWield/mnemoteca/blob/main/README.md",
+      "fetched_at": "2026-10-31T02:10:47+08:00"
+    },
+    {
+      "id": "release:v0.3.4",
+      "kind": "release",
+      "url": "https://github.com/RunWield/mnemoteca/releases/tag/v0.3.4",
+      "fetched_at": "2026-10-31T02:10:47+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "local document storage and retrieval CLI built in Go",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:21+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Install the CLI once, then add the integration",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:21+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "local document storage and retrieval CLI built in Go",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:21+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Mnemoteca is a local document storage and retrieval CLI built in Go.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:21+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Mnemoteca",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:21+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "**Go 1.21+** — [Install Go](https://go.dev/dl/).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:21+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "**GCC** — required by `mattn/go-sqlite3` (CGO).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:21+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.3.4",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T02:10:47+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "mnemoteca add \"Go is a statically typed programming language\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:21+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "mnemoteca search \"programming language\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:21+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "# List documents",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:21+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "mnemoteca export --name myproject",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:21+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "mnemoteca import myproject.jsonl",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:21+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/RunWield/mnemoteca/main/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:21+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/RunWield/mnemoteca/main/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:21+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "All ML inference runs locally with ONNX Runtime. No cloud API is required.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:21+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:51:54+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

@@ -1,0 +1,495 @@
+{
+  "schema_version": "software.v1",
+  "slug": "self-hosted-ai-assistant",
+  "repo_id": "gh:1262779084",
+  "name": "Self-Hosted AI Assistant",
+  "summary": "Local AI assistant platform for WhatsApp and Telegram using Ollama with memory and tools.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "self_hosted_web_app",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "ai",
+    "ai-agent",
+    "artificial-intelligence",
+    "automation",
+    "chatbot",
+    "fastapi",
+    "llm",
+    "local",
+    "naboraj-sarkar",
+    "naborajs"
+  ],
+  "use_cases": [
+    "chat via WhatsApp bridge integration",
+    "chat via Telegram gateway",
+    "manage assistant via edith terminal CLI",
+    "integrate local automations via Machine Chat API",
+    "backup and restore AI state"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/naborajs/Self-Hosted-AI-Assistant",
+    "full_name": "naborajs/Self-Hosted-AI-Assistant",
+    "created_at": "2026-06-08T10:06:47Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "TELEGRAM_BOT_TOKEN"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "local",
+  "last_release": {
+    "tag": "V1.0.0",
+    "published_at": "2026-10-15T17:50:56Z",
+    "url": "https://github.com/naborajs/Self-Hosted-AI-Assistant/releases/tag/V1.0.0"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "suspected_tool_fault",
+    "checked_at": "2026-10-31T00:56:27.927757+08:00",
+    "runs": [
+      {
+        "id": "verify-self-hosted-ai-assistant-20261031-005422-0434",
+        "level": "unverified",
+        "unverified_reason": "suspected_tool_fault",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:56:27.927757+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "pip",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "cd Self-Hosted-AI-Assistant && cp .env.example .env && python3 -m pip install -r requirements.txt && python3 -m pip install -e .",
+            "purpose": "copy .env.example to .env and pip install requirements plus editable edith CLI"
+          },
+          {
+            "command": "cd Self-Hosted-AI-Assistant && mkdir -p storage/workspace storage/whatsapp_bridge storage/sessions && sed -i 's/^OLLAMA_MODEL=.*/OLLAMA_MODEL=smollm2:135m/' .env && grep OLLAMA_MODEL .env && ls -la storage/",
+            "purpose": "create storage/workspace dirs and set OLLAMA_MODEL for tiny model"
+          },
+          {
+            "command": "python3 -m pip install \"sqlalchemy[asyncio]\" greenlet && python3 -c \"import greenlet; print(greenlet.__version__)\"",
+            "purpose": "install missing greenlet / sqlalchemy[asyncio] dependency"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd Self-Hosted-AI-Assistant && PYTHONPATH=. edith --version",
+            "expected_signal": "EDITH, version 0.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "EDITH, version 0.1.0",
+            "setup": [
+              {
+                "command": "cd Self-Hosted-AI-Assistant && cp .env.example .env && python3 -m pip install -r requirements.txt && python3 -m pip install -e .",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "cd Self-Hosted-AI-Assistant && PYTHONPATH=. edith doctor",
+            "expected_signal": "EDITH System Diagnostic (Doctor)",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "EDITH System Diagnostic (Doctor)",
+            "setup": [
+              {
+                "command": "cd Self-Hosted-AI-Assistant && cp .env.example .env && python3 -m pip install -r requirements.txt && python3 -m pip install -e .",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd Self-Hosted-AI-Assistant && mkdir -p storage/workspace storage/whatsapp_bridge storage/sessions && sed -i 's/^OLLAMA_MODEL=.*/OLLAMA_MODEL=smollm2:135m/' .env && grep OLLAMA_MODEL .env && ls -la storage/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "cd Self-Hosted-AI-Assistant && PYTHONPATH=. python -c \"import database.repository\"",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "File \"/home/sbx/work/Self-Hosted-AI-Assistant/database/repository.py\", line 1172, in <module> arguments: dict[str, Any], ^^^ NameError: name 'Any' is not defined. Did you mean: 'any'?",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install -e . then `edith doctor` / `edith status`",
+            "actually_needed": "run all edith/python commands with PYTHONPATH=. from the repo root (e.g. `cd Self-Hosted-AI-Assistant && PYTHONPATH=. edith --version`); plain `edith --version` fails with ModuleNotFoundError: No module named 'config'",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "copy .env.example to .env and run edith doctor",
+            "actually_needed": "mkdir -p storage/workspace storage/whatsapp_bridge storage/sessions; otherwise `edith doctor` reports Storage Directory / Isolated Tool Workspace FAIL (Writable: False)",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "python -m pip install -r requirements.txt is sufficient",
+            "actually_needed": "python -m pip install \"sqlalchemy[asyncio]\" greenlet; requirements.txt lacks greenlet so main.py fails with ImportError about sqlalchemy asyncio/greenlet",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "ollama list / ollama serve as prerequisite",
+            "actually_needed": "ollama install script at /tmp/ollama-install.sh requires sudo/root (uses sudo install, useradd, systemd) and cannot complete as user sbx without sudo",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": "suspected tool fault, not proven: command 15 exits 1 with NameError: name 'Any' is not defined. Did you mean: 'any'?; fresh box: command 2 exited 1 before the failing command; NameError: name 'Any' is not defined in database/repository.py line 1172 (dict[str, Any] without `from typing import Any`), so `import database.repository` and `python main.py` crash.",
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-self-hosted-ai-assistant-20261031-005422-0434/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.216725
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 67.0,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.55,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 33.8,
+      "signals": {
+        "stars": 18,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 142,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 44.35
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "f309fa63bac67da20ee4f1ac2f5d95316831c4fc8c4e157d45e1f124f8b3defd",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A privacy-first, local AI assistant platform for WhatsApp, Telegram, and Ollama."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "for local developer and automation integrations"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Install Python dependencies:"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "python -m pip install -r requirements.txt"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "edith doctor       # Diagnostic sanity check"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Configure `TELEGRAM_BOT_TOKEN` in `.env` obtained from @BotFather."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Automated `edith doctor` checks and resolutions for common issues."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "This project is open source under the MIT License."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/naborajs/Self-Hosted-AI-Assistant",
+      "fetched_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/naborajs/Self-Hosted-AI-Assistant/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:32:47+08:00"
+    },
+    {
+      "id": "release:V1.0.0",
+      "kind": "release",
+      "url": "https://github.com/naborajs/Self-Hosted-AI-Assistant/releases/tag/V1.0.0",
+      "fetched_at": "2026-10-29T02:32:47+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A privacy-first, local AI assistant platform for WhatsApp, Telegram, and Ollama.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:54+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Manage the assistant using the terminal CLI:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:54+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Local Ollama-powered AI inference with dynamic discovery and non-silent fallback",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:54+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A privacy-first, local AI assistant platform for WhatsApp, Telegram, and Ollama.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:54+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Self-Hosted AI Assistant",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:54+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "Configure `TELEGRAM_BOT_TOKEN` in `.env` obtained from @BotFather.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:54+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:08+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:V1.0.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:32:47+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "release:V1.0.0",
+      "quote": "Stable release",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:54+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "WhatsApp companion device bridge integration",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:54+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Telegram chat gateway support",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:54+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Professional Terminal Interface (`edith` CLI) with `--json` automation output",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:54+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Machine Chat API (`POST /api/chat`, `POST /v1/chat`) for local developer and automation integrations",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:54+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Backup and restore for AI state",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:54+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "This project is open source under the MIT License.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:54+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Local Ollama-powered AI inference with dynamic discovery and non-silent fallback",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:54+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:59+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

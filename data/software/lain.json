@@ -1,0 +1,733 @@
+{
+  "schema_version": "software.v1",
+  "slug": "lain",
+  "repo_id": "gh:1221940578",
+  "name": "Lain",
+  "summary": "Code graph for coding agents showing callers, dependencies and blast radius via MCP.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agentic-coding",
+    "agentic-coding-tool",
+    "agentic-rag",
+    "agentic-workflows",
+    "code-intelligence",
+    "knowledge-graph",
+    "llm-tools",
+    "mcp",
+    "mcp-server",
+    "mcp-servers"
+  ],
+  "use_cases": [
+    "assess blast radius before changing a function",
+    "trace call chain between functions",
+    "find files that usually co-change",
+    "check agent presence before editing code",
+    "search code by name or meaning"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/spuentesp/lain",
+    "full_name": "spuentesp/lain",
+    "created_at": "2026-04-26T21:49:34Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Rust 1.89 or newer"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @spuentesp/lain-mcp",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "lain --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-lain-20261031-012317-5fa6",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @spuentesp/lain-mcp",
+          "purpose": "Install Lain via npm global"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "lain --version",
+        "expected_signal": "lain 0.14.0"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @spuentesp/lain-mcp",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "lain --version"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.14.0",
+    "published_at": "2026-10-30T14:52:53Z",
+    "url": "https://github.com/spuentesp/lain/releases/tag/v0.14.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:24:25.695364+08:00",
+    "runs": [
+      {
+        "id": "verify-lain-20261031-012317-5fa6",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:24:25.695364+08:00",
+        "tool_version": "0.14.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @spuentesp/lain-mcp",
+            "purpose": "Install Lain via npm global"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lain --version",
+            "expected_signal": "lain 0.14.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lain 0.14.0",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "cd /tmp/lain-demo && python3 ~/.pickfit/mcp_probe.py --timeout 120 -- lain mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/lain-demo && cd /tmp/lain-demo && git init -q 2>&1 && printf 'def validate_token(token):\\n    return token == \"secret\"\\n\\ndef helper_a():\\n    return validate_token(\"x\")\\n' > auth.py && git add auth.py && git -c user.email=test@test.com -c user.name=test commit -qm init && pwd && ls -la && git log --oneline",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "cd /tmp/lain-demo && python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get_health --args '{}' -- lain mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_health content=text text_chars=1306",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/lain-demo && cd /tmp/lain-demo && git init -q 2>&1 && printf 'def validate_token(token):\\n    return token == \"secret\"\\n\\ndef helper_a():\\n    return validate_token(\"x\")\\n' > auth.py && git add auth.py && git -c user.email=test@test.com -c user.name=test commit -qm init && pwd && ls -la && git log --oneline",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Lain walks up from the working directory to find .git and serves the repository over stdio",
+            "actually_needed": "lain mcp must be launched from inside a git checkout (or with --workspace PATH / LAIN_WORKSPACE); outside a repo it exits 'no workspace resolved — pass `--workspace PATH`'",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show lain MCP handshake with 22 tools, successful get_health call reporting Operational, and version 0.14.0 output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lain-20261031-012317-5fa6/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lain-20261031-012317-5fa6/check-1-cmd5.judged.png",
+            "runs/verify/verify-lain-20261031-012317-5fa6/check-2-cmd6.judged.png",
+            "runs/verify/verify-lain-20261031-012317-5fa6/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.039247,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "lain",
+            "mcp"
+          ],
+          "url": null,
+          "protocol_version": "2024-11-05",
+          "server_name": "lain",
+          "server_version": "0.14.0",
+          "tools": [
+            "assess_change",
+            "explain_dispatch",
+            "find_anchors",
+            "find_dead_code",
+            "find_related",
+            "find_symbol",
+            "get_blast_radius",
+            "get_call_chain",
+            "get_context",
+            "get_coupling_radar",
+            "list_entry_points",
+            "run_enrichment",
+            "search_code",
+            "understand_repository",
+            "get_health",
+            "get_capabilities",
+            "list_packages",
+            "load_package",
+            "get_agent_strategy",
+            "search_org",
+            "get_cross_repo_blast_radius",
+            "get_audit_log"
+          ],
+          "tool_count": 22,
+          "called_tool": "get_health",
+          "offline": false
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": null,
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"lain\": {\n      \"command\": \"/home/you/.local/lain/lain\",\n      \"args\": [\"mcp\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "LAIN_BIND_ADDR",
+        "required": null,
+        "purpose": "bind address for server"
+      },
+      {
+        "name": "LAIN_API_KEYS",
+        "required": null,
+        "purpose": "API keys for network exposure"
+      }
+    ],
+    "tools": [
+      "get_blast_radius",
+      "assess_change",
+      "get_call_chain",
+      "find_anchors",
+      "list_entry_points",
+      "find_symbol",
+      "search_code",
+      "get_cross_repo_blast_radius",
+      "search_org",
+      "explain_dispatch"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 94.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 51.5,
+      "signals": {
+        "stars": 9,
+        "monthly_downloads": 1591,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": 1853,
+        "hn_top_score": 2,
+        "registries_count": 1
+      },
+      "age_days": 186,
+      "packages": [
+        "npm:@spuentesp/lain-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 45.64
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "8c0185cc1360d2e63e0563f76f1dfeb01494fead1c13e0d278b610ca31e89815",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "High-performance MCP server for AI coding agents: persistent knowledge graph, blast radius analysis, semantic search."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "A code graph for coding agents."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Rust 1.89 or newer is only needed when building from source."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npm install -g @spuentesp/lain-mcp"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "lain oneshot get_blast_radius validate_token"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "set `LAIN_BIND_ADDR=0.0.0.0` (with `LAIN_API_KEYS=key1,…`)"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "`npm install -g` fails with `EEXIST` when an unrelated `lain` file"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[MIT](LICENSE) — Copyright (c) 2026 spuentesp"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/spuentesp/lain",
+      "fetched_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/spuentesp/lain/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:03:50+08:00"
+    },
+    {
+      "id": "release:v0.14.0",
+      "kind": "release",
+      "url": "https://github.com/spuentesp/lain/releases/tag/v0.14.0",
+      "fetched_at": "2026-10-31T01:03:50+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "High-performance MCP server for AI coding agents: persistent knowledge graph, blast radius analysis, semantic search. Built in Rust.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/spuentesp/lain/main/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "then exposes them through the Model Context Protocol (MCP).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A code graph for coding agents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Lain",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Or from npm (macOS, Linux, and x64 Windows):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Rust 1.89 or newer is only needed when building from source.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "needs network access; once cached, lain works offline.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.14.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:03:50+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "If I change validate_token, what breaks?",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Show me the call chain from entry to helper_a.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Which files usually change with auth.rs?",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Is another agent already editing this code?",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Search by name or meaning",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g @spuentesp/lain-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g @spuentesp/lain-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g @spuentesp/lain-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Lain answers with symbol names and source paths from a local index.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "serves the\nrepository over stdio.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"lain\": {\n      \"command\": \"/home/you/.local/lain/lain\",\n      \"args\": [\"mcp\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "LAIN_BIND_ADDR",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "LAIN_API_KEYS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "| See callers before changing a symbol | `get_blast_radius`, `assess_change` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "| See callers before changing a symbol | `get_blast_radius`, `assess_change` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "| Trace how two functions connect | `get_call_chain` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "| Find architectural entry points | `find_anchors`, `list_entry_points` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "| Find architectural entry points | `find_anchors`, `list_entry_points` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "| Search by name or meaning | `find_symbol`, `search_code` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "| Search by name or meaning | `find_symbol`, `search_code` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "| Follow a symbol across repositories | `get_cross_repo_blast_radius`, `search_org` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "| Follow a symbol across repositories | `get_cross_repo_blast_radius`, `search_org` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`explain_dispatch` combines static",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:04+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:11+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

@@ -1,0 +1,638 @@
+{
+  "schema_version": "software.v1",
+  "slug": "google-surf-mcp",
+  "repo_id": "gh:1225316611",
+  "name": "google-surf-mcp",
+  "summary": "MCP server that stores Google search, papers, and code in a local knowledge graph.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "academic-research",
+    "fetch",
+    "google-search",
+    "mcp",
+    "model-context-protocol",
+    "pdf-processing",
+    "playwright",
+    "self-healing"
+  ],
+  "use_cases": [
+    "Find new information on the web",
+    "Run several new web queries",
+    "Search only previously stored research and project memory",
+    "Compare new web results with stored project knowledge"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/HarimxChoi/google-surf-mcp",
+    "full_name": "HarimxChoi/google-surf-mcp",
+    "created_at": "2026-04-30T06:53:47Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js >=22.12.0"
+    ],
+    "system_packages": [
+      "Google Chrome or Chromium for browser mode"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "SearchApi key for optional primary/fallback search"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-google-surf-mcp-20261031-014738-6754",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g google-surf-mcp",
+          "purpose": "Install google-surf-mcp globally with npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "google-surf-mcp hooks status --host codex",
+        "expected_signal": "\"host\": \"codex\""
+      },
+      "first_task": "google-surf-mcp hooks status --host codex"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.1.5",
+    "published_at": "2026-10-30T15:56:30Z",
+    "url": "https://github.com/HarimxChoi/google-surf-mcp/releases/tag/v1.1.5"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:54:41.720935+08:00",
+    "runs": [
+      {
+        "id": "verify-google-surf-mcp-20261031-014738-6754",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:54:41.720935+08:00",
+        "tool_version": "1.1.5",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g google-surf-mcp",
+            "purpose": "Install google-surf-mcp globally with npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- google-surf-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call health --args '{}' -- google-surf-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=health content=text text_chars=3696",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "google-surf-mcp hooks status --host codex",
+            "expected_signal": "\"host\": \"codex\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"host\": \"codex\",",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx google-surf-mcp (register in client config)",
+            "actually_needed": "Use the installed binary directly (google-surf-mcp) for the MCP probe instead of npx, so no network fetch is needed at check time; handshake and health/project_memory tools work without Chrome or API key, only live browser search needs Chrome.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "CLI responds to --help",
+            "actually_needed": "google-surf-mcp --help does not print help; it starts the stdio MCP server and waits on stdin (the combined install && --help command hung until the 300s timeout). Use the MCP probe or the hooks subcommand instead.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Browser mode requires Google Chrome or Chromium",
+            "actually_needed": "First launch logs '[google-surf-mcp] startup warm failed (will retry on first call): Chrome not found' but the server still starts, completes the MCP handshake, and answers health.",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 7 tools, successful health tool call, and hooks status JSON reporting host codex.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-google-surf-mcp-20261031-014738-6754/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-google-surf-mcp-20261031-014738-6754/check-1-cmd4.judged.png",
+            "runs/verify/verify-google-surf-mcp-20261031-014738-6754/check-2-cmd5.judged.png",
+            "runs/verify/verify-google-surf-mcp-20261031-014738-6754/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.042993,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "google-surf-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "google-surf-mcp",
+          "server_version": "1.1.5",
+          "tools": [
+            "search",
+            "scholar_search",
+            "search_parallel",
+            "extract",
+            "project_memory_search",
+            "project_memory",
+            "health"
+          ],
+          "tool_count": 7,
+          "called_tool": "health",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": "npx google-surf-mcp",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"google-surf\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"google-surf-mcp\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "SEARCH_API",
+        "required": false,
+        "purpose": "SearchApi provider key"
+      },
+      {
+        "name": "SURF_SEARCH_PROVIDER",
+        "required": false,
+        "purpose": "controls search provider mode"
+      },
+      {
+        "name": "SURF_SCHOLAR_PROVIDER",
+        "required": false,
+        "purpose": "controls scholar search provider"
+      }
+    ],
+    "tools": [
+      "search",
+      "search_parallel",
+      "extract",
+      "scholar_search",
+      "project_memory_search",
+      "project_memory",
+      "health"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 92.6,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 86.0,
+      "signals": {
+        "stars": 291,
+        "monthly_downloads": 982,
+        "forks": 32,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 183,
+      "packages": [
+        "npm:google-surf-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 12.96
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "48064e00a835343a5840cdde25d9e2b76fb36d1de8ad93337ade9f257d045f75",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Turn Google Search, Papers, and Codebases into an Automatic Local Knowledge Graph for AI Agents."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "for AI Agents with Zero API Key, Zero External Server."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requires Node 22.12.0+. CI tests Node 22 and 24 on Linux and Windows."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npx google-surf-mcp   # actual MCP - register in client config"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "npx google-surf-mcp   # actual MCP - register in client config"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Set `SURF_RESEARCH=false` to use search and extraction without opening the database"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "npx -y google-surf-mcp@latest hooks uninstall --host codex"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "CI tests Node 22 and 24 on Linux and Windows."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/HarimxChoi/google-surf-mcp",
+      "fetched_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/HarimxChoi/google-surf-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:04:19+08:00"
+    },
+    {
+      "id": "release:v1.1.5",
+      "kind": "release",
+      "url": "https://github.com/HarimxChoi/google-surf-mcp/releases/tag/v1.1.5",
+      "fetched_at": "2026-10-31T01:04:19+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Seven tools are available by default: `search` / `search_parallel` / `extract` / `scholar_search` / `project_memory_search` / `project_memory` / `health`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "npx google-surf-mcp   # actual MCP - register in client config",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "npx google-surf-mcp   # actual MCP - register in client config",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Turn Google Search, Papers, and Codebases into an Automatic Local Knowledge Graph for AI Agents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# google-surf-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires Node 22.12.0+.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Browser mode also requires Google Chrome or Chromium.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "SearchApi modes require your own SearchApi account, key, and available credits.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.1.5",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:04:19+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Find new information on the web",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Run several new web queries",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Search only previously stored research and project memory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Compare new web results with stored project knowledge",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "\"Turn Google Search, Papers, and Codebases into an Automatic Local Knowledge Graph and lineage for AI Agents with Zero API Key, Zero External Server.\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "npx google-surf-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"google-surf\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"google-surf-mcp\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "SEARCH_API",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "SURF_SEARCH_PROVIDER",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "SURF_SCHOLAR_PROVIDER",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "Seven tools are available by default: `search` / `search_parallel` / `extract` / `scholar_search` / `project_memory_search` / `project_memory` / `health`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "Seven tools are available by default: `search` / `search_parallel` / `extract` / `scholar_search` / `project_memory_search` / `project_memory` / `health`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "Seven tools are available by default: `search` / `search_parallel` / `extract` / `scholar_search` / `project_memory_search` / `project_memory` / `health`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "Seven tools are available by default: `search` / `search_parallel` / `extract` / `scholar_search` / `project_memory_search` / `project_memory` / `health`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "Seven tools are available by default: `search` / `search_parallel` / `extract` / `scholar_search` / `project_memory_search` / `project_memory` / `health`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "Seven tools are available by default: `search` / `search_parallel` / `extract` / `scholar_search` / `project_memory_search` / `project_memory` / `health`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "Seven tools are available by default: `search` / `search_parallel` / `extract` / `scholar_search` / `project_memory_search` / `project_memory` / `health`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:23:37+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:19+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

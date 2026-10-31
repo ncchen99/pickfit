@@ -121,12 +121,16 @@ def test_commands_run_as_the_box_user_with_limits_and_no_host_env(monkeypatch: p
     box = started(FakeSandbox([(0, [b"hel", b"lo\n"], [b"warn\n"])]), BoxLimits(pids=256, nofile=1024, home_mb=1536))
     result = box.exec("echo hello", 999)
     argv, kw = box.sandbox.calls[0]
-    assert argv[:7] == ("setpriv", "--reuid=1000", "--regid=1000", "--clear-groups", "--inh-caps=-all",
+    assert argv[:7] == ("/usr/bin/setpriv", "--reuid=1000", "--regid=1000", "--clear-groups", "--inh-caps=-all",
                         "--no-new-privs", "--")
-    assert argv[7:9] == ("env", "-i") and set(a.split("=", 1)[0] for a in argv[9:9 + len(BOX_ENV)]) == set(BOX_ENV)
+    # Programs by absolute path: the box user's ~/.local/bin comes first on its own PATH.
+    assert argv[7:9] == ("/usr/bin/env", "-i") and set(a.split("=", 1)[0] for a in argv[9:9 + len(BOX_ENV)]) == \
+        set(BOX_ENV)
+    assert argv[-3:-1] == ("/usr/bin/bash", "-c")
     assert "LLM_123" not in " ".join(argv)
     guard = argv[-1]
-    assert guard.startswith("ulimit -u 256 -n 1024 -f 1572864 && cd /home/sbx/work && exec timeout -s KILL 600 ")
+    assert guard.startswith("ulimit -u 256 -n 1024 -f 1572864 && cd /home/sbx/work && "
+                            "exec /usr/bin/timeout -s KILL 600 /usr/bin/bash -c ")
     assert kw == {"timeout": 615, "text": False}  # the host backstop sits past the in-box kill
     assert (result.exit_code, result.stdout, result.stderr, result.command) == (0, "hello\n", "warn\n", "echo hello")
 
@@ -188,7 +192,7 @@ def test_start_creates_the_sandbox_from_the_published_image(monkeypatch: pytest.
     assert created["image"] == "image:pickfit-sbx:abc" and created["runtime"] == "gvisor"
     assert box.image == "pickfit-sbx:abc" and box.sandbox_id == "sb-test"
     mkdir, chown = (call[0] for call in sandbox.calls[:2])
-    assert mkdir[:2] == ("mkdir", "-p") and chown[:3] == ("chown", "-R", "1000:1000")
+    assert mkdir[:2] == ("/usr/bin/mkdir", "-p") and chown[:3] == ("/usr/bin/chown", "-R", "1000:1000")
 
 
 def test_limits_test_reports_each_probe():
@@ -203,20 +207,26 @@ def test_limits_test_reports_each_probe():
         "head -c 1700M": (153, "", "File size limit exceeded"),
         "os.fork": (0, "blocked after 254 [Errno 11]", ""),
         "bytearray": (137, "", ""),
+        "https://1.1.1.1/": (0, "301", ""),
+        "/proc/net/route": (0, "hosts: 172.20.0.1 172.21.0.1\n", ""),
+        "AF_VSOCK": (0, "closed 2 52 OSError 97\n", ""),
+        "io_uring": (0, "io_uring refused errno 1\n", ""),
     }
 
     class Box(FakeBox):
         def exec(self, command, timeout_s, *, cwd=None):
             result = super().exec(command, timeout_s, cwd=cwd)
-            if not self.network_enabled and "pypi.org" in command:
+            if not self.network_enabled and ("pypi.org" in command or "1.1.1.1" in command):
                 result.stdout, result.exit_code = "000", 28
             result.timed_out = result.exit_code == 137 and "sleep" in command
             return result
 
     results = run_limits_test(Box(script), log=lambda s: None)
-    assert [r.name for r in results if not r.ok] == []
+    # A box with no root channel cannot run the controls those two probes need: undecided is a failure.
+    assert [r.name for r in results if not r.ok] == ["no_userns", "vsock_closed"]
     assert [r.name for r in results][-1] == "memory_cap"
-    assert len(results) == 12
+    assert len(results) == 22
+    assert "no control" in next(r for r in results if r.name == "vsock_closed").detail
 
 
 def test_a_missing_image_is_published_once_then_used(monkeypatch: pytest.MonkeyPatch):
@@ -238,7 +248,7 @@ def test_a_missing_image_is_published_once_then_used(monkeypatch: pytest.MonkeyP
     monkeypatch.setattr(modal.Sandbox, "create", create)
     monkeypatch.setattr(modal.Image, "from_name", lambda name: f"image:{name}")
     monkeypatch.setattr(mb, "sandbox_image_tag", lambda: "pickfit-sbx:abc")
-    monkeypatch.setattr(mb, "publish_image", lambda client, app, log: published.append("x") or "pickfit-sbx:abc")
+    monkeypatch.setattr(mb, "publish_image", lambda client, app, log, **kw: published.append("x") or "pickfit-sbx:abc")
     ModalBox(client="client", log=lambda s: None).start()
     assert attempts == ["image:pickfit-sbx:abc"] * 2 and published == ["x"]
 

@@ -1,0 +1,658 @@
+{
+  "schema_version": "software.v1",
+  "slug": "ltspice-mcp",
+  "repo_id": "gh:1170990531",
+  "name": "ltspice-mcp",
+  "summary": "MCP server that lets AI assistants run SPICE simulations and edit schematics.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": "prototype",
+  "tags": [
+    "ai-tools",
+    "anthropic",
+    "circuit-design",
+    "circuit-simulation",
+    "circuit-simulator",
+    "claude",
+    "eda",
+    "electronics",
+    "ltspice",
+    "mcp"
+  ],
+  "use_cases": [
+    "Measure overshoot and settling time of regulator step response",
+    "Run 200-run Monte Carlo with 5% resistors",
+    "Sweep load from 100 Ohm to 10k Ohm to find efficiency drop",
+    "Characterize NMOS gm and gm/ID vs VGS",
+    "Build differential pair as schematic openable in LTspice"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/Cognitohazard/ltspice-mcp",
+    "full_name": "Cognitohazard/ltspice-mcp",
+    "created_at": "2026-03-02T18:50:56Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.11 or newer"
+    ],
+    "system_packages": [
+      "LTspice or ngspice"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install ltspice-mcp",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "On WSL set the LTspice path manually"
+      ],
+      "check": null,
+      "first_task": "uv run ltspice-mcp"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-ltspice-mcp-20261031-012349-4494",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install ltspice-mcp && ltspice-mcp --help",
+          "purpose": "install ltspice-mcp via uv tool install"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install ltspice-mcp",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "On WSL set the LTspice path manually"
+      ],
+      "check": null,
+      "first_task": "uv run ltspice-mcp"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "GPL-3.0",
+  "processing": "local",
+  "last_release": null,
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:24:35.425706+08:00",
+    "runs": [
+      {
+        "id": "verify-ltspice-mcp-20261031-012349-4494",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:24:35.425706+08:00",
+        "tool_version": "0.7.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install ltspice-mcp && ltspice-mcp --help",
+            "purpose": "install ltspice-mcp via uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- ltspice-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call inspect --args '{\"queries\": [{\"kind\": \"guide\"}]}' -- ltspice-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=inspect content=text text_chars=13",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 8 tools listed and a successful inspect guide tool call.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ltspice-mcp-20261031-012349-4494/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ltspice-mcp-20261031-012349-4494/check-1-cmd2.judged.png",
+            "runs/verify/verify-ltspice-mcp-20261031-012349-4494/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.03194,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "ltspice-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "ltspice-mcp",
+          "server_version": "0.7.0",
+          "tools": [
+            "plot_waveform",
+            "analyze_results",
+            "run_experiments",
+            "jobs",
+            "inspect",
+            "edit_schematic",
+            "verify_circuit",
+            "run_code"
+          ],
+          "tool_count": 8,
+          "called_tool": "inspect",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "ltspice-mcp",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"spice\": { \"command\": \"ltspice-mcp\", \"args\": [] }\n  }\n}"
+      },
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add -s project spice -- ltspice-mcp"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "run_experiments",
+      "jobs",
+      "analyze_results",
+      "inspect",
+      "edit_schematic",
+      "verify_circuit",
+      "plot_waveform",
+      "run_code"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 86.0,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 68.8,
+      "signals": {
+        "stars": 67,
+        "monthly_downloads": 1151,
+        "forks": 8,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 241,
+      "packages": [
+        "pypi:ltspice-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 26.83
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "d6b97fbc2a5e2482e752902dabc04ebc471569471e3f17770ae1651effed19f1",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "MCP server giving LLMs the ability to design, simulate, and analyze SPICE circuits via LTSpice and NGspice"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "ltspice-mcp lets AI assistants run LTspice and ngspice simulations and edit"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "The server needs Python 3.11 or newer."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "uv tool install ltspice-mcp        # or: pipx install ltspice-mcp"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "claude mcp add -s project spice -- ltspice-mcp"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "The server runs without configuration."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "GPL-3.0-or-later"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Cognitohazard/ltspice-mcp",
+      "fetched_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Cognitohazard/ltspice-mcp/blob/master/README.md",
+      "fetched_at": "2026-10-31T01:06:38+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "MCP server giving LLMs the ability to design, simulate, and analyze SPICE circuits via LTSpice and NGspice",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "uv tool install ltspice-mcp        # or: pipx install ltspice-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "MCP server giving LLMs the ability to design, simulate, and analyze SPICE circuits via LTSpice and NGspice",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "ltspice-mcp lets AI assistants run LTspice and ngspice simulations and edit\nLTspice `.asc` schematics.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# ltspice-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "installed simulator automatically on Windows, Linux and macOS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "The server needs Python 3.11 or newer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "You also need LTspice or ngspice",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "Work in progress.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "\"What's the overshoot and settling time of this regulator's step response?\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "\"Run a 200-run Monte Carlo with 5% resistors and tell me the output spread.\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "\"Sweep the load from 100 Ω to 10 kΩ and find where efficiency drops.\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "\"Characterize this NMOS: gm and gm/ID vs VGS.\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "\"Build this differential pair as a schematic I can open in LTspice.\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "uv tool install ltspice-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "uv tool install ltspice-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "uv tool install ltspice-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "You also need LTspice or ngspice** on the same machine.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "uv run ltspice-mcp             # run the server (stdio)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "\"command\": \"ltspice-mcp\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"spice\": { \"command\": \"ltspice-mcp\", \"args\": [] }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "claude mcp add -s project spice -- ltspice-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`run_experiments`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`jobs`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`analyze_results`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`inspect`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`edit_schematic`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`verify_circuit`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`plot_waveform`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`run_code`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:36+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:50:13+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

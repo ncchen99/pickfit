@@ -1,0 +1,594 @@
+{
+  "schema_version": "software.v1",
+  "slug": "wtfi2",
+  "repo_id": "gh:1304218879",
+  "name": "wtfi2",
+  "summary": "Live visual tool that traces the network path to pinpoint where a connection fails and how to fix it.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "diagnostics",
+    "macos",
+    "network",
+    "networking",
+    "ratatui",
+    "rust",
+    "troubleshooting",
+    "tui",
+    "wifi"
+  ],
+  "use_cases": [
+    "pinpoint where a Wi-Fi connection dies and how to fix it",
+    "walk around to find Wi-Fi dead zones with live dashboard",
+    "diagnose a DNS-only outage",
+    "detect captive-portal login interception",
+    "output machine-readable diagnostics for scripts and CI"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://crates.io/crates/wtfi2",
+  "repo": {
+    "url": "https://github.com/kanywst/wtfi2",
+    "full_name": "kanywst/wtfi2",
+    "created_at": "2026-07-17T17:09:00Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Rust 1.88+"
+    ],
+    "system_packages": [
+      "ip",
+      "iw",
+      "ping",
+      "traceroute"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install kanywst/tap/wtfi2",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "wtfi"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-wtfi2-20261031-001734-9733",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/kanywst/wtfi2/releases/latest/download/wtfi2-installer.sh -o /tmp/wtfi2-installer2.sh",
+          "purpose": "Download installer script for reading before running"
+        },
+        {
+          "command": "sh /tmp/wtfi2-installer2.sh",
+          "purpose": "Install prebuilt wtfi binary via script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "wtfi --version",
+        "expected_signal": "wtfi 0.8.0"
+      },
+      "first_task": "wtfi"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.8.0",
+    "published_at": "2026-10-29T17:15:45Z",
+    "url": "https://github.com/kanywst/wtfi2/releases/tag/v0.8.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:19:13.485138+08:00",
+    "runs": [
+      {
+        "id": "verify-wtfi2-20261031-001734-9733",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:19:13.485138+08:00",
+        "tool_version": "0.8.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/kanywst/wtfi2/releases/latest/download/wtfi2-installer.sh -o /tmp/wtfi2-installer2.sh",
+            "purpose": "Download installer script for reading before running"
+          },
+          {
+            "command": "sh /tmp/wtfi2-installer2.sh",
+            "purpose": "Install prebuilt wtfi binary via script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "wtfi --version",
+            "expected_signal": "wtfi 0.8.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "wtfi 0.8.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "wtfi --help",
+            "expected_signal": "Usage: wtfi [OPTIONS]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: wtfi [OPTIONS]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "wtfi",
+            "expected_signal": "wtfi · what the f*ck internet",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "wtfi · what the f*ck internet",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "wtfi -v",
+            "expected_signal": "Resolving fast",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "Resolving fast (2 ms)",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl installer script installs prebuilt binary",
+            "actually_needed": "Installer downloaded and verified prebuilt x86_64-unknown-linux-gnu binary (wtfi 0.8.0) at runtime; that fetched archive cannot be read before running, only the shell script can",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Prerequisites: Rust 1.88+, ip, iw, ping, traceroute",
+            "actually_needed": "No Rust toolchain needed for script install; binary installed to $HOME/.cargo/bin which was already on PATH, no PATH edit needed",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Prerequisites list ip, iw, ping, traceroute",
+            "actually_needed": "Run succeeded with only `ip` present (no ping, iw, traceroute in box); Internet/DNS/Portal hops still measured, Wi-Fi/Gateway reported unmeasured and overall exit was 1 Degraded per README exit-code table",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "wtfi -w example",
+            "actually_needed": "`wtfi -w` live dashboard not smoke-tested: it is an interactive TUI requiring q to quit",
+            "kind": "note"
+          },
+          {
+            "readme_said": "install step 2 runs wtfi2-installer2.sh",
+            "actually_needed": "nothing to change; a note: the box ran wtfi2-installer2.sh, downloaded, without reading it first, so pickfit did not inspect it",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show wtfi running with full path diagnosis and printing version 0.8.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-wtfi2-20261031-001734-9733/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-wtfi2-20261031-001734-9733/check-1-cmd8.judged.png",
+            "runs/verify/verify-wtfi2-20261031-001734-9733/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.087347
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 88.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 72.6,
+      "signals": {
+        "stars": 98,
+        "monthly_downloads": 39,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": 443,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 104,
+      "packages": [
+        "crates:wtfi2"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 24.19
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "4b54d9466bd8878e35e5a1d3bfcb5e50a3b50b502048eee54df6fc8c13df402c",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Live, visual network-path diagnostic that pinpoints exactly where your Wi-Fi connection dies — and how to fix it."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "From crates.io (requires Rust 1.88+):"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install kanywst/tap/wtfi2"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "wtfi              # one-shot report: diagram + verdict"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Each finished sweep becomes one JSON line in `$XDG_STATE_HOME/wtfi/history.jsonl`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "only *diagnoses* on macOS and Linux — see [Platform support](#platform-support)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/kanywst/wtfi2",
+      "fetched_at": "2026-10-30T23:42:05+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/kanywst/wtfi2/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:02:56+08:00"
+    },
+    {
+      "id": "release:v0.8.0",
+      "kind": "release",
+      "url": "https://github.com/kanywst/wtfi2/releases/tag/v0.8.0",
+      "fetched_at": "2026-10-31T00:02:56+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "The installed command is `wtfi` in every case.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "wtfi              # one-shot report: diagram + verdict",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "topics: cli, diagnostics, macos, network, networking, ratatui, rust, troubleshooting, tui, wifi",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Live, visual network-path diagnostic that pinpoints exactly where your Wi-Fi connection dies — and how to fix it.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# wtfi2",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "The crate builds anywhere but only *diagnoses* on macOS and Linux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "From crates.io (requires Rust 1.88+):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "(`ip`, `iw`, `ping`, `traceroute`):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "(`ip`, `iw`, `ping`, `traceroute`):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/2",
+      "source_id": "readme",
+      "quote": "(`ip`, `iw`, `ping`, `traceroute`):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/3",
+      "source_id": "readme",
+      "quote": "(`ip`, `iw`, `ping`, `traceroute`):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "real TCP handshakes to three independent anycast operators (Cloudflare, Google, Quad9)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:05+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:05+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:05+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:05+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:05+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.8.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:02:56+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "pinpoints *exactly* where your connection dies, and tells you how to fix it.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "so you can walk around and find the dead zone.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "IPs reachable but names\n  aren't → DNS-only outage",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "a plain-HTTP hotspot check that catches login-page\n  interception before you think you're online.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "wtfi --json       # machine-readable output for scripts/CI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install kanywst/tap/wtfi2",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/kanywst/wtfi2/releases/latest/download/wtfi2-installer.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "single self-contained binary:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:13+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:41:22+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

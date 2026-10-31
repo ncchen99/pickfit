@@ -1,0 +1,498 @@
+{
+  "schema_version": "software.v1",
+  "slug": "kicadai",
+  "repo_id": "gh:1267504804",
+  "name": "KiCadAI",
+  "summary": "Deterministic toolkit that turns behavioral requirements into KiCad schematics and PCBs with checks.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "cli",
+    "eda",
+    "electronics",
+    "go",
+    "kicad",
+    "pcb",
+    "schematic"
+  ],
+  "use_cases": [
+    "generate example divider schematic to output directory",
+    "validate schematic IR request file",
+    "run KiCad ERC and strict DRC validation",
+    "place components and route PCB nets"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/dshills/KiCadAI",
+    "full_name": "dshills/KiCadAI",
+    "created_at": "2026-06-12T15:45:24Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Go 1.26.8 or newer"
+    ],
+    "system_packages": [
+      "protoc"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "OPENAI_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-kicadai-20261031-002405-4b79",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/kicadai-dl && curl -L -o /tmp/kicadai-dl/kicadai https://github.com/dshills/KiCadAI/releases/download/v1.0.1/kicadai_v1.0.1_linux_amd64 && curl -L -o /tmp/kicadai-dl/SHA256SUMS https://github.com/dshills/KiCadAI/releases/download/v1.0.1/SHA256SUMS && cat /tmp/kicadai-dl/SHA256SUMS && sha256sum /tmp/kicadai-dl/kicadai && install -m 0755 /tmp/kicadai-dl/kicadai ~/.local/bin/kicadai && ls -l ~/.local/bin/kicadai",
+          "purpose": "download and install release binary"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "kicadai --help",
+        "expected_signal": "--pretty Pretty-print JSON output"
+      },
+      "first_task": "kicadai version"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.0.1",
+    "published_at": "2026-09-07T15:57:55Z",
+    "url": "https://github.com/dshills/KiCadAI/releases/tag/v1.0.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:26:03.518020+08:00",
+    "runs": [
+      {
+        "id": "verify-kicadai-20261031-002405-4b79",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:26:03.518020+08:00",
+        "tool_version": "1.0.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/kicadai-dl && curl -L -o /tmp/kicadai-dl/kicadai https://github.com/dshills/KiCadAI/releases/download/v1.0.1/kicadai_v1.0.1_linux_amd64 && curl -L -o /tmp/kicadai-dl/SHA256SUMS https://github.com/dshills/KiCadAI/releases/download/v1.0.1/SHA256SUMS && cat /tmp/kicadai-dl/SHA256SUMS && sha256sum /tmp/kicadai-dl/kicadai && install -m 0755 /tmp/kicadai-dl/kicadai ~/.local/bin/kicadai && ls -l ~/.local/bin/kicadai",
+            "purpose": "download and install release binary"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "kicadai --help",
+            "expected_signal": "--pretty Pretty-print JSON output",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "--pretty Pretty-print JSON output",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "kicadai version",
+            "expected_signal": "\"version\": \"1.0.1\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"version\": \"1.0.1\",",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "kicadai --request ./led_indicator.json schematic-ir validate",
+            "expected_signal": "\"ok\": true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"ok\": true,",
+            "setup": [
+              {
+                "command": "cat > ./led_indicator.json <<'EOF'\n{\n  \"schema\": \"kicadai.schematic.ir.v1\",\n  \"version\": 1,\n  \"metadata\": {\n    \"name\": \"led_indicator\",\n    \"title\": \"LED Indicator\",\n    \"description\": \"Minimal current-limited LED indicator.\",\n    \"paper\": \"A4\"\n  },\n  \"circuit\": {\n    \"components\": [\n      {\n        \"id\": \"vin\",\n        \"ref\": \"J1\",\n        \"role\": \"input_connector\",\n        \"symbol\": \"Connector_Generic:Conn_01x02\",\n        \"footprint\": \"Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical\",\n        \"pins\": [{\"number\": \"1\"}, {\"number\": \"2\"}]\n      },\n      {\n        \"id\": \"r_limit\",\n        \"ref\": \"R1\",\n        \"role\": \"current_limiter\",\n        \"symbol\": \"Device:R\",\n        \"value\": \"1k\",\n        \"footprint\": \"Resistor_SMD:R_0805_2012Metric\",\n        \"pins\": [{\"number\": \"1\"}, {\"number\": \"2\"}]\n      },\n      {\n        \"id\": \"led\",\n        \"ref\": \"D1\",\n        \"role\": \"indicator_led\",\n        \"symbol\": \"Device:LED\",\n        \"value\": \"green\",\n        \"footprint\": \"LED_SMD:LED_0805_2012Metric\",\n        \"pins\": [{\"number\": \"1\"}, {\"number\": \"2\"}]\n      }\n    ],\n    \"nets\": [\n      {\"name\": \"VIN\", \"role\": \"power\", \"connect\": [\"vin.1\", \"r_limit.1\"], \"label\": \"VIN\"},\n      {\"name\": \"LED_A\", \"role\": \"signal\", \"connect\": [\"r_limit.2\", \"led.1\"], \"label\": \"LED_A\"},\n      {\"name\": \"GND\", \"role\": \"ground\", \"connect\": [\"led.2\", \"vin.2\"], \"label\": \"GND\"}\n    ]\n  },\n  \"layout\": {\n    \"flow\": \"left_to_right\",\n    \"origin\": \"centered\",\n    \"lanes\": {\"power\": \"top\", \"ground\": \"bottom\", \"signals\": \"middle\"},\n    \"rules\": {\n      \"positive_power_top\": true,\n      \"ground_bottom\": true,\n      \"center_on_page\": true,\n      \"prefer_labels_for_long_nets\": true,\n      \"avoid_wire_crossings\": true,\n      \"min_group_spacing_mm\": 20,\n      \"min_component_spacing_mm\": 10\n    }\n  },\n  \"policy\": {\n    \"repair\": {\n      \"allow_ref_assignment\": true,\n      \"allow_label_insertion\": true,\n      \"allow_group_spacing_adjustment\": true,\n      \"allow_symbol_substitution\": false,\n      \"allow_pin_guessing\": false\n    },\n    \"acceptance\": \"readable\"\n  }\n}\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "git clone + make build requiring Go 1.26.8",
+            "actually_needed": "used release binary kicadai_v1.0.1_linux_amd64 installed to ~/.local/bin/kicadai with checksum verified (df262f...); no Go installation per README 'Released binaries require no Go installation'",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "bin/kicadai --output ./out/divider schematic example divider",
+            "actually_needed": "use schematic-ir validate/write (e.g. kicadai --request ./led_indicator.json schematic-ir validate); v1.0.1 binary has no 'schematic' command",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "kicadai --request examples/schematic-ir/led_indicator.json --output ./out/ir_led --overwrite schematic-ir write",
+            "actually_needed": "schematic-ir write succeeded only with a fresh absolute --output path (/tmp/ir_led --overwrite); pre-created relative ./out/ir_led failed with doubled path 'out/ir_led/out/ir_led'",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show schematic-ir validation returning ok true and help listing the pretty flag.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-kicadai-20261031-002405-4b79/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-kicadai-20261031-002405-4b79/check-1-cmd14.judged.png",
+            "runs/verify/verify-kicadai-20261031-002405-4b79/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.126989
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 78.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7225,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 25.5,
+      "signals": {
+        "stars": 6,
+        "monthly_downloads": null,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 38,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 140,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 58.33
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "b7fe79c629a55fa422afd636e635e86549120227cb51affd7937b21daba7bad6",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "AI-assisted KiCad design toolkit with Go CLI, direct schematic/PCB writers, validation, and pinmap checks."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Agents that already have a valid `generic-circuit-v1` graph can avoid a provider:"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Released binaries require no Go installation. KiCad 10.0.3 is the supported v1"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "git clone --branch main https://github.com/dshills/KiCadAI.git"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "bin/kicadai --output ./out/divider schematic example divider"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "load `OPENAI_API_KEY` from the shell or a secret manager"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "use `doctor` to diagnose"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "KiCadAI is licensed under the [MIT License](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/dshills/KiCadAI",
+      "fetched_at": "2026-10-30T23:41:22+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/dshills/KiCadAI/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:02:51+08:00"
+    },
+    {
+      "id": "release:v1.0.1",
+      "kind": "release",
+      "url": "https://github.com/dshills/KiCadAI/releases/tag/v1.0.1",
+      "fetched_at": "2026-10-31T00:02:51+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "AI-assisted KiCad design toolkit with Go CLI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:22+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Release assets contain four platform binaries",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:22+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "bin/kicadai --output ./out/divider schematic example divider",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:22+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "AI-assisted KiCad design toolkit with Go CLI, direct schematic/PCB writers, validation, and pinmap checks.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:22+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# KiCadAI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:22+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "release:v1.0.1",
+      "quote": "Assets include CGO-free macOS and Linux binaries for AMD64 and ARM64,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:22+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "release:v1.0.1",
+      "quote": "Source builds now require Go 1.26.8 or newer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:22+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "`protoc` is needed only when regenerating vendored protobuf bindings.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:22+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "For a live request, load `OPENAI_API_KEY` from the shell",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:22+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:22+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:22+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:22+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:22+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.0.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:02:51+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "bin/kicadai --output ./out/divider schematic example divider",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:22+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "kicadai --request examples/schematic-ir/led_indicator.json schematic-ir validate",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:22+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "then uses installed KiCad for ERC,\n  strict DRC, and normalized round trips.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:22+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Placement and routing",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:22+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "KiCadAI is licensed under the [MIT License](LICENSE).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:22+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:41:22+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

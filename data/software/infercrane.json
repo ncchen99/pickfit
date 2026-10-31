@@ -1,0 +1,510 @@
+{
+  "schema_version": "software.v1",
+  "slug": "infercrane",
+  "repo_id": "gh:1328467602",
+  "name": "InferCrane",
+  "summary": "Evidence-gated system to deploy and manage vLLM/SGLang inference behind one OpenAI-compatible endpoint.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "beta",
+  "tags": [
+    "ai-infrastructure",
+    "aws",
+    "gcp",
+    "golang",
+    "gpu-inference",
+    "inference",
+    "kubernetes",
+    "llm",
+    "llm-inference",
+    "llmops"
+  ],
+  "use_cases": [
+    "deploy open-weight models into your cloud or Kubernetes",
+    "optimize workload performance and cost on exact hardware",
+    "run agent tasks in persistent sandbox",
+    "trace production inference failures and latency"
+  ],
+  "alternatives_to": [
+    "Raw vLLM and Kubernetes"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://infercrane.com/",
+  "repo": {
+    "url": "https://github.com/infercrane/infercrane",
+    "full_name": "infercrane/infercrane",
+    "created_at": "2026-08-09T05:28:44Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install infercrane/tap/infercrane",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "infercrane workload plan"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-infercrane-20261031-023354-b485",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -sL -o /tmp/infercrane.tar.gz 'https://github.com/infercrane/infercrane/releases/download/v1.0.0-rc.1/infercrane_1.0.0-rc.1_linux_amd64.tar.gz' && tar tzf /tmp/infercrane.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/infercrane.tar.gz -C /tmp/ && ls -la /tmp/*.tar.gz /tmp/infercrane* 2>&1; echo \"===\"; find /tmp -maxdepth 2 -type f -name \"infercrane*\" -exec ls -la {} \\;",
+          "purpose": "Download Linux CLI archive and extract binary"
+        },
+        {
+          "command": "cp /tmp/infercrane ~/.local/bin/infercrane && chmod +x ~/.local/bin/infercrane && infercrane --version && infercrane --help",
+          "purpose": "Install infercrane binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "infercrane --version",
+        "expected_signal": "infercrane version 1.0.0-rc.1"
+      },
+      "first_task": "rm -rf /tmp/support ./support && infercrane workload init ./support --recipe qwen3-8b"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": null,
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:35:05.335659+08:00",
+    "runs": [
+      {
+        "id": "verify-infercrane-20261031-023354-b485",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:35:05.335659+08:00",
+        "tool_version": "1.0.0-rc.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sL -o /tmp/infercrane.tar.gz 'https://github.com/infercrane/infercrane/releases/download/v1.0.0-rc.1/infercrane_1.0.0-rc.1_linux_amd64.tar.gz' && tar tzf /tmp/infercrane.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/infercrane.tar.gz -C /tmp/ && ls -la /tmp/*.tar.gz /tmp/infercrane* 2>&1; echo \"===\"; find /tmp -maxdepth 2 -type f -name \"infercrane*\" -exec ls -la {} \\;",
+            "purpose": "Download Linux CLI archive and extract binary"
+          },
+          {
+            "command": "cp /tmp/infercrane ~/.local/bin/infercrane && chmod +x ~/.local/bin/infercrane && infercrane --version && infercrane --help",
+            "purpose": "Install infercrane binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "infercrane --version",
+            "expected_signal": "infercrane version 1.0.0-rc.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "infercrane version 1.0.0-rc.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "infercrane --help",
+            "expected_signal": "Use \"infercrane [command] --help\" for more information about a command.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Use \"infercrane [command] --help\" for more information about a command.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rm -rf /tmp/support ./support && infercrane workload init ./support --recipe qwen3-8b",
+            "expected_signal": "Inference project created",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Inference project created",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm install '@infercrane/sdk@1.0.0-rc.1' and python -m pip install '.../infercrane-1.0.0rc1-py3-none-any.whl' install the CLI",
+            "actually_needed": "Downloaded and installed the Linux CLI archive infercrane_1.0.0-rc.1_linux_amd64.tar.gz from the v1.0.0-rc.1 release and copied the 'infercrane' binary to ~/.local/bin; neither artifact provides an 'infercrane' executable",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "infercrane workload plan runs after 'infercrane workload init ./support --recipe qwen3-8b' with no mention of an API key",
+            "actually_needed": "INFERCRANE_API_KEY is required (error: 'INFERCRANE_API_KEY is required; run infercrane init or set the environment variable'), so 'infercrane workload plan' cannot run without an account/key in this box",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show workload init creating the inference project with details and next steps, and --version printing 1.0.0-rc.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-infercrane-20261031-023354-b485/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-infercrane-20261031-023354-b485/check-1-cmd12.judged.png",
+            "runs/verify/verify-infercrane-20261031-023354-b485/check-2-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.085363
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 72.9,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6141,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 48.8,
+      "signals": {
+        "stars": 53,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 117,
+        "hn_top_score": 2,
+        "registries_count": 0
+      },
+      "age_days": 82,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 37.32
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:43:57.550284+08:00",
+      "sources_sha": "1f977776ec64966998ded42849b7fb1dddbd0f0709ed68a0477edb9b41890ec7",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Open-source infrastructure for the full inference lifecycle: deploy, observe, scale, optimize, and safely release self-hosted models behind one endpoint."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "InferCrane is for teams that want the control plane, capacity, and billing boundary to remain in infrastructure they own."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "The local proof needs no GPU or cloud account."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install infercrane/tap/infercrane"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "infercrane workload init ./support --recipe qwen3-8b"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Provider credentials and request content do not enter the browser console."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "InferCrane Community is available under the [Apache License 2.0](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/infercrane/infercrane",
+      "fetched_at": "2026-10-30T23:49:14+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/infercrane/infercrane/blob/main/README.md",
+      "fetched_at": "2026-10-31T02:06:40+08:00"
+    },
+    {
+      "id": "release:v1.0.0-rc.1",
+      "kind": "release",
+      "url": "https://github.com/infercrane/infercrane/releases/tag/v1.0.0-rc.1",
+      "fetched_at": "2026-10-31T02:06:40+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Install the `v1.0.0-rc.1` public beta CLI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:38+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Install the `v1.0.0-rc.1` public beta CLI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:38+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Install the `v1.0.0-rc.1` public beta CLI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:38+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Deploy or\nadopt vLLM and SGLang, measure serving changes against your workload, and promote only proven\nwinners behind one stable API.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:38+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "InferCrane is the open-source, evidence-gated release system",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:38+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "release:v1.0.0-rc.1",
+      "quote": "for macOS and Linux on amd64 and arm64.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:38+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:14+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:14+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:14+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:14+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:14+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "`v1.0.0-rc.1` is the first public beta",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:38+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "deploy open weights into your cloud or Kubernetes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:38+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Profile traffic, search bounded candidates, measure on exact hardware",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:38+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "run agent tasks in a persistent sandbox",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:38+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Trace queue wait, attempts, runtime, revision, latency, saturation",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:38+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Raw vLLM and Kubernetes:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:38+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install infercrane/tap/infercrane",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:38+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install '@infercrane/sdk@1.0.0-rc.1'",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:38+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "InferCrane Community is available under the [Apache License 2.0](LICENSE).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:38+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:49:14+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

@@ -1,0 +1,537 @@
+{
+  "schema_version": "software.v1",
+  "slug": "dukascopy-go",
+  "repo_id": "gh:1192984141",
+  "name": "dukascopy-go",
+  "summary": "Go CLI to download historical and stream real-time Dukascopy market tick and bar data.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "backtesting",
+    "candlestick-chart",
+    "cli",
+    "crypto",
+    "dukascopy",
+    "exchange-rates",
+    "finance",
+    "forex",
+    "go",
+    "golang"
+  ],
+  "use_cases": [
+    "download 1 year of M1 forex data into Parquet",
+    "generate ML features on download",
+    "derive tick, volume and dollar bars from ticks",
+    "stream real-time ticks to Redis, NATS or WebSocket",
+    "monitor live prices with webhook alerts"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/Nosvemos/dukascopy-go",
+    "full_name": "Nosvemos/dukascopy-go",
+    "created_at": "2026-03-26T18:56:11Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "go 1.26+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/Nosvemos/dukascopy-go/cmd/dukascopy-go@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "dukascopy-go"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-dukascopy-go-20261031-002140-6643",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -sL -o /tmp/dukascopy-go.tar.gz https://github.com/Nosvemos/dukascopy-go/releases/download/v0.2.0/dukascopy-go_0.2.0_linux_amd64.tar.gz && tar -xzf /tmp/dukascopy-go.tar.gz -C /tmp && chmod +x /tmp/dukascopy-go && mkdir -p ~/.local/bin && cp /tmp/dukascopy-go ~/.local/bin/dukascopy-go && chmod +x ~/.local/bin/dukascopy-go",
+          "purpose": "Download v0.2.0 linux_amd64 tarball and install binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "dukascopy-go --version",
+        "expected_signal": "dukascopy-go 0.2.0 (7a6759c)"
+      },
+      "first_task": "dukascopy-go instruments --query gold"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install dukascopy-go",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "dukascopy-go"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": null,
+  "last_release": {
+    "tag": "v0.2.0",
+    "published_at": "2026-08-17T19:47:07Z",
+    "url": "https://github.com/Nosvemos/dukascopy-go/releases/tag/v0.2.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:23:19.297387+08:00",
+    "runs": [
+      {
+        "id": "verify-dukascopy-go-20261031-002140-6643",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:23:19.297387+08:00",
+        "tool_version": "0.2.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sL -o /tmp/dukascopy-go.tar.gz https://github.com/Nosvemos/dukascopy-go/releases/download/v0.2.0/dukascopy-go_0.2.0_linux_amd64.tar.gz && tar -xzf /tmp/dukascopy-go.tar.gz -C /tmp && chmod +x /tmp/dukascopy-go && mkdir -p ~/.local/bin && cp /tmp/dukascopy-go ~/.local/bin/dukascopy-go && chmod +x ~/.local/bin/dukascopy-go",
+            "purpose": "Download v0.2.0 linux_amd64 tarball and install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "dukascopy-go --version",
+            "expected_signal": "dukascopy-go 0.2.0 (7a6759c)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "date: 2026-08-17T19:46:34Z",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "dukascopy-go --help",
+            "expected_signal": "instruments Search Dukascopy instruments",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "instruments Search Dukascopy instruments",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "dukascopy-go instruments --query gold",
+            "expected_signal": "XAU/USD",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "XAU/USD XAUUSD Gold vs US Dollar",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install dukascopy-go",
+            "actually_needed": "PyPI has no dukascopy-go (404 on pypi.org/simple/dukascopy-go); used the README's pre-built Linux amd64 binary v0.2.0 from the GitHub Releases page instead",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "Prerequisites: go 1.26+",
+            "actually_needed": "No Go toolchain present or installed (must not install one); the pre-built static binary runs with zero dependencies and no Go needed",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show expected outputs: gold query lists XAU/USD and --version prints 0.2.0 (7a6759c).",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-dukascopy-go-20261031-002140-6643/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-dukascopy-go-20261031-002140-6643/check-1-cmd9.judged.png",
+            "runs/verify/verify-dukascopy-go-20261031-002140-6643/check-2-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.058052
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 77.4,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7225,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 28.6,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": null,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": 1116,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 217,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 55.26
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "8d8c713e0453ae6ff5ad2939eef1932f264f93bb5391946876f90406799add9d",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "The fastest, zero-dependency engine for historical tick/bar downloads, real-time streaming, and quant feature engineering."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "intended for research, data engineering, backtesting, and algorithmic trading workflows."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Install via Go (1.26+):"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "go install github.com/Nosvemos/dukascopy-go/cmd/dukascopy-go@latest"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "dukascopy-go instruments --query gold"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export AWS_ACCESS_KEY_ID=\"your-access-key\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "This project is licensed under the **Dukascopy-Go Source-Available Non-Commercial License**."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Nosvemos/dukascopy-go",
+      "fetched_at": "2026-10-30T23:41:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Nosvemos/dukascopy-go/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:03:21+08:00"
+    },
+    {
+      "id": "release:v0.2.0",
+      "kind": "release",
+      "url": "https://github.com/Nosvemos/dukascopy-go/releases/tag/v0.2.0",
+      "fetched_at": "2026-10-31T00:03:21+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Go CLI for downloading historical and real-time Dukascopy market data — no dependencies.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:30+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Pre-built standalone binaries for **Windows, Linux, and macOS (Apple Silicon & Intel)** are available",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:30+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "dukascopy-go download --symbol eurusd --timeframe m1 --last 1y",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:30+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Go CLI for downloading historical and real-time Dukascopy market data — no dependencies.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:30+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1>dukascopy-go 🚀</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:30+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Pre-built standalone binaries for **Windows, Linux, and macOS (Apple Silicon & Intel)**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:30+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Install via Go (1.26+):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:30+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Real-time tick/bar streaming over Stdout, WebSocket, Redis PubSub/Streams, or NATS.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:30+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:31+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.2.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:03:21+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Download 1 year of M1 data across 8 parallel workers into Parquet:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:30+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Generate machine learning features directly into your dataset:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:30+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Derive non-time financial bars directly from raw ticks:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:30+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Stream real-time market data directly into Redis for sub-millisecond bot consumption:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:30+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Monitor live prices and indicator thresholds with automated HTTP Webhook alerts.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:30+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/Nosvemos/dukascopy-go/cmd/dukascopy-go@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:30+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "pip install dukascopy-go",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:30+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "pip install dukascopy-go",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:30+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "free non-commercial redistribution.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:30+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:41:31+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

@@ -1,0 +1,540 @@
+{
+  "schema_version": "software.v1",
+  "slug": "kern",
+  "repo_id": "gh:1350706479",
+  "name": "kern",
+  "summary": "Model-agnostic GPU runtime that ships models as verified manifest packages.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cuda",
+    "gpu-inference",
+    "llm-inference",
+    "rust"
+  ],
+  "use_cases": [
+    "generate text with a local model",
+    "serve a model via OpenAI-compatible server",
+    "test a manifest change for regressions"
+  ],
+  "alternatives_to": [
+    "vLLM",
+    "SGLang"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://kern-baa.pages.dev/",
+  "repo": {
+    "url": "https://github.com/pegainfer-project/kern",
+    "full_name": "pegainfer-project/kern",
+    "created_at": "2026-08-29T15:43:58Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.10"
+    ],
+    "system_packages": [
+      "cuBLAS 13"
+    ],
+    "gpu": "required",
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-kern-20261031-003759-c346",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install kern-llm==0.3.1",
+          "purpose": "pip install python runtime"
+        },
+        {
+          "command": "curl -fsSL https://kern-baa.pages.dev/install.sh -o /tmp/kern-install.sh",
+          "purpose": "download install script"
+        },
+        {
+          "command": "sh /tmp/kern-install.sh",
+          "purpose": "run install script for kern binaries"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "kern --version",
+        "expected_signal": "kern 0.3.1 (48e0709, cuda 13.0)"
+      },
+      "first_task": "python3 -c \"import json; d=json.load(open('/tmp/kern-src/examples/minimal.json')); d.pop('chat',None); json.dump(d, open('/tmp/minimal-nochek.json','w'), indent=2)\" && kern verify /tmp/minimal-nochek.json"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.3.1",
+    "published_at": "2026-10-15T08:44:10Z",
+    "url": "https://github.com/pegainfer-project/kern/releases/tag/v0.3.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:40:03.014062+08:00",
+    "runs": [
+      {
+        "id": "verify-kern-20261031-003759-c346",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:40:03.014062+08:00",
+        "tool_version": "0.3.1",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pip install kern-llm==0.3.1",
+            "purpose": "pip install python runtime"
+          },
+          {
+            "command": "curl -fsSL https://kern-baa.pages.dev/install.sh -o /tmp/kern-install.sh",
+            "purpose": "download install script"
+          },
+          {
+            "command": "sh /tmp/kern-install.sh",
+            "purpose": "run install script for kern binaries"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "kern --version",
+            "expected_signal": "kern 0.3.1 (48e0709, cuda 13.0)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "kern 0.3.1 (48e0709, cuda 13.0)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "kern --help",
+            "expected_signal": "model-agnostic GPU runtime",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "model-agnostic GPU runtime: run a manifest, test a kernel swap, gather cubins, verify a manifest",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 -c \"import json; d=json.load(open('/tmp/kern-src/examples/minimal.json')); d.pop('chat',None); json.dump(d, open('/tmp/minimal-nochek.json','w'), indent=2)\" && kern verify /tmp/minimal-nochek.json",
+            "expected_signal": "does not fit the serving protocol",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "\u001b[31mERROR\u001b[0m /tmp/minimal-nochek.json: manifest does not fit the serving protocol:",
+            "setup": [
+              {
+                "command": "git clone --depth 1 https://github.com/pegainfer-project/kern /tmp/kern-src && ls /tmp/kern-src/examples/ && ls /tmp/kern-src/*.toml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install kern-llm==0.3.1 provides kern usage",
+            "actually_needed": "uv tool install fails with 'No executables are provided by package kern-llm'; use pip install for Python runtime and install.sh for binaries",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "pip install kern-llm gives kern command",
+            "actually_needed": "pip install kern-llm==0.3.1 installs only Python import and no kern binary; run sh /tmp/kern-install.sh to get kern 0.3.1 and kern-serve",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "needs cuBLAS 13 on the loader path",
+            "actually_needed": "script warns no cuBLAS 13 on loader path; verify and cut work without it",
+            "kind": "note"
+          },
+          {
+            "readme_said": "examples manifests verify with released binary",
+            "actually_needed": "examples from main branch fail verify on 0.3.1 binary with unknown field chat and unknown variant temperature",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show kern rejecting the manifest as not fitting the serving protocol and reporting version 0.3.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-kern-20261031-003759-c346/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-kern-20261031-003759-c346/check-1-cmd12.judged.png",
+            "runs/verify/verify-kern-20261031-003759-c346/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.120075
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 70.7,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.578,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5222,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 68.6,
+      "signals": {
+        "stars": 145,
+        "monthly_downloads": 36,
+        "forks": 10,
+        "dependents": null,
+        "release_downloads": 93,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 62,
+      "packages": [
+        "pypi:kern-llm"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 22.2
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "265344afd828b328b115459f09a9137d86d55941a76ce6f4abf2ff485bec959d",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A model-agnostic GPU runtime for shipping models as verified programs."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Built by agents. Built for agents."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Needs an NVIDIA driver that supports CUDA 13 (r580 or newer) and cuBLAS 13 on the"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://kern-baa.pages.dev/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "kern --version                                          # kern 0.3.1 (<commit>, cuda 13.0)"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "`KERN_VERSION` pins a release, `KERN_INSTALL_DIR` picks the"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Linux x86_64 / aarch64, one binary"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/pegainfer-project/kern",
+      "fetched_at": "2026-10-30T23:49:06+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/pegainfer-project/kern/blob/master/README.md",
+      "fetched_at": "2026-10-30T23:55:57+08:00"
+    },
+    {
+      "id": "release:v0.3.1",
+      "kind": "release",
+      "url": "https://github.com/pegainfer-project/kern/releases/tag/v0.3.1",
+      "fetched_at": "2026-10-30T23:55:57+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "The `kern` binary: `run`, `test`, `bench`, `server`, `verify`, `cut`, `kernels`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:31+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://kern-baa.pages.dev/install.sh | sh   # Linux x86_64 / aarch64, one binary",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:31+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A model-agnostic GPU runtime for shipping models as verified programs.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:31+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A model-agnostic GPU runtime for shipping models as verified programs.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:31+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<img src=\"docs/assets/logo.svg\" width=\"320\" alt=\"kern\">",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:31+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://kern-baa.pages.dev/install.sh | sh   # Linux x86_64 / aarch64, one binary",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:31+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "release:v0.3.1",
+      "quote": "for Python 3.10 or newer and",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:31+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "and cuBLAS 13 on the loader path",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:31+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "it needs an NVIDIA driver for CUDA 13 (r580+)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:31+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:06+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:06+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:06+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:06+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:06+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.3.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:55:57+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "./target/release/kern run qwen3-4b --steps 320                  # generate",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:31+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "./target/release/kern server qwen3-4b --port 8000               # OpenAI-compatible server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:31+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "./target/release/kern test qwen3-4b                             # verdict for a change: exit 0 PASS / 1 FAIL / 2 INCONCLUSIVE",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:31+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "One night, 17% more requests than vLLM.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:31+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "The same engine in SGLang, 10.5% more requests.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:31+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "release:v0.3.1",
+      "quote": "pip install kern-llm==0.3.1",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:31+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "`kern-runtime` loads a verified manifest, allocates, binds weights, lowers",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:31+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:30+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

@@ -1,0 +1,561 @@
+{
+  "schema_version": "software.v1",
+  "slug": "nedster",
+  "repo_id": "gh:1203434206",
+  "name": "Nedster",
+  "summary": "Local coding agent that runs read-edit-test loops via Ollama and returns JSON results.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "alpha",
+  "tags": [
+    "agentic-coding",
+    "ai-agents",
+    "ai-coding-assistant",
+    "claude-code",
+    "cli",
+    "code-generation",
+    "codex-cli",
+    "coding-agent",
+    "developer-tools",
+    "llm-agent"
+  ],
+  "use_cases": [
+    "fix bugs with a known location or traceback",
+    "implement 1-3 file features with tests",
+    "perform multi-file renames",
+    "write tests for existing code",
+    "answer where-is and how-does-it-flow code questions"
+  ],
+  "alternatives_to": [
+    "Claude Code",
+    "Codex"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://github.com/unrealumanga/Nedster#use-it-with-claude-code",
+  "repo": {
+    "url": "https://github.com/unrealumanga/Nedster",
+    "full_name": "unrealumanga/Nedster",
+    "created_at": "2026-04-07T03:16:27Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.11"
+    ],
+    "system_packages": [],
+    "gpu": "optional",
+    "apple_silicon_only": null,
+    "min_ram_gb": 8.0,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-nedster-20261030-235631-67ea",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone --depth 1 https://github.com/unrealumanga/Nedster.git /tmp/Nedster && ls -la /tmp/Nedster && cat /tmp/Nedster/install.sh",
+          "purpose": "Clone Nedster repo for install.sh source"
+        },
+        {
+          "command": "uv tool install --force /tmp/Nedster && uv tool update-shell && echo INSTALLED",
+          "purpose": "Install nedster via uv like install.sh does"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "nedster --version",
+        "expected_signal": "Nedster 4.0.0a1"
+      },
+      "first_task": "nedster doctor"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": null,
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:58:00.364371+08:00",
+    "runs": [
+      {
+        "id": "verify-nedster-20261030-235631-67ea",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:58:00.364371+08:00",
+        "tool_version": "4.0.0a1",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/unrealumanga/Nedster.git /tmp/Nedster && ls -la /tmp/Nedster && cat /tmp/Nedster/install.sh",
+            "purpose": "Clone Nedster repo for install.sh source"
+          },
+          {
+            "command": "uv tool install --force /tmp/Nedster && uv tool update-shell && echo INSTALLED",
+            "purpose": "Install nedster via uv like install.sh does"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nedster --version",
+            "expected_signal": "Nedster 4.0.0a1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Nedster 4.0.0a1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nedster --help",
+            "expected_signal": "Nedster — a local coding agent for Ollama",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Nedster — a local coding agent for Ollama (works alone or as a token-saving worker for Claude Code",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nedster doctor",
+            "expected_signal": "inference-ready NOT READY",
+            "exit_code": 3,
+            "passed": true,
+            "observed_excerpt": "inference-ready NOT READY · Ollama not reachable at http://127.0.0.1:11434",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nedster models recommend",
+            "expected_signal": "qwen3.5:9b-q4_K_M",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "worker qwen3.5:9b-q4_K_M",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nedster config show",
+            "expected_signal": "models.ollama_url",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "models.ollama_url = http://127.0.0.1:11434 [default]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "./install.sh puts nedster on PATH and runs nedster setup",
+            "actually_needed": "Ran only the install portion (uv tool install --force /tmp/Nedster); skipped the trailing `nedster setup` which installs Ollama and pulls ~10GB of models (models recommend shows 10.3GB) and needs GPU/VRAM.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "nedster doctor must say: inference ready, execution ready",
+            "actually_needed": "nedster doctor exits 3 with NOT READY reports when Ollama/model and sandbox are absent; this is the correct not-ready exit per the README exit-code table, not a failure.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show doctor reporting NOT READY statuses, models recommend listing the balanced worker model, and version printing Nedster 4.0.0a1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nedster-20261030-235631-67ea/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nedster-20261030-235631-67ea/check-1-cmd7.judged.png",
+            "runs/verify/verify-nedster-20261030-235631-67ea/check-2-cmd8.judged.png",
+            "runs/verify/verify-nedster-20261030-235631-67ea/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.101101
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 95.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 28.1,
+      "signals": {
+        "stars": 7,
+        "monthly_downloads": null,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 0,
+        "hn_top_score": 4,
+        "registries_count": 0
+      },
+      "age_days": 204,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 68.45
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "59021f3de2747922904ede7811ef18ccd46a9cee697d9a27667203f3b4d8d48f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Nedster does the grinding on your own GPU."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Delegate: bug fixes with a known location or traceback; 1-3 file features with tests; renames;"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requirements: Python 3.11+, [Ollama](https://ollama.com) (setup can install it), 8 GB RAM minimum."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "Then run `install.ps1` on Windows or `./install.sh` on macOS/Linux."
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "nedster doctor                          # must say: inference ready, execution ready"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "writes `~/.nedster/config.toml`."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "**Does it replace Claude Code or Codex?** No. A 35B local model is a good worker"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Local, offline after setup, no account, MIT licensed. Windows, macOS and Linux."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/unrealumanga/Nedster",
+      "fetched_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/unrealumanga/Nedster/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:32:44+08:00"
+    },
+    {
+      "id": "release:v3.1.0-alpha.2",
+      "kind": "release",
+      "url": "https://github.com/unrealumanga/Nedster/releases/tag/v3.1.0-alpha.2",
+      "fetched_at": "2026-10-29T02:32:44+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Nedster is also a complete terminal coding agent.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "The installer puts `nedster` on your PATH",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "`nedster` is a local coding agent on this machine",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Nedster does the grinding on your own GPU.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Nedster: a local coding agent that saves your Claude Code and Codex tokens",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Windows, macOS and Linux.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/prerequisites/min_ram_gb",
+      "source_id": "readme",
+      "quote": "8 GB RAM minimum.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requirements: Python 3.11+",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "A GPU is\nstrongly recommended",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Local, offline after setup, no account",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "release:v3.1.0-alpha.2",
+      "quote": "Nedster 3.1 Alpha 2",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Delegate: bug fixes with a known location or traceback",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "1-3 file features with tests",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "an\n8-file rename",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "writing tests for existing code",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "\"where is X / how does Y flow\" questions.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "github_api",
+      "quote": "Local coding agent for Ollama that saves your Claude Code / Codex tokens",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "github_api",
+      "quote": "Local coding agent for Ollama that saves your Claude Code / Codex tokens",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "`nedster` is a local coding agent on this machine (Ollama, free).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Local, offline after setup, no account, MIT licensed.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:11+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:59+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

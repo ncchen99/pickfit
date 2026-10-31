@@ -1,0 +1,556 @@
+{
+  "schema_version": "software.v1",
+  "slug": "pooprusteek",
+  "repo_id": "gh:1279604342",
+  "name": "Pooprusteek",
+  "summary": "Terminal TUI coding agent in Rust using DeepSeek web API with parallel chats and tools.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent",
+    "ai",
+    "ai-coding-agent",
+    "claude",
+    "claude-code-alternative",
+    "cli",
+    "codex-alternative",
+    "coding-agent",
+    "deepseek",
+    "developer-tools"
+  ],
+  "use_cases": [
+    "open and switch between parallel chat sessions",
+    "ask a background side-question without disturbing main turn",
+    "launch a sub-agent for a sub-task"
+  ],
+  "alternatives_to": [
+    "Claude Code"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://pooprusteek.github.io",
+  "repo": {
+    "url": "https://github.com/Aver005/PoopRusteek",
+    "full_name": "Aver005/PoopRusteek",
+    "created_at": "2026-06-24T21:03:30Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "DeepSeek session token"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/Aver005/pooprusteek/releases/latest/download/install.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Log in to chat.deepseek.com and copy DeepSeek session token on first launch"
+      ],
+      "check": null,
+      "first_task": "pooprusteek --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-pooprusteek-20261031-002319-ed55",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/Aver005/pooprusteek/releases/latest/download/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && head -c 2000 /tmp/install.sh",
+          "purpose": "Download install script for inspection"
+        },
+        {
+          "command": "sh /tmp/install.sh",
+          "purpose": "Install pooprusteek via release script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "pooprusteek --version",
+        "expected_signal": "pooprusteek 0.1.1"
+      },
+      "first_task": "curl -s http://127.0.0.1:8123/v1/models; echo \"---\"; curl -s -X POST http://127.0.0.1:8123/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"mock\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}'"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v0.1.1",
+    "published_at": "2026-09-24T23:15:30Z",
+    "url": "https://github.com/Aver005/PoopRusteek/releases/tag/v0.1.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:24:44.813835+08:00",
+    "runs": [
+      {
+        "id": "verify-pooprusteek-20261031-002319-ed55",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:24:44.813835+08:00",
+        "tool_version": "0.1.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/Aver005/pooprusteek/releases/latest/download/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && head -c 2000 /tmp/install.sh",
+            "purpose": "Download install script for inspection"
+          },
+          {
+            "command": "sh /tmp/install.sh",
+            "purpose": "Install pooprusteek via release script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "pooprusteek --version",
+            "expected_signal": "pooprusteek 0.1.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "pooprusteek 0.1.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "pooprusteek --help",
+            "expected_signal": "A fast TUI coding agent",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "A fast TUI coding agent powered by DeepSeek",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8123/v1/models; echo \"---\"; curl -s -X POST http://127.0.0.1:8123/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"mock\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}'",
+            "expected_signal": "\"id\":\"mock\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"data\":[{\"context_length\":32768,\"id\":\"mock\",\"object\":\"model\",\"owned_by\":\"harness\"}],\"object\":\"list\"}---",
+            "setup": [
+              {
+                "command": "pooprusteek mock-provider --port 8123",
+                "background": true,
+                "port": 8123
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "pooprusteek --config /tmp/pr-config.toml --data-dir /tmp/pr-data exec \"say hi\" --provider mock --model mock --semantic off --timeout 30 --trace /tmp/pr-trace.jsonl --json",
+            "expected_signal": "Mock provider: no script loaded.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"final_text\": \"Mock provider: no script loaded.\",",
+            "setup": [
+              {
+                "command": "cat > /tmp/pr-config.toml <<'EOF'\n[provider]\nkind = \"openai\"\nmodel = \"mock\"\n\n[[providers]]\nname = \"mock\"\nprotocol = \"openai\"\nbase_url = \"http://127.0.0.1:8123/v1\"\nmodel = \"mock\"\napi_key = \"test\"\nEOF\ncat /tmp/pr-config.toml && mkdir -p /tmp/pr-data /tmp/pr-work && ls -l /tmp/pr-config.toml",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "pooprusteek mock-provider --port 8123",
+                "background": true,
+                "port": 8123
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://github.com/Aver005/pooprusteek/releases/latest/download/install.sh | sh",
+            "actually_needed": "installer fetches a prebuilt linux-x86_64 binary and verifies it against manifest.json sha256, then smoke-tests it with --version before swapping it in; the binary itself cannot be read as text before running",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show model list with mock id, exec JSON completed with mock text, and version 0.1.1 printed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-pooprusteek-20261031-002319-ed55/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-pooprusteek-20261031-002319-ed55/check-1-cmd9.judged.png",
+            "runs/verify/verify-pooprusteek-20261031-002319-ed55/check-2-cmd12.judged.png",
+            "runs/verify/verify-pooprusteek-20261031-002319-ed55/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.080142
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 94.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 24.0,
+      "signals": {
+        "stars": 6,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 59,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 127,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 71.52
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "6a3a8a22ccddc78138fcddf2b43ee771b41b69477a270b0fb65c354817306431",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "a fast, beautiful TUI coding agent in Rust, powered by DeepSeek"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Терминальный AI-агент для кодинга на Rust поверх веб-API DeepSeek"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Linux builds need glibc 2.39+"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "curl -fsSL https://github.com/Aver005/pooprusteek/releases/latest/download/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "pooprusteek --version"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "token = \"your-deepseek-token\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "`--dir <path>`, `--channel dev`, `--uninstall`."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[![Platform](https://img.shields.io/badge/platform-Windows_·_macOS_·_Linux-success)]()"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Aver005/PoopRusteek",
+      "fetched_at": "2026-10-30T23:46:25+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Aver005/PoopRusteek/blob/develop/README.md",
+      "fetched_at": "2026-10-31T00:09:03+08:00"
+    },
+    {
+      "id": "release:v0.1.1",
+      "kind": "release",
+      "url": "https://github.com/Aver005/PoopRusteek/releases/tag/v0.1.1",
+      "fetched_at": "2026-10-31T00:09:03+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "a fast, beautiful TUI coding agent in Rust, powered by DeepSeek",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:17:01+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "pooprusteek            # launch the TUI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:17:01+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "terminal-native alternative to Claude Code",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:17:01+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "a fast, beautiful TUI coding agent in Rust, powered by DeepSeek",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:17:01+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "Pooprusteek is a Rust rewrite",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:17:01+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "platform-Windows_·_macOS_·_Linux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:17:01+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "It talks to DeepSeek's web API directly (no paid API key)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:17:01+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "It needs a session token",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:17:01+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:46:25+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:46:25+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:46:25+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:46:25+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:46:25+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.1.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:09:03+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "open and switch between parallel sessions",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:17:01+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "fire a one-shot side-question that answers in the background",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:17:01+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Launch a sub-agent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:17:01+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "A free, terminal-native alternative to Claude Code",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:17:01+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://github.com/Aver005/pooprusteek/releases/latest/download/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:17:01+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://github.com/Aver005/pooprusteek/releases/latest/download/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:17:01+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "A free, terminal-native alternative to Claude Code",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:17:01+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "It talks to DeepSeek's web API directly (no paid API key)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:17:01+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:42:46+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

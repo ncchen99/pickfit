@@ -1,0 +1,497 @@
+{
+  "schema_version": "software.v1",
+  "slug": "agent-inspect",
+  "repo_id": "gh:1227043167",
+  "name": "agent-inspect",
+  "summary": "Local-first toolkit to inspect TypeScript agent runs, check trajectories in CI, and share offline evidence.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "ai-agents",
+    "ci",
+    "cli",
+    "debugging",
+    "devtools",
+    "evidence",
+    "jsonl",
+    "langchain",
+    "langgraph",
+    "llm"
+  ],
+  "use_cases": [
+    "read the execution path of a local agent run",
+    "fail CI on the wrong agent trajectory",
+    "create reviewable offline evidence bundle"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://agentinspect.vercel.app",
+  "repo": {
+    "url": "https://github.com/rajudandigam/agent-inspect",
+    "full_name": "rajudandigam/agent-inspect",
+    "created_at": "2026-05-02T06:07:29Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "node>=20"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-agent-inspect-20261031-001627-1e9b",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g agent-inspect && agent-inspect --version && which agent-inspect",
+          "purpose": "Install agent-inspect globally via npm"
+        },
+        {
+          "command": "agent-inspect init --yes",
+          "purpose": "Initialize demo project with init --yes"
+        },
+        {
+          "command": "npm install agent-inspect && node examples/agent-inspect-demo.mjs",
+          "purpose": "Install locally and generate trace with demo script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "agent-inspect --version",
+        "expected_signal": "6.31.30"
+      },
+      "first_task": "agent-inspect list --dir .agent-inspect"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "agent-inspect@6.31.30",
+    "published_at": "2026-10-29T22:35:39Z",
+    "url": "https://github.com/rajudandigam/agent-inspect/releases/tag/agent-inspect%406.31.30"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:17:54.887001+08:00",
+    "runs": [
+      {
+        "id": "verify-agent-inspect-20261031-001627-1e9b",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:17:54.887001+08:00",
+        "tool_version": "6.31.30",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g agent-inspect && agent-inspect --version && which agent-inspect",
+            "purpose": "Install agent-inspect globally via npm"
+          },
+          {
+            "command": "agent-inspect init --yes",
+            "purpose": "Initialize demo project with init --yes"
+          },
+          {
+            "command": "npm install agent-inspect && node examples/agent-inspect-demo.mjs",
+            "purpose": "Install locally and generate trace with demo script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "agent-inspect --version",
+            "expected_signal": "6.31.30",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "6.31.30",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "agent-inspect --help",
+            "expected_signal": "Start localhost read-only viewer",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "viewer [options] Start localhost read-only viewer (traces, suite, or workspace) (v5.3+)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "agent-inspect list --dir .agent-inspect",
+            "expected_signal": "Recent AgentInspect Runs",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Recent AgentInspect Runs",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "RUN_ID=$(basename .agent-inspect/run_*.jsonl .jsonl) && agent-inspect view $RUN_ID --dir .agent-inspect --summary",
+            "expected_signal": "Run Summary",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Run Summary",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "RUN_ID=$(basename .agent-inspect/run_*.jsonl .jsonl) && agent-inspect check $RUN_ID --dir .agent-inspect --preset trajectory",
+            "expected_signal": "Trajectory: PASS",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Trajectory: PASS",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm install agent-inspect, init, then node examples/agent-inspect-demo.mjs",
+            "actually_needed": "Also run local `npm install agent-inspect` in the project before `node examples/agent-inspect-demo.mjs`, otherwise node fails with ERR_MODULE_NOT_FOUND for 'agent-inspect' even when the CLI is installed globally.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show list output with Recent AgentInspect Runs, detailed Run Summary for DemoAgent.run, and version 6.31.30, all with exit code 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-agent-inspect-20261031-001627-1e9b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-agent-inspect-20261031-001627-1e9b/check-1-cmd12.judged.png",
+            "runs/verify/verify-agent-inspect-20261031-001627-1e9b/check-2-cmd10.judged.png",
+            "runs/verify/verify-agent-inspect-20261031-001627-1e9b/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.06394
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 89.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.9375,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 88.9,
+      "signals": {
+        "stars": 168,
+        "monthly_downloads": 54165,
+        "forks": 52,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 181,
+      "packages": [
+        "npm:agent-inspect"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 9.9
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "26b622814d125ebdaab62560a52db88aa1a3b5d6c0139cf14edfe1f5c4877d2d",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Local evidence debugger and trajectory-test toolkit for TypeScript AI agents: inspect causal runs, catch wrong tool paths in CI, and share safe offline evidence."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Inspect one local TypeScript agent run immediately"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Node.js 20 or newer"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npm install agent-inspect"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "A passing check exits `0`; a rule failure exits `1`."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Traces are local JSONL under `.agent-inspect/` or `AGENT_INSPECT_TRACE_DIR`."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "**Current published baseline:** **6.31.30** · persisted schema `1.0` · Node.js `>=20` · MIT."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/rajudandigam/agent-inspect",
+      "fetched_at": "2026-10-30T23:51:45+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/rajudandigam/agent-inspect/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:02:04+08:00"
+    },
+    {
+      "id": "release:agent-inspect@6.31.30",
+      "kind": "release",
+      "url": "https://github.com/rajudandigam/agent-inspect/releases/tag/agent-inspect%406.31.30",
+      "fetched_at": "2026-10-31T00:02:04+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "npx agent-inspect view <run-id> --dir .agent-inspect --summary",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "npm install agent-inspect",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "See nested steps, tool calls, LLM calls, model and token metadata",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "AgentInspect turns TypeScript agent runs into readable execution trees,\n  deterministic trajectory checks, and portable Evidence v2",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<p align=\"center\"><strong>agent-inspect</strong></p>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Node.js 20 or newer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:45+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:45+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:45+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:45+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:45+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:agent-inspect@6.31.30",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:02:04+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "**Support level:** Stable — see [SUPPORT-LEVELS.md]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Debug — read the execution path",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Prevent — fail CI on the wrong trajectory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Share — create reviewable offline evidence",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Keep the evidence local.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:41:13+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

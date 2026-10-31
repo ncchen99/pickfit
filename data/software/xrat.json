@@ -1,0 +1,554 @@
+{
+  "schema_version": "software.v1",
+  "slug": "xrat",
+  "repo_id": "gh:1224850322",
+  "name": "XRAT",
+  "summary": "Rust CLI/TUI that imports proxy subscriptions, tests them, and manages local connections.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "prototype",
+  "tags": [
+    "cli",
+    "hysteria2",
+    "proxy",
+    "ratatui",
+    "rust",
+    "shadowsocks",
+    "sing-box",
+    "terminal",
+    "terminal-ui",
+    "trojan"
+  ],
+  "use_cases": [
+    "import proxy subscriptions from URL or file",
+    "test subscription configs and sort by latency",
+    "rotate running proxy connection",
+    "scan candidate edge IPs for reachability",
+    "run managed local SOCKS proxy session"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://mhyrzt.github.io/xrat/",
+  "repo": {
+    "url": "https://github.com/mhyrzt/xrat",
+    "full_name": "mhyrzt/xrat",
+    "created_at": "2026-04-29T17:35:44Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install xrat",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "xrat status"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-xrat-20261031-001909-3d47",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/mhyrzt/xrat/master/install.sh -o /tmp/install-xrat.sh && ls -l /tmp/install-xrat.sh && wc -l /tmp/install-xrat.sh",
+          "purpose": "Download install script for reading"
+        },
+        {
+          "command": "bash /tmp/install-xrat.sh --no-desktop -y",
+          "purpose": "Install xrat via install script non-interactive"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "xrat --version",
+        "expected_signal": "xrat 0.33.0"
+      },
+      "first_task": "xrat list configs"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.33.0",
+    "published_at": "2026-10-26T14:58:16Z",
+    "url": "https://github.com/mhyrzt/xrat/releases/tag/v0.33.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:20:43.322182+08:00",
+    "runs": [
+      {
+        "id": "verify-xrat-20261031-001909-3d47",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:20:43.322182+08:00",
+        "tool_version": "0.33.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/mhyrzt/xrat/master/install.sh -o /tmp/install-xrat.sh && ls -l /tmp/install-xrat.sh && wc -l /tmp/install-xrat.sh",
+            "purpose": "Download install script for reading"
+          },
+          {
+            "command": "bash /tmp/install-xrat.sh --no-desktop -y",
+            "purpose": "Install xrat via install script non-interactive"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "xrat --version",
+            "expected_signal": "xrat 0.33.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "xrat 0.33.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "xrat --help",
+            "expected_signal": "Show the managed proxy runtime status",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "status Show the managed proxy runtime status.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "xrat list configs",
+            "expected_signal": "No configs matched.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No configs matched.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "xrat status",
+            "expected_signal": "status stopped",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "status stopped",
+            "setup": [
+              {
+                "command": "xrat daemon start && xrat status && xrat daemon status",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "xrat daemon status",
+            "expected_signal": "ready yes",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ready yes",
+            "setup": [
+              {
+                "command": "xrat daemon start && xrat status && xrat daemon status",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/mhyrzt/xrat/master/install.sh | bash",
+            "actually_needed": "downloaded install.sh to /tmp/install-xrat.sh, read it, then ran bash /tmp/install-xrat.sh --no-desktop -y for a non-interactive install",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "xrat status # check the connection",
+            "actually_needed": "xrat status exits 1 with 'daemon is not running' until xrat daemon start is run; systemd is unavailable in the box so the standalone daemon must be started, after which xrat status exits 0 reporting a stopped runtime",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show xrat reporting No configs matched, status stopped, and version 0.33.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-xrat-20261031-001909-3d47/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-xrat-20261031-001909-3d47/check-1-cmd7.judged.png",
+            "runs/verify/verify-xrat-20261031-001909-3d47/check-2-cmd10.judged.png",
+            "runs/verify/verify-xrat-20261031-001909-3d47/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.075798
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 92.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 67.0,
+      "signals": {
+        "stars": 56,
+        "monthly_downloads": 186,
+        "forks": 12,
+        "dependents": null,
+        "release_downloads": 307,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 183,
+      "packages": [
+        "crates:xrat"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 30.43
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "a505b40bf047e05cc0d8b8e3fc63091ab32b15a480a9a96f16749bcf241d76af",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Rust CLI/TUI proxy manager for Xray-core, V2Ray-core, and sing-box: import subscriptions,   test latency, rotate proxies, scan edge IPs, and run managed local proxy sessions."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "they do not need to be installed beforehand."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/mhyrzt/xrat/master/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "OK Imported 12 parsed nodes."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "admin_password_hash = 'PASTE_ARGON2ID_HASH_HERE'"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "xrat upgrade"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "https://img.shields.io/badge/license-MIT-green"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/mhyrzt/xrat",
+      "fetched_at": "2026-10-30T23:44:56+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/mhyrzt/xrat/blob/master/README.md",
+      "fetched_at": "2026-10-31T00:06:05+08:00"
+    },
+    {
+      "id": "release:v0.33.0",
+      "kind": "release",
+      "url": "https://github.com/mhyrzt/xrat/releases/tag/v0.33.0",
+      "fetched_at": "2026-10-31T00:06:05+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A Rust CLI and TUI proxy configuration manager",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:51+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Install script (Linux/macOS):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:51+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Import your subscriptions, find a working proxy, and keep it running from the\nterminal.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:51+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Import your subscriptions, find a working proxy, and keep it running from the\nterminal.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:51+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "XRAT - Xray-core and sing-box Proxy Manager",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:51+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Install script (Linux/macOS):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:51+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:44:56+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:44:56+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:44:56+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:44:56+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:44:56+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.33.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:06:05+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "status-under%20development-orange",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:51+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "github_api",
+      "quote": "import subscriptions,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:51+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Test a whole subscription concurrently, sort by",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:51+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Let XRAT test candidates and switch the running connection:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:51+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "compare candidate edge IPs for TCP reachability and latency,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:51+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Your local SOCKS proxy is now available on port `18200`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:51+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install xrat",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:51+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/mhyrzt/xrat/master/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:51+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Keep a local proxy running.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:51+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:42:22+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

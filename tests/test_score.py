@@ -187,6 +187,35 @@ def test_hygiene_parts_ignore_vendored_files() -> None:
         "ci": False, "tests": True, "osi_license": False, "changelog": True, "lockfile": False}
 
 
+# Texts that the untagged rules read the other way, so each kind is seen deciding on its own.
+LOOKS_LIKE_A_FIX = ("tool link", "tool pair")
+LOOKS_LIKE_THE_BOX = ("sudo install tool", "install to ~/.local/bin (no sudo in the box)")
+
+
+@pytest.mark.parametrize(("kind", "fix"), [("readme_wrong", True), ("sandbox", False), ("tool_handled", False),
+                                           ("note", False)])
+def test_a_tagged_pitfall_counts_as_a_readme_fix_only_when_readme_wrong(kind: str, fix: bool) -> None:
+    for said, needed in (LOOKS_LIKE_A_FIX, LOOKS_LIKE_THE_BOX):
+        assert readme_fix(Pitfall(readme_said=said, actually_needed=needed, kind=kind)) is fix
+    assert readme_fix(Pitfall(readme_said=LOOKS_LIKE_A_FIX[0], actually_needed=LOOKS_LIKE_A_FIX[1]))  # untagged
+    assert not readme_fix(Pitfall(readme_said=LOOKS_LIKE_THE_BOX[0], actually_needed=LOOKS_LIKE_THE_BOX[1]))
+
+
+def test_kinds_and_untagged_pitfalls_mix_in_one_run() -> None:
+    blocked = Pitfall(readme_said="tool generate path/to/repo", actually_needed="needs a model server", kind="sandbox")
+    follows = Pitfall(readme_said="tool serve [path]", actually_needed='exits 1: Run "tool generate" first.')
+    tagged_follows = Pitfall(readme_said="tool serve [path]", actually_needed='exits 1: Run "tool generate" first.',
+                             kind="readme_wrong")
+    note = Pitfall(readme_said="curl https://x.dev/i.sh | sh", actually_needed="the script was run without being read",
+                   kind="note")
+    assert readme_fixes([blocked, follows, note]) == 0  # a sandbox-tagged step blocks an untagged follower too
+    assert readme_fixes([blocked, tagged_follows, note]) == 1  # a tagged follower keeps its kind
+    notes = verification({**run(), "pitfalls": [{"readme_said": "a", "actually_needed": "b", "kind": "note"}] * 3})
+    assert sandbox_score(notes, "dev_cli") == 1.0  # recording notes costs nothing
+    wrong = verification({**run(), "pitfalls": [{"readme_said": "a", "actually_needed": "b", "kind": "readme_wrong"}]})
+    assert sandbox_score(wrong, "dev_cli") == 0.85
+
+
 def test_a_pitfall_that_follows_from_a_box_blocked_step_is_not_a_readme_fix() -> None:
     blocked = Pitfall(readme_said="tool generate path/to/repo",
                       actually_needed="`tool generate /tmp/r` exits 1: Cannot reach Ollama at localhost:11434")
@@ -274,13 +303,15 @@ def setup_records(tmp_path: Path, *, verified: bool = True) -> tuple[Path, Path]
                                       "steps": [{"command": "step 0"}, {"command": "step 1"}]}
         record["evidence"].append({"field": "/verification", "source_id": "github_api", "quote": None,
                                    "method": "sandbox", "checked_at": "2026-10-30T10:00:00+08:00"})
-        path.write_text(json.dumps(record))
+        # as profiles and write-back write a record: normalized, indented
+        path.write_text(json.dumps(SoftwareRecord.model_validate(record).model_dump(mode="json"), ensure_ascii=False,
+                                   indent=2) + "\n")
     return tmp_path / "pipeline.db", out
 
 
 def test_scoring_writes_only_scores_and_reuses_the_rubric(tmp_path: Path) -> None:
     db_path, out = setup_records(tmp_path)
-    before = SoftwareRecord.model_validate_json((out / "tinyq.json").read_text(encoding="utf-8")).model_dump(mode="json")
+    before = json.loads((out / "tinyq.json").read_text(encoding="utf-8"))
     calls: list[str] = []
     summary = score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=LATER,
                             grade=fake_grade(calls=calls))
@@ -386,6 +417,39 @@ def test_write_back_keeps_scores_and_refreshes_what_follows_the_run(tmp_path: Pa
     assert s.quality.components.install_docs == before.quality.components.install_docs
 
 
+def test_refresh_moves_scores_of_a_refreshable_formula_and_score_refresh_writes_only_scores(tmp_path: Path) -> None:
+    from pickfit.score import REFRESHABLE_FROM, refresh_records
+
+    db_path, out = setup_records(tmp_path)
+    score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW,
+                  grade=fake_grade())
+    path = out / "tinyq.json"
+    data = json.loads(path.read_text())
+    old = next(iter(REFRESHABLE_FROM))
+    data["scores"]["formula_version"] = old
+    data["verification"]["runs"][0]["pitfalls"] = [{"readme_said": "tool link", "actually_needed": "tool pair",
+                                                    "kind": "note"},
+                                                   {"readme_said": "a", "actually_needed": "b"}]  # written before kind
+    path.write_text(json.dumps(data))
+    before = SoftwareRecord.model_validate_json(path.read_text()).model_dump(mode="json")
+    assert refresh_records(out, dry_run=True, now=LATER).written == ["tinyq"]
+    assert json.loads(path.read_text()) == data  # a dry run writes nothing
+    summary = refresh_records(out, now=LATER)
+    assert summary.written == ["tinyq"] and "moved from formula" in summary.rows[0]["note"]
+    after = json.loads(path.read_text())
+    assert {k for k in after if after[k] != data.get(k)} == {"scores", "updated_at"}  # the file, key by key
+    assert "kind" not in after["verification"]["runs"][0]["pitfalls"][1]  # no schema default added
+    scores = SoftwareRecord.model_validate(after).scores
+    assert scores.formula_version == FORMULA_VERSION and scores.docs_rubric == SoftwareRecord.model_validate(
+        before).scores.docs_rubric  # other components kept as they were
+    assert scores.quality.components.sandbox_verification.score == 0.85  # the note is not a fix; "a"/"b" is
+    assert refresh_records(out, now=LATER).unchanged == ["tinyq"]
+    after["scores"]["formula_version"] = "q0"  # not refreshable: left for a full rescore, never cleared
+    path.write_text(json.dumps(after))
+    summary = refresh_records(out, now=LATER)
+    assert "tinyq" in summary.errors and json.loads(path.read_text())["scores"]["formula_version"] == "q0"
+
+
 def test_refresh_clears_scores_of_another_formula() -> None:
     data = {"scores": {"formula_version": "q0"}}
     assert "rescore" in refresh_scores(data, NOW) and data["scores"] is None
@@ -429,3 +493,14 @@ def test_grade_docs_sends_a_strict_schema_and_zeroes_unquoted_items(tmp_path: Pa
     assert rubric.unquoted == ["troubleshooting_uninstall"]
     assert rubric.items.troubleshooting_uninstall.score == 0 and rubric.items.config_and_keys.quote is None
     assert rubric.items.score() == pytest.approx(12 / 16) and graded.cost_usd > 0
+
+
+def test_mcp_servers_have_their_own_popularity_refs() -> None:
+    from pickfit.score import POPULARITY_REFS, VERIFICATION_DEPTH, popularity
+
+    assert set(POPULARITY_REFS["mcp_server"]) == set(POPULARITY_REFS["dev_cli"])
+    signals = {"stars": 40, "forks": 5, "monthly_downloads": 20000, "release_downloads": None, "dependents": None,
+               "hn_top_score": 0, "registries_count": 1}
+    # The same npm download count says less about an MCP server, which npx fetches on every client start.
+    assert popularity(signals, "mcp_server", 60) < popularity(signals, "dev_cli", 60)
+    assert VERIFICATION_DEPTH["mcp_server"]["function"] < VERIFICATION_DEPTH["mcp_server"]["service"] == 1.0

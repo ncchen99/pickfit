@@ -1,0 +1,524 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mcp-documents-reader",
+  "repo_id": "gh:1140553709",
+  "name": "MCP Document Reader",
+  "summary": "MCP server that lets AI assistants read DOCX, PDF, Excel, and TXT files.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "claude",
+    "claude-code",
+    "cursor",
+    "docx",
+    "excel",
+    "mcp",
+    "mcp-client",
+    "mcp-gateway",
+    "mcp-server"
+  ],
+  "use_cases": [
+    "read a DOCX file",
+    "read a PDF file",
+    "read an Excel file",
+    "read a text file"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/xt765/mcp_documents_reader",
+    "full_name": "xt765/mcp_documents_reader",
+    "created_at": "2026-01-23T12:45:43Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.10"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mcp-documents-reader-20261031-014404-1508",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install mcp-documents-reader",
+          "purpose": "Install mcp-documents-reader with uv tool"
+        },
+        {
+          "command": "uv pip install --python /home/sbx/.local/share/uv/tools/mcp-documents-reader/bin/python 'mcp<2'",
+          "purpose": "Pin mcp<2 in the tool environment so server starts"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.3.1",
+    "published_at": "2026-03-13T02:34:31Z",
+    "url": "https://github.com/xt765/mcp_documents_reader/releases/tag/v1.3.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:48:36.857061+08:00",
+    "runs": [
+      {
+        "id": "verify-mcp-documents-reader-20261031-014404-1508",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:48:36.857061+08:00",
+        "tool_version": "1.3.1",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install mcp-documents-reader",
+            "purpose": "Install mcp-documents-reader with uv tool"
+          },
+          {
+            "command": "uv pip install --python /home/sbx/.local/share/uv/tools/mcp-documents-reader/bin/python 'mcp<2'",
+            "purpose": "Pin mcp<2 in the tool environment so server starts"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- mcp-documents-reader",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call read_document --args '{\"filename\": \"/tmp/sample.txt\"}' -- mcp-documents-reader",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=read_document content=text text_chars=53",
+            "setup": [
+              {
+                "command": "printf 'Hello MCP Document Reader\\nSecond line for smoke test\\n' > /tmp/sample.txt && cat /tmp/sample.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Dependencies list mcp >= 1.26.0 with no upper bound.",
+            "actually_needed": "Constrain the server environment to mcp<2 (uv pip install with mcp<2); without it the installed mcp 2.x removes mcp.server.fastmcp and the server crashes on startup with ModuleNotFoundError. mcp 1.30.0 works.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "README gives launch command uvx mcp-documents-reader for MCP config.",
+            "actually_needed": "Launch the installed mcp-documents-reader binary directly over stdio; it has no working --help/--version and just waits on stdin.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake succeeding and read_document returning the sample file text.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mcp-documents-reader-20261031-014404-1508/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mcp-documents-reader-20261031-014404-1508/check-1-cmd9.judged.png",
+            "runs/verify/verify-mcp-documents-reader-20261031-014404-1508/check-2-cmd10.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.067655,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "mcp-documents-reader"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "Document?Reader",
+          "server_version": "1.30.0",
+          "tools": [
+            "read_document"
+          ],
+          "tool_count": 1,
+          "called_tool": "read_document",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": "uvx mcp-documents-reader",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"mcp-document-reader\": {\n      \"command\": \"uvx\",\n      \"args\": [\n        \"mcp-documents-reader\"\n      ]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "read_document"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.86,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 53.3,
+      "signals": {
+        "stars": 23,
+        "monthly_downloads": 486,
+        "forks": 7,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 280,
+      "packages": [
+        "pypi:mcp-documents-reader"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 36.89
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "f2b37c2260648ebfa9355b1fdf97f2f8afe7f49571bc04a8275f2cee9ed77c14",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Model Context Protocol (MCP) server exposes tools to read multiple document types including DOCX, PDF, Excel, and TXT."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Compliant with MCP standards, can be used as a tool for AI assistants like Trae IDE"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "`mcp` >= 1.26.0 - MCP protocol implementation"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install mcp-documents-reader"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "read_document(filename=\"example.docx\")"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Add the following to your MCP configuration file:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "MIT License"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/xt765/mcp_documents_reader",
+      "fetched_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/xt765/mcp_documents_reader/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:05:05+08:00"
+    },
+    {
+      "id": "release:v1.3.1",
+      "kind": "release",
+      "url": "https://github.com/xt765/mcp_documents_reader/releases/tag/v1.3.1",
+      "fetched_at": "2026-10-31T01:05:05+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Model Context Protocol (MCP) server exposes tools to read multiple document types including DOCX, PDF, Excel, and TXT.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:01+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "can be used as a tool for AI assistants like Trae IDE",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:01+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "MCP (Model Context Protocol) Document Reader - A powerful MCP tool for reading documents in multiple formats",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:01+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "MCP (Model Context Protocol) Document Reader - A powerful MCP tool for reading documents in multiple formats",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:01+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "MCP Document Reader",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:01+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "python-3.10+-blue.svg",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:01+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:36+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.3.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:05:05+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "read_document(filename=\"example.docx\")",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:01+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "read_document(filename=\"example.pdf\")",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:01+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "read_document(filename=\"example.xlsx\")",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:01+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "read_document(filename=\"example.txt\")",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:01+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "MIT License",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:01+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Reads documents directly from the file system",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:01+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "\"command\": \"uvx\",\n      \"args\": [\n        \"mcp-documents-reader\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:01+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"mcp-document-reader\": {\n      \"command\": \"uvx\",\n      \"args\": [\n        \"mcp-documents-reader\"\n      ]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:01+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "This server provides the following tool:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:01+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:34+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

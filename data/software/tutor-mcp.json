@@ -1,0 +1,649 @@
+{
+  "schema_version": "software.v1",
+  "slug": "tutor-mcp",
+  "repo_id": "gh:1196438202",
+  "name": "Tutor MCP",
+  "summary": "Open-source MCP engine for adaptive learning and personalized AI tutoring with progress tracking.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": "alpha",
+  "tags": [
+    "adaptive-learning",
+    "ai-tutor",
+    "bkt",
+    "claude",
+    "digital-learning",
+    "intelligent-tutoring-system",
+    "llm",
+    "mcp-server",
+    "model-context-protocol"
+  ],
+  "use_cases": [
+    "Learn a subject toward a goal such as conversational Spanish",
+    "Build a curriculum on any subject with skill graph",
+    "Follow a guided learning journey with lessons and exercises",
+    "Practice personalized lessons and revisit weak areas",
+    "Share learning programmes within an institution"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://tutor-mcp.dev/",
+  "repo": {
+    "url": "https://github.com/ArnaudGuiovanna/tutor-mcp",
+    "full_name": "ArnaudGuiovanna/tutor-mcp",
+    "created_at": "2026-03-30T17:43:45Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Go 1.26.10 or a newer patched release"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "Codex or Claude provider account"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-tutor-mcp-20261031-015150-823e",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/tutor-dl && curl -fsSL -o /tmp/tutor-dl/tutor-mcp_linux_amd64.tar.gz https://github.com/ArnaudGuiovanna/tutor-mcp/releases/download/v0.7.3/tutor-mcp_linux_amd64.tar.gz && tar -xzf /tmp/tutor-dl/tutor-mcp_linux_amd64.tar.gz -C /tmp/tutor-dl && ls -la /tmp/tutor-dl && install -m755 /tmp/tutor-dl/tutor-mcp ~/.local/bin/tutor-mcp && ~/.local/bin/tutor-mcp --help",
+          "purpose": "Download v0.7.3 Linux binary tarball and install tutor-mcp to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "~/.local/bin/tutor-mcp --version",
+        "expected_signal": "tutor-mcp v0.7.3"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.7.3",
+    "published_at": "2026-10-28T14:17:22Z",
+    "url": "https://github.com/ArnaudGuiovanna/tutor-mcp/releases/tag/v0.7.3"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:52:40.798583+08:00",
+    "runs": [
+      {
+        "id": "verify-tutor-mcp-20261031-015150-823e",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:52:40.798583+08:00",
+        "tool_version": "tutor-mcp v0.7.3 (commit 98463a0cb5fba77c97c4829ab3e5aaf3a7a",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/tutor-dl && curl -fsSL -o /tmp/tutor-dl/tutor-mcp_linux_amd64.tar.gz https://github.com/ArnaudGuiovanna/tutor-mcp/releases/download/v0.7.3/tutor-mcp_linux_amd64.tar.gz && tar -xzf /tmp/tutor-dl/tutor-mcp_linux_amd64.tar.gz -C /tmp/tutor-dl && ls -la /tmp/tutor-dl && install -m755 /tmp/tutor-dl/tutor-mcp ~/.local/bin/tutor-mcp && ~/.local/bin/tutor-mcp --help",
+            "purpose": "Download v0.7.3 Linux binary tarball and install tutor-mcp to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "~/.local/bin/tutor-mcp --version",
+            "expected_signal": "tutor-mcp v0.7.3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tutor-mcp v0.7.3 (commit 98463a0cb5fba77c97c4829ab3e5aaf3a7ad4c18, built 2026-10-28T13:04:45Z)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- ~/.local/bin/tutor-mcp --local",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call get_dashboard_state --args '{}' -- ~/.local/bin/tutor-mcp --local",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_dashboard_state content=text text_chars=147",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "git clone --branch main https://github.com/ArnaudGuiovanna/tutor-mcp.git; cd tutor-mcp; go build . (requires Go 1.26.10+)",
+            "actually_needed": "Downloaded v0.7.3 tutor-mcp_linux_amd64.tar.gz from GitHub releases, extracted tutor-mcp and installed to ~/.local/bin/tutor-mcp (Go toolchain is not installed and must not be installed)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 68 tools, successful get_dashboard_state call returning setup JSON, and version v0.7.3 output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tutor-mcp-20261031-015150-823e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tutor-mcp-20261031-015150-823e/check-1-cmd7.judged.png",
+            "runs/verify/verify-tutor-mcp-20261031-015150-823e/check-2-cmd8.judged.png",
+            "runs/verify/verify-tutor-mcp-20261031-015150-823e/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.054928,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "~/.local/bin/tutor-mcp",
+            "--local"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "tutor-mcp",
+          "server_version": "0.7.3",
+          "tools": [
+            "add_concepts",
+            "archive_domain",
+            "archive_training",
+            "calibration_check",
+            "cancel_assessment_attempt",
+            "check_mastery",
+            "decide_training",
+            "delete_domain",
+            "delete_training",
+            "feynman_challenge",
+            "find_training_members",
+            "get_autonomy_metrics",
+            "get_availability_model",
+            "get_conversation_context",
+            "get_curriculum_snapshot",
+            "get_dashboard_state",
+            "get_decision_replay_summary",
+            "get_goal_relevance",
+            "get_learner_context",
+            "get_memory_state",
+            "get_metacognitive_mirror",
+            "get_misconceptions",
+            "get_next_activity",
+            "get_olm_snapshot",
+            "get_pedagogical_snapshots",
+            "get_pending_alerts",
+            "get_training",
+            "get_training_groups",
+            "get_training_policy",
+            "init_domain",
+            "join_training",
+            "learning_negotiation",
+            "list_implementation_intentions",
+            "list_training_library",
+            "mark_domain_high_stakes",
+            "prepare_assessment_attempt",
+            "preview_training_edit",
+            "preview_training_lifecycle",
+            "propose_training_edit",
+            "publish_curriculum_revision",
+            "publish_training",
+            "queue_webhook_message",
+            "read_raw_session",
+            "record_affect",
+            "record_calibration_result",
+            "record_interaction",
+            "record_learning_event",
+            "record_session_close",
+            "record_transfer_result",
+            "restore_training",
+            "save_training_edit",
+            "select_conversation_training",
+            "set_domain_priority",
+            "set_goal_relevance",
+            "set_training_access",
+            "set_training_policy",
+            "share_training",
+            "start_learning_session",
+            "submit_assessment_attempt",
+            "submit_training",
+            "transfer_challenge",
+            "unarchive_domain",
+            "update_availability_model",
+            "update_implementation_intention",
+            "update_learner_memory",
+            "update_learner_profile",
+            "validate_domain_graph",
+            "withdraw_training"
+          ],
+          "tool_count": 68,
+          "called_tool": "get_dashboard_state",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "/absolute/path/to/tutor-mcp",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"tutor\": {\n      \"command\": \"/absolute/path/to/tutor-mcp\",\n      \"args\": [\"--local\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "get_next_activity",
+      "record_interaction"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 86.4,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 62.2,
+      "signals": {
+        "stars": 60,
+        "monthly_downloads": null,
+        "forks": 9,
+        "dependents": null,
+        "release_downloads": 428,
+        "hn_top_score": 1,
+        "registries_count": 0
+      },
+      "age_days": 213,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 32.66
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "872290050f8e5a8a6e82f2c4140d557b5d31839be4574fb1ae690d7beac17d43",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Tutor MCP is an open-source MCP engine for adaptive learning, self-learning and personalized AI tutoring."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Learning communities, teams and training organizations"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "build the MCP server from source with Git and [Go 1.26.10 or a newer patched release](https://go.dev/dl/):"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "git clone --branch main https://github.com/ArnaudGuiovanna/tutor-mcp.git"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "> I want to learn Go."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "\"command\": \"/absolute/path/to/tutor-mcp\","
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "et l’installer par-dessus\nla version précédente."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[MIT](LICENSE) — free to use, modify and distribute, including commercially, with the copyright and license notice preserved."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ArnaudGuiovanna/tutor-mcp",
+      "fetched_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ArnaudGuiovanna/tutor-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:03:45+08:00"
+    },
+    {
+      "id": "release:v0.7.3",
+      "kind": "release",
+      "url": "https://github.com/ArnaudGuiovanna/tutor-mcp/releases/tag/v0.7.3",
+      "fetched_at": "2026-10-31T01:03:45+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "An open-source MCP server that turns any LLM into an Intelligent Tutoring System.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Learning on your own computer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Tutor MCP is an open-source MCP engine for adaptive learning",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Tutor MCP is an open-source MCP engine for adaptive learning, self-learning and personalized AI tutoring.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Tutor MCP",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Binaries target **Linux, macOS and Windows**, on amd64 and arm64.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Go 1.26.10 or a newer patched release",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "select Codex or Claude and connect your provider account.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.7.3",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:03:45+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "https://img.shields.io/badge/status-alpha-yellow.svg",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Choose a subject and a goal — from conversational Spanish to backend engineering",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Build a curriculum on any subject.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Follow a guided learning journey.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "work through personalized lessons and exercises, revisit weak areas",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Share programmes within an institution.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "[MIT](LICENSE) — free to use, modify and distribute",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "locally over stdio or remotely over HTTPS/OAuth",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "locally over stdio or remotely over HTTPS/OAuth",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "\"command\": \"/absolute/path/to/tutor-mcp\",",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"tutor\": {\n      \"command\": \"/absolute/path/to/tutor-mcp\",\n      \"args\": [\"--local\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`get_next_activity` for guidance",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`record_interaction` to save observations",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:04+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:11+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

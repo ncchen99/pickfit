@@ -72,10 +72,12 @@ class BudgetExceeded(RuntimeError):
 
 
 def pipeline_daily_cap(day: date) -> float:
-    """$3 a day before 2026-10-29 (validation), $25 from then on, $45 from 10/31 to 11/2 (plan section 2)."""
+    """$3 a day before 2026-10-29 (validation), $25 from then on; $80 on 10/31 and $45 on 11/1-11/2 (plan section 2)."""
     if day < date(2026, 10, 29):
         return 3.0
-    return 45.0 if date(2026, 10, 31) <= day <= date(2026, 11, 2) else 25.0
+    if day == date(2026, 10, 31):
+        return 80.0
+    return 45.0 if date(2026, 11, 1) <= day <= date(2026, 11, 2) else 25.0
 
 
 @dataclass(frozen=True)
@@ -84,7 +86,7 @@ class Caps:
     daily_usd: Callable[[date], float]
 
 
-PIPELINE_TOTAL_USD = 115.0
+PIPELINE_TOTAL_USD = 120.0
 PIPELINE_CAPS = Caps(total_usd=PIPELINE_TOTAL_USD, daily_usd=pipeline_daily_cap)
 
 

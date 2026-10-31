@@ -1,0 +1,581 @@
+{
+  "schema_version": "software.v1",
+  "slug": "longhand",
+  "repo_id": "gh:1206388448",
+  "name": "Longhand",
+  "summary": "Local memory that stores Claude Code sessions verbatim for semantic recall.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "ai-memory",
+    "anthropic",
+    "chromadb",
+    "claude-code",
+    "forensic",
+    "local-first",
+    "lossless",
+    "mcp",
+    "mcp-server",
+    "python"
+  ],
+  "use_cases": [],
+  "alternatives_to": [
+    "claude-mem"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://glama.ai/mcp/servers/Wynelson94/longhand",
+  "repo": {
+    "url": "https://github.com/Wynelson94/longhand",
+    "full_name": "Wynelson94/longhand",
+    "created_at": "2026-04-09T21:36:53Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install longhand",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "longhand demo"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-longhand-20261031-011830-a9e7",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install longhand 2>&1",
+          "purpose": "Install longhand via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "longhand --version 2>&1",
+        "expected_signal": "longhand 1.3.0"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.3.0",
+    "published_at": "2026-10-30T16:52:33Z",
+    "url": "https://github.com/Wynelson94/longhand/releases/tag/v1.3.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:19:26.168319+08:00",
+    "runs": [
+      {
+        "id": "verify-longhand-20261031-011830-a9e7",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:19:26.168319+08:00",
+        "tool_version": "1.3.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install longhand 2>&1",
+            "purpose": "Install longhand via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "longhand --version 2>&1",
+            "expected_signal": "longhand 1.3.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "longhand 1.3.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- longhand mcp-server 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get_stats --args '{}' -- longhand mcp-server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_stats content=text text_chars=315",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 1.3.0, MCP handshake with 13 tools, and successful get_stats tool call.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-longhand-20261031-011830-a9e7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-longhand-20261031-011830-a9e7/check-1-cmd3.judged.png",
+            "runs/verify/verify-longhand-20261031-011830-a9e7/check-2-cmd5.judged.png",
+            "runs/verify/verify-longhand-20261031-011830-a9e7/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.039214,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "longhand",
+            "mcp-server"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "longhand",
+          "server_version": "1.30.0",
+          "tools": [
+            "search",
+            "list_sessions",
+            "get_session_timeline",
+            "replay_file",
+            "get_file_history",
+            "get_stats",
+            "recall",
+            "recall_project_status",
+            "reconcile",
+            "find_episodes",
+            "find_commits",
+            "list_projects",
+            "list_plans"
+          ],
+          "tool_count": 13,
+          "called_tool": "get_stats",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": "longhand mcp-server",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add longhand -s user -- longhand mcp-server"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "recall",
+      "search",
+      "list_sessions",
+      "get_session_timeline",
+      "list_plans",
+      "reconcile"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 91.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 49.4,
+      "signals": {
+        "stars": 14,
+        "monthly_downloads": 930,
+        "forks": 5,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 203,
+      "packages": [
+        "pypi:longhand"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 46.15
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "060d5cd16db55f2f8c76593403de42abfa14ee72e357db3d649411de4176ea89",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Every tool call, every file edit, every thinking block from every Claude Code session — stored verbatim on your machine."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Persistent local memory for Claude Code."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Python 3.10 – 3.14 are all fully supported and gated in CI"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install longhand"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "longhand recall \"that stripe webhook bug from last week\""
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "`LONGHAND_NO_UPDATE_CHECK=1` turns all of it off."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "To upgrade later: `pip install -U longhand`."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "![License](https://img.shields.io/badge/license-MIT-green)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Wynelson94/longhand",
+      "fetched_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Wynelson94/longhand/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:06:39+08:00"
+    },
+    {
+      "id": "release:v1.3.0",
+      "kind": "release",
+      "url": "https://github.com/Wynelson94/longhand/releases/tag/v1.3.0",
+      "fetched_at": "2026-10-31T01:06:39+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "longhand setup        # ingest history + install hooks + configure MCP",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "pip install longhand",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "MCP server — 13 tools that let Claude query Longhand directly during live conversations",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Persistent local memory for Claude Code.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Longhand",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Linux (3.10–3.14) is the only platform CI actually gates; there is no macOS leg.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.3.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:06:39+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "Status: v1.3.0 — stable, daily-driver tested",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Longhand vs claude-mem",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "pip install longhand",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "pip install longhand",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Never leaves your machine",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add longhand -s user -- longhand mcp-server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add longhand -s user -- longhand mcp-server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "A full `recall` across 100+ sessions returns ~4K tokens.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "MCP `search`; the CLI `search` command has tool/file/session/type",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "queryable immediately via `list_sessions`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "queryable immediately via `list_sessions`, `get_session_timeline`/`timeline`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "New `longhand plans list` command and `list_plans` MCP tool",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "New `reconcile` MCP tool wraps `longhand reconcile --fix`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:14:42+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:50:13+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

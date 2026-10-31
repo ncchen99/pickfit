@@ -1,0 +1,580 @@
+{
+  "schema_version": "software.v1",
+  "slug": "angela",
+  "repo_id": "gh:1335972482",
+  "name": "Angela",
+  "summary": "Terminal-based AI coding assistant that reads, writes and executes code.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent",
+    "harness",
+    "tui"
+  ],
+  "use_cases": [
+    "read, write and execute code in terminal via AI agents",
+    "run one prompt non-interactively and exit",
+    "generate commit message for staged changes and commit",
+    "list, show, rename, delete and export sessions",
+    "search codebase with read-only explore agent"
+  ],
+  "alternatives_to": [
+    "Crush"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/NaturalSelect/angela",
+    "full_name": "NaturalSelect/angela",
+    "created_at": "2026-08-16T13:36:03Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "ANTHROPIC_API_KEY",
+      "OPENAI_API_KEY",
+      "GEMINI_API_KEY",
+      "OPENROUTER_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/NaturalSelect/angela@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "paste API key for chosen provider"
+      ],
+      "check": null,
+      "first_task": "angela dirs"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-angela-20261031-002444-931d",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -sL -o /tmp/angela.tar.gz https://github.com/NaturalSelect/angela/releases/download/v0.0.4/angela_0.0.4_Linux_x86_64.tar.gz",
+          "purpose": "Download prebuilt Linux x86_64 tarball"
+        },
+        {
+          "command": "mkdir -p /tmp/angela_dl && tar -xzf /tmp/angela.tar.gz -C /tmp/angela_dl && mkdir -p ~/.local/bin && cp /tmp/angela_dl/angela_0.0.4_Linux_x86_64/angela ~/.local/bin/angela && chmod +x ~/.local/bin/angela",
+          "purpose": "Extract and install binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "angela --version",
+        "expected_signal": "angela version v0.0.4"
+      },
+      "first_task": "angela dirs"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/NaturalSelect/angela@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "paste API key for chosen provider"
+      ],
+      "check": null,
+      "first_task": "angela dirs"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.0.4",
+    "published_at": "2026-10-03T15:01:34Z",
+    "url": "https://github.com/NaturalSelect/angela/releases/tag/v0.0.4"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:26:32.662464+08:00",
+    "runs": [
+      {
+        "id": "verify-angela-20261031-002444-931d",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:26:32.662464+08:00",
+        "tool_version": "v0.0.4",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sL -o /tmp/angela.tar.gz https://github.com/NaturalSelect/angela/releases/download/v0.0.4/angela_0.0.4_Linux_x86_64.tar.gz",
+            "purpose": "Download prebuilt Linux x86_64 tarball"
+          },
+          {
+            "command": "mkdir -p /tmp/angela_dl && tar -xzf /tmp/angela.tar.gz -C /tmp/angela_dl && mkdir -p ~/.local/bin && cp /tmp/angela_dl/angela_0.0.4_Linux_x86_64/angela ~/.local/bin/angela && chmod +x ~/.local/bin/angela",
+            "purpose": "Extract and install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "angela --version",
+            "expected_signal": "angela version v0.0.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "angela version v0.0.4",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "angela dirs",
+            "expected_signal": "/home/sbx/.config/angela",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "/home/sbx/.config/angela",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "angela config validate",
+            "expected_signal": "ok: 0 file(s) loaded",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ok: 0 file(s) loaded, 3 warning(s)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go install github.com/NaturalSelect/angela@latest",
+            "actually_needed": "Downloaded prebuilt angela_0.0.4_Linux_x86_64.tar.gz from GitHub Releases and copied the angela binary to ~/.local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "angela dirs shows config and data directories",
+            "actually_needed": "angela dirs prints the directory list to stderr with empty stdout",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show angela listing config dirs, validating config with ok 0 files loaded, and reporting version v0.0.4.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-angela-20261031-002444-931d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-angela-20261031-002444-931d/check-1-cmd13.judged.png",
+            "runs/verify/verify-angela-20261031-002444-931d/check-2-cmd14.judged.png",
+            "runs/verify/verify-angela-20261031-002444-931d/check-3-cmd12.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.072602
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 75.6,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.75,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 26.2,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": null,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": 29,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 75,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 55.79
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "579c2d3d80869a597a00be181481de6dc01cc11cac49415b4de72285ff241baf",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Angela is a terminal-based AI coding assistant built in Go"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "go install github.com/NaturalSelect/angela@latest"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "1. Run `angela` in your project directory."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Set API keys via environment variables to skip the manual step:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "**Cross-platform** — macOS, Linux, Windows, Android, FreeBSD, OpenBSD, NetBSD"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/NaturalSelect/angela",
+      "fetched_at": "2026-10-30T23:42:13+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/NaturalSelect/angela/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:05:37+08:00"
+    },
+    {
+      "id": "release:v0.0.4",
+      "kind": "release",
+      "url": "https://github.com/NaturalSelect/angela/releases/tag/v0.0.4",
+      "fetched_at": "2026-10-31T00:05:37+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Angela is a terminal-based AI coding assistant built in Go",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Run `angela` in your project directory.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Angela is a terminal-based AI coding assistant built in Go",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Angela is a terminal-based AI coding assistant built in Go",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Angela",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "**Cross-platform** — macOS, Linux, Windows, Android, FreeBSD, OpenBSD, NetBSD",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "It connects to LLMs and\ngives them tools to read, write, and execute code in your terminal.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "`ANTHROPIC_API_KEY`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/1",
+      "source_id": "readme",
+      "quote": "`OPENAI_API_KEY`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/2",
+      "source_id": "readme",
+      "quote": "`GEMINI_API_KEY`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/3",
+      "source_id": "readme",
+      "quote": "`OPENROUTER_API_KEY`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:13+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:13+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:13+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:13+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.0.4",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:05:37+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "gives them tools to read, write, and execute code in your terminal.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "`angela run \"<prompt>\"`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "`angela commit`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "`list`, `show`, `last`, `rename`, `delete`, `export`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Fast read-only codebase search",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "forked from\n[Crush](https://github.com/charmbracelet/crush)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/NaturalSelect/angela@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/NaturalSelect/angela@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/NaturalSelect/angela@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "**Multi-provider** — Anthropic, OpenAI, Gemini, Bedrock, GitHub Copilot, OpenRouter, Ollama, and any OpenAI-compatible API",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:11+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:42:13+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

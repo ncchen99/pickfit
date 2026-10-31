@@ -1,0 +1,561 @@
+{
+  "schema_version": "software.v1",
+  "slug": "c0mpute",
+  "repo_id": "gh:1228004124",
+  "name": "c0mpute",
+  "summary": "Decentralized compute network CLI for AI inference, FFmpeg transcoding and storage jobs.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "compute",
+    "decentralized-compute",
+    "depin",
+    "dht",
+    "distributed-computing",
+    "gpu",
+    "gpu-computing",
+    "homelab",
+    "libp2p"
+  ],
+  "use_cases": [
+    "run a worker node with GPU support",
+    "submit an FFmpeg video transcoding job",
+    "run AI inference chat with a model",
+    "benchmark node performance for network scoring",
+    "monitor jobs via interactive terminal dashboard"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://c0mpute.com",
+  "repo": {
+    "url": "https://github.com/profullstack/c0mpute",
+    "full_name": "profullstack/c0mpute",
+    "created_at": "2026-05-03T13:15:36Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": "optional",
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://c0mpute.com/install.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "obtain sudo access for toolchain install on first run"
+      ],
+      "check": null,
+      "first_task": "c0mpute worker status"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-c0mpute-20261031-001957-eaee",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://c0mpute.com/install.sh -o /tmp/c0mpute-install.sh && wc -c /tmp/c0mpute-install.sh && head -c 2000 /tmp/c0mpute-install.sh",
+          "purpose": "Download installer script"
+        },
+        {
+          "command": "sh /tmp/c0mpute-install.sh --no-exec 2>&1",
+          "purpose": "Run installer script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute --version",
+        "expected_signal": "c0mpute 0.2.36"
+      },
+      "first_task": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute worker status"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.2.36",
+    "published_at": "2026-10-27T05:39:17Z",
+    "url": "https://github.com/profullstack/c0mpute/releases/tag/v0.2.36"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:22:09.110835+08:00",
+    "runs": [
+      {
+        "id": "verify-c0mpute-20261031-001957-eaee",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:22:09.110835+08:00",
+        "tool_version": "0.2.36",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://c0mpute.com/install.sh -o /tmp/c0mpute-install.sh && wc -c /tmp/c0mpute-install.sh && head -c 2000 /tmp/c0mpute-install.sh",
+            "purpose": "Download installer script"
+          },
+          {
+            "command": "sh /tmp/c0mpute-install.sh --no-exec 2>&1",
+            "purpose": "Run installer script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute --version",
+            "expected_signal": "c0mpute 0.2.36",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "c0mpute 0.2.36",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute --help",
+            "expected_signal": "Usage: c0mpute [OPTIONS] [COMMAND]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: c0mpute [OPTIONS] [COMMAND]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute worker status",
+            "expected_signal": "version: c0mpute 0.2.36",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "version: c0mpute 0.2.36",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute doctor",
+            "expected_signal": "OK c0mpute — Ok (this binary)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "OK c0mpute — Ok (this binary)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute bench",
+            "expected_signal": "saved /home/sbx/.local/share/c0mpute/bench.json",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "saved /home/sbx/.local/share/c0mpute/bench.json",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://c0mpute.com/install.sh | sh puts c0mpute on PATH",
+            "actually_needed": "In this non-interactive box `c0mpute: not found` right after install; needed export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\". System symlink + /etc/profile.d hook fail without root (Permission denied).",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "installer installs transcode system deps (ffmpeg)",
+            "actually_needed": "transcode step warns `ffmpeg missing and no sudo available` and continues; `c0mpute doctor` then reports FAIL ffmpeg. Transcode jobs unavailable without root/ffmpeg.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "installer starts the worker for you",
+            "actually_needed": "installer reported `worker started (background daemon)` but `c0mpute worker status` later reported `worker: not running (stale pid 515)`; worker does not stay up in the box",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "installer fetches mise, bun, release binaries and plugin installers at runtime",
+            "actually_needed": "main install.sh plus coinpay/infernet/transcode wrappers were downloaded and read before running; runtime-fetched mise.run, bun.sh/install, upstream coinpay/infernet installers and the prebuilt release tarball (binary) were not pre-read",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show worker status reporting version 0.2.36 running, doctor reporting OK for c0mpute binary, and --version printing c0mpute 0.2.36.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-c0mpute-20261031-001957-eaee/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-c0mpute-20261031-001957-eaee/check-1-cmd7.judged.png",
+            "runs/verify/verify-c0mpute-20261031-001957-eaee/check-2-cmd8.judged.png",
+            "runs/verify/verify-c0mpute-20261031-001957-eaee/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.107303
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 89.6,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 45.7,
+      "signals": {
+        "stars": 12,
+        "monthly_downloads": null,
+        "forks": 4,
+        "dependents": null,
+        "release_downloads": 3446,
+        "hn_top_score": 3,
+        "registries_count": 0
+      },
+      "age_days": 180,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 48.65
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "b90b5e43157e3c9fae3fcc9cfb6618e71bad8b0afdc7fe0f54f04049cd3dfcf3",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Open compute network: run a node with one command and help pool 100,000 CPUs/GPUs for open-weight AI."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**Network:** outbound internet is enough to join. No account, no port forwarding."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://c0mpute.com/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "c0mpute worker status"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "`C0MPUTE_REF=<handle>` does the same by hand"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "**Runs on:** Linux (x86_64, arm64) and macOS (Intel, Apple Silicon); Windows inside WSL2."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/profullstack/c0mpute",
+      "fetched_at": "2026-10-30T23:49:06+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/profullstack/c0mpute/blob/master/README.md",
+      "fetched_at": "2026-10-30T23:55:50+08:00"
+    },
+    {
+      "id": "release:v0.2.36",
+      "kind": "release",
+      "url": "https://github.com/profullstack/c0mpute/releases/tag/v0.2.36",
+      "fetched_at": "2026-10-30T23:55:50+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Umbrella CLI: jobs, workers, modules, dispatch",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:44+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "github_api",
+      "quote": "run a node with one command and help pool 100,000 CPUs/GPUs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:44+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "CLI-first. Three modules out of the box:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:44+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**transcode** (FFmpeg), **coinpay** (DID + escrow), **infernet** (AI inference).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:44+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# c0mpute",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:44+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Runs on:** Linux (x86_64, arm64) and macOS (Intel, Apple Silicon); Windows inside WSL2.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:44+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "Any CPU works; NVIDIA, AMD and Apple GPUs are detected and advertised.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:44+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "outbound internet is enough to join. No account, no port forwarding.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:44+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:06+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:06+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:06+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:06+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:06+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.2.36",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:55:50+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "c0mpute worker start --gpu",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:44+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "c0mpute transcode submit https://example.com/input.mp4 --preset video-1080p --max-price 1.25",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:44+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "c0mpute infernet chat --model qwen2.5:7b \"hello\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:44+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "c0mpute bench",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:44+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "c0mpute tui",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:44+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://c0mpute.com/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:44+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://c0mpute.com/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:44+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "serves AI inference (through [Infernet](https://infernetprotocol.com)),",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:44+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:30+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

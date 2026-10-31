@@ -1,0 +1,482 @@
+{
+  "schema_version": "software.v1",
+  "slug": "difflet",
+  "repo_id": "gh:1250872384",
+  "name": "Difflet",
+  "summary": "Runs diffusion transformer image and video models via CLI, Python API, and server.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "prototype",
+  "tags": [
+    "aws-trainium",
+    "diffusion-models",
+    "diffusion-transformer",
+    "image-generation",
+    "inference-engine",
+    "model-serving",
+    "text-to-image",
+    "text-to-video",
+    "video-generation"
+  ],
+  "use_cases": [
+    "generate a 1024x1024 image from a text prompt",
+    "generate a video from a text prompt",
+    "serve image and video models over OpenAI-compatible HTTP",
+    "generate text-to-video with audio via staged CLI"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/ai-decentralized/Difflet",
+    "full_name": "ai-decentralized/Difflet",
+    "created_at": "2026-05-27T03:31:30Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.10"
+    ],
+    "system_packages": [],
+    "gpu": "optional",
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "Hugging Face account for gated repos such as FLUX.1-dev"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-difflet-20261031-000241-3dd5",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone https://github.com/ai-decentralized/Difflet.git Difflet-src && ls -la && df -h /home/sbx /tmp && python3 --version && pip --version",
+          "purpose": "Clone Difflet source with HTTPS"
+        },
+        {
+          "command": "pip install --index-url https://download.pytorch.org/whl/cu128 torch==2.11.0",
+          "purpose": "Install torch cu128 per README"
+        },
+        {
+          "command": "cd Difflet-src && pip install -e \".[cuda]\"",
+          "purpose": "Install difflet with cuda extras"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "difflet --help",
+        "expected_signal": "usage: difflet"
+      },
+      "first_task": "difflet cache ls"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": null,
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:09:13.215242+08:00",
+    "runs": [
+      {
+        "id": "verify-difflet-20261031-000241-3dd5",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:09:13.215242+08:00",
+        "tool_version": "0.0.0.dev0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/ai-decentralized/Difflet.git Difflet-src && ls -la && df -h /home/sbx /tmp && python3 --version && pip --version",
+            "purpose": "Clone Difflet source with HTTPS"
+          },
+          {
+            "command": "pip install --index-url https://download.pytorch.org/whl/cu128 torch==2.11.0",
+            "purpose": "Install torch cu128 per README"
+          },
+          {
+            "command": "cd Difflet-src && pip install -e \".[cuda]\"",
+            "purpose": "Install difflet with cuda extras"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "difflet --help",
+            "expected_signal": "usage: difflet",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: difflet [-h] {download,compile,generate,run,plan,clean,serve,cache} ...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "difflet cache ls",
+            "expected_signal": "no manifests found under",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no manifests found under /home/sbx/.cache/difflet",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "difflet plan --model-id black-forest-labs/FLUX.1-dev --objective latency",
+            "expected_signal": "sp_enabled and cp_degree > 1 are mutually exclusive",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "dp2tp1cp2sp [exclusivity] sp_enabled and cp_degree > 1 are mutually exclusive",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "git clone git@github.com:ai-decentralized/Difflet.git",
+            "actually_needed": "Clone with https://github.com/ai-decentralized/Difflet.git (e.g. git clone https://github.com/ai-decentralized/Difflet.git Difflet-src); the git@ SSH URL needs an SSH key/account.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "difflet run / serve generates images and videos",
+            "actually_needed": "Generation and serving need an NVIDIA GPU (or AWS Trainium2) with tens of GB plus gated Hugging Face access; on this CPU-only box only the CPU-safe commands (--help, cache ls, plan) can run.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show the empty cache message, plan output with sp_enabled exclusivity notes, and the difflet help usage text.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-difflet-20261031-000241-3dd5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-difflet-20261031-000241-3dd5/check-1-cmd6.judged.png",
+            "runs/verify/verify-difflet-20261031-000241-3dd5/check-2-cmd7.judged.png",
+            "runs/verify/verify-difflet-20261031-000241-3dd5/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.119863
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 66.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.68,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.7,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 30.5,
+      "signals": {
+        "stars": 9,
+        "monthly_downloads": null,
+        "forks": 4,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 156,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 46.01
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "e52c31e6b423c3fd344d78d3eab85a3fbd22a11394492042aa63137c5a968998",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Run diffusion transformers on NVIDIA GPUs, AWS Trainium and (experimentally) Cloud TPU"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Python 3.10 or newer."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "git clone git@github.com:ai-decentralized/Difflet.git"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "DIFFLET_BACKEND=cuda difflet run --model-id black-forest-labs/FLUX.1-dev"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Authentication is off until a key is set with `--api-key` or `DIFFLET_API_KEY`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "`NCC_ISMP902` internal compiler error on the Flux text encoder."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ai-decentralized/Difflet",
+      "fetched_at": "2026-10-30T23:49:27+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ai-decentralized/Difflet/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:32:09+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "**`difflet` CLI** — `run` for one-shot generation",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:56+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Three entry points share one engine:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:56+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "ahead-of-time (AOT) compilation and SPMD execution across NeuronCores.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:56+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**Run diffusion transformers on NVIDIA GPUs, AWS Trainium and (experimentally) Cloud TPU: FLUX, Qwen-Image, Wan, HunyuanVideo, LTX-2 etc., from one CLI, one Python API, and one OpenAI-compatible server.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:56+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Difflet",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:56+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.10 or newer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:56+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "An accelerator, one of:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:56+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "A Hugging Face account with access to the gated FLUX.1-dev repo, if you want Flux.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:56+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:27+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:27+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:27+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:27+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "![Status](https://img.shields.io/badge/status-pre--alpha-orange.svg)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:56+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "--prompt \"a photorealistic cat sitting in a sunlit garden\" --output cat.png",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:56+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "--prompt \"a cat walking through a garden\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:56+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "`difflet serve` — a resident, OpenAI-compatible HTTP server for image and video models.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:56+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "MiniMax-H3 also supports text-to-video with audio through the staged CLI.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:56+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "loads the model onto the card, and",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:52:56+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:43+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

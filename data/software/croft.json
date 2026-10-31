@@ -1,0 +1,475 @@
+{
+  "schema_version": "software.v1",
+  "slug": "croft",
+  "repo_id": "gh:1315038955",
+  "name": "croft",
+  "summary": "VS Code-style three-pane IDE that runs inside the terminal as a single Rust binary.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "android",
+    "ghostty",
+    "ide",
+    "iterm2",
+    "linux",
+    "macos",
+    "rust",
+    "tui",
+    "vscode"
+  ],
+  "use_cases": [
+    "edit code with LSP completion, hover and go-to-definition",
+    "use integrated terminal with splits and shell integration",
+    "debug Python, JavaScript, Rust, C and C++ over DAP"
+  ],
+  "alternatives_to": [
+    "VS Code"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/vitali87/croft",
+    "full_name": "vitali87/croft",
+    "created_at": "2026-07-28T13:54:14Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install vitali87/croft/croft",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "croft --help"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-croft-20261031-000838-1799",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/croft.tar.gz https://github.com/vitali87/croft/releases/download/v0.2.82/croft-x86_64-unknown-linux-musl.tar.gz && ls -lh /tmp/croft.tar.gz && tar tzf /tmp/croft.tar.gz",
+          "purpose": "Download Linux x86_64 release archive"
+        },
+        {
+          "command": "tar xzf /tmp/croft.tar.gz -C /tmp && install -m755 /tmp/croft-x86_64-unknown-linux-musl/croft ~/.local/bin/croft && ~/.local/bin/croft --version",
+          "purpose": "Extract archive and install binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "croft --version",
+        "expected_signal": "croft 0.2.82"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.2.82",
+    "published_at": "2026-10-28T00:05:36Z",
+    "url": "https://github.com/vitali87/croft/releases/tag/v0.2.82"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:09:29.613861+08:00",
+    "runs": [
+      {
+        "id": "verify-croft-20261031-000838-1799",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:09:29.613861+08:00",
+        "tool_version": "0.2.82",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/croft.tar.gz https://github.com/vitali87/croft/releases/download/v0.2.82/croft-x86_64-unknown-linux-musl.tar.gz && ls -lh /tmp/croft.tar.gz && tar tzf /tmp/croft.tar.gz",
+            "purpose": "Download Linux x86_64 release archive"
+          },
+          {
+            "command": "tar xzf /tmp/croft.tar.gz -C /tmp && install -m755 /tmp/croft-x86_64-unknown-linux-musl/croft ~/.local/bin/croft && ~/.local/bin/croft --version",
+            "purpose": "Extract archive and install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "croft --version",
+            "expected_signal": "croft 0.2.82",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "croft 0.2.82",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "croft --help",
+            "expected_signal": "Workspace folder to open",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Workspace folder to open (defaults to current directory). A file works too: the workspace roots at its parent and the file opens in the editor",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo binstall croft-software / cargo install croft-software --locked / brew install vitali87/croft/croft",
+            "actually_needed": "Downloaded croft-x86_64-unknown-linux-musl.tar.gz from GitHub releases and installed the contained 'croft' binary to ~/.local/bin with install -m755",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows `croft --version` printing `croft 0.2.82`.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-croft-20261031-000838-1799/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-croft-20261031-000838-1799/check-1-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.02843
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 53.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 75.2,
+      "signals": {
+        "stars": 86,
+        "monthly_downloads": 179,
+        "forks": 7,
+        "dependents": null,
+        "release_downloads": 296,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 94,
+      "packages": [
+        "crates:croft-software"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 13.19
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "013dc2599a6d43c8fc7dfab44a18b9dbf14d0ea2f1606785eafcf8b49a332268",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A VS Code style three pane workspace that runs entirely inside your terminal."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Rust 1.93+ stable and a C compiler"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "brew install vitali87/croft/croft"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "`croft` opens the current directory, and `croft <folder>` any other."
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "croft runs on macOS, Linux, Android, and Windows (via WSL2)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/vitali87/croft",
+      "fetched_at": "2026-10-30T23:41:48+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/vitali87/croft/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:52:58+08:00"
+    },
+    {
+      "id": "release:v0.2.82",
+      "kind": "release",
+      "url": "https://github.com/vitali87/croft/releases/tag/v0.2.82",
+      "fetched_at": "2026-10-30T23:52:58+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A VS Code style three pane workspace that runs entirely inside your terminal.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "`croft` opens the current directory, and `croft <folder>` any other.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "an **Explorer sidebar** on the left, a **code editor** top right",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A VS Code style three pane workspace that runs entirely inside your terminal.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# croft",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "macOS, Linux, or Android (Termux)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:48+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:48+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:48+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:48+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.2.82",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:52:58+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "full LSP editing (completion, hover, go-to-definition, rename, quick fixes, inlay hints)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "a real terminal with shell integration, splits, triggers, copy mode",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "debugging for Python, JavaScript/TypeScript, Rust, C, and C++ over DAP.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "A complete VS Code replacement in the terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install vitali87/croft/croft",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo binstall croft-software",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:18+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-28T19:03:07+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

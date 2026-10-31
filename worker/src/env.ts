@@ -14,6 +14,12 @@ export interface Env {
   SUBMIT_HOURLY_CAP?: string;
   /** "all" (default) or "readonly": find_software, find_alternatives and get_install_guide only. */
   TOOLS?: string;
+  /** "on" (default) or "off": the product web page (GET / for browsers, POST /search). */
+  WEB_SEARCH?: string;
+  /** Web searches stop calling Meta once today's spend reaches this; the rest of the daily cap is left for agents. */
+  WEB_DAILY_CAP_USD?: string;
+  /** Workers rate limiting binding for web searches (wrangler.jsonc ratelimits); without it, a per-isolate count. */
+  WEB_RATE_LIMITER?: RateLimit;
 }
 
 export type ToolSet = 'all' | 'readonly';
@@ -48,5 +54,18 @@ export function settings(env: Env): Settings {
     timeoutMs: number(env.META_TIMEOUT_MS, 25_000),
     submitHourlyCap: number(env.SUBMIT_HOURLY_CAP, 20),
     tools: toolSet(env.TOOLS),
+  };
+}
+
+export interface WebSettings {
+  enabled: boolean;
+  dailyCapUsd: number;
+}
+
+/** Only "off" turns the page off, so the evaluation deployments say so explicitly. */
+export function webSettings(env: Env): WebSettings {
+  return {
+    enabled: (env.WEB_SEARCH ?? 'on').trim().toLowerCase() !== 'off',
+    dailyCapUsd: number(env.WEB_DAILY_CAP_USD, 2),
   };
 }

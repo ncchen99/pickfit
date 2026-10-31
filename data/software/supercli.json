@@ -1,0 +1,500 @@
+{
+  "schema_version": "software.v1",
+  "slug": "supercli",
+  "repo_id": "gh:1175845109",
+  "name": "supercli",
+  "summary": "Universal launcher exposing thousands of CLI, API and workflow tools via one JSON-first command.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agents",
+    "cli",
+    "harness",
+    "skills"
+  ],
+  "use_cases": [
+    "list issues via beads plugin",
+    "combine tasks and commits into one structured response",
+    "discover deploy capabilities across tools"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://javimosch.github.io/supercli/",
+  "repo": {
+    "url": "https://github.com/javimosch/supercli",
+    "full_name": "javimosch/supercli",
+    "created_at": "2026-03-08T08:54:01Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npx supercli skills list",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "npx supercli skills list"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-supercli-20261031-000756-8a98",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g superacli 2>&1",
+          "purpose": "Install superacli globally via npm"
+        },
+        {
+          "command": "npm install -g dotenv vm2 express mongodb 2>&1 && supercli --version 2>&1",
+          "purpose": "Install missing runtime deps dotenv vm2 express mongodb"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "supercli --version 2>&1",
+        "expected_signal": "\"version\":\"1.31.5\""
+      },
+      "first_task": "supercli help 2>&1"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.1.1-zig",
+    "published_at": "2026-09-11T16:00:30Z",
+    "url": "https://github.com/javimosch/supercli/releases/tag/v0.1.1-zig"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:09:45.674301+08:00",
+    "runs": [
+      {
+        "id": "verify-supercli-20261031-000756-8a98",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:09:45.674301+08:00",
+        "tool_version": "1.31.5",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g superacli 2>&1",
+            "purpose": "Install superacli globally via npm"
+          },
+          {
+            "command": "npm install -g dotenv vm2 express mongodb 2>&1 && supercli --version 2>&1",
+            "purpose": "Install missing runtime deps dotenv vm2 express mongodb"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "supercli --version 2>&1",
+            "expected_signal": "\"version\":\"1.31.5\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"name\":\"SuperCLI\",\"implementation\":\"JavaScript\",\"version\":\"1.31.5\",\"node_version\":\"v22.23.4\",\"binary_name\":\"supercli\"}",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "supercli --help 2>&1",
+            "expected_signal": "Universal Capability Router",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"name\":\"SuperCLI\",\"description\":\"Universal Capability Router for AI Agents\",\"repository\":\"https://github.com/javimosch/supercli\",\"quick_overview\":[\"Capabilities: namespace.resource.action commands\",\"Plugin System: Install external CLIs as harnesses\",\"MCP Support: Model Context Protocol server inte…",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "supercli help 2>&1",
+            "expected_signal": "\"namespaces\":[]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"version\":\"1.0\",\"namespaces\":[]}",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "supercli skills list 2>&1",
+            "expected_signal": "plugins.registry.usage",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"skills\":[{\"name\":\"plugins.registry.usage\",\"description\":\"Discover and install plugins from the registry or remote git repos\"},{\"name\":\"plugins.authoring.usage\",\"description\":\"Design, implement, test, and register a new SuperCLI plugin\"},{\"name\":\"mcp.servers.usage\",\"description\":\"Manage MCP server…",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "supercli skills search \"github\" 2>&1",
+            "expected_signal": "\"total\":0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"skills\":[],\"total\":0,\"returned\":0,\"offset\":0}",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx supercli skills list works with zero install",
+            "actually_needed": "Install the `superacli` package globally (`npm install -g superacli`) then run the `supercli` binary directly (`supercli skills list`); equivalently `npx -p superacli supercli skills list`.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "npm install -g superacli is sufficient for repeated use",
+            "actually_needed": "Also run `npm install -g dotenv vm2 express mongodb` because the published superacli package declares no dependencies yet requires dotenv, vm2, express and mongodb; without them `supercli --version` fails with `Cannot find module 'dotenv'`.",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 1.31.5 JSON, help JSON with Universal Capability Router description, and help output with empty namespaces.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-supercli-20261031-000756-8a98/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-supercli-20261031-000756-8a98/check-1-cmd10.judged.png",
+            "runs/verify/verify-supercli-20261031-000756-8a98/check-2-cmd14.judged.png",
+            "runs/verify/verify-supercli-20261031-000756-8a98/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.088012
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-10-31T13:11:27+08:00",
+    "quality": {
+      "total": 85.9,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7225,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.9375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 53.7,
+      "signals": {
+        "stars": 56,
+        "monthly_downloads": null,
+        "forks": 5,
+        "dependents": null,
+        "release_downloads": 122,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 236,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 39.77
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "01753d0dbe4873ffb90203ddb395018d7310a4948a6b4cfc2189cc2a4f54fc0e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "The universal launcher for every CLI tool — no installs, JSON-first, one command."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "## For AI Agents"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Single static binary (~250KB), no Node.js required"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -sSL https://github.com/javimosch/supercli/releases/download/v0.1.0-zig/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "npx supercli ask \"list my tasks and recent commits\"\n```\n\n```json\n{\n  \"tasks\": [...],"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "10,000+ CLI tools. One CLI to access. Zero configuration"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "## 🔧 Troubleshooting"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "## License\n\nMIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/javimosch/supercli",
+      "fetched_at": "2026-10-30T23:40:20+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/javimosch/supercli/blob/master/README.md",
+      "fetched_at": "2026-10-30T23:57:17+08:00"
+    },
+    {
+      "id": "release:v0.1.1-zig",
+      "kind": "release",
+      "url": "https://github.com/javimosch/supercli/releases/tag/v0.1.1-zig",
+      "fetched_at": "2026-10-30T23:57:17+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Run any CLI tool with `npx supercli`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:26+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Run any CLI tool with `npx supercli`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:26+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Run any CLI tool with `npx supercli`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:26+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "The universal launcher for every CLI tool — no installs, JSON-first, one command.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:26+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "supercli ⎯ 10,000+ CLI Tools, One Command — and growing daily",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:26+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "release:v0.1.1-zig",
+      "quote": "sc-zig-linux-amd64 | Linux | x86_64",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:26+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:40:20+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:40:20+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:40:20+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:40:20+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:40:20+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.1.1-zig",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:57:17+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "npx supercli beads issue list",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:26+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "npx supercli ask \"show my tasks and recent commits\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:26+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "npx supercli skills search \"deploy\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:26+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npx supercli skills list",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:26+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npx supercli skills list",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:26+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:40:20+08:00",
+  "updated_at": "2026-10-31T13:11:27+08:00"
+}

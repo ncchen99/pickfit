@@ -47,19 +47,20 @@ def test_daily_cap_schedule():
     assert pipeline_daily_cap(date(2026, 10, 28)) == 3.0
     assert pipeline_daily_cap(date(2026, 10, 29)) == 25.0
     assert pipeline_daily_cap(date(2026, 10, 30)) == 25.0
-    assert pipeline_daily_cap(date(2026, 10, 31)) == 45.0
+    assert pipeline_daily_cap(date(2026, 10, 31)) == 80.0
+    assert pipeline_daily_cap(date(2026, 11, 1)) == 45.0
     assert pipeline_daily_cap(date(2026, 11, 2)) == 45.0
     assert pipeline_daily_cap(date(2026, 11, 3)) == 25.0
-    assert PIPELINE_CAPS.total_usd == 115.0
+    assert PIPELINE_CAPS.total_usd == 120.0
 
 
 def test_total_cap_setting_can_only_lower_it(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.delenv("PICKFIT_PIPELINE_TOTAL_CAP_USD", raising=False)
     monkeypatch.setattr("pickfit.ledger.get_env", lambda name, default=None, path=None: None)
-    assert pipeline_caps().total_usd == 115.0
+    assert pipeline_caps().total_usd == 120.0
     monkeypatch.setattr("pickfit.ledger.get_env", lambda name, default=None, path=None: "5")
     assert pipeline_caps().total_usd == 5.0
-    assert pipeline_caps().daily_usd(date(2026, 10, 31)) == 45.0
+    assert pipeline_caps().daily_usd(date(2026, 11, 1)) == 45.0
     for bad in ("200", "-1", "five"):
         monkeypatch.setattr("pickfit.ledger.get_env", lambda name, default=None, path=None, v=bad: v)
         with pytest.raises(ValueError):
