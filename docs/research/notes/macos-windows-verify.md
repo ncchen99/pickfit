@@ -292,6 +292,34 @@
 - NAT hairpin：家用路由器可能可經自己的公網 WAN 位址被打到（繞一圈）。這要先找出 WAN 位址才能擋，成本高，記為已知限制。
 - 第三輪結尾列的兩項已在別處修掉：Worker 的 `verified_on_user_os` 已看 arch（併入 c199445）；「讀過 installer 會執行的腳本」的提示規則在 P3 分支上。
 
+### 5.8 Windows：VirtualBox box（`VBoxBox`，2026-10-30～31）
+
+GitHub Actions 沒有採用。改在念誠的 Windows 11 Home 筆電（i5-1135G7，4 核 8 緒，16 GB）上用 VirtualBox 7.2.22。guest 是 Windows 11 Enterprise LTSC 2024 評估版（26100.1742，x86_64，90 天，線上啟用）。另有一台 Alpine router VM 當出口（規則與 5.5 節相同精神：所有私有、保留、multicast 範圍都丟掉，只放行 DHCP／DNS 到 router）。
+
+**安裝的實測**：
+
+- Hyper-V 開著時，VirtualBox 只能走 NEM（Hyper-V 的 API），非常慢，而且多 vCPU 會凍住。6 vCPU 時，韌體卡在 PciHostBridgeDxe；4 vCPU 時，安裝第一階段與 OOBE 各凍住過一次（vCPU0 的 TSC 跟其他顆差約 35,000 秒）；1 vCPU 才裝得完。念誠關掉 Hyper-V 與 Memory Integrity 後改走 VT-x：2 vCPU 開機正常，啟用、winget、工具安裝 12 分鐘完成。
+- LTSC 沒有 Store，所以 winget 由 pickfit 從 github.com/microsoft/winget-cli 的 v1.29.380 release 裝（檔名、大小、SHA-256 記在 manifest）。
+
+**為什麼 sbx 要自動登入（2026-10-31，跟 macOS 對照）**：
+
+- winget 和 PowerShell 7（winget 現在只發 MSIX 版）都是 MSIX 套件。Windows 只在使用者「互動登入」時註冊這類套件（guestcontrol 的工作階段部署會失敗：0x80073D19），而且使用者沒有桌面工作階段時根本啟動不了（"The specified user does not have a valid profile"）。所以受測使用者 `sbx` 在每個 box 都要登入桌面，就像一般使用者的電腦。
+- 原本的探測是「不准自動登入」，目的是受測工具（以 `sbx` 執行）拿不到能提權或冒用帳號的憑證。協調 session 同意改成一樣嚴的版本：
+  - 自動登入只限 `sbx`。
+  - Winlogon（HKLM 與 HKCU）不能有 DefaultPassword。
+  - 密碼存成 LSA secret `DefaultPassword`。Winlogon 在登錄檔沒有密碼時讀這裡，標準使用者在 LsaOpenPolicy 就被拒。
+  - 不留任何 answer file：查 Panther、Panther\Unattend、Sysprep、各磁碟根目錄、`C:\vboxpostinstall.log`。
+  - 沒有光碟：安裝 ISO 與帶 Administrator 密碼的 aux ISO 在拍快照前拔掉。
+  - Administrator 的自動登入只在建置時用（裝 winget 需要它），HARDEN 會移除。
+- 這跟 macOS 一致：macOS box 也讓 `sbx` 自動登入（guest agent 要靠它啟動），密碼放在只有 root 能讀的 `/etc/kcpassword`，limits 檢查 `kcpassword_unreadable`。Windows 的對應探測是 `no_logon_secret`：`sbx` 讀 LSA secret 要得到 `denied`。
+- 每次建 base 都隨機產生密碼。密碼只用 guestcontrol 的 `--putenv` 傳進 guest 程序的環境，不寫進指令列、腳本內容、log、manifest。
+- 拍快照前，Administrator 以自己的密碼掃描 Panther、Sysprep、Setup、Temp、Public、`C:\Users\sbx`、harness 資料夾與各磁碟根目錄的檔案（明文，以及 answer file 用的 base64 形式），有命中就不拍。
+- 對照：
+  - 正向：同一個探測由 Administrator 跑時，LSA secret 是 `readable`。
+  - 反向：在用完就丟的 box 裡把 DefaultPassword 寫回 Winlogon，`sbx` 的探測要判失敗。
+  - 其他 Windows 探測也都加了對照：Administrator 會被 `non_admin` 判出、Administrator 寫得進 harness、刻意設的 `*_TOKEN` 變數會被看到、短指令不會被當成逾時。
+- harness 的 Administrator 檢查改用 Windows PowerShell 5.1：box 裡只有 `sbx` 有桌面工作階段，MSIX 的 pwsh 對 Administrator 啟動不了。模型指令仍走 pwsh 7。pwsh 的套件路徑記在 harness 資料夾的 `pwsh.path`（`sbx` 只能讀）。
+
 ---
 
 ## 6. 要念誠決定的事

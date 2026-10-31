@@ -92,6 +92,7 @@ TIMEOUT_EXIT = 137  # what run.ps1 exits with when it kills the command tree at 
 ADDITIONS_WAIT_S = 600  # cold boot of Windows 11 on Hyper-V (NEM) is slow
 ROUTER_WAIT_S = 90
 NETWORK_WAIT_S = 90
+LOGON_WAIT_S = 300  # sbx's auto logon after Guest Additions answers
 REAP_GRACE_S = 300
 STALE_S = 3 * 3600
 SENTINEL = "__PF_RC_"
@@ -170,11 +171,14 @@ def with_exit_code(command: str) -> str:
 
 # Runs as the calling user (sbx for model commands). Starts pwsh with the command, kills its process tree
 # at the deadline, prints the sentinel last and exits with the same code.
-RUN_SCRIPT = r"""param([int]$Timeout, [string]$Cwd, [string]$Nonce, [string]$Enc)
+# -Shell powershell (the harness's administrator checks): Windows PowerShell 5.1, because the MSIX pwsh starts
+# only for a user with a desktop session, and in a box only sbx has one.
+RUN_SCRIPT = r"""param([int]$Timeout, [string]$Cwd, [string]$Nonce, [string]$Enc, [string]$Shell = 'pwsh')
 $utf8 = New-Object System.Text.UTF8Encoding $false
 [Console]::OutputEncoding = $utf8
 $psi = New-Object System.Diagnostics.ProcessStartInfo
-$psi.FileName = [IO.File]::ReadAllText('C:\ProgramData\pickfit\pwsh.path').Trim()
+if ($Shell -eq 'powershell') { $psi.FileName = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" }
+else { $psi.FileName = [IO.File]::ReadAllText('C:\ProgramData\pickfit\pwsh.path').Trim() }
 $psi.Arguments = '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand ' + $Enc
 $psi.WorkingDirectory = $Cwd
 $psi.UseShellExecute = $false
@@ -633,6 +637,7 @@ class VBoxBox(Box):
             self._start_reaper()
             self.vbox("startvm", self.base, "--type", "headless", timeout_s=180)
             self._wait_additions()
+            self._wait_sbx_logon()
             self._setup()
         except BaseException:
             self.close()
@@ -689,6 +694,24 @@ class VBoxBox(Box):
                     last = probe[2][-200:]
             time.sleep(5)
         raise BoxError(f"the guest's Guest Additions did not answer within {ADDITIONS_WAIT_S}s: {last}")
+
+    def _wait_sbx_logon(self) -> None:
+        """sbx logs on to the desktop by itself (auto logon): winget and the MSIX pwsh start only for a user
+        with a desktop session. No model command runs before sbx is on and pwsh answers."""
+        deadline = time.monotonic() + LOGON_WAIT_S
+        last = ""
+        while time.monotonic() < deadline:
+            users = self.vbox("guestproperty", "get", self.base, "/VirtualBox/GuestInfo/OS/LoggedInUsersList",
+                              check=False).stdout
+            if re.search(rf"\b{WIN_USER}\b", users):
+                code, out, err, _, _, _ = self._run(WIN_USER, "Write-Output ready", 60, WIN_HOME)
+                if code == 0 and "ready" in out:
+                    return
+                last = (err or out).strip()[-200:]
+            else:
+                last = f"logged in: {users.strip()}"
+            time.sleep(5)
+        raise BoxError(f"{WIN_USER} did not log on to the desktop within {LOGON_WAIT_S}s ({last})")
 
     def _setup(self) -> None:
         check = self._admin(HARDENED_CHECK, 120)
@@ -760,9 +783,10 @@ class VBoxBox(Box):
                 "--wait-stdout", "--wait-stderr"]
         for key, value in WIN_ENV.items():
             args += ["--putenv", f"{key}={value}"]
+        shell = "powershell" if user == ADMIN_USER else "pwsh"
         return [*args, "--", "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
                 "-File", RUN_PS1, "-Timeout", str(int(timeout_s)), "-Cwd", cwd, "-Nonce", nonce,
-                "-Enc", encode_ps(with_exit_code(command))]
+                "-Shell", shell, "-Enc", encode_ps(with_exit_code(command))]
 
     def _run(self, user: str, command: str, timeout_s: int, cwd: str, *,
              head: int | None = None) -> tuple[int, str, str, bool, bool, float]:
@@ -1224,16 +1248,65 @@ if ($exe -and (Test-Path $exe)) { [IO.File]::WriteAllText('C:\ProgramData\pickfi
 else { 'pwsh missing' }
 """
 
-# Provisioned MSIX packages (winget, PowerShell 7) are registered for a user only at an interactive logon,
-# and AppX deployment refuses a guestcontrol session (0x80073D19). So sbx logs on once, as a person would;
-# HARDEN turns auto logon off again and removes the stored password. {pw} as in PROVISION_USERS.
-SBX_LOGON = r"""
+# The LSA secret "DefaultPassword" is where Winlogon looks for the auto-logon password when the registry has
+# none (as Sysinternals Autologon stores it). Only SYSTEM and administrators may read LSA secrets; a standard
+# user is refused at LsaOpenPolicy. Probe() reports `readable len=N`, `missing` or `denied`, never the value.
+LSA_TYPE = r"""
+if (-not ('PfLsa' -as [type])) { Add-Type -TypeDefinition @'
+using System; using System.Runtime.InteropServices;
+public static class PfLsa {
+  [StructLayout(LayoutKind.Sequential)] struct U { public ushort Length; public ushort MaximumLength; public IntPtr Buffer; }
+  [StructLayout(LayoutKind.Sequential)] struct A { public int Length; public IntPtr Root; public IntPtr Name; public uint Attributes; public IntPtr Sd; public IntPtr Qos; }
+  [DllImport("advapi32.dll")] static extern uint LsaOpenPolicy(IntPtr system, ref A attrs, uint access, out IntPtr policy);
+  [DllImport("advapi32.dll")] static extern uint LsaStorePrivateData(IntPtr policy, ref U key, ref U data);
+  [DllImport("advapi32.dll")] static extern uint LsaRetrievePrivateData(IntPtr policy, ref U key, out IntPtr data);
+  [DllImport("advapi32.dll")] static extern uint LsaClose(IntPtr policy);
+  [DllImport("advapi32.dll")] static extern uint LsaFreeMemory(IntPtr p);
+  [DllImport("advapi32.dll")] static extern int LsaNtStatusToWinError(uint status);
+  static U Str(string s) { U u; u.Buffer = Marshal.StringToHGlobalUni(s); u.Length = (ushort)(s.Length * 2); u.MaximumLength = (ushort)(s.Length * 2 + 2); return u; }
+  public static int Store(string name, string value) {
+    A a = new A(); a.Length = Marshal.SizeOf(a); IntPtr p;
+    uint st = LsaOpenPolicy(IntPtr.Zero, ref a, 0x00F0FFF, out p); if (st != 0) return LsaNtStatusToWinError(st);
+    U k = Str(name), d = Str(value); st = LsaStorePrivateData(p, ref k, ref d); LsaClose(p);
+    Marshal.FreeHGlobal(k.Buffer); Marshal.ZeroFreeGlobalAllocUnicode(d.Buffer); return LsaNtStatusToWinError(st);
+  }
+  public static string Probe(string name) {
+    A a = new A(); a.Length = Marshal.SizeOf(a); IntPtr p;
+    uint st = LsaOpenPolicy(IntPtr.Zero, ref a, 0x4, out p);
+    if (st != 0) { int e = LsaNtStatusToWinError(st); return e == 5 ? "denied" : "error " + e; }
+    U k = Str(name); IntPtr d; st = LsaRetrievePrivateData(p, ref k, out d); LsaClose(p); Marshal.FreeHGlobal(k.Buffer);
+    if (st != 0) { int e = LsaNtStatusToWinError(st); return e == 2 ? "missing" : e == 5 ? "denied" : "error " + e; }
+    int n = Marshal.ReadInt16(d); LsaFreeMemory(d); return "readable len=" + (n / 2);
+  }
+}
+'@ }
+"""
+
+# MSIX packages (winget, PowerShell 7) are registered for a user only at an interactive logon (AppX deployment
+# refuses a guestcontrol session, 0x80073D19), and they start only for a user with a desktop session ("The
+# specified user does not have a valid profile" otherwise). So whoever runs winget must be logged on: the
+# Administrator while the base is built (registry password, removed by HARDEN), and sbx in every box, the way
+# a person's PC logs its user on. sbx's password is the LSA secret DefaultPassword, which Winlogon reads when
+# the registry has none and a standard user cannot read (as macOS keeps /etc/kcpassword root-only).
+# The password arrives as $env:PF_SECRET, never in the script text or a command line.
+ADMIN_AUTOLOGON = r"""
 $wl = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
+Set-ItemProperty $wl AutoAdminLogon '1'
+Set-ItemProperty $wl DefaultUserName 'Administrator'
+Set-ItemProperty $wl DefaultDomainName '.'
+Set-ItemProperty $wl DefaultPassword $env:PF_SECRET
+Remove-ItemProperty $wl AutoLogonCount -ErrorAction SilentlyContinue
+shutdown.exe /r /t 5 /f
+'logon-set'
+"""
+SBX_AUTOLOGON = LSA_TYPE + r"""
+$wl = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
+$rc = [PfLsa]::Store('DefaultPassword', $env:PF_SECRET)
+if ($rc -ne 0) { "lsa store failed: $rc"; exit 1 }
+Remove-ItemProperty $wl DefaultPassword, AutoLogonCount -ErrorAction SilentlyContinue
 Set-ItemProperty $wl AutoAdminLogon '1'
 Set-ItemProperty $wl DefaultUserName 'sbx'
 Set-ItemProperty $wl DefaultDomainName '.'
-Set-ItemProperty $wl DefaultPassword {pw}
-Remove-ItemProperty $wl AutoLogonCount -ErrorAction SilentlyContinue
 shutdown.exe /r /t 5 /f
 'logon-set'
 """
@@ -1260,28 +1333,64 @@ $env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + $use
 "winget=$(try { & "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe" --version } catch { 'unavailable' })"
 """
 
-# Last, as Administrator: no auto logon, no stored password, no answer files or install logs.
-HARDEN = r"""
+# Answer files and install logs that can hold the Administrator's password (the drive roots are added at run
+# time: Windows Setup reads autounattend.xml/unattend.xml from the root of any drive).
+ANSWER_FILES = (r"C:\Windows\Panther\unattend.xml", r"C:\Windows\Panther\Autounattend.xml",
+                r"C:\Windows\System32\Sysprep\unattend.xml", r"C:\Windows\System32\Sysprep\Panther\unattend.xml",
+                r"C:\vboxpostinstall.log")
+ANSWER_SCAN = ("$af = @(" + ", ".join(f"'{p}'" for p in ANSWER_FILES) + ")\n"
+               "foreach ($d in Get-PSDrive -PSProvider FileSystem) { $af += Join-Path $d.Root 'autounattend.xml'; "
+               "$af += Join-Path $d.Root 'unattend.xml' }\n"
+               "$found = @($af | Where-Object { Test-Path -LiteralPath $_ })\n"
+               "$found += @(Get-ChildItem 'C:\\Windows\\Panther\\Unattend' -Force -ErrorAction SilentlyContinue | "
+               "ForEach-Object FullName)\n")
+
+# Last, as Administrator: auto logon only for sbx (from the LSA secret), no password left in any Winlogon
+# key, no answer files or install logs, UAC on.
+HARDEN = ANSWER_SCAN + r"""
 $wl = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
-Set-ItemProperty $wl AutoAdminLogon '0'
-Remove-ItemProperty $wl DefaultPassword -ErrorAction SilentlyContinue
-Remove-ItemProperty $wl AutoLogonCount -ErrorAction SilentlyContinue
-foreach ($f in 'C:\Windows\Panther\unattend.xml','C:\Windows\Panther\Autounattend.xml',
-               'C:\Windows\System32\Sysprep\unattend.xml','C:\Unattend.xml','C:\vboxpostinstall.log') {
-  Remove-Item -Force $f -ErrorAction SilentlyContinue }
+Remove-ItemProperty $wl DefaultPassword, AutoLogonCount -ErrorAction SilentlyContinue
+Get-ChildItem Registry::HKEY_USERS -ErrorAction SilentlyContinue | ForEach-Object {
+  Remove-ItemProperty "Registry::$($_.Name)\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" DefaultPassword -ErrorAction SilentlyContinue }
+$w = Get-ItemProperty $wl
+if ($w.AutoAdminLogon -ne '1' -or $w.DefaultUserName -ne 'sbx') { "auto logon is not sbx's"; exit 1 }
+foreach ($f in $found) { Remove-Item -Recurse -Force -LiteralPath $f -ErrorAction SilentlyContinue }
 Get-ChildItem C:\Windows\Panther -Filter *.xml -Recurse -ErrorAction SilentlyContinue |
   Where-Object { (Get-Content $_.FullName -Raw -ErrorAction SilentlyContinue) -match '<Password>|AdministratorPassword' } |
   Remove-Item -Force -ErrorAction SilentlyContinue
+Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' EnableLUA 1 -Type DWord
 'hardened-ok'
+"""
+
+# After the hardened second boot, as Administrator with its password in $env:PF_SECRET: is it (plain, or as
+# an answer file encodes it) in any file sbx or setup could have left readable? Prints `pw_hits=` and paths.
+ADMIN_SECRET_SCAN = r"""
+$pw = $env:PF_SECRET; Remove-Item env:PF_SECRET
+$forms = @($pw) + @('Password', 'AdministratorPassword' | ForEach-Object {
+  [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($pw + $_)) })
+$files = @()
+foreach ($r in 'C:\Windows\Panther', 'C:\Windows\System32\Sysprep', 'C:\Windows\Setup', 'C:\Windows\Temp',
+               'C:\Users\Public', 'C:\Users\sbx', 'C:\ProgramData\pickfit') {
+  $files += @(Get-ChildItem -LiteralPath $r -Recurse -File -Force -ErrorAction SilentlyContinue) }
+foreach ($d in Get-PSDrive -PSProvider FileSystem) { $files += @(Get-ChildItem -LiteralPath $d.Root -File -Force -ErrorAction SilentlyContinue) }
+$hits = foreach ($f in $files) {
+  if ($f.Length -gt 4MB) { continue }
+  try { $b = [IO.File]::ReadAllBytes($f.FullName) } catch { continue }
+  $t8 = [Text.Encoding]::UTF8.GetString($b); $t16 = [Text.Encoding]::Unicode.GetString($b)
+  foreach ($x in $forms) { if ($t8.Contains($x) -or $t16.Contains($x)) { $f.FullName; break } } }
+"scanned=$($files.Count)"
+"pw_hits=$(@($hits) -join ';')"
 """
 
 
 def _raw_ps(vbox: VBox, vm: str, user: str, pwfile: Path, script: str, timeout_s: int = 600,
-            exe: str = WINPS) -> tuple[int, str, str]:
+            exe: str = WINPS, secret: str | None = None) -> tuple[int, str, str]:
     """Bootstrap command before the harness scripts exist: powershell -EncodedCommand, no sentinel, so the
-    exit code is VBoxManage's mapped one turned back (exact for 0..93)."""
+    exit code is VBoxManage's mapped one turned back (exact for 0..93). `secret` reaches the script as
+    $env:PF_SECRET (the guest process environment), never in its command line or the script text."""
+    env = ["--putenv", f"PF_SECRET={secret}"] if secret is not None else []
     proc = vbox("guestcontrol", vm, "run", "--username", user, "--passwordfile", str(pwfile), "--exe", exe,
-                "--timeout", str(timeout_s * 1000), "--wait-stdout", "--wait-stderr", "--",
+                *env, "--timeout", str(timeout_s * 1000), "--wait-stdout", "--wait-stderr", "--",
                 "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
                 "-EncodedCommand", encode_ps(script), timeout_s=timeout_s + 60, check=False)
     code = proc.returncode
@@ -1305,6 +1414,29 @@ def _wait_guest(vbox: VBox, vm: str, pwfile: Path, timeout_s: float = ADDITIONS_
                 return
         time.sleep(10)
     raise BoxError(f"{vm}: Guest Additions did not answer within {timeout_s:.0f}s")
+
+
+def _logged_in(vbox: VBox, vm: str) -> list[str]:
+    out = vbox("guestproperty", "get", vm, "/VirtualBox/GuestInfo/OS/LoggedInUsersList", check=False).stdout
+    m = re.search(r"Value: (.*)", out)
+    return [u.strip() for u in m.group(1).split(",")] if m else []
+
+
+def _logon_as(vbox: VBox, vm: str, pw: dict[str, Path], user: str, log: Callable[[str], None]) -> None:
+    """Make `user` the one Windows logs on at boot, reboot, and wait until that user is on the desktop."""
+    script = SBX_AUTOLOGON if user == WIN_USER else ADMIN_AUTOLOGON
+    code, out, err = _raw_ps(vbox, vm, ADMIN_USER, pw[ADMIN_USER], script, 120,
+                             secret=pw[user].read_text(encoding="utf-8").strip())
+    if "logon-set" not in out:
+        raise BoxError(f"cannot set the auto logon for {user} ({code}): {(out + err).strip()[-300:]}")
+    time.sleep(30)  # the reboot is under way before the guest is asked again
+    _wait_guest(vbox, vm, pw[ADMIN_USER], log=log)
+    deadline = time.monotonic() + 600
+    while user not in _logged_in(vbox, vm):
+        if time.monotonic() > deadline:
+            raise BoxError(f"{user} was not logged on after the reboot ({_logged_in(vbox, vm)})")
+        time.sleep(5)
+    log(f"vbox: {vm}: {user} is logged on to the desktop")
 
 
 def create_base_vm(vbox: VBox, name: str, state: Path) -> None:
@@ -1386,6 +1518,8 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
             raise BoxError(f"{step} failed ({code}): {(out + err).strip()[-800:]}")
         return out
 
+    if ADMIN_USER not in _logged_in(vbox, name):  # winget runs only for a user on the desktop
+        _logon_as(vbox, name, pw, ADMIN_USER, log)
     out = admin("system settings + activation", PROVISION_SYSTEM, 600, lambda c, o: "build=" in o)
     info = _kv(out)
     if not re.search(r"License Status: Licensed", out):
@@ -1406,15 +1540,13 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
                                     "sha256": {k.removeprefix("sha256_"): v for k, v in got.items()
                                                if k.startswith("sha256_")}}
     admin("tools (winget)", PROVISION_TOOLS, 3600, lambda c, o: "pip uv pipx -> 0" in o and "pwsh_path=" in o)
-    admin("sbx first logon", SBX_LOGON.replace("{pw}", ps_quote(sbx_pw)), 120, lambda c, o: "logon-set" in o)
-    time.sleep(30)  # the reboot is under way before the guest is asked again
-    _wait_guest(vbox, name, pw[ADMIN_USER], log=log)
+    _logon_as(vbox, name, pw, WIN_USER, log)
     deadline = time.monotonic() + 900
     while not re.search(r"v\d+\.\d+", _raw_ps(vbox, name, WIN_USER, pw[WIN_USER], SBX_APPS, 120)[1]):
         if time.monotonic() > deadline:
-            raise BoxError("sbx did not get winget from its first logon within 15 minutes")
+            raise BoxError("sbx did not get winget from its logon within 15 minutes")
         time.sleep(15)
-    log(f"vbox: {name}: sbx logged on once; winget and pwsh are registered for it")
+    log(f"vbox: {name}: winget and pwsh are registered for sbx")
     code, out, err = _raw_ps(vbox, name, WIN_USER, pw[WIN_USER], PROVISION_SBX, 600)
     versions = _kv(out)
     log(f"vbox: {name}: sbx tools {versions}")
@@ -1424,24 +1556,37 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
     admin("hardening", HARDEN, 300, lambda c, o: "hardened-ok" in o)
     admin("shutdown", "shutdown.exe /s /t 5 /f; 'bye'", 60, lambda c, o: True)
     vbox.poweroff(name, 300)
-    for port in range(1, 4):  # the install ISO, the additions and the auxiliary (answer file) ISO
+    for port in range(1, 4):  # the install ISO, the additions and the auxiliary (answer file + passwords) ISO
         vbox("storageattach", name, "--storagectl", "SATA", "--port", str(port), "--device", "0",
              "--medium", "none", check=False)
+    media = vbox("showvminfo", name, "--machinereadable").stdout
+    if re.search(r'(?i)\.(iso|viso)"|dvddrive|emptydrive', media):
+        raise BoxError(f"{name} still has an optical drive or image attached")
     # Boot once more, as a box will, and run the same check every box runs.
     vbox("startvm", name, "--type", "headless", timeout_s=180)
     _wait_guest(vbox, name, pw[ADMIN_USER], log=log)
     check_box = VBoxBox(base=name, router=router, vboxmanage=vbox.argv0, state_dir=state, log=log)
-    code, out, err = check_box._admin(HARDENED_CHECK, 120)
+    check_box._wait_sbx_logon()
+    code, out, err = check_box._admin(HARDENED_CHECK, 180)
     if code != 0:
         raise BoxError(f"the hardened base fails its check: {(out + err).strip()[-400:]}")
+    out = _raw_ps(vbox, name, ADMIN_USER, pw[ADMIN_USER], ADMIN_SECRET_SCAN, 900,
+                  secret=pw[ADMIN_USER].read_text(encoding="utf-8").strip())[1]
+    scan = _kv(out)
+    log(f"vbox: {name}: Administrator password scan: {scan.get('scanned', '?')} files, hits: {scan.get('pw_hits')!r}")
+    if "pw_hits" not in scan or scan["pw_hits"]:
+        raise BoxError(f"the Administrator password is left in: {scan.get('pw_hits', out.strip()[-300:])}")
     # The build the snapshot really has (no cumulative updates are installed; Windows Update is off).
     final = _kv(check_box._admin(
         "$v = Get-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion'; "
         "\"build=$($v.CurrentBuild).$($v.UBR)\"; \"display=$($v.DisplayVersion)\"; "
-        "\"license=$((cscript //nologo $env:SystemRoot\\System32\\slmgr.vbs /dli | Select-String 'License Status') -replace '.*: ','')\"",
+        "\"license=$((cscript //nologo $env:SystemRoot\\System32\\slmgr.vbs /dli | Select-String 'License Status') -replace '.*: ','')\"; "
+        "\"wu=$((Get-Service wuauserv).StartType)/$((Get-ItemProperty 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU' -ErrorAction SilentlyContinue).NoAutoUpdate)\"",
         120)[1])
+    if final.get("license") != "Licensed" or final.get("wu") != "Disabled/1":
+        raise BoxError(f"not ready for the snapshot: license {final.get('license')!r}, Windows Update {final.get('wu')!r}")
     manifest.update(windows=f"{final.get('display', '?')} (build {final.get('build', '?')})",
-                    license_status=final.get("license"))
+                    license_status=final.get("license"), windows_update="off")
     admin("shutdown", "shutdown.exe /s /t 5 /f; 'bye'", 60, lambda c, o: True)
     vbox.poweroff(name, 300)
     vbox("snapshot", name, "take", SNAPSHOT, "--description", "pickfit Windows base, powered off")
@@ -1460,16 +1605,25 @@ def image_label(manifest: dict[str, Any], router: dict[str, Any]) -> str:
             f" router@{router.get('build_id', 'nobuild')}")[:120]
 
 
-# Every box runs this as the administrator before any model command; non-zero refuses the base.
-HARDENED_CHECK = r"""
+# Every box runs this as the administrator (Windows PowerShell 5.1) before any model command; non-zero refuses
+# the base. Auto logon is allowed only for sbx and only from the LSA secret (which this check, as an
+# administrator, must be able to see: the positive control for the box user's `denied`).
+HARDENED_CHECK = LSA_TYPE + ANSWER_SCAN + r"""
 $bad = @()
-$admins = (Get-LocalGroupMember -SID S-1-5-32-544 | ForEach-Object { $_.Name.Split('\')[-1] })
-if ($admins -contains 'sbx') { $bad += 'sbx is an administrator' }
+foreach ($g in 'S-1-5-32-544', 'S-1-5-32-555', 'S-1-5-32-580') {
+  $m = @(Get-LocalGroupMember -SID $g -ErrorAction SilentlyContinue | ForEach-Object { $_.Name.Split('\')[-1] })
+  if ($m -contains 'sbx') { $bad += "sbx is in $g" } }
+if ((Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System').EnableLUA -ne 1) { $bad += 'UAC is off' }
 $wl = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
-if ($wl.AutoAdminLogon -eq '1') { $bad += 'auto logon is on' }
+if ($wl.AutoAdminLogon -ne '1' -or $wl.DefaultUserName -ne 'sbx') { $bad += "auto logon is not sbx's ($($wl.AutoAdminLogon) $($wl.DefaultUserName))" }
 if ($wl.PSObject.Properties.Name -contains 'DefaultPassword') { $bad += 'a logon password is stored in Winlogon' }
-foreach ($f in 'C:\Windows\Panther\unattend.xml','C:\Windows\Panther\Autounattend.xml','C:\Windows\System32\Sysprep\unattend.xml','C:\Unattend.xml') {
-  if (Test-Path $f) { $bad += "answer file left: $f" } }
+Get-ChildItem Registry::HKEY_USERS -ErrorAction SilentlyContinue | ForEach-Object {
+  $u = Get-ItemProperty "Registry::$($_.Name)\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" -ErrorAction SilentlyContinue
+  if ($u -and $u.PSObject.Properties.Name -contains 'DefaultPassword') { $bad += "a logon password is stored in $($_.Name)" } }
+$lsa = [PfLsa]::Probe('DefaultPassword')
+if ($lsa -notlike 'readable len=*' -or $lsa -eq 'readable len=0') { $bad += "the auto-logon LSA secret is $lsa" }
+foreach ($f in $found) { $bad += "answer file left: $f" }
+if (@(Get-CimInstance Win32_CDROMDrive -ErrorAction SilentlyContinue).Count) { $bad += 'an optical drive is attached' }
 foreach ($p in 'C:\ProgramData\pickfit','C:\ProgramData\pickfit\run.ps1','C:\ProgramData\pickfit\probe.ps1') {
   if (-not (Test-Path $p)) { $bad += "$p missing"; continue }
   $acl = Get-Acl $p

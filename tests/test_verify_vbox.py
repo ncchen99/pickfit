@@ -10,6 +10,7 @@ from __future__ import annotations
 import base64
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -89,7 +90,10 @@ elif cmd == "modifyvm":
         v["nic1"] = args[args.index("--nic1") + 1]
     save()
 elif cmd == "guestproperty":
-    print("Value: 7.2.22r175245")
+    if "LoggedInUsersList" in args[-1]:
+        print("Value: " + env("FAKE_LOGGED_IN", "sbx") if env("FAKE_LOGGED_IN", "sbx") else "No value set!")
+    else:
+        print("Value: 7.2.22r175245")
 elif cmd == "guestcontrol" and args[2] in ("mkdir", "copyto"):
     if args[2] == "copyto":
         open(os.path.join(here, "copied.bin"), "wb").write(open(args[-2], "rb").read())
@@ -255,6 +259,69 @@ def test_start_resets_router_then_guest_and_checks_containment(fake) -> None:
     st = fake.state()
     assert st["pickfit-win11"]["VMState"] == "poweroff" and st["pickfit-router"]["VMState"] == "poweroff"
     assert st["pickfit-win11"]["restored"] == 2  # once before the run, once at close
+
+
+@pytest.mark.parametrize("logged_in", ["", "Administrator"])
+def test_no_command_runs_before_sbx_is_on_the_desktop(fake, monkeypatch, logged_in: str) -> None:
+    monkeypatch.setenv("FAKE_LOGGED_IN", logged_in)
+    monkeypatch.setattr(vb, "LOGON_WAIT_S", 0)
+    with pytest.raises(BoxError, match="did not log on"):
+        fake.box().start()
+    assert not any(c[0] == "guestcontrol" and "--username" in c and c[c.index("--username") + 1] == "sbx"
+                   for c in fake.calls())
+
+
+def test_admin_checks_use_windows_powershell_and_model_commands_pwsh(fake) -> None:
+    box = fake.box()
+    for user, shell in (("Administrator", "powershell"), ("sbx", "pwsh")):
+        rest = box.run_argv(user, "x", 30, r"C:\Windows\Temp", "n")
+        assert rest[rest.index("-Shell") + 1] == shell
+    assert "WindowsPowerShell" in vb.RUN_SCRIPT and "pwsh.path" in vb.RUN_SCRIPT
+
+
+def test_logon_passwords_reach_the_guest_only_through_the_environment() -> None:
+    for script in (vb.SBX_AUTOLOGON, vb.ADMIN_AUTOLOGON, vb.ADMIN_SECRET_SCAN):
+        assert "$env:PF_SECRET" in script and "{pw}" not in script
+    assert "[PfLsa]::Store('DefaultPassword'" in vb.SBX_AUTOLOGON
+    assert "Remove-ItemProperty $wl DefaultPassword" in vb.SBX_AUTOLOGON
+
+
+def test_raw_ps_puts_the_secret_in_putenv_not_the_command_line(tmp_path) -> None:
+    seen: list[list[str]] = []
+
+    class Rec(vb.VBox):
+        def __call__(self, *args, **kw):
+            seen.append(list(args))
+            return subprocess.CompletedProcess(args, 0, "ok", "")
+
+    vb._raw_ps(Rec([sys.executable]), "vm", "Administrator", tmp_path / "pw", "'x'", 10, secret="s3cret-value")
+    argv = seen[0]
+    assert argv[argv.index("--putenv") + 1] == "PF_SECRET=s3cret-value"
+    encoded = argv[argv.index("-EncodedCommand") + 1]
+    assert "s3cret-value" not in base64.b64decode(encoded).decode("utf-16-le")
+
+
+def test_logon_secret_probe_accepts_only_the_exact_clean_state() -> None:
+    from pickfit.verify.box import ExecResult
+    from pickfit.verify.limits import WIN_LOGON_EXPECT, _no_logon_secret, win_logon_secrets
+
+    def result(lines: list[str], code: int = 0) -> ExecResult:
+        return ExecResult(command="", exit_code=code, stdout="\n".join(lines) + "\n", stderr="", seconds=0.1,
+                          timed_out=False, truncated=False)
+
+    assert _no_logon_secret(result(WIN_LOGON_EXPECT))
+    for i, bad in enumerate(["autologon=1 user=Administrator", "hklm_password=True", "hkcu_password=True",
+                             "lsa=readable len=24", "answer_files=C:\\unattend.xml", "cdrom=1"]):
+        lines = list(WIN_LOGON_EXPECT)
+        lines[i] = bad
+        assert not _no_logon_secret(result(lines)), bad
+    assert not _no_logon_secret(result(["autologon=0 user=", *WIN_LOGON_EXPECT[1:]]))
+    assert not _no_logon_secret(result(WIN_LOGON_EXPECT[:-1]))  # a line missing is a failure, not a pass
+    assert not _no_logon_secret(result(WIN_LOGON_EXPECT, code=1))
+    probe = win_logon_secrets()
+    for needle in ("HKCU:", "[PfLsa]::Probe('DefaultPassword')", "Win32_CDROMDrive", "autounattend.xml",
+                   "Panther\\Unattend", "Sysprep\\unattend.xml"):
+        assert needle in probe
 
 
 def test_unhardened_base_is_refused(fake, monkeypatch) -> None:
@@ -434,7 +501,9 @@ def test_needs_store_is_a_reason_the_agent_can_give_and_the_record_keeps() -> No
 
 
 def test_hardened_check_covers_the_ways_to_admin() -> None:
-    for needle in ("S-1-5-32-544", "AutoAdminLogon", "DefaultPassword", "Panther", "fDenyTSConnections", "WinRM",
+    for needle in ("S-1-5-32-544", "S-1-5-32-555", "S-1-5-32-580", "EnableLUA", "AutoAdminLogon",
+                   "DefaultUserName -ne 'sbx'", "DefaultPassword", "HKEY_USERS", "[PfLsa]::Probe('DefaultPassword')",
+                   "Panther\\Unattend", "autounattend.xml", "Win32_CDROMDrive", "fDenyTSConnections", "WinRM",
                    "pickfit\\run.ps1"):
         assert needle in HARDENED_CHECK
 
