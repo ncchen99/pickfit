@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import socket
 import stat
+import subprocess
 import threading
 import types
 from collections.abc import Callable, Iterator
@@ -110,8 +111,13 @@ if cmd == "get":
 if cmd == "list":
     print(env("FAKE_LIST", "[]"))
 if cmd == "exec":
-    if env("FAKE_RUN_FAIL"):
-        sys.stderr.write('Error: VM "%s" is not running\n' % args[1]); sys.exit(1)
+    vm = args[2] if args[1] == "-i" else args[1]
+    if env("FAKE_RUN_FAIL") or os.path.exists(os.path.join(here, "stopped")):
+        sys.stderr.write('VM "%s" is not running\n' % vm); sys.exit(2)
+    if env("FAKE_AGENT_GONE"):
+        sys.stderr.write("Error: failed to connect to the VM, is the Tart Guest Agent running?\n"); sys.exit(1)
+    if args[2:] == ["true"]:  # the agent probe
+        sys.exit(0)
     if "-i" in args:
         open(os.path.join(here, "stdin.bin"), "wb").write(sys.stdin.buffer.read())
     script = args[-1]
@@ -250,6 +256,60 @@ def test_model_commands_run_as_the_box_user_with_limits_and_no_host_env(
     write = _calls(fake_tart)[-1]
     assert write[:2] == ["exec", "-i"] and write[-1].endswith("sh dir/a.txt'")  # path is an argument
     assert (fake_tart.parent / "stdin.bin").read_bytes() == b"data"
+
+
+@pytest.mark.parametrize("text", ['VM "pf-verify-1-abc" is not running',
+                                  'the specified VM "pf-verify-1-abc" does not exist',
+                                  "Error: failed to connect to the VM, is the Tart Guest Agent running?"])
+def test_a_command_that_prints_tarts_own_errors_has_only_failed(make_box, fake_tart: Path,
+                                                                monkeypatch: pytest.MonkeyPatch, text: str):
+    box = make_box()
+    box.start()
+    assert box.exec("echo hi", 30).ok and _calls(fake_tart)[-1][2:4] == ["sudo", "-n"]  # success: no probe
+    monkeypatch.setenv("FAKE_STDERR", text + "\n")
+    monkeypatch.setenv("FAKE_EXIT", "2")
+    result = box.exec("my-tool --check", 30)
+    assert result.exit_code == 2 and text in result.stderr and not result.timed_out
+    assert _calls(fake_tart)[-1] == ["exec", "pf-verify-1-abc", "true"]  # the host's probe decided it
+
+
+def test_a_vm_that_is_gone_is_a_box_error(make_box, fake_tart: Path):
+    box = make_box()
+    box.start()
+    (fake_tart.parent / "stopped").touch()  # the fake `tart run` exits, as the real one does when its VM stops
+    box.vm_proc.wait(timeout=10)
+    with pytest.raises(BoxError, match=r"guest agent is gone: tart run exited with 0\): VM .* is not running"):
+        box.exec("echo hi", 30)
+
+
+def test_a_guest_agent_that_is_gone_is_a_box_error(make_box, monkeypatch: pytest.MonkeyPatch):
+    box = make_box()
+    box.start()
+    monkeypatch.setenv("FAKE_AGENT_GONE", "1")
+    with pytest.raises(BoxError, match=r"gone: `tart exec pf-verify-1-abc true` exited 1: .*Guest Agent running"):
+        box.exec("echo hi", 30)
+    assert box.vm_proc.poll() is None  # the VM still runs; the agent probe is what failed
+
+
+def test_read_file_turns_a_hung_agent_into_a_box_error(make_box, monkeypatch: pytest.MonkeyPatch):
+    box = make_box()
+    box.start()
+
+    def hangs(argv, **kw):
+        raise subprocess.TimeoutExpired(argv, kw["timeout"])
+
+    with monkeypatch.context() as m:
+        m.setattr(tb.subprocess, "run", hangs)
+        with pytest.raises(BoxError, match="cannot read notes.txt: tart exec did not return within 35s"):
+            box.read_file("notes.txt")
+
+
+def test_an_mdns_probe_that_cannot_run_fails_closed(make_box, monkeypatch: pytest.MonkeyPatch):
+    box = make_box()
+    box.start()
+    monkeypatch.setenv("FAKE_FAIL_MATCH", f"{tb.HELPER_DIR}/mdns")  # exits 1 with no mdns= line
+    with pytest.raises(BoxError, match="mDNS probe could not run: injected failure"):
+        box._check_firewall(online=True)
 
 
 def test_network_cut_sets_softnet_policy_and_is_checked_as_root(make_box, fake_tart: Path):
