@@ -70,6 +70,12 @@ uv run --with pyyaml==6.0.2 --with pytest python -m pytest eval/runner/tests -q
 ## 開跑前還要做的
 
 1. 功能凍結後建兩個評測部署（A1；`worker/README.md` 的評測部署步驟），確認 `/` 回應的 `tools` 是 `readonly`、`match_mode` 各是 `model` 與 `off`。
-2. 第 8 節的測試資料 commit 到 `eval/fixtures/`（L2 用）。
-3. L2 的實跑環境（第 5 節：Modal、`ubuntu:24.04`，記下 image digest）與 C4 盲評、去識別的工具。
+2. 第 8 節的測試資料 commit 到 `eval/fixtures/`（L2 用）：10/31 已 commit（`eval/fixtures/README.md`）；外部素材等念誠決定。
+3. L2 的實跑環境（第 5 節：Modal、`ubuntu:24.04`，記下 image digest）：`l2_image.py`。念誠確認第 6 項後：
+   ```bash
+   uv run python eval/runner/l2_image.py plan                                   # 不連網、不花錢
+   uv run python eval/runner/l2_image.py build --variant dev --base-digest sha256:... --confirm-spend
+   uv run python eval/runner/l2_image.py inspect --variant dev --confirm-spend  # 記下套件版本、跑 egress selftest
+   ```
+   三個變體：`dev`（`ubuntu:24.04` 加 python3、git、ca-certificates、curl、strace，第 6 項的提案）、`base`（原樣，q03 要求映像裡沒有 python3）、`base-git`（只加 git，q10）。基底一律用 digest 固定，Modal 不加 Python；紀錄在 `eval/results/l2-images.json`。
 4. 跑 `collect_evidence.py` 與 `snapshot --label before`，兩者都 commit 後才跑 q01。
