@@ -9,8 +9,9 @@ replay ran them); the README comes from the pipeline databases and the category 
 the record, as the batch built the task. A fresh box of the run's own runtime (gVisor
 unless the replay ran in a VM) runs the plan with the pipeline's Replayer. Nothing
 under data/ is written: the output lists, per check, whether it passed and whether it
-passed offline, then and now. --gvisor-offline picks every record whose latest run is
-modal-gvisor with a smoke test that passed offline.
+passed offline, then and now. --gvisor-offline picks each record's latest modal-gvisor
+run when one of its smoke tests passed offline (a later Tart, VM or Windows run does not
+hide it); --skip-checked leaves out the runs an earlier output file already reran.
 
 replay.json files are looked up under runs/verify of this checkout, the main checkout
 and its worktrees (runs/ is not in git).
@@ -71,12 +72,12 @@ def records() -> dict[str, dict[str, Any]]:
 
 
 def gvisor_offline(by_run: dict[str, dict[str, Any]]) -> list[str]:
-    """Run ids: each record's latest run, when it is modal-gvisor and some smoke test passed offline."""
+    """Run ids: each record's latest modal-gvisor run, when some smoke test of it passed offline."""
     picked = []
     for run_id, record in by_run.items():
-        latest = record["verification"]["runs"][-1]
-        if latest["id"] == run_id and latest["runner"] == "modal-gvisor" and \
-                any(t.get("offline") is True for t in latest.get("smoke_tests", [])):
+        gvisor = [r for r in record["verification"]["runs"] if r["runner"] == "modal-gvisor"]
+        if gvisor and gvisor[-1]["id"] == run_id and \
+                any(t.get("offline") is True for t in gvisor[-1].get("smoke_tests", [])):
             picked.append(run_id)
     return sorted(picked)
 
@@ -163,6 +164,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("run_ids", nargs="*")
     ap.add_argument("--gvisor-offline", action="store_true", help="every gVisor run with a smoke test passed offline")
+    ap.add_argument("--skip-checked", type=Path, action="append", default=[],
+                    help="an earlier output file: leave out the runs it reran")
     ap.add_argument("--sample", type=int, default=0, help="a random sample of that many (seed 7)")
     ap.add_argument("--jobs", type=int, default=8)
     ap.add_argument("--out", type=Path)
@@ -170,6 +173,8 @@ def main(argv: list[str] | None = None) -> int:
     by_run = records()
     run_ids = list(args.run_ids) + (gvisor_offline(by_run) if args.gvisor_offline else [])
     run_ids = list(dict.fromkeys(run_ids))
+    done = {r["run_id"] for path in args.skip_checked for r in json.loads(path.read_text(encoding="utf-8"))["results"]}
+    run_ids = [r for r in run_ids if r not in done]
     if args.sample and len(run_ids) > args.sample:
         run_ids = sorted(random.Random(7).sample(run_ids, args.sample))
     unknown = [r for r in run_ids if r not in by_run]
