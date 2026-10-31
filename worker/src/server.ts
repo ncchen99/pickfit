@@ -9,7 +9,7 @@ import { ERROR_EXCERPT_MAX, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } 
 import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './submit.ts';
 
 const ABOUT =
-  'pickfit recommends lesser-known software that it has installed and tested in a sandbox. Scope today: developer CLI tools and local AI/LLM tools. ' +
+  'pickfit recommends lesser-known software that it has installed and tested in a sandbox. Scope: dev CLI tools, local AI/LLM tools, MCP servers. ' +
   'well_known_option is not verified by pickfit; say so. ';
 const RULES = 'Ask at most 1-2 questions first (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars.';
 
@@ -37,6 +37,21 @@ const reason = z.object({
   value: z.string(),
 });
 
+/** A GUI app's launch as pickfit saw it; the level stays install (a launch is not a feature test). */
+const gui = z
+  .object({
+    tier: z
+      .enum(['window', 'ui_rendered'])
+      .describe("window = a window of the app's own process opened; ui_rendered = a separate model saw the app's own UI drawn"),
+    screen: z
+      .enum(['main_ui', 'first_run', 'sign_in_wall', 'crash_or_error', 'blank_or_loading', 'other'])
+      .describe("What that model saw in a screenshot of the app's own windows"),
+    display: z.string().describe('The virtual display it ran on'),
+    launch_offline: z.boolean().nullable().describe('The launch passed again with the network off in a fresh sandbox'),
+  })
+  .nullable()
+  .describe('A GUI app: what pickfit saw when it launched it. null for other software');
+
 const pick = z.object({
   slug: z.string(),
   name: z.string(),
@@ -61,6 +76,7 @@ const pick = z.object({
       .boolean()
       .nullable()
       .describe('true = pickfit ran the install steps on your OS, and on your CPU architecture when arch was given; null = no os given'),
+    gui: gui,
   }),
   how_we_know: z.string(),
   evidence_url: z.string().nullable(),
@@ -71,11 +87,21 @@ const pick = z.object({
   }),
   repo: z.string(),
   homepage: z.string().nullable(),
+  match: z
+    .object({
+      quality: z.enum(['good', 'partial', 'weak']),
+      covers: z.array(z.string()).describe("The request's words this profile mentions"),
+      missing: z.array(z.string()).describe("The request's words it does not mention"),
+    })
+    .optional()
+    .describe(
+      "Rules-only answers: how well the profile covers the request's specific words (good: most of them; partial: some; weak: less). A label only: every pick is still listed. Absent when the model chose",
+    ),
 });
 
 /** The user's conditions, shared by find_software and find_alternatives. */
 const conditions = {
-  category: z.enum(['dev_cli', 'local_ai', 'any']).optional().describe('Default any'),
+  category: z.enum(['dev_cli', 'local_ai', 'mcp_server', 'any']).optional().describe('Default any; mcp_server = an MCP server to add to an AI client'),
   os: os.optional(),
   arch: arch.optional(),
   budget: z.enum(['free_only', 'free_or_paid']).optional(),
@@ -133,6 +159,12 @@ const findOutput = z.object({
     ),
   clarifying_question: z.string().nullable(),
   coverage_note: z.string().nullable(),
+  match_quality: z
+    .enum(['good', 'partial', 'none'])
+    .optional()
+    .describe(
+      'Rules-only answers: the best pick\'s label; none = no pick reaches partial (coverage_note names what they miss; the picks are still listed). Absent when the model chose',
+    ),
 });
 
 const alternativesOutput = findOutput.extend({
@@ -175,6 +207,7 @@ const installOutput = z.object({
       .boolean()
       .nullable()
       .describe('true = its checks passed again with the network off after install; false = they needed the network; null = not checked'),
+    gui: gui,
   }),
   applies_to_user_system: z.object({
     match: z.enum(['exact', 'same_os_other_arch', 'other_os', 'none']),
@@ -206,6 +239,30 @@ const installOutput = z.object({
         .describe('readme_wrong = following the README hits it; sandbox = only the sandbox needed it; tool_handled = the tool did it itself; note = nothing to fix'),
     }),
   ),
+  mcp_client_config: z
+    .object({
+      transport: z.enum(['stdio', 'streamable_http']),
+      command: z.string().describe('stdio: what the client starts; streamable_http: what to start first and keep running'),
+      args: z.array(z.string()),
+      url: z.string().nullable().describe('streamable_http: where the client connects once the server runs'),
+      claude_code: z.string().describe('A `claude mcp add` line for Claude Code'),
+      json: z.string().describe('An mcpServers entry (JSON text) for Claude Desktop, Cursor and other clients'),
+      env: z.array(
+        z.object({
+          name: z.string(),
+          required: z.boolean().nullable(),
+          purpose: z.string().nullable(),
+          placeholder: z.string().describe('Replace with the user\'s own value; pickfit never had one'),
+        }),
+      ),
+      tools: z.array(z.string()).describe('Tool names the server listed in the sandbox handshake'),
+      tool_count: z.number().int(),
+      called_tool: z.string().nullable().describe('A tool pickfit called without an error; null = only the handshake was checked'),
+      works_offline: z.boolean().nullable().describe('true = the handshake also completed with the network off'),
+      note: z.string().nullable(),
+    })
+    .nullable()
+    .describe('MCP servers only: how to add it to an MCP client, from the launch command a fresh sandbox started; null for other software'),
   warnings: z.array(z.string()),
   sources: z.array(z.string()),
 });
@@ -283,7 +340,8 @@ export function buildServer(deps: Deps): McpServer {
         'Before calling, ask at most one or two questions, and only if unknown: which OS, and whether it must be free or run fully offline. ' +
         'Returns up to 3 lesser-known tools whose install pickfit actually ran, ranked by fit (not popularity), each with reasons tied to its verified profile, trade-offs, verification evidence and separate quality/popularity scores, plus the best free option. ' +
         'If a well-known free tool pickfit does not list may fit better, well_known_option names it: tell the user pickfit has not verified it. ' +
-        'If clarifying_question is set, ask it and call again. Next: get_install_guide(slug, os, rec_id). Coverage: developer CLI tools and local AI/LLM tools.',
+        'If clarifying_question is set, ask it and call again. When matched_by is "rules", match_quality and each pick\'s match say how well the profiles cover the request; present partial or weak picks as such. ' +
+        'Next: get_install_guide(slug, os, rec_id). Coverage: developer CLI tools, local AI/LLM tools and MCP servers.',
       inputSchema: findInput,
       outputSchema: findOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },
@@ -314,6 +372,7 @@ export function buildServer(deps: Deps): McpServer {
       description:
         'Use after the user picks a tool from find_software or find_alternatives. Returns install steps pickfit actually ran (replayed in a fresh sandbox, or done by hand), with the OS, date and evidence, ' +
         'the steps only the user can do (permissions, accounts), a command to verify the install and a first task to try. ' +
+        'For an MCP server, mcp_client_config gives the `claude mcp add` line and the mcpServers JSON for the launch command pickfit started, with placeholders for keys the user must supply. ' +
         'Show each command to the user before running it, and ask before any step that needs sudo or pipes a script into a shell. ' +
         'If applies_to_user_system.match is not "exact", tell the user the steps were checked on a different system.' +
         (readonly ? '' : ' After the user tries it, call report_outcome with the rec_id.'),
@@ -385,7 +444,7 @@ export function buildServer(deps: Deps): McpServer {
       description:
         'Use only when the user asks to add a software project to pickfit, often their own. Takes the GitHub repository URL. ' +
         "pickfit's pipeline reads it with Meta's Muse Spark, tries the install in a sandbox and lists it if it works; this takes minutes, so call again with the same url to check the status. " +
-        'Developer CLI tools and local AI/LLM tools are verified today; other software may be rejected or listed unverified. Nothing is published under the user\'s name.',
+        'Developer CLI tools, local AI/LLM tools and MCP servers are verified today; other software may be rejected or listed unverified. Nothing is published under the user\'s name.',
       inputSchema: submitInput,
       outputSchema: submitOutput,
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },

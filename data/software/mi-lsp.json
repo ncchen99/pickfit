@@ -52,18 +52,29 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-mi-lsp-20261030-004205-93c9",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install-agent.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install-agent.sh -o /tmp/install-agent.sh && curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && ls -l /tmp/install*.sh && head -n 200 /tmp/install-agent.sh",
+          "purpose": "download install-agent.sh and install.sh"
+        },
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/validate-worker-manifest.js && ls -l /tmp/install.sh /tmp/validate-worker-manifest.js",
+          "purpose": "download validate-worker-manifest.js beside install.sh"
+        },
+        {
+          "command": "sh /tmp/install.sh 2>&1",
+          "purpose": "install mi-lsp CLI plus worker via install.sh"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "mi-lsp init . --name myapp"
+      "check": {
+        "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mi-lsp version 2>&1",
+        "expected_signal": "version=0.16.6"
+      },
+      "first_task": "export PATH=\"$HOME/.local/bin:$PATH\" && mi-lsp version 2>&1"
     },
     "linux": {
       "basis": "replayed",
@@ -120,7 +131,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:36:01.717392+08:00",
+    "checked_at": "2026-10-30T00:58:37.941641+08:00",
     "runs": [
       {
         "id": "verify-mi-lsp-20261029-013109-7303",
@@ -227,11 +238,13 @@
         "pitfalls": [
           {
             "readme_said": "curl -fsSL .../install-agent.sh | sh",
-            "actually_needed": "Also download validate-worker-manifest.js next to install.sh; install-agent.sh fetched alone fails with 'Cannot find module /tmp/validate-worker-manifest.js'"
+            "actually_needed": "Also download validate-worker-manifest.js next to install.sh; install-agent.sh fetched alone fails with 'Cannot find module /tmp/validate-worker-manifest.js'",
+            "kind": null
           },
           {
             "readme_said": "curl -fsSL .../install.sh | sh",
-            "actually_needed": "Run as 'sh /tmp/install.sh --skip-worker-install'; default run fails at 'mi-lsp worker install' with 'staged worker did not pass protocol verification' and rolls back, and 'worker status' reports bundled worker 'permission denied' and 'dotnet is not available'"
+            "actually_needed": "Run as 'sh /tmp/install.sh --skip-worker-install'; default run fails at 'mi-lsp worker install' with 'staged worker did not pass protocol verification' and rolls back, and 'worker status' reports bundled worker 'permission denied' and 'dotnet is not available'",
+            "kind": null
           }
         ],
         "blocking_error": null,
@@ -252,6 +265,114 @@
         },
         "actor_model": "muse-spark-1.3",
         "cost_usd": 0.101623
+      },
+      {
+        "id": "verify-mi-lsp-20261030-004205-93c9",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-10-30T00:58:37.941641+08:00",
+        "tool_version": "0.16.6",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install-agent.sh -o /tmp/install-agent.sh && curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/install.sh -o /tmp/install.sh && ls -l /tmp/install*.sh && head -n 200 /tmp/install-agent.sh",
+            "purpose": "download install-agent.sh and install.sh"
+          },
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/fgpaz/mi-lsp/main/scripts/install/validate-worker-manifest.js -o /tmp/validate-worker-manifest.js && ls -l /tmp/install.sh /tmp/validate-worker-manifest.js",
+            "purpose": "download validate-worker-manifest.js beside install.sh"
+          },
+          {
+            "command": "sh /tmp/install.sh 2>&1",
+            "purpose": "install mi-lsp CLI plus worker via install.sh"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mi-lsp version 2>&1",
+            "expected_signal": "version=0.16.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mi-lsp version=0.16.6 revision=a226978c522d modified=false go=go1.26.9 os=darwin arch=arm64 protocol=mi-lsp-v1.1 rid=osx-arm64",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mkdir -p /tmp/myapp && printf '# demo app\\nprint(\"hello from myapp\")\\n' > /tmp/myapp/app.py && printf '# myapp notes\\nBilling retry logic lives here.\\n' > /tmp/myapp/notes.md && cd /tmp/myapp && mi-lsp init . --name myapp 2>&1",
+            "expected_signal": "workspace=myapp",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "workspace=myapp",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mi-lsp workspace which --format toon 2>&1; echo \"===\"; cd /tmp/myapp && mi-lsp workspace which --format toon 2>&1",
+            "expected_signal": "workspace: myapp",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "workspace: myapp",
+            "setup": [
+              {
+                "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mkdir -p /tmp/myapp && printf '# demo app\\nprint(\"hello from myapp\")\\n' > /tmp/myapp/app.py && printf '# myapp notes\\nBilling retry logic lives here.\\n' > /tmp/myapp/notes.md && cd /tmp/myapp && mi-lsp init . --name myapp 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mi-lsp nav intent \"how does the daemon start\" --workspace myapp --format toon 2>&1",
+            "expected_signal": "backend: intent",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "backend: intent",
+            "setup": [
+              {
+                "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mkdir -p /tmp/myapp && printf '# demo app\\nprint(\"hello from myapp\")\\n' > /tmp/myapp/app.py && printf '# myapp notes\\nBilling retry logic lives here.\\n' > /tmp/myapp/notes.md && cd /tmp/myapp && mi-lsp init . --name myapp 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL .../install-agent.sh | sh and curl -fsSL .../install.sh | sh",
+            "actually_needed": "Download validate-worker-manifest.js next to install.sh before running it (e.g. curl -fsSL .../validate-worker-manifest.js -o /tmp/validate-worker-manifest.js); otherwise install.sh fails with Error: Cannot find module '/tmp/validate-worker-manifest.js'.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "install-agent.sh adds the CLI and the mi-lsp skill",
+            "actually_needed": "install-agent.sh does install the CLI (mi-lsp v0.16.6 at ~/.local/bin/mi-lsp) but its final skill step `npx skills add fgpaz/claude-skills` fails with authentication failure for that repo; use install.sh alone for a clean CLI-only install.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.16.6 printed, workspace myapp initialized, and workspace which returning myapp twice.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mi-lsp-20261030-004205-93c9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mi-lsp-20261030-004205-93c9/check-1-cmd6.judged.png",
+            "runs/verify/verify-mi-lsp-20261030-004205-93c9/check-2-cmd8.judged.png",
+            "runs/verify/verify-mi-lsp-20261030-004205-93c9/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.104168
       }
     ]
   },
@@ -573,5 +694,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-29T14:40:05+08:00"
+  "updated_at": "2026-10-30T00:58:37.975702+08:00"
 }

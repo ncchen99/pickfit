@@ -1,0 +1,559 @@
+{
+  "schema_version": "software.v1",
+  "slug": "gambletan-cortex",
+  "repo_id": "gh:1178058786",
+  "name": "Cortex",
+  "summary": "Local-first memory engine giving AI agents persistent cross-session memory on-device.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "ai-memory",
+    "bayesian",
+    "claude",
+    "embeddings",
+    "encryption",
+    "knowledge-graph",
+    "llm",
+    "local-first",
+    "mcp"
+  ],
+  "use_cases": [
+    "store a new memory via CLI",
+    "search stored memories",
+    "export all data as JSON backup",
+    "show weekly memory digest"
+  ],
+  "alternatives_to": [
+    "Mem0",
+    "OpenAI Memory"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://gambletan.github.io/cortex/",
+  "repo": {
+    "url": "https://github.com/gambletan/cortex",
+    "full_name": "gambletan/cortex",
+    "created_at": "2026-03-10T16:39:18Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Rust toolchain (provides cargo)"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install cortex-mcp-server",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "cortex-mcp-server --help",
+        "expected_signal": "Cortex memory engine — MCP server & CLI tools"
+      },
+      "first_task": "cortex-mcp-server --help"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-gambletan-cortex-20261031-023258-debc",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin ~/.cortex /tmp/cortex-dl && curl -sL -o /tmp/cortex-dl/cortex.tar.gz https://github.com/gambletan/cortex/releases/download/v2.4.0/cortex-mcp-server-linux-x86_64.tar.gz && tar xzf /tmp/cortex-dl/cortex.tar.gz -C /tmp/cortex-dl && ls -la /tmp/cortex-dl && cp /tmp/cortex-dl/cortex-mcp-server ~/.local/bin/ && chmod +x ~/.local/bin/cortex-mcp-server && ~/.local/bin/cortex-mcp-server --version 2>&1",
+          "purpose": "Download and install release binary"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "cortex-mcp-server --help",
+        "expected_signal": "Cortex memory engine — MCP server & CLI tools"
+      },
+      "first_task": "CORTEX_NO_EMBEDDINGS=1 cortex-mcp-server ~/.cortex/memory.db stats"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v2.4.0",
+    "published_at": "2026-10-06T23:05:36Z",
+    "url": "https://github.com/gambletan/cortex/releases/tag/v2.4.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:34:51.863856+08:00",
+    "runs": [
+      {
+        "id": "verify-gambletan-cortex-20261031-023258-debc",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:34:51.863856+08:00",
+        "tool_version": "2.4.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin ~/.cortex /tmp/cortex-dl && curl -sL -o /tmp/cortex-dl/cortex.tar.gz https://github.com/gambletan/cortex/releases/download/v2.4.0/cortex-mcp-server-linux-x86_64.tar.gz && tar xzf /tmp/cortex-dl/cortex.tar.gz -C /tmp/cortex-dl && ls -la /tmp/cortex-dl && cp /tmp/cortex-dl/cortex-mcp-server ~/.local/bin/ && chmod +x ~/.local/bin/cortex-mcp-server && ~/.local/bin/cortex-mcp-server --version 2>&1",
+            "purpose": "Download and install release binary"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cortex-mcp-server --help",
+            "expected_signal": "Cortex memory engine — MCP server & CLI tools",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Cortex memory engine — MCP server & CLI tools",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "CORTEX_NO_EMBEDDINGS=1 cortex-mcp-server ~/.cortex/memory.db stats",
+            "expected_signal": "Cortex Memory Statistics",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Cortex Memory Statistics",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "CORTEX_NO_EMBEDDINGS=1 cortex-mcp-server ~/.cortex/memory.db info",
+            "expected_signal": "cortex-mcp-server 2.4.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "cortex-mcp-server 2.4.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rm -f /tmp/cortex-test.db && CORTEX_NO_EMBEDDINGS=1 cortex-mcp-server /tmp/cortex-test.db ingest \"Met with Alice about Q3 roadmap\" && CORTEX_NO_EMBEDDINGS=1 cortex-mcp-server /tmp/cortex-test.db search \"Alice\"",
+            "expected_signal": "Memory stored",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✅ Memory stored",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install cortex-ai-memory (Python bindings)",
+            "actually_needed": "On Python 3.12 Linux there is no manylinux cp312 wheel (only cp39 linux + cp312 macOS), so `uv tool install cortex-ai-memory` falls back to the sdist and fails building via maturin/cargo with `linker cc not found`; cargo builds need a Rust toolchain plus C linker, which this box must not install. U…",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Official packages table: PyPI cortex-ai-memory vs binary via Releases/brew",
+            "actually_needed": "The PyPI wheel contains only the `cortex_ai_memory` Python module (native .so), no `cortex-mcp-server` binary; the CLI in the README examples comes from the GitHub Releases tarball `cortex-mcp-server-linux-x86_64.tar.gz` (installed to ~/.local/bin).",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Binary install from GitHub Releases",
+            "actually_needed": "Release tarball is a prebuilt binary that cannot be read/audited before running; installed without a readable install script.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show Cortex CLI working with stats output, version 2.4.0 info, and help text.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-gambletan-cortex-20261031-023258-debc/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-gambletan-cortex-20261031-023258-debc/check-1-cmd12.judged.png",
+            "runs/verify/verify-gambletan-cortex-20261031-023258-debc/check-2-cmd13.judged.png",
+            "runs/verify/verify-gambletan-cortex-20261031-023258-debc/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.09878
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:43:57+08:00",
+    "quality": {
+      "total": 70.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6141,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 54.1,
+      "signals": {
+        "stars": 35,
+        "monthly_downloads": null,
+        "forks": 4,
+        "dependents": null,
+        "release_downloads": 149,
+        "hn_top_score": 4,
+        "registries_count": 0
+      },
+      "age_days": 234,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 32.22
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:43:57.550284+08:00",
+      "sources_sha": "e31eca95fb1962c93f7c44b9573c73fac407f1943e6367b3a948a0cfa976ea63",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Memory for AI agents that never leaves your device."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "a memory engine for personal AI agents."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Install the [Rust toolchain](https://rustup.rs/) (provides `cargo`):"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install cortex-mcp-server"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "cortex-mcp-server ~/.cortex/memory.db search \"Alice\""
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "or go 100% offline with `CORTEX_NO_EMBEDDINGS=1`."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/gambletan/cortex",
+      "fetched_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/gambletan/cortex/blob/main/README.md",
+      "fetched_at": "2026-10-31T02:10:49+08:00"
+    },
+    {
+      "id": "release:v2.4.0",
+      "kind": "release",
+      "url": "https://github.com/gambletan/cortex/releases/tag/v2.4.0",
+      "fetched_at": "2026-10-31T02:10:49+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "one MCP server gives Claude Code / Claude Desktop (or any MCP client) persistent cross-session memory.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "brew install gambletan/tap/cortex-mcp-server          # or: cargo build --release -p cortex-mcp-server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Cortex doubles as a standalone CLI tool — no MCP client required.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Memory for AI agents that never leaves your device. Local-first, end-to-end-encrypted, zero-telemetry memory engine (Rust, MCP)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Cortex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "### Homebrew (macOS / Linux)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Install the [Rust toolchain](https://rustup.rs/) (provides `cargo`):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "then runs fully offline — or go 100% offline with `CORTEX_NO_EMBEDDINGS=1`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.4.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T02:10:49+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Store a new memory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Search memories",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Export all data as JSON",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Show weekly memory digest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "### Cortex vs Mem0 vs OpenAI Memory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "### Cortex vs Mem0 vs OpenAI Memory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install cortex-mcp-server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "pip install cortex-ai-memory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Free, forever",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Your AI's memory archive lives on your device.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:19+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:51:54+08:00",
+  "updated_at": "2026-10-31T02:43:57+08:00"
+}

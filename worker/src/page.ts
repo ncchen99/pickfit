@@ -396,6 +396,7 @@ export function renderResults(
       replayed: guide?.run.replayed ?? false,
       checked_at: guide?.run.checked_at ?? null,
       verified_on_user_os: verifiedOnUserSystem(free, form.os || undefined, form.arch || undefined),
+      gui: guide?.run.gui ?? null,
     };
     const mine = yourSystem(v, form);
     parts.push(

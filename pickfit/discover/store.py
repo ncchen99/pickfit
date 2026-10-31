@@ -20,8 +20,9 @@ from typing import Any
 
 from pickfit.ledger import taipei_now
 
-# A repo found by queries of both categories goes to the more specific one.
-CATEGORY_PRIORITY = ("local_ai", "dev_cli")
+# A repo found by queries of several categories goes to the most specific one: an MCP server
+# that also has a CLI mode is listed as an MCP server.
+CATEGORY_PRIORITY = ("mcp_server", "local_ai", "dev_cli")
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS candidates (

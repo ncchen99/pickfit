@@ -1,0 +1,313 @@
+{
+  "schema_version": "software.v1",
+  "slug": "fixture-notes-mcp",
+  "repo_id": "gh:900000001",
+  "name": "notes-mcp",
+  "summary": "Searches Markdown notes over MCP.",
+  "aliases": [
+    "example/jsontail"
+  ],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": "beta",
+  "tags": [
+    "mcp-server"
+  ],
+  "use_cases": [
+    "search Markdown notes from an AI client"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": "(Fictional) Installed with one pipx command in a Linux sandbox; filters live JSON logs without writing a jq expression.",
+  "homepage": null,
+  "repo": {
+    "url": "https://example.invalid/fixture/notes-mcp",
+    "full_name": "fixture/notes-mcp",
+    "created_at": "2026-06-10T08:00:00Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.10"
+    ],
+    "system_packages": [],
+    "gpu": "none",
+    "apple_silicon_only": false,
+    "min_ram_gb": null,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "run-20261031-linux-mcp",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g notes-mcp",
+          "purpose": "Install the server"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.3.2",
+    "published_at": "2026-10-12T09:30:00Z",
+    "url": "https://example.invalid/example/frobtail/releases/tag/v0.3.2"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T08:20:00Z",
+    "runs": [
+      {
+        "id": "run-20261031-linux-mcp",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "python:3.12-slim",
+        "checked_at": "2026-10-31T08:20:00Z",
+        "tool_version": null,
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g notes-mcp",
+            "purpose": "Install the server"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- notes-mcp --root ~/work",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search_notes --args '{\"q\": \"x\"}' -- notes-mcp --root ~/work",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search_notes",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Terminal shows one filtered WARN line with a timestamp.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "data/evidence/frobtail/run-20261031-linux-1/trace.json",
+          "log_path": "data/evidence/frobtail/run-20261031-linux-1/log.json",
+          "screenshot_paths": [
+            "data/evidence/frobtail/run-20261031-linux-1/terminal.png"
+          ],
+          "evidence_url": "https://example.invalid/runs/frobtail/run-20261031-linux-1"
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.21,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "notes-mcp",
+            "--root",
+            "~/work"
+          ],
+          "protocol_version": "2025-06-18",
+          "server_name": "notes",
+          "server_version": "0.3.1",
+          "tools": [
+            "search_notes",
+            "read_note"
+          ],
+          "tool_count": 2,
+          "called_tool": "search_notes",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "notes-mcp --root ~/notes",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add notes -- notes-mcp --root ~/notes"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "NOTES_ROOT",
+        "required": false,
+        "purpose": "notes folder"
+      },
+      {
+        "name": "NOTES_SYNC_TOKEN",
+        "required": true,
+        "purpose": "sync service token"
+      }
+    ],
+    "tools": [
+      "search_notes",
+      "read_note"
+    ]
+  },
+  "scores": {
+    "formula_version": "fixture-1",
+    "computed_at": "2026-10-28T12:00:00Z",
+    "quality": {
+      "total": 76.0,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.8,
+          "weight": 35.0
+        },
+        "install_docs": {
+          "score": 0.7,
+          "weight": 20.0
+        },
+        "maintenance": {
+          "score": 0.75,
+          "weight": 15.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 10.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 22.0,
+      "signals": {
+        "stars": 300,
+        "monthly_downloads": null,
+        "forks": null,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": null,
+        "registries_count": null
+      },
+      "age_days": 200,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 59.28
+    },
+    "docs_rubric": null
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "meta",
+      "kind": "github_api",
+      "url": "https://example.invalid/api/repos/fixture/fixture-json-query",
+      "fetched_at": "2026-10-28T10:00:00Z"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://example.invalid/fixture/fixture-json-query#readme",
+      "fetched_at": "2026-10-28T10:00:00Z"
+    },
+    {
+      "id": "run:run-20261028-linux-5",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-10-28T10:30:00Z"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/license",
+      "source_id": "meta",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-28T10:00:00Z"
+    }
+  ],
+  "first_seen_at": "2026-10-28T10:00:00Z",
+  "updated_at": "2026-10-28T12:00:00Z"
+}

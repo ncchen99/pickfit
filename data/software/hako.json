@@ -1,0 +1,535 @@
+{
+  "schema_version": "software.v1",
+  "slug": "hako",
+  "repo_id": "gh:1227023137",
+  "name": "hako",
+  "summary": "From-scratch C engine that runs hako-sho 3B and hako-koi 7B models on CPU.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "avx2",
+    "c99",
+    "cpu-inference",
+    "ggml-alternative",
+    "hako",
+    "inference-engine",
+    "llama-cpp-alternative",
+    "llm",
+    "local-llm",
+    "machine-learning"
+  ],
+  "use_cases": [
+    "generate raw greedy text completion",
+    "run one ChatML chat turn",
+    "chat in interactive multi-turn REPL"
+  ],
+  "alternatives_to": [
+    "llama.cpp",
+    "ollama"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://mithraeum.studio",
+  "repo": {
+    "url": "https://github.com/mithraeums/hako",
+    "full_name": "mithraeums/hako",
+    "created_at": "2026-05-02T05:26:51Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://mithraeums.github.io/hakm.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "./hakm --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-hako-20261031-003835-13de",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/mithraeums/hako/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -l /tmp/install.sh",
+          "purpose": "Download actual install.sh"
+        },
+        {
+          "command": "sh /tmp/install.sh",
+          "purpose": "Run hakm installer script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "hakm --version",
+        "expected_signal": "hakm v0.0.4"
+      },
+      "first_task": "hakm ~/models/smollm2b.mlf2 --raw -t 0 -n 16 \"def fibonacci(n):\""
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "GPL-3.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.0.4",
+    "published_at": "2026-10-15T14:37:53Z",
+    "url": "https://github.com/mithraeums/hako/releases/tag/v0.0.4"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:40:17.171705+08:00",
+    "runs": [
+      {
+        "id": "verify-hako-20261031-003835-13de",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:40:17.171705+08:00",
+        "tool_version": "v0.0.4",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/mithraeums/hako/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -l /tmp/install.sh",
+            "purpose": "Download actual install.sh"
+          },
+          {
+            "command": "sh /tmp/install.sh",
+            "purpose": "Run hakm installer script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "hakm --version",
+            "expected_signal": "hakm v0.0.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hakm v0.0.4 (build Oct 15 2026 14:36:38)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "hakm --help",
+            "expected_signal": "hakm list",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hakm list models in ~/.hako/models",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "hakm ~/models/smollm2b.mlf2 --raw -t 0 -n 16 \"def fibonacci(n):\"",
+            "expected_signal": "def fibonacci(n):",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "def fibonacci(n):",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/SmolLM2-135M-Instruct-Q8_0.gguf https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf && ls -lh ~/models/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "curl -fL -o /tmp/gguf2mlf.py https://raw.githubusercontent.com/mithraeums/hako/main/tools/gguf2mlf.py && wc -c /tmp/gguf2mlf.py",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /tmp/gguf2mlf.py ~/models/SmolLM2-135M-Instruct-Q8_0.gguf ~/models/smollm2b.mlf2 && ls -lh ~/models/smollm2b.mlf2",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "hakm pull hako-sho and ./hakm hako-sho --raw examples",
+            "actually_needed": "Used 138 MB SmolLM2-135M-Instruct Q8_0 GGUF converted with tools/gguf2mlf.py to .mlf2; stock hako-sho is ~1.9 GB",
+            "kind": "note"
+          },
+          {
+            "readme_said": "./hakm M --info arch banner then exit",
+            "actually_needed": "hakm ~/models/smollm2b.mlf2 --info prints arch banner to stderr with empty stdout, exit 0",
+            "kind": "note"
+          },
+          {
+            "readme_said": "make builds ./hakm and make test runs ASan gates",
+            "actually_needed": "Release binary via install.sh works; make test needs make/cc which this box lacks (make: command not found)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot 1 shows fibonacci code generation with engine stats, screenshot 2 shows hakm v0.0.4 version string.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-hako-20261031-003835-13de/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-hako-20261031-003835-13de/check-1-cmd14.judged.png",
+            "runs/verify/verify-hako-20261031-003835-13de/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.134667
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:11:57+08:00",
+    "quality": {
+      "total": 79.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.8,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 20.2,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 24,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 179,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 63.28
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "f55ea4bf752c320d5ae4d13da7b79abaff8d1275e1fb5a0bd7a3e67b3651180a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A from-scratch C inference engine for the hako model family. Own loader, own kernels, own tokenizer."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Deps: libc + libm + pthread. No third-party libraries."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://mithraeums.github.io/hakm.sh | sh    # release binary, or a source build where there is none (iSh)"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "./hakm \"$M\" --info                                   # arch banner, then exit"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "first to `HAKM_KV_DIR_MAX_MB` (default 1024; `0` disables), the just-written"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "**Windows:** the loader uses POSIX `mmap`, which MinGW lacks. Linux (glibc and musl, 64- and"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "**Engine code — GPL-3.0** (`LICENSE`). From-scratch C; no ggml/llama.cpp/torch."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/mithraeums/hako",
+      "fetched_at": "2026-10-30T23:49:27+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/mithraeums/hako/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:30:35+08:00"
+    },
+    {
+      "id": "release:v0.0.4",
+      "kind": "release",
+      "url": "https://github.com/mithraeums/hako/releases/tag/v0.0.4",
+      "fetched_at": "2026-10-29T02:30:35+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "make                            # builds ./hakm — libc + libm + pthread, no deps",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:16+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "You can also run it directly.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:16+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Runs hako-sho (3B) and hako-koi (7B) on CPU.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:16+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "C inference engine; own loader, kernels, and tokenizer. Runs hako-sho (3B) and hako-koi (7B) on CPU.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:16+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "hako — a from-scratch C inference engine for the inner chamber",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:16+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "make` builds `./hakm` on Linux / macOS / FreeBSD.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:16+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:27+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:27+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:27+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:27+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:27+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.0.4",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:30:35+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "--raw` · greedy completion",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:16+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "one ChatML turn · honest tok/s split",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:16+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "interactive multi-turn REPL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:16+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "No ggml, no llama.cpp, no torch, no ollama.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:16+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "No ggml, no llama.cpp, no torch, no ollama.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:16+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://mithraeums.github.io/hakm.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:16+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://mithraeums.github.io/hakm.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:16+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "CPU-only, and honest about it.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:16+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:27:46+08:00",
+  "updated_at": "2026-10-31T02:11:57+08:00"
+}

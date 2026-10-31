@@ -1,0 +1,583 @@
+{
+  "schema_version": "software.v1",
+  "slug": "lox",
+  "repo_id": "gh:1175518556",
+  "name": "lox",
+  "summary": "Scriptable CLI for Loxone Miniserver to monitor and control smart-home devices.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "prototype",
+  "tags": [
+    "cli",
+    "loxone",
+    "loxone-config",
+    "loxone-miniserver",
+    "tui"
+  ],
+  "use_cases": [
+    "turn off all lights when leaving",
+    "show energy meters overview",
+    "close blinds conditionally on temperature",
+    "list light controllers as JSON",
+    "stream real-time state changes as JSON"
+  ],
+  "alternatives_to": [
+    "eisber/lox-cli"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://discostu105.github.io/lox/",
+  "repo": {
+    "url": "https://github.com/discostu105/lox",
+    "full_name": "discostu105/lox",
+    "created_at": "2026-03-07T20:25:00Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew tap discostu105/lox https://github.com/discostu105/lox",
+          "purpose": null
+        },
+        {
+          "command": "brew install discostu105/lox/lox",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "lox tui --demo"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-lox-20261031-000752-0cbe",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin && curl -fsSL -o ~/.local/bin/lox https://github.com/discostu105/lox/releases/download/v0.27.0/lox-linux-x86_64 && chmod +x ~/.local/bin/lox && curl -fsSL -o /tmp/lox.sha256 https://github.com/discostu105/lox/releases/download/v0.27.0/lox-linux-x86_64.sha256 && (cd ~/.local/bin && sha256sum -c /tmp/lox.sha256 || cat /tmp/lox.sha256; sha256sum lox)",
+          "purpose": "Download prebuilt linux x86_64 binary to ~/.local/bin/lox"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "lox --version",
+        "expected_signal": "lox 0.27.0"
+      },
+      "first_task": "lox completions bash"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://raw.githubusercontent.com/discostu105/lox/main/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "lox tui --demo"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.27.0",
+    "published_at": "2026-10-30T14:35:50Z",
+    "url": "https://github.com/discostu105/lox/releases/tag/v0.27.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:08:38.572877+08:00",
+    "runs": [
+      {
+        "id": "verify-lox-20261031-000752-0cbe",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:08:38.572877+08:00",
+        "tool_version": "0.27.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin && curl -fsSL -o ~/.local/bin/lox https://github.com/discostu105/lox/releases/download/v0.27.0/lox-linux-x86_64 && chmod +x ~/.local/bin/lox && curl -fsSL -o /tmp/lox.sha256 https://github.com/discostu105/lox/releases/download/v0.27.0/lox-linux-x86_64.sha256 && (cd ~/.local/bin && sha256sum -c /tmp/lox.sha256 || cat /tmp/lox.sha256; sha256sum lox)",
+            "purpose": "Download prebuilt linux x86_64 binary to ~/.local/bin/lox"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lox --version",
+            "expected_signal": "lox 0.27.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lox 0.27.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lox --help",
+            "expected_signal": "Loxone Miniserver CLI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Loxone Miniserver CLI",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lox completions bash",
+            "expected_signal": "complete -F _lox",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "complete -F _lox -o nosort -o bashdefault -o default lox",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lox schema -o json | python3 -c \"import json,sys; d=json.load(sys.stdin); print(type(d).__name__, len(d) if hasattr(d,'__len__') else ''); print(str(d)[:500])\"",
+            "expected_signal": "commands",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{'commands': [{'description': 'Control analog/virtual inputs: set | pulse', 'name': 'input', 'subcommands': [{'args': [{'description': 'Control name or UUID', 'name': 'name_or_uuid'}, {'description': 'Value to send (numeric or text)', 'name': 'value'}, {'long': '--room', 'name': 'room', 'short': '-…",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo build --release / git clone https://github.com/discostu105/lox (both need Rust 1.91+ toolchain)",
+            "actually_needed": "Downloaded prebuilt lox-linux-x86_64 binary from GitHub releases v0.27.0 to ~/.local/bin/lox and chmod +x; verified sha256 hash matches (9f4e84f315aaa3f778c33ef61abf8eaf24fb067a1ee7104555f11dc2e1f74925)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Release provides lox-linux-x86_64 plus .sha256 file",
+            "actually_needed": "sha256 file names the asset lox-linux-x86_64 while installed file is renamed to lox, so sha256sum -c warns about missing file; compared hashes manually and they match",
+            "kind": "note"
+          },
+          {
+            "readme_said": "lox tui --demo (first README example, needs interactive TTY)",
+            "actually_needed": "Skipped interactive full-screen TUI and smoke-tested the second README example 'lox completions bash' plus offline 'lox schema -o json'",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show bash completions with complete -F _lox, schema JSON containing commands, and version lox 0.27.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lox-20261031-000752-0cbe/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lox-20261031-000752-0cbe/check-1-cmd5.judged.png",
+            "runs/verify/verify-lox-20261031-000752-0cbe/check-2-cmd6.judged.png",
+            "runs/verify/verify-lox-20261031-000752-0cbe/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.04484
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:11:57+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7225,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 47.0,
+      "signals": {
+        "stars": 36,
+        "monthly_downloads": null,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": 157,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 236,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 41.87
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "fb877b825dad5916b75433686d43906b91f6e6dd281f08c522c8fd6ac035f5d4",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Fast, scriptable command-line interface for Loxone Miniserver."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "This CLI was designed for AI agent integration."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- Loxone Miniserver Gen 1/2, firmware 12.0+"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "irm https://raw.githubusercontent.com/discostu105/lox/main/install.ps1 | iex"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "lox setup set --host https://192.168.1.100 --user USER --pass PASS"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "read -rs LOX_PASS && export LOX_PASS"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "**Platforms:** Windows (x86_64, ARM64), macOS (x86_64, Apple Silicon), Linux (x86_64, ARM64)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/discostu105/lox",
+      "fetched_at": "2026-10-30T23:41:48+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/discostu105/lox/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:57:52+08:00"
+    },
+    {
+      "id": "release:v0.27.0",
+      "kind": "release",
+      "url": "https://github.com/discostu105/lox/releases/tag/v0.27.0",
+      "fetched_at": "2026-10-30T23:57:52+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Fast, scriptable command-line interface for Loxone Miniserver.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Single binary. No runtime. No cloud. Works in scripts, cron jobs, and AI agent pipelines.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Works in scripts, cron jobs, and AI agent pipelines.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Fast, scriptable command-line interface for Loxone Miniserver.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# lox — Loxone Miniserver CLI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Works on Windows, macOS, and Linux.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Local network access (or DynDNS)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:48+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:48+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:48+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:48+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:41:48+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.27.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:57:52+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "This project is an experiment. Expect rough edges.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "# Turn off all lights when leaving",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "# Quick energy overview",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "# Conditionally close blinds",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "lox ls --type LightControllerV2 -o json | jq '.[].name'",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "lox stream --room \"Kitchen\" -o json    # Real-time WebSocket state stream",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "**[eisber/lox-cli](https://github.com/eisber/lox-cli)**: a separate project by Markus Cozowicz, based on an",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew tap discostu105/lox https://github.com/discostu105/lox",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/install/macos/steps/1",
+      "source_id": "readme",
+      "quote": "brew install discostu105/lox/lox",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "brew tap discostu105/lox https://github.com/discostu105/lox",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/install/linux/steps/1",
+      "source_id": "readme",
+      "quote": "brew install discostu105/lox/lox",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://raw.githubusercontent.com/discostu105/lox/main/install.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Single binary. No runtime. No cloud.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:04:36+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:40:29+08:00",
+  "updated_at": "2026-10-31T02:11:57+08:00"
+}

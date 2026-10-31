@@ -1,0 +1,568 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mergegate",
+  "repo_id": "gh:1416600324",
+  "name": "mergegate",
+  "summary": "Local hub to review AI agent code branches in one prioritized inbox.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "self_hosted_web_app",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agentic-coding",
+    "ai-agents",
+    "ai-code-review",
+    "claude-code",
+    "cli",
+    "code-review",
+    "codex",
+    "coding-agents",
+    "cursor",
+    "developer-tools"
+  ],
+  "use_cases": [
+    "Submit current branch for review as a new revision",
+    "Wait for review feedback on an item",
+    "Squash-merge an approved item"
+  ],
+  "alternatives_to": [
+    "GitHub web UI"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/damian-kolasinski/mergegate",
+    "full_name": "damian-kolasinski/mergegate",
+    "created_at": "2026-10-13T06:59:00Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "git 2.40 or newer",
+      "GitHub CLI (gh)"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "MG_REQUIRE_UI=1 cargo install --locked --git https://github.com/damian-kolasinski/mergegate mg",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "mg doctor"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mergegate-20261031-001859-a848",
+      "method": "other",
+      "steps": [
+        {
+          "command": "curl -fsSL https://mise.run -o /tmp/mise-install.sh && ls -l /tmp/mise-install.sh && wc -l /tmp/mise-install.sh",
+          "purpose": "Download mise install script"
+        },
+        {
+          "command": "sh /tmp/mise-install.sh 2>&1 && ~/.local/bin/mise --version",
+          "purpose": "Install mise to ~/.local/bin"
+        },
+        {
+          "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mise use -g packslip:damian-kolasinski/mergegate",
+          "purpose": "Install mergegate via mise packslip"
+        },
+        {
+          "command": "ln -sf \"$HOME/.local/share/mise/installs/packslip-damian-kolasinski-mergegate/0.11.0/mg\" \"$HOME/.local/bin/mg\" && ln -sf \"$HOME/.local/bin/mg\" \"$HOME/.local/bin/mergegate\" && ls -l ~/.local/bin/mg ~/.local/bin/mergegate && mg --version && mergegate --version",
+          "purpose": "Link mg onto default PATH and verify"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ln -sf \"$HOME/.local/share/mise/installs/packslip-damian-kolasinski-mergegate/0.11.0/mg\" \"$HOME/.local/bin/mg\" && ln -sf \"$HOME/.local/bin/mg\" \"$HOME/.local/bin/mergegate\" && ls -l ~/.local/bin/mg ~/.local/bin/mergegate && mg --version && mergegate --version",
+        "expected_signal": "mg 0.11.0"
+      },
+      "first_task": "mg doctor"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.11.0",
+    "published_at": "2026-10-29T09:37:14Z",
+    "url": "https://github.com/damian-kolasinski/mergegate/releases/tag/v0.11.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:20:41.509410+08:00",
+    "runs": [
+      {
+        "id": "verify-mergegate-20261031-001859-a848",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:20:41.509410+08:00",
+        "tool_version": "0.11.0",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://mise.run -o /tmp/mise-install.sh && ls -l /tmp/mise-install.sh && wc -l /tmp/mise-install.sh",
+            "purpose": "Download mise install script"
+          },
+          {
+            "command": "sh /tmp/mise-install.sh 2>&1 && ~/.local/bin/mise --version",
+            "purpose": "Install mise to ~/.local/bin"
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && mise use -g packslip:damian-kolasinski/mergegate",
+            "purpose": "Install mergegate via mise packslip"
+          },
+          {
+            "command": "ln -sf \"$HOME/.local/share/mise/installs/packslip-damian-kolasinski-mergegate/0.11.0/mg\" \"$HOME/.local/bin/mg\" && ln -sf \"$HOME/.local/bin/mg\" \"$HOME/.local/bin/mergegate\" && ls -l ~/.local/bin/mg ~/.local/bin/mergegate && mg --version && mergegate --version",
+            "purpose": "Link mg onto default PATH and verify"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ln -sf \"$HOME/.local/share/mise/installs/packslip-damian-kolasinski-mergegate/0.11.0/mg\" \"$HOME/.local/bin/mg\" && ln -sf \"$HOME/.local/bin/mg\" \"$HOME/.local/bin/mergegate\" && ls -l ~/.local/bin/mg ~/.local/bin/mergegate && mg --version && mergegate --version",
+            "expected_signal": "mg 0.11.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mg 0.11.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mg --help",
+            "expected_signal": "Usage: mg [OPTIONS] <COMMAND>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: mg [OPTIONS] <COMMAND>",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mg doctor",
+            "expected_signal": "the hub is not running",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "FAIL hub the hub is not running",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mg hub status",
+            "expected_signal": "hub not running",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hub not running",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "mise use -g packslip:damian-kolasinski/mergegate",
+            "actually_needed": "Installed mise first with the script from https://mise.run to ~/.local/bin/mise, then ran the README's mise command",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "mise install puts mg on your PATH",
+            "actually_needed": "Symlinked the mise-installed mg binary into ~/.local/bin (plus a mergegate alias) because mise's shims dir is not on this box's default PATH",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "mg skill status shows what's installed (and mg skill setup / mg skill remove exist)",
+            "actually_needed": "mg skill has only the 'install' subcommand; 'status', 'setup' and 'remove' from the README are rejected as unrecognized (exit 64)",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "Install script contents as read before running",
+            "actually_needed": "The mise installer downloads a prebuilt mise binary at run time; integrity is enforced by the script's embedded checksum check",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show doctor reporting hub not running, hub status as not running, and both mg binaries printing version 0.11.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mergegate-20261031-001859-a848/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mergegate-20261031-001859-a848/check-1-cmd8.judged.png",
+            "runs/verify/verify-mergegate-20261031-001859-a848/check-2-cmd9.judged.png",
+            "runs/verify/verify-mergegate-20261031-001859-a848/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.089998
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 74.8,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6141,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 25.0,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 383,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 17,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 56.1
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "905b98a04a8d0c169fed045f68a908a70c8fc76847210e75ccaee23c166924dd",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Local code review for developers who run many AI coding agents in parallel."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "mergegate is a personal tool: one operator per hub, reviewing the work of their own agents."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "It needs `git` 2.40 or newer, the [GitHub CLI](https://cli.github.com) (`gh`) signed in for the `github` backend"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "mise use -g packslip:damian-kolasinski/mergegate"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "mg hub start        # run the hub as a user service (launchd or systemd)"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "no account, no hosted service, and no LLM API key required."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "### Does it work without GitHub?"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "license-MIT-blue.svg\"></a>\n  <img alt=\"macOS and Linux\""
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/damian-kolasinski/mergegate",
+      "fetched_at": "2026-10-30T23:51:46+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/damian-kolasinski/mergegate/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:03:49+08:00"
+    },
+    {
+      "id": "release:v0.11.0",
+      "kind": "release",
+      "url": "https://github.com/damian-kolasinski/mergegate/releases/tag/v0.11.0",
+      "fetched_at": "2026-10-31T00:03:49+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "You review at `http://127.0.0.1:7800`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:19+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Install the signed release with [mise]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:19+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Agents submit work with one CLI.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:19+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Local code review for developers who run many AI coding agents in parallel.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:19+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1 align=\"center\">mergegate</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:19+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "mergegate runs on macOS and Linux (arm64 and x86_64",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:19+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "It needs `git` 2.40 or newer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:19+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "the [GitHub CLI](https://cli.github.com) (`gh`) signed in",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:19+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "On the `local` backend nothing leaves your machine.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:19+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:46+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:46+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:46+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:46+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.11.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:03:49+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Submit the current branch for review, or add a revision",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:19+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Block until the item has feedback, then print it",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:19+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "One click squash-merges the item",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:19+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "| | GitHub web UI | mergegate |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:19+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "MG_REQUIRE_UI=1 cargo install --locked --git https://github.com/damian-kolasinski/mergegate mg",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:19+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "MG_REQUIRE_UI=1 cargo install --locked --git https://github.com/damian-kolasinski/mergegate mg",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:19+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "There is no paid tier, account or hosted service.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:19+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "It runs entirely on your machine: one Rust binary, no account, no hosted service",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:19+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:41:31+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}

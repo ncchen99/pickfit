@@ -1,0 +1,568 @@
+{
+  "schema_version": "software.v1",
+  "slug": "akm",
+  "repo_id": "gh:1174743926",
+  "name": "akm — Agent Knowledge Manager",
+  "summary": "CLI tool to manage AI agent knowledge, memories, skills and bundles across assistants.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-kit-manager",
+    "agent-tools",
+    "ai-agents",
+    "ai-coding-assistant",
+    "ai-skills",
+    "akm",
+    "claude-code",
+    "cli",
+    "developer-tools",
+    "mcp"
+  ],
+  "use_cases": [
+    "build the search index",
+    "get a curated shortlist for a task",
+    "load a matched capability by ref",
+    "install capability bundles",
+    "run persisted multi-step workflows with resume"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/itlackey/akm",
+    "full_name": "itlackey/akm",
+    "created_at": "2026-03-06T19:43:46Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js >= 22"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g akm-cli",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "reviewing and activating OS scheduler entries for background tasks"
+      ],
+      "check": null,
+      "first_task": "akm setup --yes"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-akm-20261031-001734-7522",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g akm-cli",
+          "purpose": "install akm via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "akm --version",
+        "expected_signal": "0.10.261019"
+      },
+      "first_task": "akm setup --yes"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g akm-cli",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "reviewing and activating OS scheduler entries for background tasks"
+      ],
+      "check": null,
+      "first_task": "akm setup --yes"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MPL-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.10.261019",
+    "published_at": "2026-10-29T14:14:36Z",
+    "url": "https://github.com/itlackey/akm/releases/tag/v0.10.261019"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:18:42.334369+08:00",
+    "runs": [
+      {
+        "id": "verify-akm-20261031-001734-7522",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:18:42.334369+08:00",
+        "tool_version": "0.10.261019",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g akm-cli",
+            "purpose": "install akm via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "akm --version",
+            "expected_signal": "0.10.261019",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.10.261019",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "akm --help",
+            "expected_signal": "Run `akm help <command>`",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Run `akm help <command>` or `akm <command> --help` for details on any command.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "akm setup --yes",
+            "expected_signal": "\"ok\": true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"ok\": true,",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "akm index",
+            "expected_signal": "Keyword index ready",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"message\": \"Keyword index ready. Semantic search is disabled.\",",
+            "setup": [
+              {
+                "command": "akm setup --yes",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "akm curate \"deploy a Bun app\"",
+            "expected_signal": "Selected 2 curated results",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"summary\": \"Selected 2 curated results: facts/conventions/domains, facts/conventions/organization.\",",
+            "setup": [
+              {
+                "command": "akm setup --yes",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "akm index",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show setup succeeded, index completed with keyword-ready message, and version printed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-akm-20261031-001734-7522/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-akm-20261031-001734-7522/check-1-cmd4.judged.png",
+            "runs/verify/verify-akm-20261031-001734-7522/check-2-cmd5.judged.png",
+            "runs/verify/verify-akm-20261031-001734-7522/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.029482
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:11:57+08:00",
+    "quality": {
+      "total": 92.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 69.5,
+      "signals": {
+        "stars": 68,
+        "monthly_downloads": 18613,
+        "forks": 4,
+        "dependents": null,
+        "release_downloads": 88,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 237,
+      "packages": [
+        "npm:akm-cli"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 28.12
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "5f34e491d4369caab0853bf2a019eca3bcf7a72172b1f1863842468874163dd4",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A CLI tool to manage AI agent knowledge, memories, skills, and  more."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Give every coding agent the capabilities your team has already built."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**Option 1 — npm package (recommended; requires [Node.js](https://nodejs.org) >= 22):**"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://github.com/itlackey/akm/releases/latest/download/install.sh | bash\n\n# Windows (PowerShell)\nirm https://github.com/itlackey/akm/releases/latest/download/install.ps1 | iex"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "akm setup --yes                          # guided first-time setup, non-interactive"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Choosing it in `akm setup` (`--embedding local`)"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Upgrade in place: `akm upgrade`"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[MPL-2.0](LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/itlackey/akm",
+      "fetched_at": "2026-10-30T23:45:17+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/itlackey/akm/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:01:13+08:00"
+    },
+    {
+      "id": "release:v0.10.261019",
+      "kind": "release",
+      "url": "https://github.com/itlackey/akm/releases/tag/v0.10.261019",
+      "fetched_at": "2026-10-31T00:01:13+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A CLI tool to manage AI agent knowledge, memories, skills, and  more.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:21+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "npm install -g akm-cli",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:21+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "any assistant that can run shell commands",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:21+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A CLI tool to manage AI agent knowledge, memories, skills, and  more.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:21+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# akm — Agent Knowledge Manager",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:21+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "# Linux / macOS\ncurl -fsSL https://github.com/itlackey/akm/releases/latest/download/install.sh | bash\n\n# Windows (PowerShell)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:21+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "requires [Node.js](https://nodejs.org) >= 22",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:21+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "It makes network requests only to the endpoints you configure or the commands you run",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:21+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:45:17+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:45:17+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:45:17+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:45:17+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.10.261019",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:01:13+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "build the search index",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:21+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "get a curated shortlist",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:21+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "load a match by the ref curate printed",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:21+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "install the official onboarding capability bundle",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:21+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Run persisted workflows with dispatch, gates, retries, budgets, and resume",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:21+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g akm-cli",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:21+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g akm-cli",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:21+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g akm-cli",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:21+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "AKM is local-first: it stores its index and state on disk and has no telemetry.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:21+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:41:04+08:00",
+  "updated_at": "2026-10-31T02:11:57+08:00"
+}

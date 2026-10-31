@@ -1,0 +1,816 @@
+{
+  "schema_version": "software.v1",
+  "slug": "calibre-mcp",
+  "repo_id": "gh:1286063712",
+  "name": "calibre-mcp",
+  "summary": "MCP server that connects Claude to a Calibre library for semantic search and curation.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "anthropic",
+    "calibre",
+    "claude",
+    "claude-desktop",
+    "ebook-management",
+    "ebooks",
+    "epub",
+    "full-text-search",
+    "huggingface",
+    "hybrid-search"
+  ],
+  "use_cases": [
+    "find books about Rust",
+    "show full metadata for a book",
+    "semantic search books by meaning",
+    "audit library metadata quality"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://www.npmjs.com/package/calibre-mcp",
+  "repo": {
+    "url": "https://github.com/caelum29/calibre-mcp",
+    "full_name": "caelum29/calibre-mcp",
+    "created_at": "2026-07-01T12:07:28Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js >=22.16"
+    ],
+    "system_packages": [
+      "poppler"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npx skills@latest add caelum29/calibre-mcp",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Start Calibre Content Server via Connect/share in Calibre"
+      ],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-calibre-mcp-20261031-014332-58b3",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g calibre-mcp",
+          "purpose": "Install calibre-mcp package globally"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npx skills@latest add caelum29/calibre-mcp",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Start Calibre Content Server via Connect/share in Calibre"
+      ],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.10.0",
+    "published_at": "2026-10-27T16:38:33Z",
+    "url": "https://github.com/caelum29/calibre-mcp/releases/tag/v0.10.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:50:13.341348+08:00",
+    "runs": [
+      {
+        "id": "verify-calibre-mcp-20261031-014332-58b3",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:50:13.341348+08:00",
+        "tool_version": "0.11.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g calibre-mcp",
+            "purpose": "Install calibre-mcp package globally"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- calibre-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "launch with npx -y calibre-mcp",
+            "actually_needed": "npm install -g calibre-mcp so the `calibre-mcp` binary is on PATH; the README launch `npx -y calibre-mcp` fetches the package at runtime and fails with network off",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "--help/--version check",
+            "actually_needed": "`calibre-mcp --help` starts the MCP server listening on stdio and never exits (had to be killed); use the MCP probe handshake instead of --help/--version",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows calibre-mcp v0.11.0 initializing, listing 14 tools, and reporting handshake ok.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-calibre-mcp-20261031-014332-58b3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-calibre-mcp-20261031-014332-58b3/check-1-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.044061,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "calibre-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "calibre-mcp",
+          "server_version": "0.11.0",
+          "tools": [
+            "calibre_list_libraries",
+            "calibre_search",
+            "calibre_get_book",
+            "calibre_get_content",
+            "calibre_get_figures",
+            "calibre_list_categories",
+            "calibre_semantic_search",
+            "calibre_build_index",
+            "calibre_find_duplicates",
+            "calibre_quality_report",
+            "calibre_recover_metadata",
+            "calibre_board_data",
+            "calibre_open_book",
+            "calibre_ping"
+          ],
+          "tool_count": 14,
+          "called_tool": null,
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": "npx -y calibre-mcp",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add calibre -- npx -y calibre-mcp"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"calibre\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"calibre-mcp\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "CALIBRE_MCP_SERVER_URL",
+        "required": null,
+        "purpose": "Calibre Content Server base URL"
+      },
+      {
+        "name": "CALIBRE_MCP_LIBRARY",
+        "required": null,
+        "purpose": "Library name to use"
+      },
+      {
+        "name": "CALIBRE_MCP_ENABLE_WRITE",
+        "required": null,
+        "purpose": "Master write gate"
+      },
+      {
+        "name": "CALIBRE_MCP_INDEX_DIR",
+        "required": null,
+        "purpose": "Semantic index cache directory"
+      }
+    ],
+    "tools": [
+      "calibre_search",
+      "calibre_get_book",
+      "calibre_get_content",
+      "calibre_get_figures",
+      "calibre_list_categories",
+      "calibre_list_libraries",
+      "calibre_semantic_search",
+      "calibre_build_index",
+      "calibre_find_duplicates",
+      "calibre_quality_report",
+      "calibre_recover_metadata",
+      "calibre_extract_isbn",
+      "calibre_update_book",
+      "calibre_bulk_update",
+      "calibre_add_book",
+      "calibre_remove_book",
+      "calibre_merge_books",
+      "calibre_manage_bundles",
+      "calibre_ping"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:03:51+08:00",
+    "quality": {
+      "total": 80.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.68,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 56.7,
+      "signals": {
+        "stars": 21,
+        "monthly_downloads": 1500,
+        "forks": 4,
+        "dependents": null,
+        "release_downloads": 56,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 121,
+      "packages": [
+        "npm:calibre-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 34.68
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "70367ce81713e5ba4bfa86596abb9f0ca837b951056663eca4710ed8b06066c3",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "full read/write tools plus multilingual semantic search over your whole ebook library or a single book."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "For Claude & any MCP client."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**Calibre** with the **Content Server running**"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "claude mcp add calibre -- npx -y calibre-mcp"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "*“show me The Rust Programming Language”* — full metadata; renders as a book card with"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `CALIBRE_MCP_SERVER_URL` | `http://localhost:8080` | Calibre Content Server base URL |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "**“Calibre unreachable” / connection refused** — the Content Server isn’t running."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[MIT](./LICENSE) © 2026 Artem Sorochynskyi"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/caelum29/calibre-mcp",
+      "fetched_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/caelum29/calibre-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:03:56+08:00"
+    },
+    {
+      "id": "release:v0.10.0",
+      "kind": "release",
+      "url": "https://github.com/caelum29/calibre-mcp/releases/tag/v0.10.0",
+      "fetched_at": "2026-10-31T01:03:56+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "The most capable Calibre MCP server in existence",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "claude mcp add calibre -- npx -y calibre-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "The most capable Calibre MCP server in existence",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "to your [Calibre](https://calibre-ebook.com) ebook library and search it by *meaning*, not",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# 📚 calibre-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "the right install for your client (macOS/Windows/Linux)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "**Node.js ≥ 22.16** for the npm/npx install",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Optional, for best PDF text extraction: poppler's `pdftotext`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.10.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:03:56+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "“find books about Rust”",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "“show me The Rust Programming Language”",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "“which of my books explain consumer-group rebalancing?”",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "“what’s wrong with my library?” runs the quality audit",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npx skills@latest add caelum29/calibre-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npx skills@latest add caelum29/calibre-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npx skills@latest add caelum29/calibre-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "The server runs as a local Node",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add calibre -- npx -y calibre-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add calibre -- npx -y calibre-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"calibre\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"calibre-mcp\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "CALIBRE_MCP_SERVER_URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "CALIBRE_MCP_LIBRARY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "CALIBRE_MCP_ENABLE_WRITE",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "CALIBRE_MCP_INDEX_DIR",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`calibre_search`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`calibre_get_book`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`calibre_get_content`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`calibre_get_figures`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`calibre_list_categories`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`calibre_list_libraries`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`calibre_semantic_search`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`calibre_build_index`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`calibre_find_duplicates`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`calibre_quality_report`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`calibre_recover_metadata`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`calibre_extract_isbn`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "`calibre_update_book`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "`calibre_bulk_update`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/14",
+      "source_id": "readme",
+      "quote": "`calibre_add_book`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/15",
+      "source_id": "readme",
+      "quote": "`calibre_remove_book`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/16",
+      "source_id": "readme",
+      "quote": "`calibre_merge_books`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/17",
+      "source_id": "readme",
+      "quote": "`calibre_manage_bundles`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    },
+    {
+      "field": "/mcp/tools/18",
+      "source_id": "readme",
+      "quote": "`calibre_ping`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:25:12+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:11+08:00",
+  "updated_at": "2026-10-31T02:03:51+08:00"
+}

@@ -1,0 +1,503 @@
+{
+  "schema_version": "software.v1",
+  "slug": "fitllm-engine",
+  "repo_id": "gh:1249223881",
+  "name": "FitLLM Engine",
+  "summary": "Checks whether a local LLM fits on a GPU or Apple Silicon Mac with architecture-aware memory math.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "amd",
+    "apple-silicon",
+    "cli",
+    "gguf",
+    "inference",
+    "kv-cache",
+    "llama-cpp",
+    "llm",
+    "local-llm",
+    "localllama"
+  ],
+  "use_cases": [
+    "check one model against a GPU or Mac and return fit verdict",
+    "rank supported local models that fit given hardware",
+    "detect local GPUs and list what fits as JSON"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://fitllm.run",
+  "repo": {
+    "url": "https://github.com/click6067-ship-it/fitllm-engine",
+    "full_name": "click6067-ship-it/fitllm-engine",
+    "created_at": "2026-05-25T13:30:10Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-fitllm-engine-20261030-234458-62a1",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g fitllm-engine",
+          "purpose": "Install fitllm-engine globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "fitllm --help",
+        "expected_signal": "usage:"
+      },
+      "first_task": "npx fitllm \"Gemma 4 12b\" --gpu \"RTX 4090\""
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install fitllm-engine",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "npx fitllm \"Gemma 4 12b\" --gpu \"RTX 4090\""
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v2.22.0",
+    "published_at": "2026-10-28T04:50:00Z",
+    "url": "https://github.com/click6067-ship-it/fitllm-engine/releases/tag/v2.22.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:45:50.821020+08:00",
+    "runs": [
+      {
+        "id": "verify-fitllm-engine-20261030-234458-62a1",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:45:50.821020+08:00",
+        "tool_version": "2.22.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g fitllm-engine",
+            "purpose": "Install fitllm-engine globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "fitllm --help",
+            "expected_signal": "usage:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "npx fitllm \"Gemma 4 12b\" --gpu \"RTX 4090\"",
+            "expected_signal": "✓ FITS — Gemma 4 12b on RTX 4090",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ FITS — Gemma 4 12b on RTX 4090 (24GB) @ Q4_K_M, 8K tokens",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "npx fitllm --top --gpu 4090",
+            "expected_signal": "Qwen 3.8 27B",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "3. Qwen 3.8 27B 27.781B Q4_K_M △ 22.9/24 GB max ctx ~7K tokens",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "npx fitllm scan",
+            "expected_signal": "No supported runtime answered on this machine.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No supported runtime answered on this machine.",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "README shows usage via npx fitllm without documenting --version/--help flags.",
+            "actually_needed": "Use `fitllm --help` (or `npx fitllm --help`); `fitllm --version` exits 2 with 'unknown model' and is not supported.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show FitLLM Engine printing the FITS estimate, the ranked top-models list, and help usage with exit code 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-fitllm-engine-20261030-234458-62a1/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-fitllm-engine-20261030-234458-62a1/check-1-cmd4.judged.png",
+            "runs/verify/verify-fitllm-engine-20261030-234458-62a1/check-2-cmd5.judged.png",
+            "runs/verify/verify-fitllm-engine-20261030-234458-62a1/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.068622
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-30T23:55:13+08:00",
+    "quality": {
+      "total": 92.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 46.2,
+      "signals": {
+        "stars": 9,
+        "monthly_downloads": 1778,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": 213,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 155,
+      "packages": [
+        "npm:fitllm-engine"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 49.6
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:55:13.257428+08:00",
+      "sources_sha": "467f37b3f6813df7957c8ed42d1f6f18f1180d0e6270d9c4c281ed30ff39a9d8",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "FitLLM is an open-source, zero-dependency engine that checks whether a local LLM fits on a GPU or Apple Silicon Mac"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "npx fitllm --top --detect --json          # detect hardware + what fits, for people or agents"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "# self-contained binary — no Node required"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://fitllm.run/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "npx fitllm \"GLM-4.7-Flash\" --gpu 4090     # ✓ FITS — 21.9/24 GB, free 2.1 GB"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "The server is read-only, stateless, and requires no authentication."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "**When it refuses.** If `size_vram` differs from `size`, or is zero, no candidate is produced."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Binaries for macOS (arm64/x64), Linux (x64/arm64, glibc and musl) and Windows x64 are attached"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/click6067-ship-it/fitllm-engine",
+      "fetched_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/click6067-ship-it/fitllm-engine/blob/master/README.md",
+      "fetched_at": "2026-10-28T19:05:36+08:00"
+    },
+    {
+      "id": "release:v2.22.0",
+      "kind": "release",
+      "url": "https://github.com/click6067-ship-it/fitllm-engine/releases/tag/v2.22.0",
+      "fetched_at": "2026-10-28T19:05:36+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "npx fitllm \"Gemma 4 12b\" --gpu \"RTX 4090\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:43+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "run before you download",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:43+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "The \"will it run?\" question is born in the terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:43+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "checks whether a local LLM fits on a GPU or Apple Silicon Mac using architecture-aware memory math.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:43+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# FitLLM Engine",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:43+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Binaries for macOS (arm64/x64), Linux (x64/arm64, glibc and musl) and Windows x64",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:43+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:29:31+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.22.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-28T19:05:36+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "check one model against a GPU, multi-GPU rig, or Mac and return the verdict",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:43+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "rank the supported local models that fit the given GPU, multi-GPU rig, or Mac.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:43+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "detect every supported local GPU; agent-ready JSON",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:43+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install fitllm-engine",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:43+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install fitllm-engine",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:43+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Free · No ads · No login",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:43+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "nothing is sent anywhere",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:43+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-28T19:03:23+08:00",
+  "updated_at": "2026-10-30T23:55:13+08:00"
+}

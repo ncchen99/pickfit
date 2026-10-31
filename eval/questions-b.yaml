@@ -1,0 +1,722 @@
+# pickfit 評測題組 B（探索性）
+#
+# 依 eval/README.md 9.2 E 建立：12 題真實的人公開問過的問題（2024-01-01 到 2026-10-26 發表），每類 4 題。
+# 來源與抽樣紀錄：eval/b-set/（queries.json 在抓資料前 commit：111c4d3；pool.json、screening.json 記錄候選池與排除）。
+# 挑題的 session 沒讀 data/、runs/、docs/demo-candidates.md，也沒呼叫 pickfit。
+# 念誠 2026-10-31 逐題審定：b01「有在維護」定為 12 個月內有 commit 或 release；b07 手機可用的記憶體定為 4 GB 以下；
+# b08 的開源條件保留（原題標題就是在問有沒有好的開源聊天 app）。本檔 commit 的那一刻就是凍結，之後規則同 eval/README.md 第 3 節。
+#
+# 改寫規則：保留原問題的情境與每一個硬條件，不加原文沒有的條件；用字改寫，不照抄原文。
+# 原文寫 "ideally" 的條件放在 constraints.preferences，不計分（本檔新增的欄位，只有這個欄位和 source 與 questions.yaml 不同）。
+# 檢查項目的 [L2] 測試資料（fixtures）要在第一次開跑前 commit 到 eval/fixtures/（README 第 8 節）；本檔只寫要檢查什麼。
+# 欄位差異：本檔多了頂層的 set、每題的 source 和 constraints.preferences；budget、must_run_locally 原文沒說時寫 not_stated。
+# [L2] 裡的數字門檻沿用 20 題的做法，在 fixture 校準時定，第一次開跑前 commit（第 3 節所說的 at freeze）。
+#
+# 授權：source.site 是 Software Recommendations Stack Exchange 的題目（b03、b04、b09、b10）改寫自 CC BY-SA 4.0 的貼文，
+# 這四題的改寫版本同樣以 CC BY-SA 4.0 授權（https://creativecommons.org/licenses/by-sa/4.0/），原作者與連結見各題的 source。
+# Hacker News 與 GitHub 的題目只取情境與條件，不照抄原文。
+
+version: 1
+set: B
+questions:
+- id: b01
+  category: dev_cli
+  kind: find_software
+  language: en
+  prompt: >-
+    I want to run a tournament where strangers upload Python programs (poker bots) to my server. My controller
+    launches each uploaded program as a process and talks to it only through stdin and stdout: it sends game
+    events in and reads the player's moves out. Since anyone can upload anything, I need to launch the Python
+    interpreter in a way that the uploaded code cannot start reading files or connect to the internet or to other
+    services; it should only be able to do its stdin/stdout job. This is for a Linux server. The projects I found
+    were mostly untouched for years, or had a different security model from what I need. Is there an existing,
+    maintained tool or setup that does this?
+  constraints:
+    os: linux
+    arch: any
+    budget: not_stated
+    must_run_locally: true
+    other:
+    - Runs on a Linux server
+    - Runs Python programs uploaded by strangers (untrusted code)
+    - Each program runs as its own process, and the controller talks to it only through stdin and stdout
+    - The running program cannot start reading files
+    - The running program cannot connect to the internet or to other services
+    - Maintained (projects untouched for years were rejected)
+    preferences: []
+  current_software: null
+  pain_points:
+  - Strangers could upload malicious programs (bitcoin miners, spam senders)
+  - Running JavaScript in a restricted environment was impractical and Python is wanted
+  - Found projects were mostly unmaintained or had a different security model
+  success_checklist:
+  - >-
+    [L1] The recommended tool or setup exists, runs on Linux, and its docs show launching a program as a process
+    with stdin and stdout passed through while denying file access and network access by enforcement, not by
+    trusting the program
+  - >-
+    [L1] It is maintained: it has a commit or release within 12 months before the grading date
+  - '[L2] The answer''s install steps succeed verbatim in the dev image'
+  - >-
+    [L2] Fixture: a well-behaved Python bot that reads one line on stdin and prints one reply line. Launched with
+    the answer's command from a frozen controller script, the controller gets the expected reply
+  - >-
+    [L2] Fixture: a hostile Python program that, in one run, tries to read a canary file outside its own
+    submission directory and the interpreter runtime, to connect to a localhost listener, and to connect to an
+    external address. Under the answer's command the canary content is never printed, the listener sees no
+    connection, and the egress log shows no outbound attempt succeeding
+  - '[L2] Egress check passes for the well-behaved run'
+  why_famous_may_not_fit: null
+  sandbox: linux_sandbox
+  rationale: >-
+    Real question (Ask HN, 2024-01-10), dev_cli bucket seed position 2. The asker also mentions a fallback
+    (players run bots on their own machines); it is not a condition and is left out. The long backstory is
+    compressed to the situation and conditions. L2 needs a sandbox that allows the answer's isolation method
+    (for example user namespaces); if the Modal image cannot, that is recorded for both groups.
+  source:
+    site: Hacker News (Ask HN)
+    url: https://news.ycombinator.com/item?id=38940856
+    posted: 2024-01-10
+    original_title: 'Ask HN: How can I run untrusted Python code?'
+    license: not stated by the site; paraphrased, no text copied
+    pool: {bucket: dev_cli, position: 2}
+
+- id: b02
+  category: dev_cli
+  kind: find_alternatives
+  language: en
+  prompt: >-
+    I've been using Graphite's command-line tool for a few months to manage stacked git branches: it updates
+    my branches and creates the PRs, and I barely touch its web dashboard. Graphite is moving everyone to paid
+    team plans with a minimum of $100/month for 5 seats, and my coworkers haven't shown much interest, so that would be a big jump.
+    What alternatives should I look at for working with stacked branches in git? A collection of git scripts might
+    be enough, so recommendations of good scripts are welcome too.
+  constraints:
+    os: any
+    arch: any
+    budget: below Graphite's team plan (minimum $100/month for 5 seats)
+    must_run_locally: not_stated
+    other:
+    - Supports stacked git branches (a branch built on top of another branch)
+    - Has a command-line way to update the branches of a stack and to create pull requests
+    - Costs clearly less than Graphite's team plan for a small team
+    - Git scripts are acceptable if specific good ones are named
+    preferences: []
+  current_software: Graphite
+  pain_points:
+  - Graphite is moving users to paid team plans, minimum $100/month for 5 seats
+  - Coworkers are not interested in paying for it
+  success_checklist:
+  - >-
+    [L1] Each recommended tool or script set exists in a public repository or package registry and supports a
+    stacked-branch workflow: creating a branch on top of another and restacking the dependent branches after a
+    change below them
+  - >-
+    [L1] It has a command-line way to update the stack's branches and to create pull requests (or the answer
+    names scripts that do both)
+  - >-
+    [L1] For a 5-person team its price is clearly below Graphite's $100/month minimum (free or open source
+    counts), per its pricing page or license
+  - '[L2] The answer''s install steps succeed verbatim in the dev image'
+  - >-
+    [L2] Fixture: a git repository with stacked branches A, B, C (each on top of the previous one) and a local bare
+    remote. After a new commit on A, the answer's update command leaves B and C containing that commit with no
+    conflicts, and the branch order is unchanged
+  - >-
+    [L2] PR creation: the answer's command for creating pull requests, pointed at a frozen GitHub-compatible mock
+    API when the tool allows a configurable API base URL, makes the mock receive one PR per stacked branch, each
+    based on the branch below it. If the tool cannot be pointed at a mock, this item is recorded as not run for
+    both groups
+  - '[L2] Egress check passes (only the local remote and the mock API are reached)'
+  why_famous_may_not_fit: null
+  sandbox: linux_sandbox
+  rationale: >-
+    Real question (Ask HN, 2024-05-16), dev_cli bucket seed position 74. The price condition is stated only
+    relative to Graphite's plan, so it is kept relative and no 'free' requirement is added.
+  source:
+    site: Hacker News (Ask HN)
+    url: https://news.ycombinator.com/item?id=40375310
+    posted: 2024-05-16
+    original_title: 'Ask HN: Alternatives to Graphite.dev to work with stacked branches with Git?'
+    license: not stated by the site; paraphrased, no text copied
+    pool: {bucket: dev_cli, position: 74}
+
+- id: b03
+  category: dev_cli
+  kind: find_alternatives
+  language: en
+  prompt: >-
+    I'm used to SQL Server's SSDT database projects, which keep a database schema under version control. Is there
+    an equivalent for SQLite databases? If not, what workflow do you use to put a SQLite schema under version
+    control? What I like about the SSDT project and want to keep is that I can start a project by importing an
+    existing database, diff the real database against the project and apply the changes to the project, and diff
+    the project against the real database and apply the changes to the database. From my research I can dump the
+    schema as a plain-text script with the sqlite3 CLI and compare databases with sqldiff, but I'm not sure that's
+    the way to go, since sqldiff's documentation says it does not report changes to triggers or views.
+  constraints:
+    os: any
+    arch: any
+    budget: not_stated
+    must_run_locally: not_stated
+    other:
+    - Works with SQLite databases
+    - Can start a project by importing an existing database
+    - Can diff the real database against the project and apply the changes to the project
+    - Can diff the project against the real database and apply the changes to the database
+    preferences: []
+  current_software: SQL Server SSDT database project
+  pain_points:
+  - No SSDT-like version control for SQLite schemas is known
+  - The sqlite3 .schema dump plus sqldiff does not report trigger or view changes
+  success_checklist:
+  - >-
+    [L1] The answer names a tool or a concrete workflow for SQLite that exists and supports all three: import an
+    existing database into a project, diff real database to project with apply, diff project to real database
+    with apply
+  - >-
+    [L1] If the answer says no equivalent exists, it says so plainly and still gives a workflow covering the three
+    operations (the claim is checked with the procedure in eval/README.md 5 and 9.1 C6)
+  - '[L2] The answer''s install steps succeed verbatim in the dev image'
+  - >-
+    [L2] Fixture: a SQLite database with two tables, one view and one trigger. Following the answer, import it
+    into a project; then change the real database (add a column, alter the view) and run the answer's real-to-project
+    diff and apply; then edit the project (add a table, alter the trigger) and run the project-to-real diff and
+    apply. At the end the normalized schema of the real database equals the project's, and each diff reported the
+    change that was made
+  - >-
+    [L2] The changed view and the changed trigger are reported by the diff (the asker's stated doubt about sqldiff;
+    a workflow that misses them fails this item)
+  why_famous_may_not_fit: null
+  sandbox: linux_sandbox
+  rationale: >-
+    Real question (Software Recommendations SE, 2024-05-24), dev_cli bucket seed position 78. The asker does not
+    say the tool must be a command-line program; the bucket rule matched because the question mentions the
+    sqlite3 command-line tools, so category fit is borderline. No licence or price is stated, none is added.
+  source:
+    site: Software Recommendations Stack Exchange
+    url: https://softwarerecs.stackexchange.com/questions/90555
+    posted: 2024-05-24
+    author: Atomic
+    original_title: SSDT alternative for SQLite?
+    license: CC BY-SA 4.0 (adapted from the post above; attribution, link and this note satisfy BY, this adaptation is shared alike)
+    pool: {bucket: dev_cli, position: 78}
+
+- id: b04
+  category: dev_cli
+  kind: find_software
+  language: en
+  prompt: >-
+    Before I build one myself and re-invent the wheel: is there already an open-source, stand-alone, pure-Python
+    bootstrapper for a project's dev, test and prod environments? I mean a single Python script stored in the
+    project's own repo so it is available right after clone. Users run it right after git clone or git pull,
+    before anything else works, so there is no venv and there are no packages yet. It should bring the environment
+    to the required state, reading preferences from the repo's config (project directory layout, Python version,
+    dependencies, log verbosity, overrides per target environment, and so on), and do the basics that people
+    re-invent from repo to repo in shell scripts. It may offer extension points (pre-commit setup, generated code
+    and config), but those can run once the venv exists. It should stay small and focused on the early bootstrap and
+    then hand over to the tools inside the venv. I want to find it, review it, contribute to it, or confirm that
+    the niche is still empty.
+  constraints:
+    os: any
+    arch: any
+    budget: not_stated
+    must_run_locally: true
+    other:
+    - A single stand-alone Python script that can be stored in the project's repo
+    - Pure Python, and it runs right after clone before any venv or package exists
+    - Takes its settings from the repo's config (directory layout, Python version, dependencies, log verbosity, per-target-environment overrides)
+    - Focused on the early bootstrap only and small; later steps may be handed over to tools in the venv
+    - Open source (the asker wants to review it and contribute)
+    preferences:
+    - Extension points such as pre-commit setup and code or config generation (after the venv exists)
+  current_software: null
+  pain_points:
+  - Basic bootstrap steps are re-invented from repo to repo, usually as shell scripts
+  success_checklist:
+  - >-
+    [L1] Each recommended tool exists in a public repository, is open source, and its docs show a stand-alone
+    pure-Python script that runs before any venv, reads the repo's config for the listed settings, and stays
+    limited to bootstrapping
+  - >-
+    [L1] If the answer says no such tool exists, it says so plainly (the claim is checked with the procedure in
+    eval/README.md 5 and 9.1 C6; a tool found by that check that passes the L1 item above makes it wrong)
+  - '[L2] The answer''s install steps (copying the script into a repo) succeed verbatim in the dev image'
+  - >-
+    [L2] Fixture: a fresh clone of a frozen repo that contains the bootstrapper and a config file (directory
+    layout, the image's Python version, a small dependency list served from a local index, log verbosity, one
+    per-target override), in an image with only the system Python and no third-party packages. After the run the
+    venv exists, the dependencies are installed, the configured directories exist, verbosity changes the log
+    output, and the override for the chosen target is applied
+  - '[L2] Egress check passes (only the local index is reached)'
+  why_famous_may_not_fit: null
+  sandbox: linux_sandbox
+  rationale: >-
+    Real question (Software Recommendations SE, 2025-07-13), dev_cli bucket seed position 94. 'Open source' comes
+    from the post's tag and from the asker wanting to review and contribute. The asker explicitly allows the answer
+    'it does not exist yet', so an honest no-tool answer is possible.
+  source:
+    site: Software Recommendations Stack Exchange
+    url: https://softwarerecs.stackexchange.com/questions/93494
+    posted: 2025-07-13
+    author: uvsmtid
+    original_title: A stand-alone pure `python` dev/test/prod bootstrapper on repo clone before `venv` is ready?
+    license: CC BY-SA 4.0 (adapted from the post above; attribution, link and this note satisfy BY, this adaptation is shared alike)
+    pool: {bucket: dev_cli, position: 94}
+
+- id: b05
+  category: local_ai
+  kind: find_software
+  language: en
+  prompt: >-
+    I have a pile of historical documents, about 500 to 1,000 A4 scans of low-quality print with widely varying
+    layouts, that I want to translate for my own research. Services like DeepL, or the in-place OCR, translation and
+    layout recovery that Safari and Google Translate's camera mode do, work nicely, but they are not practical at
+    this volume, and I don't want to upload gigabytes of scans anywhere, so I want to run this locally. I tried the
+    standard tools (Tesseract with bounding-box detection) and the results were very bad compared with those cloud
+    services, and a promising GitHub project I found (phkhanhtrinh23/translation_layoutrecovery) won't run for me
+    at all. With today's computer vision, machine learning and LLMs, what tools, approaches or techniques could
+    translate my scans while keeping the widely varying layouts?
+  constraints:
+    os: any
+    arch: any
+    budget: not_stated
+    must_run_locally: true
+    other:
+    - Runs locally; the scans are not uploaded to any service
+    - Handles hundreds of A4 scans (about 500 to 1,000) of low-quality print
+    - Reads (OCR) the text and translates it
+    - Preserves the layout, which varies widely between pages
+    preferences: []
+  current_software: null
+  pain_points:
+  - Cloud translation and in-place layout recovery services are impractical for this volume and need uploads
+  - Tesseract with bounding-box detection gave very bad results
+  - The GitHub project translation_layoutrecovery could not be made to run
+  success_checklist:
+  - >-
+    [L1] Each recommended tool or pipeline exists, runs fully locally per its docs (no upload of the scans), and
+    covers OCR, translation and layout-preserving output, or the answer composes components that together do
+  - >-
+    [L1] The answer says how it copes with low-quality print and varying layouts across hundreds of pages (batch
+    processing), rather than only showing a single clean page
+  - '[L2] The answer''s install steps succeed verbatim in the dev image'
+  - >-
+    [L2] Fixture: 5 synthetic page scans rendered from CC0 text with degraded print (noise, skew) in 3 layouts
+    (single column, two columns, table-like), with a frozen reference translation and block positions. With
+    egress blocked after setup, the answer's pipeline produces an output page for each scan; the output text is
+    identified as the target language, a frozen similarity score against the reference translation is above the
+    threshold, and text blocks overlap the source blocks above the threshold (thresholds set at fixture
+    calibration)
+  - >-
+    [L2] The answer's commands process the 5 pages as one batch run and finish within 30 minutes on 4 vCPU
+  - '[L2] Egress check passes during the run'
+  why_famous_may_not_fit: null
+  sandbox: linux_sandbox
+  rationale: >-
+    Real question (Ask HN, 2025-02-13), local_ai bucket seed position 15. The source and target languages are not
+    stated; the fixture picks one pair and any answer must work for it (the language pair is recorded before
+    freeze). The asker's reference to one specific GitHub project is kept as context.
+  source:
+    site: Hacker News (Ask HN)
+    url: https://news.ycombinator.com/item?id=43033873
+    posted: 2025-02-13
+    original_title: 'Ask HN: Local Translation with Layout Recovery'
+    license: not stated by the site; paraphrased, no text copied
+    pool: {bucket: local_ai, position: 15}
+
+- id: b06
+  category: local_ai
+  kind: find_alternatives
+  language: en
+  prompt: >-
+    I've been using the Ask o11y plugin for Grafana (together with the Grafana LLM plugin) with Claude Haiku 4.5,
+    and now I want to run it with a local, open-source LLM instead. I had little success with Qwen 2.5 13B models.
+    Which open model, and which size, is recommended for the plugin to work well? I also need to work out how much
+    VRAM that would take.
+  constraints:
+    os: any
+    arch: any
+    budget: not_stated
+    must_run_locally: true
+    other:
+    - A local open-source model (open weights) that runs with the Ask o11y plugin and the Grafana LLM plugin
+    - Works well enough for the plugin to operate successfully
+    - Not one of the models already tried without success (Qwen 2.5 13B)
+    - The answer states the VRAM needed
+    preferences: []
+  current_software: Claude Haiku 4.5
+  pain_points:
+  - Qwen 2.5 13B models gave little success with the plugin
+  - Unknown VRAM requirement for a suitable local model
+  success_checklist:
+  - >-
+    [L1] The recommended model exists with open weights and can be served locally through an endpoint the Grafana
+    LLM plugin supports, per the plugin's docs, and supports whatever tool calling the Ask o11y plugin needs per
+    its docs
+  - '[L1] It is not Qwen 2.5 13B, which the asker already found unsuccessful'
+  - >-
+    [L1] The answer states a model size and the VRAM it needs (quantization stated), and the figure matches the
+    model's published parameter count and quantization within 25%
+  - '[L2] The answer''s install and serve steps succeed verbatim in the dev image'
+  - >-
+    [L2] Tool-calling fixture: a frozen reference harness with 3 tool schemas modeled on the plugin's tools (docs
+    version recorded at freeze), calling the served model through its OpenAI-compatible endpoint, completes the
+    frozen task 3 of 3 times (the run uses the answer's model and quantization; if it is too large for the dev
+    image, the item is recorded as not run for both groups)
+  - '[L2] The measured resident memory of the loaded model is within 25% of the answer''s stated memory figure'
+  why_famous_may_not_fit: null
+  sandbox: linux_sandbox
+  rationale: >-
+    Real question (GitHub Discussions Q&A in the Consensys/ask-o11y-plugin repository, 2026-08-06), local_ai bucket
+    seed position 53. The asker's hardware is not stated, so no hardware constraint is added. The end-to-end run
+    with Grafana and the plugin is not part of the draft checklist because it depends on the plugin's current
+    release; it can be added at fixture time.
+  source:
+    site: GitHub Discussions (Consensys/ask-o11y-plugin)
+    url: https://github.com/Consensys/ask-o11y-plugin/discussions/172
+    posted: 2026-08-06
+    original_title: Open Source Model suggestions
+    license: not stated by the site; paraphrased, no text copied
+    pool: {bucket: local_ai, position: 53}
+
+- id: b07
+  category: local_ai
+  kind: find_software
+  language: en
+  prompt: >-
+    I want to build an offline tutor and assistant for three high-school subjects. It has to be a tiny but useful
+    model, because it will run on a mobile phone, absolutely offline. For each subject I have the syllabus, the
+    textbooks, practice questions and plenty of old exam papers with answers. I want it tailored to this academic
+    level: students ask a question and get an explanation drawn from the books and kept within the syllabus. If
+    possible, students should also be able to practice exam questions, with the model either fetching past and
+    practice questions on a topic or generating similar ones. I'm fairly new to this. What model should I use, how
+    should I train it, should I use RAG or a purely generative model (or something in between), and what challenges
+    and workarounds should I expect?
+  constraints:
+    os: any
+    arch: any
+    budget: not_stated
+    must_run_locally: true
+    other:
+    - Runs on a mobile phone, completely offline
+    - A tiny model that is still useful
+    - Answers come from the supplied syllabus and textbooks and stay within the syllabus
+    - Supports exam practice by fetching past or practice questions on a topic, or generating similar ones
+    preferences: []
+  current_software: null
+  pain_points:
+  - New to building this; unsure whether to fine-tune, use RAG, or mix
+  success_checklist:
+  - >-
+    [L1] The recommended model exists with weights that allow on-device use, and a runtime for it exists for at
+    least one mobile OS and works with no network connection, per the docs
+  - >-
+    [L1] The answer's model size is small enough for a phone: the answer states the memory needed, and it is
+    4 GB or less
+  - >-
+    [L1] The answer gives an approach (RAG, fine-tuning or a mix) that keeps answers grounded in the supplied
+    books, and names the expected challenges with workarounds, as the asker asked
+  - '[L2] The answer''s model and runtime install steps succeed verbatim in the dev image'
+  - >-
+    [L2] Fixture: a small synthetic syllabus and textbook excerpt with 5 unique made-up facts and a bank of 10
+    practice questions. With egress blocked after setup and memory capped at 4 GB (the limit in L1), the
+    answer's setup answers 5 frozen questions with the exact fact token for at least 4 of 5, and can return or
+    generate a practice question on a frozen topic
+  - '[L2] Egress check passes during the run'
+  why_famous_may_not_fit: null
+  sandbox: linux_sandbox
+  rationale: >-
+    Real question (Ask HN, 2025-01-26), local_ai bucket seed position 88. Open-ended and the least tool-specific of
+    the twelve; it states conditions (phone, offline, tiny model, grounded in the supplied books, exam practice) but
+    asks for an approach as much as for software. The phone OS is not stated, so the L2 run is a Linux proxy for the
+    memory and offline limits, not a phone test.
+  source:
+    site: Hacker News (Ask HN)
+    url: https://news.ycombinator.com/item?id=42831796
+    posted: 2025-01-26
+    original_title: 'Ask HN: Best approach for an offline LLM assistant for 3 high school subjects'
+    license: not stated by the site; paraphrased, no text copied
+    pool: {bucket: local_ai, position: 88}
+
+- id: b08
+  category: local_ai
+  kind: find_software
+  language: en
+  prompt: >-
+    I've been trying open models through Ollama (GLM-5.1 and Kimi-K2.6), and I'm impressed with how close they get
+    to Claude Sonnet for what I need, especially programming. What I miss is the chat interface: I love having the
+    Claude website and app to bounce questions off and to get help with my math homework. I've looked around at
+    existing open-source chat apps but none stood out. What have people found that works? I'd be willing to pay a
+    reasonable subscription fee to cover storage and hosting costs, too.
+  constraints:
+    os: any
+    arch: any
+    budget: open-source app; a reasonable subscription for storage and hosting is acceptable
+    must_run_locally: not_stated
+    other:
+    - A chat interface (web or app) for talking to open models served through Ollama
+    - Open source
+    preferences: []
+  current_software: null
+  pain_points:
+  - Ollama has no chat interface comparable to the Claude website and app
+  - The existing open-source chat apps tried did not stand out
+  success_checklist:
+  - >-
+    [L1] Each recommended app exists, is open source (an OSI-approved licence for the app itself), and its docs show
+    it connecting to an Ollama-served model and providing a chat interface (web or app)
+  - >-
+    [L1] The answer does not require the asker to give up open source: a proprietary app recommended as the first
+    choice fails this item
+  - '[L2] The answer''s install steps succeed verbatim in the dev image'
+  - >-
+    [L2] With a pinned Ollama serving the frozen small model, the app configured as the answer describes completes
+    a chat turn through its interface (UI test or its documented API) and returns non-empty text
+  - '[L2] The conversation is still there after restarting the app (history is stored)'
+  - '[L2] Egress check passes when the app is configured for local Ollama only'
+  why_famous_may_not_fit: null
+  sandbox: linux_sandbox
+  rationale: >-
+    Real question (Ask HN, 2026-04-29), local_ai bucket seed position 123. The two models named (GLM-5.1, Kimi-K2.6)
+    are not required for the answer: the fixture uses a small model. The stored-history L2 item follows the asker's
+    mention of storage; it is the weakest condition and 念誠 may drop it at review. The asker's hosting remark does
+    not make a paid product acceptable: open source is the only licence condition.
+  source:
+    site: Hacker News (Ask HN)
+    url: https://news.ycombinator.com/item?id=47954962
+    posted: 2026-04-29
+    original_title: 'Ask HN: Are there any good open-source chat apps?'
+    license: not stated by the site; paraphrased, no text copied
+    pool: {bucket: local_ai, position: 123}
+
+- id: b09
+  category: mcp_server
+  kind: find_software
+  language: en
+  prompt: >-
+    Publishing an Android app to Google Play takes a lot of steps, often longer than developing the app. Tools
+    like Google Play's publishing API or fastlane's supply cover only part of it, because they don't fill in the
+    values for you. I'd like an MCP server that generates any missing data and does the rest: it takes screenshots
+    of the app; creates the Google Play artwork (feature graphic and so on) and an icon if there isn't one;
+    generates a privacy policy inferred from the app's content (for example checking whether the app makes network
+    requests or sends user data to third parties); works out the right age rating; checks whether the app shows
+    ads; uploads to Google Play (and makes any step that truly needs a human click efficient); releases it; and,
+    if there is a problem, tries to fix it automatically. It must be open source and free. Ideally it would store
+    its metadata in the fastlane format or another quasi-standard format, and also upload to F-Droid and other
+    stores such as the Samsung Galaxy Store.
+  constraints:
+    os: any
+    arch: any
+    budget: free
+    must_run_locally: not_stated
+    other:
+    - It is an MCP server
+    - Open source
+    - Free of charge
+    - Generates the missing store data (screenshots, Google Play artwork, icon if absent, a privacy policy inferred from the app, age rating, ads check)
+    - Uploads to Google Play and releases, keeping any step that truly needs a human click efficient
+    - Tries to fix issues automatically
+    preferences:
+    - Stores its metadata in the fastlane format or another quasi-standard format
+    - Can also upload to F-Droid and other stores such as the Samsung Galaxy Store
+  current_software: null
+  pain_points:
+  - Publishing takes longer than developing the app
+  - The publishing API and fastlane do not fill in the required values
+  success_checklist:
+  - >-
+    [L1] The recommended server exists, is open source and free per its repository and licence, and its docs
+    present it as an MCP server
+  - >-
+    [L1] Its documented tools cover generating missing store data and uploading to Google Play; if the answer
+    combines several servers or tools, each part is named and the combination covers the same steps
+  - >-
+    [L1] If no single server covers all the steps, the answer says which steps are missing instead of claiming full
+    coverage
+  - '[L2] The answer''s install steps succeed verbatim in the dev image'
+  - >-
+    [L2] The server starts as an MCP server over its documented transport and a pinned reference MCP client lists
+    its tools; the listed tools include those the L1 item relied on
+  - >-
+    [L2] A dry run against a frozen fixture Android project (no Google Play account is used) produces the
+    generated store data the tools claim to produce (for example a privacy policy file) without network access to
+    Google Play. The final upload to Google Play is not run (it needs a developer account) and is recorded as such
+    for both groups
+  why_famous_may_not_fit: null
+  sandbox: linux_sandbox
+  rationale: >-
+    Real question (Software Recommendations SE, 2025-12-12), mcp bucket seed position 155. The 'ideally' items are
+    kept as preferences and not scored. Same asker as b10 (posted one day after it); the two are
+    separate questions with different tasks. The full publish flow cannot be run offline, so the L2 part is limited.
+  source:
+    site: Software Recommendations Stack Exchange
+    url: https://softwarerecs.stackexchange.com/questions/94998
+    posted: 2025-12-12
+    author: Nicolas Raoul
+    original_title: MCP to publish an Android app to Google Play
+    license: CC BY-SA 4.0 (adapted from the post above; attribution, link and this note satisfy BY, this adaptation is shared alike)
+    pool: {bucket: mcp, position: 155}
+
+- id: b10
+  category: mcp_server
+  kind: find_software
+  language: en
+  prompt: >-
+    When I develop an Android app I usually do this: ask an LLM to write a particular feature, build the APK,
+    install it on a physical phone connected by USB, test the feature by touching the screen, typing, and
+    sometimes tilting the phone or otherwise sending signals to its sensors, note every bug I find, and ask the LLM
+    to fix them, then start again until no bugs are left, and finally review the code manually. I believe an MCP
+    server could do the build, install, test and bug-finding steps automatically, including recording the screen
+    while it tests. Is there an MCP server that builds an Android app, installs it on a device, tests it, works out
+    how well it is going, and finds bugs? It has to be free of charge, open source and a standard MCP server.
+    Ideally it works with real devices as well as emulators, and can run tests on several devices in parallel.
+  constraints:
+    os: any
+    arch: any
+    budget: free
+    must_run_locally: not_stated
+    other:
+    - It is an MCP server (standard MCP)
+    - Open source
+    - Free of charge
+    - Builds an Android app, installs it on a device, and tests it by touching, typing and similar input
+    - Records the screen while testing
+    - Works out how well the test is going and finds bugs
+    preferences:
+    - Works with both real physical devices and emulators
+    - Can run tests on several devices in parallel
+  current_software: null
+  pain_points:
+  - Manual build, install and touch-testing cycles for every LLM-written change
+  success_checklist:
+  - '[L1] The recommended server exists, is open source and free per its repository and licence, and is an MCP server'
+  - >-
+    [L1] Its documented tools cover installing an Android build on a device or emulator and driving it with touch and
+    text input, and recording the screen; the answer says how bugs are found or that the agent does that from
+    screenshots and logs
+  - >-
+    [L1] If the answer combines several servers or tools, each part is named; if a step (such as building the APK)
+    is not covered by a server, the answer says so
+  - '[L2] The answer''s install steps succeed verbatim in the dev image'
+  - >-
+    [L2] The server starts as an MCP server over its documented transport and a pinned reference MCP client lists
+    its tools; the listed tools include those the L1 item relied on
+  - >-
+    [L2] Where an Android emulator can run in the dev image: with a frozen fixture APK installed on it, a frozen tap
+    sequence through the server's tools changes the app's screen as expected and a screen recording file is
+    produced. Where an emulator cannot run (no hardware virtualization), this item is recorded as not run for both
+    groups
+  why_famous_may_not_fit: null
+  sandbox: linux_sandbox
+  rationale: >-
+    Real question (Software Recommendations SE, 2025-12-11), mcp bucket seed position 793. 'while recording screen'
+    comes from the post's title. Real devices and parallel runs are preferences and not scored. L2 depends on
+    whether the Modal image can run an emulator; this is checked at fixture time.
+  source:
+    site: Software Recommendations Stack Exchange
+    url: https://softwarerecs.stackexchange.com/questions/94996
+    posted: 2025-12-11
+    author: Nicolas Raoul
+    original_title: MCP to install an Android app, test it via touches/typing/etc, while recording screen
+    license: CC BY-SA 4.0 (adapted from the post above; attribution, link and this note satisfy BY, this adaptation is shared alike)
+    pool: {bucket: mcp, position: 793}
+
+- id: b11
+  category: mcp_server
+  kind: find_software
+  language: en
+  prompt: >-
+    Is there an MCP server that I can run on a remote server and that connects to, say, a database? The prompts
+    would come from a remote client: for example, the client asks 'get the number of rows in the abc table' and
+    that request is relayed to the MCP server on the remote machine.
+  constraints:
+    os: any
+    arch: any
+    budget: not_stated
+    must_run_locally: false
+    other:
+    - It is an MCP server
+    - It can run on a remote server, and the client reaches it over the network (not only a local process)
+    - It connects to a database and can answer questions like the number of rows in a table
+    preferences: []
+  current_software: null
+  pain_points:
+  - The client and the database are on different machines
+  success_checklist:
+  - >-
+    [L1] The recommended server exists, is an MCP server, supports a network transport (such as streamable HTTP or
+    SSE) so that a remote client can connect, and has a documented tool for querying a database
+  - >-
+    [L1] The answer says which databases it supports and how the remote client is pointed at the server
+  - '[L2] The answer''s install steps succeed verbatim in the dev image'
+  - >-
+    [L2] Fixture: a table named abc with a frozen row count in a database of a kind the server supports (fixtures
+    provided for PostgreSQL, MySQL and SQLite). The server runs in one container and a pinned reference MCP client
+    in another container connects over the network and requests the row count; the reply contains the frozen
+    count
+  - '[L2] The call goes only over the container network (egress check passes)'
+  why_famous_may_not_fit: null
+  sandbox: linux_sandbox
+  rationale: >-
+    Real question (Ask HN, 2025-05-29), mcp bucket seed position 817. Very short; the database type is not stated
+    ('say, a database'), so the fixture offers three kinds and the answer's server must support at least one.
+    The thinnest of the MCP questions: its conditions are remote operation and database access only.
+  source:
+    site: Hacker News (Ask HN)
+    url: https://news.ycombinator.com/item?id=44126985
+    posted: 2025-05-29
+    original_title: 'Ask HN: How to remote connect to MCP server?'
+    license: not stated by the site; paraphrased, no text copied
+    pool: {bucket: mcp, position: 817}
+
+- id: b12
+  category: mcp_server
+  kind: find_software
+  language: en
+  prompt: >-
+    I'm looking for a good code-intelligence MCP server (semantic search, symbol lookup, call graphs and so on) to
+    pair with an AI coding agent, so the model gets structured access to the codebase instead of relying only on
+    grep and file reads. The space feels fragmented: there are a handful of options but no clear winner. Has anyone
+    settled on one? What sold you on it? I mainly care about how well the agent actually uses the structured data,
+    how painful setup and indexing are, and whether it is worth it over simpler approaches (ripgrep, good project
+    docs, AGENTS.md).
+  constraints:
+    os: any
+    arch: any
+    budget: not_stated
+    must_run_locally: not_stated
+    other:
+    - It is an MCP server used with an AI coding agent
+    - Provides semantic search, symbol lookup and call graphs over a codebase
+    preferences: []
+  current_software: null
+  pain_points:
+  - The options are fragmented and there is no clear winner
+  - Unsure that the setup and indexing effort pays off against grep, project docs and AGENTS.md
+  success_checklist:
+  - >-
+    [L1] The recommended server exists, is an MCP server, and its docs show semantic search, symbol lookup and call
+    graph tools for source code
+  - >-
+    [L3] The answer says how painful setup and indexing are and whether the server is worth it over simpler
+    approaches (ripgrep, project docs, AGENTS.md), instead of presenting it as always better
+  - '[L2] The answer''s install steps succeed verbatim in the dev image'
+  - >-
+    [L2] Fixture: a small frozen repository in three languages. After indexing as the answer describes, a pinned
+    reference MCP client calling the server's tools gets: the definition location of a frozen symbol (symbol
+    lookup), the frozen set of callers of a frozen function (call graph), and the expected file within the top 3
+    results for a frozen natural-language query (semantic search)
+  - '[L2] Time to install and index the fixture is recorded (reported, not scored)'
+  why_famous_may_not_fit: null
+  sandbox: linux_sandbox
+  rationale: >-
+    Real question (Ask HN, 2026-05-19), mcp bucket seed position 825. The asker's closing request (is it worth it
+    over simpler approaches) is an answer-content requirement, tagged L3 because the honest answer may be that a
+    simple approach is enough. The three capabilities are from the post's own examples ('and so on' is not scored).
+  source:
+    site: Hacker News (Ask HN)
+    url: https://news.ycombinator.com/item?id=48198129
+    posted: 2026-05-19
+    original_title: 'Ask HN: Is there a good code intelligence MCP server yet?'
+    license: not stated by the site; paraphrased, no text copied
+    pool: {bucket: mcp, position: 825}

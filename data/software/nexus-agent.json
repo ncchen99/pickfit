@@ -1,0 +1,551 @@
+{
+  "schema_version": "software.v1",
+  "slug": "nexus-agent",
+  "repo_id": "gh:1213819247",
+  "name": "NexusAgent",
+  "summary": "Zero-config local AI agent framework with multi-agent orchestration and GraphRAG memory.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "ai",
+    "ai-agent",
+    "automation",
+    "autonomous-agent",
+    "benchmark",
+    "cli",
+    "cloud-sync",
+    "code-agent",
+    "docker",
+    "graphrag"
+  ],
+  "use_cases": [
+    "Execute a task with the AI agent",
+    "Scan workspace and build GraphRAG memory",
+    "List all auto-generated skills",
+    "Launch the web dashboard for monitoring",
+    "Run AST-aware code analysis on a path"
+  ],
+  "alternatives_to": [
+    "Aider",
+    "Continue.dev",
+    "Cursor",
+    "OpenHands"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://rudra496.github.io/nexus-agent",
+  "repo": {
+    "url": "https://github.com/rudra496/nexus-agent",
+    "full_name": "rudra496/nexus-agent",
+    "created_at": "2026-04-17T19:49:46Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.10"
+    ],
+    "system_packages": [
+      "Ollama"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-nexus-agent-20261031-000105-3940",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "rm -rf nexus-agent && git clone https://github.com/rudra496/nexus-agent.git 2>&1 && ls nexus-agent/pyproject.toml",
+          "purpose": "Clone source repo"
+        },
+        {
+          "command": "pip install --user \"./nexus-agent[all]\" 2>&1",
+          "purpose": "Install nexus-agent from source with all extras"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "nexus --help 2>&1",
+        "expected_signal": "NexusAgent: The Zero-Config, Self-Evolving Local AI Agent."
+      },
+      "first_task": "nexus status 2>&1"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v1.0.0",
+    "published_at": "2026-04-17T19:50:38Z",
+    "url": "https://github.com/rudra496/nexus-agent/releases/tag/v1.0.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:04:46.133042+08:00",
+    "runs": [
+      {
+        "id": "verify-nexus-agent-20261031-000105-3940",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:04:46.133042+08:00",
+        "tool_version": "1.0.0",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "rm -rf nexus-agent && git clone https://github.com/rudra496/nexus-agent.git 2>&1 && ls nexus-agent/pyproject.toml",
+            "purpose": "Clone source repo"
+          },
+          {
+            "command": "pip install --user \"./nexus-agent[all]\" 2>&1",
+            "purpose": "Install nexus-agent from source with all extras"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nexus --help 2>&1",
+            "expected_signal": "NexusAgent: The Zero-Config, Self-Evolving Local AI Agent.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "NexusAgent: The Zero-Config, Self-Evolving Local AI Agent.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nexus status 2>&1",
+            "expected_signal": "Nexus Diagnostics",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Nexus Diagnostics",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nexus skills 2>&1",
+            "expected_signal": "Nexus Skill Tree:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Nexus Skill Tree:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nexus evolve 2>&1",
+            "expected_signal": "Evolution complete!",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Evolution complete!",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install nexus-agent / pipx install nexus-agent gives NexusAgent",
+            "actually_needed": "Uninstall/remove placeholder and install from source: git clone https://github.com/rudra496/nexus-agent.git then pip install --user \"./nexus-agent[all]\" (v1.0.0 with nexus entry point)",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show help tagline, diagnostics table, and skill-tree message across the three commands with exit 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nexus-agent-20261031-000105-3940/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nexus-agent-20261031-000105-3940/check-1-cmd5.judged.png",
+            "runs/verify/verify-nexus-agent-20261031-000105-3940/check-2-cmd6.judged.png",
+            "runs/verify/verify-nexus-agent-20261031-000105-3940/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.068565
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 69.8,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.68,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.56,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 23.6,
+      "signals": {
+        "stars": 7,
+        "monthly_downloads": null,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 195,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 53.33
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "c1186de78b8707b38102bcb12a6665836d813067dbbf92fc41cd7b2d50335882",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "The Zero-Config, Self-Evolving Local AI Agent Framework"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "NexusAgent includes enterprise-grade features for team deployments:"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "> **Requires:** Python 3.10+ and [Ollama](https://ollama.ai/) for local models (optional for cloud models)."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "pip install nexus-agent"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "nexus run \"Create a Python function to calculate Fibonacci numbers\""
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "NexusAgent uses a YAML config file at `~/.nexus/config.yaml` (auto-created on first run)."
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "**Ollama not running?** Start it with `ollama serve` or verify it's running at `http://localhost:11434`."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/rudra496/nexus-agent",
+      "fetched_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/rudra496/nexus-agent/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:54:31+08:00"
+    },
+    {
+      "id": "release:v1.0.0",
+      "kind": "release",
+      "url": "https://github.com/rudra496/nexus-agent/releases/tag/v1.0.0",
+      "fetched_at": "2026-10-30T23:54:31+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "`nexus run \"prompt\"` | Execute a task with the AI agent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "pip install nexus-agent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Runs 100% local with Ollama.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "The Zero-Config, Self-Evolving Local AI Agent Framework",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1 align=\"center\">⚡ NexusAgent</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires:** Python 3.10+ and [Ollama]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Requires:** Python 3.10+ and [Ollama](https://ollama.ai/) for local models",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.0.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:54:31+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "✅ v1.0 — Production",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "`nexus run \"prompt\"` | Execute a task with the AI agent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "`nexus evolve` | Scan workspace and build GraphRAG memory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "`nexus skills` | List all auto-generated skills",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "`nexus web` | Launch the web dashboard (port 8420)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "`nexus analyze [path]` | AST-aware code analysis",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "| Feature | NexusAgent | Aider | Continue.dev | Cursor | OpenHands |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "| Feature | NexusAgent | Aider | Continue.dev | Cursor | OpenHands |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "| Feature | NexusAgent | Aider | Continue.dev | Cursor | OpenHands |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "| Feature | NexusAgent | Aider | Continue.dev | Cursor | OpenHands |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Open Source (MIT)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Local-first execution with Ollama. Optional cloud models via LiteLLM.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:54:19+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-28T19:03:31+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}

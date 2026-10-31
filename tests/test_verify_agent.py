@@ -224,7 +224,7 @@ def test_unsupported_finish_goes_back_once_and_a_clean_rerun_counts(task, ledger
     lines_agent = agent(task, box, server, ledger, tmp_path)
     report = lines_agent.run()
     sent_back = server.requests[3]["input"][-1]["output"]
-    assert "step 1 does not show a success (the last command is `cat`" in sent_back
+    assert "step 1 does not show a success (piping into `head`" in sent_back
     assert "You have 13 commands left" in sent_back
     assert report.stop_reason == "finished" and report.verdict["level"] == "install"
     assert report.verdict["step_ids"] == [3] and report.verdict["agrees"]

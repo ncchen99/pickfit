@@ -1,0 +1,594 @@
+{
+  "schema_version": "software.v1",
+  "slug": "scribe",
+  "repo_id": "gh:1216845109",
+  "name": "scribe",
+  "summary": "Single-binary CLI that builds and maintains a personal LLM-written knowledge base from repos and sessions.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-tools",
+    "bm25",
+    "claude-code",
+    "cli",
+    "cron",
+    "developer-tools",
+    "full-text-search",
+    "golang",
+    "knowledge-base",
+    "llm"
+  ],
+  "use_cases": [
+    "extract decisions and patterns from git repos",
+    "mine coding-agent sessions via ccrider index",
+    "capture links texted to self via iMessage",
+    "compile curated wiki indexed for semantic search",
+    "auto-commit knowledge base on schedule"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://getscribe.dev/",
+  "repo": {
+    "url": "https://github.com/oliver-kriska/scribe",
+    "full_name": "oliver-kriska/scribe",
+    "created_at": "2026-04-21T09:37:19Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Go>=1.26"
+    ],
+    "system_packages": [
+      "git",
+      "sqlite3"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew tap oliver-kriska/scribe",
+          "purpose": null
+        },
+        {
+          "command": "brew install oliver-kriska/scribe/scribe",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Grant Full Disk Access to the scribe binary in System Settings"
+      ],
+      "check": null,
+      "first_task": "scribe doctor"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-scribe-20261031-004220-f89d",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/oliver-kriska/scribe/main/install.sh -o /tmp/install-scribe.sh && ls -l /tmp/install-scribe.sh && wc -l /tmp/install-scribe.sh",
+          "purpose": "Download install script for reading"
+        },
+        {
+          "command": "bash /tmp/install-scribe.sh",
+          "purpose": "Install scribe via release script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "scribe --version",
+        "expected_signal": "scribe 0.5.10"
+      },
+      "first_task": "scribe cron status"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.5.10",
+    "published_at": "2026-10-15T09:24:57Z",
+    "url": "https://github.com/oliver-kriska/scribe/releases/tag/v0.5.10"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:43:25.408555+08:00",
+    "runs": [
+      {
+        "id": "verify-scribe-20261031-004220-f89d",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:43:25.408555+08:00",
+        "tool_version": "0.5.10",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/oliver-kriska/scribe/main/install.sh -o /tmp/install-scribe.sh && ls -l /tmp/install-scribe.sh && wc -l /tmp/install-scribe.sh",
+            "purpose": "Download install script for reading"
+          },
+          {
+            "command": "bash /tmp/install-scribe.sh",
+            "purpose": "Install scribe via release script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "scribe --version",
+            "expected_signal": "scribe 0.5.10",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "scribe 0.5.10",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "scribe --help",
+            "expected_signal": "cron status",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "cron status",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "scribe cron status",
+            "expected_signal": "No registered KBs",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No registered KBs — add one with `scribe kb add <path>` (or set kb_dir in /home/sbx/.config/scribe/config.yaml)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "scribe init --check",
+            "expected_signal": "(--check: plan only — nothing written)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "(--check: plan only — nothing written)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "scribe -C /tmp/test-kb doctor",
+            "expected_signal": "Summary: 19 ok, 17 warn, 10 FAIL",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "Summary: 19 ok, 17 warn, 10 FAIL",
+            "setup": [
+              {
+                "command": "scribe init --path /tmp/test-kb --owner-name \"Test User\" --owner-context \"Testing scribe verification.\" --domains test --yes --no-claude-md --no-codex-md --no-amp-md --no-cron && echo \"INIT_OK\" && ls /tmp/test-kb",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Prerequisites the README states: Go>=1.26, git, sqlite3",
+            "actually_needed": "Binary install via install.sh succeeded with no Go toolchain and no sqlite3 present; Go is only needed for the source-build fallback path.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "Example command listed as bare `scribe doctor`",
+            "actually_needed": "scribe doctor must run inside a KB checkout (created via scribe init) or with -C <path>/SCRIBE_KB; outside a KB it exits 1 with 'not inside a scribe KB checkout'.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/oliver-kriska/scribe/main/install.sh | bash",
+            "actually_needed": "install.sh fetches a prebuilt release tarball (scribe_<tag>_<os>_<arch>.tar.gz) plus checksums.txt from GitHub releases and verifies sha256; the tarball binary cannot be read before running the installer.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show expected output: cron status reports no KBs, init --check shows plan only, and version prints scribe 0.5.10.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-scribe-20261031-004220-f89d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-scribe-20261031-004220-f89d/check-1-cmd7.judged.png",
+            "runs/verify/verify-scribe-20261031-004220-f89d/check-2-cmd8.judged.png",
+            "runs/verify/verify-scribe-20261031-004220-f89d/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.062692
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 83.3,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7231,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 63.3,
+      "signals": {
+        "stars": 67,
+        "monthly_downloads": null,
+        "forks": 6,
+        "dependents": null,
+        "release_downloads": 90,
+        "hn_top_score": 3,
+        "registries_count": 0
+      },
+      "age_days": 190,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 30.57
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "8019c06f63a7bd2f548a3d7903ea081d6a8c84cc96f7333173e0d35472caf44b",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "`scribe` is a single-binary CLI that creates and maintains a personal, LLM-written knowledge base."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "This is the killer feature for anyone juggling more than one codebase."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requires Go ≥ 1.26 and a C toolchain (for `go-sqlite3` with FTS5 support):"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install oliver-kriska/scribe/scribe"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "scribe init --path ~/my-kb --bind"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Primary config file. Written by `scribe init`, edit freely. Highlights:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "`scribe doctor` will tell you which are missing."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "### Homebrew (macOS, Linux/Linuxbrew)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/oliver-kriska/scribe",
+      "fetched_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/oliver-kriska/scribe/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:34:03+08:00"
+    },
+    {
+      "id": "release:v0.5.10",
+      "kind": "release",
+      "url": "https://github.com/oliver-kriska/scribe/releases/tag/v0.5.10",
+      "fetched_at": "2026-10-29T02:34:03+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "`scribe` is a single-binary CLI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "brew install oliver-kriska/scribe/scribe",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "`scribe` is a single-binary CLI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "`scribe` is a single-binary CLI that creates and maintains a personal, LLM-written knowledge base.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# scribe",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "### Homebrew (macOS, Linux/Linuxbrew)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires Go ≥ 1.26 and a C toolchain (for `go-sqlite3` with FTS5 support):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "`git`         | yes      | KB auto-commit + cron sync           | system package",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "`sqlite3`     | yes      | chat.db + ccrider reads              | `brew install sqlite` / `apt install sqlite3`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "flipping the whole pipeline to free/offline is one line of yaml",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:54+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.5.10",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:34:03+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "scan git repos for new decisions, patterns, learnings; extract them with the configured LLM",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "mine coding-agent sessions via ccrider's FTS5 index",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "capture links you texted yourself (`capture --fetch`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "compiles it into a curated wiki that [`qmd`](https://github.com/tobi/qmd) indexes for semantic search",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Every hour: auto-commit the KB.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew tap oliver-kriska/scribe",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/install/macos/steps/1",
+      "source_id": "readme",
+      "quote": "brew install oliver-kriska/scribe/scribe",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/oliver-kriska/scribe/main/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Anthropic's Claude by default, or a 100% local [Ollama](https://ollama.com) server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:36:48+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}

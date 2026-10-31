@@ -312,8 +312,8 @@ test('before any search the page shows real catalog runs, never invented ones', 
   assert.match(frame, /curl -fsSL https:\/\/example\.invalid\/fixture\/fixture-llm-runner\/install\.sh \| sh/);
   // The newest runs: one row per verified tool (5 fixtures), with where and when.
   const table = html.slice(html.indexOf('<table class="runs" data-ui>'), html.indexOf('</table>'));
-  assert.equal(table.split('<tr><td class="kind">').length - 1, 5); // all 5 fixtures; the page shows up to 6
-  assert.match(html, /pickfit lists 5 tools\. 5 were installed and replayed in a fresh sandbox, and 1 is a hidden gem: high quality, little known\. 1 was installed by hand on a real machine\./);
+  assert.equal(table.split('<tr><td class="kind">').length - 1, 6); // all 6 fixtures; the page shows up to 6
+  assert.match(html, /pickfit lists 6 tools\. 6 were installed and replayed in a fresh sandbox, and 1 is a hidden gem: high quality, little known\. 1 was installed by hand on a real machine\./);
   // How it works: four stages for the same tool; the reasons come from rules.ts, citing their fields.
   assert.equal(html.split('<li class="stage" data-stage=').length - 1, 4);
   assert.match(html, /<input type="range" id="stage" min="0" max="3"/);
@@ -469,7 +469,7 @@ function pick(overrides: Partial<PickOut> = {}): PickOut {
     processing: 'local',
     open_source: true,
     license: 'MIT',
-    verification: { level: 'function', os: 'linux', arch: 'x86_64', method: 'sandbox', replayed: true, checked_at: '2026-10-29T08:00:00Z', verified_on_user_os: null },
+    verification: { level: 'function', os: 'linux', arch: 'x86_64', method: 'sandbox', replayed: true, checked_at: '2026-10-29T08:00:00Z', verified_on_user_os: null, gui: null },
     how_we_know: 'pickfit ran it.',
     evidence_url: null,
     scores: { quality: 80, popularity: 10, treasure: false },
@@ -545,7 +545,7 @@ test('render: a best free option outside the picks, a no-install option and a ca
 });
 
 test('catalog stats come from the index', () => {
-  assert.deepEqual(catalogStats(fixtureCatalog()), { listed: 5, replayed: 5, byHand: 1, gems: 1 });
+  assert.deepEqual(catalogStats(fixtureCatalog()), { listed: 6, replayed: 6, byHand: 1, gems: 1 });
 });
 
 test('render: the offline check is shown when it failed, and said when it was never run but asked for', () => {

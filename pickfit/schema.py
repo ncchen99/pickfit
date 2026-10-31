@@ -17,6 +17,7 @@ that an API provides (license, releases, repo) are never filled in by a model.
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable, Iterator
 from typing import Annotated, Any, Generic, Literal, TypeVar, get_args
 
@@ -39,7 +40,7 @@ JSON_SCHEMA_DIALECT = "https://json-schema.org/draft/2020-12/schema"
 
 type OS = Literal["macos", "linux", "windows"]
 type Arch = Literal["x86_64", "arm64"]
-type Category = Literal["dev_cli", "local_ai", "other"]
+type Category = Literal["dev_cli", "local_ai", "mcp_server", "other"]
 type Kind = Literal[
     "cli_tool",
     "tui",
@@ -96,6 +97,12 @@ type SourceKind = Literal[
     "hn", "submission", "sandbox", "human",
 ]
 type EvidenceMethod = Literal["api", "model", "sandbox", "rule", "human"]
+type McpTransport = Literal["stdio", "streamable_http", "sse"]
+type McpClient = Literal["claude_code", "claude_desktop", "cursor", "vscode", "generic_json", "other"]
+
+# Categories pickfit lists and verifies; "other" is read but never written as a record.
+LISTED_CATEGORIES: tuple[str, ...] = ("dev_cli", "local_ai", "mcp_server")
+assert set(LISTED_CATEGORIES) | {"other"} == set(get_args(Category.__value__))
 
 # Kinds that count as usable software (B.1); only these can be treasures.
 TOOL_KINDS: frozenset[str] = frozenset(
@@ -139,6 +146,9 @@ QUOTE_MAX = 300
 COMMAND_MAX = 500
 # A smoke test's setup may write a whole input file with a heredoc.
 SETUP_MAX = 4000
+# An MCP client config snippet (a `claude mcp add` line or an mcpServers JSON entry).
+MCP_SNIPPET_MAX = 1500
+MCP_TOOLS_MAX = 200
 
 # --- Constrained strings ----------------------------------------------------
 
@@ -259,6 +269,9 @@ def _known(items: list[Cited[Any]]) -> list[Cited[Any]]:
 CitedList = Annotated[list[Cited[str]], AfterValidator(_known)]
 
 
+_ENV_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,63}$")
+
+
 def _usable_command(command: str) -> bool:
     return bool(command.strip()) and len(command) <= COMMAND_MAX
 
@@ -305,6 +318,46 @@ class ExtractedPrerequisites(_Model):
     )
 
 
+class McpConfigClaim(_Model):
+    """An MCP client config snippet as a source writes it; not run yet."""
+
+    client: McpClient = Field(
+        description=(
+            "claude_code: a `claude mcp add` command; claude_desktop, cursor, vscode: that client's "
+            "config file; generic_json: an mcpServers JSON entry for any client."
+        )
+    )
+    snippet: str = Field(description="Copied verbatim (a command or a JSON block); it is its own quote.")
+
+
+class McpEnvClaim(_Model):
+    """An environment variable an MCP server reads, as the sources name it."""
+
+    name: str = Field(description="The variable name copied verbatim, e.g. GITHUB_TOKEN.")
+    required: bool | None = Field(
+        description="true only when the sources say the server needs it to start or to work; null when unclear."
+    )
+    purpose: str | None = Field(description="What it holds, in a few English words; null when unclear.")
+
+
+class ExtractedMcp(_Model):
+    """What an AI client needs to use an MCP server. Empty for software that is not one."""
+
+    transports: Cited[list[McpTransport]] = Field(
+        description="stdio: the client starts it as a subprocess; streamable_http or sse: the client connects to a URL."
+    )
+    launch_command: Cited[str] = Field(
+        description="The command a client runs to start it over stdio, e.g. 'npx -y some-mcp' or 'uvx some-mcp'."
+    )
+    client_configs: list[McpConfigClaim] = Field(description="Up to 3 config snippets, best documented first.")
+    env_vars: list[McpEnvClaim] = Field(description="Environment variables the server reads; up to 10.")
+    tools: CitedList = Field(description="Names of the tools it offers, as the sources list them; up to 30.")
+
+
+_NO_MCP = {"transports": {"value": None, "quote": None}, "launch_command": {"value": None, "quote": None},
+           "client_configs": [], "env_vars": [], "tools": []}
+
+
 class ExtractionResult(_Model):
     """Facts about one software project, read only from the <source> blocks.
 
@@ -332,7 +385,8 @@ class ExtractionResult(_Model):
     category: Cited[Category] = Field(
         description=(
             "dev_cli: tools developers use in a terminal; local_ai: runs AI models on "
-            "the user's machine (local LLMs, inference servers, offline AI tools)."
+            "the user's machine (local LLMs, inference servers, offline AI tools); "
+            "mcp_server: a Model Context Protocol server that AI clients start or connect to."
         )
     )
     audience: Cited[Audience] = Field(
@@ -372,6 +426,10 @@ class ExtractionResult(_Model):
     alternatives_to: CitedList = Field(
         description="Well-known tools the sources compare it to or replace."
     )
+    mcp: ExtractedMcp = Field(
+        default_factory=lambda: ExtractedMcp.model_validate(_NO_MCP),
+        description="Only for an MCP server; leave every value null and every list empty otherwise.",
+    )
 
     @model_validator(mode="after")
     def _drop_unusable_commands(self) -> ExtractionResult:
@@ -380,6 +438,10 @@ class ExtractionResult(_Model):
         self.smoke_test_candidates = [
             c for c in self.smoke_test_candidates if _usable_command(c.command)
         ]
+        self.mcp.client_configs = [
+            c for c in self.mcp.client_configs if c.snippet.strip() and len(c.snippet) <= MCP_SNIPPET_MAX
+        ]
+        self.mcp.env_vars = [e for e in self.mcp.env_vars if _ENV_NAME.match(e.name)]
         return self
 
 
@@ -522,6 +584,41 @@ class Judge(_Model):
     model: str
 
 
+# A recorded GUI tier rests on a screenshot the judge read: a launch with no window (or nothing judged) leaves
+# no GUI record. Weaker outcomes (no window, a process with no window) live in the notes and smoke tests.
+type GuiTier = Literal["window", "ui_rendered"]
+type GuiScreen = Literal["main_ui", "first_run", "sign_in_wall", "crash_or_error", "blank_or_loading", "other"]
+GUI_PASSED_TIERS: tuple[str, ...] = ("window", "ui_rendered")
+# What the screen judge saw at each tier: ui_rendered is the app's own UI drawn; a window shows anything else.
+GUI_SCREENS_BY_TIER: dict[str, tuple[str, ...]] = {
+    "window": ("sign_in_wall", "crash_or_error", "blank_or_loading", "other"),
+    "ui_rendered": ("main_ui", "first_run"),
+}
+
+
+class GuiCheck(_Model):
+    """How far a GUI app got on the box's virtual display (Linux, Xvfb, no window manager).
+
+    Recorded only for a launch whose checked screenshot the judge read. window: a mapped window whose X
+    client is one of the app's processes (per the X server), showing something other than the app's UI
+    (`screen`: a sign-in wall, a crash, a blank or loading screen); ui_rendered: the judge saw the app's own
+    interface in a crop of its windows (its main screen or its first-run screen). A GUI launch supports
+    install only; checking controls or that an action changed checkable state is not built.
+    """
+
+    tier: GuiTier
+    screen: GuiScreen = Field(description="What the screen judge saw in the crop of the app's windows.")
+    command: str = Field(min_length=1, max_length=COMMAND_MAX, description="How the app was started.")
+    window_title: str | None = Field(default=None, max_length=200, description="Set by the app; data only.")
+    display: str = Field(max_length=120, description="e.g. Xvfb 1280x800x24, no window manager, no GPU.")
+
+    @model_validator(mode="after")
+    def _screen_fits_tier(self) -> GuiCheck:
+        if self.screen not in GUI_SCREENS_BY_TIER[self.tier]:
+            raise ValueError(f"tier {self.tier!r} cannot rest on screen {self.screen!r}")
+        return self
+
+
 class ArtifactCheck(_Model):
     """A check of the published package file itself, made by hand, not by a box.
 
@@ -545,6 +642,42 @@ class RunEvidence(_Model):
     evidence_url: HttpsUrl | None = Field(
         default=None, description="Public run page or trace JSON (MCP evidence_url)."
     )
+
+
+class McpHandshake(_Model):
+    """What pickfit's MCP probe saw when a fresh box started the server (the replay's check).
+
+    Names come from the server and are untrusted: the probe keeps only safe characters, and
+    tool descriptions never leave the box (only the probe's own pattern flags do).
+    """
+
+    transport: McpTransport
+    launch: list[str] = Field(
+        min_length=1, max_length=40,
+        description="argv that started the server, as the replay ran it: the probe's own over stdio, the "
+                    "background setup's over HTTP.",
+    )
+    url: str | None = Field(
+        default=None, pattern=r"^http://(127\.0\.0\.1|localhost)(:\d{1,5})?(/[A-Za-z0-9_./-]*)?$",
+        description="streamable_http: the local URL the probe posted to.",
+    )
+    protocol_version: str | None = Field(default=None, max_length=40)
+    server_name: str | None = Field(default=None, max_length=80)
+    server_version: str | None = Field(default=None, max_length=60)
+    tools: list[str] = Field(default=[], max_length=MCP_TOOLS_MAX, description="Tool names from tools/list.")
+    tool_count: int = Field(ge=0, description="Tools listed, also those past MCP_TOOLS_MAX.")
+    called_tool: str | None = Field(
+        default=None, max_length=80, description="A tool tools/call ran without an error (level service)."
+    )
+    offline: bool | None = Field(
+        default=None, description="true: the handshake passed with the network off; false: only with it on."
+    )
+
+    @model_validator(mode="after")
+    def _count_covers_names(self) -> McpHandshake:
+        if self.tool_count < len(self.tools):
+            raise ValueError("tool_count must be at least the number of tool names")
+        return self
 
 
 class VerificationRun(_Model):
@@ -582,6 +715,16 @@ class VerificationRun(_Model):
         exclude_if=lambda value: value is None,
         description="A check of the published package by hand: the only ground for a failed sandbox run.",
     )
+    gui: GuiCheck | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="A GUI app's launch on a virtual display: the strongest evidence tier it reached.",
+    )
+    mcp: McpHandshake | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="MCP servers: the handshake a fresh box completed; required for a passed run of one.",
+    )
 
     @model_validator(mode="after")
     def _check_outcome(self) -> VerificationRun:
@@ -595,6 +738,14 @@ class VerificationRun(_Model):
                 raise ValueError("a passed run needs the judge's verdict to be 'working'")
             if self.level != "install" and not any(t.passed for t in self.smoke_tests):
                 raise ValueError(f"a {self.level!r} run needs at least one passing smoke test")
+            if self.gui and self.gui.tier not in GUI_PASSED_TIERS:
+                raise ValueError(f"a passed run's GUI launch must reach a window, not {self.gui.tier!r}")
+            if self.gui and self.gui.screen in ("crash_or_error", "blank_or_loading", "other"):
+                raise ValueError(f"a passed run's GUI launch cannot show {self.gui.screen!r}")
+            if self.gui and self.level != "install":
+                raise ValueError("a GUI launch supports install only")
+            if self.level == "service" and self.mcp is not None and self.mcp.called_tool is None:
+                raise ValueError("an MCP server's service run needs a tool call (mcp.called_tool)")
         if self.level == "failed" and not self.blocking_error:
             raise ValueError("a failed run must record blocking_error")
         if self.level == "failed" and self.method == "sandbox" and self.artifact_check is None:
@@ -851,6 +1002,30 @@ class Outcomes(_Model):
     synced_at: AwareDatetime | None = None
 
 
+class McpClientConfig(_Model):
+    client: McpClient
+    snippet: str = Field(min_length=1, max_length=MCP_SNIPPET_MAX, description="Verbatim from the sources.")
+
+
+class McpEnvVar(_Model):
+    name: str = Field(pattern=r"^[A-Za-z_][A-Za-z0-9_]{0,63}$")
+    required: bool | None = None
+    purpose: str | None = Field(default=None, max_length=120)
+
+
+class McpServer(_Model):
+    """How an AI client uses this MCP server, as the sources claim it (README, not run).
+
+    What a box actually saw lives in verification.runs[].mcp; the index prefers that.
+    """
+
+    transports: list[McpTransport] = []
+    launch_command: str | None = Field(default=None, max_length=COMMAND_MAX)
+    client_configs: list[McpClientConfig] = Field(default=[], max_length=3)
+    env_vars: list[McpEnvVar] = Field(default=[], max_length=10)
+    tools: list[str] = Field(default=[], max_length=30, description="Tool names the sources list.")
+
+
 class Source(_Model):
     id: str = Field(
         pattern=r"^\S+$", max_length=200, description="e.g. readme, release:<tag>."
@@ -915,6 +1090,11 @@ class SoftwareRecord(_Model):
     processing: Processing | None
     last_release: Release | None
     verification: Verification
+    mcp: McpServer | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="Only for category mcp_server: transport, launch command, client config, env vars, tools.",
+    )
     scores: Scores | None = None
     outcomes: Outcomes = Field(default_factory=Outcomes)
     sources: list[Source] = Field(min_length=1)
@@ -932,6 +1112,27 @@ class SoftwareRecord(_Model):
                 raise ValueError(f"evidence {item.field} cites unknown source {item.source_id!r}")
             if item.field.split("/")[1] not in type(self).model_fields:
                 raise ValueError(f"evidence points to unknown field {item.field}")
+        return self
+
+    @model_validator(mode="after")
+    def _check_gui_app_levels(self) -> SoftwareRecord:
+        if self.kind == "desktop_app":
+            for run in self.verification.runs:
+                if run.level in ("function", "service", "inference"):
+                    raise ValueError(f"run {run.id}: a desktop app is not {run.level}: that needs an action shown to "
+                                     "change checkable state, which pickfit does not check yet")
+        return self
+
+    @model_validator(mode="after")
+    def _check_mcp(self) -> SoftwareRecord:
+        """An MCP server passes only on a completed handshake; other software has no MCP facts."""
+        if self.mcp is not None and self.category != "mcp_server":
+            raise ValueError("mcp facts belong to category mcp_server only")
+        for run in self.verification.runs:
+            if self.category == "mcp_server" and is_passed(run.level) and run.mcp is None:
+                raise ValueError(f"run {run.id}: a passed MCP server run needs its handshake (mcp)")
+            if self.category != "mcp_server" and run.mcp is not None:
+                raise ValueError(f"run {run.id}: only an MCP server's run carries a handshake")
         return self
 
     @model_validator(mode="after")

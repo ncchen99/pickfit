@@ -1,0 +1,592 @@
+{
+  "schema_version": "software.v1",
+  "slug": "illip",
+  "repo_id": "gh:1282102712",
+  "name": "ILLIP AI",
+  "summary": "Local-first AI platform with chat, agent crew, memory, and hardware-sized model store.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "self_hosted_web_app",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agents",
+    "ai",
+    "ai-assistant",
+    "fastapi",
+    "llm",
+    "local-ai",
+    "local-llm",
+    "offline-first",
+    "ollama",
+    "privacy"
+  ],
+  "use_cases": [
+    "Route a task to the right agent",
+    "semantic search across conversations",
+    "speak instead of type via mic button",
+    "list all files in a directory",
+    "chat with local ILLIP from phone via Telegram"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/Yashwanth-pilli/ILLIP",
+    "full_name": "Yashwanth-pilli/ILLIP",
+    "created_at": "2026-06-27T10:24:16Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Python"
+    ],
+    "system_packages": [
+      "Ollama"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/Yashwanth-pilli/ILLIP/main/install.sh | bash",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "pytest -v"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-illip-20261031-023619-2442",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/install.sh https://raw.githubusercontent.com/Yashwanth-pilli/ILLIP/main/install.sh && wc -c /tmp/install.sh && head -c 2000 /tmp/install.sh",
+          "purpose": "Download install.sh for reading before running"
+        },
+        {
+          "command": "bash /tmp/install.sh",
+          "purpose": "Run README script installer (clone, venv, pip install, .env)"
+        },
+        {
+          "command": "./illip_ai/.venv/bin/python -m pip install \"pytest>=9.0\" \"pytest-asyncio>=1.0\" && ./illip_ai/.venv/bin/python -m pytest --version",
+          "purpose": "Install pytest dev deps missing from installer"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "cd illip_ai && ./.venv/bin/python -m pytest -v",
+        "expected_signal": "249 passed"
+      },
+      "first_task": "cd illip_ai && ./.venv/bin/python -m pytest -v"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://raw.githubusercontent.com/Yashwanth-pilli/ILLIP/main/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "pytest -v"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "AGPL-3.0",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v3.4.0",
+    "published_at": "2026-10-30T13:06:01Z",
+    "url": "https://github.com/Yashwanth-pilli/ILLIP/releases/tag/v3.4.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:39:25.711634+08:00",
+    "runs": [
+      {
+        "id": "verify-illip-20261031-023619-2442",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:39:25.711634+08:00",
+        "tool_version": "3.1.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/install.sh https://raw.githubusercontent.com/Yashwanth-pilli/ILLIP/main/install.sh && wc -c /tmp/install.sh && head -c 2000 /tmp/install.sh",
+            "purpose": "Download install.sh for reading before running"
+          },
+          {
+            "command": "bash /tmp/install.sh",
+            "purpose": "Run README script installer (clone, venv, pip install, .env)"
+          },
+          {
+            "command": "./illip_ai/.venv/bin/python -m pip install \"pytest>=9.0\" \"pytest-asyncio>=1.0\" && ./illip_ai/.venv/bin/python -m pytest --version",
+            "purpose": "Install pytest dev deps missing from installer"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd illip_ai && ./.venv/bin/python -m pytest -v",
+            "expected_signal": "249 passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "================================= 249 passed, 2 warnings in 27.14s =================================",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS http://127.0.0.1:8000/api/health",
+            "expected_signal": "\"status\":\"ok\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"ok\",\"message\":\"System healthy. Provider: mock\",\"timestamp\":\"2026-10-30T18:39:19.165182Z\"}",
+            "setup": [
+              {
+                "command": "cd illip_ai && MODEL_PROVIDER=mock ./.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS http://127.0.0.1:8000/v1/models",
+            "expected_signal": "\"id\":\"illip\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"object\":\"list\",\"data\":[{\"id\":\"illip\",\"object\":\"model\",\"created\":1793385559,\"owned_by\":\"illip\"}]}",
+            "setup": [
+              {
+                "command": "cd illip_ai && MODEL_PROVIDER=mock ./.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS http://127.0.0.1:8000/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\":\"illip\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hi in five words\"}],\"temperature\":0,\"max_tokens\":16,\"stream\":false}'",
+            "expected_signal": "\"object\":\"chat.completion\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":\"chatcmpl-b08db922\",\"object\":\"chat.completion\",\"created\":1793385559,\"model\":\"illip\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"I can help you with tasks, planning, and more. What would you like to do?\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":0,\"completion_tokens…",
+            "setup": [
+              {
+                "command": "cd illip_ai && MODEL_PROVIDER=mock ./.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd illip_ai && ./.venv/bin/python -c \"from app import __version__; print(__version__)\" && ./.venv/bin/python app/cli.py version",
+            "expected_signal": "3.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "3.1.0",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Running Tests: pytest -v (and test_chat.py, test_agents.py)",
+            "actually_needed": "./illip_ai/.venv/bin/python -m pip install \"pytest>=9.0\" \"pytest-asyncio>=1.0\" before pytest works",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "Default provider auto (Ollama -> llamafile -> OpenRouter -> Groq -> Mock); Troubleshooting says set MODEL_PROVIDER=mock to test without a model",
+            "actually_needed": "Started server with MODEL_PROVIDER=mock so /api/health reports mock provider with no Ollama, API key, GPU or model download",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show healthy status ok, models list containing illip, and 249 tests passed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-illip-20261031-023619-2442/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-illip-20261031-023619-2442/check-1-cmd7.judged.png",
+            "runs/verify/verify-illip-20261031-023619-2442/check-2-cmd8.judged.png",
+            "runs/verify/verify-illip-20261031-023619-2442/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.130504
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:43:57+08:00",
+    "quality": {
+      "total": 76.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6502,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 48.7,
+      "signals": {
+        "stars": 27,
+        "monthly_downloads": null,
+        "forks": 11,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 125,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 39.35
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:43:57.550284+08:00",
+      "sources_sha": "fdf5119d18b514278e3206392bd755f66805b4a661537de5f17149e225b7b1dc",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Local-first AI platform: chat, agent crew, memory, and a model store sized to your hardware"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "First time, it finds or installs Python and Ollama (asking your permission first)"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/Yashwanth-pilli/ILLIP/main/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": ".\\scripts\\run_backend.ps1"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "MODEL_PROVIDER=auto          # auto | ollama | llamafile | airllm | openrouter | groq | mock"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "**Backend won't start:**"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Licensed under [AGPL-3.0](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Yashwanth-pilli/ILLIP",
+      "fetched_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Yashwanth-pilli/ILLIP/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:07:32+08:00"
+    },
+    {
+      "id": "release:v3.4.0",
+      "kind": "release",
+      "url": "https://github.com/Yashwanth-pilli/ILLIP/releases/tag/v3.4.0",
+      "fetched_at": "2026-10-31T01:07:32+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "serves the UI and API from one port",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:51+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "double-click `run.bat`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:51+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Local-first AI platform: chat, agent crew, memory, and a model store",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:51+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Local-first AI platform: chat, agent crew, memory, and a model store sized to your hardware",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:51+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# ILLIP AI — v3.4",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:51+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "# Windows PowerShell\nirm https://raw.githubusercontent.com/Yashwanth-pilli/ILLIP/main/install.ps1 | iex\n```\n\n```bash\n# Linux/macOS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:51+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "finds or installs Python and Ollama (asking your permission first)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:51+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "finds or installs Python and Ollama (asking your permission first)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:51+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v3.4.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:07:32+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Route any task to the right agent.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:51+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "semantic search across all conversations.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:51+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Use the 🎤 mic button in the UI to speak instead of type.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:51+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "List all files in any directory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:51+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Chat with your local ILLIP from your phone",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:51+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/Yashwanth-pilli/ILLIP/main/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:51+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/Yashwanth-pilli/ILLIP/main/install.sh | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:51+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://raw.githubusercontent.com/Yashwanth-pilli/ILLIP/main/install.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:51+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Local or cloud.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:16:51+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:46:33+08:00",
+  "updated_at": "2026-10-31T02:43:57+08:00"
+}

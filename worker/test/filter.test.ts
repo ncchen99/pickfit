@@ -25,8 +25,10 @@ test('hard filters: category, OS claims and exclusions', () => {
     'fixture-transcribe',
   ]);
   assert.deepEqual(slugs({ os: 'windows' }), ['fixture-chat-tui', 'fixture-cloud-summarize', 'fixture-json-query']);
-  assert.deepEqual(slugs({ os: 'linux', exclude: ['fixture-json-query'] }).length, 4);
-  assert.deepEqual(slugs({ budget: 'free_or_paid' }).length, 5);
+  assert.deepEqual(slugs({ os: 'linux', exclude: ['fixture-json-query'] }).length, 5);
+  assert.deepEqual(slugs({ budget: 'free_or_paid' }).length, 6);
+  assert.deepEqual(slugs({ category: 'mcp_server' }), ['fixture-notes-mcp']);
+  assert.deepEqual(slugs({ category: 'mcp_server', os: 'macos' }), []); // claims and runs are Linux only
 });
 
 test('must_run_locally rejects cloud processing, required network and API keys', () => {

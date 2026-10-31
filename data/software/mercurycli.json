@@ -1,0 +1,521 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mercurycli",
+  "repo_id": "gh:1356553004",
+  "name": "Mercury CLI",
+  "summary": "Terminal environment for running parallel AI coding agents that edit files and run tests.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agentic",
+    "agents",
+    "ai",
+    "anthropic",
+    "cli",
+    "coding-agent",
+    "deepseek",
+    "developer-tools",
+    "gemini",
+    "grok"
+  ],
+  "use_cases": [
+    "read and edit files and run shell commands via agent",
+    "run parallel coding sessions",
+    "run one-shot prompts headlessly"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://mercury-cli.ai",
+  "repo": {
+    "url": "https://github.com/Whq02/MercuryCLI",
+    "full_name": "Whq02/MercuryCLI",
+    "created_at": "2026-09-04T00:25:34Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "git"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install Whq02/mercury/mercury",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "mercury --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mercurycli-20261031-002056-5079",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g mercury-tech-cli 2>&1",
+          "purpose": "npm global install of mercury-tech-cli shim"
+        },
+        {
+          "command": "MERCURY_INSTALL_ARGS=--force mercury --version 2>&1",
+          "purpose": "forced first-run payload install plus version check"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mercury --version 2>&1",
+        "expected_signal": "Mercury 1.0.1"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g mercury-tech-cli",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "mercury --version"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "hybrid",
+  "last_release": null,
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:25:01.186278+08:00",
+    "runs": [
+      {
+        "id": "verify-mercurycli-20261031-002056-5079",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:25:01.186278+08:00",
+        "tool_version": "1.0.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g mercury-tech-cli 2>&1",
+            "purpose": "npm global install of mercury-tech-cli shim"
+          },
+          {
+            "command": "MERCURY_INSTALL_ARGS=--force mercury --version 2>&1",
+            "purpose": "forced first-run payload install plus version check"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mercury --version 2>&1",
+            "expected_signal": "Mercury 1.0.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Mercury 1.0.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mercury --help 2>&1",
+            "expected_signal": "Print the version",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "-v, --version Print the version",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm install -g mercury-tech-cli then check mercury --version",
+            "actually_needed": "Prefix the first run with MERCURY_INSTALL_ARGS=--force (i.e. MERCURY_INSTALL_ARGS=--force mercury --version) so the product installer overwrites the npm shim at ~/.local/bin/mercury; without it the installer refuses ('stable command NOT written: an existing non-Mercury-managed command is already at…",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "check mercury --version after opening a new terminal",
+            "actually_needed": "First invocation of mercury downloads the ~27MB linux-x64 release archive (v1.0.1), verifies checksum, and stages ~/.mercury/versions/1.0.1 before printing the version; allow ~20s. Direct versioned launcher ~/.mercury/versions/1.0.1/mercury --version answers instantly.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "run `mercury` inside a repository; headless via mercury run",
+            "actually_needed": "Interactive `mercury` needs a TTY/repository and `mercury run \"<prompt>\"` needs a signed-in model provider, so neither was runnable with no API keys; verified function with `mercury --help` and `mercury update --check` (no sign-in needed) instead.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show --version printing Mercury 1.0.1 and --help listing commands including version Print the version.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mercurycli-20261031-002056-5079/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mercurycli-20261031-002056-5079/check-1-cmd8.judged.png",
+            "runs/verify/verify-mercurycli-20261031-002056-5079/check-2-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.079126
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 84.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 63.2,
+      "signals": {
+        "stars": 27,
+        "monthly_downloads": 3474,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": 633,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 56,
+      "packages": [
+        "npm:mercury-tech-cli"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 31.17
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "edbb59fe6027032b8a561ce848059db6eefd5b4770d31994548901e4eab19661",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A terminal-native environment for AI coding agents, inside your own git repositories on macOS, Linux and Windows."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "inside your own git repositories on macOS, Linux and Windows."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "include Node and ripgrep (`git` is the only separate requirement):"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://mercury-cli.ai/install | sh     # macOS and Linux (x64 and arm64)\nirm https://mercury-cli.ai/install.ps1 | iex        # Windows (x64 and arm64), in PowerShell 7"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "check `mercury --version`, and run `mercury` inside a repository."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "`MERCURY_SAMPLES=1` adds `/samples` under `current work`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "for `mercury update`, release verification, requirements and building from source."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Mercury is open source under the Apache License 2.0"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Whq02/MercuryCLI",
+      "fetched_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Whq02/MercuryCLI/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:57:07+08:00"
+    },
+    {
+      "id": "release:v1.0.1",
+      "kind": "release",
+      "url": "https://github.com/Whq02/MercuryCLI/releases/tag/v1.0.1",
+      "fetched_at": "2026-10-30T23:57:07+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A terminal-native environment for AI coding agents",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:38+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "run `mercury` inside a repository.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:38+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A terminal-native environment for AI coding agents",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:38+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "An agent reads and edits files, runs shell commands, steps through tests and debuggers, and checks the results",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:38+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "github_api",
+      "quote": "Mercury CLI: multiple AI coding sessions in one terminal.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:38+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "inside your own git repositories on macOS, Linux and Windows.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:38+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "`git` is the only separate requirement",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:38+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "An agent reads and edits files, runs shell commands, steps through tests and debuggers",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:38+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "run parallel sessions on `/concourse`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:38+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "run one-shot prompts with `mercury run \"<prompt>\"`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:38+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install Whq02/mercury/mercury",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:38+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g mercury-tech-cli",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:38+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g mercury-tech-cli",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:38+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Mercury is open source under the Apache License 2.0",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:38+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "github_api",
+      "quote": "Mix and match provider and locally hosted models",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:13:38+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}

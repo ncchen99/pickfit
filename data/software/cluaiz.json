@@ -57,18 +57,25 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-cluaiz-20261030-003612-efa2",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://cluaiz.com/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://cluaiz.com/install.sh -o /tmp/cluaiz-install.sh && ls -l /tmp/cluaiz-install.sh && wc -c /tmp/cluaiz-install.sh",
+          "purpose": "Download install script without piping to shell"
+        },
+        {
+          "command": "sh /tmp/cluaiz-install.sh",
+          "purpose": "Install mac-arm64 core with install script"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "cluaiz show unsloth/Qwen3-4B-GGUF"
+      "check": {
+        "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && cluaiz --version",
+        "expected_signal": "cluaiz 0.1.0"
+      },
+      "first_task": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && cluaiz show ~/models/stories260K.gguf"
     },
     "linux": {
       "basis": "replayed",
@@ -117,7 +124,7 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:42:56.109414+08:00",
+    "checked_at": "2026-10-30T00:42:05.969998+08:00",
     "runs": [
       {
         "id": "verify-cluaiz-20261029-024155-8b17",
@@ -204,11 +211,13 @@
         "pitfalls": [
           {
             "readme_said": "curl -fsSL https://cluaiz.com/install.sh | sh",
-            "actually_needed": "download the script first (curl -fsSL https://cluaiz.com/install.sh -o /tmp/install.sh), read it, then run sh /tmp/install.sh"
+            "actually_needed": "download the script first (curl -fsSL https://cluaiz.com/install.sh -o /tmp/install.sh), read it, then run sh /tmp/install.sh",
+            "kind": null
           },
           {
             "readme_said": "run cluaiz directly after install",
-            "actually_needed": "binary installs to ~/.cluaiz/bin, which is not on PATH; each use needs export PATH=\"$HOME/.cluaiz/bin:$PATH\" before cluaiz"
+            "actually_needed": "binary installs to ~/.cluaiz/bin, which is not on PATH; each use needs export PATH=\"$HOME/.cluaiz/bin:$PATH\" before cluaiz",
+            "kind": null
           }
         ],
         "blocking_error": null,
@@ -229,20 +238,144 @@
         },
         "actor_model": "muse-spark-1.3",
         "cost_usd": 0.06861
+      },
+      {
+        "id": "verify-cluaiz-20261030-003612-efa2",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-10-30T00:42:05.969998+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://cluaiz.com/install.sh -o /tmp/cluaiz-install.sh && ls -l /tmp/cluaiz-install.sh && wc -c /tmp/cluaiz-install.sh",
+            "purpose": "Download install script without piping to shell"
+          },
+          {
+            "command": "sh /tmp/cluaiz-install.sh",
+            "purpose": "Install mac-arm64 core with install script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && cluaiz --version",
+            "expected_signal": "cluaiz 0.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "cluaiz 0.1.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && cluaiz --help",
+            "expected_signal": "Run and serve local AI models",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Run and serve local AI models",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && cluaiz show ~/models/stories260K.gguf",
+            "expected_signal": "Plan on this machine now",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Plan on this machine now",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -l ~/models/stories260K.gguf",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && cluaiz run ~/models/stories260K.gguf \"Once upon a time\" --temp 0 -n 16",
+            "expected_signal": "Lily said",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "They opened the capter and sat down. The flopper small rolled in the park, sealk. Then, there was a little boy. The boy had an ideal on his hat. Lily was afraiding it, so much!\" Lily said.",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -l ~/models/stories260K.gguf",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8000/v1/models -H \"Authorization: Bearer $(cat ~/.cluaiz/session.token)\"",
+            "expected_signal": "\"object\":\"list\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"data\":[],\"object\":\"list\"}",
+            "setup": [
+              {
+                "command": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" && cluaiz serve",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://cluaiz.com/install.sh | sh then use cluaiz",
+            "actually_needed": "export PATH=\"$HOME/.cluaiz/bin:$PATH\" before using cluaiz; installer only appends to shell rc files",
+            "kind": "note"
+          },
+          {
+            "readme_said": "cluaiz show unsloth/Qwen3-4B-GGUF",
+            "actually_needed": "cluaiz show accepts a local path (cluaiz show ~/models/stories260K.gguf); registry id would require a large download",
+            "kind": "note"
+          },
+          {
+            "readme_said": "cluaiz serve",
+            "actually_needed": "cluaiz serve takes no model argument; select local file first with cluaiz model set-chat ~/models/stories260K.gguf",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show model info with plan output, a long generated story mentioning Lily, and version 0.1.0, all exit 0 with no errors.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-cluaiz-20261030-003612-efa2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-cluaiz-20261030-003612-efa2/check-1-cmd8.judged.png",
+            "runs/verify/verify-cluaiz-20261030-003612-efa2/check-2-cmd9.judged.png",
+            "runs/verify/verify-cluaiz-20261030-003612-efa2/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.158208
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v4",
-    "computed_at": "2026-10-29T14:40:05+08:00",
+    "computed_at": "2026-10-29T22:10:15+08:00",
     "quality": {
-      "total": 74.7,
+      "total": 81.5,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.765,
+          "score": 0.9,
           "weight": 40.0
         },
         "install_docs": {
@@ -282,8 +415,8 @@
       "packages": []
     },
     "treasure": {
-      "is_treasure": false,
-      "value": 41.76
+      "is_treasure": true,
+      "value": 45.56
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -574,5 +707,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-29T14:40:05+08:00"
+  "updated_at": "2026-10-30T00:42:05.984332+08:00"
 }

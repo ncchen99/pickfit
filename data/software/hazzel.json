@@ -1,0 +1,490 @@
+{
+  "schema_version": "software.v1",
+  "slug": "hazzel",
+  "repo_id": "gh:1360076624",
+  "name": "Hazzel",
+  "summary": "Terminal coding agent that shows diffs for approval before editing files.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agent",
+    "anthropic",
+    "cli",
+    "coding-assistant",
+    "developer-tools",
+    "groq",
+    "llm",
+    "mcp",
+    "ollama",
+    "openai"
+  ],
+  "use_cases": [
+    "review staged git changes",
+    "draft and create git commit",
+    "fix failing test in project"
+  ],
+  "alternatives_to": [
+    "Aider"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://agenthazzel.vercel.app",
+  "repo": {
+    "url": "https://github.com/mukundzha/hazzel",
+    "full_name": "mukundzha/hazzel",
+    "created_at": "2026-09-07T10:19:08Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "GROQ_API_KEY",
+      "OPENAI_API_KEY",
+      "ANTHROPIC_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-hazzel-20261031-002643-9aee",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install git+https://github.com/mukundzha/hazzel --force && HAZZEL_NO_UPDATE_CHECK=1 hazzel --version",
+          "purpose": "install hazzel from git main via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "HAZZEL_NO_UPDATE_CHECK=1 hazzel --version",
+        "expected_signal": "Hazzel 1.6.2"
+      },
+      "first_task": "HAZZEL_NO_UPDATE_CHECK=1 hazzel --list-models"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v1.6.2",
+    "published_at": "2026-10-26T06:10:24Z",
+    "url": "https://github.com/mukundzha/hazzel/releases/tag/v1.6.2"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:29:18.195470+08:00",
+    "runs": [
+      {
+        "id": "verify-hazzel-20261031-002643-9aee",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:29:18.195470+08:00",
+        "tool_version": "1.6.2",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install git+https://github.com/mukundzha/hazzel --force && HAZZEL_NO_UPDATE_CHECK=1 hazzel --version",
+            "purpose": "install hazzel from git main via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "HAZZEL_NO_UPDATE_CHECK=1 hazzel --version",
+            "expected_signal": "Hazzel 1.6.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Hazzel 1.6.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "HAZZEL_NO_UPDATE_CHECK=1 hazzel --help",
+            "expected_signal": "--list-models",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: hazzel [-h] [-p [TEXT]] [-y] [--output-format {text,json}] [--version] [--list-models]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "HAZZEL_NO_UPDATE_CHECK=1 hazzel --list-models",
+            "expected_signal": "groq openai/gpt-oss-120b",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "groq openai/gpt-oss-120b GPT OSS 120B 131072",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "uvx hazzel / pip install hazzel gives hazzel --list-models (README v1.6.2)",
+            "actually_needed": "install from git main (uv tool install git+https://github.com/mukundzha/hazzel) where --list-models exists; PyPI hazzel 1.6.2 errors with 'unrecognized arguments: --list-models' (exit 2)",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show the model list containing groq openai/gpt-oss-120b and version output Hazzel 1.6.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-hazzel-20261031-002643-9aee/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-hazzel-20261031-002643-9aee/check-1-cmd11.judged.png",
+            "runs/verify/verify-hazzel-20261031-002643-9aee/check-2-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.097425
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:11:57+08:00",
+    "quality": {
+      "total": 77.9,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 81.4,
+      "signals": {
+        "stars": 29,
+        "monthly_downloads": 4953,
+        "forks": 16,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 9,
+        "registries_count": 1
+      },
+      "age_days": 53,
+      "packages": [
+        "pypi:hazzel"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 14.49
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "5f0c1b49b7b139e2b49575fde436cb9e235fe3edf3516180efc2569b17897133",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A terminal coding agent you can actually read."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install hazzel"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "❯ Fix the failing test in tests/test_agent.py\n\n  ● read_file   tests/test_agent.py"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export GROQ_API_KEY=\"...\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Apache-2.0. See [LICENSE](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/mukundzha/hazzel",
+      "fetched_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/mukundzha/hazzel/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:54:45+08:00"
+    },
+    {
+      "id": "release:v1.6.2",
+      "kind": "release",
+      "url": "https://github.com/mukundzha/hazzel/releases/tag/v1.6.2",
+      "fetched_at": "2026-10-30T23:54:45+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A terminal coding agent you can actually read.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "uvx hazzel                  # try it — nothing installed, no venv touched (or: pipx run hazzel)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A terminal coding agent you can actually read.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "a terminal coding harness",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1 align=\"center\">Hazzel</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "export GROQ_API_KEY=\"...\"   # or skip this and pick a provider inside with /model",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/1",
+      "source_id": "readme",
+      "quote": "| OpenAI | `OPENAI_API_KEY` | |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/2",
+      "source_id": "readme",
+      "quote": "| Anthropic | `ANTHROPIC_API_KEY` | |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.6.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:54:45+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "❯ /review --staged",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "❯ /commit",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "❯ Fix the failing test in tests/test_agent.py",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "| Capability | Hazzel | Aider | Cloud agents |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Bring your own key. No subscription. Every change shown as a diff before it touches disk.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "you pay your provider directly, or nothing at all if you're running local.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:17+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-28T19:03:31+08:00",
+  "updated_at": "2026-10-31T02:11:57+08:00"
+}

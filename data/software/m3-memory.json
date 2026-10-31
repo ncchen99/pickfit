@@ -1,0 +1,613 @@
+{
+  "schema_version": "software.v1",
+  "slug": "m3-memory",
+  "repo_id": "gh:1167246588",
+  "name": "m3 Memory",
+  "summary": "Local-first memory layer that stores facts and history for AI assistants to recall.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "agent-memory",
+    "agentic-memory",
+    "ai-agents",
+    "ai-memory",
+    "claude-code",
+    "fips-140-3",
+    "gdpr",
+    "gemini-cli",
+    "knowledge-graph",
+    "langchain"
+  ],
+  "use_cases": [
+    "remember facts from earlier sessions",
+    "recall past conversations",
+    "share memory across AI assistants",
+    "find memories by meaning",
+    "share notes and handoffs between agents"
+  ],
+  "alternatives_to": [
+    "Mem0",
+    "Letta",
+    "Zep"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://github.com/skynetcmd/m3-memory",
+  "repo": {
+    "url": "https://github.com/skynetcmd/m3-memory",
+    "full_name": "skynetcmd/m3-memory",
+    "created_at": "2026-02-26T04:56:40Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.12+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install m3-memory",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "m3 setup"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-m3-memory-20261031-023427-2831",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "python3 --version && uv --version && uv tool install m3-memory",
+          "purpose": "Install m3-memory via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "m3 --version",
+        "expected_signal": "m3-memory 2026.10.25.0"
+      },
+      "first_task": "m3 doctor"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install m3-memory",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "m3 setup"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v2026.10.25.0",
+    "published_at": "2026-10-26T03:49:38Z",
+    "url": "https://github.com/skynetcmd/m3-memory/releases/tag/v2026.10.25.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:36:50.356352+08:00",
+    "runs": [
+      {
+        "id": "verify-m3-memory-20261031-023427-2831",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:36:50.356352+08:00",
+        "tool_version": "2026.10.25.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "python3 --version && uv --version && uv tool install m3-memory",
+            "purpose": "Install m3-memory via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "m3 --version",
+            "expected_signal": "m3-memory 2026.10.25.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "m3-memory 2026.10.25.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "m3 --help",
+            "expected_signal": "m3 setup",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "m3 setup",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "m3 doctor",
+            "expected_signal": "m3 DEGRADED",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "[~] m3 DEGRADED · ? memories · embedder: pure-Python (HTTP) · chatlog: ?",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "m3 memory memory_write --type user_fact --content \"pickfit verification test memory\" --title \"verification test\" --no-embed --yes",
+            "expected_signal": "Created:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"Created: 8f582406-51e1-4b97-b317-a074aa69d24a\"",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "m3 memory memory_search --query \"pickfit verification test memory\"",
+            "expected_signal": "pickfit verification test memory",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"content\": \"pickfit verification test memory\",",
+            "setup": [
+              {
+                "command": "m3 memory memory_write --type user_fact --content \"pickfit verification test memory\" --title \"verification test\" --no-embed --yes",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "m3 setup # finds your agents and connects them to m3",
+            "actually_needed": "m3 setup is an interactive wizard prompting 'Keep the current settings and just update this install? [Y/n]' and waits for TTY input; with stdin closed it hung until killed after 60s (exit 137). Use non-interactive flags (see m3 setup --help, e.g. --agents/--no-cognitive-loop) or m3 doctor for a non…",
+            "kind": "note"
+          },
+          {
+            "readme_said": "m3 doctor # checks that everything is working",
+            "actually_needed": "m3 doctor exits 1 and reports 'm3 DEGRADED' with 'embedding: broken' and 'embed-server: binary not located' when the optional embedder is not installed; storage and CLI still work via keyword search.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "m3 CLI memory_write/memory_search with default embedding",
+            "actually_needed": "m3 memory memory_write required --no-embed --yes to store without the embedder server and to confirm the mutating tool; m3 memory memory_search then falls back to keyword search with EmbedFallbackError warnings on stderr but exit 0.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show m3 DEGRADED doctor output, successful Created memory write, and correct m3-memory version.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-m3-memory-20261031-023427-2831/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-m3-memory-20261031-023427-2831/check-1-cmd4.judged.png",
+            "runs/verify/verify-m3-memory-20261031-023427-2831/check-2-cmd11.judged.png",
+            "runs/verify/verify-m3-memory-20261031-023427-2831/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.090751
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:43:57+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7225,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 56.9,
+      "signals": {
+        "stars": 30,
+        "monthly_downloads": 5393,
+        "forks": 4,
+        "dependents": null,
+        "release_downloads": 18,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 246,
+      "packages": [
+        "pypi:m3-memory"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 34.05
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:43:57.550284+08:00",
+      "sources_sha": "dac48a84e7bb8a691963b0415481ea5d875bda28ce347452365b5d41a302d366",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "m3 is a **memory layer** for AI agents: the AI assistants that work for you, such as"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "You keep using the assistants you already use;"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "m3 itself needs no cloud\naccount or API key; your AI assistant may have its own requirements."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pipx install m3-memory  # or pip install m3-memory in a virtual environment; use one, not both"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "m3 setup                # finds your agents and connects them to m3"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "`m3_config.toml` holds every setting, and `m3 config show` prints each one"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "working? [Troubleshooting](docs/TROUBLESHOOTING.md) · [FAQ](docs/FAQ.md)"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Apache 2.0. ([Project status](#project-status) · [Roadmap](docs/ROADMAP.md))"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/skynetcmd/m3-memory",
+      "fetched_at": "2026-10-30T23:46:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/skynetcmd/m3-memory/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:08:11+08:00"
+    },
+    {
+      "id": "release:v2026.10.25.0",
+      "kind": "release",
+      "url": "https://github.com/skynetcmd/m3-memory/releases/tag/v2026.10.25.0",
+      "fetched_at": "2026-10-31T01:08:11+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "an MCP server and a\nJSON-in, JSON-out command-line tool over the same store.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "pipx install m3-memory  # or pip install m3-memory in a virtual environment",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "you can use it from\nthe command line too.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "It runs on your own computer and stores\nfacts, decisions, preferences and conversation history",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# 🧠 m3 Memory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "5,700+ tests on Windows, macOS and Linux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.12+",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "github_api",
+      "quote": "100% local (fully offline) or cloud capable",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:46:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:46:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:46:57+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:46:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:46:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2026.10.25.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:08:11+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "**Stable** | Safe to build on: tested on every release",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "remembers what you told it in earlier sessions",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "keeps your conversations and finds them again",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "shares one memory across Claude Code, Cursor, Gemini CLI and [others]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "finds a memory even when you don't recall the exact words",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "lets several assistants share notes, hand off work and split tasks",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Comparison with Mem0, Letta, Zep and others",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "Comparison with Mem0, Letta, Zep and others",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "Comparison with Mem0, Letta, Zep and others",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "pipx install m3-memory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "pipx install m3-memory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "pipx install m3-memory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "By default everything stays on your own\ncomputer, and it [works offline]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:13+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:46:57+08:00",
+  "updated_at": "2026-10-31T02:43:57+08:00"
+}

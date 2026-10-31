@@ -1,0 +1,455 @@
+{
+  "schema_version": "software.v1",
+  "slug": "rei",
+  "repo_id": "gh:1376607924",
+  "name": "Rei",
+  "summary": "Local-first agent that writes and verifies code, reviews, and runs automated tasks.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "ai-coding",
+    "cli",
+    "code-review",
+    "coding-agent",
+    "developer-tools",
+    "gguf",
+    "llm",
+    "lm-studio",
+    "local-first"
+  ],
+  "use_cases": [
+    "write code and verify with project compiler or tests",
+    "review code as reviewer role or isolated sub-agent",
+    "run morning briefing with news and weather via MCP"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/lucasaguilar/rei",
+    "full_name": "lucasaguilar/rei",
+    "created_at": "2026-09-19T01:40:41Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "node>=20"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": [
+      "cloud provider API key"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-rei-20261030-234830-eedb",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/lucasaguilar/rei/main/install.sh -o /tmp/install-rei.sh && wc -c /tmp/install-rei.sh && head -c 2000 /tmp/install-rei.sh",
+          "purpose": "Download rei install script"
+        },
+        {
+          "command": "bash /tmp/install-rei.sh",
+          "purpose": "Install rei via script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "rei --help",
+        "expected_signal": "REI 0.1.0 — a local-first coding agent."
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": null,
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-30T23:51:57.183174+08:00",
+    "runs": [
+      {
+        "id": "verify-rei-20261030-234830-eedb",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-30T23:51:57.183174+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/lucasaguilar/rei/main/install.sh -o /tmp/install-rei.sh && wc -c /tmp/install-rei.sh && head -c 2000 /tmp/install-rei.sh",
+            "purpose": "Download rei install script"
+          },
+          {
+            "command": "bash /tmp/install-rei.sh",
+            "purpose": "Install rei via script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "rei --help",
+            "expected_signal": "REI 0.1.0 — a local-first coding agent.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "REI 0.1.0 — a local-first coding agent.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "node $HOME/.rei/bin/rei.js --version",
+            "expected_signal": "rei 0.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "rei 0.1.0",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/lucasaguilar/rei/main/install.sh | bash",
+            "actually_needed": "install script used cp fallback automatically (rsync not installed in box) and install succeeded",
+            "kind": "tool_handled"
+          },
+          {
+            "readme_said": "rei --config",
+            "actually_needed": "rei --config starts an interactive launcher asking for workspace/provider and an API key or local endpoint; with stdin closed it waits for input and had to be killed after 15s, so it cannot complete here without a key/server",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows rei --help printing the REI banner, version tagline, and usage instructions with exit code 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-rei-20261030-234830-eedb/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-rei-20261030-234830-eedb/check-1-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.070329
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-30T23:55:13+08:00",
+    "quality": {
+      "total": 61.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 26.2,
+      "signals": {
+        "stars": 8,
+        "monthly_downloads": null,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 39,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 45.17
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:55:13.257428+08:00",
+      "sources_sha": "27f0b97ce8abf8cf3f9338fd50316549a7a1726522e83fd63a3e9c0bfc1d04d3",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "One agent, tailored to the job: it writes code and checks its own work, reviews like a senior, runs"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "- **You run a model on your own machine** — LM Studio, oMLX, Ollama, MTPLX — and you want an agent built"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "alt=\"Node ≥ 20\""
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/lucasaguilar/rei/main/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "cd ~/my-project && rei"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `MODEL_PROVIDER` | which backend to use |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "One known limit, worth saying plainly."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "alt=\"License: MIT\""
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/lucasaguilar/rei",
+      "fetched_at": "2026-10-30T23:42:05+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/lucasaguilar/rei/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:31:14+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "cd ~/my-project && rei",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:24+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/lucasaguilar/rei/main/install.sh | bash   # then: cd ~/my-project && rei",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:24+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Codes** — and runs your project's own compiler or tests before it says \"done\".",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:24+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "it writes code and checks its own work, reviews like a senior, runs your day",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:24+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "github_api",
+      "quote": "Rei Agent. A local-first agent you assemble yourself.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:24+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Node ≥ 20",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:24+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Local is free, private, and works offline.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:24+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "takes an API key if you picked a cloud one",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:24+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:05+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:05+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:05+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:05+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Codes** — and runs your project's own compiler or tests before it says \"done\".",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:24+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "a reviewer role in your session, or an isolated sub-agent on a different model.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:24+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "news, weather, your morning briefing; email and music through the MCP",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:24+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Local for free, cloud when it counts. No lock-in.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:24+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Running part local and part cloud in the same session is a supported setup,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:43:24+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:11+08:00",
+  "updated_at": "2026-10-30T23:55:13+08:00"
+}
