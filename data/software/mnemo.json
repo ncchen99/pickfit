@@ -1,0 +1,717 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mnemo",
+  "repo_id": "gh:1156058980",
+  "name": "Mnemo MCP Server",
+  "summary": "Persistent AI memory with hybrid search stored locally in SQLite.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "ai-coding",
+    "ai-memory",
+    "claude",
+    "claude-code",
+    "cursor",
+    "docker",
+    "hybrid-search",
+    "mcp",
+    "mcp-server"
+  ],
+  "use_cases": [
+    "recall topic-relevant memories with context-type filtering",
+    "capture memories with typed context",
+    "audit memories for duplicates and contradictions",
+    "capture session decisions and open questions",
+    "query point-in-time memory snapshots"
+  ],
+  "alternatives_to": [
+    "Mem0",
+    "Letta",
+    "OpenMemory"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://docs.n24q02m.com/servers/mnemo/",
+  "repo": {
+    "url": "https://github.com/n24q02m/mnemo",
+    "full_name": "n24q02m/mnemo",
+    "created_at": "2026-02-12T08:01:04Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mnemo-20261101-002540-a96b",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install mnemo-mcp 2>&1",
+          "purpose": "install mnemo-mcp via uv tool install (places mnemo-mcp on PATH)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mnemo-mcp --version 2>&1",
+        "expected_signal": "mnemo 2.21.0"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v2.21.0",
+    "published_at": "2026-10-27T13:51:11Z",
+    "url": "https://github.com/n24q02m/mnemo/releases/tag/v2.21.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:26:40.560453+08:00",
+    "runs": [
+      {
+        "id": "verify-mnemo-20261101-002540-a96b",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:26:40.560453+08:00",
+        "tool_version": "2.21.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install mnemo-mcp 2>&1",
+            "purpose": "install mnemo-mcp via uv tool install (places mnemo-mcp on PATH)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mnemo-mcp --version 2>&1",
+            "expected_signal": "mnemo 2.21.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mnemo 2.21.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s -i http://127.0.0.1:8000/mcp 2>&1 | head -n 40\npython3 ~/.pickfit/mcp_probe.py --url http://127.0.0.1:8000/mcp --timeout 120 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "mnemo-mcp",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call memory_stats --args '{}' --url http://127.0.0.1:8000/mcp --timeout 120 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=memory_stats content=text text_chars=190",
+            "setup": [
+              {
+                "command": "mnemo-mcp",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "README lists uvx --from mnemo-mcp mnemo-mcp as launch command and says server speaks Streamable HTTP only with no stdio transport",
+            "actually_needed": "Installed via uv tool install mnemo-mcp so launch command is on PATH and works offline; server binds to http://127.0.0.1:8000/mcp and must be probed via --url, not stdio",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 2.21.0, successful MCP handshake with 13 tools, and successful memory_stats tool call.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mnemo-20261101-002540-a96b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mnemo-20261101-002540-a96b/check-1-cmd4.judged.png",
+            "runs/verify/verify-mnemo-20261101-002540-a96b/check-2-cmd6.judged.png",
+            "runs/verify/verify-mnemo-20261101-002540-a96b/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.063151,
+        "mcp": {
+          "transport": "streamable_http",
+          "launch": [
+            "mnemo-mcp"
+          ],
+          "url": "http://127.0.0.1:8000/mcp",
+          "protocol_version": "2025-11-25",
+          "server_name": "Mnemo",
+          "server_version": "2.21.0",
+          "tools": [
+            "add_memory",
+            "search_memory",
+            "list_memories",
+            "update_memory",
+            "delete_memory",
+            "export_memories",
+            "import_memories",
+            "memory_stats",
+            "restore_memory",
+            "archived_memories",
+            "consolidate_memories",
+            "memory",
+            "config"
+          ],
+          "tool_count": 13,
+          "called_tool": "memory_stats",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "streamable_http"
+    ],
+    "launch_command": "uvx --from mnemo-mcp mnemo-mcp",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add --transport http mnemo http://127.0.0.1:8000/mcp"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "MNEMO_AUTH_TOKEN",
+        "required": null,
+        "purpose": "auth token for hashing"
+      },
+      {
+        "name": "MNEMO_HOST",
+        "required": null,
+        "purpose": "bind host"
+      },
+      {
+        "name": "MNEMO_PORT",
+        "required": null,
+        "purpose": "bind port"
+      }
+    ],
+    "tools": [
+      "add_memory",
+      "search_memory",
+      "list_memories",
+      "update_memory",
+      "delete_memory",
+      "memory_stats",
+      "restore_memory",
+      "archived_memories",
+      "consolidate_memories",
+      "memory",
+      "config"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 86.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 50.4,
+      "signals": {
+        "stars": 12,
+        "monthly_downloads": 7888,
+        "forks": 7,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 260,
+      "packages": [
+        "pypi:mnemo-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 42.8
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "bac2418f55991975149756d6c6f7ad8fb6a01873be42f89683b17dc97c0c8603",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Persistent AI memory with hybrid search and embedded sync. Open, free, unlimited."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "primary for scripts/agents; it never"
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "uvx --from mnemo-mcp mnemo-mcp            # serves http://127.0.0.1:8000/mcp by default"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "mnemo recall --db ./mem.db \"release ladder\" --k 5"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "may alternatively come from the\n`HULL_<TASK>_API_KEY` env vars."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Apache-2.0 -- See [LICENSE](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/n24q02m/mnemo",
+      "fetched_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/n24q02m/mnemo/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:43:17+08:00"
+    },
+    {
+      "id": "release:v2.21.0",
+      "kind": "release",
+      "url": "https://github.com/n24q02m/mnemo/releases/tag/v2.21.0",
+      "fetched_at": "2026-10-31T13:43:17+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "# Mnemo MCP Server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "uvx --from mnemo-mcp mnemo-mcp            # serves http://127.0.0.1:8000/mcp by default",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "MCP server remains a secondary surface.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**Persistent AI memory with hybrid search. Open, free, unlimited.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Mnemo MCP Server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.21.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:43:17+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Pulls cwd / topic-relevant memories with `context_type` filtering",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Typed manual capture with `context_type` decision tree",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Find duplicates, contradictions, stale entries; consolidate",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Capture decisions / preferences / corrections / conventions / open questions",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Point-in-time snapshots via `action=\"as_of\"` and version-chain tracing via `superseded_by`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "| Feature | mnemo | Mem0 | Letta | OpenMemory |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "| Feature | mnemo | Mem0 | Letta | OpenMemory |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "| Feature | mnemo | Mem0 | Letta | OpenMemory |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "github_api",
+      "quote": "Persistent AI memory with hybrid search and embedded sync. Open, free, unlimited.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Optional cloud calls go through per-task `[models.<task>]` provider cells (OpenAI-spec; OpenRouter pre-wired default)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "the server speaks Streamable HTTP only — there is no stdio",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "uvx --from mnemo-mcp mnemo-mcp            # serves http://127.0.0.1:8000/mcp by default",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add --transport http mnemo http://127.0.0.1:8000/mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "MNEMO_AUTH_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "MNEMO_HOST",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "MNEMO_PORT",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`add_memory`, `search_memory`, `list_memories`, `update_memory`, `delete_memory`, `export_memories`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`add_memory`, `search_memory`, `list_memories`, `update_memory`, `delete_memory`, `export_memories`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`add_memory`, `search_memory`, `list_memories`, `update_memory`, `delete_memory`, `export_memories`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`add_memory`, `search_memory`, `list_memories`, `update_memory`, `delete_memory`, `export_memories`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`add_memory`, `search_memory`, `list_memories`, `update_memory`, `delete_memory`, `export_memories`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`memory_stats`, `restore_memory`, `archived_memories`, `consolidate_memories`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`memory_stats`, `restore_memory`, `archived_memories`, `consolidate_memories`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`memory_stats`, `restore_memory`, `archived_memories`, `consolidate_memories`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`memory_stats`, `restore_memory`, `archived_memories`, `consolidate_memories`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "| `memory` (legacy dispatcher, **DEPRECATED** -- use the granular tools above instead;",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "| `config` | `status`, `set`, `warmup`, `backfill_embeddings` | Server status, update runtime settings,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:33+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:37:45+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

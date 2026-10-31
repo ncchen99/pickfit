@@ -31,6 +31,12 @@
     "Schedule cron jobs as Markdown files"
   ],
   "alternatives_to": [],
+  "features": [
+    "chat via console TUI",
+    "connect editors via ACP server",
+    "serve OpenAI-compatible API with web UI",
+    "chat via Telegram gateway"
+  ],
   "why_worth_it": null,
   "homepage": "https://coddy.dev",
   "repo": {
@@ -74,20 +80,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-coddy-agent-20261029-030213-c7b1",
+      "run_id": "verify-coddy-agent-20261031-021355-5f67",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://coddy.dev/install.sh -o /tmp/coddy-install.sh && bash /tmp/coddy-install.sh",
-          "purpose": "Download install.sh and install coddy to ~/.local/bin"
+          "command": "curl -fsSL https://coddy.dev/install.sh -o /tmp/coddy-install.sh && wc -c /tmp/coddy-install.sh && head -c 2000 /tmp/coddy-install.sh",
+          "purpose": "download install script"
+        },
+        {
+          "command": "bash /tmp/coddy-install.sh --no-shell-setup",
+          "purpose": "install coddy binary via script"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "coddy --version",
-        "expected_signal": "1.3.60"
+        "command": "coddy -v",
+        "expected_signal": "1.3.66"
       },
-      "first_task": "coddy -t"
+      "first_task": "coddy -v"
     },
     "windows": {
       "basis": "readme_claim",
@@ -121,10 +131,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T03:04:13.663207+08:00",
+    "checked_at": "2026-10-31T02:15:28.899729+08:00",
     "runs": [
       {
-        "id": "verify-coddy-agent-20261029-030213-c7b1",
+        "id": "verify-coddy-agent-20261031-021355-5f67",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -132,29 +142,33 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T03:04:13.663207+08:00",
-        "tool_version": "1.3.60",
+        "checked_at": "2026-10-31T02:15:28.899729+08:00",
+        "tool_version": "1.3.66",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://coddy.dev/install.sh -o /tmp/coddy-install.sh && bash /tmp/coddy-install.sh",
-            "purpose": "Download install.sh and install coddy to ~/.local/bin"
+            "command": "curl -fsSL https://coddy.dev/install.sh -o /tmp/coddy-install.sh && wc -c /tmp/coddy-install.sh && head -c 2000 /tmp/coddy-install.sh",
+            "purpose": "download install script"
+          },
+          {
+            "command": "bash /tmp/coddy-install.sh --no-shell-setup",
+            "purpose": "install coddy binary via script"
           }
         ],
         "smoke_tests": [
           {
-            "command": "coddy --version",
-            "expected_signal": "1.3.60",
+            "command": "coddy -v",
+            "expected_signal": "1.3.66",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "1.3.60",
+            "observed_excerpt": "1.3.66",
             "setup": [],
             "offline": true
           },
           {
             "command": "coddy -t",
-            "expected_signal": "valid, 1 warning",
+            "expected_signal": "valid",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "/home/sbx/.coddy/config.yaml: valid, 1 warning",
@@ -162,16 +176,7 @@
             "offline": true
           },
           {
-            "command": "coddy --dry-run",
-            "expected_signal": "dry run: 1 error",
-            "exit_code": 1,
-            "passed": true,
-            "observed_excerpt": "dry run: 1 error, 0 warnings, 1 ok",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "curl -fsSL http://127.0.0.1:12345/docs/ -o /tmp/coddy-docs.html && wc -c /tmp/coddy-docs.html\ncurl -fsSL http://127.0.0.1:12345/v1/models",
+            "command": "curl -fsSL http://127.0.0.1:12345/v1/models && echo",
             "expected_signal": "\"object\":\"list\"",
             "exit_code": 0,
             "passed": true,
@@ -190,27 +195,63 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show config validation with 1 warning, dry-run reporting 1 error as intended, and version 1.3.60 printed.",
+          "observed": "Screenshots show config validation as valid, models endpoint returning object list, and version 1.3.66.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-coddy-agent-20261029-030213-c7b1/report.json",
+          "trace_path": "runs/verify/verify-coddy-agent-20261031-021355-5f67/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-coddy-agent-20261029-030213-c7b1/check-1-cmd6.judged.png",
-            "runs/verify/verify-coddy-agent-20261029-030213-c7b1/check-2-cmd7.judged.png",
-            "runs/verify/verify-coddy-agent-20261029-030213-c7b1/check-3-cmd4.judged.png"
+            "runs/verify/verify-coddy-agent-20261031-021355-5f67/check-1-cmd4.judged.png",
+            "runs/verify/verify-coddy-agent-20261031-021355-5f67/check-2-cmd10.judged.png",
+            "runs/verify/verify-coddy-agent-20261031-021355-5f67/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.065415
+        "cost_usd": 0.109012,
+        "features": [
+          {
+            "feature": "chat via console TUI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "console chat needs provider key or /login"
+          },
+          {
+            "feature": "connect editors via ACP server",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "ACP initialize answered with agentInfo in output but check exit was masked and budget exhausted so not citable"
+          },
+          {
+            "feature": "serve OpenAI-compatible API with web UI",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "chat via Telegram gateway",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Telegram gateway needs a bot token"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 93.1,
       "confidence": 0.9,
@@ -539,8 +580,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-29T02:35:46+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "console TUI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:19+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "github_api",
+      "quote": "ACP server for editors",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:19+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "github_api",
+      "quote": "OpenAI-compatible API with embedded web UI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:19+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "github_api",
+      "quote": "Telegram gateway",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:19+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

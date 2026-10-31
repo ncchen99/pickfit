@@ -14,6 +14,8 @@ from pickfit.verify.mcp import MARKER, parse_summary
 from pickfit.verify.mcp_probe import flags_for, safe_name
 
 PROBE = Path(__file__).resolve().parent.parent / "pickfit" / "verify" / "mcp_probe.py"
+# The probe runs inside Linux boxes and stops the server with POSIX signals (SIGKILL).
+POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="mcp_probe stops the server with POSIX signals")
 
 SERVER = textwrap.dedent('''\
     import json, sys
@@ -77,6 +79,7 @@ def probe(tmp_path: Path, *args: str, tools: list[dict] | None = None, mode: str
                           timeout=60)
 
 
+@POSIX_ONLY
 def test_handshake_lists_tools_and_ends_with_a_summary(tmp_path: Path) -> None:
     out = probe(tmp_path, tools=[TIME_TOOL, POISONED])
     assert out.returncode == 0, out.stdout + out.stderr
@@ -95,6 +98,7 @@ def test_handshake_lists_tools_and_ends_with_a_summary(tmp_path: Path) -> None:
     assert out.stdout.splitlines()[-1].startswith(MARKER)
 
 
+@POSIX_ONLY
 def test_stdout_noise_and_server_requests(tmp_path: Path) -> None:
     out = probe(tmp_path, mode="noise")
     assert out.returncode == 0 and parse_summary(out.stdout)["noise"] == 1
@@ -102,6 +106,7 @@ def test_stdout_noise_and_server_requests(tmp_path: Path) -> None:
     assert probe(tmp_path, mode="ping").returncode == 0
 
 
+@POSIX_ONLY
 def test_tool_call_ok_and_error(tmp_path: Path) -> None:
     out = probe(tmp_path, "--call", "get_time", "--args", '{"tz": "UTC"}')
     assert out.returncode == 0, out.stdout
@@ -113,6 +118,7 @@ def test_tool_call_ok_and_error(tmp_path: Path) -> None:
     assert probe(tmp_path, "--call", "missing", "--args", "{}").returncode == 1
 
 
+@POSIX_ONLY
 def test_a_server_that_exits_asking_for_a_key(tmp_path: Path) -> None:
     server = "import sys\nprint('Error: GITHUB_TOKEN is required', file=sys.stderr)\nsys.exit(1)\n"
     out = probe(tmp_path, server=server)
@@ -121,6 +127,7 @@ def test_a_server_that_exits_asking_for_a_key(tmp_path: Path) -> None:
     assert parse_summary(out.stdout) == {**parse_summary(out.stdout), "ok": False}
 
 
+@POSIX_ONLY
 def test_no_tools_and_timeouts(tmp_path: Path) -> None:
     assert probe(tmp_path, tools=[]).returncode == 4
     silent = "import sys, time\nsys.stdin.readline()\ntime.sleep(30)\n"
@@ -167,6 +174,7 @@ def test_safe_name() -> None:
     assert safe_name(None) == "?" and len(safe_name("a" * 200)) == 64
 
 
+@POSIX_ONLY
 def test_a_modern_server_without_initialize(tmp_path: Path) -> None:
     out = probe(tmp_path, "--call", "get_time", "--args", "{}", mode="modern")
     assert out.returncode == 0, out.stdout + out.stderr
@@ -256,6 +264,7 @@ def test_url_must_be_local_and_alone() -> None:
     assert out.returncode == 2 and "cannot reach the server" in out.stdout
 
 
+@POSIX_ONLY
 def test_server_instructions_never_reach_the_output_even_on_failure(tmp_path: Path) -> None:
     out = probe(tmp_path, tools=[], mode="modern")
     assert out.returncode == 4

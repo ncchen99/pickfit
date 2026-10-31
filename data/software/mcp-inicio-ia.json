@@ -30,6 +30,12 @@
     "prepare research query from a question"
   ],
   "alternatives_to": [],
+  "features": [
+    "search local documents",
+    "ask local assistant with Ollama",
+    "save and consult user notes",
+    "read indexed documents by ID"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -59,24 +65,24 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-mcp-inicio-ia-20261029-024627-e8b2",
+      "run_id": "verify-mcp-inicio-ia-20261031-021054-c2b0",
       "method": "source",
       "steps": [
         {
-          "command": "git clone https://github.com/em4nu3i69dll/mcp-inicio-ia.git repo && ls -la repo && cat repo/requirements.txt && cat repo/pyproject.toml 2>/dev/null; cat repo/setup.py 2>/dev/null; python3 --version; python3 -c \"import sqlite3; print(sqlite3.sqlite_version); print(sqlite3.connect(':memory:').execute(\\\"SELECT sqlite_compileoption_used('ENABLE_FTS5')\\\").fetchone())\"",
-          "purpose": "Clone repository source"
+          "command": "git clone https://github.com/em4nu3i69dll/mcp-inicio-ia.git /tmp/mcp-inicio-ia",
+          "purpose": "clone repository to /tmp/mcp-inicio-ia"
         },
         {
-          "command": "cd repo && python3 -m pip install -r requirements.txt && python3 -m pip install --no-deps .",
-          "purpose": "Install requirements and package with pip per README"
+          "command": "cd /tmp/mcp-inicio-ia && python3 -m pip install -r requirements.txt && python3 -m pip install --no-deps .",
+          "purpose": "install requirements and package with pip"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "cd repo && python3 -m mcp_inicio --help",
+        "command": "cd /tmp/mcp-inicio-ia && python3 -m mcp_inicio --help",
         "expected_signal": "usage: mcp-inicio"
       },
-      "first_task": "cd repo && python3 -m mcp_inicio preparar"
+      "first_task": "cd /tmp/mcp-inicio-ia && python3 -m mcp_inicio preparar"
     },
     "windows": null
   },
@@ -91,10 +97,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:47:50.757035+08:00",
+    "checked_at": "2026-10-31T02:12:45.300082+08:00",
     "runs": [
       {
-        "id": "verify-mcp-inicio-ia-20261029-024627-e8b2",
+        "id": "verify-mcp-inicio-ia-20261031-021054-c2b0",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -102,23 +108,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T02:47:50.757035+08:00",
+        "checked_at": "2026-10-31T02:12:45.300082+08:00",
         "tool_version": "1.0.0",
         "install_method": "source",
         "replayed": true,
         "steps": [
           {
-            "command": "git clone https://github.com/em4nu3i69dll/mcp-inicio-ia.git repo && ls -la repo && cat repo/requirements.txt && cat repo/pyproject.toml 2>/dev/null; cat repo/setup.py 2>/dev/null; python3 --version; python3 -c \"import sqlite3; print(sqlite3.sqlite_version); print(sqlite3.connect(':memory:').execute(\\\"SELECT sqlite_compileoption_used('ENABLE_FTS5')\\\").fetchone())\"",
-            "purpose": "Clone repository source"
+            "command": "git clone https://github.com/em4nu3i69dll/mcp-inicio-ia.git /tmp/mcp-inicio-ia",
+            "purpose": "clone repository to /tmp/mcp-inicio-ia"
           },
           {
-            "command": "cd repo && python3 -m pip install -r requirements.txt && python3 -m pip install --no-deps .",
-            "purpose": "Install requirements and package with pip per README"
+            "command": "cd /tmp/mcp-inicio-ia && python3 -m pip install -r requirements.txt && python3 -m pip install --no-deps .",
+            "purpose": "install requirements and package with pip"
           }
         ],
         "smoke_tests": [
           {
-            "command": "cd repo && python3 -m mcp_inicio --help",
+            "command": "cd /tmp/mcp-inicio-ia && python3 -m mcp_inicio --help",
             "expected_signal": "usage: mcp-inicio",
             "exit_code": 0,
             "passed": true,
@@ -127,7 +133,7 @@
             "offline": true
           },
           {
-            "command": "cd repo && python3 -m mcp_inicio preparar",
+            "command": "cd /tmp/mcp-inicio-ia && python3 -m mcp_inicio preparar",
             "expected_signal": "\"indexados\": 3",
             "exit_code": 0,
             "passed": true,
@@ -136,14 +142,14 @@
             "offline": true
           },
           {
-            "command": "cd repo && python3 -m mcp_inicio comprobar",
+            "command": "cd /tmp/mcp-inicio-ia && python3 -m mcp_inicio comprobar",
             "expected_signal": "\"conectado\": true",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "\"conectado\": true,",
             "setup": [
               {
-                "command": "cd repo && python3 -m mcp_inicio preparar",
+                "command": "cd /tmp/mcp-inicio-ia && python3 -m mcp_inicio preparar",
                 "background": false,
                 "port": null
               }
@@ -151,14 +157,58 @@
             "offline": true
           },
           {
-            "command": "cd repo && python3 -m unittest discover -s pruebas -v",
-            "expected_signal": "Ran 20 tests",
+            "command": "cd /tmp/mcp-inicio-ia && python3 -m unittest discover -s pruebas -v",
+            "expected_signal": "OK",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Ran 20 tests in 3.928s",
+            "observed_excerpt": "test_archivos_eliminados_desaparecen_al_reindexar (test_almacen.Documentos.test_archivos_eliminados_desaparecen_al_reindexar) ... ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/mcp-inicio-ia && python3 -c \"from mcp_inicio.almacen import Almacen; import json; print(json.dumps(Almacen('.').buscar('respaldos'), ensure_ascii=False, indent=2))\"",
+            "expected_signal": "fragmento",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"fragmento\": \"# [Respaldos] de ejemplo\\n\\nLos [respaldos] de Faro se realizan todos los días a las 03.00 UTC.\\nLa retención es de siete copias diarias y cuatro semanales.\\nEl respaldo de SQLite se realiza con la API online de la biblioteca.\\nLa copia … \"",
             "setup": [
               {
-                "command": "cd repo && python3 -m mcp_inicio preparar",
+                "command": "cd /tmp/mcp-inicio-ia && python3 -m mcp_inicio preparar",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/mcp-inicio-ia && python3 -m mcp_inicio nota --titulo \"Decisión de despliegue\" --archivo /tmp/nota_decision.txt && python3 -c \"from mcp_inicio.almacen import Almacen; import json; print(json.dumps(Almacen('.').notas(), ensure_ascii=False, indent=2))\"",
+            "expected_signal": "\"guardada\": true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"guardada\": true",
+            "setup": [
+              {
+                "command": "cd /tmp/mcp-inicio-ia && python3 -m mcp_inicio preparar",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/mcp-inicio-ia && cat > /tmp/nota_decision.txt <<'EOF'\nDecisión de despliegue: usar SQLite local con FTS5 para la búsqueda.\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/mcp-inicio-ia && python3 -c \"from mcp_inicio.almacen import Almacen; import json; a=Almacen('.'); docs=a.listar(); did=docs['documentos'][0]['id']; print('DOC_ID:'+did); print(json.dumps(a.leer(did), ensure_ascii=False, indent=2))\"",
+            "expected_signal": "Accesos de ejemplo",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"titulo\": \"Accesos de ejemplo\",",
+            "setup": [
+              {
+                "command": "cd /tmp/mcp-inicio-ia && python3 -m mcp_inicio preparar",
                 "background": false,
                 "port": null
               }
@@ -170,27 +220,67 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three screenshots show successful outputs: preparar indexed 3, comprobar connected true, and help usage displayed.",
+          "observed": "Screenshots show preparar indexed 3 docs, comprobar connected true with tools, and --help usage displayed.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-mcp-inicio-ia-20261029-024627-e8b2/report.json",
+          "trace_path": "runs/verify/verify-mcp-inicio-ia-20261031-021054-c2b0/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-mcp-inicio-ia-20261029-024627-e8b2/check-1-cmd4.judged.png",
-            "runs/verify/verify-mcp-inicio-ia-20261029-024627-e8b2/check-2-cmd5.judged.png",
-            "runs/verify/verify-mcp-inicio-ia-20261029-024627-e8b2/check-3-cmd3.judged.png"
+            "runs/verify/verify-mcp-inicio-ia-20261031-021054-c2b0/check-1-cmd4.judged.png",
+            "runs/verify/verify-mcp-inicio-ia-20261031-021054-c2b0/check-2-cmd5.judged.png",
+            "runs/verify/verify-mcp-inicio-ia-20261031-021054-c2b0/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.040149
+        "cost_usd": 0.103012,
+        "features": [
+          {
+            "feature": "search local documents",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "ask local assistant with Ollama",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "requires Ollama daemon and model pull qwen3.5:0.8b, not available in box"
+          },
+          {
+            "feature": "save and consult user notes",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "read indexed documents by ID",
+            "status": "checked",
+            "smoke_tests": [
+              6
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 66.3,
       "confidence": 0.8,
@@ -481,8 +571,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-29T02:40:12+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "búsqueda local, notas y un asistente con Ollama",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:35+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "un asistente con Ollama",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:35+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Notas guardadas expresamente por el usuario",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:35+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Contenido numerado, hasta cien líneas",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:35+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:27:54+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

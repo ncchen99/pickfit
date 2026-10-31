@@ -28,7 +28,7 @@ from dataclasses import asdict, dataclass, field
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from pickfit.schema import COMMAND_MAX, PASSED_LEVELS, is_passed
-from pickfit.verify.mcp import credentials, parse_summary, probe_kind
+from pickfit.verify.mcp import credentials, parse_summary, probe_kind, remote_proxy
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import CommandRecord, FinishArgs
@@ -148,6 +148,36 @@ def _first_word(text: str) -> str:
 def written_paths(command: str) -> set[str]:
     """Files a command writes with -o/-O/--output or a redirect (not /dev/* or &N)."""
     return {p for p in _WRITES.findall(command) if not p.startswith("/dev/") and not p[:1].isdigit()}
+
+
+def names_path(command: str, path: str) -> bool:
+    """Whether a command names `path` as a whole word, not as part of a longer name."""
+    return re.search(rf"(?<![\w./~$-]){re.escape(path)}(?![\w./-])", command) is not None
+
+
+def missing_input(check_id: int, setup_ids: list[int], available: set[int],
+                  commands: list[CommandRecord]) -> str | None:
+    """Why a check cannot run in a fresh box: it, or a setup it cites, uses a file only another command
+    wrote, one the replay does not run before it (not an install step, a setup of a check, or its own
+    setup). None when every file it names is there."""
+    by_id = {c.command_id: c for c in commands if c.command_id is not None}
+    for cid in [*setup_ids, check_id]:
+        user = by_id.get(cid)
+        if user is None:
+            continue
+        own = written_paths(user.command)
+        for earlier in commands:
+            if earlier.command_id is None or earlier.command_id >= cid or earlier.command_id in available \
+                    or earlier.command_id in setup_ids or earlier.tool != "run_command":
+                continue
+            for path in sorted(written_paths(earlier.command) - own):
+                if names_path(user.command, path) and not any(
+                        path in written_paths(by_id[a].command) for a in (*available, *setup_ids)
+                        if a in by_id and a < cid):
+                    who = "it" if cid == check_id else f"its setup {cid}"
+                    return (f"{who} uses {path}, which only command {earlier.command_id} wrote; cite a command "
+                            f"that writes it (and exits 0) in setup_ids, or a fresh box will not have it")
+    return None
 
 
 _SCRIPT = re.compile(r"\.(?:sh|bash|zsh|js|mjs|cjs|ts|py|ps1|rb|pl)$")
@@ -632,6 +662,10 @@ def mcp_problems(kind: str, stdout: str) -> list[str]:
         return ["no summary line from pickfit's MCP probe in the output"]
     if not summary.get("ok"):
         return [f"the MCP probe did not complete: {str(summary.get('error') or 'not ok')[:120]}"]
+    launch = summary.get("launch")
+    if isinstance(launch, list) and (remote := remote_proxy([str(w) for w in launch])):
+        return [f"the handshake went to the hosted {remote[1][:120]} through {remote[0]}: the box did not start "
+                "the server, so the check does not pass"]
     if kind == "mcp_call" and not summary.get("called"):
         return ["the MCP probe's tool call did not return a result"]
     return []
@@ -721,6 +755,8 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord], *, mcp: bool 
 
     checks: list[ResolvedCheck] = []
     has_service = False
+    # Before a check, a fresh box runs every install step and the setups of every check.
+    available = {*step_ids, *(s for t in finish.smoke_tests for s in t.setup_ids)}
     for test in finish.smoke_tests:
         record = by_id.get(test.command_id)
         if record is None:
@@ -742,6 +778,10 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord], *, mcp: bool 
             elif setup.exit_code != 0 or setup.timed_out:
                 setup_ok = False
                 check.problems.append(f"setup {setup_id} exited {setup.exit_code}")
+        missing = missing_input(test.command_id, list(test.setup_ids), available, commands)
+        if missing:
+            setup_ok = False
+            check.problems.append(missing)
         ok, why = evaluate_check(record, check.expected_exit_code, check.expected_signal,
                                  trusted_only=check.kind == "gui")
         if check.kind in MCP_KINDS:

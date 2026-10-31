@@ -112,11 +112,11 @@ def test_full_pass_is_replayed_offline_and_judged(tmp_path: Path):
     assert [c for c, _ in replay_box.ran] == ["uv tool install graphtty", GRAPH, "graphtty --version",
                                               "graphtty graph.json"]
     # Evidence next to the agent's report.
-    saved = VerificationRun.model_validate_json((outcome.evidence_dir / "verification_run.json").read_text())
+    saved = VerificationRun.model_validate_json((outcome.evidence_dir / "verification_run.json").read_text(encoding="utf-8"))
     assert saved == run
     for name in ("report.json", "replay.json", "judge.json", "outcome.json", "check-1-cmd4.judged.png"):
         assert (outcome.evidence_dir / name).exists(), name
-    assert json.loads((outcome.evidence_dir / "outcome.json").read_text())["offline"] is True
+    assert json.loads((outcome.evidence_dir / "outcome.json").read_text(encoding="utf-8"))["offline"] is True
     assert lines[-1].startswith("result · graphtty · level function · replayed True · judge working · "
                                 "offline True")
 
@@ -219,7 +219,7 @@ def test_the_pipeline_never_writes_failed(tmp_path: Path, agent, confirm, turns)
     outcome, _ = verify(tmp_path, FakeServer(*turns), Boxes({"agent": agent, "confirm": confirm}), write=True,
                         data_dir=path.parent)
     assert outcome.run.level == "unverified" and outcome.run.artifact_check is None
-    assert SoftwareRecord.model_validate_json(path.read_text()).verification.level != "failed"
+    assert SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8")).verification.level != "failed"
 
 
 @pytest.mark.parametrize(("script", "turns", "roles", "why"), [
@@ -312,7 +312,7 @@ SHIM = "printf '#!/bin/sh\\necho 0' > ~/.local/bin/nvidia-smi && chmod +x ~/.loc
 def bare_record(data_dir: Path) -> Path:
     """The example record with no runs, as a profile has before verification."""
     data_dir.mkdir(exist_ok=True)
-    record = json.loads((FIXTURES / "software_example.json").read_text())
+    record = json.loads((FIXTURES / "software_example.json").read_text(encoding="utf-8"))
     record.update(slug="graphtty", scores=None)
     record["verification"] = {"level": "unverified", "unverified_reason": "not_run", "checked_at": None, "runs": []}
     record["install"]["linux"] = None
@@ -324,8 +324,8 @@ def bare_record(data_dir: Path) -> Path:
 def test_write_back_keeps_a_failed_run_until_a_pass(tmp_path: Path):
     """A failed run (from a person, or a check of the published package) is replaced only by a pass."""
     path = bare_record(tmp_path / "data")
-    record = json.loads(path.read_text())
-    failed = json.loads((FIXTURES / "software_example.json").read_text())["verification"]["runs"][0] | {
+    record = json.loads(path.read_text(encoding="utf-8"))
+    failed = json.loads((FIXTURES / "software_example.json").read_text(encoding="utf-8"))["verification"]["runs"][0] | {
         "level": "failed", "blocking_error": "the wheel ships no code", "smoke_tests": [], "judge": None,
         "artifact_check": {"artifact": "https://files.example.invalid/graphtty-0.4.1-py3-none-any.whl",
                            "sha256": "0" * 64, "finding": "only dist-info files", "checked_by": "a person",
@@ -340,7 +340,7 @@ def test_write_back_keeps_a_failed_run_until_a_pass(tmp_path: Path):
     outcome, _ = verify(tmp_path, FakeServer(*agent_turns(), judge_answer("working")), Boxes({}), write=True,
                         data_dir=path.parent)
     assert outcome.written
-    assert SoftwareRecord.model_validate_json(path.read_text()).verification.level == "function"
+    assert SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8")).verification.level == "function"
     # write_back itself refuses a failed run, whatever made it.
     run = VerificationRun.model_validate(failed)
     assert write_back(run, "graphtty", path.parent) == (False, "not written: the pipeline never writes failed "
@@ -352,7 +352,7 @@ def test_write_back_keeps_a_suspicion_as_unverified(tmp_path: Path):
     outcome, _ = verify(tmp_path, FakeServer(*failed_turns()), Boxes({"agent": BROKEN, "confirm": {**INTACT, **BROKEN}}),
                         write=True, data_dir=path.parent)
     assert outcome.written
-    verification = SoftwareRecord.model_validate_json(path.read_text()).verification
+    verification = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8")).verification
     assert (verification.level, verification.unverified_reason) == ("unverified", "suspected_tool_fault")
 
 
@@ -363,7 +363,7 @@ def test_write_back_records_the_box_reason(tmp_path: Path):
                                               blocking_error="No container engine in the box (neither docker nor podman)")))
     outcome, _ = verify(tmp_path, server, Boxes({"agent": BROKEN}), write=True, data_dir=path.parent)
     assert outcome.written
-    verification = SoftwareRecord.model_validate_json(path.read_text()).verification
+    verification = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8")).verification
     assert (verification.level, verification.unverified_reason) == ("unverified", "needs_container")
 
 
@@ -396,13 +396,13 @@ def test_a_downloaded_script_run_unread_is_a_note_not_a_block(tmp_path: Path):
 def test_write_back_updates_the_record(tmp_path: Path):
     data_dir = tmp_path / "data"
     data_dir.mkdir()
-    record = json.loads((FIXTURES / "software_example.json").read_text())
+    record = json.loads((FIXTURES / "software_example.json").read_text(encoding="utf-8"))
     record["slug"] = "graphtty"
     (data_dir / "graphtty.json").write_text(json.dumps(record))
     outcome, lines = verify(tmp_path, FakeServer(*agent_turns(), judge_answer("working")), Boxes({}),
                             write=True, data_dir=data_dir)
     assert outcome.written and "write-back: written" in "\n".join(lines)
-    updated = SoftwareRecord.model_validate_json((data_dir / "graphtty.json").read_text())
+    updated = SoftwareRecord.model_validate_json((data_dir / "graphtty.json").read_text(encoding="utf-8"))
     linux = [r for r in updated.verification.runs if r.os == "linux"]
     assert [r.id for r in linux] == [outcome.run_id]  # replaces the earlier linux sandbox run
     guide = updated.install.linux
@@ -415,7 +415,7 @@ def test_write_back_updates_the_record(tmp_path: Path):
 def test_write_back_keeps_a_stronger_passed_run(tmp_path: Path):
     data_dir = tmp_path / "data"
     data_dir.mkdir()
-    record = json.loads((FIXTURES / "software_example.json").read_text()) | {"slug": "graphtty"}
+    record = json.loads((FIXTURES / "software_example.json").read_text(encoding="utf-8")) | {"slug": "graphtty"}
     (data_dir / "graphtty.json").write_text(json.dumps(record))
     outcome, _ = verify(tmp_path, FakeServer(*agent_turns("install"), judge_answer("working")), Boxes({}),
                         write=True, data_dir=data_dir)
@@ -475,7 +475,7 @@ def test_the_guide_prefers_a_first_task_that_worked_offline():
     from pickfit.schema import SmokeTest
     from pickfit.verify.result import install_guide
 
-    record = json.loads((FIXTURES / "software_example.json").read_text())
+    record = json.loads((FIXTURES / "software_example.json").read_text(encoding="utf-8"))
     run = VerificationRun.model_validate(record["verification"]["runs"][0])
     tests = [SmokeTest(command="tool --version", expected_signal="1.0", exit_code=0, passed=True, offline=True),
              SmokeTest(command="npx tool@latest", expected_signal="ok", exit_code=0, passed=True, offline=False),

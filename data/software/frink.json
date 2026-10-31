@@ -27,6 +27,12 @@
   "alternatives_to": [
     "llama.cpp"
   ],
+  "features": [
+    "run GGUF checkpoints inference",
+    "serve OpenAI-compatible API",
+    "run Mixture-of-Experts models",
+    "serve embeddings and reranking"
+  ],
   "why_worth_it": null,
   "homepage": "https://www.fratepietro.com/2026/frink-rust-alternative-to-llama-cpp/",
   "repo": {
@@ -65,24 +71,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-frink-20261029-023935-6e9e",
+      "run_id": "verify-frink-20261031-022043-a3dd",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/antonellof/frink/main/scripts/install.sh -o /tmp/frink-install.sh && wc -c /tmp/frink-install.sh && cat /tmp/frink-install.sh",
-          "purpose": "Download install script for reading before running"
+          "command": "curl -fsSL https://raw.githubusercontent.com/antonellof/frink/main/scripts/install.sh -o /tmp/frink-install.sh && ls -l /tmp/frink-install.sh && wc -c /tmp/frink-install.sh",
+          "purpose": "Download install script for reading"
         },
         {
           "command": "bash /tmp/frink-install.sh",
-          "purpose": "Run install script to install frink and frink-server"
+          "purpose": "Install frink via release script"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "frink --version",
-        "expected_signal": "frink 0.49.0"
+        "expected_signal": "0.50.0"
       },
-      "first_task": "frink smoke"
+      "first_task": "curl -s http://127.0.0.1:8383/v1/models"
     },
     "windows": null
   },
@@ -99,108 +105,207 @@
     "url": "https://github.com/antonellof/frink/releases/tag/v0.49.0"
   },
   "verification": {
-    "level": "function",
+    "level": "inference",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:40:24.904927+08:00",
+    "checked_at": "2026-10-31T02:21:55.797715+08:00",
     "runs": [
       {
-        "id": "verify-frink-20261029-023935-6e9e",
-        "level": "function",
+        "id": "verify-frink-20261031-022043-a3dd",
+        "level": "inference",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T02:40:24.904927+08:00",
-        "tool_version": "0.49.0",
+        "checked_at": "2026-10-31T02:21:55.797715+08:00",
+        "tool_version": "0.50.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/antonellof/frink/main/scripts/install.sh -o /tmp/frink-install.sh && wc -c /tmp/frink-install.sh && cat /tmp/frink-install.sh",
-            "purpose": "Download install script for reading before running"
+            "command": "curl -fsSL https://raw.githubusercontent.com/antonellof/frink/main/scripts/install.sh -o /tmp/frink-install.sh && ls -l /tmp/frink-install.sh && wc -c /tmp/frink-install.sh",
+            "purpose": "Download install script for reading"
           },
           {
             "command": "bash /tmp/frink-install.sh",
-            "purpose": "Run install script to install frink and frink-server"
+            "purpose": "Install frink via release script"
           }
         ],
         "smoke_tests": [
           {
             "command": "frink --version",
-            "expected_signal": "frink 0.49.0",
+            "expected_signal": "0.50.0",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "frink 0.49.0",
+            "observed_excerpt": "frink 0.50.0",
             "setup": [],
             "offline": true
           },
           {
-            "command": "frink --help",
-            "expected_signal": "bench",
+            "command": "FRINK_EXPERT_CACHE_BYTES=536870912 frink -m ~/models/stories260K.gguf -p \"Hello\" -n 16",
+            "expected_signal": "long tree",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Running several models at once does not share the machine -- it thrashes it, and any timing either process reports is noise. Stop the other instance, or pass --allow-multiple-instances (or set FRINK_ALLOW_MULTIPLE_INSTANCES=1) to start anyway.",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -l ~/models/stories260K.gguf",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8383/v1/models",
+            "expected_signal": "\"id\":\"llama\"",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "bench-bw Measure this host's CPU/PCIe bandwidths and write the profile `qstar` reads to decide the MoE fetch split",
-            "setup": [],
+            "observed_excerpt": "{\"data\":[{\"frink_synthetic_weights\":false,\"frink_tokenizer\":\"gguf-spm\",\"id\":\"llama\",\"object\":\"model\"}],\"object\":\"list\"}",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -l ~/models/stories260K.gguf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "FRINK_EXPERT_CACHE_BYTES=536870912 frink serve -m ~/models/stories260K.gguf",
+                "background": true,
+                "port": 8383
+              }
+            ],
             "offline": true
           },
           {
-            "command": "frink bench --help",
-            "expected_signal": "Also run `llama-bench` on the same GGUF and print the gap",
+            "command": "curl -s -X POST http://127.0.0.1:8383/v1/chat/completions -H 'content-type: application/json' -d '{\"model\":\"llama\",\"messages\":[{\"role\":\"user\",\"content\":\"Hi\"}],\"max_tokens\":16,\"temperature\":0}'",
+            "expected_signal": "completion_tokens",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "--compare Also run `llama-bench` on the same GGUF and print the gap",
-            "setup": [],
+            "observed_excerpt": "{\"id\":\"chatcmpl-61b59bf018f9000000\",\"request_id\":\"chatcmpl-61b59bf018f9000000\",\"object\":\"chat.completion\",\"model\":\"llama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"ndeisie. Whiskers liked to\"},\"finish_reason\":\"length\"}],\"usage\":{\"prompt_tokens\":7,\"completion_tokens\":16,\"total_t…",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -l ~/models/stories260K.gguf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "FRINK_EXPERT_CACHE_BYTES=536870912 frink serve -m ~/models/stories260K.gguf",
+                "background": true,
+                "port": 8383
+              }
+            ],
             "offline": true
           },
           {
-            "command": "frink smoke",
-            "expected_signal": "Smoke test passed: 8 decode steps, all logits finite.",
+            "command": "curl -s -X POST http://127.0.0.1:8383/v1/embeddings -H 'content-type: application/json' -d '{\"model\":\"llama\",\"input\":\"Hello world\"}'",
+            "expected_signal": "embedding",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Smoke test passed: 8 decode steps, all logits finite.",
-            "setup": [],
+            "observed_excerpt": "{\"data\":[{\"embedding\":[0.872779130935669,-1.047592043876648,-0.03938326984643936,0.6700657606124878,0.1538236141204834,-2.5885517597198486,-0.6008235216140747,0.3783779740333557,-0.6704239249229431,-0.7447769641876221,0.6504842042922974,0.03907867521047592,1.3606922626495361,0.3676978349685669,0.76…",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -l ~/models/stories260K.gguf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "FRINK_EXPERT_CACHE_BYTES=536870912 frink serve -m ~/models/stories260K.gguf",
+                "background": true,
+                "port": 8383
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "frink bench -m models/Llama-3.2-3B-Instruct-Q4_K_M.gguf -p 512 -n 128 -r 3 --compare",
-            "actually_needed": "Download the ~2GB Llama-3.2-3B-Instruct-Q4_K_M.gguf first via `frink download ... --local-dir models`; also --compare requires llama-bench on PATH. Verified offline substitute instead: `frink smoke` (synthetic weights, no download) and `frink bench --help` to confirm the README flags exist."
+            "readme_said": "curl -fsSL .../install.sh | bash",
+            "actually_needed": "download to /tmp/frink-install.sh, read it, then run bash /tmp/frink-install.sh",
+            "kind": "note"
+          },
+          {
+            "readme_said": "frink -m <model> -p ... -n ... runs directly",
+            "actually_needed": "run with FRINK_EXPERT_CACHE_BYTES=536870912 on this 2GiB box",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "frink -m ... -dev metal -ngl all",
+            "actually_needed": "omit -dev metal -ngl all on Linux CPU; run without device flags",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show success: smoke test completed 8 steps with finite logits, and version printed as frink 0.49.0.",
+          "observed": "All three checks show Frink working: models list returns llama, chat completion returns tokens, and version prints 0.50.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-frink-20261029-023935-6e9e/report.json",
+          "trace_path": "runs/verify/verify-frink-20261031-022043-a3dd/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-frink-20261029-023935-6e9e/check-1-cmd7.judged.png",
-            "runs/verify/verify-frink-20261029-023935-6e9e/check-2-cmd3.judged.png"
+            "runs/verify/verify-frink-20261031-022043-a3dd/check-1-cmd8.judged.png",
+            "runs/verify/verify-frink-20261031-022043-a3dd/check-2-cmd9.judged.png",
+            "runs/verify/verify-frink-20261031-022043-a3dd/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.04736
+        "cost_usd": 0.074022,
+        "features": [
+          {
+            "feature": "run GGUF checkpoints inference",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "serve OpenAI-compatible API",
+            "status": "checked",
+            "smoke_tests": [
+              2,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "run Mixture-of-Experts models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "no MoE checkpoint under 300MB available; MoE models need GBs and box reports 2GiB"
+          },
+          {
+            "feature": "serve embeddings and reranking",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 77.0,
+      "total": 87.0,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.8,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -243,7 +348,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 28.26
+      "value": 31.93
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -499,8 +604,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-29T02:37:22+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Frink loads GGUF checkpoints and runs them on the hardware you already",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:08+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**OpenAI-compatible server.** On Metal, multiple concurrent clients",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:08+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**Mixture-of-experts is a first-class path.** GPU routing, indexed",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:08+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**Embeddings, reranking and scoring from real encoder models.** Point",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:08+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

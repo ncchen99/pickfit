@@ -1,0 +1,659 @@
+{
+  "schema_version": "software.v1",
+  "slug": "sessionmem",
+  "repo_id": "gh:1248546335",
+  "name": "sessionmem",
+  "summary": "Local-first MCP server that stores project memories across AI coding sessions in SQLite.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "claude-code",
+    "cline",
+    "codex",
+    "cursor",
+    "developer-tools",
+    "local-first",
+    "mcp",
+    "mcp-server",
+    "memory"
+  ],
+  "use_cases": [
+    "capture session events while you work",
+    "summarize decisions and warnings into stored memories",
+    "load relevant memories at next session start"
+  ],
+  "alternatives_to": [
+    "claude-mem"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://www.npmjs.com/package/sessionmem",
+  "repo": {
+    "url": "https://github.com/catfish-1234/sessionmem",
+    "full_name": "catfish-1234/sessionmem",
+    "created_at": "2026-05-24T19:32:47Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js 20.19+ or 22.13+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g sessionmem",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "sessionmem doctor"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-sessionmem-20261101-000851-5845",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g sessionmem",
+          "purpose": "install sessionmem via npm install -g"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "sessionmem --version",
+        "expected_signal": "1.10.1"
+      },
+      "first_task": "sessionmem ping"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g sessionmem",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "sessionmem doctor"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.10.1",
+    "published_at": "2026-10-31T05:12:01Z",
+    "url": "https://github.com/catfish-1234/sessionmem/releases/tag/v1.10.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:09:53.582726+08:00",
+    "runs": [
+      {
+        "id": "verify-sessionmem-20261101-000851-5845",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:09:53.582726+08:00",
+        "tool_version": "1.10.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g sessionmem",
+            "purpose": "install sessionmem via npm install -g"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "sessionmem --version",
+            "expected_signal": "1.10.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.10.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sessionmem ping",
+            "expected_signal": "status: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "status: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- sessionmem run",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call stats --args '{}' -- sessionmem run",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=stats content=text text_chars=65",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "sessionmem doctor reports PASS when configured",
+            "actually_needed": "doctor reports FAIL for autostart/memory store until ping initializes DB; requires autostart enable and ping",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show expected signals: ping reports status ok, MCP probe reports handshake ok with 15 tools, and --version prints 1.10.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-sessionmem-20261101-000851-5845/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-sessionmem-20261101-000851-5845/check-1-cmd5.judged.png",
+            "runs/verify/verify-sessionmem-20261101-000851-5845/check-2-cmd6.judged.png",
+            "runs/verify/verify-sessionmem-20261101-000851-5845/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.030796,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "sessionmem",
+            "run"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "sessionmem",
+          "server_version": "1.10.1",
+          "tools": [
+            "searchMemoryIndex",
+            "memoryTimeline",
+            "retrieveMemories",
+            "storeMemory",
+            "listMemories",
+            "getMemory",
+            "forgetMemory",
+            "stats",
+            "resetAccessCounts",
+            "batchStoreMemory",
+            "ingestSessionEvents",
+            "summarizeSessionToMemory",
+            "handleSessionEnd",
+            "fetch_memories",
+            "startup_inject_memories"
+          ],
+          "tool_count": 15,
+          "called_tool": "stats",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "sessionmem run",
+    "client_configs": [],
+    "env_vars": [
+      {
+        "name": "SESSIONMEM_DB_PATH",
+        "required": null,
+        "purpose": "select database file"
+      },
+      {
+        "name": "SESSIONMEM_PROJECT_ID",
+        "required": null,
+        "purpose": "pin project bucket"
+      },
+      {
+        "name": "SESSIONMEM_ADAPTER",
+        "required": null,
+        "purpose": "select install host"
+      }
+    ],
+    "tools": [
+      "storeMemory",
+      "retrieveMemories"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 94.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 42.9,
+      "signals": {
+        "stars": 9,
+        "monthly_downloads": 976,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 159,
+      "packages": [
+        "npm:sessionmem"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 53.73
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "eebe6c1ebbde3e4645896cfee0f889dcfb708120f94baf2fd20156429964c96e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Local-first MCP memory layer for AI coding assistants; persistent cross-session memory, stored entirely on your machine"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "It works with Claude Code, Cursor, Cline, Codex, Windsurf, and other [MCP](https://modelcontextprotocol.io) hosts."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "You need a terminal (Command Prompt, Terminal, or PowerShell) and [Node.js](https://nodejs.org), version 20.19+ on the Node 20 line, or 22.13+."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npm install -g sessionmem"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "sessionmem install"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Creates `~/.sessionmem/config.json` with secret redaction enabled and a 90-day retention window, if the file doesn't already exist."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "sessionmem uninstall --adapter claude-code"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "License: MIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/catfish-1234/sessionmem",
+      "fetched_at": "2026-10-31T13:38:42+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/catfish-1234/sessionmem/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:41:58+08:00"
+    },
+    {
+      "id": "release:v1.10.1",
+      "kind": "release",
+      "url": "https://github.com/catfish-1234/sessionmem/releases/tag/v1.10.1",
+      "fetched_at": "2026-10-31T13:41:58+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "`sessionmem` is an MCP server that stores decisions, warnings, and project context across sessions.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "npm install -g sessionmem",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "`sessionmem` is an MCP server that stores decisions, warnings, and project context across sessions.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Local-first MCP memory layer for AI coding assistants; persistent cross-session memory, stored entirely on your machine",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# sessionmem",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Login capture uses a LaunchAgent in `~/Library/LaunchAgents` on macOS, a\n`systemd --user` service on Linux, and a Scheduled Task",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "version 20.19+ on the Node 20 line, or 22.13+. Node 22 LTS is recommended.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Works with no network connection by default.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:42+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:42+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:42+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:42+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:42+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.10.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:41:58+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "it captures session events.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "it summarizes decisions, warnings, and useful facts into stored memories.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "it loads the most relevant memories within a small token budget.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Compared with projects such as *claude-mem* and other cloud or Claude-only memory tools",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g sessionmem",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g sessionmem",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g sessionmem",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "By default, everything stays on your machine.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "running it directly starts a stdio server that\nwaits for MCP messages",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "Your host starts\n`sessionmem run` automatically; running it directly starts a stdio server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "SESSIONMEM_DB_PATH",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "SESSIONMEM_PROJECT_ID",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "SESSIONMEM_ADAPTER",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "It captures dialogue through the public `storeMemory` API",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "asks the original\nquestions through `retrieveMemories`, fully offline with no API keys.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:02:23+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:37:25+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

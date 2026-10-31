@@ -1,0 +1,850 @@
+{
+  "schema_version": "software.v1",
+  "slug": "hief",
+  "repo_id": "gh:1171121233",
+  "name": "HIEF (Hybrid Intent-Evaluation Framework)",
+  "summary": "Local MCP server giving coding agents persistent searchable context, task coordination, and quality checks.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agentic-ai",
+    "ai-agent",
+    "cli",
+    "code-intelligence",
+    "developer-tools",
+    "guardrails",
+    "intent-evaluation",
+    "mcp",
+    "memory",
+    "rust"
+  ],
+  "use_cases": [
+    "index and search codebase with keyword, structural, and semantic search",
+    "coordinate tasks via dependency-tracked intent graph",
+    "run golden-set quality evaluations against codebase",
+    "scaffold feature specs from templates",
+    "expose markdown recipes as dynamic agent tools"
+  ],
+  "alternatives_to": [
+    "Augment Code",
+    "Sourcegraph",
+    "Cursor"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/hiranp/hief",
+    "full_name": "hiranp/hief",
+    "created_at": "2026-03-02T22:30:16Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Rust stable toolchain 1.85+"
+    ],
+    "system_packages": [
+      "Git"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-hief-20261101-001230-94c9",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -L -o /tmp/hief.tar.gz https://github.com/hiranp/hief/releases/download/v0.5.0/hief-linux-x86_64.tar.gz",
+          "purpose": "download prebuilt linux x86_64 binary from GitHub releases v0.5.0"
+        },
+        {
+          "command": "tar xzf /tmp/hief.tar.gz -C ~/.local/bin",
+          "purpose": "extract binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "hief --version",
+        "expected_signal": "hief 0.5.0"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.3.0",
+    "published_at": "2026-05-17T19:25:49Z",
+    "url": "https://github.com/hiranp/hief/releases/tag/v0.3.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:13:56.011154+08:00",
+    "runs": [
+      {
+        "id": "verify-hief-20261101-001230-94c9",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:13:56.011154+08:00",
+        "tool_version": "0.5.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -L -o /tmp/hief.tar.gz https://github.com/hiranp/hief/releases/download/v0.5.0/hief-linux-x86_64.tar.gz",
+            "purpose": "download prebuilt linux x86_64 binary from GitHub releases v0.5.0"
+          },
+          {
+            "command": "tar xzf /tmp/hief.tar.gz -C ~/.local/bin",
+            "purpose": "extract binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "hief --version",
+            "expected_signal": "hief 0.5.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hief 0.5.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/demo && python3 ~/.pickfit/mcp_probe.py -- hief serve 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/demo && cd /tmp/demo && git init -q && echo 'fn main() { println!(\"hello\"); }' > main.rs && echo 'print(\"hello\")' > hello.py && hief init 2>&1 && ls -la .hief 2>&1 | head -n 20 && hief index build 2>&1 | tail -n 20",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/demo && python3 ~/.pickfit/mcp_probe.py --call index_status --args '{}' -- hief serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=index_status content=text text_chars=150",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/demo && cd /tmp/demo && git init -q && echo 'fn main() { println!(\"hello\"); }' > main.rs && echo 'print(\"hello\")' > hello.py && hief init 2>&1 && ls -la .hief 2>&1 | head -n 20 && hief index build 2>&1 | tail -n 20",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo build --release with Rust 1.85+",
+            "actually_needed": "box has no C linker (cc/gcc); building from source requires a system C toolchain which README does not mention; used prebuilt release tarball hief-linux-x86_64.tar.gz instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "hief serve expects to run from an initialized project",
+            "actually_needed": "must run hief init and hief index build in project directory before MCP probe succeeds",
+            "kind": "note"
+          },
+          {
+            "readme_said": "An MCP server over stdio writes only JSON-RPC messages to stdout",
+            "actually_needed": "This server wrote 2 other line(s) to stdout during the handshake; strict MCP clients may reject them.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show expected signals: MCP handshake with 38 tools, successful index_status tool call, and version 0.5.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-hief-20261101-001230-94c9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-hief-20261101-001230-94c9/check-1-cmd11.judged.png",
+            "runs/verify/verify-hief-20261101-001230-94c9/check-2-cmd12.judged.png",
+            "runs/verify/verify-hief-20261101-001230-94c9/check-3-cmd15.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.120628,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "hief",
+            "serve"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "rmcp",
+          "server_version": "3.8.0",
+          "tools": [
+            "check_drift",
+            "claim_issue",
+            "create_intent",
+            "create_pattern",
+            "execute_skill_?",
+            "execute_skill_hief_protocol",
+            "find_callers",
+            "get_conventions",
+            "get_eval_scores",
+            "get_pattern",
+            "get_project_context",
+            "get_project_health",
+            "get_routing_table",
+            "get_session_context",
+            "get_session_summary",
+            "get_skill",
+            "get_transitive_deps",
+            "git_blame",
+            "index_status",
+            "judge_with_local_model",
+            "list_claims",
+            "list_context_files",
+            "list_intents",
+            "list_patterns",
+            "list_skills",
+            "read_context_file",
+            "ready_intents",
+            "recover_stale_intents",
+            "related_files",
+            "release_issue",
+            "reload_skills",
+            "run_evaluation",
+            "run_test_suite",
+            "search_code",
+            "semantic_search",
+            "structural_search",
+            "update_intent",
+            "write_context_file"
+          ],
+          "tool_count": 38,
+          "called_tool": "index_status",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "hief serve",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"hief\": {\n      \"command\": \"hief\",\n      \"args\": [\"serve\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "search_code",
+      "structural_search",
+      "semantic_search",
+      "index_status",
+      "git_blame",
+      "create_intent",
+      "list_intents",
+      "update_intent",
+      "ready_intents",
+      "recover_stale_intents",
+      "get_transitive_deps",
+      "find_callers",
+      "run_evaluation",
+      "run_test_suite",
+      "judge_with_local_model",
+      "get_eval_scores",
+      "check_drift",
+      "get_project_context",
+      "get_conventions",
+      "get_project_health",
+      "get_session_context",
+      "related_files",
+      "list_context_files",
+      "read_context_file",
+      "write_context_file"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 87.0,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 22.3,
+      "signals": {
+        "stars": 7,
+        "monthly_downloads": null,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 2,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 242,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 67.6
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "e0d78ce3b8c947dd8d65a41c498086588e244a098ebde92a4317b9d8007baa65",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "gives any AI coding agent — Claude Code, Cursor, Copilot, Windsurf, Goose, and\nmore — **persistent, searchable codebase context**"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "HIEF is built for developers who care about security and privacy."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- [Rust](https://rustup.rs/) stable toolchain (MSRV **1.85+**)"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "git clone https://github.com/hiranp/hief.git"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "cd /path/to/your/project\nhief init"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Machine-readable project rules from `.hief/conventions.toml`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "HIEF is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/hiranp/hief",
+      "fetched_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/hiranp/hief/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:46:54+08:00"
+    },
+    {
+      "id": "release:v0.3.0",
+      "kind": "release",
+      "url": "https://github.com/hiranp/hief/releases/tag/v0.3.0",
+      "fetched_at": "2026-10-31T13:46:54+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "**HIEF** is a local-first [MCP](https://modelcontextprotocol.io/) server that",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "gives any AI coding agent — Claude Code, Cursor, Copilot, Windsurf, Goose, and",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "**HIEF** is a local-first [MCP](https://modelcontextprotocol.io/) server that",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "gives any AI coding agent — Claude Code, Cursor, Copilot, Windsurf, Goose, and\nmore — **persistent, searchable codebase context**, **lightweight task",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# HIEF (Hybrid Intent-Evaluation Framework)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "- [Rust](https://rustup.rs/) stable toolchain (MSRV **1.85+**)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "- Git (for blame and hooks integration)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.3.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:46:54+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "**AST-aware chunking** via tree-sitter (Rust, Python, TypeScript/JavaScript)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "**DAG-based task graph** with status workflow (`draft → in_progress → in_review → approved → done`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "**Golden sets** define project-specific quality criteria in TOML",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "**Spec-Driven Development (SDD)**: Scaffold new feature specs from embedded or custom templates.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Place any markdown/YAML recipe in `.hief/skills/` and HIEF will expose it",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "| Local-first (no cloud) | ✅ | ❌ | ❌ | Partial |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "| Capability | HIEF | Augment Code | Sourcegraph | Cursor |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "| Capability | HIEF | Augment Code | Sourcegraph | Cursor |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Your code never leaves your machine.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "MCP (stdio or HTTP)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "hief serve",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"hief\": {\n      \"command\": \"hief\",\n      \"args\": [\"serve\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`search_code`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`structural_search`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`semantic_search`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`index_status`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`git_blame`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`create_intent`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`list_intents`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`update_intent`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`ready_intents`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`recover_stale_intents`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`get_transitive_deps`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`find_callers`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "`run_evaluation`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "`run_test_suite`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/14",
+      "source_id": "readme",
+      "quote": "`judge_with_local_model`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/15",
+      "source_id": "readme",
+      "quote": "`get_eval_scores`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/16",
+      "source_id": "readme",
+      "quote": "`check_drift`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/17",
+      "source_id": "readme",
+      "quote": "`get_project_context`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/18",
+      "source_id": "readme",
+      "quote": "`get_conventions`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/19",
+      "source_id": "readme",
+      "quote": "`get_project_health`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/20",
+      "source_id": "readme",
+      "quote": "`get_session_context`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/21",
+      "source_id": "readme",
+      "quote": "`related_files`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/22",
+      "source_id": "readme",
+      "quote": "`list_context_files`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/23",
+      "source_id": "readme",
+      "quote": "`read_context_file`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    },
+    {
+      "field": "/mcp/tools/24",
+      "source_id": "readme",
+      "quote": "`write_context_file`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:13+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:39:03+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

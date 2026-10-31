@@ -1,0 +1,642 @@
+{
+  "schema_version": "software.v1",
+  "slug": "krusch-context-mcp",
+  "repo_id": "gh:1230467838",
+  "name": "Krusch Context MCP",
+  "summary": "Local MCP server giving AI coding agents persistent working memory for project decisions across sessions.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "antigravity",
+    "claude",
+    "claude-code",
+    "context-engineering",
+    "cursor",
+    "llm",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol"
+  ],
+  "use_cases": [
+    "capture architectural decisions and invariants",
+    "retrieve active memories and steering rules",
+    "audit diffs against project invariants pre-commit",
+    "supersede stale knowledge with lineage tracking",
+    "report memory health and TTL decay review"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/kruschdev/krusch-context-mcp",
+    "full_name": "kruschdev/krusch-context-mcp",
+    "created_at": "2026-05-06T02:58:19Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js >= 22.0.0"
+    ],
+    "system_packages": [],
+    "gpu": "none",
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "none",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-krusch-context-mcp-20261101-001315-8d78",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g krusch-context-mcp",
+          "purpose": "install MCP package globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v2.0.0",
+    "published_at": "2026-10-29T14:59:29Z",
+    "url": "https://github.com/kruschdev/krusch-context-mcp/releases/tag/v2.0.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:14:46.958682+08:00",
+    "runs": [
+      {
+        "id": "verify-krusch-context-mcp-20261101-001315-8d78",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:14:46.958682+08:00",
+        "tool_version": "1.8.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g krusch-context-mcp",
+            "purpose": "install MCP package globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- krusch-context-mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call krusch_context_health --args '{}' -- krusch-context-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=krusch_context_health content=text text_chars=383",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx krusch-context-mcp init as quickstart",
+            "actually_needed": "npm install -g krusch-context-mcp provides krusch-context-mcp on PATH for offline replay; init still works via that binary",
+            "kind": "note"
+          },
+          {
+            "readme_said": "krusch-context-mcp --help / --version",
+            "actually_needed": "binary runs as MCP stdio server with no args and hangs waiting for JSON-RPC; --help/--version not supported interactively (times out)",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show successful MCP initialize, tools/list with 5 tools, handshake ok, and a successful krusch_context_health tool call returning storage status.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-krusch-context-mcp-20261101-001315-8d78/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-krusch-context-mcp-20261101-001315-8d78/check-1-cmd5.judged.png",
+            "runs/verify/verify-krusch-context-mcp-20261101-001315-8d78/check-2-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.05095,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "krusch-context-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "krusch-context-mcp",
+          "server_version": "1.8.0",
+          "tools": [
+            "krusch_context_retrieve",
+            "krusch_context_remember",
+            "krusch_context_revise",
+            "krusch_context_nudge",
+            "krusch_context_health"
+          ],
+          "tool_count": 5,
+          "called_tool": "krusch_context_health",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": "npx -y krusch-context-mcp",
+    "client_configs": [
+      {
+        "client": "cursor",
+        "snippet": "{\n  \"mcpServers\": {\n    \"krusch-context\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"krusch-context-mcp\"]\n    }\n  }\n}"
+      },
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add krusch-context -- npx -y krusch-context-mcp"
+      },
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"krusch-context\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"krusch-context-mcp\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "OLLAMA_URL",
+        "required": false,
+        "purpose": "Local Ollama endpoint"
+      },
+      {
+        "name": "EMBED_MODEL",
+        "required": false,
+        "purpose": "embedding model name"
+      },
+      {
+        "name": "OPENROUTER_API_KEY",
+        "required": false,
+        "purpose": "remote embeddings API key"
+      },
+      {
+        "name": "STORAGE_MODE",
+        "required": false,
+        "purpose": "storage mode selector"
+      }
+    ],
+    "tools": [
+      "krusch_context_retrieve",
+      "krusch_context_remember",
+      "krusch_context_revise",
+      "krusch_context_nudge",
+      "krusch_context_health"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 92.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 61.8,
+      "signals": {
+        "stars": 83,
+        "monthly_downloads": null,
+        "forks": 6,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 178,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 35.22
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "a2b317fcfbe0df8404b6f692d26982bfb73afce8e3c27f46bc93dc3a68f51982",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "> Local MCP server: five tools to store, retrieve, and retire project decisions. SQLite by default."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "gives AI coding agents (Cursor, Claude Code, Windsurf, Antigravity) persistent working memory across sessions."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requires **Node.js >= 22.0.0**. Run once inside your project repository:"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npx krusch-context-mcp init"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "npx krusch-context-mcp init"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Set `OLLAMA_URL=\"http://127.0.0.1:11434\"` with `EMBED_MODEL=\"snowflake-arctic-embed2\"`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "MIT © [kruschdev](https://github.com/kruschdev)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/kruschdev/krusch-context-mcp",
+      "fetched_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/kruschdev/krusch-context-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:42:28+08:00"
+    },
+    {
+      "id": "release:v2.0.0",
+      "kind": "release",
+      "url": "https://github.com/kruschdev/krusch-context-mcp/releases/tag/v2.0.0",
+      "fetched_at": "2026-10-31T13:42:28+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Local MCP server: five tools to store, retrieve, and retire project decisions. SQLite by default.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "gives AI coding agents (Cursor, Claude Code, Windsurf, Antigravity) persistent working memory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Local MCP server: five tools to store, retrieve, and retire project decisions. SQLite by default.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "gives AI coding agents (Cursor, Claude Code, Windsurf, Antigravity) persistent working memory across sessions.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Krusch Context MCP",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires **Node.js >= 22.0.0**.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "Zero-GPU Default",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Runs 100% locally on your machine with zero external cloud dependencies.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.0.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:42:28+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "It captures architectural decisions, invariants, lessons, and bug diagnoses",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Pulls active memories, steering rules, and project state briefings",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Pre-commit auditor that checks proposed diffs against active project invariants",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Updates stale knowledge (`supersede` with lineage tracking)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Reports storage mode, memory counts by closed taxonomy, and 30-day TTL decay review.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Runs 100% locally on your machine with zero external cloud dependencies.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add krusch-context -- npx -y krusch-context-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"krusch-context\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"krusch-context-mcp\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "claude mcp add krusch-context -- npx -y krusch-context-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/2",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"krusch-context\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"krusch-context-mcp\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "OLLAMA_URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "EMBED_MODEL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "OPENROUTER_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "STORAGE_MODE",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "**`krusch_context_retrieve`**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "**`krusch_context_remember`**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "**`krusch_context_revise`**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "**`krusch_context_nudge`**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "**`krusch_context_health`**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:17+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:37:31+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

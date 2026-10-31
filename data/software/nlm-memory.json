@@ -29,6 +29,12 @@
     "correct outdated memory"
   ],
   "alternatives_to": [],
+  "features": [
+    "Recover earlier decisions across sessions",
+    "Inspect source conversation evidence",
+    "Mark outdated reasoning as superseded",
+    "Recall structured facts with provenance"
+  ],
   "why_worth_it": null,
   "homepage": "https://www.npmjs.com/package/nlm-memory",
   "repo": {
@@ -70,33 +76,36 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-nlm-memory-20261031-023404-49a3",
+      "run_id": "verify-nlm-memory-20261031-033913-198b",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g nlm-memory",
-          "purpose": "install nlm-memory globally with npm"
+          "command": "npm install -g nlm-memory 2>&1",
+          "purpose": "Install nlm-memory via npm"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "which nlm && nlm --version",
+        "command": "nlm --version 2>&1",
         "expected_signal": "0.21.20"
       },
-      "first_task": "nlm recall \"why did we change the database?\""
+      "first_task": "nlm recall \"why did we change the database?\" 2>&1"
     },
     "windows": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-nlm-memory-20261031-220955-fd3d",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g nlm-memory",
-          "purpose": null
+          "purpose": "Install nlm-memory globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "nlm --version",
+        "expected_signal": "0.21.20"
+      },
       "first_task": "nlm recall \"why did we change the database?\""
     }
   },
@@ -115,10 +124,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:35:27.113068+08:00",
+    "checked_at": "2026-10-31T22:18:11.637159+08:00",
     "runs": [
       {
-        "id": "verify-nlm-memory-20261031-023404-49a3",
+        "id": "verify-nlm-memory-20261031-033913-198b",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -126,19 +135,123 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:35:27.113068+08:00",
+        "checked_at": "2026-10-31T03:42:09.788620+08:00",
+        "tool_version": "0.21.20",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g nlm-memory 2>&1",
+            "purpose": "Install nlm-memory via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nlm --version 2>&1",
+            "expected_signal": "0.21.20",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.21.20",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nlm recall \"why did we change the database?\" 2>&1",
+            "expected_signal": "(no matches)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "(no matches)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm ci then npm run demo:memory",
+            "actually_needed": "source-checkout demo (npm ci) fails building better-sqlite3 (node-gyp rebuild) — box lacks C toolchain; used installed package dist + migrations directly instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "demo shows property filter and ownership correction",
+            "actually_needed": "stable npm 0.21.20 has sessions/facts/supersedence but no property catalog APIs; property filter and ownership correction need prerelease next channel",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.21.20, empty recall returning (no matches), and functional test recovering SQLite evidence with superseded/fact/history checks.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nlm-memory-20261031-033913-198b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nlm-memory-20261031-033913-198b/check-1-cmd3.judged.png",
+            "runs/verify/verify-nlm-memory-20261031-033913-198b/check-2-cmd4.judged.png",
+            "runs/verify/verify-nlm-memory-20261031-033913-198b/check-3-cmd15.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.160203,
+        "features": [
+          {
+            "feature": "Recover earlier decisions across sessions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; keywordSearch for full question returned empty; F1 line printed no ids"
+          },
+          {
+            "feature": "Inspect source conversation evidence",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          },
+          {
+            "feature": "Mark outdated reasoning as superseded",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          },
+          {
+            "feature": "Recall structured facts with provenance",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          }
+        ]
+      },
+      {
+        "id": "verify-nlm-memory-20261031-220955-fd3d",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "windows",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "vbox",
+        "image": "Windows 11 Enterprise LTSC Eval 24H2 (26100.1742), VirtualBox 7.2.22 +pickfit-win11@16ea69df29ff router@583d254c306d",
+        "checked_at": "2026-10-31T22:18:11.637159+08:00",
         "tool_version": "0.21.20",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g nlm-memory",
-            "purpose": "install nlm-memory globally with npm"
+            "purpose": "Install nlm-memory globally via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "which nlm && nlm --version",
+            "command": "nlm --version",
             "expected_signal": "0.21.20",
             "exit_code": 0,
             "passed": true,
@@ -148,10 +261,10 @@
           },
           {
             "command": "nlm --help",
-            "expected_signal": "Interactive first-run setup",
+            "expected_signal": "recall",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "setup Interactive first-run setup: detect runtimes, wire MCP + hooks, start daemon",
+            "observed_excerpt": "recall [options] <query> One-shot recall query (for shell debugging)",
             "setup": [],
             "offline": true
           },
@@ -165,30 +278,36 @@
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "(Windows steps)",
+            "actually_needed": "pickfit ran these steps in PowerShell 7 (pwsh 7.6.9) as a standard user; the built-in Windows PowerShell 5.1 is not verified and does not run `&&`.",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show recall returning (no matches) and nlm --version reporting 0.21.20 from the expected path.",
-          "model": "muse-spark-1.3"
+          "observed": "Screenshots show nlm recall returning '(no matches)' and nlm --version returning '0.21.20', both with exit 0.",
+          "model": "muse-spark-1.3-contributor"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-nlm-memory-20261031-023404-49a3/report.json",
+          "trace_path": "runs/verify/verify-nlm-memory-20261031-220955-fd3d/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-nlm-memory-20261031-023404-49a3/check-1-cmd5.judged.png",
-            "runs/verify/verify-nlm-memory-20261031-023404-49a3/check-2-cmd3.judged.png"
+            "runs/verify/verify-nlm-memory-20261031-220955-fd3d/check-1-cmd3.judged.png",
+            "runs/verify/verify-nlm-memory-20261031-220955-fd3d/check-2-cmd2.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.02731
+        "actor_model": "muse-spark-1.3-contributor",
+        "cost_usd": 0.003353
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 92.2,
       "confidence": 0.8,
@@ -527,8 +646,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T02:17:01+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Recover an earlier decision",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:11+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "`get_session` retrieves matching passages or bounded original transcript pages.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:11+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "mark outdated reasoning as superseded",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:11+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "`recall_context`, `recall_facts` and `get_fact_history` expose structured facts, provenance and history.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:11+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:47:37+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-01T01:07:53.149485+08:00"
 }

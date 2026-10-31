@@ -30,6 +30,11 @@
     "review drafts in Proton Mail and send manually"
   ],
   "alternatives_to": [],
+  "features": [
+    "read and search mail",
+    "create drafts with attachments",
+    "inspect PDF, TXT, CSV attachments as text"
+  ],
   "why_worth_it": null,
   "homepage": "https://fbossiere.github.io/proton-safe-mcp/",
   "repo": {
@@ -58,12 +63,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-proton-safe-mcp-20261031-012049-129d",
+      "run_id": "verify-proton-safe-mcp-20261031-024743-50bc",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install proton-safe-mcp==2.3.2",
-          "purpose": "install proton-safe-mcp 2.3.2 via uv tool"
+          "purpose": "Install proton-safe-mcp via uv tool"
         }
       ],
       "manual_steps": [],
@@ -90,10 +95,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:22:08.208758+08:00",
+    "checked_at": "2026-10-31T02:49:52.590347+08:00",
     "runs": [
       {
-        "id": "verify-proton-safe-mcp-20261031-012049-129d",
+        "id": "verify-proton-safe-mcp-20261031-024743-50bc",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -101,14 +106,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:22:08.208758+08:00",
+        "checked_at": "2026-10-31T02:49:52.590347+08:00",
         "tool_version": "2.3.2",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install proton-safe-mcp==2.3.2",
-            "purpose": "install proton-safe-mcp 2.3.2 via uv tool"
+            "purpose": "Install proton-safe-mcp via uv tool"
           }
         ],
         "smoke_tests": [
@@ -123,7 +128,7 @@
           },
           {
             "command": "proton-safe-mcp doctor",
-            "expected_signal": "PROTON_BRIDGE_USER is required",
+            "expected_signal": "[FAIL] Configuration: PROTON_BRIDGE_USER is required",
             "exit_code": 1,
             "passed": true,
             "observed_excerpt": "[FAIL] Configuration: PROTON_BRIDGE_USER is required",
@@ -131,7 +136,7 @@
             "offline": true
           },
           {
-            "command": "PROTON_BRIDGE_USER=\"test@proton.me\" python3 ~/.pickfit/mcp_probe.py -- proton-safe-mcp serve",
+            "command": "PROTON_BRIDGE_USER=\"test@example.com\" python3 ~/.pickfit/mcp_probe.py -- proton-safe-mcp serve",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -140,40 +145,49 @@
             "offline": true
           },
           {
-            "command": "PROTON_BRIDGE_USER=\"test@proton.me\" python3 ~/.pickfit/mcp_probe.py --call list_sender_addresses --args '{}' -- proton-safe-mcp serve",
+            "command": "PROTON_BRIDGE_USER=\"test@example.com\" python3 ~/.pickfit/mcp_probe.py --call list_sender_addresses --args '{}' -- proton-safe-mcp serve",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=list_sender_addresses content=text text_chars=73",
+            "observed_excerpt": "tools/call: ok tool=list_sender_addresses content=text text_chars=77",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "HASH=$(printf 'hello world' | sha256sum | cut -d' ' -f1) && PROTON_BRIDGE_USER=\"test@example.com\" python3 ~/.pickfit/mcp_probe.py --call begin_attachment_upload --args \"{\\\"filename\\\":\\\"hello.txt\\\",\\\"content_type\\\":\\\"text/plain\\\",\\\"size_bytes\\\":11,\\\"sha256_hex\\\":\\\"$HASH\\\"}\" -- proton-safe-mcp serve",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=begin_attachment_upload content=text text_chars=97",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "proton-safe-mcp serve",
-            "actually_needed": "prefix serve probe and tool call with PROTON_BRIDGE_USER=test@proton.me; bare `proton-safe-mcp serve` exits with `Error: PROTON_BRIDGE_USER is required`",
+            "readme_said": "PROTON_BRIDGE_USER required for Bridge connection",
+            "actually_needed": "server exits before initialize with 'Error: PROTON_BRIDGE_USER is required'; handshake and tool calls need PROTON_BRIDGE_USER set (e.g. PROTON_BRIDGE_USER=\"test@example.com\" prefix) even for local-only tools",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show doctor failing on missing PROTON_BRIDGE_USER, serve handshaking with 13 tools, and help displaying usage.",
+          "observed": "All three checks show expected outputs: doctor reports missing PROTON_BRIDGE_USER, MCP serve handshakes with 13 tools, and --help shows usage.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-proton-safe-mcp-20261031-012049-129d/report.json",
+          "trace_path": "runs/verify/verify-proton-safe-mcp-20261031-024743-50bc/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-proton-safe-mcp-20261031-012049-129d/check-1-cmd3.judged.png",
-            "runs/verify/verify-proton-safe-mcp-20261031-012049-129d/check-2-cmd6.judged.png",
-            "runs/verify/verify-proton-safe-mcp-20261031-012049-129d/check-3-cmd2.judged.png"
+            "runs/verify/verify-proton-safe-mcp-20261031-024743-50bc/check-1-cmd3.judged.png",
+            "runs/verify/verify-proton-safe-mcp-20261031-024743-50bc/check-2-cmd8.judged.png",
+            "runs/verify/verify-proton-safe-mcp-20261031-024743-50bc/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.051714,
+        "cost_usd": 0.088336,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -202,7 +216,33 @@
           "tool_count": 13,
           "called_tool": "list_sender_addresses",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "read and search mail",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs Proton Bridge IMAP with signed-in account; no bridge in box"
+          },
+          {
+            "feature": "create drafts with attachments",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "draft creation needs Bridge; local staging alone works (see smoke test 10) but full draft untested"
+          },
+          {
+            "feature": "inspect PDF, TXT, CSV attachments as text",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs received mail via Bridge; no mailbox in box"
+          }
+        ]
       }
     ]
   },
@@ -257,7 +297,7 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 92.2,
       "confidence": 0.8,
@@ -732,8 +772,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:14:11+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "It can read and search mail and create **drafts with attachments**.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:52+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "create **drafts with attachments**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:52+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Received PDF, TXT, and CSV attachments can be inspected through bounded text extraction without exposing their raw bytes.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:52+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

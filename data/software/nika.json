@@ -30,6 +30,12 @@
     "rate risk of each pull request"
   ],
   "alternatives_to": [],
+  "features": [
+    "write repeatable AI work as workflow file",
+    "audit workflow before running it",
+    "run workflow with chosen model",
+    "verify tamper-evident run record"
+  ],
   "why_worth_it": null,
   "homepage": "https://nika.sh",
   "repo": {
@@ -72,7 +78,7 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-nika-20261031-002735-aa21",
+      "run_id": "verify-nika-20261031-032250-1741",
       "method": "npm",
       "steps": [
         {
@@ -85,7 +91,7 @@
         "command": "nika --version",
         "expected_signal": "nika 0.124.1"
       },
-      "first_task": "cd /tmp/nika-smoke && nika check hello.nika"
+      "first_task": "nika compile hello hello.nika"
     },
     "windows": null
   },
@@ -104,10 +110,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:28:39.368610+08:00",
+    "checked_at": "2026-10-31T03:23:37.941846+08:00",
     "runs": [
       {
-        "id": "verify-nika-20261031-002735-aa21",
+        "id": "verify-nika-20261031-032250-1741",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -115,7 +121,7 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:28:39.368610+08:00",
+        "checked_at": "2026-10-31T03:23:37.941846+08:00",
         "tool_version": "0.124.1",
         "install_method": "npm",
         "replayed": true,
@@ -136,23 +142,23 @@
             "offline": true
           },
           {
-            "command": "nika --help",
-            "expected_signal": "nika run",
+            "command": "nika compile hello hello.nika",
+            "expected_signal": "wrote hello.nika",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "nika run run a file",
+            "observed_excerpt": "wrote hello.nika",
             "setup": [],
             "offline": true
           },
           {
-            "command": "cd /tmp/nika-smoke && nika check hello.nika",
-            "expected_signal": "run ready",
+            "command": "nika check hello.nika",
+            "expected_signal": "audited",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "layers · valid ✔ · access ready ✔ · capacity fit ✔ · run ready ✔",
+            "observed_excerpt": "✔ audited · 1 task · 1 wave · permits {} · est out ≤$0.0000 · 0 hints · risk low",
             "setup": [
               {
-                "command": "mkdir -p /tmp/nika-smoke && cp /tmp/nika-smoke /tmp/nika-smoke-tmp 2>/dev/null; rm -rf /tmp/nika-smoke; mkdir -p /tmp/nika-smoke && cd /tmp/nika-smoke && nika compile hello hello.nika",
+                "command": "nika compile hello hello.nika",
                 "background": false,
                 "port": null
               }
@@ -160,14 +166,14 @@
             "offline": true
           },
           {
-            "command": "cd /tmp/nika-smoke && nika run hello.nika",
+            "command": "nika run hello.nika",
             "expected_signal": "wrote .nika/traces",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "wrote .nika/traces",
             "setup": [
               {
-                "command": "mkdir -p /tmp/nika-smoke && cp /tmp/nika-smoke /tmp/nika-smoke-tmp 2>/dev/null; rm -rf /tmp/nika-smoke; mkdir -p /tmp/nika-smoke && cd /tmp/nika-smoke && nika compile hello hello.nika",
+                "command": "nika compile hello hello.nika",
                 "background": false,
                 "port": null
               }
@@ -175,19 +181,19 @@
             "offline": true
           },
           {
-            "command": "cd /tmp/nika-smoke && nika trace verify",
+            "command": "nika trace verify",
             "expected_signal": "chain intact",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "OK — 5 events · chain intact · head 276db57e1a82aadb1c994d7f7cfe884e34b0739e067a295e9c6d52c1166b143c",
+            "observed_excerpt": "OK — 5 events · chain intact · head 2f187d5e4ecd28033fbd056a870a4545bf894e5281ed07600e64cafa788434cc",
             "setup": [
               {
-                "command": "mkdir -p /tmp/nika-smoke && cp /tmp/nika-smoke /tmp/nika-smoke-tmp 2>/dev/null; rm -rf /tmp/nika-smoke; mkdir -p /tmp/nika-smoke && cd /tmp/nika-smoke && nika compile hello hello.nika",
+                "command": "nika compile hello hello.nika",
                 "background": false,
                 "port": null
               },
               {
-                "command": "cd /tmp/nika-smoke && nika run hello.nika",
+                "command": "nika run hello.nika",
                 "background": false,
                 "port": null
               }
@@ -195,31 +201,79 @@
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "npm install @supernovae-st/nika (lands in node_modules/.bin)",
+            "actually_needed": "npm install -g @supernovae-st/nika so nika lands in ~/.local/bin on PATH",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three screenshots show nika check reporting run ready, nika run writing traces, and version 0.124.1.",
+          "observed": "All three checks show success: compile wrote hello.nika, check reports audited, and --version prints nika 0.124.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-nika-20261031-002735-aa21/report.json",
+          "trace_path": "runs/verify/verify-nika-20261031-032250-1741/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-nika-20261031-002735-aa21/check-1-cmd5.judged.png",
-            "runs/verify/verify-nika-20261031-002735-aa21/check-2-cmd6.judged.png",
-            "runs/verify/verify-nika-20261031-002735-aa21/check-3-cmd2.judged.png"
+            "runs/verify/verify-nika-20261031-032250-1741/check-1-cmd3.judged.png",
+            "runs/verify/verify-nika-20261031-032250-1741/check-2-cmd4.judged.png",
+            "runs/verify/verify-nika-20261031-032250-1741/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.05504
+        "cost_usd": 0.05156,
+        "features": [
+          {
+            "feature": "write repeatable AI work as workflow file",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "audit workflow before running it",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "run workflow with chosen model",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "verify tamper-evident run record",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 94.1,
       "confidence": 0.8,
@@ -548,8 +602,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:15:01+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Describe the job; Nika writes a `.nika` file (or `nika compile` from a skeleton)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:44+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "`nika check` audits it before any model is called",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:44+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "`nika run` with the model you choose",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:44+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "`nika trace verify` checks the run's record",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:44+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

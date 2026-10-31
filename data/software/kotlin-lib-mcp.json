@@ -1,0 +1,763 @@
+{
+  "schema_version": "software.v1",
+  "slug": "kotlin-lib-mcp",
+  "repo_id": "gh:1296102323",
+  "name": "kotlin-lib-mcp",
+  "summary": "MCP server exposing Maven Kotlin/Java library sources, API signatures, and KDoc to AI clients.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-tools",
+    "analysis-api",
+    "claude",
+    "claude-code",
+    "code-search",
+    "copilot",
+    "developer-tools",
+    "documentation",
+    "gradle",
+    "java"
+  ],
+  "use_cases": [
+    "fetch and cache a Maven library for analysis",
+    "get resolved signature of a declaration by name",
+    "read KDoc for a library declaration",
+    "compare public API between two library versions",
+    "search raw library source and read implementation"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://github.com/aoreshkov/kotlin-lib-mcp#quick-start-no-build-required",
+  "repo": {
+    "url": "https://github.com/aoreshkov/kotlin-lib-mcp",
+    "full_name": "aoreshkov/kotlin-lib-mcp",
+    "created_at": "2026-07-10T05:50:12Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "JDK 25+",
+      "Java 25+ runtime"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-kotlin-lib-mcp-20261101-005740-68d6",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fL -o /tmp/jdk25.tar.gz \"https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25+36/OpenJDK25U-jdk_x64_linux_hotspot_25_36.tar.gz\" 2>&1 | tail -20; ls -lh /tmp/jdk25.tar.gz 2>&1\n# fallback check api\n",
+          "purpose": "download JDK 25 Temurin tarball"
+        },
+        {
+          "command": "mkdir -p /tmp/jdk && tar -xzf /tmp/jdk25.tar.gz -C /tmp/jdk --strip-components=1 && /tmp/jdk/bin/java -version && ls /tmp/jdk/bin/java",
+          "purpose": "unpack JDK 25 to /tmp/jdk"
+        },
+        {
+          "command": "export JAVA_HOME=/tmp/jdk && export PATH=$JAVA_HOME/bin:$PATH && java -version 2>&1 && curl -fL -o /tmp/server2.zip https://github.com/aoreshkov/kotlin-lib-mcp/releases/download/v0.10.1/kotlin-lib-mcp-server-0.10.1.zip && ls -lh /tmp/server2.zip && rm -rf /tmp/kotlin-lib-mcp-server-0.10.1 && unzip -q /tmp/server2.zip -d /tmp",
+          "purpose": "download and unzip kotlin-lib-mcp server 0.10.1 release zip"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && cat > ~/.local/bin/kotlin-lib-mcp <<'EOS'\n#!/bin/sh\nexport JAVA_HOME=/tmp/jdk\nexport PATH=\"$JAVA_HOME/bin:$PATH\"\nexec /tmp/kotlin-lib-mcp-server-0.10.1/bin/server \"$@\"\nEOS\nchmod +x ~/.local/bin/kotlin-lib-mcp",
+          "purpose": "create wrapper script in ~/.local/bin that sets JAVA_HOME and launches server"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "~/.local/bin/kotlin-lib-mcp --version",
+        "expected_signal": "kotlin-lib-mcp 0.10.1"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.10.1",
+    "published_at": "2026-10-29T18:51:31Z",
+    "url": "https://github.com/aoreshkov/kotlin-lib-mcp/releases/tag/v0.10.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:59:17.748994+08:00",
+    "runs": [
+      {
+        "id": "verify-kotlin-lib-mcp-20261101-005740-68d6",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:59:17.748994+08:00",
+        "tool_version": "0.10.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fL -o /tmp/jdk25.tar.gz \"https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25+36/OpenJDK25U-jdk_x64_linux_hotspot_25_36.tar.gz\" 2>&1 | tail -20; ls -lh /tmp/jdk25.tar.gz 2>&1\n# fallback check api\n",
+            "purpose": "download JDK 25 Temurin tarball"
+          },
+          {
+            "command": "mkdir -p /tmp/jdk && tar -xzf /tmp/jdk25.tar.gz -C /tmp/jdk --strip-components=1 && /tmp/jdk/bin/java -version && ls /tmp/jdk/bin/java",
+            "purpose": "unpack JDK 25 to /tmp/jdk"
+          },
+          {
+            "command": "export JAVA_HOME=/tmp/jdk && export PATH=$JAVA_HOME/bin:$PATH && java -version 2>&1 && curl -fL -o /tmp/server2.zip https://github.com/aoreshkov/kotlin-lib-mcp/releases/download/v0.10.1/kotlin-lib-mcp-server-0.10.1.zip && ls -lh /tmp/server2.zip && rm -rf /tmp/kotlin-lib-mcp-server-0.10.1 && unzip -q /tmp/server2.zip -d /tmp",
+            "purpose": "download and unzip kotlin-lib-mcp server 0.10.1 release zip"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && cat > ~/.local/bin/kotlin-lib-mcp <<'EOS'\n#!/bin/sh\nexport JAVA_HOME=/tmp/jdk\nexport PATH=\"$JAVA_HOME/bin:$PATH\"\nexec /tmp/kotlin-lib-mcp-server-0.10.1/bin/server \"$@\"\nEOS\nchmod +x ~/.local/bin/kotlin-lib-mcp",
+            "purpose": "create wrapper script in ~/.local/bin that sets JAVA_HOME and launches server"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "~/.local/bin/kotlin-lib-mcp --version",
+            "expected_signal": "kotlin-lib-mcp 0.10.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "kotlin-lib-mcp 0.10.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- kotlin-lib-mcp --transport stdio 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get_latest_version --args '{\"coordinate\":\"org.jetbrains.kotlin:kotlin-stdlib\"}' -- kotlin-lib-mcp --transport stdio 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_latest_version content=text text_chars=126",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Requires JDK 25+ runtime, launch via bin/server",
+            "actually_needed": "JDK not preinstalled; manually downloaded Temurin 25 and created wrapper setting JAVA_HOME",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "The sandbox run installed it under /tmp, and its launch command or wrapper points there.",
+            "actually_needed": "The run installed into /tmp; install into a permanent directory and point the MCP client's launch command there.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 12 tools, successful get_latest_version call returning kotlin-stdlib versions, and version 0.10.1 output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-kotlin-lib-mcp-20261101-005740-68d6/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-kotlin-lib-mcp-20261101-005740-68d6/check-1-cmd7.judged.png",
+            "runs/verify/verify-kotlin-lib-mcp-20261101-005740-68d6/check-2-cmd8.judged.png",
+            "runs/verify/verify-kotlin-lib-mcp-20261101-005740-68d6/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.086266,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "kotlin-lib-mcp",
+            "--transport",
+            "stdio"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "kotlin-lib-mcp",
+          "server_version": "0.10.1",
+          "tools": [
+            "fetch_library",
+            "list_packages",
+            "list_declarations",
+            "get_api_signature",
+            "get_kdoc",
+            "get_source",
+            "search_source",
+            "diff_versions",
+            "diff_api",
+            "get_dependencies",
+            "list_versions",
+            "get_latest_version"
+          ],
+          "tool_count": 12,
+          "called_tool": "get_latest_version",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "docker run -i --rm -v kotlin-lib-mcp-cache:/home/mcp/.cache ghcr.io/aoreshkov/kotlin-lib-mcp",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add kotlin-lib -- docker run -i --rm -v kotlin-lib-mcp-cache:/home/mcp/.cache ghcr.io/aoreshkov/kotlin-lib-mcp"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"kotlin-lib\": {\n      \"command\": \"docker\",\n      \"args\": [\"run\", \"-i\", \"--rm\", \"-v\", \"kotlin-lib-mcp-cache:/home/mcp/.cache\", \"ghcr.io/aoreshkov/kotlin-lib-mcp\"]\n    }\n  }\n}"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"kotlin-lib\": {\n      \"command\": \"C:/path/to/kotlin-lib-mcp-server-<version>/bin/server.bat\",\n      \"args\": [\"--transport\", \"stdio\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "OTEL_EXPORTER_OTLP_ENDPOINT",
+        "required": null,
+        "purpose": "OTLP collector endpoint"
+      },
+      {
+        "name": "OTEL_SERVICE_NAME",
+        "required": null,
+        "purpose": "service name for traces"
+      },
+      {
+        "name": "OTEL_RESOURCE_ATTRIBUTES",
+        "required": null,
+        "purpose": "resource attributes for traces"
+      },
+      {
+        "name": "OTEL_EXPORTER_OTLP_HEADERS",
+        "required": null,
+        "purpose": "collector API key headers"
+      }
+    ],
+    "tools": [
+      "fetch_library",
+      "list_packages",
+      "list_declarations",
+      "get_api_signature",
+      "get_kdoc",
+      "get_source",
+      "search_source",
+      "diff_versions",
+      "diff_api",
+      "get_dependencies",
+      "list_versions",
+      "get_latest_version"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:59:17+08:00",
+    "quality": {
+      "total": 79.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 35.1,
+      "signals": {
+        "stars": 13,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 101,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 112,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 51.34
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "460b90c407c0d21db92edb15106b765482bdf63ae7367e375f4794314cd8c9c1",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "MCP server: gives your AI agent the real sources, public API and KDoc of any Maven/Gradle-published Kotlin or Java library"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Give your AI agent the **real sources** of any Maven-published Kotlin/Java library."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requires JDK 25 (a Gradle toolchain: an installed JDK 25 is detected, otherwise Gradle downloads one)."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "claude mcp add kotlin-lib -- docker run -i --rm -v kotlin-lib-mcp-cache:/home/mcp/.cache ghcr.io/aoreshkov/kotlin-lib-mcp"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "./gradlew :server:run --args=\"--transport stdio\"   # local MCP over stdio (default)"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318   # '/v1/traces' is appended for you"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "> **Endpoint gotcha.** With the generic `OTEL_EXPORTER_OTLP_ENDPOINT`, `/v1/traces` is appended"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[Apache-2.0](LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/aoreshkov/kotlin-lib-mcp",
+      "fetched_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/aoreshkov/kotlin-lib-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:43:31+08:00"
+    },
+    {
+      "id": "release:v0.10.1",
+      "kind": "release",
+      "url": "https://github.com/aoreshkov/kotlin-lib-mcp/releases/tag/v0.10.1",
+      "fetched_at": "2026-10-31T13:43:31+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "An [MCP](https://modelcontextprotocol.io) server that, on request, downloads the sources",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Give your AI agent the **real sources** of any Maven-published Kotlin/Java library.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "An [MCP](https://modelcontextprotocol.io) server that, on request, downloads the sources",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "An [MCP](https://modelcontextprotocol.io) server that, on request, downloads the sources of a\nlibrary (e.g. `io.ktor:ktor-client-core:3.5.1`), parses them with the Kotlin **Analysis API**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# kotlin-lib-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Needs a JDK 25+ — the one on",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/1",
+      "source_id": "readme",
+      "quote": "unzip (needs a\nJava 25+ runtime)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Exact version you asked for, offline after the first fetch.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.10.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:43:31+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "`fetch_library` | Download + analyze + cache; returns a summary. Idempotent. Version may be omitted or `latest`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "`get_api_signature` | Resolved signature of one declaration by FQ name, with its deprecation and `ReplaceWith`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "`get_kdoc` | KDoc (summary, description, tags) of one declaration",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "`diff_api` | Public-API changes between two fetched versions — added, removed, changed, deprecated (with `ReplaceWith`); summary-first, paged, `package`- and `change`-filtered",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "`search_source` | Substring/regex search; bounded, returns `file:line` snippets",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "`server --help` lists them all with their defaults, the `OTEL_*` variables and\nexamples: `--transport stdio|http`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add kotlin-lib -- docker run -i --rm -v kotlin-lib-mcp-cache:/home/mcp/.cache ghcr.io/aoreshkov/kotlin-lib-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add kotlin-lib -- docker run -i --rm -v kotlin-lib-mcp-cache:/home/mcp/.cache ghcr.io/aoreshkov/kotlin-lib-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"kotlin-lib\": {\n      \"command\": \"docker\",\n      \"args\": [\"run\", \"-i\", \"--rm\", \"-v\", \"kotlin-lib-mcp-cache:/home/mcp/.cache\", \"ghcr.io/aoreshkov/kotlin-lib-mcp\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/2",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"kotlin-lib\": {\n      \"command\": \"C:/path/to/kotlin-lib-mcp-server-<version>/bin/server.bat\",\n      \"args\": [\"--transport\", \"stdio\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "OTEL_SERVICE_NAME",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "OTEL_RESOURCE_ATTRIBUTES",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "OTEL_EXPORTER_OTLP_HEADERS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`fetch_library` · `list_packages` · `list_declarations` ·",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`fetch_library` · `list_packages` · `list_declarations` ·",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`fetch_library` · `list_packages` · `list_declarations` ·",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`get_api_signature` · `get_kdoc` · `get_source` · `search_source` · `diff_versions` · `diff_api` ·",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`get_api_signature` · `get_kdoc` · `get_source` · `search_source` · `diff_versions` · `diff_api` ·",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`get_api_signature` · `get_kdoc` · `get_source` · `search_source` · `diff_versions` · `diff_api` ·",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`get_api_signature` · `get_kdoc` · `get_source` · `search_source` · `diff_versions` · `diff_api` ·",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`get_api_signature` · `get_kdoc` · `get_source` · `search_source` · `diff_versions` · `diff_api` ·",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`get_api_signature` · `get_kdoc` · `get_source` · `search_source` · `diff_versions` · `diff_api` ·",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`get_dependencies` · `list_versions` · `get_latest_version`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`get_dependencies` · `list_versions` · `get_latest_version`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`get_dependencies` · `list_versions` · `get_latest_version`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:19+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:37:45+08:00",
+  "updated_at": "2026-11-01T01:32:55+08:00"
+}

@@ -26,6 +26,12 @@
     "run a WASM app on the Ark and save its report"
   ],
   "alternatives_to": [],
+  "features": [
+    "run apps and print reports",
+    "upload variant calls to the Ark",
+    "download public data onto the Ark",
+    "list dataset slots and their state"
+  ],
   "why_worth_it": null,
   "homepage": "https://dark.bio",
   "repo": {
@@ -69,16 +75,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-cli-20261031-002011-c7c1",
+      "run_id": "verify-cli-20261031-035507-5384",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://github.com/dark-bio/cli/releases/latest/download/ark-installer.sh -o /tmp/ark-installer.sh && ls -l /tmp/ark-installer.sh && wc -c /tmp/ark-installer.sh",
-          "purpose": "Download installer script for inspection"
+          "command": "curl -fsSL https://github.com/dark-bio/cli/releases/latest/download/ark-installer.sh -o /tmp/ark-installer.sh && ls -l /tmp/ark-installer.sh && head -c 2000 /tmp/ark-installer.sh",
+          "purpose": "download installer script only"
         },
         {
           "command": "sh /tmp/ark-installer.sh",
-          "purpose": "Run installer script to install ark"
+          "purpose": "run installer script"
         }
       ],
       "manual_steps": [],
@@ -86,7 +92,7 @@
         "command": "ark --version",
         "expected_signal": "ark 0.5.0"
       },
-      "first_task": "ark completions bash"
+      "first_task": "ark devices"
     },
     "windows": {
       "basis": "readme_claim",
@@ -122,10 +128,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:21:12.498875+08:00",
+    "checked_at": "2026-10-31T03:56:03.648359+08:00",
     "runs": [
       {
-        "id": "verify-cli-20261031-002011-c7c1",
+        "id": "verify-cli-20261031-035507-5384",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -133,18 +139,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:21:12.498875+08:00",
+        "checked_at": "2026-10-31T03:56:03.648359+08:00",
         "tool_version": "0.5.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://github.com/dark-bio/cli/releases/latest/download/ark-installer.sh -o /tmp/ark-installer.sh && ls -l /tmp/ark-installer.sh && wc -c /tmp/ark-installer.sh",
-            "purpose": "Download installer script for inspection"
+            "command": "curl -fsSL https://github.com/dark-bio/cli/releases/latest/download/ark-installer.sh -o /tmp/ark-installer.sh && ls -l /tmp/ark-installer.sh && head -c 2000 /tmp/ark-installer.sh",
+            "purpose": "download installer script only"
           },
           {
             "command": "sh /tmp/ark-installer.sh",
-            "purpose": "Run installer script to install ark"
+            "purpose": "run installer script"
           }
         ],
         "smoke_tests": [
@@ -158,69 +164,94 @@
             "offline": true
           },
           {
-            "command": "ark --help",
-            "expected_signal": "Command line interface to Ark enclaves",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Command line interface to Ark enclaves",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "ark completions bash",
-            "expected_signal": "complete -F _ark",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "complete -F _ark -o nosort -o bashdefault -o default ark",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "ark devices",
-            "expected_signal": "no Arks found",
+            "expected_signal": "error[no-device]: no Arks found; discovery was incomplete",
             "exit_code": 3,
             "passed": true,
             "observed_excerpt": "error[no-device]: no Arks found; discovery was incomplete",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ark status",
+            "expected_signal": "error[no-device]: no Ark enclave found",
+            "exit_code": 3,
+            "passed": true,
+            "observed_excerpt": "error[no-device]: no Ark enclave found",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -fsSL https://github.com/dark-bio/cli/releases/latest/download/ark-installer.sh | sh",
-            "actually_needed": "Installer downloads prebuilt binary ark-0.5.0-linux-amd64 and LICENSES.txt from GitHub releases; the binary cannot be read as text before running",
+            "readme_said": "curl installer script | sh installs ark",
+            "actually_needed": "installer fetches compiled binary ark-0.5.0-linux-amd64 and LICENSES.txt at run time; binary cannot be read as text before running",
             "kind": "note"
           },
           {
-            "readme_said": "ark devices # find the Ark; ark status # serial, firmware, pairing and lock",
-            "actually_needed": "ark devices and ark status correctly report error[no-device] and exit 3 when no Ark hardware or emulator is present; pairing/unlock/data/run steps need Ark hardware plus phone approval and cannot be tested here",
-            "kind": "note"
+            "readme_said": "On Linux, your user needs access to the Ark's USB device once via sudo tee udev rule",
+            "actually_needed": "skipped udev rule (requires sudo/root, not available); ark devices still runs and reports no-device with USB warning",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show bash completions containing complete -F _ark, devices reporting no Arks found, and version reporting ark 0.5.0.",
+          "observed": "Screenshots show expected no-device errors for devices and status and version 0.5.0 output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-cli-20261031-002011-c7c1/report.json",
+          "trace_path": "runs/verify/verify-cli-20261031-035507-5384/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-cli-20261031-002011-c7c1/check-1-cmd8.judged.png",
-            "runs/verify/verify-cli-20261031-002011-c7c1/check-2-cmd5.judged.png",
-            "runs/verify/verify-cli-20261031-002011-c7c1/check-3-cmd3.judged.png"
+            "runs/verify/verify-cli-20261031-035507-5384/check-1-cmd4.judged.png",
+            "runs/verify/verify-cli-20261031-035507-5384/check-2-cmd5.judged.png",
+            "runs/verify/verify-cli-20261031-035507-5384/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.041243
+        "cost_usd": 0.040522,
+        "features": [
+          {
+            "feature": "run apps and print reports",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "needs paired unlocked Ark plus owner phone approval"
+          },
+          {
+            "feature": "upload variant calls to the Ark",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "needs paired unlocked Ark plus owner phone approval"
+          },
+          {
+            "feature": "download public data onto the Ark",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "needs paired unlocked Ark; README says data fetch needs Ark"
+          },
+          {
+            "feature": "list dataset slots and their state",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "needs paired unlocked Ark; README says data list needs paired unlocked Ark"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 85.1,
       "confidence": 0.8,
@@ -535,8 +566,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:16:35+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Runs an app and prints its report",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:42+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Uploads the owner's variant calls",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:42+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Downloads public data onto the Ark",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:42+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Shows the dataset slots and their state",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:42+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:41:39+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

@@ -1,0 +1,788 @@
+{
+  "schema_version": "software.v1",
+  "slug": "freightutils-mcp",
+  "repo_id": "gh:1200163235",
+  "name": "FreightUtils MCP Server",
+  "summary": "Neutral freight reference layer giving AI agents source-backed DG, customs, location and freight calculations.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "freight",
+    "logistics",
+    "mcp",
+    "model-context-protocol"
+  ],
+  "use_cases": [
+    "Calculate CBM for boxes",
+    "Look up UN number in ADR database",
+    "Check ADR 1.1.3.6 small load exemption",
+    "Calculate UK import duty on goods",
+    "Calculate box-on-pallet fitting"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://www.freightutils.com/",
+  "repo": {
+    "url": "https://github.com/SoapyRED/freightutils-mcp",
+    "full_name": "SoapyRED/freightutils-mcp",
+    "created_at": "2026-04-03T05:22:50Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node 18 or newer"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-freightutils-mcp-20261101-002638-c17f",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g freightutils-mcp",
+          "purpose": "install freightutils-mcp via npm global"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "npx freightutils-mcp ping 2>&1",
+        "expected_signal": "All checks passed"
+      },
+      "first_task": "npx freightutils-mcp ping 2>&1"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v2.27.0",
+    "published_at": "2026-10-31T00:56:04Z",
+    "url": "https://github.com/SoapyRED/freightutils-mcp/releases/tag/v2.27.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:28:23.988329+08:00",
+    "runs": [
+      {
+        "id": "verify-freightutils-mcp-20261101-002638-c17f",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:28:23.988329+08:00",
+        "tool_version": "2.27.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g freightutils-mcp",
+            "purpose": "install freightutils-mcp via npm global"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "npx freightutils-mcp ping 2>&1",
+            "expected_signal": "All checks passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "All checks passed. Your FreightUtils MCP install is working.",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- freightutils-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call cbm_calculator --args '{\"length_cm\":120,\"width_cm\":80,\"height_cm\":100}' -- freightutils-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=cbm_calculator content=text,text text_chars=540",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show ping passing all 3 checks, MCP probe listing 25 tools with handshake ok, and cbm_calculator call returning 0.96 m3.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-freightutils-mcp-20261101-002638-c17f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-freightutils-mcp-20261101-002638-c17f/check-1-cmd4.judged.png",
+            "runs/verify/verify-freightutils-mcp-20261101-002638-c17f/check-2-cmd5.judged.png",
+            "runs/verify/verify-freightutils-mcp-20261101-002638-c17f/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.037323,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "freightutils-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "freightutils-mcp",
+          "server_version": "2.27.0",
+          "tools": [
+            "cbm_calculator",
+            "chargeable_weight_calculator",
+            "ldm_calculator",
+            "adr_lookup",
+            "adr_exemption_calculator",
+            "adr_lq_eq_check",
+            "airline_lookup",
+            "container_lookup",
+            "hs_code_lookup",
+            "incoterms_lookup",
+            "pallet_fitting_calculator",
+            "unit_converter",
+            "consignment_calculator",
+            "unlocode_lookup",
+            "uk_duty_calculator",
+            "shipment_summary",
+            "uld_lookup",
+            "vehicle_lookup",
+            "emissions_calculator",
+            "validate",
+            "ics2_check",
+            "airport_lookup",
+            "nearest_airport",
+            "resolve_reference",
+            "get_subscribe_link"
+          ],
+          "tool_count": 25,
+          "called_tool": "cbm_calculator",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "npx freightutils-mcp",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"freightutils\": {\n      \"command\": \"npx\",\n      \"args\": [\"freightutils-mcp\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "FREIGHTUTILS_API_KEY",
+        "required": false,
+        "purpose": "authenticate API calls to use plan limit"
+      }
+    ],
+    "tools": [
+      "ldm_calculator",
+      "cbm_calculator",
+      "chargeable_weight_calculator",
+      "pallet_fitting_calculator",
+      "container_lookup",
+      "unit_converter",
+      "consignment_calculator",
+      "emissions_calculator",
+      "adr_lookup",
+      "adr_exemption_calculator",
+      "adr_lq_eq_check",
+      "hs_code_lookup",
+      "uk_duty_calculator",
+      "incoterms_lookup",
+      "ics2_check",
+      "resolve_reference",
+      "airline_lookup",
+      "unlocode_lookup",
+      "airport_lookup",
+      "nearest_airport",
+      "uld_lookup",
+      "vehicle_lookup",
+      "validate",
+      "shipment_summary",
+      "get_subscribe_link"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 94.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 42.0,
+      "signals": {
+        "stars": 8,
+        "monthly_downloads": 2896,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 211,
+      "packages": [
+        "npm:freightutils-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 54.58
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "ed7dafcf7943f65b52d8dff6e9477ba5999628253297f54fea7db02962747084",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "The neutral freight reference layer for AI agents."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "server gives AI agents access to 25 freight calculation and reference tools"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Requires Node 18 or newer."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npm install -g freightutils-mcp"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "All checks passed. Your FreightUtils MCP install is working."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "\"FREIGHTUTILS_API_KEY\": \"fu_pk_xxx\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "| Symptom | Likely cause | Fix |"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "MIT — see [LICENSE](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/SoapyRED/freightutils-mcp",
+      "fetched_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/SoapyRED/freightutils-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:44:43+08:00"
+    },
+    {
+      "id": "release:v2.27.0",
+      "kind": "release",
+      "url": "https://github.com/SoapyRED/freightutils-mcp/releases/tag/v2.27.0",
+      "fetched_at": "2026-10-31T13:44:43+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "This [Model Context Protocol](https://modelcontextprotocol.io/) server gives AI agents access to 25 freight",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Add to your MCP config (`claude_desktop_config.json` or `.claude/settings.json`):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "This [Model Context Protocol](https://modelcontextprotocol.io/) server gives AI agents access to 25 freight",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "FreightUtils is the neutral freight reference layer for AI agents — source-backed dangerous-goods, customs, location and freight-calculation data",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# FreightUtils MCP Server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires Node 18 or newer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Tool inputs go only to `https://www.freightutils.com/api` (or the base you set in `FREIGHTUTILS_API_URL`), over HTTPS.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.27.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:44:43+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "\"Calculate CBM for a box 120cm × 80cm × 100cm, 24 pieces\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "\"Look up UN 1203 in the ADR database\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "\"Check if 200L of petrol qualifies for ADR 1.1.3.6 exemption\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "\"What's the UK import duty on laptops from China?\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "\"How many boxes of 40×30×25cm fit on a euro pallet?\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "All tools call the free FreightUtils API:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "it talks over stdio only.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "\"args\": [\"freightutils-mcp\"]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"freightutils\": {\n      \"command\": \"npx\",\n      \"args\": [\"freightutils-mcp\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "FREIGHTUTILS_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`ldm_calculator` | Loading metres for European and US road trailers",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`cbm_calculator` | Cubic metres for sea freight",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`chargeable_weight_calculator` | Air freight chargeable weight (volumetric vs actual)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`pallet_fitting_calculator` | Box-on-pallet optimisation with rotation",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`container_lookup` | ISO container specs (10 types) and loading calculation",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`unit_converter` | Weight, volume, length, and freight-specific conversions",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`consignment_calculator` | Multi-item CBM, LDM, volumetric & mode-specific chargeable weight",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`emissions_calculator` | Freight CO2e via the ISO 14083 / GLEC distance-based method",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`adr_lookup` | 2,939 UNECE ADR 2025 entries, all 20 Table A columns",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`adr_exemption_calculator` | ADR 1.1.3.6 small load exemption check",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`adr_lq_eq_check` | Limited and Excepted Quantity eligibility",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`hs_code_lookup` | 6,940 Harmonized System tariff codes (HS 2022)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "`uk_duty_calculator` | UK import duty and VAT (live GOV.UK Trade Tariff data)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "`incoterms_lookup` | Incoterms 2020 — all 11 rules with risk/cost transfer points",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/14",
+      "source_id": "readme",
+      "quote": "`ics2_check` | Flag EU ICS2 unacceptable goods-description terms (stop-words)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/15",
+      "source_id": "readme",
+      "quote": "`resolve_reference` | Resolve any freight identifier (\"176\", \"UN1845\", \"NLRTM\", \"FOB\")",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/16",
+      "source_id": "readme",
+      "quote": "`airline_lookup` | 6,356 airlines with IATA/ICAO codes and AWB prefixes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/17",
+      "source_id": "readme",
+      "quote": "`unlocode_lookup` | 116,086 UN/LOCODE transport locations",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/18",
+      "source_id": "readme",
+      "quote": "`airport_lookup` | 86,248 airports by IATA/ICAO code, name or city (OurAirports)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/19",
+      "source_id": "readme",
+      "quote": "`nearest_airport` | Nearest airports to a latitude/longitude, by great-circle distance",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/20",
+      "source_id": "readme",
+      "quote": "`uld_lookup` | 16 air cargo ULD types (LD3, PMC, etc.)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/21",
+      "source_id": "readme",
+      "quote": "`vehicle_lookup` | 17 road freight vehicles and trailers",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/22",
+      "source_id": "readme",
+      "quote": "`validate` | Parse any text (a booking line, an email) to find & validate every container",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/23",
+      "source_id": "readme",
+      "quote": "`shipment_summary` | Chains CBM + weight + LDM + ADR + duty in one call",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/mcp/tools/24",
+      "source_id": "readme",
+      "quote": "`get_subscribe_link` | The pricing page URL with the Pro plan's limit and price",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:28+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:38:07+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

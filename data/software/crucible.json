@@ -31,6 +31,12 @@
     "compare baseline and compressed benchmark runs"
   ],
   "alternatives_to": [],
+  "features": [
+    "prune experts from MoE models",
+    "merge experts then prune",
+    "quantize pruned models to W4A16",
+    "benchmark served models for evaluation"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -53,7 +59,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-crucible-20261031-020526-14fa",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone --depth 1 https://github.com/peonist-ai/crucible /home/sbx/crucible",
+          "purpose": "clone repo"
+        },
+        {
+          "command": "cd /home/sbx/crucible && uv sync",
+          "purpose": "install via uv sync"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "cd /home/sbx/crucible && uv run crucible --help",
+        "expected_signal": "MoE expert compression toolkit"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -65,22 +91,115 @@
   "processing": null,
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:09:03.703467+08:00",
+    "runs": [
+      {
+        "id": "verify-crucible-20261031-020526-14fa",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:09:03.703467+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/peonist-ai/crucible /home/sbx/crucible",
+            "purpose": "clone repo"
+          },
+          {
+            "command": "cd /home/sbx/crucible && uv sync",
+            "purpose": "install via uv sync"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd /home/sbx/crucible && uv run crucible --help",
+            "expected_signal": "MoE expert compression toolkit",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "MoE expert compression toolkit — prune, merge, and forge specialist models",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "uv pip install crucible-bench installs the benchmark harness",
+            "actually_needed": "clone https://github.com/peonist-ai/crucible then uv sync from repo root; PyPI crucible-bench 1.6.0 is a different thesis-judgment tool",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows crucible --help printing usage, the MoE expert compression toolkit tagline, and subcommands with exit code 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-crucible-20261031-020526-14fa/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-crucible-20261031-020526-14fa/check-1-cmd14.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.167507,
+        "features": [
+          {
+            "feature": "prune experts from MoE models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "needs 35B MoE download + GPU calibration; box cannot host it"
+          },
+          {
+            "feature": "merge experts then prune",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "README says experimental/broken on Gemma 4; also needs 35B model"
+          },
+          {
+            "feature": "quantize pruned models to W4A16",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "needs pruned model plus optional llm-compressor"
+          },
+          {
+            "feature": "benchmark served models for evaluation",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "compare ran successfully but pipe-formatted run cannot be cited; no budget left to re-run clean"
+          }
+        ]
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 58.4,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 54.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.51,
           "weight": 40.0
         },
         "install_docs": {
@@ -121,7 +240,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 42.57
+      "value": 39.88
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -339,8 +458,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-29T02:39:55+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "prune, merge, and forge specialist models for local inference.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:22+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "REAM (`--method ream`) — merge-then-prune.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:22+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Quantize the pruned model to compressed-tensors W4A16 (needs llm-compressor)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:22+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "drives any\nOpenAI-compatible endpoint (vLLM, llama-server, …):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:22+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

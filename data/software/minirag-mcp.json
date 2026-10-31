@@ -31,6 +31,12 @@
   "alternatives_to": [
     "shinpr/mcp-local-rag"
   ],
+  "features": [
+    "hybrid search over local documents",
+    "ingest documents in 12 file formats",
+    "list every document mentioning a phrase",
+    "filter search by labels and dates"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -74,20 +80,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-minirag-mcp-20261031-014150-bb84",
+      "run_id": "verify-minirag-mcp-20261031-025226-3b9b",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install minirag-mcp 2>&1",
+          "command": "uv tool install minirag-mcp",
           "purpose": "install minirag-mcp with uv tool"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "minirag-mcp --help 2>&1",
-        "expected_signal": "status"
+        "command": "minirag-mcp --version",
+        "expected_signal": "1.0.0"
       },
-      "first_task": "mkdir -p /tmp/minirag-docs && printf '# Hello\\n\\nThis is a test document about pickfit verification.\\n' > /tmp/minirag-docs/hello.md && printf 'Second doc with error code E123 for keyword search test.\\n' > /tmp/minirag-docs/notes.txt && BASE_DIR=/tmp/minirag-docs minirag-mcp status 2>&1"
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -119,10 +125,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:43:50.501286+08:00",
+    "checked_at": "2026-10-31T02:57:13.796176+08:00",
     "runs": [
       {
-        "id": "verify-minirag-mcp-20261031-014150-bb84",
+        "id": "verify-minirag-mcp-20261031-025226-3b9b",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -130,28 +136,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:43:50.501286+08:00",
+        "checked_at": "2026-10-31T02:57:13.796176+08:00",
         "tool_version": "1.0.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install minirag-mcp 2>&1",
+            "command": "uv tool install minirag-mcp",
             "purpose": "install minirag-mcp with uv tool"
           }
         ],
         "smoke_tests": [
           {
-            "command": "minirag-mcp --help 2>&1",
-            "expected_signal": "status",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "│ status Show index and configuration status. │",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "minirag-mcp --version 2>&1",
+            "command": "minirag-mcp --version",
             "expected_signal": "1.0.0",
             "exit_code": 0,
             "passed": true,
@@ -160,23 +157,19 @@
             "offline": true
           },
           {
-            "command": "mkdir -p /tmp/minirag-docs && printf '# Hello\\n\\nThis is a test document about pickfit verification.\\n' > /tmp/minirag-docs/hello.md && printf 'Second doc with error code E123 for keyword search test.\\n' > /tmp/minirag-docs/notes.txt && BASE_DIR=/tmp/minirag-docs minirag-mcp status 2>&1",
-            "expected_signal": "version: 1.0.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "version: 1.0.0",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "cd /tmp/minirag-docs && BASE_DIR=/tmp/minirag-docs python3 ~/.pickfit/mcp_probe.py --timeout 120 -- minirag-mcp 2>&1",
+            "command": "BASE_DIR=/tmp/minirag-docs python3 ~/.pickfit/mcp_probe.py -- minirag-mcp",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
             "setup": [
               {
-                "command": "mkdir -p /tmp/minirag-docs && printf '# Hello\\n\\nThis is a test document about pickfit verification.\\n' > /tmp/minirag-docs/hello.md && printf 'Second doc with error code E123 for keyword search test.\\n' > /tmp/minirag-docs/notes.txt && BASE_DIR=/tmp/minirag-docs minirag-mcp status 2>&1",
+                "command": "mkdir -p /tmp/minirag-docs && cat > /tmp/minirag-docs/hello.md <<'EOF'\n# Project Alpha Notes\n\nThis document describes the hybrid search prototype for Project Alpha.\nIt mentions the unique keyword zxqalpha123 and error code E_CONN_TIMEOUT_42.\n\nDate: 2026-08-05\nEOF\ncat > /tmp/minirag-docs/report.txt <<'EOF'\nWeekly sync minutes for Project Alpha.\n\nDiscussed connection timeout handling and retry policy.\nKeyword zxqalpha123 appears here too for find_mentions testing.\nEOF\nls -la /tmp/minirag-docs",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "minirag-mcp sync --base-dir /tmp/minirag-docs",
                 "background": false,
                 "port": null
               }
@@ -184,14 +177,64 @@
             "offline": true
           },
           {
-            "command": "cd /tmp/minirag-docs && BASE_DIR=/tmp/minirag-docs python3 ~/.pickfit/mcp_probe.py --timeout 120 --call status --args '{}' -- minirag-mcp 2>&1",
+            "command": "BASE_DIR=/tmp/minirag-docs python3 ~/.pickfit/mcp_probe.py --call query_documents --args '{\"query\":\"zxqalpha123\",\"topK\":5}' -- minirag-mcp",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=status content=text text_chars=420",
+            "observed_excerpt": "tools/call: ok tool=query_documents content=text text_chars=1853",
             "setup": [
               {
-                "command": "mkdir -p /tmp/minirag-docs && printf '# Hello\\n\\nThis is a test document about pickfit verification.\\n' > /tmp/minirag-docs/hello.md && printf 'Second doc with error code E123 for keyword search test.\\n' > /tmp/minirag-docs/notes.txt && BASE_DIR=/tmp/minirag-docs minirag-mcp status 2>&1",
+                "command": "mkdir -p /tmp/minirag-docs && cat > /tmp/minirag-docs/hello.md <<'EOF'\n# Project Alpha Notes\n\nThis document describes the hybrid search prototype for Project Alpha.\nIt mentions the unique keyword zxqalpha123 and error code E_CONN_TIMEOUT_42.\n\nDate: 2026-08-05\nEOF\ncat > /tmp/minirag-docs/report.txt <<'EOF'\nWeekly sync minutes for Project Alpha.\n\nDiscussed connection timeout handling and retry policy.\nKeyword zxqalpha123 appears here too for find_mentions testing.\nEOF\nls -la /tmp/minirag-docs",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "minirag-mcp sync --base-dir /tmp/minirag-docs",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "BASE_DIR=/tmp/minirag-docs python3 ~/.pickfit/mcp_probe.py --call ingest_data --args '{\"data\":\"# Ingest test note\\nThis is a markdown ingest test with keyword zxqalpha123.\",\"source\":\"test-ingest-note\",\"format\":\"markdown\"}' -- minirag-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=ingest_data content=text text_chars=71",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/minirag-docs && cat > /tmp/minirag-docs/hello.md <<'EOF'\n# Project Alpha Notes\n\nThis document describes the hybrid search prototype for Project Alpha.\nIt mentions the unique keyword zxqalpha123 and error code E_CONN_TIMEOUT_42.\n\nDate: 2026-08-05\nEOF\ncat > /tmp/minirag-docs/report.txt <<'EOF'\nWeekly sync minutes for Project Alpha.\n\nDiscussed connection timeout handling and retry policy.\nKeyword zxqalpha123 appears here too for find_mentions testing.\nEOF\nls -la /tmp/minirag-docs",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "minirag-mcp sync --base-dir /tmp/minirag-docs",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "BASE_DIR=/tmp/minirag-docs python3 ~/.pickfit/mcp_probe.py --call query_documents --args '{\"query\":\"zxqalpha123\",\"topK\":5,\"dateFrom\":\"2026-01-01\",\"dateTo\":\"2026-12-31\"}' -- minirag-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=query_documents content=text text_chars=84",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/minirag-docs && cat > /tmp/minirag-docs/hello.md <<'EOF'\n# Project Alpha Notes\n\nThis document describes the hybrid search prototype for Project Alpha.\nIt mentions the unique keyword zxqalpha123 and error code E_CONN_TIMEOUT_42.\n\nDate: 2026-08-05\nEOF\ncat > /tmp/minirag-docs/report.txt <<'EOF'\nWeekly sync minutes for Project Alpha.\n\nDiscussed connection timeout handling and retry policy.\nKeyword zxqalpha123 appears here too for find_mentions testing.\nEOF\nls -la /tmp/minirag-docs",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "minirag-mcp sync --base-dir /tmp/minirag-docs",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/minirag-docs/.minirag && cat > /tmp/minirag-docs/.minirag/classify.toml <<'EOF'\n[facets.project]\ndefault = \"main\"\nvalues.main = { description = \"The main product.\" }\nvalues.pilots = { description = \"Pilot projects.\", paths = [\"pilots\"] }\nEOF\ncat /tmp/minirag-docs/.minirag/classify.toml",
                 "background": false,
                 "port": null
               }
@@ -199,25 +242,36 @@
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "`query_documents` and `list_files` take `labels`, `dateFrom` and `dateTo`",
+            "actually_needed": "any labels/dateFrom/dateTo filter is refused without <root>/.minirag/classify.toml, even a date-only filter; created minimal default-facet taxonomy to make it answer",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "`find_mentions` lists every document that mentions a phrase",
+            "actually_needed": "installed PyPI v1.0.0 exposes 11 MCP tools with no find_mentions; README describes 12 tools including find_mentions",
+            "kind": "readme_wrong"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show help listing the status command, version output 1.0.0, and status output with version 1.0.0 and index config.",
+          "observed": "Screenshots show MCP handshake with 11 tools, successful query_documents call returning the test keyword, and --version printing 1.0.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-minirag-mcp-20261031-014150-bb84/report.json",
+          "trace_path": "runs/verify/verify-minirag-mcp-20261031-025226-3b9b/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-minirag-mcp-20261031-014150-bb84/check-1-cmd3.judged.png",
-            "runs/verify/verify-minirag-mcp-20261031-014150-bb84/check-2-cmd4.judged.png",
-            "runs/verify/verify-minirag-mcp-20261031-014150-bb84/check-3-cmd5.judged.png"
+            "runs/verify/verify-minirag-mcp-20261031-025226-3b9b/check-1-cmd6.judged.png",
+            "runs/verify/verify-minirag-mcp-20261031-025226-3b9b/check-2-cmd7.judged.png",
+            "runs/verify/verify-minirag-mcp-20261031-025226-3b9b/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.051259,
+        "cost_usd": 0.143052,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -241,9 +295,47 @@
             "status"
           ],
           "tool_count": 11,
-          "called_tool": "status",
+          "called_tool": "query_documents",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "hybrid search over local documents",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "ingest documents in 12 file formats",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "list every document mentioning a phrase",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; installed v1.0.0 lists 11 tools, no find_mentions"
+          },
+          {
+            "feature": "filter search by labels and dates",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Filtered query returned empty results with nothing found to demonstrate filtering."
+          }
+        ]
       }
     ]
   },
@@ -290,15 +382,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 94.1,
+      "total": 80.3,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -339,7 +431,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 48.84
+      "value": 41.68
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -739,8 +831,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:24:49+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**Hybrid search** — vector similarity (fastembed/ONNX) fused with keyword",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:57+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "12 file formats** ingested via `markitdown` (PDF, DOCX, PPTX, XLSX,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:57+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "`find_mentions` lists every document that",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:57+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "release:v1.0.0",
+      "quote": "`query_documents` and `list_files` take `labels`, `dateFrom` and `dateTo`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:57+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

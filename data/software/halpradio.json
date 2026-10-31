@@ -36,6 +36,12 @@
     "radio-active",
     "mocp / cmus"
   ],
+  "features": [
+    "stream internet radio in terminal",
+    "search 30,000+ online stations",
+    "watch beat-reactive animal DJ visualizers",
+    "view live ICY song metadata"
+  ],
   "why_worth_it": null,
   "homepage": "https://github.com/halpworld/halpradio",
   "repo": {
@@ -77,16 +83,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-halpradio-20261031-002043-f725",
+      "run_id": "verify-halpradio-20261031-033534-adf4",
       "method": "script",
       "steps": [
         {
-          "command": "which go; go version 2>&1; echo \"---\"; which halpradio; curl -fsSL https://raw.githubusercontent.com/halpworld/halpradio/main/install.sh -o /tmp/install_halpradio.sh && ls -l /tmp/install_halpradio.sh && wc -l /tmp/install_halpradio.sh",
-          "purpose": "Download installer script for reading before running"
+          "command": "curl -fsSL https://raw.githubusercontent.com/halpworld/halpradio/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
+          "purpose": "Download install script for reading"
         },
         {
-          "command": "INSTALL_DIR=\"$HOME/.local/bin\" bash /tmp/install_halpradio.sh",
-          "purpose": "Install halpradio v0.8.1 binary to ~/.local/bin via installer script"
+          "command": "bash /tmp/install.sh",
+          "purpose": "Run install script to install halpradio"
         }
       ],
       "manual_steps": [],
@@ -126,10 +132,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:21:54.733872+08:00",
+    "checked_at": "2026-10-31T03:36:52.506481+08:00",
     "runs": [
       {
-        "id": "verify-halpradio-20261031-002043-f725",
+        "id": "verify-halpradio-20261031-033534-adf4",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -137,18 +143,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:21:54.733872+08:00",
+        "checked_at": "2026-10-31T03:36:52.506481+08:00",
         "tool_version": "v0.8.1",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "which go; go version 2>&1; echo \"---\"; which halpradio; curl -fsSL https://raw.githubusercontent.com/halpworld/halpradio/main/install.sh -o /tmp/install_halpradio.sh && ls -l /tmp/install_halpradio.sh && wc -l /tmp/install_halpradio.sh",
-            "purpose": "Download installer script for reading before running"
+            "command": "curl -fsSL https://raw.githubusercontent.com/halpworld/halpradio/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
+            "purpose": "Download install script for reading"
           },
           {
-            "command": "INSTALL_DIR=\"$HOME/.local/bin\" bash /tmp/install_halpradio.sh",
-            "purpose": "Install halpradio v0.8.1 binary to ~/.local/bin via installer script"
+            "command": "bash /tmp/install.sh",
+            "purpose": "Run install script to install halpradio"
           }
         ],
         "smoke_tests": [
@@ -162,17 +168,8 @@
             "offline": true
           },
           {
-            "command": "halpradio --help",
-            "expected_signal": "Show halpradio help",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "-h, --help Show halpradio help",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "halpradio current",
-            "expected_signal": "halpradio is not currently running",
+            "expected_signal": "not currently running",
             "exit_code": 1,
             "passed": true,
             "observed_excerpt": "Error: halpradio is not currently running (socket /home/sbx/.config/halpradio/ipc.sock not found)",
@@ -190,7 +187,7 @@
           },
           {
             "command": "halpradio remote status",
-            "expected_signal": "halpradio is not currently running",
+            "expected_signal": "not currently running",
             "exit_code": 1,
             "passed": true,
             "observed_excerpt": "Remote control error: halpradio is not currently running (socket /home/sbx/.config/halpradio/ipc.sock not found)",
@@ -198,51 +195,94 @@
             "offline": true
           },
           {
-            "command": "halpradio stations list -n 3",
-            "expected_signal": "SomaFM: Groove Salad",
+            "command": "halpradio theme list",
+            "expected_signal": "INSTALLED THEMES",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "1 soma-groovesalad SomaFM: Groove Salad Ambient / Chillout 🇺🇸 US 128 kbps",
+            "observed_excerpt": "🎨 INSTALLED THEMES:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "halpradio plugin list",
+            "expected_signal": "INSTALLED PLUGINS",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "📦 INSTALLED PLUGINS:",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "One-line installer installs halpradio to /usr/local/bin.",
-            "actually_needed": "Installer auto-fell back to /home/sbx/.local/bin (on PATH); explicitly passing INSTALL_DIR=\"$HOME/.local/bin\" gives the same result without probing /usr/local/bin.",
+            "readme_said": "installs it to /usr/local/bin",
+            "actually_needed": "script fell back to /home/sbx/.local/bin because /usr/local/bin not writable without sudo",
             "kind": "sandbox"
           },
           {
-            "readme_said": "README status-query examples show playing-station output.",
-            "actually_needed": "halpradio current, halpradio current --json and halpradio remote status exit 1 with 'halpradio is not currently running (socket .../ipc.sock not found)' plus a stopped-status JSON payload when no player daemon is running; this is the tool's intended idle state, not a failure.",
+            "readme_said": "halpradio current outputs 'SomaFM Groove Salad: Tycho - A Walk'",
+            "actually_needed": "halpradio current, current --json and remote status exit 1 with 'not currently running' message when no daemon is running",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show not-running error, stopped JSON status, and v0.8.1 version output as expected.",
+          "observed": "Screenshots show not-running socket errors, stopped JSON status, and v0.8.1 version output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-halpradio-20261031-002043-f725/report.json",
+          "trace_path": "runs/verify/verify-halpradio-20261031-033534-adf4/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-halpradio-20261031-002043-f725/check-1-cmd5.judged.png",
-            "runs/verify/verify-halpradio-20261031-002043-f725/check-2-cmd6.judged.png",
-            "runs/verify/verify-halpradio-20261031-002043-f725/check-3-cmd3.judged.png"
+            "runs/verify/verify-halpradio-20261031-033534-adf4/check-1-cmd4.judged.png",
+            "runs/verify/verify-halpradio-20261031-033534-adf4/check-2-cmd5.judged.png",
+            "runs/verify/verify-halpradio-20261031-033534-adf4/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.061194
+        "cost_usd": 0.080503,
+        "features": [
+          {
+            "feature": "stream internet radio in terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Both outputs only show not-running socket errors, not any radio stream."
+          },
+          {
+            "feature": "search 30,000+ online stations",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs live RadioBrowser API and interactive fuzzy search '/'"
+          },
+          {
+            "feature": "watch beat-reactive animal DJ visualizers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "needs interactive TUI press 'v' plus audio playback"
+          },
+          {
+            "feature": "view live ICY song metadata",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs live streaming station; stopped daemon shows no artist/title"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 96.1,
       "confidence": 0.8,
@@ -603,8 +643,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:16:30+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "Terminal Internet Radio Streamer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:36+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "github_api",
+      "quote": "30,000+ stations",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:36+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "github_api",
+      "quote": "beat-reactive animal DJ visualizers",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:36+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "github_api",
+      "quote": "live ICY metadata",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:36+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:41:22+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

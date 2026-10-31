@@ -34,6 +34,11 @@
     "Labelary",
     "Zebra Printer"
   ],
+  "features": [
+    "render labels to PNG and PDF",
+    "encode images as ZPL/TSPL code",
+    "preview labels in interactive web playground"
+  ],
   "why_worth_it": null,
   "homepage": "https://labelize.764629910.workers.dev",
   "repo": {
@@ -60,34 +65,41 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-labelize-20261031-000542-a71b",
-      "method": "npm",
+      "run_id": "verify-labelize-20261031-032510-09e1",
+      "method": "binary",
       "steps": [
         {
-          "command": "npm install @goodboy008/labelize-wasm",
-          "purpose": "Install @goodboy008/labelize-wasm via npm"
+          "command": "curl -fsSL -o /tmp/labelize-clean.tar.gz https://github.com/GOODBOY008/labelize/releases/download/v1.10.0/labelize-x86_64-unknown-linux-gnu.tar.gz && mkdir -p /tmp/lzclean && tar -xzf /tmp/labelize-clean.tar.gz -C /tmp/lzclean && mkdir -p ~/.local/bin && rm -f ~/.local/bin/labelize && cp /tmp/lzclean/labelize ~/.local/bin/labelize && chmod +x ~/.local/bin/labelize",
+          "purpose": "Download linux binary tarball and install to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "node -e \"import('./node_modules/@goodboy008/labelize-wasm/package.json', {with:{type:'json'}}).then(m=>console.log(m.default.version))\"",
-        "expected_signal": "1.10.0"
+        "command": "labelize --help",
+        "expected_signal": "Convert a ZPL/EPL/TSPL/CPCL/DPL file to PNG or PDF"
       },
-      "first_task": "node -e \"import('./node_modules/@goodboy008/labelize-wasm/package.json', {with:{type:'json'}}).then(m=>console.log(m.default.version))\""
+      "first_task": "labelize convert label.zpl && ls -l label.png && file label.png"
     },
     "windows": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "npm",
+      "basis": "replayed",
+      "run_id": "verify-labelize-20261031-230031-6dff",
+      "method": "binary",
       "steps": [
         {
-          "command": "npm install @goodboy008/labelize-wasm",
-          "purpose": null
+          "command": "curl.exe -sL -o labelize.zip https://github.com/GOODBOY008/labelize/releases/download/v1.10.0/labelize-x86_64-pc-windows-msvc.zip && dir labelize.zip && tar.exe -tf labelize.zip",
+          "purpose": "download Windows binary zip from Releases"
+        },
+        {
+          "command": "tar.exe -xf labelize.zip && dir labelize.exe && .\\labelize.exe --version",
+          "purpose": "extract labelize.exe from zip"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "labelize convert label.zpl"
+      "check": {
+        "command": "tar.exe -xf labelize.zip && dir labelize.exe && .\\labelize.exe --version",
+        "expected_signal": "labelize 1.10.0"
+      },
+      "first_task": "[System.IO.File]::WriteAllText('label.zpl', '^XA^FO50,50^A0N,40,40^FDHello World^FS^XZ') && .\\labelize.exe convert label.zpl && Write-Output CONVERT_OK"
     }
   },
   "pricing": {
@@ -103,48 +115,48 @@
     "url": "https://github.com/GOODBOY008/labelize/releases/tag/v1.10.0"
   },
   "verification": {
-    "level": "function",
+    "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:06:50.121017+08:00",
+    "checked_at": "2026-10-31T23:07:31.823042+08:00",
     "runs": [
       {
-        "id": "verify-labelize-20261031-000542-a71b",
-        "level": "function",
+        "id": "verify-labelize-20261031-032510-09e1",
+        "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:06:50.121017+08:00",
+        "checked_at": "2026-10-31T03:26:53.963158+08:00",
         "tool_version": "1.10.0",
-        "install_method": "npm",
+        "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install @goodboy008/labelize-wasm",
-            "purpose": "Install @goodboy008/labelize-wasm via npm"
+            "command": "curl -fsSL -o /tmp/labelize-clean.tar.gz https://github.com/GOODBOY008/labelize/releases/download/v1.10.0/labelize-x86_64-unknown-linux-gnu.tar.gz && mkdir -p /tmp/lzclean && tar -xzf /tmp/labelize-clean.tar.gz -C /tmp/lzclean && mkdir -p ~/.local/bin && rm -f ~/.local/bin/labelize && cp /tmp/lzclean/labelize ~/.local/bin/labelize && chmod +x ~/.local/bin/labelize",
+            "purpose": "Download linux binary tarball and install to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "node -e \"import('./node_modules/@goodboy008/labelize-wasm/package.json', {with:{type:'json'}}).then(m=>console.log(m.default.version))\"",
-            "expected_signal": "1.10.0",
+            "command": "labelize --help",
+            "expected_signal": "Convert a ZPL/EPL/TSPL/CPCL/DPL file to PNG or PDF",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "1.10.0",
+            "observed_excerpt": "convert Convert a ZPL/EPL/TSPL/CPCL/DPL file to PNG or PDF",
             "setup": [],
             "offline": true
           },
           {
-            "command": "python3 -c \"d=open('label.png','rb').read(); print('is_png=', d[:8]==bytes.fromhex('89504e470d0a1a0a')); print('size=', len(d))\"",
-            "expected_signal": "PNG magic: 89504e470d0a1a0a",
+            "command": "labelize convert label.zpl && ls -l label.png && file label.png",
+            "expected_signal": "Converted label.zpl -> label.png",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "PNG magic: 89504e470d0a1a0a",
+            "observed_excerpt": "Converted label.zpl -> label.png",
             "setup": [
               {
-                "command": "cat > render-test.mjs <<'EOF'\nimport { lz_render } from \"@goodboy008/labelize-wasm/init\";\nimport { writeFileSync } from \"node:fs\";\nconst zpl = Buffer.from(\"^XA^FO50,50^A0N,40,40^FDHello World^FS^XZ\", \"ascii\");\nconst png = lz_render(zpl, 102.0, 152.0, 8, false, false, false);\nwriteFileSync(\"label.png\", png);\nconsole.log(\"PNG bytes:\", png.length);\nconsole.log(\"PNG magic:\", Buffer.from(png.slice(0,8)).toString(\"hex\"));\nEOF\nnode render-test.mjs && ls -l label.png",
+                "command": "cat > label.zpl <<'EOF'\n^XA^FO50,50^A0N,40,40^FDHello World^FS^XZ\nEOF\ncat label.zpl",
                 "background": false,
                 "port": null
               }
@@ -152,14 +164,49 @@
             "offline": true
           },
           {
-            "command": "cat > encode-test.mjs <<'EOF'\nimport { lz_encode } from \"@goodboy008/labelize-wasm/init\";\nimport { readFileSync, writeFileSync } from \"node:fs\";\nconst source = readFileSync(\"label.png\");\nconst zpl = lz_encode(source, 8, 128, \"zpl\");\nwriteFileSync(\"logo.zpl\", zpl);\nconsole.log(\"ZPL bytes:\", zpl.length);\nconsole.log(new TextDecoder().decode(zpl.slice(0, 120)));\nEOF\nnode encode-test.mjs && ls -l logo.zpl && head -c 300 logo.zpl",
-            "expected_signal": "^GFA",
+            "command": "labelize encode logo.png && ls -l logo.zpl && file logo.zpl",
+            "expected_signal": "Encoded logo.png -> logo.zpl",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "^FO0,0^GFA,99960,99960,102,",
+            "observed_excerpt": "Encoded logo.png -> logo.zpl",
             "setup": [
               {
-                "command": "cat > render-test.mjs <<'EOF'\nimport { lz_render } from \"@goodboy008/labelize-wasm/init\";\nimport { writeFileSync } from \"node:fs\";\nconst zpl = Buffer.from(\"^XA^FO50,50^A0N,40,40^FDHello World^FS^XZ\", \"ascii\");\nconst png = lz_render(zpl, 102.0, 152.0, 8, false, false, false);\nwriteFileSync(\"label.png\", png);\nconsole.log(\"PNG bytes:\", png.length);\nconsole.log(\"PNG magic:\", Buffer.from(png.slice(0,8)).toString(\"hex\"));\nEOF\nnode render-test.mjs && ls -l label.png && python3 -c \"d=open('label.png','rb').read(); print('is_png=', d[:8]==bytes.fromhex('89504e470d0a1a0a')); print('size=', len(d))\"",
+                "command": "cat > /tmp/mkpng.py <<'PY'\nimport struct, zlib\nw=h=64\nraw=b''\nfor y in range(h):\n    raw+=b'\\x00'\n    for x in range(w):\n        v=0 if (x//8+y//8)%2==0 else 255\n        raw+=bytes([v,v,v])\ndef chunk(t,d):\n    c=t+d\n    return struct.pack('>I',len(d))+c+struct.pack('>I',zlib.crc32(c)&0xffffffff)\npng=b'\\x89PNG\\r\\n\\x1a\\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',w,h,8,2,0,0,0))+chunk(b'IDAT',zlib.compress(raw))+chunk(b'IEND',b'')\nopen('logo.png','wb').write(png)\nprint('wrote logo.png', len(png))\nPY\npython3 /tmp/mkpng.py && ls -l logo.png && file logo.png",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsSL http://127.0.0.1:8080/health && echo && curl -fsSL http://127.0.0.1:8080/ -o /tmp/play.html && ls -l /tmp/play.html",
+            "expected_signal": "{\"status\":\"ok\"}",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"ok\"}",
+            "setup": [
+              {
+                "command": "labelize serve --port 8080",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 -c \"t=open('/tmp/play.html').read(); print(len(t)); print(t[:1500])\"",
+            "expected_signal": "<title>Free ZPL Viewer",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "<title>Free ZPL Viewer — ZPL, EPL, TSPL, CPCL &amp; DPL to PNG | Labelize</title>",
+            "setup": [
+              {
+                "command": "labelize serve --port 8080",
+                "background": true,
+                "port": 8080
+              },
+              {
+                "command": "curl -fsSL http://127.0.0.1:8080/health && echo && curl -fsSL http://127.0.0.1:8080/ -o /tmp/play.html && ls -l /tmp/play.html",
                 "background": false,
                 "port": null
               }
@@ -169,43 +216,163 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "labelize convert label.zpl / labelize encode logo.png / labelize serve --port 8080",
-            "actually_needed": "Use the JavaScript WebAssembly API via `import { lz_render, lz_encode } from \"@goodboy008/labelize-wasm/init\"` on Node >=20; no `labelize` binary is installed by this package",
+            "readme_said": "npm install @goodboy008/labelize-wasm",
+            "actually_needed": "Downloaded prebuilt linux tarball labelize-x86_64-unknown-linux-gnu.tar.gz v1.10.0 from GitHub releases and copied labelize to ~/.local/bin",
+            "kind": "note"
+          },
+          {
+            "readme_said": "cargo install labelize --features cli / cargo add labelize",
+            "actually_needed": "Skipped; box has no Rust toolchain and installing one is forbidden, so cargo candidates cannot work here",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show ZPL-to-PNG conversion producing a PNG, PNG-to-ZPL encoding producing ASCII text, and help listing the convert command.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-labelize-20261031-032510-09e1/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-labelize-20261031-032510-09e1/check-1-cmd9.judged.png",
+            "runs/verify/verify-labelize-20261031-032510-09e1/check-2-cmd10.judged.png",
+            "runs/verify/verify-labelize-20261031-032510-09e1/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.128847,
+        "features": [
+          {
+            "feature": "render labels to PNG and PDF",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "encode images as ZPL/TSPL code",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows file created as generic ASCII text without showing ^GFA/BITMAP code contents."
+          },
+          {
+            "feature": "preview labels in interactive web playground",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows health ok and HTML page served, not live preview rendering or zoom/themes in use."
+          }
+        ]
+      },
+      {
+        "id": "verify-labelize-20261031-230031-6dff",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "windows",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "vbox",
+        "image": "Windows 11 Enterprise LTSC Eval 24H2 (26100.1742), VirtualBox 7.2.22 +pickfit-win11@16ea69df29ff router@583d254c306d",
+        "checked_at": "2026-10-31T23:07:31.823042+08:00",
+        "tool_version": "1.10.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl.exe -sL -o labelize.zip https://github.com/GOODBOY008/labelize/releases/download/v1.10.0/labelize-x86_64-pc-windows-msvc.zip && dir labelize.zip && tar.exe -tf labelize.zip",
+            "purpose": "download Windows binary zip from Releases"
+          },
+          {
+            "command": "tar.exe -xf labelize.zip && dir labelize.exe && .\\labelize.exe --version",
+            "purpose": "extract labelize.exe from zip"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "tar.exe -xf labelize.zip && dir labelize.exe && .\\labelize.exe --version",
+            "expected_signal": "labelize 1.10.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "labelize 1.10.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": ".\\labelize.exe --help",
+            "expected_signal": "convert Convert a ZPL",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "convert Convert a ZPL/EPL/TSPL/CPCL/DPL file to PNG or PDF",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "[System.IO.File]::WriteAllText('label.zpl', '^XA^FO50,50^A0N,40,40^FDHello World^FS^XZ') && .\\labelize.exe convert label.zpl && Write-Output CONVERT_OK",
+            "expected_signal": "Converted label.zpl -> label.png",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Converted label.zpl -> label.png",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install labelize --features cli / cargo add labelize",
+            "actually_needed": "Skipped both cargo candidates: box has no Rust toolchain and installing one is forbidden, so cargo install/add cannot work here",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "npm install @goodboy008/labelize-wasm provides the labelize CLI",
+            "actually_needed": "Used README's Windows path (download labelize-x86_64-pc-windows-msvc.zip from GitHub Releases v1.10.0 and extract labelize.exe) because the ranked npm package installs only a WebAssembly library with no labelize binary on PATH",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "(Windows steps)",
+            "actually_needed": "pickfit ran these steps in PowerShell 7 (pwsh 7.6.9) as a standard user; the built-in Windows PowerShell 5.1 is not verified and does not run `&&`.",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show version 1.10.0, successful ZPL-to-PNG render with valid PNG magic, and PNG-to-ZPL encode emitting ^GFA.",
-          "model": "muse-spark-1.3"
+          "observed": "Screenshots show Converted label.zpl -> label.png with CONVERT_OK and labelize 1.10.0 version output.",
+          "model": "muse-spark-1.3-contributor"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-labelize-20261031-000542-a71b/report.json",
+          "trace_path": "runs/verify/verify-labelize-20261031-230031-6dff/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-labelize-20261031-000542-a71b/check-1-cmd7.judged.png",
-            "runs/verify/verify-labelize-20261031-000542-a71b/check-2-cmd4.judged.png",
-            "runs/verify/verify-labelize-20261031-000542-a71b/check-3-cmd5.judged.png"
+            "runs/verify/verify-labelize-20261031-230031-6dff/check-1-cmd15.judged.png",
+            "runs/verify/verify-labelize-20261031-230031-6dff/check-2-cmd7.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.073373
+        "actor_model": "muse-spark-1.3-contributor",
+        "cost_usd": 0.033858
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 94.8,
+      "total": 88.1,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -249,7 +416,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 21.9
+      "value": 20.35
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -537,8 +704,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:04:35+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**Parse and render ZPL / EPL / TSPL / CPCL / DPL labels to PNG & PDF — fast, offline, open source.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:15+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "turn any raster (PNG/JPEG/GIF/BMP) into ZPL `^GFA` or TSPL `BITMAP` printer code",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:15+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**Live preview** with debounced auto-render, zoom fit / percent, dark & light themes, English / 简体中文",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:15+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:40:29+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-01T01:07:53.511350+08:00"
 }

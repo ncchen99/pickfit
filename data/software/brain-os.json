@@ -1,0 +1,717 @@
+{
+  "schema_version": "software.v1",
+  "slug": "brain-os",
+  "repo_id": "gh:1227448499",
+  "name": "Brain OS",
+  "summary": "Local-first MCP server that stores project decisions, blockers, plans and priorities across sessions.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-memory",
+    "ai-agents",
+    "claude-code",
+    "cursor",
+    "developer-tools",
+    "local-first",
+    "mcp",
+    "model-context-protocol",
+    "operational-memory",
+    "project-state"
+  ],
+  "use_cases": [
+    "check a proposed action against logged decisions",
+    "log strategic decisions with reasoning and rejected alternatives",
+    "get prioritized recommendations on what to work on",
+    "search project memory by meaning",
+    "save session state changes at end of session"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://brainos-hq.com",
+  "repo": {
+    "url": "https://github.com/brainOS-HQ/brain-os",
+    "full_name": "brainOS-HQ/brain-os",
+    "created_at": "2026-05-02T17:41:56Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js 20 or newer"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "OPENAI_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-brain-os-20261101-003002-45b7",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g brain-os 2>&1",
+          "purpose": "install brain-os globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.11.0",
+    "published_at": "2026-10-30T19:05:19Z",
+    "url": "https://github.com/brainOS-HQ/brain-os/releases/tag/v0.11.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:31:22.790962+08:00",
+    "runs": [
+      {
+        "id": "verify-brain-os-20261101-003002-45b7",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:31:22.790962+08:00",
+        "tool_version": "0.11.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g brain-os 2>&1",
+            "purpose": "install brain-os globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- brain-os serve 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call operational_state_check --args '{\"root_path\": \"/home/sbx/work\"}' -- brain-os serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=operational_state_check content=text text_chars=3338",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show brain-os serve initializing as v0.11.0, listing 24 tools, and completing handshake and operational_state_check call successfully.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-brain-os-20261101-003002-45b7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-brain-os-20261101-003002-45b7/check-1-cmd3.judged.png",
+            "runs/verify/verify-brain-os-20261101-003002-45b7/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.054761,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "brain-os",
+            "serve"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "brain-os",
+          "server_version": "0.11.0",
+          "tools": [
+            "entity_read",
+            "context_resolve",
+            "entity_update",
+            "decision_log",
+            "decision_check",
+            "decision_refresh",
+            "focus_get",
+            "pattern_detect",
+            "memory_check",
+            "memory_commit",
+            "semantic_recall",
+            "audit_log",
+            "wrap_check",
+            "wrap_auto",
+            "plan_set",
+            "plan_advance",
+            "plan_add",
+            "plan_read",
+            "project_evidence_scan",
+            "operational_state_check",
+            "decision_review",
+            "risk_assess",
+            "action_guard",
+            "brain_setup"
+          ],
+          "tool_count": 24,
+          "called_tool": "operational_state_check",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "npx -y brain-os serve",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add brain-os -- npx -y brain-os serve"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"brain-os\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"brain-os\", \"serve\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "BRAIN_EMBEDDINGS",
+        "required": false,
+        "purpose": null
+      },
+      {
+        "name": "OPENAI_API_KEY",
+        "required": false,
+        "purpose": null
+      }
+    ],
+    "tools": [
+      "entity_read",
+      "entity_update",
+      "decision_log",
+      "decision_check",
+      "focus_get",
+      "pattern_detect",
+      "semantic_recall",
+      "plan_set",
+      "plan_advance",
+      "plan_add",
+      "plan_read",
+      "brain_setup",
+      "memory_check",
+      "memory_commit",
+      "operational_state_check"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 96.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 34.9,
+      "signals": {
+        "stars": 6,
+        "monthly_downloads": 314,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 181,
+      "packages": [
+        "npm:brain-os"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 62.56
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "22751f2efe362b653bcb0d079c7dad143d12b0634a4e4a1653220b72c781637e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Local-first MCP memory server for operational project state: decisions, blockers, plans, patterns, and next moves."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requires Node.js 20 or newer."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "claude mcp add brain-os -- npx -y brain-os serve"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "> decision_check({ proposal: \"switch to Postgres for the new service\" })\n\n{\n  \"verdict\": \"conflict\","
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "\"BRAIN_EMBEDDINGS\": \"openai\","
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "Set your MCP config to `npx -y brain-os@latest serve`, or run `npx clear-npx-cache`."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "## License\n\nMIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/brainOS-HQ/brain-os",
+      "fetched_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/brainOS-HQ/brain-os/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:45:10+08:00"
+    },
+    {
+      "id": "release:v0.11.0",
+      "kind": "release",
+      "url": "https://github.com/brainOS-HQ/brain-os/releases/tag/v0.11.0",
+      "fetched_at": "2026-10-31T13:45:10+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Brain OS is an [MCP server](https://modelcontextprotocol.io) that works with any MCP-compatible client",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Requires Node.js 20 or newer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Local-first MCP memory server for operational project state",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Local-first MCP memory server for operational project state: decisions, blockers, plans, patterns, and next moves.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Brain OS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires Node.js 20 or newer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "\"OPENAI_API_KEY\": \"${OPENAI_API_KEY}\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.11.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:45:10+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "decision_check` | Check a proposed action against active decisions — returns clear/caution/conflict",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "decision_log` | Log a strategic decision with reasoning and alternatives",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "focus_get` | Get prioritized recommendations on what to work on",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "semantic_recall` | Search memory by meaning using natural language",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "memory_commit` | End-of-session commit — save all state changes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "No cloud. No database. No account. Your data stays on your machine.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Local stdio server only.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add brain-os -- npx -y brain-os serve",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add brain-os -- npx -y brain-os serve",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"brain-os\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"brain-os\", \"serve\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "BRAIN_EMBEDDINGS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "OPENAI_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`entity_read` | Read operational state of one or all tracked entities",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`entity_update` | Update entity state — status, momentum, blockers, next moves",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`decision_log` | Log a strategic decision with reasoning and alternatives",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`decision_check` | Check a proposed action against active decisions — returns clear/caution/conflict",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`focus_get` | Get prioritized recommendations on what to work on",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`pattern_detect` | Analyze patterns across all entities",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`semantic_recall` | Search memory by meaning using natural language",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`plan_set` | Set an ordered plan for an entity — step 1 becomes active next_move",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`plan_advance` | Complete or skip a step (requires evidence/reason) — auto-promotes next",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`plan_add` | Add steps to an existing plan",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`plan_read` | View plan progress and current step",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`brain_setup` | Set up Brain OS in the open project from chat.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "`memory_check` | Audit memory quality — flags stale data, contradictions, noise",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "`memory_commit` | End-of-session commit — save all state changes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/mcp/tools/14",
+      "source_id": "readme",
+      "quote": "`operational_state_check` | Ephemeral read-only comparison of allowlisted package/Git facts",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:35+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:38:28+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

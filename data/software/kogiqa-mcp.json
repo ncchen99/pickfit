@@ -33,6 +33,12 @@
   "alternatives_to": [
     "Playwright MCP"
   ],
+  "features": [
+    "interact with web pages through natural language",
+    "debug style issues on web pages",
+    "automatically fix console errors",
+    "write end-to-end tests automatically"
+  ],
   "why_worth_it": null,
   "homepage": "https://www.npmjs.com/package/kogiqa-mcp",
   "repo": {
@@ -57,7 +63,7 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-kogiqa-mcp-20261031-014548-f1d9",
+      "run_id": "verify-kogiqa-mcp-20261031-030054-9298",
       "method": "npm",
       "steps": [
         {
@@ -86,10 +92,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:49:31.690633+08:00",
+    "checked_at": "2026-10-31T03:03:23.018278+08:00",
     "runs": [
       {
-        "id": "verify-kogiqa-mcp-20261031-014548-f1d9",
+        "id": "verify-kogiqa-mcp-20261031-030054-9298",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -97,8 +103,8 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:49:31.690633+08:00",
-        "tool_version": "1.3.159",
+        "checked_at": "2026-10-31T03:03:23.018278+08:00",
+        "tool_version": "1.0.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
@@ -121,26 +127,31 @@
         "pitfalls": [
           {
             "readme_said": "npx kogiqa-mcp@latest",
-            "actually_needed": "npm install -g kogiqa-mcp@latest, then launch offline as `kogiqa-mcp` (installed version 1.3.159)",
+            "actually_needed": "npm install -g kogiqa-mcp@latest so `kogiqa-mcp` is on PATH for offline replay; npx would fetch on every launch",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "--help exits with usage",
+            "actually_needed": "`kogiqa-mcp --help` prints setup help then starts the MCP proxy on stdio and never exits (had to be killed); use the MCP probe handshake instead",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows MCP probe initialized, listed 47 browser tools, and reported handshake: ok with exit 0.",
+          "observed": "Screenshot shows MCP probe initializing kogiqa-webbrowser-mcp-server, listing 47 browser tools, and reporting handshake ok.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-kogiqa-mcp-20261031-014548-f1d9/report.json",
+          "trace_path": "runs/verify/verify-kogiqa-mcp-20261031-030054-9298/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-kogiqa-mcp-20261031-014548-f1d9/check-1-cmd5.judged.png"
+            "runs/verify/verify-kogiqa-mcp-20261031-030054-9298/check-1-cmd4.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.053692,
+        "cost_usd": 0.050317,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -202,7 +213,41 @@
           "tool_count": 47,
           "called_tool": null,
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "interact with web pages through natural language",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs a live web app to navigate; only handshake plus a safe local call attempted"
+          },
+          {
+            "feature": "debug style issues on web pages",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs a live page with style issue to debug"
+          },
+          {
+            "feature": "automatically fix console errors",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs a live page with console errors"
+          },
+          {
+            "feature": "write end-to-end tests automatically",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs a live sign-up flow to generate tests from"
+          }
+        ]
       }
     ]
   },
@@ -228,7 +273,7 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 78.1,
       "confidence": 0.8,
@@ -559,8 +604,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:24:46+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "enables LLMs to interact with web pages through natural language",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:57+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Debug style issues on your page",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:57+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Automatically fix console errors.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:57+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Automatically write end-to-end tests",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:57+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:18:42+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

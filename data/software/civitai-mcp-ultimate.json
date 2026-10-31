@@ -1,0 +1,692 @@
+{
+  "schema_version": "software.v1",
+  "slug": "civitai-mcp-ultimate",
+  "repo_id": "gh:1190082760",
+  "name": "civitai-mcp-ultimate",
+  "summary": "MCP server for Civitai API to search models, browse images with prompts, and download files.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-models",
+    "checkpoint",
+    "civitai",
+    "fastmcp",
+    "flux",
+    "lora",
+    "mcp",
+    "mcp-server",
+    "python",
+    "stable-diffusion"
+  ],
+  "use_cases": [
+    "search models",
+    "browse top images with prompts",
+    "download LoRAs and Checkpoints",
+    "analyze trends"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://pypi.org/project/civitai-mcp-ultimate/",
+  "repo": {
+    "url": "https://github.com/timoncool/civitai-mcp-ultimate",
+    "full_name": "timoncool/civitai-mcp-ultimate",
+    "created_at": "2026-03-24T00:28:05Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "CIVITAI_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-civitai-mcp-ultimate-20261101-003645-88d1",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install civitai-mcp-ultimate 2>&1",
+          "purpose": "install via uv tool install civitai-mcp-ultimate"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": null,
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:39:09.369787+08:00",
+    "runs": [
+      {
+        "id": "verify-civitai-mcp-ultimate-20261101-003645-88d1",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:39:09.369787+08:00",
+        "tool_version": "0.2.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install civitai-mcp-ultimate 2>&1",
+            "purpose": "install via uv tool install civitai-mcp-ultimate"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- civitai-mcp-ultimate 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call get_tags --args '{\"query\": \"anime\", \"limit\": 2}' -- civitai-mcp-ultimate 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_tags content=text text_chars=42",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "civitai-mcp-ultimate supports --help/--version",
+            "actually_needed": "binary is a stdio MCP server; --help/--version start the server and wait for MCP JSON-RPC on stdin (timeout), use MCP probe instead",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show successful MCP handshake with 14 tools listed and a successful get_tags call returning anime results.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-civitai-mcp-ultimate-20261101-003645-88d1/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-civitai-mcp-ultimate-20261101-003645-88d1/check-1-cmd4.judged.png",
+            "runs/verify/verify-civitai-mcp-ultimate-20261101-003645-88d1/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.04519,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "civitai-mcp-ultimate"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "civitai-mcp-ultimate",
+          "server_version": "4.1.4",
+          "tools": [
+            "search_models",
+            "get_model",
+            "get_model_version",
+            "get_model_version_by_hash",
+            "get_top_checkpoints",
+            "get_top_loras",
+            "browse_images",
+            "get_top_images",
+            "get_model_images",
+            "get_image_generation_data",
+            "get_creators",
+            "get_tags",
+            "get_download_url",
+            "get_download_info"
+          ],
+          "tool_count": 14,
+          "called_tool": "get_tags",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "uvx civitai-mcp-ultimate",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add civitai -e CIVITAI_API_KEY=your_key_here -- uvx civitai-mcp-ultimate"
+      },
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"civitai\": {\n      \"command\": \"uvx\",\n      \"args\": [\"civitai-mcp-ultimate\"],\n      \"env\": {\n        \"CIVITAI_API_KEY\": \"your_key_here\"\n      }\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "CIVITAI_API_KEY",
+        "required": false,
+        "purpose": "API key for NSFW access + higher rate limits"
+      },
+      {
+        "name": "CIVITAI_MCP_LANG",
+        "required": false,
+        "purpose": "Output language: en or ru"
+      },
+      {
+        "name": "COMFYUI_MODELS_PATH",
+        "required": false,
+        "purpose": "ComfyUI models path for download commands"
+      },
+      {
+        "name": "MEILISEARCH_KEY",
+        "required": false,
+        "purpose": "Meilisearch search-only key"
+      }
+    ],
+    "tools": [
+      "search_models",
+      "get_model",
+      "get_model_version",
+      "get_model_version_by_hash",
+      "get_top_checkpoints",
+      "get_top_loras",
+      "browse_images",
+      "get_top_images",
+      "get_model_images",
+      "get_image_generation_data",
+      "get_creators",
+      "get_tags",
+      "get_download_url",
+      "get_download_info"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 73.4,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.4375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 52.1,
+      "signals": {
+        "stars": 24,
+        "monthly_downloads": 68,
+        "forks": 6,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 220,
+      "packages": [
+        "pypi:civitai-mcp-ultimate"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 35.16
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "a9c8f2761cd77e38f12f8bcf6277bebd4ddd6efaaffe056150f7e1fb62eed42f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Ultimate MCP server for Civitai API — search models, browse top images with prompts, download LoRAs/Checkpoints, analyze trends."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "pip install civitai-mcp-ultimate"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "civitai-mcp-ultimate"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "`CIVITAI_API_KEY` | Recommended | — | API key for NSFW access + higher rate limits"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "MIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/timoncool/civitai-mcp-ultimate",
+      "fetched_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/timoncool/civitai-mcp-ultimate/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:06:16+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "The most complete MCP server for [Civitai](https://civitai.com) API",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "All from your AI assistant. 14 tools covering 100% of the Civitai public REST API v1.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "The most complete MCP server for [Civitai](https://civitai.com) API",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Ultimate MCP server for Civitai API — search models, browse top images with prompts, download LoRAs/Checkpoints, analyze trends.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# civitai-mcp-ultimate",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "`CIVITAI_API_KEY` | Recommended | — | API key for NSFW access + higher rate limits",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "github_api",
+      "quote": "search models",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "github_api",
+      "quote": "browse top images with prompts",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "github_api",
+      "quote": "download LoRAs/Checkpoints",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "github_api",
+      "quote": "analyze trends",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "The most complete MCP server for [Civitai](https://civitai.com) API",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "\"command\": \"uvx\",",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add civitai -e CIVITAI_API_KEY=your_key_here -- uvx civitai-mcp-ultimate",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add civitai -e CIVITAI_API_KEY=your_key_here -- uvx civitai-mcp-ultimate",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"civitai\": {\n      \"command\": \"uvx\",\n      \"args\": [\"civitai-mcp-ultimate\"],\n      \"env\": {\n        \"CIVITAI_API_KEY\": \"your_key_here\"\n      }\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "CIVITAI_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "CIVITAI_MCP_LANG",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "COMFYUI_MODELS_PATH",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "MEILISEARCH_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`search_models`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`get_model`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`get_model_version`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`get_model_version_by_hash`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`get_top_checkpoints`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`get_top_loras`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`browse_images`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`get_top_images`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`get_model_images`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`get_image_generation_data`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`get_creators`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`get_tags`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "`get_download_url`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "`get_download_info`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:07+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:50+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

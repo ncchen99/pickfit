@@ -4,11 +4,14 @@ The model decides every step through function tools (list_dir, read_file,
 run_command, run_background, finish); the program runs them in the Box and
 enforces the limits: 25 turns, 15 commands, 20 minutes, $0.50 per run
 (`scope="verify:<slug>"` in the shared ledger), and a stop after the same
-error three times. Near a limit the model gets one last turn with only
-`finish`. README text and tool output reach the model inside <source> blocks;
+error three times. Near a limit the model is told to call `finish` now; it
+keeps the same tools, so the conversation's prompt cache still holds, but any
+other call is refused unrun, and it gets one more turn if it does not finish. README text and tool output reach the model inside <source> blocks;
 the Box holds no keys, and every model call goes through call_meta. Every
 budgeted command gets a command_id; `finish` cites ids, and verdict.py
 decides the level from the recorded commands, not from the model's claims.
+When the extraction lists the tool's main features, the task asks for a check
+of each, and features.py decides from the same log which ones were exercised.
 
 Two ways to carry the conversation, picked by `mode`:
 - chain: `previous_response_id`; each turn sends only the new tool outputs.
@@ -24,7 +27,6 @@ from __future__ import annotations
 import json
 import re
 import secrets
-import shlex
 import time
 from collections import Counter
 from collections.abc import Callable
@@ -39,7 +41,9 @@ from pickfit.ledger import BudgetExceeded, taipei_now
 from pickfit.meta import MetaResult, ToolCall, call_meta, resolve_model
 from pickfit.schema import InstallMethod, PitfallKind, UnverifiedReason, VerificationLevel, is_passed
 from pickfit.verify import gui
-from pickfit.verify.box import Box, BoxError, ExecResult, background_script
+from pickfit.verify.box import Box, BoxError, ExecResult
+from pickfit.verify import features as feature_checks
+from pickfit.verify.features import FINISH_FEATURES, FinishFeature, resolve_features
 from pickfit.verify.plan import InstallPlan, plan_for
 from pickfit.verify.rules import RuleHit, error_signature, match_rules
 from pickfit.verify.mcp import GUIDE as MCP_GUIDE
@@ -91,7 +95,7 @@ _INT = {"type": "integer"}
 _LEVELS = ["function", "install", "service", "inference", "unverified", "failed"]
 _REASONS = ["needs_gpu", "apple_silicon_only", "macos_only", "windows_only", "gui_only",
             "needs_account", "model_too_large", "needs_toolchain", "needs_root", "needs_container",
-            "needs_more_resources", "other"]
+            "needs_more_resources", "needs_store", "other"]
 _METHODS = ["brew", "cargo", "pip", "pipx", "uv", "npm", "go", "binary", "docker", "script", "source", "other"]
 
 FINISH_TOOL = _fn(
@@ -140,9 +144,10 @@ FINISH_TOOL = _fn(
             "Required when level is failed: the command_id of the tool's own command that failed after the "
             "install. A fresh box reruns your steps, then this command; the failure must repeat.")},
         "summary": {"type": "string", "description": "Two sentences: what you did and what the output showed."},
+        "features": FINISH_FEATURES,
     },
     ["level", "unverified_reason", "tool_version", "install_method", "steps", "smoke_tests",
-     "pitfalls", "blocking_error", "failing_command_id", "summary"],
+     "pitfalls", "blocking_error", "failing_command_id", "summary", "features"],
 )
 
 TOOLS: list[dict[str, Any]] = [
@@ -179,6 +184,21 @@ LAUNCH_GUI_TOOL = _fn(
      "wait_s": {"type": "integer", "description": f"Seconds to wait for a window (max {gui.WAIT_MAX_S})."}},
     ["command", "wait_s"])
 GUI_TOOLS: list[dict[str, Any]] = [*TOOLS[:-1], LAUNCH_GUI_TOOL, FINISH_TOOL]
+
+
+def tools_for(box: Box) -> list[dict[str, Any]]:
+    """TOOLS with run_command naming the box's shell (bash, or pwsh in the Windows box)."""
+    if box.shell == "bash":
+        return TOOLS
+    tools = json.loads(json.dumps(TOOLS))
+    for tool in tools:
+        if tool.get("name") == "run_command":
+            tool["description"] = tool["description"].replace(
+                "bash command", f"{box.shell} (PowerShell 7) command").replace(
+                "`; echo $?`", "`; echo $LASTEXITCODE`")
+        if tool.get("name") == "list_dir":
+            tool["description"] = tool["description"].replace("(ls -la)", "(Get-ChildItem -Force)")
+    return tools
 
 
 class _ListDirArgs(BaseModel):
@@ -262,6 +282,7 @@ class FinishArgs(BaseModel):
     blocking_error: str | None = None
     failing_command_id: int | None = None
     summary: str = ""
+    features: list[FinishFeature] = []
 
     @field_validator("unverified_reason", "tool_version", "install_method", "blocking_error",
                      "failing_command_id", mode="before")
@@ -445,6 +466,9 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
         for t in ex.smoke_test_candidates:
             shown = f" (README shows: {t.expected_output})" if t.expected_output else ""
             lines.append(f"- {t.command}{shown}")
+    listed = feature_checks.render(ex.features)
+    if listed:
+        lines += ["", "Main features the README advertises:", *listed, feature_checks.guide(is_mcp(task))]
     if is_mcp(task):
         lines += ["", MCP_GUIDE]
         mcp = ex.mcp
@@ -528,6 +552,7 @@ class VerifyReport:
     commands: list[CommandRecord] = field(default_factory=list)
     finish: dict[str, Any] | None = None
     verdict: dict[str, Any] | None = None  # LogVerdict: what the command log supports
+    features: list[dict[str, Any]] = field(default_factory=list)  # ResolvedFeature: what the log supports
     stop_reason: str = ""
     error: str | None = None
     cost_usd: float = 0.0
@@ -580,7 +605,7 @@ class VerifyAgent:
                                                 minutes=round(limits.max_seconds / 60),
                                                 stdout_chars=f"{STDOUT_CHARS:,}", box_kind=box.kind,
                                                 box_rule=box.user_rule) + (GUI_RULES if box.display else "")
-        self.tools = GUI_TOOLS if box.display else TOOLS
+        self.tools = GUI_TOOLS if box.display else tools_for(box)
         self.commands_used = 0
         self.finish_retries = 0
         self.verdict: LogVerdict | None = None
@@ -626,6 +651,7 @@ class VerifyAgent:
         history: list[dict[str, Any]] = []
         previous_id: str | None = None
         wrap_up: str | None = None
+        grace = 1  # turns after the wrap-up turn when the model has not called finish yet
         nudges = 0
         turn = 0
         while True:
@@ -643,7 +669,7 @@ class VerifyAgent:
             turn += 1
             # prompt_cache_key keeps one run's growing history on the same prefix cache (a hint).
             body: dict[str, Any] = {"instructions": self.instructions,
-                                    "tools": [FINISH_TOOL] if wrap_up else self.tools,
+                                    "tools": self.tools,
                                     "reasoning": {"summary": "auto"}, "prompt_cache_key": self.run_id}
             if self.mode == "chain":
                 body["input"] = pending
@@ -660,19 +686,26 @@ class VerifyAgent:
                 history.extend(result.output_items)
             pending = []
             if not result.tool_calls:
-                if wrap_up or nudges >= MAX_NUDGES:
+                if (wrap_up and not grace) or (not wrap_up and nudges >= MAX_NUDGES):
                     self._stop("no_finish")
                     return
+                if wrap_up:
+                    grace -= 1
+                    pending.append(_user("Call finish now, alone. Nothing else runs any more."))
+                    continue
                 nudges += 1
                 pending.append(_user("Continue with the tools; call finish when you are done."))
                 continue
-            finished = self._handle_calls(result.tool_calls, turn, pending, can_retry=wrap_up is None)
+            finished = self._handle_calls(result.tool_calls, turn, pending, can_retry=wrap_up is None,
+                                          finish_only=wrap_up is not None)
             if finished:
                 self.report.stop_reason = "finished"
                 return
             if wrap_up:
-                self._stop("no_finish")
-                return
+                if not grace:
+                    self._stop("no_finish")
+                    return
+                grace -= 1
 
     def _stop(self, reason: str) -> None:
         # A finish sent back for a retry still stands if the model never sends another.
@@ -684,8 +717,8 @@ class VerifyAgent:
             return f"the same error happened {lim.same_error_limit} times ({self.repeated_error})"
         if self.commands_used >= lim.max_commands:
             return f"the command budget ({lim.max_commands}) is used up"
-        if turns_done + 1 >= lim.max_turns:
-            return f"this is the last of {lim.max_turns} turns"
+        if turns_done + 2 >= lim.max_turns:  # leaves one turn in case the model does not finish at once
+            return f"the {lim.max_turns}-turn limit is near"
         if self._elapsed() >= lim.max_seconds - WRAP_UP_SECONDS:
             return f"the {round(lim.max_seconds / 60)}-minute limit is near"
         return None
@@ -731,13 +764,20 @@ class VerifyAgent:
     # -- tool calls
 
     def _handle_calls(self, calls: list[ToolCall], turn: int, outputs: list[dict[str, Any]],
-                      can_retry: bool) -> bool:
-        """Run each call in order, append its output; True once a valid finish is recorded."""
-        alone = len(calls) == 1
+                      can_retry: bool, finish_only: bool = False) -> bool:
+        """Run each call in order, append its output; True once a valid finish is recorded.
+
+        finish_only: past a limit, other calls are refused without running, so finish counts as alone.
+        """
+        finishes = sum(call.name == "finish" for call in calls)
+        alone = len(calls) == 1 or (finish_only and finishes == 1)
         finished = False
         for call in calls:
             if call.name == "finish":
                 text, finished = self._finish(call, alone, can_retry)
+            elif finish_only:
+                self._say(f"  {call.name} refused: past the limit, only finish")
+                text = "error: nothing else runs past the limit. Call finish now, alone."
             else:
                 text = self._dispatch(call, turn)
             outputs.append({"type": "function_call_output", "call_id": call.call_id, "output": text})
@@ -763,25 +803,45 @@ class VerifyAgent:
         self.verdict = verdict
         self.report.finish = args.model_dump()
         self.report.verdict = verdict.to_dict()
+        names = feature_checks.labels(self.task.extraction.features)
+        resolved = resolve_features(names, args.features, verdict, self.report.commands,
+                                    mcp=is_mcp(self.task))
+        self.report.features = [f.to_dict() for f in resolved]
         said = "agrees" if verdict.agrees else f"lowered to {verdict.level}" if \
             verdict.level != args.level else "with problems"
         self._say(f"  finish: level {args.level} · {len(args.steps)} steps · {len(args.smoke_tests)} smoke "
                   f"tests · {len(args.pitfalls)} pitfalls · log {said}")
         for problem in verdict.problems:
             self._say(f"    ! {problem}")
+        if resolved:
+            counts = Counter(f.status for f in resolved)
+            self._say("  features: " + " · ".join(f"{n} {status}" for status, n in counts.items()))
+            for f in resolved:
+                for problem in f.problems:
+                    self._say(f"    ! F{f.number} {f.feature}: {problem}")
         if args.summary:
             self._say(f"    {_one_line(args.summary, 300)}")
         left = self.limits.max_commands - self.commands_used
-        if (verdict.level != args.level and verdict.problems and can_retry and left > 0
-                and self.finish_retries < MAX_FINISH_RETRIES):
-            self.finish_retries += 1
-            self._say(f"  finish sent back once: {left} commands left to fix it")
-            problems = "\n".join(f"- {p}" for p in verdict.problems)
-            return (f"Not accepted yet: pickfit's command record supports level {verdict.level}, not "
-                    f"{args.level}:\n{problems}\nYou have {left} commands left. Rerun what is needed as its own "
-                    "run_command (an install step with no exploration chained after it; a check with no "
-                    "`; echo`, `| head` or `|| true`), then call finish again citing the new command_ids. "
-                    "If it cannot be fixed, call finish again as it is."), False
+        unreported = bool(names) and not args.features
+        if can_retry and self.finish_retries < MAX_FINISH_RETRIES:
+            if verdict.level != args.level and verdict.problems and left > 0:
+                self.finish_retries += 1
+                self._say(f"  finish sent back once: {left} commands left to fix it")
+                problems = "\n".join(f"- {p}" for p in verdict.problems)
+                return (f"Not accepted yet: pickfit's command record supports level {verdict.level}, not "
+                        f"{args.level}:\n{problems}\nYou have {left} commands left. Rerun what is needed as its own "
+                        "run_command (an install step with no exploration chained after it; a check with no "
+                        "`; echo`, `| head` or `|| true`), then call finish again citing the new command_ids. "
+                        "If it cannot be fixed, call finish again as it is."
+                        + (" Also report every listed feature (F1, F2, ...) in features." if unreported else "")), False
+            if unreported:
+                self.finish_retries += 1
+                self._say("  finish sent back once: no features reported")
+                return ("Not recorded yet: finish must report every feature the task lists (F1 to "
+                        f"F{len(names)}) in features: checked with the command_ids of the smoke tests that "
+                        "exercise it, not_checked with the reason, or test_failed. "
+                        + (f"You have {left} commands left to check one. " if left > 0 else "")
+                        + "Then call finish again with the rest unchanged."), False
         return "Recorded.", True
 
     def _dispatch(self, call: ToolCall, turn: int) -> str:
@@ -805,7 +865,7 @@ class VerifyAgent:
         return f"error: unknown tool {call.name!r}"
 
     def _list_dir(self, args: _ListDirArgs, turn: int) -> str:
-        result = self.box.exec(f"ls -la -- {shlex.quote(args.path)}", 20)
+        result = self.box.exec(self.box.list_command(args.path), 20)
         self._record(turn, "list_dir", args.path, result)
         self._say(f"  · list_dir {args.path} → exit {result.exit_code}")
         body = _tail(result.stdout or result.stderr, LIST_DIR_CHARS)
@@ -865,7 +925,7 @@ class VerifyAgent:
         n = self.commands_used
         wait = max(0, min(args.wait_s, BACKGROUND_WAIT_S))
         self._say(f"  & {_one_line(args.command, 200)}   [cmd {n}/{self.limits.max_commands}]")
-        script = background_script(args.command, args.port, wait, n, detach=self.box.detach)
+        script = self.box.background(args.command, args.port, wait, n)
         result = self.box.exec(script, self._timeout(wait + 15))
         hints = match_rules(args.command, result.exit_code, result.stdout, result.stderr)
         self._record(turn, "run_background", args.command, result, hints, port=args.port, wait_s=wait)

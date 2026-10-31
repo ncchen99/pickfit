@@ -13,6 +13,10 @@ import pytest
 from pickfit.verify import box as box_mod
 from pickfit.verify.box import BOX_ENV, BoxError, BoxLimits, DockerBox, _Capture, run_captured
 
+POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32",
+                                reason="the fake docker is a #! shell script, which Windows cannot execute")
+
+
 SECRET_NAMES = ("KEY", "TOKEN", "SECRET", "PASSWORD")
 
 
@@ -82,9 +86,10 @@ def fake_docker(tmp_path: Path) -> Path:
 
 
 def _calls(fake: Path) -> list[list[str]]:
-    return [json.loads(line) for line in (fake.parent / "calls.jsonl").read_text().splitlines()]
+    return [json.loads(line) for line in (fake.parent / "calls.jsonl").read_text(encoding="utf-8").splitlines()]
 
 
+@POSIX_ONLY
 def test_exec_kills_inside_the_box_and_clamps_timeout(fake_docker: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(box_mod, "ensure_docker", lambda **kw: None)
     box = DockerBox(image="img", build=False, docker=str(fake_docker), name="pf-test",
@@ -110,6 +115,7 @@ def test_exec_kills_inside_the_box_and_clamps_timeout(fake_docker: Path, monkeyp
         box.exec("echo again", 5)
 
 
+@POSIX_ONLY
 def test_start_blocks_cloud_metadata_as_root(fake_docker: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(box_mod, "ensure_docker", lambda **kw: None)
     box = DockerBox(image="img", build=False, docker=str(fake_docker), name="pf-meta")
@@ -121,6 +127,7 @@ def test_start_blocks_cloud_metadata_as_root(fake_docker: Path, monkeypatch: pyt
     assert _calls(fake_docker)[-1][:2] == ["exec", "-w"]
 
 
+@POSIX_ONLY
 def test_start_fails_closed_when_metadata_cannot_be_blocked(fake_docker: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(box_mod, "ensure_docker", lambda **kw: None)
     box = DockerBox(image="img", build=False, docker=str(fake_docker), name="pf-meta")
@@ -131,6 +138,7 @@ def test_start_fails_closed_when_metadata_cannot_be_blocked(fake_docker: Path, m
     assert _calls(fake_docker)[-1] == ["rm", "-f", "pf-meta"] and not box.started
 
 
+@POSIX_ONLY
 def test_exec_marks_in_box_kill_as_timeout(fake_docker: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(box_mod, "ensure_docker", lambda **kw: None)
     box = DockerBox(image="img", build=False, docker=str(fake_docker))

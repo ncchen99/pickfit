@@ -1,0 +1,556 @@
+{
+  "schema_version": "software.v1",
+  "slug": "brewpage-openapi",
+  "repo_id": "gh:1197634181",
+  "name": "BrewPage",
+  "summary": "BrewPage is a free instant hosting service for HTML, Markdown, sites, JSON, KV and files.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": null,
+  "maturity": null,
+  "tags": [
+    "ai-agent",
+    "ai-tools",
+    "anthropic",
+    "api-documentation",
+    "api-hosting",
+    "brewpage",
+    "claude-code",
+    "claude-desktop",
+    "claude-skill",
+    "developer-tools"
+  ],
+  "use_cases": [],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://brewpage.app",
+  "repo": {
+    "url": "https://github.com/kochetkov-ma/brewpage-openapi",
+    "full_name": "kochetkov-ma/brewpage-openapi",
+    "created_at": "2026-03-31T18:40:51Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-brewpage-openapi-20261101-003253-fda3",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g brewpage-mcp@1.16.5",
+          "purpose": "Install brewpage-mcp globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v1.16.5",
+    "published_at": "2026-10-30T20:54:15Z",
+    "url": "https://github.com/kochetkov-ma/brewpage-openapi/releases/tag/v1.16.5"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:33:56.531435+08:00",
+    "runs": [
+      {
+        "id": "verify-brewpage-openapi-20261101-003253-fda3",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:33:56.531435+08:00",
+        "tool_version": "1.16.5",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g brewpage-mcp@1.16.5",
+            "purpose": "Install brewpage-mcp globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- brewpage-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call get_stats --args '{}' -- brewpage-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_stats content=text text_chars=2416",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show brewpage-mcp initializing, listing 20 tools, completing handshake, and get_stats returning platform statistics.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-brewpage-openapi-20261101-003253-fda3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-brewpage-openapi-20261101-003253-fda3/check-1-cmd4.judged.png",
+            "runs/verify/verify-brewpage-openapi-20261101-003253-fda3/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.027684,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "brewpage-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "brewpage-mcp",
+          "server_version": "1.16.5",
+          "tools": [
+            "publish_html",
+            "publish_file",
+            "update_hosting",
+            "delete_resource",
+            "get_page",
+            "get_stats",
+            "publish_site",
+            "republish_site",
+            "update_html",
+            "publish_json",
+            "get_json",
+            "update_json",
+            "publish_kv",
+            "set_kv",
+            "get_kv",
+            "get_limits",
+            "search_gallery",
+            "set_visibility",
+            "bind_token",
+            "mint_token"
+          ],
+          "tool_count": 20,
+          "called_tool": "get_stats",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "npx -y brewpage-mcp@1.16.5",
+    "client_configs": [
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"brewpage\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"brewpage-mcp@1.16.5\"]\n    }\n  }\n}"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"brewpage\": {\n      \"type\": \"http\",\n      \"url\": \"https://brewpage.app/mcp\"\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "publish_html",
+      "publish_file",
+      "publish_site",
+      "delete_resource",
+      "set_visibility",
+      "get_page",
+      "get_stats"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 92.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 37.7,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": 4196,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 22,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 213,
+      "packages": [
+        "npm:brewpage-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 57.44
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "ac7bcb2a1bc00871fda3bea9b47826daa12b0ee15114d979066f58c430e5f1bb",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "[BrewPage](https://brewpage.app) is a free instant hosting service for HTML pages, Markdown documents,"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "AI agents frequently need to share structured outputs -- reports, artifacts, generated HTML, intermediate JSON state -- with users or"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "No signup or API key required for creation."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "gemini extensions install https://github.com/kochetkov-ma/brewpage-openapi"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "\"link\": \"https://brewpage.app/public/aBcDeFgHiJ\","
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Protected reads use `X-Password`; owner updates, deletion and scoped lists use `X-Owner-Token`."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "[Apache 2.0](LICENSE) covers this repository's contract/docs layer."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/kochetkov-ma/brewpage-openapi",
+      "fetched_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/kochetkov-ma/brewpage-openapi/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:41:21+08:00"
+    },
+    {
+      "id": "release:v1.16.5",
+      "kind": "release",
+      "url": "https://github.com/kochetkov-ma/brewpage-openapi/releases/tag/v1.16.5",
+      "fetched_at": "2026-10-31T13:41:21+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "The `brewpage-mcp` package provides a Model Context Protocol server with **20 tools**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "wraps the API into twenty typed tools that any MCP-compatible agent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "[BrewPage](https://brewpage.app) is a free instant hosting service for HTML pages, Markdown documents,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "This repository is the **open-source public layer** of [BrewPage](https://brewpage.app)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Add `https://brewpage.app/mcp` as a custom connector / remote MCP server by URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:28+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.16.5",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:41:21+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "is a free instant hosting service for HTML pages, Markdown documents,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "The API base URL is `https://brewpage.app`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Add `https://brewpage.app/mcp` as a custom connector / remote MCP server by URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "\"command\": \"npx\",\n      \"args\": [\"-y\", \"brewpage-mcp@1.16.5\"]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"brewpage\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"brewpage-mcp@1.16.5\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"brewpage\": {\n      \"type\": \"http\",\n      \"url\": \"https://brewpage.app/mcp\"\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`publish_html` | Publish HTML, Markdown, code or JSON content with optional password",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`publish_file` | Upload a file from a URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`publish_site` | Publish a single-page or multi-file HTML site",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`delete_resource` | Delete any resource (HTML, site, KV, JSON, file) by owner token",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`set_visibility` | Hide or show a public publication in the gallery and sitemap",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`get_page` | Fetch a published HTML page and its content",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`get_stats` | Get platform-wide usage statistics",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:17+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:50:14+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

@@ -4,11 +4,13 @@
 # apt-get later (libgomp1 for llama.cpp-style binaries), download and unpack
 # tools, uv/pipx for Python CLIs, and Node for npm CLIs. iproute2 lets the
 # harness (as root, before the agent starts) route cloud metadata to nowhere.
+# slirp4netns is a gVisor box's network uplink: the box user's own network
+# namespace reaches out only through it, so the network cut can close DNS too.
 FROM python:3.12-slim
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-      bzip2 ca-certificates curl file git iproute2 libgomp1 procps unzip xz-utils zstd \
+      bzip2 ca-certificates curl file git iproute2 libgomp1 procps slirp4netns unzip xz-utils zstd \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=node:22-slim /usr/local/bin/node /usr/local/bin/node

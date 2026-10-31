@@ -1,0 +1,619 @@
+{
+  "schema_version": "software.v1",
+  "slug": "dreamd",
+  "repo_id": "gh:1233134877",
+  "name": "dreamd",
+  "summary": "Local-first long-term memory for AI agents with auditable lessons and provenance.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "agent-memory",
+    "ai-agents",
+    "benchmark",
+    "claude-code",
+    "cline",
+    "coding-agents",
+    "cursor",
+    "evaluation",
+    "llm",
+    "local-first"
+  ],
+  "use_cases": [
+    "find which stored memories drove a recall",
+    "remove a bad memory event and its lesson state",
+    "verify provenance ledger consistency",
+    "search prior agent context across sessions"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://dreamd.dev",
+  "repo": {
+    "url": "https://github.com/botzrDev/dreamd",
+    "full_name": "botzrDev/dreamd",
+    "created_at": "2026-05-08T16:19:52Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npx -y dreamd-mcp setup",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "npx -y dreamd-mcp --help"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-dreamd-20261101-000847-d387",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g dreamd-mcp",
+          "purpose": "install dreamd-mcp globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "dreamd-mcp --help",
+        "expected_signal": "dreamd-mcp — npx shim"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npx -y dreamd-mcp setup",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "npx -y dreamd-mcp --help"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.2.0",
+    "published_at": "2026-10-29T18:44:52Z",
+    "url": "https://github.com/botzrDev/dreamd/releases/tag/v1.2.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:10:03.327227+08:00",
+    "runs": [
+      {
+        "id": "verify-dreamd-20261101-000847-d387",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:10:03.327227+08:00",
+        "tool_version": "1.2.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g dreamd-mcp",
+            "purpose": "install dreamd-mcp globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "dreamd-mcp --help",
+            "expected_signal": "dreamd-mcp — npx shim",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "dreamd-mcp — npx shim for the dreamd MCP server",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 -- dreamd-mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "dreamd-mcp setup --yes --harness none 2>&1\necho EXIT:$?\nls -la .agent/ 2>&1 | head -n 50\ndreamd-mcp doctor 2>&1; echo EXIT2:$?\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 --call search_nodes --args '{\"query\":\"test\"}' -- dreamd-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search_nodes content=text text_chars=14",
+            "setup": [
+              {
+                "command": "dreamd-mcp setup --yes --harness none 2>&1\necho EXIT:$?\nls -la .agent/ 2>&1 | head -n 50\ndreamd-mcp doctor 2>&1; echo EXIT2:$?\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx -y dreamd-mcp setup scaffolds .agent/",
+            "actually_needed": "requires project sentinel (.git/package.json) and .agent store created via setup --yes --harness none",
+            "kind": "note"
+          },
+          {
+            "readme_said": "npm install gives runnable binary",
+            "actually_needed": "shim downloads prebuilt binary on first run to ~/.cache/dreamd-mcp/1.2.0/dreamd, needs network on first invocation",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake succeeding, search_nodes tool call returning empty results, and dreamd-mcp npx shim help text.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-dreamd-20261101-000847-d387/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-dreamd-20261101-000847-d387/check-1-cmd8.judged.png",
+            "runs/verify/verify-dreamd-20261101-000847-d387/check-2-cmd9.judged.png",
+            "runs/verify/verify-dreamd-20261101-000847-d387/check-3-cmd15.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.10901,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "dreamd-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "dreamd-mcp",
+          "server_version": "1.2.0",
+          "tools": [
+            "append_node",
+            "search_nodes"
+          ],
+          "tool_count": 2,
+          "called_tool": "search_nodes",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "npx -y dreamd-mcp",
+    "client_configs": [],
+    "env_vars": [],
+    "tools": [
+      "search_nodes",
+      "append_node"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 88.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 44.0,
+      "signals": {
+        "stars": 6,
+        "monthly_downloads": 1047,
+        "forks": 4,
+        "dependents": null,
+        "release_downloads": 684,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 175,
+      "packages": [
+        "npm:dreamd-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 49.45
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "aaf62c227367a36953854da636bb93b61d94a5e5314d76acfe1a32c4c0a427fe",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "dreamd is local-first, long-term memory for AI agents."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "dreamd needs a project root sentinel (`.git/`, `Cargo.toml`, `package.json` or `pyproject.toml`)."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "npx -y dreamd-mcp setup   # scaffold .agent/ and write the harness MCP config"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "npx -y dreamd-mcp setup   # scaffold .agent/ and wire your harness"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "[docs/configuration.md](./docs/configuration.md) | TOML config and env vars"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "To uninstall from a machine, run `npx -y dreamd-mcp uninstall` (project `.agent/` stores are left in place)."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Linux, macOS and Windows. Windows serves over loopback TCP."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/botzrDev/dreamd",
+      "fetched_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/botzrDev/dreamd/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:43:28+08:00"
+    },
+    {
+      "id": "release:v1.2.0",
+      "kind": "release",
+      "url": "https://github.com/botzrDev/dreamd/releases/tag/v1.2.0",
+      "fetched_at": "2026-10-31T13:43:28+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "npx -y dreamd-mcp         # MCP server (stdio): what the harness spawns",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "npx -y dreamd-mcp setup   # scaffold .agent/ and wire your harness",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "npx -y dreamd-mcp         # MCP server (stdio): what the harness spawns",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "dreamd is local-first, long-term memory for AI agents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# dreamd",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Linux, macOS and Windows.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "without one it writes a deterministic lesson and makes no network call.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:21+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.2.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:43:28+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "v1.2.0 is tagged and published on npm (`dreamd-mcp`, `latest`).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "`dreamd blame <query>` lists the stored memories behind a recall, with ids, timestamps, source and score.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "`dreamd forget <event-id>` removes the event and the lesson state that names it.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "`dreamd doctor --provenance` recomputes the ledger's Merkle root and lists orphan, missing and corrupt edges.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Ask the agent to search memory for something it learned earlier. It calls `search_nodes`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npx -y dreamd-mcp setup",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npx -y dreamd-mcp setup",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npx -y dreamd-mcp setup",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "The Apache-2.0 core is open, and a single repo stays free.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "dreamd is local-first, long-term memory for AI agents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "stdio is the default transport.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "npx -y dreamd-mcp         # MCP server (stdio): what the harness spawns",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "The MCP surface is two tools (`search_nodes`, `append_node`).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "The MCP surface is two tools (`search_nodes`, `append_node`).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:03+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:37:45+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

@@ -29,6 +29,12 @@
     "Save and search persistent memory facts"
   ],
   "alternatives_to": [],
+  "features": [
+    "run shell commands in workspace",
+    "read, write and edit files",
+    "search web and fetch pages",
+    "save and recall persistent memory"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -51,7 +57,7 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-agent-mini-20261029-024541-c365",
+      "run_id": "verify-agent-mini-20261031-020513-f809",
       "method": "uv",
       "steps": [
         {
@@ -61,10 +67,10 @@
       ],
       "manual_steps": [],
       "check": {
-        "command": "agent-mini --version 2>&1",
-        "expected_signal": "agent-mini, version 0.5.0"
+        "command": "agent-mini --help 2>&1",
+        "expected_signal": "Commands:"
       },
-      "first_task": "printf '\\n\\n\\n\\n\\n' | agent-mini init 2>&1"
+      "first_task": null
     },
     "windows": null
   },
@@ -83,10 +89,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:46:27.757056+08:00",
+    "checked_at": "2026-10-31T02:07:39.805655+08:00",
     "runs": [
       {
-        "id": "verify-agent-mini-20261029-024541-c365",
+        "id": "verify-agent-mini-20261031-020513-f809",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -94,7 +100,7 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T02:46:27.757056+08:00",
+        "checked_at": "2026-10-31T02:07:39.805655+08:00",
         "tool_version": "0.5.0",
         "install_method": "uv",
         "replayed": true,
@@ -106,15 +112,6 @@
         ],
         "smoke_tests": [
           {
-            "command": "agent-mini --version 2>&1",
-            "expected_signal": "agent-mini, version 0.5.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "agent-mini, version 0.5.0",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "agent-mini --help 2>&1",
             "expected_signal": "Commands:",
             "exit_code": 0,
@@ -124,68 +121,88 @@
             "offline": true
           },
           {
-            "command": "printf '\\n\\n\\n\\n\\n' | agent-mini init 2>&1",
-            "expected_signal": "Config saved to",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "✓ Config saved to /home/sbx/.agent-mini/config.json",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "agent-mini doctor 2>&1",
-            "expected_signal": "is unreachable",
+            "command": "mkdir -p ~/.agent-mini/workspace /tmp/agent-work && cat > ~/.agent-mini/config.json <<'EOF'\n{\n  \"provider\": \"local\",\n  \"providers\": {\n    \"local\": {\"baseUrl\": \"http://127.0.0.1:8080/v1\", \"model\": \"/home/sbx/models/SmolLM2-135M-Instruct-Q8_0.gguf\"}\n  },\n  \"workspace\": \"/tmp/agent-work\",\n  \"tools\": {\"sandboxLevel\": \"workspace\", \"confirm\": []},\n  \"memory\": {\"enabled\": true}\n}\nEOF\nchmod 600 ~/.agent-mini/config.json && agent-mini doctor 2>&1",
+            "expected_signal": "Provider",
             "exit_code": 1,
-            "passed": true,
-            "observed_excerpt": "✗ Provider ollama at http://localhost:11434 is unreachable (ConnectError)",
-            "setup": [
-              {
-                "command": "printf '\\n\\n\\n\\n\\n' | agent-mini init 2>&1",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
+            "passed": false,
+            "observed_excerpt": "✗ Provider local at http://127.0.0.1:8080/v1 is unreachable (ConnectError)",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "pip install agent-mini",
-            "actually_needed": "uv tool install agent-mini (isolated install; avoids PEP 668 / read-only system)"
+            "readme_said": "README providers say any OpenAI-compatible server works",
+            "actually_needed": "use prebuilt llama-server tarball llama-b12015-bin-ubuntu-x64.tar.gz which extracts to ~/tools/llama/llama-b12015/llama-server, not build/bin/llama-server",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "agent-mini init (interactive wizard with no non-interactive flag)",
-            "actually_needed": "printf '\\n\\n\\n\\n\\n' | agent-mini init to accept defaults non-interactively"
+            "readme_said": "no server setup documented",
+            "actually_needed": "pip install llama-cpp-python fails here (no wheel build, needs toolchain); used prebuilt llama.cpp binary instead",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "agent-mini doctor checks provider, model, tool support and permissions",
-            "actually_needed": "doctor exits 1 reporting ollama unreachable when no local model server runs; config/workspace/sandbox/budget checks still pass"
+            "readme_said": "config.example.json lists local model as local-model",
+            "actually_needed": "local model id must be the server-reported id (/home/sbx/models/SmolLM2-135M-Instruct-Q8_0.gguf) for doctor Model check to pass",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show version 0.5.0, help with Commands list, and init saving config successfully.",
+          "observed": "The screenshot shows agent-mini help with Usage, Options, and Commands including chat, doctor, gateway, and init.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-agent-mini-20261029-024541-c365/report.json",
+          "trace_path": "runs/verify/verify-agent-mini-20261031-020513-f809/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-agent-mini-20261029-024541-c365/check-1-cmd2.judged.png",
-            "runs/verify/verify-agent-mini-20261029-024541-c365/check-2-cmd3.judged.png",
-            "runs/verify/verify-agent-mini-20261029-024541-c365/check-3-cmd9.judged.png"
+            "runs/verify/verify-agent-mini-20261031-020513-f809/check-1-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.04831
+        "cost_usd": 0.18938,
+        "features": [
+          {
+            "feature": "run shell commands in workspace",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "no commands left to exercise shell tool"
+          },
+          {
+            "feature": "read, write and edit files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "no commands left to exercise file tools"
+          },
+          {
+            "feature": "search web and fetch pages",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "web search/fetch needs internet; replay has network off"
+          },
+          {
+            "feature": "save and recall persistent memory",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "no commands left to exercise memory tools"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 76.3,
       "confidence": 0.8,
@@ -468,8 +485,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-29T02:40:49+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Run a command in the workspace",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:37:04+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "read/write/edit files",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:37:04+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "web search and fetch",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:37:04+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Save facts for later sessions (same key = update) and search them",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:37:04+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

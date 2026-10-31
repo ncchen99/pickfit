@@ -29,6 +29,12 @@
     "switch harness and start a new session"
   ],
   "alternatives_to": [],
+  "features": [
+    "display agent work in terminal",
+    "connect DSH and other ACP agents",
+    "queue messages and steer agent",
+    "compose UI from Cordis plugins"
+  ],
   "why_worth_it": null,
   "homepage": "https://martty.sh",
   "repo": {
@@ -70,7 +76,7 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-martty-20261031-005126-2337",
+      "run_id": "verify-martty-20261031-031844-cc6c",
       "method": "npm",
       "steps": [
         {
@@ -80,24 +86,27 @@
       ],
       "manual_steps": [],
       "check": {
-        "command": "martty --help",
+        "command": "which martty-cli; ls -la ~/.local/bin/martty* ; martty-cli --help",
         "expected_signal": "martty — terminal-native ACP client UI"
       },
-      "first_task": "martty --dump-frame"
+      "first_task": "martty-cli --dump-frame"
     },
     "windows": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-martty-20261031-222518-09bb",
       "method": "npm",
       "steps": [
         {
           "command": "npm install --global martty",
-          "purpose": null
+          "purpose": "install martty globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "martty --demo"
+      "check": {
+        "command": "Get-Command martty-cli -ErrorAction Stop; martty-cli --version",
+        "expected_signal": "martty 0.3.3"
+      },
+      "first_task": "martty-cli harness list"
     }
   },
   "pricing": {
@@ -115,10 +124,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:53:55.279147+08:00",
+    "checked_at": "2026-10-31T22:36:54.803792+08:00",
     "runs": [
       {
-        "id": "verify-martty-20261031-005126-2337",
+        "id": "verify-martty-20261031-031844-cc6c",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -126,8 +135,8 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:53:55.279147+08:00",
-        "tool_version": "martty 0.3.3",
+        "checked_at": "2026-10-31T03:20:50.697685+08:00",
+        "tool_version": "0.3.3",
         "install_method": "npm",
         "replayed": true,
         "steps": [
@@ -138,16 +147,168 @@
         ],
         "smoke_tests": [
           {
-            "command": "martty --help",
+            "command": "which martty-cli; ls -la ~/.local/bin/martty* ; martty-cli --help",
             "expected_signal": "martty — terminal-native ACP client UI",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "martty — terminal-native ACP client UI",
             "setup": [],
-            "offline": false
+            "offline": true
           },
           {
-            "command": "martty-cli --version",
+            "command": "martty-cli --dump-frame",
+            "expected_signal": "describe what you want to build",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│❯ describe what you want to build… │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "martty-cli harness list",
+            "expected_signal": "Bundled DeepSeek Harness",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "○ Bundled DeepSeek Harness",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ls -la ~/.local/bin/martty* ; martty --dump-frame",
+            "expected_signal": "describe what you want to build",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│❯ describe what you want to build… │",
+            "setup": [
+              {
+                "command": "martty-cli --dump-frame",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "martty --dump-frame --demo-skin",
+            "expected_signal": "describe what you want to build",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│❯ describe what you want to build… │",
+            "setup": [
+              {
+                "command": "ls -la ~/.local/bin/martty* ; martty --dump-frame",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "martty harness find",
+            "expected_signal": "Bundled DeepSeek Harness",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "○ Bundled DeepSeek Harness",
+            "setup": [
+              {
+                "command": "ls -la ~/.local/bin/martty* ; martty --dump-frame",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm install --global martty then run martty",
+            "actually_needed": "global install provides martty-cli only; martty shim auto-created on first martty-cli run",
+            "kind": "tool_handled"
+          },
+          {
+            "readme_said": "martty --demo and martty --demo-skin to see the UI",
+            "actually_needed": "headless box has no TTY for interactive TUI; martty --dump-frame (and --dump-frame --demo-skin) renders one demo frame as text and exits 0",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show the dump-frame demo UI with build prompt, the bundled harness listing, and help with install path.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-martty-20261031-031844-cc6c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-martty-20261031-031844-cc6c/check-1-cmd3.judged.png",
+            "runs/verify/verify-martty-20261031-031844-cc6c/check-2-cmd4.judged.png",
+            "runs/verify/verify-martty-20261031-031844-cc6c/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.07516,
+        "features": [
+          {
+            "feature": "display agent work in terminal",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "connect DSH and other ACP agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists available harnesses with Default none, no active DSH connection shown."
+          },
+          {
+            "feature": "queue messages and steer agent",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "queue/steer needs interactive running turn (enter, ctrl+enter, esc)"
+          },
+          {
+            "feature": "compose UI from Cordis plugins",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows a UI frame but gives no evidence it was composed from Cordis plugins."
+          }
+        ]
+      },
+      {
+        "id": "verify-martty-20261031-222518-09bb",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "windows",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "vbox",
+        "image": "Windows 11 Enterprise LTSC Eval 24H2 (26100.1742), VirtualBox 7.2.22 +pickfit-win11@16ea69df29ff router@583d254c306d",
+        "checked_at": "2026-10-31T22:36:54.803792+08:00",
+        "tool_version": "0.3.3",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install --global martty",
+            "purpose": "install martty globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "Get-Command martty-cli -ErrorAction Stop; martty-cli --version",
             "expected_signal": "martty 0.3.3",
             "exit_code": 0,
             "passed": true,
@@ -156,55 +317,59 @@
             "offline": true
           },
           {
-            "command": "martty --dump-frame",
-            "expected_signal": "describe what you want to build",
+            "command": "martty-cli --help",
+            "expected_signal": "--demo scripted turns, no runtime / API key needed",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "│❯ describe what you want to build… │",
+            "observed_excerpt": "--demo scripted turns, no runtime / API key needed",
             "setup": [],
             "offline": true
           },
           {
-            "command": "martty --demo-skin --dump-frame",
-            "expected_signal": "describe what you want to build",
+            "command": "martty-cli harness list",
+            "expected_signal": "Bundled DeepSeek Harness",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "│❯ describe what you want to build… │",
+            "observed_excerpt": "○ Bundled DeepSeek Harness",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "martty --demo and martty --demo-skin just show the UI",
-            "actually_needed": "interactive martty --demo / --demo-skin need a TTY (/dev/tty); without one they exit 1 with 'No such device or address (os error 6)'. Headless equivalent martty --dump-frame (and martty --demo-skin --dump-frame) renders the same scripted demo frame as text and exits 0; under 'script -qec' with a pt…",
-            "kind": "sandbox"
+            "readme_said": "martty --demo / martty --demo-skin as first examples",
+            "actually_needed": "use martty-cli on fresh global install (martty shim is only created on first start); verified with martty-cli --version / --help / harness list",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "(Windows steps)",
+            "actually_needed": "pickfit ran these steps in PowerShell 7 (pwsh 7.6.9) as a standard user; the built-in Windows PowerShell 5.1 is not verified and does not run `&&`.",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show both dump-frame outputs containing the build prompt and help output with the expected header.",
-          "model": "muse-spark-1.3"
+          "observed": "Screenshots show harness list containing Bundled DeepSeek Harness and version output martty 0.3.3.",
+          "model": "muse-spark-1.3-contributor"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-martty-20261031-005126-2337/report.json",
+          "trace_path": "runs/verify/verify-martty-20261031-222518-09bb/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-martty-20261031-005126-2337/check-1-cmd6.judged.png",
-            "runs/verify/verify-martty-20261031-005126-2337/check-2-cmd8.judged.png",
-            "runs/verify/verify-martty-20261031-005126-2337/check-3-cmd9.judged.png"
+            "runs/verify/verify-martty-20261031-222518-09bb/check-1-cmd10.judged.png",
+            "runs/verify/verify-martty-20261031-222518-09bb/check-2-cmd5.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.082818
+        "actor_model": "muse-spark-1.3-contributor",
+        "cost_usd": 0.017257
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 94.8,
       "confidence": 0.9,
@@ -519,8 +684,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:16:15+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Martty 在终端中呈现完整的 agent 工作过程，包括流式回复、推理、工具调用、",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:29+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Martty 内置 ACP 连接层，默认启动并连接 DSH。",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:29+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "回合运行时可以继续排队消息，也可以立即 steer 当前 agent。",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:29+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "UI、主题、Slot、命令、Overlay 和 Session 视图",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:29+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:42:22+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-01T01:07:53.295995+08:00"
 }

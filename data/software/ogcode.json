@@ -31,6 +31,12 @@
     "build semantic project index"
   ],
   "alternatives_to": [],
+  "features": [
+    "Understand unfamiliar code",
+    "Build and fix software",
+    "Research the web as you go",
+    "Recall past decisions and context"
+  ],
   "why_worth_it": null,
   "homepage": "https://ogcode.in",
   "repo": {
@@ -64,24 +70,24 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-ogcode-20261031-023713-61ea",
+      "run_id": "verify-ogcode-20261031-034417-a067",
       "method": "script",
       "steps": [
         {
           "command": "curl -fsSL https://ogcode.in/install.sh -o /tmp/ogcode-install.sh && wc -c /tmp/ogcode-install.sh && head -c 2000 /tmp/ogcode-install.sh",
-          "purpose": "Download install script for inspection"
+          "purpose": "Download install script for reading before running"
         },
         {
           "command": "INSTALL_DIR=\"$HOME/.local/bin\" sh /tmp/ogcode-install.sh",
-          "purpose": "Install ogcode to user bin dir"
+          "purpose": "Install ogcode binary to user bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "ogcode version",
-        "expected_signal": "ogcode v0.54.0"
+        "command": "ogcode --help",
+        "expected_signal": "Agentic coding assistant with web UI"
       },
-      "first_task": "ogcode version"
+      "first_task": "curl -fsSL http://localhost:9595/ -o /tmp/ogcode-ui.html && wc -c /tmp/ogcode-ui.html && head -c 1500 /tmp/ogcode-ui.html"
     },
     "windows": {
       "basis": "readme_claim",
@@ -113,10 +119,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:38:21.670787+08:00",
+    "checked_at": "2026-10-31T03:45:11.791704+08:00",
     "runs": [
       {
-        "id": "verify-ogcode-20261031-023713-61ea",
+        "id": "verify-ogcode-20261031-034417-a067",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -124,30 +130,21 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:38:21.670787+08:00",
+        "checked_at": "2026-10-31T03:45:11.791704+08:00",
         "tool_version": "v0.54.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
             "command": "curl -fsSL https://ogcode.in/install.sh -o /tmp/ogcode-install.sh && wc -c /tmp/ogcode-install.sh && head -c 2000 /tmp/ogcode-install.sh",
-            "purpose": "Download install script for inspection"
+            "purpose": "Download install script for reading before running"
           },
           {
             "command": "INSTALL_DIR=\"$HOME/.local/bin\" sh /tmp/ogcode-install.sh",
-            "purpose": "Install ogcode to user bin dir"
+            "purpose": "Install ogcode binary to user bin"
           }
         ],
         "smoke_tests": [
-          {
-            "command": "ogcode version",
-            "expected_signal": "ogcode v0.54.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "ogcode v0.54.0 (linux/amd64)",
-            "setup": [],
-            "offline": true
-          },
           {
             "command": "ogcode --help",
             "expected_signal": "Agentic coding assistant with web UI",
@@ -158,14 +155,19 @@
             "offline": true
           },
           {
-            "command": "curl -fsSL http://localhost:9595/v1/models",
-            "expected_signal": "<title>ogcode</title>",
+            "command": "curl -fsSL http://localhost:9595/ -o /tmp/ogcode-ui.html && wc -c /tmp/ogcode-ui.html && head -c 1500 /tmp/ogcode-ui.html",
+            "expected_signal": "ogcode-theme-mode",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "<title>ogcode</title>",
+            "observed_excerpt": "var stored = localStorage.getItem('ogcode-theme-mode');",
             "setup": [
               {
-                "command": "ogcode serve -p 9595",
+                "command": "mkdir -p /tmp/ogdemo && printf 'def add(a, b):\\n    return a + b\\n' > /tmp/ogdemo/calc.py && printf '# demo\\nprint(\"hi\")\\n' > /tmp/ogdemo/main.py && ls -la /tmp/ogdemo",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/ogdemo && ogcode --port 9595",
                 "background": true,
                 "port": 9595
               }
@@ -175,52 +177,81 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -fsSL https://ogcode.in/install.sh | sh",
-            "actually_needed": "INSTALL_DIR=\"$HOME/.local/bin\" sh /tmp/ogcode-install.sh; default /usr/local/bin is not writable without sudo in this box",
+            "readme_said": "curl -fsSL https://ogcode.in/install.sh | sh installs to /usr/local/bin",
+            "actually_needed": "INSTALL_DIR=$HOME/.local/bin sh /tmp/ogcode-install.sh because /usr/local/bin is not writable without root",
             "kind": "sandbox"
           },
           {
-            "readme_said": "--version works to check version",
-            "actually_needed": "ogcode version prints version; ogcode --version exits 1 with unknown flag",
-            "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "ogcode index builds the semantic project index",
-            "actually_needed": "ogcode index exits 1 requiring ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY or OLLAMA_API_KEY; server UI works without a key",
+            "readme_said": "install.sh script installs ogcode",
+            "actually_needed": "installer downloads prebuilt binary tarball ogcode_*_Linux_x86_64.tar.gz from GitHub releases which cannot be read as text",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show the server returning HTML containing <title>ogcode</title> and the CLI printing ogcode v0.54.0.",
+          "observed": "Screenshots show the server returning HTML containing ogcode-theme-mode and the CLI help starting with Agentic coding assistant with web UI.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-ogcode-20261031-023713-61ea/report.json",
+          "trace_path": "runs/verify/verify-ogcode-20261031-034417-a067/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-ogcode-20261031-023713-61ea/check-1-cmd11.judged.png",
-            "runs/verify/verify-ogcode-20261031-023713-61ea/check-2-cmd4.judged.png"
+            "runs/verify/verify-ogcode-20261031-034417-a067/check-1-cmd7.judged.png",
+            "runs/verify/verify-ogcode-20261031-034417-a067/check-2-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.062903
+        "cost_usd": 0.049452,
+        "features": [
+          {
+            "feature": "Understand unfamiliar code",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "ogcode index errors: no LLM provider configured, needs API key"
+          },
+          {
+            "feature": "Build and fix software",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "agent build/fix needs ANTHROPIC/OPENAI/OPENROUTER/OLLAMA key"
+          },
+          {
+            "feature": "Research the web as you go",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "web search is agent-driven, needs model provider key"
+          },
+          {
+            "feature": "Recall past decisions and context",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "memory/recall needs model provider key and sessions"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 80.7,
+      "total": 87.3,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -261,7 +292,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 21.87
+      "value": 23.66
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -581,8 +612,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T02:16:46+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**Understand unfamiliar code**: Ogcode maps a project before reading it, outlines files with exact line ranges, and reads only what matters.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:09+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**Build and fix software**: implement features and fixes across files, run your builds and tests, and investigate failures instead of retrying blindly.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:09+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**Research as you go**: built-in web search and page reading, reusable `SKILL.md` workflows, and external MCP servers.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:09+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**Keep context that fits**: recall past decisions instead of replaying the whole transcript, so long sessions stay focused and affordable.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:09+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:51:37+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

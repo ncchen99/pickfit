@@ -27,6 +27,12 @@
     "Split a big job across background agents on git branches"
   ],
   "alternatives_to": [],
+  "features": [
+    "Verify task completion with deterministic checks",
+    "Run parallel background agents on git branches",
+    "Use any model via subscription or API",
+    "Control agent via TUI, web UI and API"
+  ],
   "why_worth_it": null,
   "homepage": "https://madkoding.github.io/motita/",
   "repo": {
@@ -72,22 +78,22 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-motita-20261031-000751-9230",
+      "run_id": "verify-motita-20261031-034341-4a36",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://motita.kodingvibes.com/install.sh -o /tmp/motita-install.sh && ls -l /tmp/motita-install.sh && wc -c /tmp/motita-install.sh",
-          "purpose": "download installer script only"
+          "command": "curl -fsSL https://motita.kodingvibes.com/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -c 2000 /tmp/install.sh",
+          "purpose": "Download installer script only"
         },
         {
-          "command": "openssl version; sh /tmp/motita-install.sh",
-          "purpose": "run motita installer script"
+          "command": "openssl version; echo \"---\"; sh /tmp/install.sh",
+          "purpose": "Run installer script after reading"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "motita -version",
-        "expected_signal": "motita v4.81.0 (linux/amd64)"
+        "command": "motita --version",
+        "expected_signal": "motita v4.82.0 (linux/amd64)"
       },
       "first_task": "motita gateway stop"
     },
@@ -123,10 +129,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:09:07.813177+08:00",
+    "checked_at": "2026-10-31T03:45:31.634694+08:00",
     "runs": [
       {
-        "id": "verify-motita-20261031-000751-9230",
+        "id": "verify-motita-20261031-034341-4a36",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -134,27 +140,27 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:09:07.813177+08:00",
-        "tool_version": "v4.81.0",
+        "checked_at": "2026-10-31T03:45:31.634694+08:00",
+        "tool_version": "v4.82.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://motita.kodingvibes.com/install.sh -o /tmp/motita-install.sh && ls -l /tmp/motita-install.sh && wc -c /tmp/motita-install.sh",
-            "purpose": "download installer script only"
+            "command": "curl -fsSL https://motita.kodingvibes.com/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -c 2000 /tmp/install.sh",
+            "purpose": "Download installer script only"
           },
           {
-            "command": "openssl version; sh /tmp/motita-install.sh",
-            "purpose": "run motita installer script"
+            "command": "openssl version; echo \"---\"; sh /tmp/install.sh",
+            "purpose": "Run installer script after reading"
           }
         ],
         "smoke_tests": [
           {
-            "command": "motita -version",
-            "expected_signal": "motita v4.81.0 (linux/amd64)",
+            "command": "motita --version",
+            "expected_signal": "motita v4.82.0 (linux/amd64)",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "motita v4.81.0 (linux/amd64)",
+            "observed_excerpt": "motita v4.82.0 (linux/amd64)",
             "setup": [],
             "offline": true
           },
@@ -183,34 +189,79 @@
             "passed": true,
             "observed_excerpt": "motita works; the ⚠️ lines above are worth a look.",
             "setup": [],
-            "offline": true
+            "offline": false
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "Then just run motita. A 5-step setup picks your provider, model and the check",
+            "actually_needed": "motita config is an interactive 5-step wizard asking for Provider [1] and timed out after 30s with stdin closed; gateway stop works non-interactively",
+            "kind": "note"
+          },
+          {
+            "readme_said": "motita gateway start",
+            "actually_needed": "motita gateway start did not come up within 10s; log at ~/.motita/workspace/motita.log says the LLM key is missing, so a configured provider/API key is required before the gateway/Web UI runs",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show version v4.81.0 and both gateway commands reporting no gateway is running.",
+          "observed": "All three screenshots show the expected outputs for stop, status, and version commands.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-motita-20261031-000751-9230/report.json",
+          "trace_path": "runs/verify/verify-motita-20261031-034341-4a36/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-motita-20261031-000751-9230/check-1-cmd3.judged.png",
-            "runs/verify/verify-motita-20261031-000751-9230/check-2-cmd6.judged.png",
-            "runs/verify/verify-motita-20261031-000751-9230/check-3-cmd7.judged.png"
+            "runs/verify/verify-motita-20261031-034341-4a36/check-1-cmd5.judged.png",
+            "runs/verify/verify-motita-20261031-034341-4a36/check-2-cmd8.judged.png",
+            "runs/verify/verify-motita-20261031-034341-4a36/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.052302
+        "cost_usd": 0.075545,
+        "features": [
+          {
+            "feature": "Verify task completion with deterministic checks",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "deterministic check needs configured provider/model and API key; no key in box"
+          },
+          {
+            "feature": "Run parallel background agents on git branches",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "background agents need configured model and API key"
+          },
+          {
+            "feature": "Use any model via subscription or API",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "requires API key or paid subscription login"
+          },
+          {
+            "feature": "Control agent via TUI, web UI and API",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "gateway needs LLM key; log says LLM key is missing so Web UI cannot start here"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 88.3,
       "confidence": 0.8,
@@ -523,8 +574,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-30T23:52:50+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "A deterministic check, not the model, decides when a task is done.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:51+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Split a big job across background agents, each on its own git branch, with time and token cost per agent.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:51+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Use an API key or the subscription you already pay for.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:51+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "github_api",
+      "quote": "with parallel background agents on git worktrees, a TUI, a web UI and an HTTP API.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:51+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-01T01:08:55+08:00"
 }

@@ -1,0 +1,568 @@
+{
+  "schema_version": "software.v1",
+  "slug": "find-mcp",
+  "repo_id": "gh:1300999234",
+  "name": "@agentage/find-mcp",
+  "summary": "Stdio client that lets AI apps search a directory of 17,000+ MCP servers.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "mcp",
+    "mcp-client",
+    "mcp-directory",
+    "model-context-protocol",
+    "search",
+    "stdio"
+  ],
+  "use_cases": [
+    "Find a tool that connects AI to Postgres",
+    "Check for a Notion MCP server and how to install it",
+    "List popular tools for browser automation"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://catalog.agentage.io/mcp",
+  "repo": {
+    "url": "https://github.com/agentage/find-mcp",
+    "full_name": "agentage/find-mcp",
+    "created_at": "2026-07-14T22:39:28Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-find-mcp-20261101-002834-c5c6",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @agentage/find-mcp",
+          "purpose": "install @agentage/find-mcp globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v1.13.3",
+    "published_at": "2026-10-31T02:14:51Z",
+    "url": "https://github.com/agentage/find-mcp/releases/tag/v1.13.3"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:29:49.790756+08:00",
+    "runs": [
+      {
+        "id": "verify-find-mcp-20261101-002834-c5c6",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:29:49.790756+08:00",
+        "tool_version": "1.13.3",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @agentage/find-mcp",
+            "purpose": "install @agentage/find-mcp globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- agentage-find-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call mcp_categories --args '{}' -- agentage-find-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=mcp_categories content=text text_chars=2148",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "launch via npx -y @agentage/find-mcp",
+            "actually_needed": "installed binary is named agentage-find-mcp (npm scoped package binary sanitization); use agentage-find-mcp for stdio launch when installed with npm install -g",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both probes show successful initialize, 3 tools listed, handshake ok, and mcp_categories call returning category data.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-find-mcp-20261101-002834-c5c6/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-find-mcp-20261101-002834-c5c6/check-1-cmd5.judged.png",
+            "runs/verify/verify-find-mcp-20261101-002834-c5c6/check-2-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.037805,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "agentage-find-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "find-mcp",
+          "server_version": "1.13.3",
+          "tools": [
+            "mcp_search",
+            "mcp_get",
+            "mcp_categories"
+          ],
+          "tool_count": 3,
+          "called_tool": "mcp_categories",
+          "offline": false
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "npx -y @agentage/find-mcp",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"find-mcp\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@agentage/find-mcp\"]\n    }\n  }\n}"
+      },
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add find-mcp -- npx -y @agentage/find-mcp"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "FIND_MCP_URL",
+        "required": false,
+        "purpose": "Override the upstream endpoint"
+      },
+      {
+        "name": "CATALOG_MCP_URL",
+        "required": false,
+        "purpose": "Deprecated alias for FIND_MCP_URL"
+      }
+    ],
+    "tools": [
+      "mcp_search",
+      "mcp_get",
+      "mcp_categories"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 89.6,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 39.2,
+      "signals": {
+        "stars": 6,
+        "monthly_downloads": 1472,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 108,
+      "packages": [
+        "npm:@agentage/find-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 54.48
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "e6b354c04c9711674604936495ecc98e3c2c670c165c74b24851efaaea924b5a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "it gives your AI a searchable directory of 17,000+ of those tools,"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Add this to your AI app, then ask away."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Nothing to install permanently,"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "claude mcp add find-mcp -- npx -y @agentage/find-mcp"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "\"Find me a tool that connects you to Postgres.\""
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `FIND_MCP_URL`    | `https://catalog.agentage.io/mcp`  | Override the upstream endpoint (dev)"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "MIT - see [LICENSE](./LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/agentage/find-mcp",
+      "fetched_at": "2026-10-31T13:38:56+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/agentage/find-mcp/blob/master/README.md",
+      "fetched_at": "2026-10-31T13:44:46+08:00"
+    },
+    {
+      "id": "release:v1.13.3",
+      "kind": "release",
+      "url": "https://github.com/agentage/find-mcp/releases/tag/v1.13.3",
+      "fetched_at": "2026-10-31T13:44:46+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "a thin stdio proxy that bridges\nstdio-only MCP clients to the public remote endpoint",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Add this to your AI app, then ask away.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Find MCP - stdio MCP client for the agentage MCP directory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "it gives your AI a searchable directory of 17,000+ of those tools,\nso you can simply ask for what you need and let the AI find it.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# @agentage/find-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "On start it connects to the remote\ndirectory over Streamable HTTP",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:56+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:56+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:56+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:56+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:38:56+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.13.3",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:44:46+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "\"Find me a tool that connects you to Postgres.\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "\"Is there an MCP server for Notion? How do I install it?\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "\"What are the most popular tools for browser automation?\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "right tool in seconds - free, read-only, no sign-up.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "On start it connects to the remote\ndirectory over Streamable HTTP and forwards `tools/list` and `tools/call` verbatim",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "a thin stdio proxy that bridges\nstdio-only MCP clients to the public remote endpoint",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add find-mcp -- npx -y @agentage/find-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"find-mcp\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@agentage/find-mcp\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "claude mcp add find-mcp -- npx -y @agentage/find-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "FIND_MCP_URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "CATALOG_MCP_URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`mcp_search`     | Find MCP servers by keyword, with category/language/license filters",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`mcp_get`        | Return one server's full packages, tools, and install command by slug",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`mcp_categories` | List the category/language/license values you can filter on",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:11+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:38:07+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

@@ -1,0 +1,582 @@
+{
+  "schema_version": "software.v1",
+  "slug": "ctxtual",
+  "repo_id": "gh:1173038630",
+  "name": "ctxtual",
+  "summary": "Stores oversized tool results and lets agents search, filter, and page them.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "claude",
+    "context-engineering",
+    "cursor",
+    "fastmcp",
+    "harness",
+    "harness-engineering",
+    "llm",
+    "mcp",
+    "mcp-server"
+  ],
+  "use_cases": [
+    "search through stored large tool results",
+    "filter and sort large tool results",
+    "aggregate large structured tool results",
+    "page through stored large tool results"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://pypi.org/project/ctxtual/",
+  "repo": {
+    "url": "https://github.com/banda-larga/ctxtual",
+    "full_name": "banda-larga/ctxtual",
+    "created_at": "2026-03-05T00:19:41Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.11+"
+    ],
+    "system_packages": [
+      "uv"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-ctxtual-20261101-001955-58c9",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install 'ctxtual[mcp]' 2>&1",
+          "purpose": "install ctxtual with mcp extra via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ctxtual --version 2>&1",
+        "expected_signal": "0.5.0"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.5.0",
+    "published_at": "2026-10-21T22:26:14Z",
+    "url": "https://github.com/banda-larga/ctxtual/releases/tag/v0.5.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:21:07.984509+08:00",
+    "runs": [
+      {
+        "id": "verify-ctxtual-20261101-001955-58c9",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:21:07.984509+08:00",
+        "tool_version": "0.5.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install 'ctxtual[mcp]' 2>&1",
+            "purpose": "install ctxtual with mcp extra via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ctxtual --version 2>&1",
+            "expected_signal": "0.5.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ctxtual 0.5.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- ctxtual wrap -- python3 /tmp/dummy_mcp.py",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "cat > /tmp/dummy_mcp.py << 'PY'\n#!/usr/bin/env python3\nimport sys, json\ndef send(o):\n    sys.stdout.write(json.dumps(o)+\"\\n\")\n    sys.stdout.flush()\nfor line in sys.stdin:\n    line=line.strip()\n    if not line:\n        continue\n    try:\n        req=json.loads(line)\n    except:\n        continue\n    mid=req.get(\"id\")\n    method=req.get(\"method\")\n    if method==\"initialize\":\n        send({\"jsonrpc\":\"2.0\",\"id\":mid,\"result\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{\"tools\":{}},\"serverInfo\":{\"name\":\"dummy\",\"version\":\"1.0\"}}})\n    elif method==\"notifications/initialized\":\n        pass\n    elif method==\"tools/list\":\n        send({\"jsonrpc\":\"2.0\",\"id\":mid,\"result\":{\"tools\":[{\"name\":\"big_tool\",\"description\":\"returns big data\",\"inputSchema\":{\"type\":\"object\",\"properties\":{}}}]}})\n    elif method==\"tools/call\":\n        big=\"x\"*50000\n        send({\"jsonrpc\":\"2.0\",\"id\":mid,\"result\":{\"content\":[{\"type\":\"text\",\"text\":big}]}})\n    else:\n        send({\"jsonrpc\":\"2.0\",\"id\":mid,\"error\":{\"code\":-32601,\"message\":\"unknown\"}})\nPY\nchmod +x /tmp/dummy_mcp.py\necho done",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call big_tool --args '{}' -- ctxtual wrap -- python3 /tmp/dummy_mcp.py",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=big_tool content=text text_chars=1309",
+            "setup": [
+              {
+                "command": "cat > /tmp/dummy_mcp.py << 'PY'\n#!/usr/bin/env python3\nimport sys, json\ndef send(o):\n    sys.stdout.write(json.dumps(o)+\"\\n\")\n    sys.stdout.flush()\nfor line in sys.stdin:\n    line=line.strip()\n    if not line:\n        continue\n    try:\n        req=json.loads(line)\n    except:\n        continue\n    mid=req.get(\"id\")\n    method=req.get(\"method\")\n    if method==\"initialize\":\n        send({\"jsonrpc\":\"2.0\",\"id\":mid,\"result\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{\"tools\":{}},\"serverInfo\":{\"name\":\"dummy\",\"version\":\"1.0\"}}})\n    elif method==\"notifications/initialized\":\n        pass\n    elif method==\"tools/list\":\n        send({\"jsonrpc\":\"2.0\",\"id\":mid,\"result\":{\"tools\":[{\"name\":\"big_tool\",\"description\":\"returns big data\",\"inputSchema\":{\"type\":\"object\",\"properties\":{}}}]}})\n    elif method==\"tools/call\":\n        big=\"x\"*50000\n        send({\"jsonrpc\":\"2.0\",\"id\":mid,\"result\":{\"content\":[{\"type\":\"text\",\"text\":big}]}})\n    else:\n        send({\"jsonrpc\":\"2.0\",\"id\":mid,\"error\":{\"code\":-32601,\"message\":\"unknown\"}})\nPY\nchmod +x /tmp/dummy_mcp.py\necho done",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "ctxtual wrap proxies any MCP server",
+            "actually_needed": "wrap needs an upstream MCP server; probe required creating a dummy upstream and launching as ctxtual wrap -- python3 /tmp/dummy_mcp.py",
+            "kind": "note"
+          },
+          {
+            "readme_said": "The sandbox run's launch command points at files it created in /tmp for the test.",
+            "actually_needed": "Point the MCP client's launch command at the user's own files in a permanent directory; /tmp is cleared on reboot.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show ctxtual 0.5.0, MCP wrap handshake ok with 5 tools listed, and big_tool call succeeding.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ctxtual-20261101-001955-58c9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ctxtual-20261101-001955-58c9/check-1-cmd12.judged.png",
+            "runs/verify/verify-ctxtual-20261101-001955-58c9/check-2-cmd13.judged.png",
+            "runs/verify/verify-ctxtual-20261101-001955-58c9/check-3-cmd14.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.074321,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "ctxtual",
+            "wrap",
+            "--",
+            "python3",
+            "/tmp/dummy_mcp.py"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "dummy",
+          "server_version": "1.0",
+          "tools": [
+            "result_search",
+            "result_read",
+            "result_query",
+            "result_list",
+            "big_tool"
+          ],
+          "tool_count": 5,
+          "called_tool": "big_tool",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "ctxtual wrap",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"deepwiki\": {\n      \"command\": \"uvx\",\n      \"args\": [\"--from\", \"ctxtual[mcp]\", \"ctxtual\", \"wrap\", \"https://mcp.deepwiki.com/mcp\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "result_search",
+      "result_read",
+      "result_query",
+      "result_list"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 91.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 37.4,
+      "signals": {
+        "stars": 13,
+        "monthly_downloads": 66,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": 0,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 239,
+      "packages": [
+        "pypi:ctxtual"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 57.09
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "e4277036c9f3690041ac8de296fcd331a2dfec6a13de833985e89c3505fac620",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Keep large tool results out of the context window."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "For tools you call from your own agent loop, without MCP:"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Zero dependencies (standard library only), Python 3.11+."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "uvx --from 'ctxtual[mcp]' ctxtual install claude-desktop"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "Calling the producer (directly or as a tool call from the model) returns:"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Options: `threshold`, per-tool `thresholds`, `include`/`exclude`, `ttl`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "(a backup is made; `uninstall` puts the original entries back)"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "## License\n\nMIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/banda-larga/ctxtual",
+      "fetched_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/banda-larga/ctxtual/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:06:12+08:00"
+    },
+    {
+      "id": "release:v0.5.0",
+      "kind": "release",
+      "url": "https://github.com/banda-larga/ctxtual/releases/tag/v0.5.0",
+      "fetched_at": "2026-10-31T01:06:12+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "it is a normal stdio server that runs `ctxtual wrap`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Wrap every server a client already has",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Wraps any MCP server (one-line install for Claude Desktop, Cursor, VS Code, Codex) or works as a Python library.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Keep large tool results out of your agent's context.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<img alt=\"ctxtual\" src=\"https://raw.githubusercontent.com/banda-larga/ctxtual/dc6e4aef43f3b1e57bda109d145288b7f17c89bf/assets/logo.svg\" width=\"380\">",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Zero dependencies (standard library only), Python 3.11+.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Requires [uv](https://docs.astral.sh/uv/).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.5.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:06:12+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "plus tools to search, filter, aggregate and page through the stored data.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "plus tools to search, filter, aggregate and page through the stored data.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "plus tools to search, filter, aggregate and page through the stored data.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "plus tools to search, filter, aggregate and page through the stored data.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "it is a normal stdio server that runs `ctxtual wrap`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "it is a normal stdio server that runs `ctxtual wrap`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"deepwiki\": {\n      \"command\": \"uvx\",\n      \"args\": [\"--from\", \"ctxtual[mcp]\", \"ctxtual\", \"wrap\", \"https://mcp.deepwiki.com/mcp\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "Use result_search(result_id, query) to find passages; result_read(result_id, page) to read it",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "Use result_search(result_id, query) to find passages; result_read(result_id, page) to read it",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "e.g. `result_query(result_id, where={\"state\": \"open\"},",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`result_search` (items or passages), `result_read` (pages, single items, long",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:25+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:50+08:00",
+  "updated_at": "2026-11-01T01:32:55+08:00"
+}

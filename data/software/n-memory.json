@@ -1,0 +1,537 @@
+{
+  "schema_version": "software.v1",
+  "slug": "n-memory",
+  "repo_id": "gh:1306545019",
+  "name": "nMEMORY",
+  "summary": "Local-first memory server that stores agent decisions with sources and recalls them with evidence.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-memory",
+    "agpl",
+    "ai-agents",
+    "claude-code",
+    "developer-tools",
+    "local-first",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "provenance"
+  ],
+  "use_cases": [
+    "recall a past decision at session start",
+    "store a decision with source and anchor",
+    "capture work in sessions with handoffs"
+  ],
+  "alternatives_to": [
+    "A notes file (CLAUDE.md, AGENTS.md)",
+    "A plain vector store"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://no.tt",
+  "repo": {
+    "url": "https://github.com/menot-you/n-memory",
+    "full_name": "menot-you/n-memory",
+    "created_at": "2026-07-20T11:39:58Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "python 3.14+"
+    ],
+    "system_packages": [
+      "uv",
+      "Git"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": [
+      "GEMINI_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "AGPL-3.0",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.111.0",
+    "published_at": "2026-10-30T15:33:24Z",
+    "url": "https://github.com/menot-you/n-memory/releases/tag/v0.111.0"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "not_run",
+    "checked_at": null,
+    "runs": []
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "uv run --directory \"$PWD\" nmemory mcp serve",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add nmemory -- uv run --directory \"$PWD\" nmemory mcp serve"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "GEMINI_API_KEY",
+        "required": false,
+        "purpose": "embedding provider key"
+      },
+      {
+        "name": "NOTT_NMEMORY_EMBED_PROVIDER",
+        "required": false,
+        "purpose": "embedding provider selection"
+      },
+      {
+        "name": "NOTT_NMEMORY_CONFIG",
+        "required": false,
+        "purpose": "config file path"
+      },
+      {
+        "name": "NOTT_DATABASE_DIR",
+        "required": false,
+        "purpose": "store directory override"
+      }
+    ],
+    "tools": [
+      "nmemory_context_show",
+      "nmemory_capsule_retrieve",
+      "nmemory_capsule_ingest"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 38.6,
+      "signals": {
+        "stars": 9,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 914,
+        "hn_top_score": 2,
+        "registries_count": 0
+      },
+      "age_days": 102,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 42.37
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "b8ba9ddb1f9437d9bf031592d7ec22f4d999b667a55266bbcb5d14b6fbc7b362",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Local-first memory for AI agents. Keep decisions and evidence across sessions. Recall with sources through MCP."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "nMEMORY, part of the NOTT family: memory for coding agents. Every recall cites its source, or says that it does not know."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Or install from source. You need [uv](https://docs.astral.sh/uv/getting-started/installation/) and Git:"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl --proto '=https' --tlsv1.2 -fsSL https://no.tt/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "uv run nmemory capsule retrieve \"what database stores our data\"\nuv run nmemory capsule show --id cap-1\n```\n\nThe first command returns `\"outcome\": \"grounded\"` and the record."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "The optional file is `~/.nott/memory.toml`. The variable\n  `NOTT_NMEMORY_CONFIG` names another path."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "[AGPL-3.0-only](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/menot-you/n-memory",
+      "fetched_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/menot-you/n-memory/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:04:00+08:00"
+    },
+    {
+      "id": "release:v0.111.0",
+      "kind": "release",
+      "url": "https://github.com/menot-you/n-memory/releases/tag/v0.111.0",
+      "fetched_at": "2026-10-31T01:04:00+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "The MCP server is `nmemory mcp serve` (stdio).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "curl --proto '=https' --tlsv1.2 -fsSL https://no.tt/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "MCP stdio server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Local-first memory for AI agents. Keep decisions and evidence across sessions. Recall with sources through MCP.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "nMEMORY, part of the NOTT family: memory for coding agents. Every recall cites its source, or says that it does not know.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.14 or later",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "You need [uv](https://docs.astral.sh/uv/getting-started/installation/) and Git:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "You need [uv](https://docs.astral.sh/uv/getting-started/installation/) and Git:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "To keep recall lexical only, unset that key.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "(`GEMINI_API_KEY` for the default), nMEMORY sends capsule text and",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:18:19+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.111.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:04:00+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "The agent recalls the decision at the start of the session.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Store a decision (the agent calls `nmemory_capsule_ingest`):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "An agent opens a session, captures as it",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "A notes file (`CLAUDE.md`, `AGENTS.md`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "A plain vector store",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Embeddings send text off the machine.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Any MCP client that speaks stdio connects the same way as Claude Code.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add nmemory -- uv run --directory \"$PWD\" nmemory mcp serve",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add nmemory -- uv run --directory \"$PWD\" nmemory mcp serve",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "GEMINI_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "NOTT_NMEMORY_EMBED_PROVIDER",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "NOTT_NMEMORY_CONFIG",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "NOTT_DATABASE_DIR",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "Start with `nmemory_context_show`, `nmemory_capsule_retrieve` and",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "Start with `nmemory_context_show`, `nmemory_capsule_retrieve` and",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`nmemory_capsule_ingest`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:04:54+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:11+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

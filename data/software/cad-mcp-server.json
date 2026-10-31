@@ -31,6 +31,12 @@
     "compare what changed between two STEP revisions"
   ],
   "alternatives_to": [],
+  "features": [
+    "measure real CAD geometry from STEP files",
+    "inspect size, volume and hole diameters",
+    "describe declared PMI dimensions and tolerances",
+    "compare two STEP revisions for changes"
+  ],
   "why_worth_it": null,
   "homepage": "https://www.npmjs.com/package/cad-mcp-server",
   "repo": {
@@ -59,12 +65,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-cad-mcp-server-20261031-012435-b0a8",
+      "run_id": "verify-cad-mcp-server-20261031-025952-9753",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g cad-mcp-server",
-          "purpose": "Install cad-mcp-server globally with npm"
+          "purpose": "install cad-mcp-server globally with npm"
         }
       ],
       "manual_steps": [],
@@ -88,10 +94,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:26:21.786628+08:00",
+    "checked_at": "2026-10-31T03:01:50.414805+08:00",
     "runs": [
       {
-        "id": "verify-cad-mcp-server-20261031-012435-b0a8",
+        "id": "verify-cad-mcp-server-20261031-025952-9753",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -99,14 +105,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:26:21.786628+08:00",
+        "checked_at": "2026-10-31T03:01:50.414805+08:00",
         "tool_version": "0.3.2",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g cad-mcp-server",
-            "purpose": "Install cad-mcp-server globally with npm"
+            "purpose": "install cad-mcp-server globally with npm"
           }
         ],
         "smoke_tests": [
@@ -123,36 +129,36 @@
         "pitfalls": [
           {
             "readme_said": "Requirements: Node.js 24+",
-            "actually_needed": "Node.js v22.23.4 worked; package.json engines field allows >=22",
+            "actually_needed": "works on Node v22.23.4; package.json engines allows >=22",
             "kind": "readme_wrong"
           },
           {
             "readme_said": "Tools table lists inspect, find_entities, measure, describe_pmi, diff",
-            "actually_needed": "Server lists 4 tools: inspect_step, query_step, diff_step, transact_step (probe output)",
+            "actually_needed": "server exposes inspect_step, query_step, diff_step, transact_step over stdio",
             "kind": "readme_wrong"
           },
           {
-            "readme_said": "Launch command: npx -y cad-mcp-server",
-            "actually_needed": "Use installed binary directly: cad-mcp-server (on PATH via npm install -g cad-mcp-server); it runs over stdio with no --version/--help (with an argument it just starts the server: 'CAD MCP Server started (4-tool surface)' and waits on stdin)",
+            "readme_said": "launch via npx -y cad-mcp-server",
+            "actually_needed": "binary starts stdio server and waits on stdin; no --help/--version output",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows MCP probe initializing successfully, listing 4 tools, and reporting handshake: ok.",
+          "observed": "Screenshot shows successful MCP probe with initialize ok and handshake ok listing 4 tools.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-cad-mcp-server-20261031-012435-b0a8/report.json",
+          "trace_path": "runs/verify/verify-cad-mcp-server-20261031-025952-9753/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-cad-mcp-server-20261031-012435-b0a8/check-1-cmd4.judged.png"
+            "runs/verify/verify-cad-mcp-server-20261031-025952-9753/check-1-cmd5.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.089454,
+        "cost_usd": 0.081852,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -171,7 +177,41 @@
           "tool_count": 4,
           "called_tool": null,
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "measure real CAD geometry from STEP files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "handshake passed but no tool call attempted before budget exhausted"
+          },
+          {
+            "feature": "inspect size, volume and hole diameters",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "handshake passed but no tool call attempted before budget exhausted"
+          },
+          {
+            "feature": "describe declared PMI dimensions and tolerances",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "handshake passed but no tool call attempted before budget exhausted"
+          },
+          {
+            "feature": "compare two STEP revisions for changes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "handshake passed but no tool call attempted before budget exhausted"
+          }
+        ]
       }
     ]
   },
@@ -197,7 +237,7 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 71.1,
       "confidence": 0.8,
@@ -566,8 +606,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:14:47+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Give any AI assistant the ability to measure real CAD geometry.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:35+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "overall size and volume, hole and boss diameters, wall thickness,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:35+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Declared dimensions (nominal with deviations or bounds), geometric tolerances (value, zone, material modifier, datums), and datums, each with the entity IDs it applies to.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:35+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "What changed between revision A and revision B?",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:35+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:18:19+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

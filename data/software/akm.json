@@ -31,6 +31,12 @@
     "run persisted multi-step workflows with resume"
   ],
   "alternatives_to": [],
+  "features": [
+    "manage agent knowledge, memories and skills",
+    "use same library from any coding agent",
+    "install and share capability bundles",
+    "run resumable multi-step workflows"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -74,35 +80,36 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-akm-20261031-001734-7522",
+      "run_id": "verify-akm-20261031-032510-5356",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g akm-cli",
-          "purpose": "install akm via npm"
+          "purpose": "Install akm via npm"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "akm --version",
-        "expected_signal": "0.10.261019"
+        "expected_signal": "0.10.261021"
       },
       "first_task": "akm setup --yes"
     },
     "windows": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-akm-20261031-221817-e9c3",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g akm-cli",
-          "purpose": null
+          "purpose": "Install akm via npm"
         }
       ],
-      "manual_steps": [
-        "reviewing and activating OS scheduler entries for background tasks"
-      ],
-      "check": null,
+      "manual_steps": [],
+      "check": {
+        "command": "akm --version",
+        "expected_signal": "0.10.261022"
+      },
       "first_task": "akm setup --yes"
     }
   },
@@ -121,10 +128,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:18:42.334369+08:00",
+    "checked_at": "2026-10-31T22:25:13.533540+08:00",
     "runs": [
       {
-        "id": "verify-akm-20261031-001734-7522",
+        "id": "verify-akm-20261031-032510-5356",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -132,32 +139,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:18:42.334369+08:00",
-        "tool_version": "0.10.261019",
+        "checked_at": "2026-10-31T03:27:01.737308+08:00",
+        "tool_version": "0.10.261021",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g akm-cli",
-            "purpose": "install akm via npm"
+            "purpose": "Install akm via npm"
           }
         ],
         "smoke_tests": [
           {
             "command": "akm --version",
-            "expected_signal": "0.10.261019",
+            "expected_signal": "0.10.261021",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "0.10.261019",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "akm --help",
-            "expected_signal": "Run `akm help <command>`",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Run `akm help <command>` or `akm <command> --help` for details on any command.",
+            "observed_excerpt": "0.10.261021",
             "setup": [],
             "offline": true
           },
@@ -172,10 +170,10 @@
           },
           {
             "command": "akm index",
-            "expected_signal": "Keyword index ready",
+            "expected_signal": "\"shape\": \"index\"",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "\"message\": \"Keyword index ready. Semantic search is disabled.\",",
+            "observed_excerpt": "\"shape\": \"index\",",
             "setup": [
               {
                 "command": "akm setup --yes",
@@ -187,10 +185,210 @@
           },
           {
             "command": "akm curate \"deploy a Bun app\"",
-            "expected_signal": "Selected 2 curated results",
+            "expected_signal": "\"shape\": \"curate\"",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "\"summary\": \"Selected 2 curated results: facts/conventions/domains, facts/conventions/organization.\",",
+            "observed_excerpt": "\"shape\": \"curate\",",
+            "setup": [
+              {
+                "command": "akm setup --yes",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "akm index",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "akm show facts/conventions/domains",
+            "expected_signal": "# Domain vocabulary",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"content\": \"\\n<!--\\n SOFT guidance only. This is the domain vocabulary that `organization.md` refers\\n to. It is intentionally SHORT and STARTER — replace these with the domains your\\n stash actually accumulates. A closed list keeps agents from coining a new\\n folder per session (which fragments th…",
+            "setup": [
+              {
+                "command": "akm setup --yes",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "akm index",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "akm hints --detail brief",
+            "expected_signal": "Run `akm help <command>`",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Run `akm help <command>` for that command's options and subcommands. Run",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "akm bundle list",
+            "expected_signal": "\"shape\": \"list\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"shape\": \"list\",",
+            "setup": [
+              {
+                "command": "akm setup --yes",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "akm workflow list",
+            "expected_signal": "\"shape\": \"workflow-list\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"shape\": \"workflow-list\",",
+            "setup": [
+              {
+                "command": "akm setup --yes",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show setup succeeded with ok true, index completed 12 entries with shape index, and version 0.10.261021 printed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-akm-20261031-032510-5356/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-akm-20261031-032510-5356/check-1-cmd3.judged.png",
+            "runs/verify/verify-akm-20261031-032510-5356/check-2-cmd4.judged.png",
+            "runs/verify/verify-akm-20261031-032510-5356/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.101044,
+        "features": [
+          {
+            "feature": "manage agent knowledge, memories and skills",
+            "status": "checked",
+            "smoke_tests": [
+              2,
+              3,
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "use same library from any coding agent",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output is only hints/help text, not use from different coding agents."
+          },
+          {
+            "feature": "install and share capability bundles",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists existing bundle, no install or share action shown."
+          },
+          {
+            "feature": "run resumable multi-step workflows",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows empty workflow runs with nothing executed or resumed."
+          }
+        ]
+      },
+      {
+        "id": "verify-akm-20261031-221817-e9c3",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "windows",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "vbox",
+        "image": "Windows 11 Enterprise LTSC Eval 24H2 (26100.1742), VirtualBox 7.2.22 +pickfit-win11@16ea69df29ff router@583d254c306d",
+        "checked_at": "2026-10-31T22:25:13.533540+08:00",
+        "tool_version": "0.10.261022",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g akm-cli",
+            "purpose": "Install akm via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "akm --version",
+            "expected_signal": "0.10.261022",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.10.261022",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "akm --help",
+            "expected_signal": "Run `akm help <command>` or `akm <command> --help` for details on any command.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Run `akm help <command>` or `akm <command> --help` for details on any command.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "akm setup --yes",
+            "expected_signal": "\"ok\": true,",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"ok\": true,",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "akm index",
+            "expected_signal": "\"scanComplete\": true,",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"scanComplete\": true,",
+            "setup": [
+              {
+                "command": "akm setup --yes",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "akm curate \"deploy a Bun app\"",
+            "expected_signal": "\"query\": \"deploy a Bun app\",",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"query\": \"deploy a Bun app\",",
             "setup": [
               {
                 "command": "akm setup --yes",
@@ -206,31 +404,37 @@
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "(Windows steps)",
+            "actually_needed": "pickfit ran these steps in PowerShell 7 (pwsh 7.6.9) as a standard user; the built-in Windows PowerShell 5.1 is not verified and does not run `&&`.",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show setup succeeded, index completed with keyword-ready message, and version printed.",
-          "model": "muse-spark-1.3"
+          "observed": "Screenshots show setup succeeded with ok true, index processed 12 entries and verified keyword index, and version 0.10.261022 printed.",
+          "model": "muse-spark-1.3-contributor"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-akm-20261031-001734-7522/report.json",
+          "trace_path": "runs/verify/verify-akm-20261031-221817-e9c3/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-akm-20261031-001734-7522/check-1-cmd4.judged.png",
-            "runs/verify/verify-akm-20261031-001734-7522/check-2-cmd5.judged.png",
-            "runs/verify/verify-akm-20261031-001734-7522/check-3-cmd2.judged.png"
+            "runs/verify/verify-akm-20261031-221817-e9c3/check-1-cmd4.judged.png",
+            "runs/verify/verify-akm-20261031-221817-e9c3/check-2-cmd5.judged.png",
+            "runs/verify/verify-akm-20261031-221817-e9c3/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.029482
+        "actor_model": "muse-spark-1.3-contributor",
+        "cost_usd": 0.006021
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 92.2,
       "confidence": 0.8,
@@ -561,8 +765,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:16:21+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "A CLI tool to manage AI agent knowledge, memories, skills, and  more.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:33+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Use the same capability library from Claude Code, OpenCode, Cursor, Aider, Windsurf, or any assistant that can run shell commands.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:33+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Install and share bundles containing skills, scripts, workflows, agents, instructions, memories, and knowledge — not just prompt snippets.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:33+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Run persisted workflows with dispatch, gates, retries, budgets, and resume instead of reconstructing a process from prose every session.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:33+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:41:04+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-01T01:07:53.228007+08:00"
 }

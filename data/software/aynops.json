@@ -1,0 +1,709 @@
+{
+  "schema_version": "software.v1",
+  "slug": "aynops",
+  "repo_id": "gh:1246596878",
+  "name": "AynOps/AynOps",
+  "summary": "Local MCP server giving AI agents real-time cybersecurity reconnaissance and OSINT tools.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-tools",
+    "claude",
+    "cybersecurity-tools",
+    "fastmcp",
+    "information-gathering",
+    "local-mcp-server",
+    "mcp-server",
+    "model-context-protocol",
+    "open-source",
+    "osint-tool"
+  ],
+  "use_cases": [
+    "Perform WHOIS query on a target domain",
+    "Enumerate DNS records and brute-force subdomains",
+    "Run service version port scan on a host",
+    "Look up known CVEs for software version",
+    "Inspect SSL/TLS certificate of a domain"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://glama.ai/mcp/servers/AynOps/AynOps",
+  "repo": {
+    "url": "https://github.com/AynOps/AynOps",
+    "full_name": "AynOps/AynOps",
+    "created_at": "2026-05-22T10:58:31Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.12"
+    ],
+    "system_packages": [
+      "nmap"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "ABUSEIPDB_API_KEY",
+      "HIBP_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install --upgrade AynOps",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "nmap --version"
+    },
+    "linux": null,
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install --upgrade AynOps",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "nmap --version"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.2.1",
+    "published_at": "2026-10-25T07:26:21Z",
+    "url": "https://github.com/AynOps/AynOps/releases/tag/v1.2.1"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "not_run",
+    "checked_at": null,
+    "runs": []
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "docker",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"AynOps\": {\n      \"command\": \"/full/path/to/AynOps/.venv/bin/python3\",\n      \"args\": [\"/full/path/to/AynOps/server.py\"],\n      \"env\": {\n        \"ABUSEIPDB_API_KEY\": \"your-abuseipdb-api-key-here\",\n        \"HIBP_API_KEY\": \"your-hibp-api-key-here\"\n      }\n    }\n  }\n}"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"AynOps\": {\n      \"command\": \"docker\",\n      \"args\": [\n        \"run\",\n        \"--rm\",\n        \"-i\",\n        \"-e\", \"ABUSEIPDB_API_KEY=your-abuseipdb-api-key-here\",\n        \"-e\", \"HIBP_API_KEY=your-hibp-api-key-here\",\n        \"aynops:latest\"\n      ]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "ABUSEIPDB_API_KEY",
+        "required": false,
+        "purpose": "for ip_reputation tool"
+      },
+      {
+        "name": "HIBP_API_KEY",
+        "required": false,
+        "purpose": "for hibp_check tool"
+      }
+    ],
+    "tools": [
+      "whois_lookup",
+      "dns_enumeration",
+      "port_scan",
+      "ssl_inspect",
+      "email_security_check",
+      "tech_stack_detect",
+      "cert_transparency",
+      "asn_lookup",
+      "ip_reputation",
+      "headers_analyzer",
+      "full_recon",
+      "cve_lookup",
+      "cloud_exposure_check",
+      "trace_redirects",
+      "robots_txt_inspect",
+      "subdomain_takeover",
+      "hibp_check"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 52.2,
+      "signals": {
+        "stars": 29,
+        "monthly_downloads": null,
+        "forks": 40,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 161,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 32.98
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "786ba86765e921080c652253c0de0671f154d9d1455efe78a3ef8b29f5890f26",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "An Open Sourced Model Context Protocol (MCP) Local server that gives AI Clients real-time cybersecurity reconnaissance capabilities"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "AynOps is engineered from the ground up for cybersecurity engineers, red/blue teams, and security researchers seeking deterministic automation:"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- **Python Runtime**: Python `>= 3.12`"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "git clone https://github.com/AynOps/AynOps.git"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "Agent: [Invokes port_scan with scan_type=\"service\"]\n       Discovered Open Services:"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "`ABUSEIPDB_API_KEY` is optional and only required for `ip_reputation`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "pip install --upgrade AynOps"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "<img src=\"https://img.shields.io/badge/license-MIT-green.svg\" alt=\"License: MIT\" />"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/AynOps/AynOps",
+      "fetched_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/AynOps/AynOps/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:06:26+08:00"
+    },
+    {
+      "id": "release:v1.2.1",
+      "kind": "release",
+      "url": "https://github.com/AynOps/AynOps/releases/tag/v1.2.1",
+      "fetched_at": "2026-10-31T01:06:26+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A high-performance Model Context Protocol (MCP) server that brings real-time cybersecurity reconnaissance",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "AynOps runs entirely as a local daemon on your host or isolated container.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A high-performance Model Context Protocol (MCP) server that brings real-time cybersecurity reconnaissance",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A high-performance Model Context Protocol (MCP) server that brings real-time cybersecurity reconnaissance, attack surface mapping, and automated OSINT telemetry directly to AI agents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "github_api",
+      "quote": "name: AynOps/AynOps",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "| **Windows** | `%APPDATA%\\Claude\\claude_desktop_config.json` |\n| **macOS** | `~/Library/Application Support/Claude/claude_desktop_config.json`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python `>= 3.12`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "**Nmap** binary installed and accessible in the system `PATH`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Real-time querying of `crt.sh` append-only Merkle trees for passive subdomain",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "`ABUSEIPDB_API_KEY` is optional and only required for `ip_reputation`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/1",
+      "source_id": "readme",
+      "quote": "`HIBP_API_KEY` is optional and only required for `hibp_check`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:27+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.2.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:06:26+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "\"Perform a WHOIS query on target-organization.com\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "\"Enumerate all DNS resource records and brute-force common subdomains for example.com\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "\"Run a service version port scan on scanme.nmap.org\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "\"Look up known CVEs for OpenSSH version 8.2p1\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "\"Inspect the SSL/TLS certificate of payment.gateway.io on port 443\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "release:v1.2.1",
+      "quote": "pip install --upgrade AynOps",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "release:v1.2.1",
+      "quote": "pip install --upgrade AynOps",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "github_api",
+      "quote": "An Open Sourced Model Context Protocol (MCP) Local server",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "🔒 **100% Local-First Execution**: Self-hosted local daemon with zero telemetry leaks",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "over a standard JSON-RPC 2.0 `stdio` transport.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "\"command\": \"docker\",",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"AynOps\": {\n      \"command\": \"/full/path/to/AynOps/.venv/bin/python3\",\n      \"args\": [\"/full/path/to/AynOps/server.py\"],\n      \"env\": {\n        \"ABUSEIPDB_API_KEY\": \"your-abuseipdb-api-key-here\",\n        \"HIBP_API_KEY\": \"your-hibp-api-key-here\"\n      }\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"AynOps\": {\n      \"command\": \"docker\",\n      \"args\": [\n        \"run\",\n        \"--rm\",\n        \"-i\",\n        \"-e\", \"ABUSEIPDB_API_KEY=your-abuseipdb-api-key-here\",\n        \"-e\", \"HIBP_API_KEY=your-hibp-api-key-here\",\n        \"aynops:latest\"\n      ]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "ABUSEIPDB_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "HIBP_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "[`whois_lookup`](docs/tools/whois_lookup.md)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "[`dns_enumeration`](docs/tools/dns_enumeration.md)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "[`port_scan`](docs/tools/port_scan.md)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "[`ssl_inspect`](docs/tools/ssl_inspect.md)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "[`email_security_check`](docs/tools/email_security_check.md)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "[`tech_stack_detect`](docs/tools/tech_stack_detect.md)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "[`cert_transparency`](docs/tools/cert_transparency.md)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`asn_lookup`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "[`ip_reputation`](docs/tools/ip_reputation.md)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "[`headers_analyzer`](docs/tools/headers_analyzer.md)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`full_recon`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`cve_lookup`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "`cloud_exposure_check`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "`trace_redirects`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/14",
+      "source_id": "readme",
+      "quote": "`robots_txt_inspect`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/15",
+      "source_id": "readme",
+      "quote": "`subdomain_takeover`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    },
+    {
+      "field": "/mcp/tools/16",
+      "source_id": "readme",
+      "quote": "`hibp_check`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:05:04+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:50+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

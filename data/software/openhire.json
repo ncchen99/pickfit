@@ -1,0 +1,774 @@
+{
+  "schema_version": "software.v1",
+  "slug": "openhire",
+  "repo_id": "gh:1299869329",
+  "name": "OpenHire · 开聘",
+  "summary": "MCP server and CLI that finds jobs in employers' own ATS while keeping your resume local.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "ashby",
+    "ats",
+    "autonomous-driving",
+    "claude",
+    "cursor",
+    "embodied-ai",
+    "greenhouse",
+    "job-search",
+    "jobs"
+  ],
+  "use_cases": [
+    "check which applied postings have closed",
+    "find perception roles in Shanghai with original posting dates",
+    "watch an employer's careers page for new postings",
+    "check a posting before applying",
+    "verify employer background and trust signals"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://pypi.org/project/openhire/",
+  "repo": {
+    "url": "https://github.com/gzchenhao/openhire",
+    "full_name": "gzchenhao/openhire",
+    "created_at": "2026-07-14T01:04:57Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "python >= 3.11"
+    ],
+    "system_packages": [
+      "uv"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install openhire",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "ohp bootstrap"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-openhire-20261101-002217-22bd",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install openhire --force",
+          "purpose": "install openhire via uv tool install"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ohp version",
+        "expected_signal": "openhire 0.8.47"
+      },
+      "first_task": "ohp version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install openhire",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "ohp bootstrap"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.8.42",
+    "published_at": "2026-10-31T01:48:00Z",
+    "url": "https://github.com/gzchenhao/openhire/releases/tag/v0.8.42"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:23:21.378746+08:00",
+    "runs": [
+      {
+        "id": "verify-openhire-20261101-002217-22bd",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:23:21.378746+08:00",
+        "tool_version": "0.8.47",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install openhire --force",
+            "purpose": "install openhire via uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ohp version",
+            "expected_signal": "openhire 0.8.47",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "openhire 0.8.47",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- ohp serve\n",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call list_portals --args '{}' -- ohp serve\n",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list_portals content=text text_chars=27202",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "The server's tools/list shows each tool's description to the calling agent as is",
+            "actually_needed": "Tool salary_benchmark's description has instruction-like text aimed at the agent (text telling the model to keep something from the user). pickfit neither kept nor followed it; read what the server sends before enabling it.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "The server's tools/list shows each tool's description to the calling agent as is",
+            "actually_needed": "Tool search_jobs's description has instruction-like text aimed at the agent (text telling the model to keep something from the user). pickfit neither kept nor followed it; read what the server sends before enabling it.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake succeeding, list_portals returning 32 portals, and version output matching 0.8.47.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-openhire-20261101-002217-22bd/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-openhire-20261101-002217-22bd/check-1-cmd4.judged.png",
+            "runs/verify/verify-openhire-20261101-002217-22bd/check-2-cmd5.judged.png",
+            "runs/verify/verify-openhire-20261101-002217-22bd/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.068711,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "ohp",
+            "serve"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "openhire",
+          "server_version": "0.8.47",
+          "tools": [
+            "search_jobs",
+            "get_company_info",
+            "watch_intent",
+            "refresh_index",
+            "check_employer",
+            "list_portals",
+            "read_board",
+            "add_employer",
+            "remove_employer",
+            "check_watches",
+            "salary_benchmark",
+            "check_applications",
+            "authorize_application"
+          ],
+          "tool_count": 13,
+          "called_tool": "list_portals",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "sse",
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "uvx openhire@latest serve",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{ \"mcpServers\": { \"openhire\": { \"command\": \"uvx\", \"args\": [\"openhire@latest\", \"serve\"] } } }"
+      },
+      {
+        "client": "vscode",
+        "snippet": "{ \"servers\": { \"openhire\": { \"type\": \"stdio\", \"command\": \"uvx\", \"args\": [\"openhire@latest\", \"serve\"] } } }"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "TIANYANCHA_API_KEY",
+        "required": null,
+        "purpose": "company register check key"
+      },
+      {
+        "name": "OPENHIRE_SNAPSHOT_URL",
+        "required": null,
+        "purpose": "index snapshot download URL"
+      },
+      {
+        "name": "OPENHIRE_HOSTED",
+        "required": null,
+        "purpose": "self-host hosted mode flag"
+      },
+      {
+        "name": "UV_DEFAULT_INDEX",
+        "required": null,
+        "purpose": "PyPI mirror index"
+      }
+    ],
+    "tools": [
+      "search_jobs",
+      "watch_intent",
+      "check_watches",
+      "salary_benchmark",
+      "check_applications",
+      "authorize_application",
+      "get_company_info",
+      "check_employer",
+      "read_board"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 94.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 47.1,
+      "signals": {
+        "stars": 14,
+        "monthly_downloads": 1890,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 9,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 109,
+      "packages": [
+        "pypi:openhire"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 49.78
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "98d9aeda414ff2001dbabe2fad62080927b53b5d21e9baa502ab77aaf7944242",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Let your AI assistant find jobs straight from employers' own ATS: is the job still open, is the company real, did the posting you applied to close."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "New graduates (应届生) start here."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "The one prerequisite is [uv](https://docs.astral.sh/uv/) (it provides `uvx`)."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -LsSf https://astral.sh/uv/install.sh | sh     # macOS / Linux\nirm https://astral.sh/uv/install.ps1 | iex          # Windows PowerShell"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "ohp search --required-skills rust,k8s --remote --role-family engineering"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "{ \"mcpServers\": { \"openhire\": { \"command\": \"uvx\", \"args\": [\"openhire@latest\", \"serve\"] } } }"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Stuck? Run `ohp doctor`."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "MCP server, MIT."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/gzchenhao/openhire",
+      "fetched_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/gzchenhao/openhire/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:40:15+08:00"
+    },
+    {
+      "id": "release:v0.8.42",
+      "kind": "release",
+      "url": "https://github.com/gzchenhao/openhire/releases/tag/v0.8.42",
+      "fetched_at": "2026-10-31T13:40:15+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "MCP server, MIT.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "pipx install openhire      # keeps it isolated and puts `ohp` on your PATH",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "An MCP server that turns **any** MCP-speaking assistant",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Let your AI assistant find jobs straight from employers' own systems, with your résumé never leaving your computer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# OpenHire · 开聘",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "curl -LsSf https://astral.sh/uv/install.sh | sh     # macOS / Linux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "![python ≥ 3.11](https://img.shields.io/badge/python-%E2%89%A5%203.11-C9D1D9)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "The one prerequisite is [uv](https://docs.astral.sh/uv/) (it provides `uvx`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:03+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.8.42",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:40:15+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "which of the 12 postings I applied to have closed?",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Find perception roles in Shanghai with their original posting dates",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Watch OKX's careers page and tell me when something new appears",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Before I apply, check this posting: <company> <title>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "查一下这家公司靠不靠谱：<公司名>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "pipx install openhire",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "pipx install openhire",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "pipx install openhire",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "No account. No signup. No résumé upload. Ever.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Matching runs on your machine — only an anonymous",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "`ohp serve --transport streamable-http --port 8000`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "{ \"mcpServers\": { \"openhire\": { \"command\": \"uvx\", \"args\": [\"openhire@latest\", \"serve\"] } } }",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{ \"mcpServers\": { \"openhire\": { \"command\": \"uvx\", \"args\": [\"openhire@latest\", \"serve\"] } } }",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{ \"servers\": { \"openhire\": { \"type\": \"stdio\", \"command\": \"uvx\", \"args\": [\"openhire@latest\", \"serve\"] } } }",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "TIANYANCHA_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "OPENHIRE_SNAPSHOT_URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "OPENHIRE_HOSTED",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "UV_DEFAULT_INDEX",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`search_jobs`, and every row comes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "| `watch_intent` | Register a standing intent once",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "| `check_watches` | Pull the matches that are new since your last check",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "| `salary_benchmark` | What employers themselves publish as pay",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "| `check_applications` | An answer to \"I applied and heard nothing\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "| `authorize_application` | One explicit confirmation per job.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "| `get_company_info` | Aggregate, anonymous trust signals for one employer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "| `check_employer` | Facts about one employer with sources and times",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "| `read_board` | Read any employer's public board live from its careers URL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:03:20+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:11+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

@@ -1,0 +1,658 @@
+{
+  "schema_version": "software.v1",
+  "slug": "zerikai-memory",
+  "repo_id": "gh:1227691745",
+  "name": "zerikai_memory",
+  "summary": "Local MCP server giving IDEs persistent workspace-isolated codebase memory.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "ai",
+    "ai-tools",
+    "chromadb",
+    "deepseek-v4-pro",
+    "jev",
+    "lexical",
+    "mcp",
+    "mcp-memory",
+    "mcp-server",
+    "mcp-tools"
+  ],
+  "use_cases": [
+    "scan workspace to index codebase memory",
+    "retrieve relevant context via vector search",
+    "retrieve project brief",
+    "save architectural decision to memory"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/KikeVen/zerikai_memory",
+    "full_name": "KikeVen/zerikai_memory",
+    "created_at": "2026-05-03T03:08:29Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "python 3.11+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": [
+      "DEEPSEEK_API_KEY",
+      "TYPESAFE_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v1.0.0",
+    "published_at": "2026-09-25T03:24:24Z",
+    "url": "https://github.com/KikeVen/zerikai_memory/releases/tag/v1.0.0"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "needs_account",
+    "checked_at": "2026-11-01T00:36:45.227236+08:00",
+    "runs": [
+      {
+        "id": "verify-zerikai-memory-20261101-003545-28fd",
+        "level": "unverified",
+        "unverified_reason": "needs_account",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:36:45.227236+08:00",
+        "tool_version": "v1.0.0-6-g5a5d039",
+        "install_method": "source",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "git clone https://github.com/KikeVen/zerikai_memory.git repo && ls -la repo/ | head -n 50\ncat repo/requirements.txt 2>&1 | head -n 100\ncat repo/main.py 2>&1 | head -n 80",
+            "purpose": "clone repository from GitHub"
+          },
+          {
+            "command": "pip install -r repo/requirements.txt 2>&1 | tail -n 30",
+            "purpose": "install dependencies via pip install -r requirements.txt"
+          }
+        ],
+        "smoke_tests": [],
+        "pitfalls": [
+          {
+            "readme_said": "python -c \"from main import scan_workspace, query_memory; print('OK')\" should print OK",
+            "actually_needed": "main.py unconditionally creates OpenAI client with DEEPSEEK_API_KEY; without it raises openai.OpenAIError and import fails",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "MCP server starts via python main.py",
+            "actually_needed": "DEEPSEEK_API_KEY env var is required at import time; probe exits with 'api_key client option must be set' without it (handshake ok only with DEEPSEEK_API_KEY=dummy set)",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-zerikai-memory-20261101-003545-28fd/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.063506
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": null,
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"universal-brain\": {\n      \"command\": \"C:\\\\path\\\\to\\\\zerikai_memory\\\\venv\\\\Scripts\\\\python.exe\",\n      \"args\": [\"C:\\\\path\\\\to\\\\zerikai_memory\\\\main.py\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "DEEPSEEK_API_KEY",
+        "required": true,
+        "purpose": "DeepSeek API authorization"
+      },
+      {
+        "name": "TYPESAFE_API_KEY",
+        "required": false,
+        "purpose": "Jev judgment layer API key"
+      },
+      {
+        "name": "ENABLE_JEV",
+        "required": false,
+        "purpose": "enable Jev judgment layer"
+      },
+      {
+        "name": "MEMORY_MODE",
+        "required": false,
+        "purpose": "select cloud hybrid or local engine"
+      }
+    ],
+    "tools": [
+      "scan_workspace",
+      "scan_status",
+      "save_to_memory",
+      "list_memory",
+      "query_memory",
+      "get_brief",
+      "update_brief",
+      "init_workspace",
+      "list_workspaces",
+      "get_token_usage",
+      "get_cost_report",
+      "get_cache_stats"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:45:12+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.6,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 50.1,
+      "signals": {
+        "stars": 36,
+        "monthly_downloads": null,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 1,
+        "registries_count": 0
+      },
+      "age_days": 181,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 34.43
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:45:12.068268+08:00",
+      "sources_sha": "ad328ce11e84736e72d17162813d5f48995f699e63b7a3f9375a8e9367221e09",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "zerikai_memory provides persistent, workspace-isolated memory for every IDE that is local-first, cost-aware, and instant."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Create and activate a virtual environment (Python 3.11+)"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "source venv/bin/activate  # Windows: .\\venv\\Scripts\\activate"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "python -c \"from main import scan_workspace, query_memory; print('OK')\"\n```\n\nYou should see the startup banner followed by `OK`."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "DEEPSEEK_API_KEY=your_deepseek_key_here"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "If you accidentally execute a workspace crawl before setting up your `.memignore` configurations"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "MIT License © [Zerikai](http://enriquebruzual.github.io)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/KikeVen/zerikai_memory",
+      "fetched_at": "2026-10-31T13:39:20+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/KikeVen/zerikai_memory/blob/main/README.md",
+      "fetched_at": "2026-10-31T13:47:18+08:00"
+    },
+    {
+      "id": "release:v1.0.0",
+      "kind": "release",
+      "url": "https://github.com/KikeVen/zerikai_memory/releases/tag/v1.0.0",
+      "fetched_at": "2026-10-31T13:47:18+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "runs as a **local STDIO MCP server**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Press `Ctrl+Shift+P` → **MCP: Add Local Server**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "runs as a **local STDIO MCP server**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A standalone local-only Python MCP server that gives any IDE persistent, workspace-isolated memory.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "## zerikai_memory 🧠",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Platform-Windows%20%7C%20macOS%20%7C%20Linux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.11+",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "100% air-gapped hardware-local tracking.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "DEEPSEEK_API_KEY=your_deepseek_key_here",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/1",
+      "source_id": "readme",
+      "quote": "set `TYPESAFE_API_KEY` and `ENABLE_JEV=true` in `.env`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:20+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:20+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:20+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:39:20+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.0.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T13:47:18+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "ready for production use.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Scan the workspace for the first time:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Retrieves relevant context via vector search and synthesises an answer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Retrieves the current project brief from `.brain/contexts/`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Manually saves an architectural decision, fact, or technical note",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "MIT License © [Zerikai]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Use Ollama for file scanning, DeepSeek for briefs and escalated queries",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "runs as a **local STDIO MCP server**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"universal-brain\": {\n      \"command\": \"C:\\\\path\\\\to\\\\zerikai_memory\\\\venv\\\\Scripts\\\\python.exe\",\n      \"args\": [\"C:\\\\path\\\\to\\\\zerikai_memory\\\\main.py\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "DEEPSEEK_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "TYPESAFE_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "ENABLE_JEV",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "MEMORY_MODE",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`scan_workspace`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`scan_status`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`save_to_memory`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`list_memory`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`query_memory`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`get_brief`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`update_brief`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`init_workspace`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`list_workspaces`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`get_token_usage`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`get_cost_report`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`get_cache_stats`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:06:05+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T13:39:20+08:00",
+  "updated_at": "2026-11-01T00:45:12+08:00"
+}

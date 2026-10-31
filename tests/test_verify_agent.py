@@ -114,7 +114,7 @@ def test_chain_mode_reads_the_error_fixes_it_and_finishes(task, ledger, tmp_path
     # Budget accounting: every turn is in the shared ledger under the run's scope.
     assert report.cost_usd > 0
     assert [t.reasoning_summary for t in report.turns][-1] == "validate exit 1 is right."
-    saved = json.loads(Path(report.report_path).read_text())
+    saved = json.loads(Path(report.report_path).read_text(encoding="utf-8"))
     assert saved["verdict"]["level"] == "function" and len(saved["turns"]) == 4
 
     # The terminal shows model, commands, exit codes and spend as they happen.
@@ -160,7 +160,8 @@ def test_command_budget_forces_a_finish_only_turn(task, ledger, tmp_path):
     assert report.stop_reason == "finished" and report.verdict["claimed_level"] == "failed"
     assert report.verdict["level"] == "unverified"
     last = server.requests[-1]
-    assert last["tools"] == [FINISH_TOOL]
+    # The same tools as every turn, so the prompt cache still covers the whole history.
+    assert last["tools"] == server.requests[0]["tools"]
     assert "Stop working: the command budget (2) is used up" in last["input"][-1]["content"]
     assert report.turns[-1].finish_only
 
@@ -178,11 +179,26 @@ def test_same_error_three_times_stops_the_work(task, ledger, tmp_path):
     assert "same error happened 3 times" in server.requests[-1]["input"][-1]["content"]
 
 
-def test_last_turn_is_finish_only_and_silence_ends_the_run(task, ledger, tmp_path):
-    server = FakeServer(response("r1", run_cmd("echo 1")), response("r2", text="I am done."))
-    report = agent(task, FakeBox(), server, ledger, tmp_path, limits=AgentLimits(max_turns=2)).run()
+def test_past_the_limit_only_finish_runs_and_silence_ends_the_run(task, ledger, tmp_path):
+    server = FakeServer(response("r1", run_cmd("echo 1")), response("r2", run_cmd("echo 2")),
+                        response("r3", text="I am done."))
+    box = FakeBox()
+    report = agent(task, box, server, ledger, tmp_path, limits=AgentLimits(max_turns=3)).run()
     assert report.stop_reason == "no_finish" and report.verdict is None
-    assert server.requests[1]["tools"] == [FINISH_TOOL]
+    assert "the 3-turn limit is near" in server.requests[1]["input"][-1]["content"]
+    assert [c for c, _ in box.ran] == ["echo 1"]  # the call past the limit was refused, not run
+    assert server.requests[2]["input"][-1]["output"].startswith("error: nothing else runs past the limit")
+    assert server.requests[2]["tools"] == server.requests[0]["tools"]
+
+
+def test_a_finish_in_the_spare_turn_still_counts(task, ledger, tmp_path):
+    server = FakeServer(response("r1", run_cmd("echo 1")),
+                        response("r2", run_cmd("echo 2"), finish(level="unverified", unverified_reason="other")),
+                        )
+    report = agent(task, FakeBox(), server, ledger, tmp_path, limits=AgentLimits(max_commands=1)).run()
+    # Past the command budget a finish beside a refused call counts as alone.
+    assert report.stop_reason == "finished" and report.verdict["level"] == "unverified"
+    assert len(server.requests) == 2
 
 
 def test_text_reply_gets_a_nudge(task, ledger, tmp_path):
@@ -290,7 +306,7 @@ def test_run_background_waits_for_the_port(task, ledger, tmp_path):
 
 
 def local_ai(task: VerifyTask) -> VerifyTask:
-    data = json.loads((FIXTURES / "evnx.json").read_text())["extraction"]
+    data = json.loads((FIXTURES / "evnx.json").read_text(encoding="utf-8"))["extraction"]
     data["category"] = {"value": "local_ai", "quote": "runs GGUF models locally"}
     return VerifyTask(task.slug, task.repo_url, task.readme, ExtractionResult.model_validate(data))
 
@@ -350,7 +366,7 @@ def test_default_mode_is_replay(task, ledger, tmp_path):
 
 
 def test_sample_files_must_stay_in_the_work_dir(tmp_path):
-    data = json.loads((FIXTURES / "evnx.json").read_text())
+    data = json.loads((FIXTURES / "evnx.json").read_text(encoding="utf-8"))
     for bad in ("/etc/passwd", "../escape", "README.md"):
         path = tmp_path / "f.json"
         path.write_text(json.dumps({**data, "files": {bad: "x"}}))
@@ -383,7 +399,7 @@ def test_finish_accepts_the_string_null_for_nullable_fields():
 
 def test_fixtures_load_and_parse():
     for path in FIXTURES.glob("*.json"):
-        data = json.loads(path.read_text())
+        data = json.loads(path.read_text(encoding="utf-8"))
         ExtractionResult.model_validate(data["extraction"])
         assert data["readme_url"].startswith("https://raw.githubusercontent.com/")
         assert len(data["readme_url"].split("/")[5]) == 40  # pinned to a commit
