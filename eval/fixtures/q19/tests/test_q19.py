@@ -142,7 +142,7 @@ def main():
         by = {x["run"]: x for x in rep["runs"]}
         check(by["r1"]["pass"] and by["r3"]["pass"] and not by["r2"]["pass"], "right string passes, wrong string fails")
         check(rep["L2-2"] == "pass" and rep["server_log_shows_requests"], "2 of 3 -> L2-2 pass; server log shows requests")
-        check(rep["L2-3"] == "incomplete" and rep["egress"] == "not checked", "L2-3 stays incomplete without an egress report")
+        check(rep["L2-3"] == "undetermined" and rep["egress"] == "not checked", "L2-3 stays undetermined without an egress report")
         check(all(by[k]["server_requests"] == 2 for k in by), "proxy log shows both agent requests per run")
         r = subprocess.run([sys.executable, os.path.join(ROOT, "check_hello.py"), w2], capture_output=True, text=True)
         check(r.returncode == 1, "check_hello rejects a different line")

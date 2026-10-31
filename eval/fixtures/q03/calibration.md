@@ -54,19 +54,19 @@ sha256sum /work/big.csv /work/big.csv.expected_counts.csv
 
 ```sh
 cd /work
-sh /opt/eval/fixtures/q03/big/measure.sh /work/cal.tsv baseline_cat 'cat /work/big.csv > /dev/null'
-cat /work/cal.tsv
+sh /opt/eval/fixtures/_shared/mem_peak.sh run /work/cal-baseline_cat.json 'cat /work/big.csv > /dev/null'
+cat /work/cal-baseline_cat.json
 ```
 
-記下 `peak_before`、`peak_after`、`max_anon`。若 `peak_after` 比只算工具本身的記憶體大很多（`cat` 幾乎不用記憶體，`peak_after` 卻接近或超過 1,000,000,000），表示 memory.peak 含 page cache，題目原文的量法對任何工具都會不過 → 用 3b。
+記下 `peak_before`、`peak_after`、`max_anon`（共用的 `mem_peak.sh`，`_shared/README.md` 第 3 節）。若 `peak_after` 比只算工具本身的記憶體大很多（`cat` 幾乎不用記憶體，`peak_after` 卻接近或超過 1,000,000,000），表示 memory.peak 含 page cache，題目原文的量法對任何工具都會不過 → 用 3b。
 
 **3b. 硬上限**（登記的替代規則）。新沙盒，cpu=4、記憶體硬上限 ≤ 1,000,000,000 位元組（Modal 以 MiB 設定時用 953 MiB）、不用 swap：
 
 ```sh
 sh /opt/eval/fixtures/q03/big/gen_big.sh /work/big.csv                      # 必須能在上限內寫完
-sh /opt/eval/fixtures/q03/big/measure.sh /work/cal.tsv limit_cat 'cat /work/big.csv > /dev/null'   # 預期 exit 0、oom_kills 0
-sh /opt/eval/fixtures/q03/big/measure.sh /work/cal.tsv limit_hog "awk 'BEGIN{s=\"x\"; while (length(s) < 1500000000) s = s s; print length(s)}'"   # 預期被 OOM kill：exit 137、oom_kills ≥ 1
-cat /work/cal.tsv /sys/fs/cgroup/memory.max
+sh /opt/eval/fixtures/_shared/mem_peak.sh run /work/cal-limit_cat.json 'cat /work/big.csv > /dev/null'   # 預期 exit 0、oom_kills 0
+sh /opt/eval/fixtures/_shared/mem_peak.sh run /work/cal-limit_hog.json "awk 'BEGIN{s=\"x\"; while (length(s) < 1500000000) s = s s; print length(s)}'"   # 預期被 OOM kill：exit 137、oom_kills ≥ 1
+cat /work/cal-limit_*.json /sys/fs/cgroup/memory.max
 ```
 
 兩個對照都如預期，才能用 3b。
@@ -83,7 +83,7 @@ cat /work/cal.tsv /sys/fs/cgroup/memory.max
 在步驟 3 定案的沙盒設定下，跑一個不判定的參考指令，確認 5 分鐘的限制在這個環境合理：
 
 ```sh
-sh /opt/eval/fixtures/q03/big/measure.sh /work/cal.tsv ref_wc 'wc -l /work/big.csv'
+sh /opt/eval/fixtures/_shared/mem_peak.sh run /work/cal-ref_wc.json 'wc -l /work/big.csv'
 ```
 
 | `wc -l` 耗時 | 磁碟類型 | 日期 |

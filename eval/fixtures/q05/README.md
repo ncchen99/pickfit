@@ -15,7 +15,7 @@
 | `verify_fixtures.py` | 確認兩個檔的內容與 `content.json` 一致 | 手寫 |
 | `check_md.py` | **凍結的比對腳本**：檢查一份轉出來的 `.md` | 手寫 |
 | `test_check_md.py` | `check_md.py` 的自我測試（20 個合成案例） | 手寫 |
-| `egress_run.py` | 斷網、記錄連線、計時、逾時的執行包裝（q05、q06、q07 三份相同） | 手寫 |
+| `../_shared/egress.py` | 沒有對外連線的檢查、斷網、計時、逾時的執行包裝（各題共用，[`_shared/README.md`](../_shared/README.md) 第 1 節） | 手寫 |
 | `needs.json` | 需要外部素材、等念誠決定的項目 | — |
 | `calibration.md` | 第一次開跑前要跑的校正步驟與紀錄表（待填） | — |
 
@@ -57,20 +57,14 @@
 - 目錄約定：
   - `/work/in/`：只放 `fixture.pdf`、`fixture.docx`；
   - `/work/out/`：轉出的 `.md` 與各種紀錄；
-  - `/opt/eval-q05/`：本資料夾的腳本。
+  - `/opt/eval-q05/`：本資料夾的腳本；`$SHARED`：`eval/fixtures/_shared`（各題共用的工具）。
 - 安裝 20 分鐘逾時，每個檢查 10 分鐘逾時（第 5 節）。
 
 ## 4. 名詞
 
-- **照步驟原樣（verbatim）**：答案裡的指令逐字複製執行。只允許第 5 節列的調整：填入版本號與佔位字（這題就是輸入、輸出檔的路徑）、接受安裝程式的預設值；Ubuntu 擋下裸 `pip install` 時改在 venv 裡跑，記 `needed_venv`，但「照步驟原樣成功」那一項不過。不可以修正錯的指令或旗標、補上缺的步驟、換掉答案指定的模型。答案的指令只把 Markdown 印到標準輸出時，用 `egress_run.py --stdout` 存成檔案，這不算改指令。
-- **斷網（egress blocked）**：`egress_run.py --block-network` 讓指令在一個新的網路命名空間裡執行，裡面只有已啟用的 loopback（`lo`），連不到機器外面，DNS 也查不到。腳本會確認命名空間裡只有 `lo`，否則中止（exit 125）。
-- **egress 檢查**：同一次執行用 `strace -f` 記下指令與所有子程序的 `connect`、`sendto`、`sendmsg`、`sendmmsg`。下列任一種都算一次對外連線嘗試，**連線失敗也算**：
-  - 目的地不是 loopback（`127.0.0.0/8`、`::1`、對應到 127.x 的 IPv6、`0.0.0.0`）；
-  - 任何 DNS 類埠（53、853、5353、5355），即使在 loopback 上（代表查了網域名稱）；
-  - 送往系統解析服務的 UNIX socket（`/run/systemd/resolve…`、nscd）；
-  - AF_PACKET 原始封包。
-
-  嘗試次數為 0 才算通過（報告裡 `egress.verdict` 是 `pass`）。紀錄檔（`.strace`）與報告一起保存當證據。
+- **照步驟原樣（verbatim）**：答案裡的指令逐字複製執行。只允許第 5 節列的調整：填入版本號與佔位字（這題就是輸入、輸出檔的路徑）、接受安裝程式的預設值；Ubuntu 擋下裸 `pip install` 時改在 venv 裡跑，記 `needed_venv`，但「照步驟原樣成功」那一項不過。不可以修正錯的指令或旗標、補上缺的步驟、換掉答案指定的模型。答案的指令只把 Markdown 印到標準輸出時，用 `egress.py run --stdout` 存成檔案，這不算改指令。
+- **斷網（egress blocked）**：`egress.py run --block-network` 讓指令在一個新的網路命名空間裡執行，裡面只有已啟用的 loopback（`lo`），連不到機器外面，DNS 也查不到。腳本會確認命名空間裡只有 `lo`，否則中止（exit 125）。
+- **egress 檢查**：同一次執行由 `egress.py run` 用 `strace -f` 記下指令與所有子程序（含留在背景的服務）的連線。什麼算一次對外連線嘗試（**連線失敗也算**）、怎麼判定，見 [`_shared/README.md`](../_shared/README.md) 第 1 節。嘗試次數為 0 才算通過（`egress.py report` 的結果是 `pass`）。紀錄（`/work/out/egress/` 整個資料夾，含 `.strace`）與報告一起保存當證據。
 
 ## 5. 各 [L2] 項目
 
@@ -81,7 +75,7 @@
 > [L2] The install steps succeed verbatim in the dev image (x86_64, CPU only, 4 vCPU and 16 GB); any model downloads happen during setup
 
 - **用到**：只有乾淨的開發 image，不用測試檔。
-- **做法**：網路開著，照答案的安裝與設定步驟逐條執行，每條記下指令、exit code、輸出（`egress_run.py --report /work/out/install-NN.json -- <指令>`，不加 `--block-network`；這一步的 egress 結果不評分，只留紀錄）。答案自己寫的「先下載模型」「先執行一次讓它下載模型」等步驟屬於設定，照做；答案沒寫的，評分者**不可以**替它先跑一次暖機。
+- **做法**：網路開著，照答案的安裝與設定步驟逐條執行，每條記下指令、exit code、輸出（`python3 $SHARED/egress.py run --out /work/out/install --label NN --sh '<指令>'`，不加 `--block-network`；這一步的 egress 結果不評分，只留紀錄）。答案自己寫的「先下載模型」「先執行一次讓它下載模型」等步驟屬於設定，照做；答案沒寫的，評分者**不可以**替它先跑一次暖機。
 - **判定**：
   - 每條步驟都成功（exit 0，或答案說明的成功狀態）才過；
   - 「模型下載在設定時完成」由 L2-2 的斷網轉換檢驗：斷網轉換時因為要下載模型或其他資料而失敗，或 egress 紀錄顯示它想連外下載，本項也記不過。
@@ -90,21 +84,24 @@
 
 > [L2] Frozen fixtures: a text-based PDF (CJK font embedded) and a DOCX with the same content: Traditional Chinese and English text, one H1, two H2s, a 4-column table with a header row and 2 data rows (12 cells), and a bullet list. With egress blocked, each converts to a .md file in which the headings are ATX headings at the right levels, the table is a Markdown pipe table whose 12 cell texts match the fixture, and the list items are Markdown list items
 
-- **用到**：`fixture.pdf`、`fixture.docx`、`content.json`、`check_md.py`、`egress_run.py`。
+- **用到**：`fixture.pdf`、`fixture.docx`、`content.json`、`check_md.py`、`$SHARED/egress.py`。
 - **做法**：兩個檔各轉一次，輸入、輸出換成下面的路徑，其餘照答案：
 
   ```sh
   cd /work
-  python3 /opt/eval-q05/egress_run.py --block-network --timeout 600 \
-      --report /work/out/pdf.run.json -- <答案的轉換指令：輸入 /work/in/fixture.pdf，輸出 /work/out/fixture_pdf.md>
+  python3 $SHARED/egress.py run --out /work/out/egress --label pdf --block-network --timeout 600 \
+      --sh '<答案的轉換指令：輸入 /work/in/fixture.pdf，輸出 /work/out/fixture_pdf.md>'
   python3 /opt/eval-q05/check_md.py /work/out/fixture_pdf.md --report /work/out/pdf.check.json
 
-  python3 /opt/eval-q05/egress_run.py --block-network --timeout 600 \
-      --report /work/out/docx.run.json -- <答案的轉換指令：輸入 /work/in/fixture.docx，輸出 /work/out/fixture_docx.md>
+  python3 $SHARED/egress.py run --out /work/out/egress --label docx --block-network --timeout 600 \
+      --sh '<答案的轉換指令：輸入 /work/in/fixture.docx，輸出 /work/out/fixture_docx.md>'
+
+  python3 $SHARED/egress.py stop --out /work/out/egress --kill
+  python3 $SHARED/egress.py report --out /work/out/egress --labels pdf docx --json /work/out/egress.json
   python3 /opt/eval-q05/check_md.py /work/out/fixture_docx.md --report /work/out/docx.check.json
   ```
 
-  - 答案的轉換要先啟動本機服務、再送檔案時，整段用 `sh -c '…'` 包在同一次 `egress_run.py` 裡，讓服務和轉換在同一個斷網環境。
+  - 答案的轉換要先啟動本機服務、再送檔案時，整段寫進同一次 `egress.py run --sh '…'` 裡，讓服務和轉換在同一個斷網環境。
   - 工具輸出一個資料夾（含圖片等）時，取其中對應輸入檔的那一個 `.md`；有多個 `.md` 時取主檔，記下選了哪個。
   - PDF 和 DOCX 必須用**同一個工具**轉（題目要求一個工具處理兩種格式）；答案對兩種格式給不同指令時照答案。
 - **判定**（`check_md.py` 報告裡的 `structure.pass`，兩個檔都要 `true` 才過）：
@@ -113,7 +110,7 @@
   - 有一個 Markdown 管線表格（表頭列、分隔列、資料列；HTML `<table>` 不算）剛好 4 欄，表頭列等於測試文件的表頭，資料列（全部空白的列不計）剛好是那 2 列、順序相同；
   - 3 個清單項目都是 Markdown 清單項目（行首 `-`、`*`、`+` 或 `1.`、`1)`），可以折行。
   - 文字比對方式：Unicode NFKC、去掉所有空白、去掉 Markdown 的強調與程式碼記號（`*`、`_`、`` ` ``）、反斜線跳脫與 `<br>`；清單項目開頭殘留的項目符號字元（例如 `- • 文字`）忽略。**字本身要完全相同**，簡體字不算對。
-- 兩個檔的 `.run.json` 要記到報告：exit code、時間、egress 結果也給 L2-4、L2-5 用。轉換失敗（非 0、沒有產生 `.md`）時，該檔的 L2-2、L2-3 都不過。
+- 兩個檔的 `/work/out/egress/pdf.json`、`docx.json` 要記到報告：exit code、時間、egress 結果也給 L2-4、L2-5 用。轉換失敗（非 0、沒有產生 `.md`）時，該檔的 L2-2、L2-3 都不過。
 
 ### L2-3
 
@@ -130,15 +127,15 @@
 
 > [L2] Each conversion finishes within 10 minutes
 
-- **用到**：L2-2 的 `pdf.run.json`、`docx.run.json`。
-- **判定**：兩次轉換都 exit 0、產生了 `.md`，而且 `duration_s ≤ 600`、`timed_out` 為 `false`，才過。`egress_run.py --timeout 600` 到時會砍掉整個程序群組（報告記 exit 124）。
+- **用到**：L2-2 的 `/work/out/egress/pdf.json`、`docx.json`。
+- **判定**：兩次轉換都 exit 0、產生了 `.md`，而且 `duration_s ≤ 600`、`timed_out` 為 `false`，才過。`egress.py run --timeout 600` 到時會砍掉整個程序群組（記 exit 124）。
 
 ### L2-5
 
 > [L2] Egress check passes during the conversions
 
-- **用到**：L2-2 的兩份 `.run.json` 與 `.strace` 紀錄。
-- **判定**：兩次轉換的 `egress.verdict` 都是 `pass`（對外連線嘗試 0 次，定義見第 4 節），而且 `netns.ok` 為 `true`，才過。有嘗試時，把報告裡列出的紀錄行附在評分紀錄。
+- **用到**：L2-2 的 `/work/out/egress.json`（`egress.py report`）與 `pdf.json`、`docx.json`。
+- **判定**：`egress.json` 的 `result` 是 `pass`（兩次轉換的對外連線嘗試都是 0 次，定義見第 4 節），而且 `pdf.json`、`docx.json` 的 `netns.ok` 都是 `true`，才過。有嘗試時，把報告裡列出的紀錄行附在評分紀錄。
 
 ## 6. 自我測試（不是校正）
 
@@ -146,7 +143,7 @@
 
 ```sh
 python3 test_check_md.py      # check_md.py 對 20 個合成案例的判定都符合預期
-python3 egress_run.py --selftest
+python3 ../_shared/test_shared.py   # 共用工具的測試；strace 的實測在 _shared/calibration.md
 python3 verify_fixtures.py    # fixture.pdf 產生之前，pdf 會顯示 MISSING
 ```
 

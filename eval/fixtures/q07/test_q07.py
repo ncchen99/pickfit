@@ -55,9 +55,9 @@ def run_mode(tmp, mode, port, double):
     srv = subprocess.Popen([PY, os.path.join(HERE, "server.py"), "--mode", mode, "--port", str(port), "--log", log],
                            stderr=subprocess.DEVNULL)
     time.sleep(0.8)
-    rep = os.path.join(tmp, "run_%s.json" % mode)
-    subprocess.run([PY, os.path.join(HERE, "egress_run.py"), "--no-strace", "--timeout", "60", "--report", rep,
-                    "--", PY, double, os.path.join(HERE, "requests.json"), str(port)],
+    rep = os.path.join(tmp, "eg")
+    subprocess.run([PY, os.path.join(HERE, "..", "_shared", "egress.py"), "run", "--out", rep, "--label", mode,
+                    "--no-trace", "--timeout", "60", "--", PY, double, os.path.join(HERE, "requests.json"), str(port)],
                    stderr=subprocess.DEVNULL, check=False)
     srv.terminate()
     srv.wait()
@@ -70,8 +70,7 @@ def main():
     open(double, "w").write(DOUBLE)
     port = free_port()
     reps = {m: run_mode(tmp, m, port, double) for m in ("ok", "status500", "okfalse")}
-    r = subprocess.run([PY, os.path.join(HERE, "check_q07.py"), "--ok", reps["ok"][0], "--ok-log", reps["ok"][1],
-                        "--s500", reps["status500"][0], "--okfalse", reps["okfalse"][0]],
+    r = subprocess.run([PY, os.path.join(HERE, "check_q07.py"), "--runs", reps["ok"][0], "--ok-log", reps["ok"][1]],
                        capture_output=True, text=True)
     v = json.loads(r.stdout)
     results = [("server modes: ok run passes", v["ok_run"]["pass"] is True),

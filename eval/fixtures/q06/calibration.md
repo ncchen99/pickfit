@@ -18,7 +18,7 @@
 mkdir -p /work/cal && cd /work/cal
 python3 /opt/eval-q06/mock_api.py --port 18080 --log mock_log.jsonl --state mock_state.json &
 C="python3 /opt/eval-q06/calib_mcp_server.py --spec /opt/eval-q06/openapi.json --base-url http://127.0.0.1:18080"
-E="python3 /opt/eval-q06/egress_run.py --timeout 600"
+E="python3 $SHARED/egress.py run --out /work/cal/eg --timeout 600"
 R="python3 /opt/eval-q06/mcp_ref_client.py"
 K="python3 /opt/eval-q06/check_q06.py --mock-log mock_log.jsonl --mock-state mock_state.json"
 ```
@@ -27,15 +27,15 @@ K="python3 /opt/eval-q06/check_q06.py --mock-log mock_log.jsonl --mock-state moc
 
 | 步驟 | 指令 | 預期 | 結果 |
 |---|---|---|---|
-| a | `python3 /opt/eval-q06/egress_run.py --selftest` | `16/16` | |
+| a | `python3 $SHARED/egress.py selftest`（`_shared/calibration.md` 步驟 1，各題共用，做過一次即可） | exit 0 | |
 | b | `python3 /opt/eval-q06/test_q06.py` | 7 個案例都 ok | |
-| c | `$E --report s1.json -- $R --report c1.json --stdio -- $C --stdio` 然後 `$K --client-report c1.json --egress s1.json` | 三項都 PASS | |
-| d | `$E --report s2.json -- $R --report c2.json --http http://127.0.0.1:18090/mcp --spawn "$C --http-port 18090"` 然後 `$K --client-report c2.json --egress s2.json` | 三項都 PASS | |
-| e | `$E --report s3.json -- $R --report c3.json --stdio -- $C --stdio --fault spec-servers` 然後 `$K --client-report c3.json --egress s3.json` | `tool_calls` 與 `egress` FAIL（egress 列出查詢 `items-api.example.internal` 的 DNS 嘗試） | |
-| f | `$E --report s4.json -- $R --report c4.json --stdio -- $C --stdio --fault extra-tool` 然後 `$K --client-report c4.json --egress s4.json` | `tools_list` FAIL | |
-| g | `$E --report s5.json -- $R --report c5.json --stdio -- $C --stdio --fault startup-egress` 然後 `$K --client-report c5.json --egress s5.json` | `tools_list`、`tool_calls` PASS，`egress` FAIL（server 啟動時連 1.1.1.1:80 被抓到） | |
+| c | `$E --label s1 -- $R --report c1.json --stdio -- $C --stdio` 然後 `$K --client-report c1.json --egress-dir /work/cal/eg --egress-label s1` | 三項都 PASS | |
+| d | `$E --label s2 -- $R --report c2.json --http http://127.0.0.1:18090/mcp --spawn "$C --http-port 18090"` 然後 `$K --client-report c2.json --egress-dir /work/cal/eg --egress-label s2` | 三項都 PASS | |
+| e | `$E --label s3 -- $R --report c3.json --stdio -- $C --stdio --fault spec-servers` 然後 `$K --client-report c3.json --egress-dir /work/cal/eg --egress-label s3` | `tool_calls` 與 `egress` FAIL（egress 列出查詢 `items-api.example.internal` 的 DNS 嘗試） | |
+| f | `$E --label s4 -- $R --report c4.json --stdio -- $C --stdio --fault extra-tool` 然後 `$K --client-report c4.json --egress-dir /work/cal/eg --egress-label s4` | `tools_list` FAIL | |
+| g | `$E --label s5 -- $R --report c5.json --stdio -- $C --stdio --fault startup-egress` 然後 `$K --client-report c5.json --egress-dir /work/cal/eg --egress-label s5` | `tools_list`、`tool_calls` PASS，`egress` FAIL（server 啟動時連 1.1.1.1:80 被抓到） | |
 
-若 strace 在 sandbox 裡不能用（c、e、g 的 `egress.checked` 不是 true）：寫下錯誤訊息，在 `eval/README.md` 第 9 節追加一小節說明替代做法，兩組都用同一做法。
+若 strace 在 sandbox 裡不能用（步驟 a 沒過）：照 `_shared/README.md` 第 1 節，egress 項目記「無法檢查」，請念誠決定替代做法，兩組都用同一做法。
 
 | 欄位 | 值 |
 |---|---|

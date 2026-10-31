@@ -2,7 +2,7 @@
 
 題目與檢查項目見 [../../questions.yaml](../../questions.yaml) 的 q09；評分規則見 [../../README.md](../../README.md) 第 5 節。本資料夾放 [L2] 五個項目要用的測試資料與檢查腳本。
 
-全部是自己寫的合成資料，不含任何工具名稱或預期答案；檢查腳本不假設任何工具的欄位名稱或檔案格式。腳本只用 POSIX sh、git 與 Python 3.8 以上的標準函式庫；`dev_shell.sh`、`setup_user.sh`、`egress_selftest.sh` 是給 Linux dev image 用的（要 `su`、`getent`、`useradd`）。
+全部是自己寫的合成資料，不含任何工具名稱或預期答案；檢查腳本不假設任何工具的欄位名稱或檔案格式。腳本只用 POSIX sh、git 與 Python 3.8 以上的標準函式庫；`dev_shell.sh`、`setup_user.sh` 是給 Linux dev image 用的（要 `su`、`getent`、`useradd`）。
 
 ## 檔案
 
@@ -11,11 +11,10 @@
 | `titles.json`、`titles.sh` | 三個任務標題（同一份內容，一個給 Python、一個給 shell）：T1 `Add CI workflow for unit tests`、T2 `修正登入畫面的錯誤訊息，補上測試`（繁體中文）、T3 `Write release notes draft`。依 T1、T2、T3 的順序建立；L2-2 關 T1，L2-4 再關 T3；T2 一直開著，所以每次列表都要出現 |
 | `make_repo.sh` | 新的 git repo：一個 README、一個 commit（固定身分與時間，commit id 一定是 `56cc386237ac98db667679cfb869d19e4359950a`） |
 | `setup_user.sh` | 在 dev image 裡建非 root 使用者 `dev`（要不要給 sudo 見 `needs.json`） |
-| `dev_shell.sh` | 以 `dev` 身分、在互動式 login bash 裡跑一個指令（等同開新終端機）；設 `EGRESS_LOG` 時整段在 strace 下執行 |
+| `dev_shell.sh` | 以 `dev` 身分、在互動式 login bash 裡跑一個指令（等同開新終端機）；設 `EGRESS_LOG=資料夾/名稱.log` 時整段用共用的 `../_shared/egress.py run` 執行 |
 | `inspect_listing.py` | 讀 JSON 列表，判定 L2-2；`--compare` 判定 L2-3 |
-| `check_repo_data.py` | L2-4：`text` 檢查 commit 進去的資料是 UTF-8 文字，`diffsize` 算關掉一個任務改了幾行 |
-| `egress_parse.py` | L2-5：讀 strace 紀錄，列出所有連往其他主機的嘗試 |
-| `egress_selftest.sh` | 開跑前確認 strace 在 sandbox 裡抓得到連線 |
+| `check_repo_data.py` | L2-4：`text` 檢查 commit 進去的資料是 UTF-8 文字，`diffsize` 算關掉一個任務改了幾行（用共用的 `../_shared/git_diff_lines.py`） |
+| `../_shared/egress.py` | L2-5：沒有對外連線的檢查（各題共用，[`_shared/README.md`](../_shared/README.md) 第 1 節） |
 | `selftest.py` | 檢查腳本的自我測試（macOS、Linux 都能跑） |
 | `calibration.md` | 開跑前要確認並記錄的事 |
 | `needs.json` | 要念誠決定的外部項目（dev image 內容、`dev` 有沒有 sudo、strace） |
@@ -23,7 +22,7 @@
 ## 共同準備
 
 1. **dev image**：`ubuntu:24.04` 加上 `needs.json` 決定的套件，記下 digest。兩組用同一個 image。
-2. 以 root：把本資料夾複製到 `/fixtures/q09/`，`sh /fixtures/q09/setup_user.sh`（建 `dev`、`/work` 給 `dev`）。
+2. 以 root：把本資料夾複製到 `/fixtures/q09/`、`_shared` 複製到 `/fixtures/_shared/`，`sh /fixtures/q09/setup_user.sh`（建 `dev`、`/work` 給 `dev`）。
 3. 之後答案的所有指令都以 `dev` 身分執行，用 `sh /fixtures/q09/dev_shell.sh [-C 目錄] '<指令>'`。它開的是互動式 login bash，`~/.profile`、`~/.bashrc` 都會載入，等同使用者開一個新的終端機。
 4. **只對當下 shell 有效的設定**：答案的安裝步驟裡只影響當下終端機的行（`export ...`、`source ...`、`eval "$(...)"`），照原樣抄進 `/work/prelude.sh`，之後每個指令用 `Q09_PRELUDE=/work/prelude.sh` 先載入，視同使用者還在安裝時那個終端機。這不算補步驟；抄錄內容記在檢查紀錄。
 5. 每個指令的完整輸出與 exit code 都存進檢查紀錄。
@@ -119,7 +118,7 @@
   ```
 - **判定**：
   - `text`：從固定的第一個 commit 到 HEAD 之間變動的每個檔，在 HEAD 的內容要能以 UTF-8 嚴格解碼、沒有 NUL、沒有 tab／換行／CR／form feed 以外的控制字元，git 也不把它當 binary。沒有任何檔變動（任務資料沒進 repo）算不過。
-  - `diffsize`：`git add -A` 後算 `git diff --cached -M --numstat $BEFORE` 的「新增行數＋刪除行數」合計。改一行算 2（一刪一增），搬檔（rename）只算內容變動。工具自己 commit 也算在內（比的是關閉前的 commit）。
+  - `diffsize`：共用的行數定義（[`_shared/README.md`](../_shared/README.md) 第 4 節）：`git add -A` 後看 `git diff --cached -M $BEFORE`，每個 hunk 取刪掉與加上的行數較大者，加總。原地改一行算 1，搬檔（rename）只算內容變動。工具自己 commit 也算在內（比的是關閉前的 commit）。
 - **過**：`L2-4 text: PASS` 而且 `L2-4 diff: PASS`（合計 ≤ 5、沒有 binary、確實有變動）。
 - **不過**：任一不成立。
 
@@ -127,18 +126,22 @@
 
 > [L2] Egress check passes for all commands
 
-- **用到**：`dev_shell.sh`（`EGRESS_LOG`）、`egress_parse.py`、`egress_selftest.sh`。
-- **「egress check」的意思**：L2-2～L2-4 的每個指令（工具的初始化、新增、關閉、列表，clone 裡的列表，以及評分者的 git 指令）都在 strace 下執行，記下所有 `connect`、`sendto`、`sendmsg`、`sendmmsg`。只要有一次是連往 loopback（127.0.0.0/8、::1）與未指定位址以外的 IPv4／IPv6 位址，或是往任何位址的 53 port（DNS 查詢；本機的 DNS stub 會再往外送），不論成功或失敗，就算有 egress。AF_UNIX、netlink 不算。安裝步驟（L2-1）需要網路，不在範圍內。
-- **做法**：`python3 /fixtures/q09/egress_parse.py /work/egress/*.log`
-- **過**：印出 `egress check: PASS`，而且每個 log 都有內容（指令真的在 strace 下跑過）。
+- **用到**：`dev_shell.sh`（`EGRESS_LOG`）、`$SHARED/egress.py`。
+- **「egress check」的意思**：L2-2～L2-4 的每個指令（工具的初始化、新增、關閉、列表，clone 裡的列表，以及評分者的 git 指令）都用 `EGRESS_LOG=/work/egress/<名稱>.log` 經 `dev_shell.sh` 在共用的 `egress.py run` 底下執行（留在背景的程序也一直記錄到 `stop`）。什麼算一次對外連線嘗試（不論成功或失敗）見 [`_shared/README.md`](../_shared/README.md) 第 1 節。安裝步驟（L2-1）需要網路，不在範圍內。
+- **做法**：
+  ```sh
+  python3 /fixtures/_shared/egress.py stop --out /work/egress
+  python3 /fixtures/_shared/egress.py report --out /work/egress --json /work/out/egress.json
+  ```
+- **過**：印出 `egress: PASS`（沒有任何嘗試，而且每一步都有 strace 紀錄）。
 - **不過**：任何一次 egress，例如檢查更新、送使用統計、自動 push。
-- **備案**：`calibration.md` 的 egress 自我測試沒過（sandbox 不允許 ptrace）時，改用斷網的方式：L2-1 裝好後把 sandbox 的檔案系統存成 image，用同一個 image 開一個 `block_network=True` 的 sandbox 跑 L2-2～L2-4。這時判準是每個指令都成功、沒有卡住超過 10 分鐘，而且輸出裡沒有連線失敗的訊息；檢查紀錄寫明用了備案。兩組要用同一種方式。
+- **strace 不能用時**：照 `_shared/README.md` 第 1 節，這項記「無法檢查」，請念誠決定替代方式；不能只靠擋網路後指令仍成功判過。
 
 ## 開跑前自我測試
 
 ```sh
 python3 selftest.py              # 檢查腳本本身（macOS、Linux 都可以）
-sh egress_selftest.sh /tmp/es    # 在 dev image 裡以 root 跑，要先裝 strace、建 dev
+python3 ../_shared/egress.py selftest   # 在 dev image 裡以 root 跑（_shared/calibration.md 步驟 1，各題共用一次）
 ```
 
 結果記到 `calibration.md`。

@@ -28,15 +28,15 @@
 
 | 步驟 | 指令 | 預期 | 結果 |
 |---|---|---|---|
-| a | `python3 /opt/eval-q05/egress_run.py --selftest` | `16/16` | |
+| a | `python3 $SHARED/egress.py selftest`（`_shared/calibration.md` 步驟 1，各題共用，做過一次即可） | exit 0 | |
 | b | `python3 /opt/eval-q05/test_check_md.py` | `20/20` | |
-| c | `python3 /opt/eval-q05/egress_run.py --block-network --report c.json -- python3 -c "import socket; socket.create_connection(('1.1.1.1', 80), timeout=3)"` | 指令失敗；`netns.interfaces` 是 `["lo"]`；`egress.verdict` 是 `fail`，列出 1.1.1.1:80 | |
-| d | `python3 /opt/eval-q05/egress_run.py --block-network --report d.json -- python3 -c "import socket; socket.getaddrinfo('example.com', 443)"` | 指令失敗；`egress.verdict` 是 `fail`，列出 53 埠的嘗試 | |
-| e | `python3 /opt/eval-q05/egress_run.py --block-network --report e.json -- python3 -c "import socket; s=socket.socket(); s.bind(('127.0.0.1', 18999)); s.listen(1); c=socket.create_connection(('127.0.0.1', 18999)); print('ok')"` | 印出 ok、exit 0；`egress.verdict` 是 `pass` | |
-| f | `python3 /opt/eval-q05/egress_run.py --report f.json -- python3 -c "import socket; socket.create_connection(('1.1.1.1', 80), timeout=3)"`（不斷網） | `egress.verdict` 是 `fail`（只記錄、不阻擋時也抓得到） | |
-| g | `python3 /opt/eval-q05/egress_run.py --block-network --timeout 5 --report g.json -- sleep 30` | exit 124、`timed_out` 為 `true` | |
+| c | `python3 $SHARED/egress.py run --out /work/cal/eg --label c --block-network -- python3 -c "import socket; socket.create_connection(('1.1.1.1', 80), timeout=3)"` | 指令失敗；`c.json` 的 `netns.interfaces` 是 `["lo"]`；`egress.py report --out /work/cal/eg --labels <步驟>` 的結果是 `fail`，列出 1.1.1.1:80 | |
+| d | `python3 $SHARED/egress.py run --out /work/cal/eg --label d --block-network -- python3 -c "import socket; socket.getaddrinfo('example.com', 443)"` | 指令失敗；`egress.py report --out /work/cal/eg --labels <步驟>` 的結果是 `fail`，列出 53 埠的嘗試 | |
+| e | `python3 $SHARED/egress.py run --out /work/cal/eg --label e --block-network -- python3 -c "import socket; s=socket.socket(); s.bind(('127.0.0.1', 18999)); s.listen(1); c=socket.create_connection(('127.0.0.1', 18999)); print('ok')"` | 印出 ok、exit 0；`egress.py report --out /work/cal/eg --labels <步驟>` 的結果是 `pass` | |
+| f | `python3 $SHARED/egress.py run --out /work/cal/eg --label f -- python3 -c "import socket; socket.create_connection(('1.1.1.1', 80), timeout=3)"`（不斷網） | `egress.py report --out /work/cal/eg --labels <步驟>` 的結果是 `fail`（只記錄、不阻擋時也抓得到） | |
+| g | `python3 $SHARED/egress.py run --out /work/cal/eg --label g --block-network --timeout 5 -- sleep 30` | exit 124、`g.json` 的 `timed_out` 為 `true` | |
 
-若 c–e 因為 sandbox 不允許建立網路命名空間或不支援 strace 而無法執行：寫下錯誤訊息，改用替代做法（安裝在可連網的 sandbox 完成後，把檔案系統做成快照，在 `block_network=True` 的新 sandbox 裡轉換），並在 `eval/README.md` 第 9 節追加一小節說明，兩組都用同一做法。
+若 c–e 因為 sandbox 不允許建立網路命名空間或不支援 strace 而無法執行：寫下錯誤訊息，照 `_shared/README.md` 第 1 節處理；擋外連改用替代做法（安裝在可連網的 sandbox 完成後，把檔案系統做成快照，在 `block_network=True` 的新 sandbox 裡轉換），並在 `eval/README.md` 第 9 節追加一小節說明，兩組都用同一做法。
 
 | 欄位 | 值 |
 |---|---|

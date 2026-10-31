@@ -7,7 +7,8 @@
 
 The script runs with only PATH, HOME, LANG and the --env pairs the answer gives;
 every other OPENAI_* variable is absent, so OPENAI_API_KEY is unset unless the
-answer sets it. With --egress-dir the run is wrapped by egress.py trace.
+answer sets it. With --egress-dir the run is wrapped by the shared egress check
+(eval/fixtures/_shared/egress.py run --label LABEL --inherit-output).
 Pass: exit code 0 and non-empty stdout (the frozen script exits non-zero on an
 empty completion). Writes OUT.json (and OUT.stdout / OUT.stderr). Exit 0 on pass.
 """
@@ -20,6 +21,7 @@ import sys
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+SHARED = os.environ.get("SHARED") or os.path.join(HERE, "..", "_shared")
 
 
 def main():
@@ -41,8 +43,8 @@ def main():
         given.append(k)
     cmd = [a.python, os.path.basename(a.script)]
     if a.egress_dir:
-        cmd = [sys.executable, os.path.join(HERE, "egress", "egress.py"), "trace", "--out", a.egress_dir,
-               "--label", a.label, "--"] + cmd
+        cmd = [sys.executable, os.path.join(SHARED, "egress.py"), "run", "--out", a.egress_dir,
+               "--label", a.label, "--inherit-output", "--"] + cmd
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     t0 = time.time()
     rec = {"cmd": cmd, "env_names": sorted(env), "env_from_answer": given, "start": t0}

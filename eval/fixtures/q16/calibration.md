@@ -60,21 +60,21 @@ python3 eval/fixtures/q16/lang_check.py --output eval/fixtures/q16/docs --map 02
 
 ## 4. 擋外連與外連監測（與 q14 相同）
 
-在擋住的沙盒裡（先 `apt-get install -y strace` 再擋）：
+在擋住的沙盒裡：
 
 ```bash
-python3 /eval/q16/egress_check.py probe --log /results/probe.json        # exit 0
-python3 /eval/q16/egress_check.py selftest --log /results/selftest.json  # ok: true
-python3 /eval/q16/egress_check.py run --log /results/quiet.json -- sleep 10   # attempt_count 0
+python3 $SHARED/egress.py probe --json /results/probe.json                 # exit 0
+python3 $SHARED/egress.py selftest --out /results/selftest                 # _shared/calibration.md 步驟 1，各題共用一次
+python3 $SHARED/egress.py run --out /results/quiet --label quiet -- sleep 10
+python3 $SHARED/egress.py report --out /results/quiet                      # pass
 ```
 
 | 項目 | 值 |
 |---|---|
 | 擋法與指令 | |
-| strace 版本 | |
-| `selftest` 的 monitor 與結果 | |
+| `selftest` 結果 | （記在 `_shared/calibration.md`） |
 
-`selftest` 不通過時，不改用 `/proc` 輪詢判過（它抓不到立刻失敗的連線）；請念誠決定替代做法並寫在這裡。
+`selftest` 不通過時，不改用 `/proc` 輪詢判過（它抓不到立刻失敗的連線）；照 `_shared/README.md` 第 1 節，請念誠決定替代做法並寫在這裡。
 
 ## 5. dev image 與自我測試
 

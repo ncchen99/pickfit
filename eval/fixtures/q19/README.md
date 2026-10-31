@@ -20,7 +20,7 @@
 | `start_fixture_servers.sh`、`stop_fixture_servers.sh` | 啟動／停止「自架伺服器」：固定版本的 Ollama（127.0.0.1:11435）與前面的 logging proxy（127.0.0.1:8000） |
 | `tools/logging_proxy.py` | 透明的 HTTP 記錄 proxy，就是檢查項目說的「the local server's log」 |
 | `tools/run_steps.py`、`tools/pty_drive.py`、`tools/gen_dummy_key.py` | 逐字執行安裝指令；在虛擬終端機跑 agent 並同意提示；執行時產生假的金鑰值 |
-| `egress/egress.py` | egress check（第 1 節） |
+| `../_shared/egress.py` | egress check（各題共用，[`_shared/README.md`](../_shared/README.md) 第 1 節；第 1 節寫本題怎麼用） |
 | `selftest.sh`、`tests/` | 離線自我測試（用假的模型伺服器） |
 | `needs.json`、`calibration.md` | 待決定的外部資料；開跑前校準步驟與結果欄位 |
 
@@ -56,9 +56,9 @@ agent（答案推薦的）──HTTP──> http://127.0.0.1:8000/v1  logging pr
 
 「egress」指**任何連往本機以外的嘗試**：查詢 localhost 以外名稱的 DNS，或對 loopback（127.0.0.0/8、::1）、0.0.0.0、本沙盒自己介面位址以外的 IPv4／IPv6 位址呼叫 connect／sendto／sendmsg（失敗的嘗試、UDP、多播都算；遙測、更新檢查、下載都算）。
 
-`egress/egress.py` 三層：**dns**（必要；本題 `--mode forward`，照常解析但全部記錄）、**strace**（`egress.py trace -- <agent 指令>`，涵蓋 agent 的程序樹）、**poll**（輪詢 `/proc/net`）。strace、poll 是否為必要層照 calibration.md E7。
+定義、做法與判定見 [`_shared/README.md`](../_shared/README.md) 第 1 節（共用工具在沙盒裡的 `$SHARED`）。本題網路不封鎖，但全程記錄：答案的設定步驟（label `config`）與每次執行（label `r1`、`r2`、`r3`，和執行資料夾同名）都用 `egress.py run` 包起來，留在背景的程序到 `egress.py stop` 為止都被記錄。
 
-**「egress check 通過」**＝ 每次執行時段內 `egress.py report` 的 `result` 是 `pass`。`fail` 列出對外的名稱與位址；`incomplete` 表示量測沒在運作，不能判過、也不算答案的錯，修好後重做。固定的伺服器與 proxy 本身不外連，已在 calibration.md C7 確認。
+**「egress check 通過」**＝ 每次執行的判定是 `pass`：該次執行自己的紀錄全部算，其他步驟（設定步驟留下的背景程序、前幾次的殘留）只算落在該次時段內的嘗試（`check_run.py` 用共用的 `window_verdict`）。`fail` 列出位址與原始紀錄行；`undetermined` 表示量測沒做好，不能判過、也不算答案的錯，修好後重做。固定的伺服器與 proxy 本身不外連固定的伺服器與 proxy 本身不外連，已在 calibration.md C7 確認。
 
 ## 2. 各 [L2] 項目
 
@@ -78,21 +78,21 @@ agent（答案推薦的）──HTTP──> http://127.0.0.1:8000/v1  logging pr
 
 ```sh
 STATE=$W/state sh $F/start_fixture_servers.sh               # 自架伺服器：http://127.0.0.1:8000/v1
-python3 $F/tools/run_steps.py --steps $W/steps-config.txt --out $W/config   # 答案的設定（base URL、模型、金鑰、遙測關閉），佔位字照第 1 節
-sudo python3 $F/egress/egress.py start --out $W/egress --mode forward
+python3 $SHARED/egress.py run --out $W/egress --label config --inherit-output -- \
+  python3 $F/tools/run_steps.py --steps $W/steps-config.txt --out $W/config   # 答案的設定（base URL、模型、金鑰、遙測關閉），佔位字照第 1 節
 for r in r1 r2 r3; do
   RUN=$(python3 $F/new_run.py --runs-dir $W/runs --label $r --workdir /home/dev/inventory-$r)
   cd /home/dev/inventory-$r
   # (a) 答案的非互動或自動同意模式：請求填 task.txt 原文
   python3 $F/tools/pty_drive.py --out $RUN/agent --timeout 900 -- \
-    python3 $F/egress/egress.py trace --out $W/egress --label $r -- <agent 非互動指令>
+    python3 $SHARED/egress.py run --out $W/egress --label $r --inherit-output -- <agent 非互動指令>
   # (b) 只有互動模式：送出請求、同意每個提示、hello.py 出現後閒置 30 秒再結束
   # python3 $F/tools/pty_drive.py --out $RUN/agent --timeout 900 --send-file $F/task.txt \
   #   --send-after '<提示字元 regex>' --approve '<同意提示 regex>' --approve-keys '<同意鍵>' \
   #   --done-file /home/dev/inventory-$r/hello.py --idle 30 --exit-keys '<結束鍵>' -- \
-  #   python3 $F/egress/egress.py trace --out $W/egress --label $r -- <agent 指令>
+  #   python3 $SHARED/egress.py run --out $W/egress --label $r --inherit-output -- <agent 指令>
 done
-sudo python3 $F/egress/egress.py stop --out $W/egress
+python3 $SHARED/egress.py stop --out $W/egress --kill
 python3 $F/check_run.py --state-dir $W/state --egress-dir $W/egress $W/runs/r1 $W/runs/r2 $W/runs/r3
 ```
 
@@ -107,13 +107,13 @@ python3 $F/check_run.py --state-dir $W/state --egress-dir $W/egress $W/runs/r1 $
 
 > [L2] The local server's log shows the agent's requests, and the egress check passes after applying the answer's telemetry settings
 
-用到：`tools/logging_proxy.py` 的 `$W/state/proxy/requests.jsonl`；`egress/egress.py`；L2-2 的同 3 次執行。
+用到：`tools/logging_proxy.py` 的 `$W/state/proxy/requests.jsonl`；`$SHARED/egress.py`；L2-2 的同 3 次執行。
 
 - 「the local server's log」＝ logging proxy 的紀錄（它就是自架伺服器的入口；每筆有時間、方法、路徑、模型名、工具數，只記標頭名稱不記值）。
 - 答案給的遙測設定在 L2-2 之前套用（寫進 `steps-config.txt`，或加在 agent 指令前的環境變數）；沒給就不套用。
-- 量測時段＝ L2-2 每次執行從 `new_run.py` 到用戶端（或 agent）結束；網路不封鎖，DNS 用 forward 模式。
+- 量測時段＝ L2-2 每次執行從 `new_run.py` 到用戶端（或 agent）結束；網路不封鎖。
 
-通過（`check_run.py` 的 `L2-3`）：L2-2 通過的每一次執行，紀錄裡都有該次時段內的請求（`server_requests` ≥ 1），**而且** 3 次執行的 egress report 都是 `pass`。有 `incomplete` 時記 `incomplete`，修好量測後重做。
+通過（`check_run.py` 的 `L2-3`）：L2-2 通過的每一次執行，紀錄裡都有該次時段內的請求（`server_requests` ≥ 1），**而且** 3 次執行的 egress report 都是 `pass`。有 `undetermined` 時記 `undetermite`，修好量測後重做。
 
 ### L2-4 全程沒有登入提示
 

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """Verdicts for q07 L2-2, L2-3 and L2-5 from the run reports (stdlib only).
 
-    check_q07.py --ok RUN_OK.json --ok-log LOG_OK.jsonl
-                 --s500 RUN_500.json --okfalse RUN_OKFALSE.json [--report verdict.json]
+    check_q07.py --runs EGRESS_DIR --ok-log LOG_OK.jsonl [--report verdict.json]
 
-RUN_*.json are egress_run.py reports of the same CLI command run against server.py in
-mode ok, status500 and okfalse; LOG_OK.jsonl is server.py's log of the ok run.
+EGRESS_DIR is the folder of eval/fixtures/_shared/egress.py runs of the same CLI command
+against server.py, labelled ok, status500 and okfalse; LOG_OK.jsonl is server.py's log of
+the ok run.
 
 ok_run      the ok run exits 0, did not time out, and the server saw all three requests:
             GET /health, GET /widgets, POST /orders whose JSON body equals requests.json
 fail_runs   the status500 run and the okfalse run both exit non-zero and did not time out
-egress      all three runs have egress.verdict == "pass"
+egress      the shared egress verdict (_shared/README.md section 1) of all three runs is "pass"
 """
 
 import argparse
@@ -19,19 +19,19 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.environ.get("SHARED") or os.path.join(HERE, "..", "_shared"))
+import egress as shared_egress  # noqa: E402
+MODES = ("ok", "status500", "okfalse")
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--ok", required=True)
+    ap.add_argument("--runs", required=True)
     ap.add_argument("--ok-log", required=True)
-    ap.add_argument("--s500", required=True)
-    ap.add_argument("--okfalse", required=True)
     ap.add_argument("--requests", default=os.path.join(HERE, "requests.json"))
     ap.add_argument("--report")
     a = ap.parse_args()
-    runs = {k: json.load(open(p, encoding="utf-8")) for k, p in (("ok", a.ok), ("status500", a.s500),
-                                                                  ("okfalse", a.okfalse))}
+    runs = {r["label"]: r for r in shared_egress.step_verdicts(a.runs, MODES)}
     spec = json.load(open(a.requests, encoding="utf-8"))
     log = [json.loads(ln) for ln in open(a.ok_log, encoding="utf-8") if ln.strip()]
     want_body = next(r["body"] for r in spec["requests"] if r["id"] == "orders")
@@ -48,10 +48,9 @@ def main():
     fails = {k: {"exit_code": runs[k]["exit_code"], "timed_out": runs[k]["timed_out"]}
              for k in ("status500", "okfalse")}
     fail_runs = {"pass": all(v["exit_code"] != 0 and not v["timed_out"] for v in fails.values()), **fails}
-    eg = {k: r.get("egress", {}).get("verdict") for k, r in runs.items()}
+    eg = {k: r["result"] for k, r in runs.items()}
     egress = {"pass": all(v == "pass" for v in eg.values()), "verdicts": eg,
-              "first_attempts": {k: [x.get("line") for x in r.get("egress", {}).get("attempts", [])[:3]]
-                                 for k, r in runs.items()}}
+              "first_attempts": {k: r["first_attempts"][:3] for k, r in runs.items()}}
     commands = {k: r.get("command") for k, r in runs.items()}
     same_cmd = len({json.dumps(c) for c in commands.values()}) == 1
     out = {"ok_run": ok_run, "fail_runs": fail_runs, "egress": egress, "same_command_all_runs": same_cmd,

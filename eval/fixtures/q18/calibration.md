@@ -11,7 +11,7 @@
 | 項目 | 結果 |
 |---|---|
 | dev image digest、apt snapshot id | |
-| E7 必要層 | dns ＋ （strace？）＋（poll？） |
+| egress | 照 `_shared/calibration.md` 步驟 1、2（各題共用一次） |
 
 ## C. q18 固定版本與模型
 
@@ -22,7 +22,7 @@
 | C3 context 長度 | 決定 `OLLAMA_CONTEXT_LENGTH`（預設 16384）。啟動後看 `$STATE/ollama.log` 的 context 設定、`free -m` 記憶體 | 16 GiB 內放得下 |
 | C4 工具呼叫 3/3 | `STATE=/tmp/q18cal sh $F/start_fixture_servers.sh`，再 `python3 $F/calibrate_toolcall.py --host http://127.0.0.1:11435 --model "$FIXTURE_MODEL" --runs 3 --out /tmp/q18cal/toolcall.json` | `correct_runs` 是 3（檢查項目要求 3/3）。`final_has_token` 只記錄，不是門檻 |
 | C5 proxy 透明 | 同樣的指令改 `--host http://127.0.0.1:11434`（經過 logging proxy） | 仍是 3/3；`/tmp/q18cal/proxy/requests.jsonl` 有 6 筆（3 次 × 2 回合），每筆都有 `.resp` |
-| C6 環境本身不外連 | 網路開的沙盒：`sudo python3 $F/egress/egress.py start --out /tmp/q18eg --mode forward`；`start_fixture_servers.sh`；C5 跑 1 次；閒置 120 秒；`stop`；`report --out /tmp/q18eg` | `result` 是 `pass`（Ollama 與 proxy 本身沒有對外連線）。若不是：記下名稱，找 Ollama 文件的關閉方式寫進 `start_fixture_servers.sh`，重做 |
+| C6 環境本身不外連 | 網路開的沙盒：`python3 $SHARED/egress.py run --out /tmp/q18eg --label fixtures --sh 'sh $F/start_fixture_servers.sh'`（伺服器留在背景、一直被記錄）；C5 跑 1 次；閒置 120 秒；`python3 $SHARED/egress.py stop --out /tmp/q18eg --kill`；`python3 $SHARED/egress.py report --out /tmp/q18eg` | `result` 是 `pass`（Ollama 與 proxy 本身沒有對外連線）。若不是：記下名稱，找 Ollama 文件的關閉方式寫進 `start_fixture_servers.sh`，重做 |
 | C7 自我測試 | `sh $F/selftest.sh` | 兩個測試都 `0 failure(s)` |
 
 結果（第一次開跑前填）：

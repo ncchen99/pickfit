@@ -6,24 +6,7 @@
 
 ## 步驟 1：egress check 的追蹤方式
 
-與 q01 `calibration.md` 步驟 7 相同（同一份 `egress/` 檔案）。在 dev image 的沙盒裡：
-
-```sh
-F=/opt/eval/fixtures/q02/egress
-sh $F/run_traced.sh /tmp/c1.log 'true';                      python3 $F/egress_check.py /tmp/c1.log   # 預期 exit 0
-sh $F/run_traced.sh /tmp/c2.log 'getent ahosts example.com'; python3 $F/egress_check.py /tmp/c2.log   # 預期 exit 1
-sh $F/run_traced.sh /tmp/c3.log 'echo hi | cat > /tmp/o.txt'; python3 $F/egress_check.py /tmp/c3.log  # 管線、重導向：預期 exit 0，/tmp/o.txt 是 hi
-python3 $F/egress_check.py --self-test                       # 預期 PASS
-```
-
-q01 已經做過而且是同一個 image 時，可以引用 q01 的紀錄。
-
-| 檢查 | 結果 | strace 版本 | 日期 |
-|---|---|---|---|
-| c1 | | | |
-| c2 | | | |
-| c3 | | | |
-| self-test | | | |
+照 [`_shared/calibration.md`](../_shared/calibration.md) 步驟 1（`egress.py selftest`，各題共用一次）。管線與重導向由 `egress.py run --sh` 原樣交給 `/bin/sh -c`，`_shared/test_shared.py` 有測。
 
 ## 步驟 2：產生器在 dev image 的參考雜湊
 

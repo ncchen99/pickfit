@@ -20,7 +20,7 @@
 | `tools/run_steps.py` | 把答案的安裝指令原字不改、依序打進同一個終端機 session |
 | `tools/pty_drive.py` | 在虛擬終端機裡跑用戶端：送出請求、自動同意工具提示、記錄輸出與時間 |
 | `tools/gen_dummy_key.py` | 執行時產生假的金鑰值（只在答案說「填什麼都可以」時用） |
-| `egress/egress.py` | egress check（第 1 節） |
+| `../_shared/egress.py` | egress check（各題共用，[`_shared/README.md`](../_shared/README.md) 第 1 節；第 1 節寫本題怎麼用） |
 | `selftest.sh`、`tests/` | 離線自我測試（用假的模型伺服器，不呼叫真模型） |
 | `needs.json`、`calibration.md` | 待決定的外部資料；開跑前校準步驟與結果欄位 |
 
@@ -61,9 +61,9 @@ proxy 佔用 Ollama 的預設位址，原樣轉送所有請求（含串流），
 
 「egress」指**任何連往本機以外的嘗試**：查詢 localhost 以外名稱的 DNS，或對 loopback（127.0.0.0/8、::1）、0.0.0.0、本沙盒自己介面位址以外的 IPv4／IPv6 位址呼叫 connect／sendto／sendmsg（失敗的嘗試、UDP、多播都算；更新檢查、遙測、下載都算）。
 
-`egress/egress.py` 三層：**dns**（必要；127.0.0.1:53 記錄所有查詢，本題用 `--mode forward`，照常轉給原本的 DNS，網路不封鎖）、**strace**（`egress.py trace -- <用戶端指令>`，涵蓋用戶端與它啟動的 MCP 伺服器）、**poll**（輪詢 `/proc/net`）。strace、poll 是否為必要層，照 calibration.md E7。
+定義、做法與判定見 [`_shared/README.md`](../_shared/README.md) 第 1 節（共用工具在沙盒裡的 `$SHARED`）。本題網路不封鎖，但全程記錄：答案的設定步驟（label `config`）與每次執行（label `r1`、`r2`、`r3`，和執行資料夾同名）都用 `egress.py run` 包起來，留在背景的程序到 `egress.py stop` 為止都被記錄。
 
-**「egress check 通過」**＝ 每次執行的時段內，`egress.py report` 的 `result` 是 `pass`（三層違規都是 0，必要層都在運作）。`fail` 列出對外的名稱與位址。`incomplete` 表示量測沒在運作：不能判過、也不算答案的錯，修好後重做。固定的 Ollama 與 proxy 本身不外連，已在 calibration.md C6 確認。
+**「egress check 通過」**＝ 每次執行的判定是 `pass`：該次執行自己的紀錄全部算，其他步驟（設定步驟留下的背景程序、前幾次的殘留）只算落在該次時段內的嘗試（`check_run.py` 用共用的 `window_verdict`）。`fail` 列出位址與原始紀錄行；`undetermined` 表示量測沒做好，不能判過、也不算答案的錯，修好後重做。固定的 Ollama 與 proxy 本身不外連，已在 calibration.md C6 確認。
 
 ## 2. 各 [L2] 項目
 
@@ -83,20 +83,20 @@ proxy 佔用 Ollama 的預設位址，原樣轉送所有請求（含串流），
 
 ```sh
 STATE=$W/state sh $F/start_fixture_servers.sh          # 使用者原本的 Ollama（11435）＋ proxy（11434）
-python3 $F/tools/run_steps.py --steps $W/steps-config.txt --out $W/config   # 答案的設定步驟（MCP 伺服器、模型、遙測關閉），佔位字照第 1 節
-sudo python3 $F/egress/egress.py start --out $W/egress --mode forward
+python3 $SHARED/egress.py run --out $W/egress --label config --inherit-output -- \
+  python3 $F/tools/run_steps.py --steps $W/steps-config.txt --out $W/config   # 答案的設定步驟（MCP 伺服器、模型、遙測關閉），佔位字照第 1 節
 for r in r1 r2 r3; do
   RUN=$(python3 $F/new_run.py --runs-dir $W/runs --label $r --state-dir $W/state)
   TOKEN=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["token"])' $RUN/run.json)
   # (a) 答案有文件記載的非互動模式：請求原文當參數或 stdin
   python3 $F/tools/pty_drive.py --out $RUN/client --timeout 600 -- \
-    python3 $F/egress/egress.py trace --out $W/egress --label $r -- <用戶端非互動指令，請求填 request.txt 原文>
+    python3 $SHARED/egress.py run --out $W/egress --label $r --inherit-output -- <用戶端非互動指令，請求填 request.txt 原文>
   # (b) 只有互動模式：送出請求、同意每一個工具提示、看到 token 後閒置 60 秒再結束
   # python3 $F/tools/pty_drive.py --out $RUN/client --timeout 600 --send-file $F/request.txt \
   #   --send-after '<提示字元 regex>' --approve '<工具同意提示 regex>' --approve-keys '<同意鍵>' \
-  #   --done "$TOKEN" --idle 60 --exit-keys '<結束鍵>' -- python3 $F/egress/egress.py trace --out $W/egress --label $r -- <用戶端指令>
+  #   --done "$TOKEN" --idle 60 --exit-keys '<結束鍵>' -- python3 $SHARED/egress.py run --out $W/egress --label $r --inherit-output -- <用戶端指令>
 done
-sudo python3 $F/egress/egress.py stop --out $W/egress
+python3 $SHARED/egress.py stop --out $W/egress --kill
 python3 $F/check_run.py --state-dir $W/state --egress-dir $W/egress $W/runs/r1 $W/runs/r2 $W/runs/r3
 ```
 
@@ -114,12 +114,12 @@ python3 $F/check_run.py --state-dir $W/state --egress-dir $W/egress $W/runs/r1 $
 
 > [L2] Egress check passes, after applying any telemetry-off setting the answer gives
 
-用到：`egress/egress.py`；L2-2 的同 3 次執行。
+用到：`$SHARED/egress.py`；L2-2 的同 3 次執行。
 
 - 答案給的遙測關閉設定（設定檔、環境變數、旗標）在 L2-2 開始前就套用，寫進 `steps-config.txt`（環境變數則加在用戶端指令前）。答案沒給就不套用。
-- 量測時段＝ L2-2 每次執行從 `new_run.py` 到用戶端（或 agent）結束；網路不封鎖，DNS 用 forward 模式。
+- 量測時段＝ L2-2 每次執行從 `new_run.py` 到用戶端（或 agent）結束；網路不封鎖。
 
-通過（`check_run.py` 的 `L2-3`）：3 次執行的 egress report 都是 `pass`。任何一次 `fail` 就不過；有 `incomplete` 時記 `incomplete`，修好量測後重做 L2-2 的 3 次。
+通過（`check_run.py` 的 `L2-3`）：3 次執行的 egress report 都是 `pass`。任何一次 `fail` 就不過；有 `undetermined` 時記 `undetermined`，修好量測後重做 L2-2 的 3 次。
 
 ### L2-4 全程沒有登入或帳號步驟
 

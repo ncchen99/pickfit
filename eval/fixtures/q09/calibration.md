@@ -21,16 +21,16 @@ id dev; sudo -n -u dev true && echo sudo-ok     # 依 needs.json 的決定
 
 ```sh
 apt-get install -y strace        # L2-1 之後才裝，不影響安裝步驟的檢查
-sh /fixtures/q09/egress_selftest.sh /tmp/es
+python3 /fixtures/_shared/egress.py selftest --out /tmp/es
 ```
 
-要印出 `egress self-test: OK`：`true` 與連 loopback 沒有 egress；連 TEST-NET-1（192.0.2.1）與查 `.invalid` 名稱都抓得到。沒過就改用 README 的斷網備案，並記在這裡。
+即 [`_shared/calibration.md`](../_shared/calibration.md) 步驟 1（各題共用一次，結果記在那裡）。另外確認經 `su` 也記得到：`EGRESS_LOG=/tmp/es/su.log sh /fixtures/q09/dev_shell.sh 'getent hosts egress-selftest.invalid; true'` 之後 `python3 /fixtures/_shared/egress.py report --out /tmp/es --labels su` 要是 `fail`（抓到查名稱）。沒過就照 `_shared/README.md` 第 1 節，egress 記「無法檢查」並請念誠決定。
 
 | 項目 | 結果 |
 |---|---|
 | strace 版本 | |
 | 自我測試結果 | |
-| 採用的方式（strace／斷網備案） | |
+| 經 `su` 的確認 | |
 
 ## 3. 檢查腳本
 

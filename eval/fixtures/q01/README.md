@@ -14,22 +14,21 @@
 | `seed/locations.json` | 三個 agent 文件列出的每一個 MCP 設定位置（user 與 project scope），各自的一個無關設定 |
 | `seed/seed_configs.py` | `seed`：寫入上面每個位置；`check`：檢查每個檔還在、還能解析、無關設定沒變 |
 | `seed/validate_shape.py` | 只在校準判定某個 agent 的 list 指令不能離線、免登入執行時，代替該 agent 的 list 檢查 |
-| `egress/run_traced.sh` | 在 strace 下執行一行指令，留下系統呼叫紀錄 |
-| `egress/egress_check.py` | 讀紀錄，列出所有對外連線嘗試 |
+| `../_shared/egress.py` | 沒有對外連線的檢查（各題共用，[`_shared/README.md`](../_shared/README.md) 第 1 節） |
 | `needs.json` | 需要從外部取得、這裡沒有放的東西（三個 agent CLI 的固定版本、Node.js、strace、dev image） |
 | `calibration.md` | 第一次開跑前要做的校準步驟與紀錄表（待填） |
 
 ## 2. 共同設定
 
 - **環境**：dev image（定義見 `needs.json`；需要 `python3` 3.11 以上、`git`、`strace`）＋評分者事先裝好的三個 agent CLI 固定版本（版本記在 `calibration.md`）。使用者本來就在用這三個 agent，所以先裝好，再照答案裝工具。
-- **路徑**：本資料夾複製到 `FIXTURE=/opt/eval/fixtures/q01`；評分紀錄放 `/opt/eval/state/`（不在任何 git repo 裡）；專案目錄 `PROJECT=/work/proj`（`git init` 過的空 repo）。`HOME` 用沙盒預設值（全新、空的）。
+- **路徑**：本資料夾複製到 `FIXTURE=/opt/eval/fixtures/q01`，共用工具 `eval/fixtures/_shared` 複製到 `SHARED=/opt/eval/fixtures/_shared`；評分紀錄放 `/opt/eval/state/`（不在任何 git repo 裡）；專案目錄 `PROJECT=/work/proj`（`git init` 過的空 repo）。`HOME` 用沙盒預設值（全新、空的）。
 - **不登入**：`HOME` 裡沒有任何 agent 的登入檔，環境變數沒有任何 API key。執行 agent 指令一律用 `env -i HOME="$HOME" PATH="$PATH"`。
 - **工作目錄**：答案的所有步驟與 agent 的 list 指令都在 `PROJECT` 裡執行，讓 user 與 project 兩層設定都看得到。
 
 ## 3. 名詞
 
 - **原樣（verbatim）**：逐字複製答案的指令執行，只做 `eval/README.md` 第 5 節允許的調整（填版本號與佔位字、接受安裝程式的預設值）。任何一步 exit code 不是 0、或要改指令或旗標、補步驟才能成功，就不過。Ubuntu 擋下裸 `pip install` 時改在 venv 裡跑並記 `needed_venv`，但這一項不過。
-- **egress check（對外連線檢查）**：把指定步驟的每一行指令包在 `egress/run_traced.sh` 裡執行，strace 記下它和所有子程序（包括留在背景的 daemon）的 `connect`、`sendto`、`sendmsg`、`sendmmsg`。之後 `egress/egress_check.py` 把以下都算成對外連線嘗試：目的地是非 loopback 的 IPv4／IPv6 位址；任何位址的 port 53（DNS，連 loopback 上的 stub resolver 也算，因為它會往外轉送）；其他能上網的 socket 家族（例如 `AF_PACKET`）。失敗的嘗試也算。`AF_UNIX`、`AF_NETLINK` 不算。結果 exit 0＝過；1＝不過；2＝紀錄裡沒有 strace 有效的證據（沒有 execve），這一步要修好追蹤方式後重跑，不能判過。
+- **egress check（對外連線檢查）**：指定的每一步都用 `$SHARED/egress.py run` 包起來執行，strace 記下它和它啟動的所有程序（包括留在背景的 daemon，記到 `egress.py stop` 為止）的連線。什麼算一次對外連線嘗試、怎麼判定，見 [`_shared/README.md`](../_shared/README.md) 第 1 節（失敗的嘗試也算）。`egress.py report` exit 0＝過；1＝不過；2＝量測沒做好（紀錄缺漏、沒有 execve 或還沒 stop），不算答案的錯，修好後重跑。
 - **填入的 fixture server**：名稱 `fixture-echo`、transport stdio、command `python3`、args `["/opt/eval/fixtures/q01/server/fixture_mcp_server.py"]`、沒有 env（`server/server.json`）。答案的工具問要同步到哪些 agent 時，選這三個；其他問題接受預設值。
 
 ## 4. L2 項目
@@ -67,8 +66,8 @@
   2. 安裝之後，照答案的做法把 fixture server 加進工具的清單並同步到三個 agent。答案要求的初始化或匯入步驟、加入、同步，每一行都包在 egress check 裡執行（項目 4）：
      ```sh
      cd /work/proj
-     sh $FIXTURE/egress/run_traced.sh /opt/eval/state/q01-egress-01.log '<答案的第一行指令，佔位字已填>'
-     sh $FIXTURE/egress/run_traced.sh /opt/eval/state/q01-egress-02.log '<下一行>'
+     python3 $SHARED/egress.py run --out /opt/eval/state/q01-egress --label 01 --sh '<答案的第一行指令，佔位字已填>'
+     python3 $SHARED/egress.py run --out /opt/eval/state/q01-egress --label 02 --sh '<下一行>'
      ```
   3. **在執行任何 agent 指令之前**檢查（agent 自己可能會改寫自己的設定檔，所以先檢查）：
      ```sh
@@ -101,25 +100,25 @@
 
 > [L2] Egress check passes for the add and sync steps
 
-- **測試資料**：`egress/run_traced.sh`、`egress/egress_check.py`。
+- **測試資料**：`$SHARED/egress.py`。
 - **範圍**：安裝之後、為了把 fixture server 加進清單並寫進三個 agent 設定所執行的每一行答案指令（初始化或匯入、加入、同步）。安裝步驟、評分者自己的檢查與 agent 的 list 指令不算。
-- **做法**：項目 2 的步驟 2 已經把每一行包在 `run_traced.sh` 裡。之後（可在沙盒裡，或把紀錄複製到評分者電腦上）：
+- **做法**：項目 2 的步驟 2 已經把每一行包在 `egress.py run` 裡。在沙盒裡先停掉還在記錄的 tracer，再出報告（`report` 也可以把 `q01-egress/` 複製到評分者電腦上再跑）：
   ```sh
-  python3 $FIXTURE/egress/egress_check.py /opt/eval/state/q01-egress-*.log \
-    --json /opt/eval/state/q01-egress.json
+  python3 $SHARED/egress.py stop --out /opt/eval/state/q01-egress
+  python3 $SHARED/egress.py report --out /opt/eval/state/q01-egress --json /opt/eval/state/q01-egress.json
   ```
-- **判定**：exit 0（`RESULT PASS`）→ 過；exit 1 → 不過，報告附上每一筆連線嘗試；exit 2 → 量測失敗，修好追蹤方式後在新沙盒重跑整個 q01 流程（答案原文不變），並記錄重跑原因。
+- **判定**：exit 0（`egress: PASS`）→ 過；exit 1 → 不過，報告附上每一筆連線嘗試；exit 2 → 量測失敗，修好追蹤方式後在新沙盒重跑整個 q01 流程（答案原文不變），並記錄重跑原因。
 
 ## 5. 一次跑完的流程
 
-1. 開新沙盒（dev image＋三個 agent 的固定版本），複製本資料夾到 `/opt/eval/fixtures/q01`，`mkdir -p /work/proj /opt/eval/state && git -C /work/proj init -q`。
+1. 開新沙盒（dev image＋三個 agent 的固定版本），複製本資料夾到 `/opt/eval/fixtures/q01`、`_shared` 到 `/opt/eval/fixtures/_shared`，`mkdir -p /work/proj /opt/eval/state && git -C /work/proj init -q`。
 2. `python3 $FIXTURE/server/selftest.py`：必須 `RESULT PASS`，否則是環境問題，先修環境。
 3. 寫入設定（項目 2 的步驟 1）。
 4. 原樣安裝（項目 1）。
 5. 加入並同步，每行包 egress check（項目 2 的步驟 2、項目 4）。
 6. `seed_configs.py check`（項目 2 的步驟 3）。
 7. 封鎖對外連線、不登入，跑三個 list 指令或替代檢查（項目 3）。
-8. `egress_check.py`（項目 4）。
+8. `egress.py stop` 與 `egress.py report`（項目 4）。
 9. 保存 `/opt/eval/state/` 全部檔案。這些檔案沒有機密，可以和結果一起 commit。
 
 ## 6. 外部材料與校準

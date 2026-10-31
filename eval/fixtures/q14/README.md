@@ -13,8 +13,8 @@
 | `service_check.py` | L2-1：一個啟動指令、同一個服務、兩個端點都就緒 |
 | `embed_check.py` | L2-2、L2-3：透過 openai client 取向量、比較維度與 cosine |
 | `rerank_check.py` | L2-4：送一次 rerank 請求，判讀排名 |
-| `egress_check.py` | L2-5：證明外連被擋、記錄外連嘗試（q14、q15、q16 各一份，內容相同） |
-| `mem_peak.py` | L2-5：容器記憶體峰值 |
+| `../_shared/egress.py` | L2-5：證明外連被擋、記錄外連嘗試（各題共用，[`_shared/README.md`](../_shared/README.md) 第 1 節） |
+| `../_shared/mem_peak.sh` | L2-5：容器記憶體峰值（各題共用，同上第 3 節） |
 | `needs.json` | 要從外部取得的東西，待念誠決定 |
 | `calibration.md` | 第一次開跑前要做的固定與紀錄 |
 | `tests/` | 本資料夾腳本的自我測試 |
@@ -30,11 +30,11 @@
 - **照原樣（verbatim）**：評分者把答案的安裝指令依序、原封不動複製成 `/results/steps.sh`，在同一個 bash 裡逐條執行（`bash -x steps.sh 2>&1 | tee /results/install.log`）。只做第 5 節允許的調整：填版本號與佔位字、安裝程式詢問時接受預設值；每一處替換記在 `/results/substitutions.json`。Ubuntu 擋下裸 `pip install` 時可以改在 venv 裡繼續（記 `needed_venv`）。修正指令或旗標、補步驟、換模型都不允許。本題沒有單獨的「照原樣」項目；安裝失敗時，照 9.1 節 C7，其餘 [L2] 項目都記不過。
 - **一個啟動指令**：答案給的「啟動服務」那一行指令（可以有參數、可以是設定檔路徑），評分者原樣執行一次，背景執行、記下 PID。答案需要兩個以上的啟動指令（例如兩個程序、兩個容器）才能提供兩個端點，L2-1 就不過；評分者不替答案合併。
 - **擋外連（egress blocked）**：在 A 階段安裝完成、模型下載完成之後才擋。做法：從 A 階段結束時的檔案系統快照開一個新沙盒，網路在沙盒層級關閉（首選）；或在同一個沙盒以 root 用 iptables／ip6tables 只放行 `lo`，其餘 REJECT（連線立刻失敗，不卡逾時）。用哪一種記在 `calibration.md`；兩組、所有答案都用同一種。本題首選新沙盒，因為這樣 `memory.peak` 只涵蓋 B 階段。
-- **外連檢查（egress check）**：受測程序用 `egress_check.py run` 包起來：
-  1. 執行前、後各探測一次：TCP 連 `1.1.1.1:443`、`8.8.8.8:53`、`9.9.9.9:443`、`[2606:4700:4700::1111]:443`，UDP 對 `8.8.8.8:53`、`1.1.1.1:53` 送 DNS 查詢，解析 `example.com`。全部失敗才算「確實擋住」。
-  2. 執行期間用 strace（`-f --seccomp-bpf`，追蹤 `connect`、`sendto`、`sendmsg`、`sendmmsg`）記錄受測程序與它所有子程序的每一次連線；目的地不是 loopback（`127.0.0.0/8`、`::1`）也不是未指定位址（`0.0.0.0`、`::`）的，都算一次外連嘗試，包括 DNS 查詢、私有網段與 `169.254.169.254`。
-  3. 通過：前後探測都擋住，而且外連嘗試 0 次（log 的 `verdict.egress_check_passed` 是 `true`）。探測顯示沒擋住，是評分環境的問題：修好重跑，不記答案不過。
-  4. strace 不能用時，`/proc` 輪詢只是備案而且抓不到立刻失敗的連線（`calibration.md`），不能用來判過；要先照 `calibration.md` 解決。
+- **外連檢查（egress check）**：定義與判定見 [`_shared/README.md`](../_shared/README.md) 第 1 節（共用工具在沙盒裡的 `$SHARED`）：
+  1. 擋了之後、啟動服務前，和停止服務後，各跑一次 `egress.py probe`：直接連公開位址的 TCP 與送往公開 DNS 的 UDP 都失敗，才算「確實擋住」。透過沙盒自己的 resolver 查名稱只記錄（`dns_resolves`），不影響判定。
+  2. 受測程序用 `egress.py run` 包起來，strace 記錄它與它所有子程序（含在背景跑的服務）的每一次連線；目的地不是 loopback、未指定位址、沙盒自己的位址的，以及任何查名稱（DNS），都算一次外連嘗試，包括私有網段與 `169.254.169.254`。
+  3. 通過：前後探測都擋住，而且 `egress.py report` 是 `pass`。探測顯示沒擋住，是評分環境的問題：修好重跑，不記答案不過。
+  4. strace 不能用時，不能判過（`_shared/README.md` 第 1 節；`/proc` 輪詢抓不到立刻失敗的連線）。
 - **逾時**：安裝 20 分鐘；第一次啟動（含下載模型）最多 20 分鐘；其餘每個檢查 10 分鐘（第 5 節）。
 - **判讀模型輸出**：embedding 與 rerank 沒有取樣溫度，每項只跑一次。
 
@@ -66,15 +66,15 @@
 
 ### B 階段（擋外連，新沙盒，同樣 4 vCPU、8 GiB）
 
-8. 從快照開新沙盒，網路關閉。`$EVAL_PY /eval/q14/egress_check.py probe --log /results/probe-b.json` 必須 exit 0。
-9. 沒有 `memory.peak` 時，先在背景跑 `$EVAL_PY /eval/q14/mem_peak.py watch --out /results/mem-watch.json`。
+8. 從快照開新沙盒，網路關閉。`$EVAL_PY $SHARED/egress.py probe --json /results/probe-b.json` 必須 exit 0。
+9. 在背景跑記憶體取樣：`sh $SHARED/mem_peak.sh watch /results/mem-watch.json &`，記下 PID。
 10. 在監測下執行同一個啟動指令（背景）：
     ```bash
-    $EVAL_PY /eval/q14/egress_check.py run --log /results/egress.json -- bash -c '<答案的啟動指令>' &
+    $EVAL_PY $SHARED/egress.py run --out /results/egress --label start --sh '<答案的啟動指令>' &
     ```
 11. 等就緒（同步驟 4，`--wait 600`，輸出 `/results/service-b.json`），然後再送一次步驟 5 與步驟 6（輸出 `embed-b.json`、`rerank-b.json`）。
-12. `kill -TERM <步驟 10 的 PID>`（`egress_check.py` 把訊號轉給整個程序群組，再寫 log）；停掉 `mem_peak.py watch`。
-13. `$EVAL_PY /eval/q14/mem_peak.py read [--watch-log /results/mem-watch.json] --out /results/mem.json`。
+12. 停止服務與記錄：`$EVAL_PY $SHARED/egress.py stop --out /results/egress --kill`，再 `wait` 步驟 10 的背景工作；`kill -TERM` 步驟 9 的取樣。然後 `$EVAL_PY $SHARED/egress.py probe --json /results/probe-b-after.json` 必須 exit 0，`$EVAL_PY $SHARED/egress.py report --out /results/egress --json /results/egress.json`。
+13. `BELOW_BYTES=8589934592 sh $SHARED/mem_peak.sh read /results/mem.json /results/mem-watch.json`。
 
 ## 4. L2 項目
 
@@ -118,15 +118,15 @@
 
 > [L2] After model download, with egress blocked, both requests succeed, the egress check passes, and container memory.peak stays under 8 GB
 
-- 測試資料：同 L2-2、L2-4；`egress_check.py`、`mem_peak.py`。
+- 測試資料：同 L2-2、L2-4；`$SHARED/egress.py`、`$SHARED/mem_peak.sh`。
 - 設定：第 3 節 B 階段。
 - 「兩個請求」：B 階段的 embedding 請求（`embed-b.json` 的 `items.dims` 那兩次）與 rerank 請求（`rerank-b.json`）。
 - 「外連檢查」：第 2 節的定義，範圍是 B 階段從啟動服務到停止服務的整段時間（含模型載入）。
-- 「memory.peak」：B 階段沙盒 cgroup v2 的 `memory.peak`；沒有這個檔時用 `mem_peak.py watch` 的最大值（`memory.current`，再沒有就是所有程序 RSS 加總），`mem.json` 記下用了哪一種。8 GB = 8 GiB = 8589934592 bytes，也就是沙盒的上限。
+- 「memory.peak」：B 階段沙盒 cgroup v2 的 `memory.peak`；沒有這個檔時用 `mem_peak.sh watch` 取樣的最大值（`memory.current`，再沒有就是所有程序 RSS 加總），`mem.json` 的 `method` 記下用了哪一種（共用規則，`_shared/README.md` 第 3 節）。8 GB = 8 GiB = 8589934592 bytes，也就是沙盒的上限。
 - 通過，三個都要成立：
   1. `embed-b.json` 的 `items.dims` 通過，而且 `rerank-b.json` 回 200；
-  2. `egress.json` 的 `verdict.egress_check_passed` 是 `true`；
-  3. `mem.json` 的 `decision.passed` 是 `true`：峰值 < 8589934592，而且沒有 OOM kill。
+  2. `probe-b.json`、`probe-b-after.json` 都是 `blocked: true`，而且 `egress.json` 的 `result` 是 `pass`；
+  3. `mem.json` 的 `result` 是 `pass`：峰值 < 8589934592，而且沒有 OOM kill。
 
 ## 5. 不適用
 
@@ -138,4 +138,4 @@
 python3 -m unittest discover -s eval/fixtures/q14/tests -v
 ```
 
-用本機假的 embedding／rerank 伺服器驗證各種回應格式與判定；外連探測只對 `127.0.0.1` 測，不連外；strace 與 `/proc/net` 的解析用樣本文字測。2026-10-30 另在離線（`--network none`）的 x86_64 Linux 容器跑過全部測試，並確認：預設探測回報「擋住」、`/proc` 輪詢抓不到立刻失敗的連線、cgroup v2 的 `memory.peak` 讀得到。
+用本機假的 embedding／rerank 伺服器驗證各種回應格式與判定。外連檢查與記憶體量測的測試在 `_shared/test_shared.py`。以下是 q14 原本的外連工具在出題時的實測紀錄，結論已寫進 `_shared/README.md`：2026-10-30 另在離線（`--network none`）的 x86_64 Linux 容器跑過全部測試，並確認：預設探測回報「擋住」、`/proc` 輪詢抓不到立刻失敗的連線、cgroup v2 的 `memory.peak` 讀得到。

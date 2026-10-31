@@ -14,7 +14,7 @@
 | `mock_api.py` | 本機假 API（127.0.0.1 與 ::1 的 18080 埠），每次啟動產生一個隨機 token，記錄每個請求 |
 | `mcp_ref_client.py` | **固定版本的參考 MCP client**（stdio、streamable HTTP、舊版 HTTP+SSE） |
 | `check_q06.py` | 從 client 報告、假 API 紀錄、egress 報告算出 L2-2、L2-3、L2-4 的判定 |
-| `egress_run.py` | 記錄連線、計時、逾時的執行包裝（q05、q06、q07 三份相同） |
+| `../_shared/egress.py` | 沒有對外連線的檢查、斷網、計時、逾時的執行包裝（各題共用，[`_shared/README.md`](../_shared/README.md) 第 1 節） |
 | `calib_mcp_server.py` | **只供校正**的 MCP server，證明整套檢查會讓正確的 server 過、壞的 server 不過；不是答案，也不給受測 agent 看 |
 | `test_q06.py` | 本機自我測試（不需要 strace） |
 | `needs.json`、`calibration.md` | 待決定的外部素材、開跑前的校正步驟與紀錄表 |
@@ -29,7 +29,7 @@
 ## 2. 評分環境
 
 - Modal Sandbox，x86_64；image 是第 5 節的開發 image 加上評分工具 `python3`、`strace`（見 `needs.json`）。記下 image digest。兩組用同一個 image。
-- 目錄約定：`/opt/eval-q06/` 放本資料夾；`/work/api/` 放規格的副本；`/work/out/` 放紀錄。答案要求的專案目錄或產生的程式碼放 `/work/project/`。
+- 目錄約定：`/opt/eval-q06/` 放本資料夾；`$SHARED` 是 `eval/fixtures/_shared`（各題共用的工具）；`/work/api/` 放規格的副本；`/work/out/` 放紀錄。答案要求的專案目錄或產生的程式碼放 `/work/project/`。
 - 安裝 20 分鐘逾時，每個檢查 10 分鐘逾時（第 5 節）。
 
 ## 3. 名詞
@@ -41,7 +41,7 @@
   - 驗證佔位字：答案的設定有 token、API key 之類的佔位字時，填一個執行時產生的假值：`python3 -c "import secrets; print('fake-' + secrets.token_hex(16))"`。這個值不寫進任何 commit。
 - **產生的程式碼原樣使用**：答案的工具若先產生程式碼或專案，產生之後不改任何一行；需要的安裝、建置照答案做。
 - **參考 MCP client**：`mcp_ref_client.py`，以測試資料凍結那個 commit 的版本為準（sha256 記在 `calibration.md`；每份 client 報告的 `client.sha256` 要與它相同）。它做的事：`initialize` → `notifications/initialized` → `tools/list`（翻完所有頁）→ 呼叫 GET 工具（id 42）→ 呼叫 POST 工具（`post_body.json`）。協定版本先送 `2025-06-18`，伺服器回什麼版本就用什麼版本。
-- **egress 檢查**：同 q05 第 4 節的定義（`strace -f` 記下所有子程序的連線；目的地不是 loopback、任何 DNS 類埠、系統解析 socket、原始封包，都算一次嘗試，失敗的嘗試也算）。這題**不斷網**，只記錄。假 API 在被記錄的程序之外另外啟動；參考 client 與它啟動的 MCP server 一起被記錄。連到 loopback 都允許（包括 client 連 MCP server 的 HTTP 埠）；「只連到本機假 API」的意思就是除了 loopback 之外沒有任何連線嘗試。
+- **egress 檢查**：`$SHARED/egress.py run` 用 `strace -f` 記下所有子程序的連線；什麼算一次嘗試（失敗的也算）見 [`_shared/README.md`](../_shared/README.md) 第 1 節。這題**不斷網**，只記錄。假 API 在被記錄的程序之外另外啟動；參考 client 與它啟動的 MCP server 一起被記錄。連到 loopback 都允許（包括 client 連 MCP server 的 HTTP 埠）；「只連到本機假 API」的意思就是除了 loopback 之外沒有任何連線嘗試。
 
 ## 4. 每個答案的流程
 
@@ -59,20 +59,20 @@ python3 /opt/eval-q06/mock_api.py --port 18080 \
 
    ```sh
    cd /work/project
-   python3 /opt/eval-q06/egress_run.py --timeout 600 --report /work/out/gen.json -- <答案的產生指令>
+   python3 $SHARED/egress.py run --out /work/out/egress --label gen --timeout 600 --sh '<答案的產生指令>'
    ```
 3. **啟動＋兩個工具呼叫**，看答案的 server 用哪種傳輸：
    - stdio（答案給啟動指令，或給一段 MCP client 設定，例如 `{"command": …, "args": […], "env": {…}}`；設定裡的 command、args、env 原樣搬過來）：
 
      ```sh
-     python3 /opt/eval-q06/egress_run.py --timeout 600 --report /work/out/session.json -- \
+     python3 $SHARED/egress.py run --out /work/out/egress --label session --timeout 600 -- \
          python3 /opt/eval-q06/mcp_ref_client.py --report /work/out/client.json \
          --stdio [--env KEY=VALUE]... [--cwd /work/project] -- <答案的 server 指令>
      ```
    - streamable HTTP（答案給啟動指令與網址）：
 
      ```sh
-     python3 /opt/eval-q06/egress_run.py --timeout 600 --report /work/out/session.json -- \
+     python3 $SHARED/egress.py run --out /work/out/egress --label session --timeout 600 -- \
          python3 /opt/eval-q06/mcp_ref_client.py --report /work/out/client.json \
          --http http://127.0.0.1:<埠>/<路徑> --spawn '<答案的 server 啟動指令>' [--cwd /work/project]
      ```
@@ -84,7 +84,7 @@ python3 /opt/eval-q06/mock_api.py --port 18080 \
    ```sh
    python3 /opt/eval-q06/check_q06.py --client-report /work/out/client.json \
        --mock-log /work/out/mock_log.jsonl --mock-state /work/out/mock_state.json \
-       [--egress /work/out/gen.json] --egress /work/out/session.json --report /work/out/verdict.json
+       --egress-dir /work/out/egress [--egress-label gen] --egress-label session --report /work/out/verdict.json
    ```
 
 ## 5. 各 [L2] 項目
@@ -122,14 +122,14 @@ python3 /opt/eval-q06/mock_api.py --port 18080 \
 
 > [L2] Egress check passes for generation, startup and both tool calls (only the localhost mock is reached)
 
-- **用到**：`egress_run.py`、第 4 節的 `gen.json`（有產生步驟時）與 `session.json`。
-- **判定**（`egress.pass`）：給的每一份報告 `egress.verdict` 都是 `pass`。`npx`、`uvx` 之類在啟動時才去抓套件或查版本，也算對外連線嘗試。安裝步驟本身不在這項檢查內。
+- **用到**：`$SHARED/egress.py`、第 4 節 `/work/out/egress/` 裡的 `gen`（有產生步驟時）與 `session` 兩步。
+- **判定**（`egress.pass`）：每一步的共用判定都是 `pass`。`npx`、`uvx` 之類在啟動時才去抓套件或查版本，也算對外連線嘗試。安裝步驟本身不在這項檢查內。
 
 ## 6. 自我測試（不是校正）
 
 ```sh
 python3 test_q06.py            # 7 個案例：stdio、HTTP（JSON 與 SSE 回應）、舊版 SSE 都過；多一個工具、丟掉 POST 主體、base URL 錯都抓得到
-python3 egress_run.py --selftest
+python3 ../_shared/test_shared.py   # 共用工具的測試；strace 的實測在 _shared/calibration.md
 ```
 
 2026-10-30 在 macOS 上跑過，全部符合預期。strace 只能在 Linux 上測，放在 `calibration.md`。

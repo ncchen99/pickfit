@@ -226,15 +226,22 @@ def test_calibration_and_runs():
         check(len(tokens) == 3, "every run gets its own token")
 
         def egress_dir(name, bad_run=None):
+            # a folder as eval/fixtures/_shared/egress.py run writes it: one traced step per run, plus the
+            # config step whose leftover (a background helper) phones home during bad_run's window
             d = os.path.join(work, name)
             os.makedirs(d)
-            t_first = json.load(open(os.path.join(r1, "run.json")))["t_start"]
-            lines = [{"event": "dns_start", "ts": t_first - 10, "mode": "forward"}]
-            if bad_run:
-                t = json.load(open(os.path.join(bad_run, "run.json")))["t_start"] + 0.05
-                lines.append({"event": "query", "ts": t, "qname": "telemetry.example.org", "local": False})
-            with open(os.path.join(d, "dns.jsonl"), "w") as f:
-                f.write("".join(json.dumps(l) + "\n" for l in lines))
+            execve = '1 1761800000.1 execve("/bin/sh", ["sh"], 0x0 /* 1 var */) = 0\n'
+            for label in ("config", "r1", "r2", "r3"):
+                trace = execve
+                if label == "config" and bad_run:
+                    t = json.load(open(os.path.join(bad_run, "run.json")))["t_start"] + 0.05
+                    trace += ('2 %.6f connect(3, {sa_family=AF_INET, sin_port=htons(443), '
+                              'sin_addr=inet_addr("203.0.113.9")}, 16) = 0\n' % t)
+                with open(os.path.join(d, label + ".strace"), "w") as f:
+                    f.write(trace)
+                with open(os.path.join(d, label + ".json"), "w") as f:
+                    json.dump({"tool": "egress.py", "label": label, "trace": os.path.join(d, label + ".strace"),
+                               "traced": True, "tracer_running": False, "self_addresses": []}, f)
             return d
 
         for name, bad, want in (("eg-clean", None, "pass"), ("eg-bad", r2, "fail")):
@@ -244,7 +251,8 @@ def test_calibration_and_runs():
             rep = json.loads(res.stdout)
             check(rep["L2-3"] == want, "egress %s -> L2-3 %s (got %s)" % (name, want, rep["L2-3"]))
         by = {x["run"]: x for x in rep["runs"]}
-        check(by["r2"]["egress_names"] == ["telemetry.example.org"] and by["r1"]["egress"] == "pass",
+        check(by["r2"]["egress"] == "fail" and "203.0.113.9" in by["r2"]["egress_attempts"][0]
+              and by["r1"]["egress"] == "pass" and by["r3"]["egress"] == "pass",
               "egress violation is attributed to the run whose window it falls in")
     finally:
         proxy.terminate()

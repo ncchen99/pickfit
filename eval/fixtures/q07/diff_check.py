@@ -10,11 +10,12 @@ edit    replace every occurrence of OLD with NEW in that one file (bytes, no ref
         prints the count. Run it more than once when the tool stores the URL in more than
         one form (for example a full URL plus a path list), each time for a form of the
         same URL. Editing by hand in a text editor is equally fine.
-report  verdict on `git diff` against the baseline:
-          * exactly one path differs (git status, untracked files included) and it is
-            REL_PATH; no other file was added, removed or changed;
-          * that file is valid UTF-8 text (git does not treat it as binary);
-          * changed lines = max(added, deleted) from `git diff --numstat` <= 3;
+report  verdict on `git diff` against the baseline, counted by the shared
+        eval/fixtures/_shared/git_diff_lines.py (_shared/README.md section 4):
+          * exactly one path differs (new, deleted and moved files included) and it is
+            REL_PATH, modified in place; no other file was added, removed or changed;
+          * that file is valid UTF-8 text and not a binary change;
+          * changed lines (the shared count: per hunk max(removed, added), summed) <= 3;
           * every removed line contains "widgets" and every added line contains "gadgets"
             (the change touches only the edited request's URL, which also shows the other
             requests are untouched when all three share one file).
@@ -25,6 +26,9 @@ import json
 import os
 import subprocess
 import sys
+
+sys.path.insert(0, os.environ.get("SHARED") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "_shared"))
+import git_diff_lines  # noqa: E402
 
 GIT_ENV = dict(os.environ, GIT_AUTHOR_NAME="eval", GIT_AUTHOR_EMAIL="eval@localhost",
                GIT_COMMITTER_NAME="eval", GIT_COMMITTER_EMAIL="eval@localhost",
@@ -59,29 +63,21 @@ def edit(d, rel, old, new):
 
 
 def report(d, rel, out):
-    status = [ln for ln in git(d, "status", "--porcelain", "--untracked-files=all").stdout.splitlines() if ln]
-    paths = [ln[3:] for ln in status]
-    numstat = [ln.split("\t") for ln in git(d, "diff", "--numstat").stdout.splitlines() if ln]
-    diff = git(d, "diff", "--unified=0").stdout
+    count = git_diff_lines.count(d, "HEAD")
+    files = count["files"]
+    diff = count["diff"]
     removed = [ln[1:] for ln in diff.splitlines() if ln.startswith("-") and not ln.startswith("---")]
     added = [ln[1:] for ln in diff.splitlines() if ln.startswith("+") and not ln.startswith("+++")]
-    one = len(paths) == 1 and paths[0] == rel and status[0][:2].strip() == "M"
-    entry = next((n for n in numstat if n[2] == rel), None)
-    binary = entry is not None and entry[0] == "-"
-    a_cnt = int(entry[0]) if entry and not binary else None
-    d_cnt = int(entry[1]) if entry and not binary else None
-    try:
-        open(os.path.join(d, rel), "rb").read().decode("utf-8")
-        utf8 = True
-    except (OSError, UnicodeDecodeError):
-        utf8 = False
-    changed = max(a_cnt, d_cnt) if a_cnt is not None else None
+    one = len(files) == 1 and files[0]["path"] == rel and files[0]["status"] == "M"
+    binary = bool(count["binary"])
+    utf8 = bool(files) and all(f.get("utf8_text") for f in files)
+    changed = count["changed_lines"]
     only_url = bool(removed) and bool(added) and all("widgets" in ln for ln in removed) and \
         all("gadgets" in ln for ln in added)
     ok = one and not binary and utf8 and changed is not None and changed <= 3 and only_url
-    res = {"pass": ok, "changed_paths": status, "one_file_is_the_edited_file": one, "binary": binary,
-           "utf8": utf8, "added": a_cnt, "deleted": d_cnt, "changed_lines_max_added_deleted": changed,
-           "threshold": 3, "only_url_lines_changed": only_url, "diff": diff[:4000]}
+    res = {"pass": ok, "changed_paths": [(f["status"], f["path"]) for f in files], "one_file_is_the_edited_file": one,
+           "binary": binary, "utf8": utf8, "added": count["added"], "deleted": count["removed"],
+           "changed_lines": changed, "threshold": 3, "only_url_lines_changed": only_url, "diff": diff[:4000]}
     text = json.dumps(res, ensure_ascii=False, indent=2)
     if out:
         with open(out, "w", encoding="utf-8") as fh:

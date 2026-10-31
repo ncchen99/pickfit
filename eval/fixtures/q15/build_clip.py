@@ -199,7 +199,7 @@ def cmd_stats(args) -> int:
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         import zh_score
 
-        out["reference"] = zh_score.reference_stats(ref, zh_score.load_opencc())
+        out["reference"] = zh_score.reference_stats(ref, zh_score.zh_script.OpenCCTables(args.dict_dir))
     except SystemExit as exc:
         out["reference"] = {"error": str(exc)}
     json.dump(out, sys.stdout, ensure_ascii=False, indent=2)
@@ -225,6 +225,7 @@ def main(argv=None) -> int:
     sp = sub.add_parser("stats")
     sp.add_argument("--clip", required=True)
     sp.add_argument("--ref", required=True)
+    sp.add_argument("--dict-dir", required=True, help="pinned OpenCC dictionary files (_shared/needs.json)")
     sp.set_defaults(func=cmd_stats)
     args = p.parse_args(argv)
     return args.func(args)

@@ -26,21 +26,8 @@
   },
   {
     "item": "Pinned OpenCC (the shared OpenCC scorer, also used by q11)",
-    "why": "L2-3 converts reference and output to Traditional; L2-4 is the shared scorer of eval/README.md section 5. zh_score.py implements that scorer; q11's fixtures should use the same file or the same rules and the same pinned version.",
-    "candidates": [
-      {
-        "source": "https://pypi.org/project/OpenCC/ (official Python binding of BYVoid/OpenCC)",
-        "license": "Apache-2.0",
-        "size": "a few MB wheel (dictionaries included)",
-        "pin": "OpenCC==X.Y.Z (latest on the pin date) + wheel SHA-256, installed in the grader's own venv outside the sandbox"
-      },
-      {
-        "source": "https://pypi.org/project/opencc-python-reimplemented/",
-        "license": "Apache-2.0",
-        "size": "under 1 MB, pure Python",
-        "pin": "version + wheel SHA-256 (its dictionaries may lag the official ones)"
-      }
-    ],
+    "why": "L2-3 converts reference and output to Traditional; L2-4 is the shared scorer of eval/README.md section 5. Both use eval/fixtures/_shared/zh_script.py with one pinned set of OpenCC dictionary files, listed once in eval/fixtures/_shared/needs.json (no OpenCC package).",
+    "candidates": [],
     "decision_needed_by": "念誠"
   },
   {
@@ -127,7 +114,7 @@
   },
   {
     "item": "Dev image digest and grader-side Python (shared by every Linux question)",
-    "why": "eval/README.md section 5. egress_check.py and check_no_torch.sh run inside the sandbox; the scorers run outside it.",
+    "why": "eval/README.md section 5. _shared/egress.py and check_no_torch.sh run inside the sandbox; the scorers run outside it.",
     "candidates": [
       {
         "source": "docker.io/library/ubuntu:24.04 plus the eval's own dev-image layer; python3 from the image or a standalone build on the read-only /eval mount (https://github.com/astral-sh/python-build-standalone/releases)",

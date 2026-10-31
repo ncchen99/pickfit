@@ -13,13 +13,13 @@ L3（主要答案是否說不用另外裝 proxy／gateway）從答案原文判�
 | `script/ask.py` | 凍結的使用者腳本：官方 openai 套件、`client = OpenAI()`、`model="gpt-4o-mini"`、問一句話、印出回答（回答是空的就以非 0 結束） |
 | `check_script_diff.py` | 確認改過的腳本只動了 `OpenAI(...)` 的 `base_url`、`api_key` 與 `model=` 的值（比對語法樹，註解與排版不算） |
 | `check_base_url.py` | L2-1：base_url 是否為 Ollama 文件的預設位址與 OpenAI 相容路徑 |
-| `run_ask.py` | 在乾淨的環境變數下跑一次腳本（`OPENAI_*` 只留答案給的），記錄結果；可包在 egress trace 裡 |
+| `run_ask.py` | 在乾淨的環境變數下跑一次腳本（`OPENAI_*` 只留答案給的），記錄結果；`--egress-dir` 時包在共用的 `egress.py run` 裡 |
 | `pins.env` | 固定版本（凍結時填） |
 | `setup_pinned_ollama.sh`、`setup_user_env.sh` | 建 base image 時裝固定版本的 Ollama 與小模型、建使用者的 venv 與固定版本的 openai 套件（**要網路**，只在建 image 時用） |
 | `start_ollama.sh`、`stop_ollama.sh` | 以 Ollama 自己的預設位址啟動／停止（不設 `OLLAMA_HOST`），並確認模型 digest |
 | `tools/gen_dummy_key.py` | 執行時產生假的金鑰值（只在答案說「填什麼都可以」時用） |
 | `tools/run_steps.py`、`tools/pty_drive.py` | 答案要另外裝東西時，把指令原字不改、依序打進同一個終端機 session |
-| `egress/egress.py` | egress check（第 1 節） |
+| `../_shared/egress.py` | egress check（各題共用，[`_shared/README.md`](../_shared/README.md) 第 1 節；第 1 節寫本題怎麼用） |
 | `selftest.sh`、`tests/` | 離線自我測試；設 `Q20_OPENAI_PYTHON` 時另外用真的 openai 套件對假伺服器跑端到端 |
 | `needs.json`、`calibration.md` | 待決定的外部資料；開跑前校準步驟與結果欄位 |
 
@@ -43,11 +43,11 @@ L3（主要答案是否說不用另外裝 proxy／gateway）從答案原文判�
 
 「egress」指**任何連往本機以外的嘗試**：查詢 localhost 以外名稱的 DNS，或對 loopback（127.0.0.0/8、::1）、0.0.0.0、本沙盒自己介面位址以外的 IPv4／IPv6 位址呼叫 connect／sendto／sendmsg（失敗的嘗試、UDP、多播都算）。
 
-`egress/egress.py` 三層：**dns**（必要；本題 `--mode sink`，localhost 以外一律 NXDOMAIN）、**strace**（`run_ask.py --egress-dir` 會把腳本包在 `egress.py trace` 裡）、**poll**（輪詢 `/proc/net`，整個沙盒，含 Ollama）。strace、poll 是否為必要層照 calibration.md E7。
+定義、做法與判定見 [`_shared/README.md`](../_shared/README.md) 第 1 節（共用工具在沙盒裡的 `$SHARED`）。本題：Ollama 的啟動（label `ollama`，留在背景、一直被記錄）與那一次呼叫（`run_ask.py --egress-dir`，label `blocked`）都用 `egress.py run` 包起來；判定只算呼叫時段（`--since`／`--until`）內的嘗試，Ollama 在那段時間的連線也算。
 
-**「egress check 通過」**＝ 該次呼叫時段內 `egress.py report` 的 `result` 是 `pass`。`fail` 列出對外的名稱與位址；`incomplete` 表示量測沒在運作，不能判過、也不算答案的錯。Ollama 本身在封鎖網路時不外連，已在 calibration.md C5 確認。
+**「egress check 通過」**＝ `egress.py report` 的 `result` 是 `pass`。`fail` 列出位址與原始紀錄行；`undetermined` 表示量測沒做好，不能判過、也不算答案的錯。Ollama 本身在封鎖網路時不外連，已在 calibration.md C5 確認。
 
-**「egress blocked (localhost allowed)」**＝ 沙盒 B 封鎖對外網路、loopback 可用（calibration.md E2 確認），DNS 層用 sink 模式。
+**「egress blocked (localhost allowed)」**＝ 沙盒 B 封鎖對外網路、loopback 可用（calibration.md E2 確認）；擋好後先跑 `egress.py probe`，必須 exit 0。
 
 ## 2. 各 [L2] 項目
 
@@ -86,22 +86,22 @@ python3 $F/run_ask.py --script $W/ask.py --python /opt/q20-venv/bin/python \
 
 > [L2] With egress blocked (localhost allowed), the same call succeeds and the egress check passes
 
-用到：`egress/egress.py`、`start_ollama.sh`、`run_ask.py`；L2-2 的同一份 `$W/ask.py` 與同樣的 `--env`。
+用到：`$SHARED/egress.py`、`start_ollama.sh`、`run_ask.py`；L2-2 的同一份 `$W/ask.py` 與同樣的 `--env`。
 
 做法（沙盒 B：用 A 的快照開機、封鎖網路）：
 
 ```sh
-sudo python3 $F/egress/egress.py start --out $W/egress --mode sink     # 先開量測，再啟動 Ollama
-STATE=$W/state sh $F/start_ollama.sh
+python3 $SHARED/egress.py probe --json $W/runs/probe.json                                      # exit 0
+python3 $SHARED/egress.py run --out $W/egress --label ollama --sh "STATE=$W/state sh $F/start_ollama.sh"   # Ollama 留在背景，一直被記錄
 T0=$(python3 -c 'import time; print(time.time())')
 python3 $F/run_ask.py --script $W/ask.py --python /opt/q20-venv/bin/python [--env ...] \
   --egress-dir $W/egress --label blocked --out $W/runs/blocked
 T1=$(python3 -c 'import time; print(time.time())')
-sudo python3 $F/egress/egress.py stop --out $W/egress
-python3 $F/egress/egress.py report --out $W/egress --since $T0 --until $T1 --save $W/runs/egress-report.json
+python3 $SHARED/egress.py stop --out $W/egress --kill
+python3 $SHARED/egress.py report --out $W/egress --since $T0 --until $T1 --json $W/runs/egress-report.json
 ```
 
-通過：`$W/runs/blocked.json` 的 `pass` 為 true，**而且** egress report 的 `result` 是 `pass`。`incomplete` 時修好量測後重做這一步。
+通過：`$W/runs/blocked.json` 的 `pass` 為 true，**而且** egress report 的 `result` 是 `pass`。`undetermined` 時修好量測後重做這一步。
 
 ## 3. 自我測試
 

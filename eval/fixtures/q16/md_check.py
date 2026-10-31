@@ -3,8 +3,9 @@
 
   files       each of the 3 inputs has one non-empty output .md file (naming
               rule in mdtools.map_outputs; --map NAME=PATH when the answer
-              names its outputs otherwise); with --run-log (the
-              egress_check.py log of the translation run) also: the run
+              names its outputs otherwise); with --run-log (the step file
+              <label>.json that _shared/egress.py run wrote for the translation
+              run) also: the run
               ended within 1800 s and was not stopped by the time limit.
   structure   per file: the sequence of fenced code blocks is identical,
               byte for byte (same count, same order, fences and info string
@@ -68,9 +69,9 @@ def check_files(mapping: dict, run_log=None) -> dict:
     produced = {n: bool(m["path"]) and os.path.getsize(m["path"]) > 0 for n, m in mapping.items()}
     out = {"mapping": mapping, "produced": produced, "all_produced": all(produced.values()) and len(produced) == 3}
     if run_log is not None:
-        wall = run_log.get("wall_seconds")
+        wall = run_log.get("duration_s")
         in_time = (not run_log.get("timed_out")) and wall is not None and wall <= TIME_LIMIT_S
-        out.update(wall_seconds=wall, time_limit_s=TIME_LIMIT_S, in_time=in_time,
+        out.update(duration_s=wall, time_limit_s=TIME_LIMIT_S, in_time=in_time,
                    run_exit_code=run_log.get("exit_code"))
         out["passed"] = out["all_produced"] and in_time
     else:
@@ -162,7 +163,7 @@ def main(argv=None) -> int:
     p.add_argument("--input", default=os.path.join(HERE, "docs"), help="the untouched fixture docs")
     p.add_argument("--output", required=True, help="folder holding the answer's translated files")
     p.add_argument("--map", action="append", help="NAME=PATH when the answer's naming is not recognised")
-    p.add_argument("--run-log", help="egress_check.py log of the translation run")
+    p.add_argument("--run-log", help="_shared/egress.py run step file (<label>.json) of the translation run")
     p.add_argument("--manifest")
     p.add_argument("--out", required=True)
     args = p.parse_args(argv)

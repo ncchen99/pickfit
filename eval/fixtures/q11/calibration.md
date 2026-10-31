@@ -4,17 +4,9 @@
 
 ## 1. OpenCC 字元表（L2-4；q15 共用）
 
-1. 從 `needs.json` 選定的 OpenCC 版本取得 `data/dictionary/STCharacters.txt` 與 `data/dictionary/TSCharacters.txt`，放在評分機器的固定位置（不 commit 進 repo）。
-2. 記下版本與 SHA-256：
+1. 字典檔照 [`_shared/calibration.md`](../_shared/calibration.md) 步驟 3 取得並記下版本與 SHA-256（q15 用同一份，放在 `$OPENCC`；不 commit 進 repo）。
 
-| 項目 | 結果 |
-|---|---|
-| OpenCC 版本（tag） | |
-| 取得來源 URL | |
-| `STCharacters.txt` SHA-256 | |
-| `TSCharacters.txt` SHA-256 | |
-
-3. 逐字分類的抽查（`python3 opencc_scorer.py --dict-dir DIR --probe <字>`），把結果填進表格：
+2. 逐字分類的抽查（`python3 ../_shared/zh_script.py --dict-dir $OPENCC probe <字>`），把結果填進表格：
 
 | 字組 | 預期 | 結果 |
 |---|---|---|
@@ -23,11 +15,11 @@
 | 为 软 视 频 网 络 认 这 说 们 个 会 | simplified | |
 
    有和預期不同的字（例如台灣常用、但被判成只屬簡體的字），在這裡列出，並在開跑前決定：照凍結的規則照算，或在 9.x 勘誤登記改法（兩組一起套用）。
-4. 用正式字元表跑合成回覆：
+3. 用正式字典檔跑合成回覆：
 
 ```sh
-python3 opencc_scorer.py --dict-dir DIR samples/good/P*.txt        # 預期 PASS
-python3 opencc_scorer.py --dict-dir DIR samples/simplified/P*.txt  # 預期 FAIL
+python3 ../_shared/zh_script.py --dict-dir $OPENCC ratio samples/good/P*.txt        # 預期 PASS
+python3 ../_shared/zh_script.py --dict-dir $OPENCC ratio samples/simplified/P*.txt  # 預期 FAIL
 ```
 
 | 項目 | 結果（比例、不同字數、只屬簡體的字） |

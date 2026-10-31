@@ -11,7 +11,7 @@
 | 項目 | 結果 |
 |---|---|
 | dev image digest、apt snapshot id | |
-| E7 必要層 | dns ＋ （strace？）＋（poll？） |
+| egress | 照 `_shared/calibration.md` 步驟 1、2（各題共用一次） |
 
 ## C. q19 固定伺服器與模型
 
@@ -25,7 +25,7 @@
 | C4 參考 harness 3/3 | `STATE=/tmp/q19cal sh $F/start_fixture_servers.sh`，再 `python3 $F/reference_harness.py --base-url http://127.0.0.1:8000/v1 --model "$FIXTURE_MODEL" --runs 3 --probe-prefill 16000 --out /tmp/q19cal/harness.json` | `passed_runs` 是 3（檢查項目要求 3/3），每次 ≤ 900 秒 |
 | C5 長提示的速度（只記錄） | 看 `harness.json` 的 `prefill_probe.seconds`（約 16,000 token 的提示處理時間） | 若超過 600 秒，真的 coding agent 可能來不及在 15 分鐘內完成：在凍結前決定是否換較小的模型（寫下決定與理由） |
 | C6 伺服器紀錄 | `/tmp/q19cal/proxy/requests.jsonl` | 每次 harness 的請求都有記錄（路徑 `/v1/chat/completions`、模型名、`n_tools` 為 3） |
-| C7 環境本身不外連 | 網路開的沙盒：`sudo python3 $F/egress/egress.py start --out /tmp/q19eg --mode forward`；`start_fixture_servers.sh`；C4 跑 1 次；閒置 120 秒；`stop`；`report --out /tmp/q19eg` | `result` 是 `pass` |
+| C7 環境本身不外連 | 網路開的沙盒：`python3 $SHARED/egress.py run --out /tmp/q19eg --label fixtures --sh 'sh $F/start_fixture_servers.sh'`（伺服器留在背景、一直被記錄）；C4 跑 1 次；閒置 120 秒；`python3 $SHARED/egress.py stop --out /tmp/q19eg --kill`；`python3 $SHARED/egress.py report --out /tmp/q19eg` | `result` 是 `pass` |
 | C8 工作資料夾 | 依 needs.json 的 git 決定，`python3 $F/new_run.py --runs-dir /tmp/q19runs --label c --workdir /tmp/q19wd` | `run.json` 的 `git` 與 `head`；記下 head（每次執行都從同一個 commit 開始） |
 | C9 自我測試 | `sh $F/selftest.sh` | 兩個測試都 `0 failure(s)` |
 

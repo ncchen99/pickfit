@@ -3,7 +3,7 @@
 
 1. inspect_listing.py on hand-written JSON listings of many shapes
    (none of them copies a real tool's format).
-2. egress_parse.py on hand-written strace lines.
+2. the shared egress classification (../_shared/egress.py) on hand-written strace lines.
 3. make_repo.sh + check_repo_data.py with a throw-away stand-in "tool" written
    here (tasks as lines of a text file), including the fresh-clone listing
    with an empty HOME.
@@ -19,7 +19,8 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import egress_parse  # noqa: E402
+sys.path.insert(0, os.path.join(HERE, "..", "_shared"))
+import egress  # noqa: E402
 import inspect_listing as il  # noqa: E402
 
 with open(os.path.join(HERE, "titles.json"), encoding="utf-8") as f:
@@ -108,15 +109,15 @@ with open(log, "w") as f:
     f.write('101 connect(3, {sa_family=AF_UNIX, sun_path="/var/run/nscd/socket"}, 110) = -1 ENOENT\n'
             '101 connect(4, {sa_family=AF_INET, sin_port=htons(8080), sin_addr=inet_addr("127.0.0.1")}, 16) = 0\n'
             '101 sendto(5, "x", 1, 0, {sa_family=AF_NETLINK, nl_pid=0, nl_groups=00000000}, 12) = 1\n')
-check("egress: unix/loopback/netlink only -> no egress", egress_parse.scan(log)[0] == [])
+check("egress: unix/loopback/netlink only -> no egress", egress.parse_trace(log)["attempts"] == [])
 with open(log, "a") as f:
     f.write('102 connect(6, {sa_family=AF_INET, sin_port=htons(53), sin_addr=inet_addr("127.0.0.53")}, 16) = 0\n'
             '[pid 103] connect(7, {sa_family=AF_INET6, sin6_port=htons(443), sin6_flowinfo=htonl(0), '
             'inet_pton(AF_INET6, "2001:db8::1", &sin6_addr), sin6_scope_id=0}, 28) = -1 ENETUNREACH\n'
             '104 sendto(8, "q", 1, MSG_NOSIGNAL, {sa_family=AF_INET, sin_port=htons(123), '
             'sin_addr=inet_addr("192.0.2.7")}, 16) = 1\n')
-hits = egress_parse.scan(log)[0]
-check("egress: DNS to loopback, IPv6 and UDP sendto all counted", len(hits) == 3 and hits[0]["dns"])
+hits = egress.parse_trace(log)["attempts"]
+check("egress: DNS to loopback, IPv6 and UDP sendto all counted", len(hits) == 3 and hits[0]["port"] == 53)
 
 # ------------------------------------------------------------ 3. repo + stand-in tool
 git = shutil.which("git")
@@ -173,7 +174,7 @@ esac
     with open(os.devnull, "w") as dn:
         r_diff = subprocess.run([sys.executable, os.path.join(HERE, "check_repo_data.py"), "diffsize", repo, before],
                                 stdout=dn).returncode
-    check("stand-in: L2-4 diff (2 lines) -> PASS", r_diff == 0)
+    check("stand-in: L2-4 diff (1 changed line) -> PASS", r_diff == 0)
     # negative: binary data and a large rewrite
     with open(os.path.join(repo, "state.bin"), "wb") as f:
         f.write(b"\x00\x01\x02" * 10)

@@ -10,7 +10,7 @@
 |---|---|
 | `gen_log.py` | 凍結的 seeded 產生器：寫出 `app.log`（一般行＋6 行各帶一個假的敏感值）與 `manifest.json`（6 個值、所在行號、一般行的行號）。輸出目錄在這個 git repo 裡時拒絕執行 |
 | `check_clean.py` | 比對 `app.log` 與 `clean.log`，分別判定「遮罩」與「一般行不變」兩項；不印出任何假值 |
-| `egress/run_traced.sh`、`egress/egress_check.py` | egress check（與 q01 相同的檔案） |
+| `../_shared/egress.py` | egress check（各題共用，[`_shared/README.md`](../_shared/README.md) 第 1 節） |
 | `needs.json` | 需要外部取得的東西（strace、dev image） |
 | `calibration.md` | 第一次開跑前的校準步驟與紀錄表（待填） |
 
@@ -30,9 +30,9 @@
 
 ## 3. 共同設定
 
-- **環境**：dev image（`needs.json`；需要 `python3`、`strace`）。本資料夾複製到 `FIXTURE=/opt/eval/fixtures/q02`，測試目錄 `/work/q02`，紀錄放 `/opt/eval/state/`。
+- **環境**：dev image（`needs.json`；需要 `python3`、`strace`）。本資料夾複製到 `FIXTURE=/opt/eval/fixtures/q02`，共用工具複製到 `SHARED=/opt/eval/fixtures/_shared`，測試目錄 `/work/q02`，紀錄放 `/opt/eval/state/`。
 - **原樣（verbatim）**：逐字執行答案的指令，只做 `eval/README.md` 第 5 節允許的調整（填版本號與佔位字、接受預設值；裸 `pip install` 被擋時改用 venv 並記 `needed_venv`，但「原樣成功」那一項不過）。任何一步 exit code 不是 0、或要改指令、旗標、補步驟才能成功，就不過。
-- **egress check**：把指定步驟包在 `egress/run_traced.sh` 裡執行，strace 記下所有子程序的 `connect`、`sendto`、`sendmsg`、`sendmmsg`；`egress/egress_check.py` 把非 loopback 的 IPv4／IPv6 目的地、任何位址的 port 53（DNS）、其他能上網的 socket 家族都算成對外連線嘗試（失敗的也算）。exit 0＝過、1＝不過、2＝沒有追蹤成功的證據（要修好追蹤後重跑）。
+- **egress check**：指定的每一步都用 `$SHARED/egress.py run` 包起來執行，strace 記下它和它啟動的所有程序（包括留在背景的 daemon，記到 `egress.py stop` 為止）的連線。什麼算一次對外連線嘗試、怎麼判定，見 [`_shared/README.md`](../_shared/README.md) 第 1 節（失敗的嘗試也算）。`egress.py report` exit 0＝過；1＝不過；2＝量測沒做好（紀錄缺漏、沒有 execve 或還沒 stop），不算答案的錯，修好後重跑。
 
 ## 4. L2 項目
 
@@ -53,8 +53,8 @@
   ```sh
   python3 $FIXTURE/gen_log.py /work/q02            # 印出的 sha256 必須等於第 2 節的參考值
   cd /work/q02
-  sh $FIXTURE/egress/run_traced.sh /opt/eval/state/q02-egress.log \
-    'cat app.log | <答案的工具與旗標> > clean.log'
+  python3 $SHARED/egress.py run --out /opt/eval/state/q02-egress --label pipeline \
+    --sh 'cat app.log | <答案的工具與旗標> > clean.log'
   echo "pipeline exit: $?" > /opt/eval/state/q02-exit.txt
   python3 $FIXTURE/check_clean.py --manifest manifest.json --input app.log --output clean.log \
     --report /opt/eval/state/q02-check.json
@@ -79,12 +79,12 @@
 
 > [L2] Egress check passes during the run
 
-- **測試資料**：`egress/`。
+- **測試資料**：`$SHARED/egress.py`。
 - **範圍**：項目 2 的那一條管線（產生 log、安裝、評分者的檢查都不算）。
 - **做法**：
   ```sh
-  python3 $FIXTURE/egress/egress_check.py /opt/eval/state/q02-egress.log \
-    --json /opt/eval/state/q02-egress.json
+  python3 $SHARED/egress.py stop --out /opt/eval/state/q02-egress
+  python3 $SHARED/egress.py report --out /opt/eval/state/q02-egress --json /opt/eval/state/q02-egress.json
   ```
 - **判定**：exit 0 → 過；exit 1 → 不過，附上每一筆連線嘗試；exit 2 → 量測失敗，修好追蹤後在新沙盒重跑項目 2–4（答案原文不變），記錄原因。
 

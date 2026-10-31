@@ -109,7 +109,7 @@ def main():
     item2 = all_answered and n_tok >= 4 and pdf_ok and egress == "pass"
     if item2:
         item2_state = "pass"
-    elif all_answered and n_tok >= 4 and pdf_ok and egress in (None, "incomplete"):
+    elif all_answered and n_tok >= 4 and pdf_ok and egress in (None, "undetermined"):
         item2_state = "pending"
     else:
         item2_state = "fail"

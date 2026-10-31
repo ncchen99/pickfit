@@ -13,7 +13,10 @@ Per run (window = run start .. agent end + 5 s, cut at the next run's start):
                   ended the session by --done / --done-file
   server_requests requests the logging proxy (the self-hosted server's front)
                   relayed in the window, with their paths
-  egress          egress.py report for the window (when --egress-dir given)
+  egress          the shared egress verdict (when --egress-dir given): the run's own
+                  traced step (label = run folder name) in full, every other step in
+                  that folder (config steps, leftovers) inside the window
+                  (eval/fixtures/_shared/egress.py window_verdict)
   login_hits      lines that mention login / sign-in / account (for the grader)
 L2-2 passes when at least 2 runs have hello and in_time.
 L2-3 passes when every run that passed L2-2 shows at least one server request
@@ -29,6 +32,7 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+SHARED = os.environ.get("SHARED") or os.path.join(HERE, "..", "_shared")
 LOGIN = re.compile(r"(?i)\b(log ?in|sign ?in|sign ?up|create an account|account required|authenticat\w*|device code|subscription)\b")
 
 
@@ -68,7 +72,7 @@ def main():
     a = ap.parse_args()
     proxy_dir = a.proxy_dir or os.path.join(a.state_dir, "proxy")
     checker = load(os.path.join(HERE, "check_hello.py"), "q19_check_hello")
-    egress = load(os.path.join(HERE, "egress", "egress.py"), "egress") if a.egress_dir else None
+    egress = load(os.path.join(SHARED, "egress.py"), "egress") if a.egress_dir else None
     reqs_all = read_jsonl(os.path.join(proxy_dir, "requests.jsonl"))
     starts = sorted(json.load(open(os.path.join(r, "run.json"), encoding="utf-8"))["t_start"] for r in a.runs)
     results = []
@@ -101,22 +105,22 @@ def main():
         res["pass"] = bool(res["hello"]["pass"] and res["in_time"])
         if egress:
             # egress window ends when the agent ended (the egress stop that follows must not fall inside it)
-            rep = egress.build_report(a.egress_dir, since=t0, until=min(t1, summ.get("end", t1)))
+            rep = egress.window_verdict(a.egress_dir, res["run"], since=t0, until=min(t1, summ.get("end", t1)))
             res["egress"] = rep["result"]
-            res["egress_names"] = rep["layers"]["dns"]["names"]
-            res["egress_remotes"] = sorted(set(rep["layers"]["strace"]["remotes"] + rep["layers"]["poll"]["remotes"]))
+            res["egress_reason"] = rep["reason"]
+            res["egress_attempts"] = rep["first_attempts"]
         results.append(res)
     n_pass = sum(1 for r in results if r.get("pass"))
     out = {"runs": results, "runs_passed": n_pass, "L2-2": "pass" if n_pass >= 2 else "fail"}
     seen = all(r.get("server_requests", 0) > 0 for r in results if r.get("pass")) and n_pass >= 1
     if egress:
         eg = [r.get("egress") for r in results]
-        eg_state = "pass" if all(e == "pass" for e in eg) else ("fail" if "fail" in eg else "incomplete")
+        eg_state = "pass" if all(e == "pass" for e in eg) else ("fail" if "fail" in eg else "undetermined")
     else:
         eg_state = "not checked"
     out["server_log_shows_requests"] = seen
     out["egress"] = eg_state
-    out["L2-3"] = "pass" if (seen and eg_state == "pass") else ("incomplete" if seen and eg_state != "fail" else "fail")
+    out["L2-3"] = "pass" if (seen and eg_state == "pass") else ("undetermined" if seen and eg_state != "fail" else "fail")
     print(json.dumps(out, indent=1))
     return 0 if (out["L2-2"] == "pass" and out["L2-3"] == "pass") else 1
 

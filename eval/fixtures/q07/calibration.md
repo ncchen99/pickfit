@@ -18,19 +18,19 @@
 ```sh
 mkdir -p /work/cal && cd /work/cal
 python3 /opt/eval-q07/server.py --mode ok --log log.jsonl &
-E="python3 /opt/eval-q07/egress_run.py --timeout 60"
+E="python3 $SHARED/egress.py run --out /work/cal/eg --timeout 60"
 ```
 
 | 步驟 | 指令 | 預期 | 結果 |
 |---|---|---|---|
-| a | `python3 /opt/eval-q07/egress_run.py --selftest` | `16/16` | |
+| a | `python3 $SHARED/egress.py selftest`（`_shared/calibration.md` 步驟 1，各題共用，做過一次即可） | exit 0 | |
 | b | `python3 /opt/eval-q07/test_q07.py` | 7 個案例都 ok（含 4 個 diff 案例） | |
-| c | `$E --report c.json -- python3 -c "import urllib.request as u; print(u.build_opener(u.ProxyHandler({})).open('http://127.0.0.1:18081/health').read())"` | 印出 `{"ok": true}`；`egress.verdict` 是 `pass` | |
-| d | `$E --report d.json -- python3 -c "import socket; socket.create_connection(('1.1.1.1', 80), timeout=3)"` | `egress.verdict` 是 `fail`，列出 1.1.1.1:80 | |
-| e | `$E --report e.json -- python3 -c "import socket; socket.getaddrinfo('example.com', 443)"` | `egress.verdict` 是 `fail`，列出 53 埠的嘗試 | |
+| c | `$E --label c -- python3 -c "import urllib.request as u; print(u.build_opener(u.ProxyHandler({})).open('http://127.0.0.1:18081/health').read())"` | `c.stdout` 是 `{"ok": true}`；`egress.py report --out /work/cal/eg --labels c` 是 `pass` | |
+| d | `$E --label d -- python3 -c "import socket; socket.create_connection(('1.1.1.1', 80), timeout=3)"` | `egress.py report --out /work/cal/eg --labels <步驟>` 是 `fail`，列出 1.1.1.1:80 | |
+| e | `$E --label e -- python3 -c "import socket; socket.getaddrinfo('example.com', 443)"` | `egress.py report --out /work/cal/eg --labels <步驟>` 是 `fail`，列出 53 埠的嘗試 | |
 | f | `python3 -c "import urllib.request as u; print(u.build_opener(u.ProxyHandler({})).open('http://[::1]:18081/x').status)"` | `200`（伺服器同時聽 ::1；sandbox 沒有 IPv6 時記「無 IPv6」） | |
 
-若 strace 在 sandbox 裡不能用（c–e 的 `egress.checked` 不是 true）：寫下錯誤訊息，在 `eval/README.md` 第 9 節追加一小節說明替代做法，兩組都用同一做法。
+若 strace 在 sandbox 裡不能用（步驟 a 沒過）：照 `_shared/README.md` 第 1 節，egress 項目記「無法檢查」，請念誠決定替代做法，兩組都用同一做法。
 
 | 欄位 | 值 |
 |---|---|

@@ -10,10 +10,10 @@
 |---|---|
 | `prompts/P1.txt`～`P5.txt` | 五個凍結的題目，逐字取自 questions.yaml（`selftest.py` 會核對） |
 | `score_replies.py` | L2-3 連貫性（字數、重複）、L2-4 字體、L2-5 用語；產生盲評請求；三次取兩次的彙整 |
-| `opencc_scorer.py` | 第 5 節的共用 OpenCC 計分（逐字判斷），讀固定版本 OpenCC 的字元表；q15 也該用同一支 |
+| `../_shared/zh_script.py` | 第 5 節的共用 OpenCC 計分（逐字判斷），讀固定版本 OpenCC 的字典檔；q15 用同一個（[`_shared/README.md`](../_shared/README.md) 第 2 節） |
 | `judge_rubric.md` | L2-3「是否回答了題目」的固定盲評說明 |
 | `samples/` | 自己寫的假回覆（繁體、簡體、繁體字但大陸用語、重複、答非所問），自我測試與校準用 |
-| `selftest_dict/` | 自我測試用的手寫小字元表（**不是** OpenCC 資料，正式計分不能用） |
+| `../_shared/selftest_dict/` | 自我測試用的手寫小字元表（**不是** OpenCC 資料，正式計分不能用） |
 | `selftest.py` | 自我測試；加 `--mac` 會在 macOS 上一併測記憶體量測 |
 | `mac/` | Mac 共用腳本與 [RUNBOOK.md](mac/RUNBOOK.md) |
 | `calibration.md` | 開跑前要做的校準與固定版本（待填） |
@@ -87,7 +87,7 @@
 
 > [L2] Script: the shared OpenCC scorer gives a Traditional ratio of at least 0.95 over the five replies (at least 30 script-differing characters)
 
-- **用到**：`opencc_scorer.py`（由 `score_replies.py` 呼叫）、固定版本 OpenCC 的 `STCharacters.txt` 與 `TSCharacters.txt`（`needs.json`）。
+- **用到**：共用的 `../_shared/zh_script.py`（由 `score_replies.py` 呼叫）、固定版本 OpenCC 的字典檔（`_shared/needs.json`，q15 用同一份）。
 - **判定方式**（第 5 節「逐字判斷」）：五個回覆接在一起逐字看。一個字是 STCharacters 的鍵、而且不在它自己的繁體候選裡，算「只屬簡體」；是 TSCharacters 的鍵、而且不在它自己的簡體候選裡，算「只屬繁體」；兩者皆是或皆非（兩種字體都通用的字，例如 OpenCC 把它自己列為候選的字）不計。繁體比例＝只屬繁體 ÷（只屬繁體＋只屬簡體）；「繁簡不同字」＝兩者之和。
 - **做法**：`python3 $F/q11/score_replies.py --dict-dir <OpenCC 字元表資料夾> $R/replies/run1`（三次時接三個資料夾）。
 - **過**：比例 ≥ 0.95 且繁簡不同字 ≥ 30。

@@ -17,7 +17,7 @@
 | `lang_check.py` | L2-5 的語言辨識 |
 | `meaning/rubric.md`、`meaning/make_judge_input.py` | L2-7：凍結的評分說明、盲評輸入、計分 |
 | `calibration/` | 校準用：自己翻的 pt-PT 對照、pt-BR 對照（只有變體檔）、6 題已知答案的評分案例 |
-| `egress_check.py` | L2-2：證明外連被擋、記錄外連嘗試、計時（q14、q15、q16 各一份，內容相同） |
+| `../_shared/egress.py` | L2-2：證明外連被擋、記錄外連嘗試、計時（各題共用，[`_shared/README.md`](../_shared/README.md) 第 1 節） |
 | `needs.json` | 要從外部取得的東西（語言辨識器、意義評分者等），待念誠決定 |
 | `calibration.md` | 第一次開跑前要做的固定與紀錄 |
 | `tests/` | 本資料夾腳本的自我測試 |
@@ -28,15 +28,15 @@
 - **掛載**：本資料夾唯讀掛在 `/eval/q16`；評分輸出寫到 `/results`。每次翻譯前把 `docs/` 複製成全新的 `/work/docs`（答案要求就地翻譯也只動這份複本）。下文的 `$EVAL_PY` 是評分者自己的 Python 3（dev image 的 `python3`，或 `/eval` 上的獨立版本），不裝進受測環境。`md_check.py`、`lang_check.py`、評分者工具都在沙盒外，對複製出來的輸出檔跑。
 - **佔位字**：答案裡的資料夾、輸出位置、模型檔名是佔位字時，評分者填入（輸入一律是 `/work/docs`）。
 - **照原樣（verbatim）**：評分者把答案的安裝指令依序、原封不動複製成 `/results/steps.sh`，在同一個 bash 裡逐條執行（`bash -x steps.sh 2>&1 | tee /results/install.log`）。答案給的膠水程式（題目允許最多 50 行）原封不動存成答案指定的檔名（沒指定時用答案提到的名稱或 `glue` 加上對應副檔名，記為佔位字替換），算安裝的一部分。只做第 5 節允許的調整：填版本號與佔位字、安裝程式詢問時接受預設值；替換記在 `/results/substitutions.json`。任何一條非 0 結束，或超過 20 分鐘，就是不過。Ubuntu 擋下裸 `pip install` 時可以改在 venv 裡繼續做後面的項目（記 `needed_venv`），但「照原樣成功」不過。修正指令或旗標、補步驟、改膠水程式、換模型都不允許。
-- **答案的翻譯指令**：把整個資料夾翻完所需的指令（含啟動本機模型服務），照答案原樣寫成 `/results/run.sh`，用 `bash /results/run.sh` 一次執行。答案要求在另一個終端機先啟動服務時，評分者用 `egress_check.py run` 另外包住那個服務（另一份 log），兩份 log 都要通過外連檢查。
+- **答案的翻譯指令**：把整個資料夾翻完所需的指令（含啟動本機模型服務），照答案原樣寫成 `/results/run.sh`，用 `bash /results/run.sh` 一次執行。答案要求在另一個終端機先啟動服務時，評分者用 `egress.py run`（同一個 `--out`、另一個 label，例如 `service`）另外包住那個服務，兩步都要通過外連檢查。
 - **擋外連（egress blocked）**：在 A 階段（安裝、模型下載、暖機）完成之後才擋。做法：從檔案系統快照開新沙盒、網路在沙盒層級關閉（首選）；或在同一個沙盒以 root 用 iptables／ip6tables 只放行 `lo`，其餘 REJECT。用哪一種記在 `calibration.md`；兩組、所有答案都用同一種。
-- **外連檢查（egress check）**：翻譯指令用 `egress_check.py run` 包起來：
-  1. 執行前、後各探測一次：TCP 連 `1.1.1.1:443`、`8.8.8.8:53`、`9.9.9.9:443`、`[2606:4700:4700::1111]:443`，UDP 對 `8.8.8.8:53`、`1.1.1.1:53` 送 DNS 查詢，解析 `example.com`。全部失敗才算「確實擋住」。
-  2. 執行期間用 strace（`-f --seccomp-bpf`，追蹤 `connect`、`sendto`、`sendmsg`、`sendmmsg`）記錄指令與所有子程序的連線；目的地不是 loopback、也不是未指定位址的，都算一次外連嘗試（包括 DNS 查詢、私有網段、`169.254.169.254`）。指令本身結束後，它留在背景的程序有 2 秒，之後被停掉。
-  3. 通過：前後探測都擋住，而且外連嘗試 0 次（`verdict.egress_check_passed` 是 `true`）。探測顯示沒擋住，是評分環境的問題：修好重跑，不記答案不過。
-  4. strace 不能用時，`/proc` 輪詢只是備案，抓不到立刻失敗的連線，不能用來判過（`calibration.md`）。
-- **判讀模型輸出（L2-4～L2-7）**：答案的指令或設定明確固定了 temperature（例如 0）或 seed，就只用第 1 次翻譯的輸出；沒有固定，就再跑第 2、3 次（同樣擋外連、同樣 1800 秒上限，`--monitor none`），每一項 3 次中 2 次過算過（第 5 節）。L2-2、L2-3 只看第 1 次。評分者不自己加參數。
-- **逾時**：安裝 20 分鐘；每次翻譯 1800 秒（題目的 30 分鐘，取代第 5 節的 10 分鐘），到時間 `egress_check.py --timeout 1800` 會停掉它。
+- **外連檢查（egress check）**：定義與判定見 [`_shared/README.md`](../_shared/README.md) 第 1 節（共用工具在沙盒裡的 `$SHARED`）：
+  1. 第 1 次翻譯前後各跑一次 `egress.py probe`：直接連公開位址的 TCP 與送往公開 DNS 的 UDP 都失敗，才算「確實擋住」；透過沙盒 resolver 查名稱只記錄。
+  2. 翻譯指令用 `egress.py run` 包起來，strace 記錄指令與所有子程序（含留在背景的服務，記到 `egress.py stop` 為止）的連線；目的地不是 loopback、未指定位址、沙盒自己的位址的，以及任何查名稱（DNS），都算一次外連嘗試（包括私有網段、`169.254.169.254`）。
+  3. 通過：前後探測都擋住，而且 `egress.py report` 是 `pass`。探測顯示沒擋住，是評分環境的問題：修好重跑，不記答案不過。
+  4. strace 不能用時不能判過（`_shared/README.md` 第 1 節）。
+- **判讀模型輸出（L2-4～L2-7）**：答案的指令或設定明確固定了 temperature（例如 0）或 seed，就只用第 1 次翻譯的輸出；沒有固定，就再跑第 2、3 次（同樣擋外連、同樣 1800 秒上限，`egress.py run --no-trace`），每一項 3 次中 2 次過算過（第 5 節）。L2-2、L2-3 只看第 1 次。評分者不自己加參數。
+- **逾時**：安裝 20 分鐘；每次翻譯 1800 秒（題目的 30 分鐘，取代第 5 節的 10 分鐘），到時間 `egress.py run --timeout 1800` 會停掉它。
 
 ## 3. 執行順序
 
@@ -51,15 +51,19 @@
 
 5. `cp -r /eval/q16/docs /work/docs`，第 1 次翻譯：
    ```bash
-   $EVAL_PY /eval/q16/egress_check.py run --timeout 1800 --log /results/translate-1.json -- bash /results/run.sh
+   $EVAL_PY $SHARED/egress.py probe --json /results/probe-before.json      # exit 0
+   $EVAL_PY $SHARED/egress.py run --out /results/eg --label translate-1 --timeout 1800 -- bash /results/run.sh
+   $EVAL_PY $SHARED/egress.py stop --out /results/eg --kill
+   $EVAL_PY $SHARED/egress.py probe --json /results/probe-after.json       # exit 0
+   $EVAL_PY $SHARED/egress.py report --out /results/eg --json /results/egress.json
    ```
    把答案的輸出資料夾整個複製到 `/results/out-1/`。
-6. 答案沒有固定 temperature 或 seed：刪掉 `/work/docs` 與輸出，重新複製，第 2、3 次（`--monitor none --timeout 1800 --log /results/translate-N.json`），輸出存 `/results/out-2/`、`/results/out-3/`。
+6. 答案沒有固定 temperature 或 seed：刪掉 `/work/docs` 與輸出，重新複製，第 2、3 次（`--label translate-N --no-trace --timeout 1800`），輸出存 `/results/out-2/`、`/results/out-3/`。
 
 ### 評分（沙盒外，每一次的輸出各跑一遍）
 
 7. ```bash
-   python3 eval/fixtures/q16/md_check.py --output out-1 --run-log translate-1.json --out md-1.json
+   python3 eval/fixtures/q16/md_check.py --output out-1 --run-log eg/translate-1.json --out md-1.json
    python3 eval/fixtures/q16/lang_check.py --output out-1 --backend <固定的> [--model-path ...] --out lang-1.json
    python3 eval/fixtures/q16/meaning/make_judge_input.py build --output out-1 --out judge-1.json
    ```
@@ -79,9 +83,9 @@
 
 > [L2] After model download, with egress blocked, translation runs and the egress check passes
 
-- 測試資料：`docs/`、`egress_check.py`。
+- 測試資料：`docs/`、`$SHARED/egress.py`。
 - 設定：第 3 節步驟 4–5。
-- 通過：`translate-1.json` 的 `exit_code` 是 0、沒有逾時，而且 `verdict.egress_check_passed` 是 `true`（另外包住的服務 log 也要是 `true`）。
+- 通過：`eg/translate-1.json` 的 `exit_code` 是 0、沒有逾時；`probe-before.json`、`probe-after.json` 都是 `blocked: true`；而且 `egress.json` 的 `result` 是 `pass`（另外包住的服務也在同一份報告裡）。
 
 ### L2-3
 
@@ -89,7 +93,7 @@
 
 - 測試資料：`docs/`（1,021 字）；`md_check.py`。
 - 輸出檔的認法（`mdtools.map_outputs`）：輸出資料夾底下（含子資料夾）檔名等於原檔名，或以原檔名主檔名開頭、接著 `.`、`_`、`-` 的 `.md` 檔（例如 `01-getting-started.pt.md`）；和原文一模一樣的檔不算輸出（沒翻）。同一個原檔有多個候選時，名稱裡有 `pt` 的那個優先；仍有多個就由評分者照答案說的命名用 `--map` 指定。
-- 檢查：`md-1.json` 的 `files`：3 個原檔都有非空的輸出，`translate-1.json` 的 `wall_seconds` ≤ 1800 而且沒有逾時。
+- 檢查：`md-1.json` 的 `files`：3 個原檔都有非空的輸出，`eg/translate-1.json` 的 `duration_s` ≤ 1800 而且沒有逾時。
 - 通過：`items.files_within_30_min` 是 `true`。
 
 ### L2-4

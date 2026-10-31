@@ -32,6 +32,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+sys.path.insert(0, os.environ.get("SHARED") or os.path.join(HERE, "..", "_shared"))
 
 PROMPTS = ["P1", "P2", "P3", "P4", "P5"]
 COHERENCE_PROMPTS = ["P1", "P2", "P3", "P5"]
@@ -179,9 +180,9 @@ def vocabulary(replies):
 def script(replies, dict_dir):
     if not dict_dir:
         return {"pass": None, "reason": "not run: --dict-dir (pinned OpenCC dictionaries) not given"}
-    from opencc_scorer import Scorer
+    from zh_script import OpenCCTables  # the shared scorer, eval/fixtures/_shared/zh_script.py
     text = "\n".join(replies[p] for p in PROMPTS if replies.get(p) is not None)
-    return Scorer(dict_dir).score(text)
+    return OpenCCTables(dict_dir).ratio(text)
 
 
 def judge_requests(run_dirs, out_path):
@@ -210,7 +211,7 @@ def judge_requests(run_dirs, out_path):
 def main(argv=None):
     ap = argparse.ArgumentParser(description="q11 reply checks")
     ap.add_argument("runs", nargs="+", help="1 or 3 run directories")
-    ap.add_argument("--dict-dir", help="pinned OpenCC dictionary folder (STCharacters.txt, TSCharacters.txt)")
+    ap.add_argument("--dict-dir", help="pinned OpenCC dictionary folder (_shared/needs.json)")
     ap.add_argument("--write-judge-requests", metavar="OUT.jsonl")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)

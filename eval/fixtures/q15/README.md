@@ -13,10 +13,10 @@
 | `select_clips.py` | 依固定規則從語料庫選片段（不先聽、不先試工具） |
 | `build_clip.py` | 把選好的片段組成 60 秒音檔與逐字稿；`stats` 檢查語音秒數與繁簡不同字數 |
 | `srt_check.py` | L2-2：SRT 是否有效、cue 涵蓋多少秒 |
-| `zh_score.py` | L2-3、L2-4：CER 與繁體比例（第 5 節的共用 OpenCC 評分器，q11 也用同一套規則） |
+| `zh_score.py` | L2-3、L2-4：CER 與繁體比例；轉換與比例都用共用的 `../_shared/zh_script.py`（第 5 節的共用 OpenCC 評分器，q11 用同一個） |
 | `check_no_torch.sh` | L2-1：容器裡有沒有裝 torch |
 | `baseline/run_baseline.sh` | L2-5：openai-whisper `small` 預設設定的速度基準（另一個容器） |
-| `egress_check.py` | L2-2、L2-6：證明外連被擋、記錄外連嘗試；也拿來計時（q14、q15、q16 各一份，內容相同） |
+| `../_shared/egress.py` | L2-2、L2-6：證明外連被擋、記錄外連嘗試；`--no-trace` 只計時（各題共用，[`_shared/README.md`](../_shared/README.md) 第 1 節） |
 | `needs.json` | 要從外部取得的東西（音檔候選 3 個、OpenCC、SRT 解析器、基準版本等），待念誠決定 |
 | `calibration.md` | 第一次開跑前要做的固定與紀錄 |
 | `tests/` | 本資料夾腳本的自我測試 |
@@ -29,11 +29,11 @@
 - **照原樣（verbatim）**：評分者把答案的安裝指令依序、原封不動複製成 `/results/steps.sh`，在同一個 bash 裡逐條執行（`bash -x steps.sh 2>&1 | tee /results/install.log`）。只做第 5 節允許的調整：填版本號與佔位字、安裝程式詢問時接受預設值；替換記在 `/results/substitutions.json`。Ubuntu 擋下裸 `pip install` 時可以改在 venv 裡繼續（記 `needed_venv`）。修正指令或旗標、補步驟、換模型都不允許。
 - **答案的完整指令**：從音檔到最後交出的 SRT 為止的所有指令（轉檔、辨識、繁體轉換等後處理），照答案原樣寫成 `/results/run.sh`，用 `bash /results/run.sh` 一次執行。「最後交出的 SRT」是答案說要用的那一個（例如轉成繁體之後的檔）。
 - **擋外連（egress blocked）**：在 setup（安裝、模型下載、暖機）完成之後才擋。做法：從檔案系統快照開新沙盒、網路在沙盒層級關閉（首選）；或在同一個沙盒以 root 用 iptables／ip6tables 只放行 `lo`，其餘 REJECT。用哪一種記在 `calibration.md`；受測容器、基準容器、兩組、所有答案都用同一種。
-- **外連檢查（egress check）**：受測指令用 `egress_check.py run` 包起來：
-  1. 執行前、後各探測一次：TCP 連 `1.1.1.1:443`、`8.8.8.8:53`、`9.9.9.9:443`、`[2606:4700:4700::1111]:443`，UDP 對 `8.8.8.8:53`、`1.1.1.1:53` 送 DNS 查詢，解析 `example.com`。全部失敗才算「確實擋住」。
-  2. 執行期間用 strace（`-f --seccomp-bpf`，追蹤 `connect`、`sendto`、`sendmsg`、`sendmmsg`）記錄指令與所有子程序的連線；目的地不是 loopback、也不是未指定位址的，都算一次外連嘗試（包括 DNS 查詢、私有網段、`169.254.169.254`）。
-  3. 通過：前後探測都擋住，而且外連嘗試 0 次（`verdict.egress_check_passed` 是 `true`）。探測顯示沒擋住，是評分環境的問題：修好重跑，不記答案不過。
-  4. strace 不能用時，`/proc` 輪詢只是備案，抓不到立刻失敗的連線，不能用來判過（`calibration.md`）。
+- **外連檢查（egress check）**：定義與判定見 [`_shared/README.md`](../_shared/README.md) 第 1 節（共用工具在沙盒裡的 `$SHARED`）：
+  1. 擋了之後、Run B 前後各跑一次 `egress.py probe`：直接連公開位址的 TCP 與送往公開 DNS 的 UDP 都失敗，才算「確實擋住」；透過沙盒 resolver 查名稱只記錄。
+  2. Run B 用 `egress.py run` 包起來，strace 記錄指令與所有子程序的連線；目的地不是 loopback、未指定位址、沙盒自己的位址的，以及任何查名稱（DNS），都算一次外連嘗試（包括私有網段、`169.254.169.254`）。
+  3. 通過：前後探測都擋住，而且 `egress.py report` 是 `pass`。探測顯示沒擋住，是評分環境的問題：修好重跑，不記答案不過。
+  4. strace 不能用時不能判過（`_shared/README.md` 第 1 節）。
 - **判讀模型輸出（L2-2～L2-4）**：答案的指令或設定明確固定了 temperature（例如 0 或 greedy）或 seed，就只用第 1 次（Run A）的輸出；沒有固定，就用 Run A、Run B、Run C 三次的輸出，每一項 3 次中 2 次過算過（第 5 節）。評分者不自己加旗標。
 - **逾時**：安裝 20 分鐘；每次轉錄 10 分鐘（第 5 節）；超過就停，那一次記不過。
 
@@ -48,11 +48,11 @@
 5. 裝評分工具 `apt-get install -y strace`，然後擋外連。
 6. 把 `clip.wav` 複製成 `/work/meeting.wav`，Run A（計時，不監測）：
    ```bash
-   $EVAL_PY /eval/q15/egress_check.py run --monitor none --log /results/runA.json -- bash /results/run.sh
+   $EVAL_PY $SHARED/egress.py run --out /results/eg --label runA --no-trace --timeout 600 -- bash /results/run.sh
    ```
    SRT 複製成 `/results/runA.srt`，然後刪掉輸出。
-7. Run B（外連監測）：同一個指令，`--monitor auto --log /results/runB.json`；SRT 存成 `/results/runB.srt`。
-8. 答案沒有固定 temperature 或 seed 時，Run C：同 Run A（`--monitor none --log /results/runC.json`），SRT 存成 `/results/runC.srt`。
+7. Run B（外連監測）：先 `$EVAL_PY $SHARED/egress.py probe --json /results/probe-before.json`（exit 0），再用同一個指令、`--label runB`、不加 `--no-trace`；SRT 存成 `/results/runB.srt`。之後 `$EVAL_PY $SHARED/egress.py stop --out /results/eg --kill`、`$EVAL_PY $SHARED/egress.py probe --json /results/probe-after.json`（exit 0）、`$EVAL_PY $SHARED/egress.py report --out /results/eg --json /results/egress.json`（只納入有記錄的 runB）。
+8. 答案沒有固定 temperature 或 seed 時，Run C：同 Run A（`--label runC --no-trace`），SRT 存成 `/results/runC.srt`。
 
 ### 基準容器（另一個沙盒，同一個 dev image、同樣 4 vCPU 16 GB）
 
@@ -65,7 +65,7 @@
 12. 每個 SRT：
     ```bash
     python3 eval/fixtures/q15/srt_check.py runA.srt --out srtA.json
-    python3 eval/fixtures/q15/zh_score.py all --ref eval/fixtures/q15/clip/reference.txt --srt runA.srt [--allow eval/fixtures/q15/script_allow.txt] --out scoreA.json
+    python3 eval/fixtures/q15/zh_score.py --dict-dir $OPENCC all --ref eval/fixtures/q15/clip/reference.txt --srt runA.srt --out scoreA.json
     ```
 
 ## 4. L2 項目
@@ -94,7 +94,7 @@
 > [L2] Accuracy: character error rate is at most 25% against the reference, after converting both to Traditional with the pinned OpenCC and removing punctuation
 
 - 測試資料：`clip/reference.txt`；`zh_score.py`；固定版本的 OpenCC。
-- 正規化（兩邊相同）：Unicode NFKC → OpenCC `s2tw`（轉繁體、台灣字形）→ 刪掉所有不是字母或數字的字元（標點、符號、空白、換行），拉丁字母轉小寫。答案這邊是所有 cue 文字依序接起來（格式標籤已去掉）。
+- 正規化（兩邊相同）：Unicode NFKC → 共用工具的 `s2tw`（固定版本的 OpenCC 字典檔，轉繁體、台灣字形；`_shared/README.md` 第 2 節）→ 刪掉所有不是字母或數字的字元（標點、符號、空白、換行），拉丁字母轉小寫。答案這邊是所有 cue 文字依序接起來（格式標籤已去掉）。
 - CER = Levenshtein 距離 ÷ 參考字數。
 - 通過：CER ≤ 0.25。
 
@@ -102,8 +102,8 @@
 
 > [L2] Script: the shared OpenCC scorer gives a Traditional ratio of at least 0.95 (the reference script contains at least 60 script-differing characters)
 
-- 測試資料：`zh_score.py`（共用評分器）；固定版本的 OpenCC；參考逐字稿的繁簡不同字數在 `calibration.md`（≥ 60）。
-- 判斷方式（逐字、看上下文，答案的字照原樣不轉換）：OpenCC `s2t` 與 `s2tw` 都會改掉的字算簡體（只有 `s2t` 會改、`s2tw` 不改的台灣常用字形不算簡體）；其餘被 `t2s` 改掉的字算繁體；兩種寫法相同的字不算。三種轉換都對整段文字做，讓詞組規則看得到上下文；轉換改變長度時退回逐字轉換。`script_allow.txt` 存在時，裡面的字不算簡體（`calibration.md` 決定）。
+- 測試資料：`zh_score.py script`，也就是共用評分器 `../_shared/zh_script.py`（與 q11 同一個）；固定版本的 OpenCC 字典檔；參考逐字稿的繁簡不同字數在 `calibration.md`（≥ 60）。
+- 判斷方式：[`_shared/README.md`](../_shared/README.md) 第 2 節。答案的字照原樣逐字判斷、不轉換；兩種寫法都對的字（例如 台、后、里）不計。沒有例外清單。
 - 比例 = 繁體 ÷（繁體 + 簡體）。
 - 通過：繁體 + 簡體 ≥ 30（第 5 節），而且比例 ≥ 0.95。
 
@@ -111,9 +111,9 @@
 
 > [L2] Speed: the answer's full end-to-end command, including any post-processing for Traditional output, finishes faster than openai-whisper 'small' with default settings, run once in an identical but separate container on the same host
 
-- 測試資料：`clip/clip.wav`；`baseline/run_baseline.sh`；`egress_check.py`（`--monitor none` 只計時）。
-- 答案的時間：Run A 的 `wall_seconds`（`bash /results/run.sh` 從開始到結束，含載入模型與後處理，不含已在 setup 完成的下載）。
-- 基準的時間：`baseline_time.json` 的 `wall_seconds`，指令是 `whisper /eval/q15/clip/clip.wav --model small`，其他全用預設值（語言自動偵測、預設 beam 與溫度遞增、CPU 上用 fp32、預設輸出格式）。
+- 測試資料：`clip/clip.wav`；`baseline/run_baseline.sh`；`$SHARED/egress.py run --no-trace`（只計時，兩邊同一個包裝）。
+- 答案的時間：`/results/eg/runA.json` 的 `duration_s`（`bash /results/run.sh` 從開始到結束，含載入模型與後處理，不含已在 setup 完成的下載）。
+- 基準的時間：`baseline.json` 的 `duration_s`，指令是 `whisper /eval/q15/clip/clip.wav --model small`，其他全用預設值（語言自動偵測、預設 beam 與溫度遞增、CPU 上用 fp32、預設輸出格式）。
 - 「相同的另一個容器、同一台主機」：同一個 dev image、同樣的 CPU 與記憶體上限、同一種擋外連方法、都在擋住之後跑一次；Modal 不能指定主機，所以用 CPU 型號相同代替（第 3 節步驟 11）。
 - 通過：答案的時間 < 基準的時間。Run A 失敗或逾時，就不過。
 
@@ -121,9 +121,9 @@
 
 > [L2] Egress check passes during transcription
 
-- 測試資料：`egress_check.py`。
+- 測試資料：`$SHARED/egress.py`。
 - 設定：第 3 節步驟 7（Run B）：與 Run A 相同的指令、相同的輸入，在 strace 監測下跑；和計時的 Run A 分開，監測不影響速度項目。
-- 通過：`runB.json` 的 `verdict.egress_check_passed` 是 `true`，而且 Run B exit 0。
+- 通過：`probe-before.json`、`probe-after.json` 都是 `blocked: true`，`egress.json` 的 `result` 是 `pass`，而且 Run B exit 0（`/results/eg/runB.json`）。
 
 ## 5. 不適用
 
@@ -135,4 +135,4 @@
 python3 -m unittest discover -s eval/fixtures/q15/tests -v
 ```
 
-用合成的音調 WAV 測 `build_clip.py`（裁靜音、跳過放不下的片段、補到剛好 60 秒）；用小的繁簡對照表代替 OpenCC 測 `zh_score.py` 的規則（真正的 OpenCC 在 `calibration.md` 對真正的逐字稿跑）；用手寫的 SRT 測 `srt_check.py`（內建的嚴格解析器，正式評分用固定版本的 `srt`）；用暫存資料夾測 `check_no_torch.sh`。2026-10-30 另在離線的 x86_64 Linux 容器跑過全部測試。
+用合成的音調 WAV 測 `build_clip.py`（裁靜音、跳過放不下的片段、補到剛好 60 秒）；用 `_shared/selftest_dict/` 的手寫小字典代替 OpenCC 測 `zh_score.py` 怎麼用共用評分器（規則本身的測試在 `_shared/test_shared.py`；真正的 OpenCC 字典在 `calibration.md` 對真正的逐字稿跑）；用手寫的 SRT 測 `srt_check.py`（內建的嚴格解析器，正式評分用固定版本的 `srt`）；用暫存資料夾測 `check_no_torch.sh`。2026-10-30 另在離線的 x86_64 Linux 容器跑過全部測試。

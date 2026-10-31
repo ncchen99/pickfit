@@ -17,7 +17,7 @@
 | `tools/run_steps.py` | 把答案的指令原字不改、依序打進同一個終端機 session，記下每條的 exit code |
 | `tools/pty_drive.py` | 在虛擬終端機裡執行一個指令（可打字、可自動同意提示），記錄輸出與時間 |
 | `tools/gen_dummy_key.py` | 執行時產生一個假的金鑰值（只在答案說「金鑰填什麼都可以」時用） |
-| `egress/egress.py` | egress check（見第 1 節） |
+| `../_shared/egress.py` | egress check（各題共用，[`_shared/README.md`](../_shared/README.md) 第 1 節；第 1 節寫本題怎麼用） |
 | `selftest.sh`、`tests/` | 離線自我測試 |
 | `needs.json` | 要外部取得、等念誠決定的東西（dev image 內容、strace） |
 | `calibration.md` | 第一次開跑前要做的校準步驟與結果欄位 |
@@ -47,19 +47,11 @@
 
 ### egress check（本題 L2-2 用）
 
-「egress」指**任何連往本機以外的嘗試**：查詢 localhost 以外名稱的 DNS，或對 loopback（127.0.0.0/8、::1）、0.0.0.0、本沙盒自己介面位址以外的 IPv4／IPv6 位址呼叫 connect／sendto／sendmsg（失敗的嘗試、UDP、多播都算）。
+定義、做法與判定見 [`_shared/README.md`](../_shared/README.md) 第 1 節（共用工具在沙盒裡的 `$SHARED`）。本題：答案要的背景服務與 5 次提問，每一步都用 `egress.py run` 包起來（服務留在背景，到 `egress.py stop` 為止都被記錄），所有步驟的紀錄合起來判定。
 
-`egress/egress.py` 有三層，寫在同一個輸出資料夾：
+**「egress check 通過」**＝ `egress.py report` 的 `result` 是 `pass`。`fail` ＝ 有對外嘗試（報告列出位址與原始紀錄行）。`undetermined` ＝ 量測沒做好，**不能判過，也不算答案的錯**：修好量測後重做。
 
-| 層 | 怎麼量 | 涵蓋 |
-|---|---|---|
-| dns（必要） | 在 127.0.0.1:53 起一個記錄所有查詢的 DNS，`/etc/resolv.conf` 指向它。`--mode sink`：localhost 以外一律回 NXDOMAIN（網路封鎖時用）；`--mode forward`：轉給原本的 DNS（網路開著時用） | 之後啟動的所有程序 |
-| strace | `egress.py trace --out <資料夾> --label <名稱> -- <指令>`，在 strace 底下跑該指令與它的所有子程序 | 該指令的程序樹 |
-| poll | 每 50 ms 讀 `/proc/net/{tcp,tcp6,udp,udp6}`，記下遠端不是本機的 socket | 整個沙盒（盡力而為） |
-
-**「egress check 通過」**＝ `python3 $F/egress/egress.py report --out <資料夾> --since <開始> --until <結束>` 的 `result` 是 `pass`：時段內三層的違規都是 0，而且必要層都有在運作。`fail` ＝ 有對外嘗試（報告列出名稱與位址）。`incomplete` ＝ 必要層沒在運作，**不能判過，也不算答案的錯**：修好量測後重做。strace 層與 poll 層是不是必要層，在 calibration.md E7 決定，所有題、所有組一樣。
-
-**「egress blocked」**＝ 在沙盒 B（網路封鎖）做，DNS 層用 `sink` 模式。
+**「egress blocked」**＝ 在沙盒 B（網路封鎖）做；擋好後先跑 `egress.py probe`，必須 exit 0。
 
 ### 金鑰
 
@@ -93,30 +85,29 @@ python3 $F/tools/run_steps.py --steps $W/steps-index.txt --out $W/index --step-t
 
 > [L2] With egress blocked after setup (egress check passes), each of 5 frozen questions is answered within 3 minutes; at least 4 of 5 answers contain the exact token, and both PDF-only questions pass
 
-用到：`questions.json`、`tools/pty_drive.py`、`egress/egress.py`、`check_answers.py`。
+用到：`questions.json`、`tools/pty_drive.py`、`$SHARED/egress.py`、`check_answers.py`。
 
-做法（沙盒 B，用 A 的快照開機、網路封鎖，root 執行 egress 的 start/stop）：
+做法（沙盒 B，用 A 的快照開機、網路封鎖）：
 
 ```sh
-T0=$(python3 -c 'import time; print(time.time())')
-sudo python3 $F/egress/egress.py start --out $W/egress --mode sink
-python3 $F/tools/run_steps.py --steps $W/steps-services.txt --out $W/services   # 只有答案要背景服務時：答案自己的啟動指令
+python3 $SHARED/egress.py probe --json $W/answers/probe.json                                         # exit 0
+python3 $SHARED/egress.py run --out $W/egress --label services --inherit-output -- \
+  python3 $F/tools/run_steps.py --steps $W/steps-services.txt --out $W/services  # 只有答案要背景服務時：答案自己的啟動指令
 # 每一題各跑一次，新的程序、各自計時（id 是 q17-1 … q17-5，問題文字取自 questions.json）
 python3 $F/tools/pty_drive.py --out $W/answers/q17-1 --timeout 180 -- \
-  python3 $F/egress/egress.py trace --out $W/egress --label q17-1 -- <答案的提問指令，問題填 q17-1 的原文>
+  python3 $SHARED/egress.py run --out $W/egress --label q17-1 --inherit-output -- <答案的提問指令，問題填 q17-1 的原文>
 ...
-T1=$(python3 -c 'import time; print(time.time())')
-sudo python3 $F/egress/egress.py stop --out $W/egress
-python3 $F/egress/egress.py report --out $W/egress --since $T0 --until $T1 --save $W/answers/egress-report.json
+python3 $SHARED/egress.py stop --out $W/egress --kill
+python3 $SHARED/egress.py report --out $W/egress --json $W/answers/egress-report.json
 python3 $F/check_answers.py --run-dir $W/answers --egress-report $W/answers/egress-report.json
 ```
 
 - 一題一次、互不續接；問題文字**原字照貼**。答案的工具只有互動模式時：`--send "<問題>" --send-after '<工具的提示字元 regex>' --done '<回答結束的標記 regex>' --idle 20`，這時作答時間取最後一次輸出的時間（`last_output_t`），不含等待與結束鍵。
 - 「answered within 3 minutes」：5 題**每一題**都要在 180 秒內答完（被時間上限中止的那題算沒答）。
 - 「contain the exact token」：作答輸出（去掉終端機控制碼後）含有一模一樣的 token 字串，大小寫、連字號都要相同。
-- egress check：見第 1 節；時段是從 egress start 到最後一題結束。
+- egress check：見第 1 節；範圍是背景服務（從啟動起）與 5 次提問的所有程序。
 
-通過（`check_answers.py` 的 `L2-2`）：5 題都在時限內作答、至少 4 題含 token、兩題 PDF 題（`q17-4`、`q17-5`）都含 token，**而且** egress report 是 `pass`。egress report 是 `incomplete` 時，L2-2 記 `pending`，修好量測後重做提問。
+通過（`check_answers.py` 的 `L2-2`）：5 題都在時限內作答、至少 4 題含 token、兩題 PDF 題（`q17-4`、`q17-5`）都含 token，**而且** egress report 是 `pass`。egress report 是 `undetermined` 時，L2-2 記 `pending`，修好量測後重做提問。
 
 ### L2-3 引用出處
 
@@ -146,7 +137,7 @@ python3 $F/check_answers.py --run-dir $W/answers --egress-report $W/answers/egre
 sh selftest.sh        # 離線；不需要 root；約 1 分鐘
 ```
 
-測試內容：語料可重產生且雜湊一致；`check_answers.py` 在全對、4/5、列出太多檔、逾時四種情況的判定；egress 三層的解析與 DNS 伺服器（高埠、不改 resolv.conf）；`pty_drive.py`、`run_steps.py` 的行為。寫 fixture 時已在 macOS 用 Python 3.9 與 3.12 跑過，全部通過。
+測試內容：語料可重產生且雜湊一致；`check_answers.py` 在全對、4/5、列出太多檔、逾時四種情況的判定；`pty_drive.py`、`run_steps.py` 的行為（egress 的測試在 `_shared/test_shared.py`）。寫 fixture 時已在 macOS 用 Python 3.9 與 3.12 跑過，全部通過。
 
 ## 4. 還沒決定的事
 

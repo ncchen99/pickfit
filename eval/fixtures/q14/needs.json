@@ -14,15 +14,8 @@
   },
   {
     "item": "strace (Ubuntu 24.04 package) for the egress monitor",
-    "why": "L2-5 egress check. Installed by the grader after phase A's install steps, before the snapshot, so it is not part of the answer's install. Without strace the monitor falls back to /proc polling, which (selftest on 2026-10-30 in an offline container) does not see connects that fail at once; that fallback is not accepted for a pass without 念誠's decision (README section 2).",
-    "candidates": [
-      {
-        "source": "Ubuntu 24.04 (noble) archive, package strace",
-        "license": "LGPL-2.1-or-later",
-        "size": "about 1.5 MB",
-        "pin": "package version from `apt-cache policy strace` on the pin date (noble ships 6.8-0ubuntu2; confirm)"
-      }
-    ],
+    "why": "Shared by every Linux question: listed once in eval/fixtures/_shared/needs.json (strace for _shared/egress.py).",
+    "candidates": [],
     "decision_needed_by": "念誠"
   },
   {
@@ -59,7 +52,7 @@
   },
   {
     "item": "Grader-side Python 3 inside the sandbox",
-    "why": "service_check.py, embed_check.py, rerank_check.py, egress_check.py and mem_peak.py run inside the sandbox. A standalone interpreter on the read-only /eval mount (with the pinned openai client installed into it) keeps the answer's environment untouched; the dev image's python3 is fine for the stdlib-only scripts if present.",
+    "why": "service_check.py, embed_check.py, rerank_check.py and the shared _shared/egress.py run inside the sandbox (_shared/mem_peak.sh needs only sh). A standalone interpreter on the read-only /eval mount (with the pinned openai client installed into it) keeps the answer's environment untouched; the dev image's python3 is fine for the stdlib-only scripts if present.",
     "candidates": [
       {
         "source": "https://github.com/astral-sh/python-build-standalone/releases (x86_64-unknown-linux-gnu install_only build)",

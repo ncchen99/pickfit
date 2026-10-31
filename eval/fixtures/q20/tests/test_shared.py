@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Self-test for egress.py, pty_drive.py and logging_proxy.py (stdlib only, no root, no network).
+"""Self-test for pty_drive.py, logging_proxy.py and run_steps.py (stdlib only, no root, no network).
 
 Run from the question folder:  python3 tests/test_shared.py
 Every tool that a question folder does not ship is skipped.
@@ -9,7 +9,6 @@ import http.client
 import json
 import os
 import socket
-import struct
 import subprocess
 import sys
 import tempfile
@@ -19,7 +18,6 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-EGRESS = os.path.join(ROOT, "egress", "egress.py")
 PTY = os.path.join(ROOT, "tools", "pty_drive.py")
 PROXY = os.path.join(ROOT, "tools", "logging_proxy.py")
 STEPS = os.path.join(ROOT, "tools", "run_steps.py")
@@ -48,106 +46,8 @@ def load(path, name):
     return mod
 
 
-# ------------------------------------------------------------------ egress
+# The egress check moved to eval/fixtures/_shared/egress.py (tests in _shared/test_shared.py).
 
-def test_egress():
-    eg = load(EGRESS, "egress")
-    check(eg.classify_ip("127.0.0.1") == "loopback", "127.0.0.1 is loopback")
-    check(eg.classify_ip("::ffff:127.0.0.5") == "loopback", "v4-mapped loopback")
-    check(eg.classify_ip("::1") == "loopback", "::1 is loopback")
-    check(eg.classify_ip("0.0.0.0") == "unspecified", "0.0.0.0 unspecified")
-    check(eg.classify_ip("93.184.215.14") == "remote", "public v4 is remote")
-    check(eg.classify_ip("10.1.2.3", {"10.1.2.3"}) == "self", "own interface is self")
-
-    sample = "\n".join([
-        '101 1761800000.100000 connect(3, {sa_family=AF_INET, sin_port=htons(443), sin_addr=inet_addr("140.82.112.3")}, 16) = -1 ENETUNREACH (Network is unreachable)',
-        '101 1761800000.200000 connect(4, {sa_family=AF_INET, sin_port=htons(11434), sin_addr=inet_addr("127.0.0.1")}, 16) = 0',
-        '[pid 102] 1761800000.300000 connect(5, {sa_family=AF_INET6, sin6_port=htons(443), sin6_flowinfo=htonl(0), inet_pton(AF_INET6, "2606:4700::6810:84e5", &sin6_addr), sin6_scope_id=0}, 28) = -1 ENETUNREACH',
-        '102 1761800000.400000 sendto(6, "\\x12\\x34", 30, MSG_NOSIGNAL, {sa_family=AF_INET, sin_port=htons(53), sin_addr=inet_addr("127.0.0.1")}, 16) = 30',
-        '103 1761800000.500000 connect(7, {sa_family=AF_UNIX, sun_path="/run/x.sock"}, 110) = 0',
-        '103 1761800000.600000 sendmsg(8, {msg_name={sa_family=AF_INET, sin_port=htons(5353), sin_addr=inet_addr("224.0.0.251")}, msg_namelen=16}, 0) = 40',
-        '1761800000.700000 connect(9, {sa_family=AF_INET, sin_port=htons(80), sin_addr=inet_addr("0.0.0.0")}, 16) = 0',
-    ])
-    ev = eg.parse_strace(sample)
-    remote = [e for e in ev if e["kind"] == "remote"]
-    check(len(ev) == 6, "strace parser finds 6 inet events (got %d)" % len(ev))
-    check(sorted(e["ip"] for e in remote) == ["140.82.112.3", "224.0.0.251", "2606:4700::6810:84e5"],
-          "strace parser flags exactly the 3 remote addresses")
-    check(any(e["pid"] == 102 for e in ev), "strace parser reads [pid N] prefix")
-
-    proc = ("  sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode\n"
-            "   0: 0100007F:2CAA 00000000:0000 0A 00000000:00000000 00:00000000 00000000     0        0 1 1\n"
-            "   1: 0100007F:D3E2 0100007F:2CAA 01 00000000:00000000 00:00000000 00000000     0        0 2 1\n"
-            "   2: 0A00000F:D3E4 0370528C:01BB 02 00000000:00000000 00:00000000 00000000     0        0 3 1\n")
-    rows = eg.parse_proc_net(proc, "tcp")
-    check(rows[0]["lport"] == 11434 and rows[0]["local"] == "127.0.0.1", "proc parser decodes listen row")
-    check(rows[2]["remote"] == "140.82.112.3" and rows[2]["rport"] == 443, "proc parser decodes remote row")
-    v6 = eg.hex_to_ip("00000000000000000000000001000000")
-    check(v6 == "::1", "proc parser decodes ::1 (got %s)" % v6)
-
-    out = tempfile.mkdtemp(prefix="egress-test-")
-    port = free_port()
-    r = subprocess.run([sys.executable, EGRESS, "dns-start", "--out", out, "--port", str(port), "--no-resolv"],
-                       capture_output=True, text=True, timeout=20)
-    check(r.returncode == 0, "dns-start on a high port (%s)" % r.stderr.strip()[:200])
-    try:
-        rc_local = eg.probe_dns("127.0.0.1", port, "localhost")
-        rc_remote = eg.probe_dns("127.0.0.1", port, "telemetry.example.org")
-        check(rc_local == 0, "DNS logger answers localhost NOERROR")
-        check(rc_remote == 3, "DNS logger answers other names NXDOMAIN in sink mode")
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(3)
-        s.connect(("127.0.0.1", port))
-        q = eg.dns_query_packet("update.example.net", qtype=28)
-        s.sendall(struct.pack("!H", len(q)) + q)
-        n = struct.unpack("!H", s.recv(2))[0]
-        reply = b""
-        while len(reply) < n:
-            reply += s.recv(n - len(reply))
-        s.close()
-        check(struct.unpack("!H", reply[2:4])[0] & 0xF == 3, "DNS logger answers over TCP too")
-    finally:
-        subprocess.run([sys.executable, EGRESS, "dns-stop", "--out", out, "--no-resolv"],
-                       capture_output=True, timeout=20)
-    rep = eg.build_report(out)
-    names = rep["layers"]["dns"]["names"]
-    check(rep["result"] == "fail" and names == ["telemetry.example.org", "update.example.net"],
-          "report fails on the two non-local queries (got %s, %s)" % (rep["result"], names))
-    with open(os.path.join(out, "strace-r1.log"), "w") as f:
-        f.write(sample + "\n")
-    with open(os.path.join(out, "strace-r1.meta.json"), "w") as f:
-        json.dump({"ts": 1761800000.0, "label": "r1", "strace": "/usr/bin/strace"}, f)
-    rep = eg.build_report(out, since=1761800000.0, until=1761800001.0, require_strace=True)
-    check(rep["layers"]["strace"]["active"] and len(rep["layers"]["strace"]["violations"]) == 3,
-          "report counts strace violations inside the window")
-    check(rep["layers"]["dns"]["active"] is False and "dns" in rep["missing_layers"],
-          "report marks dns inactive when it was not running in the window")
-    rep = eg.build_report(out, since=time.time() + 3600, until=time.time() + 7200)
-    check(rep["layers"]["dns"]["active"] is False, "report marks dns inactive after dns-stop")
-
-    clean = tempfile.mkdtemp(prefix="egress-clean-")
-    port = free_port()
-    subprocess.run([sys.executable, EGRESS, "dns-start", "--out", clean, "--port", str(port), "--no-resolv"],
-                   capture_output=True, timeout=20)
-    t0 = time.time()
-    eg.probe_dns("127.0.0.1", port, "localhost")
-    eg.probe_dns("127.0.0.1", port, "1.0.0.127.in-addr.arpa")
-    t1 = time.time()
-    subprocess.run([sys.executable, EGRESS, "dns-stop", "--out", clean, "--no-resolv"],
-                   capture_output=True, timeout=20)
-    r = subprocess.run([sys.executable, EGRESS, "report", "--out", clean, "--since", str(t0), "--until", str(t1)],
-                       capture_output=True, text=True, timeout=20)
-    check(r.returncode == 0 and json.loads(r.stdout)["result"] == "pass",
-          "report passes when only localhost names were queried")
-
-    tr = tempfile.mkdtemp(prefix="egress-trace-")
-    r = subprocess.run([sys.executable, EGRESS, "trace", "--out", tr, "--label", "t", "--",
-                        sys.executable, "-c", "print('traced-ok')"], capture_output=True, text=True, timeout=60)
-    check("traced-ok" in r.stdout, "trace runs the command (strace present: %s)" %
-          bool(__import__("shutil").which("strace")))
-
-
-# ------------------------------------------------------------------ pty_drive
 
 FAKE_CLI = r'''
 import sys, time
@@ -369,8 +269,6 @@ def test_run_steps():
 def main():
     if os.path.exists(STEPS):
         test_run_steps()
-    if os.path.exists(EGRESS):
-        test_egress()
     if os.path.exists(PTY):
         test_pty()
     if os.path.exists(PROXY):

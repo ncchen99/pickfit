@@ -2,11 +2,12 @@
 """Verdicts for q06 L2-2, L2-3 and L2-4 from the run's evidence files (stdlib only).
 
     check_q06.py --client-report client_report.json --mock-log mock_log.jsonl
-                 --mock-state mock_state.json [--egress REPORT.json]... [--post-body post_body.json]
-                 [--report verdict.json]
+                 --mock-state mock_state.json --egress-dir DIR --egress-label session [--egress-label gen]
+                 [--post-body post_body.json] [--report verdict.json]
 
---egress takes the egress_run.py reports of the generation step (if the answer has one)
-and of the session (server startup plus both tool calls); give every one of them.
+--egress-dir is the folder of eval/fixtures/_shared/egress.py runs; --egress-label names the
+session step (server startup plus both tool calls) and the generation step (if the answer has
+one). Give every one of them.
 
 tools_list  exactly two tools are listed (all pages) and they map one-to-one onto the two
             operations, either by name/title/description/schema (client mapping) or by
@@ -14,8 +15,8 @@ tools_list  exactly two tools are listed (all pages) and they map one-to-one ont
 tool_calls  the GET call's result (content and structuredContent) contains the mock's
             per-run token and is not an error, the mock log has GET /items/42, and the
             mock log has POST /items whose parsed JSON body equals post_body.json
-egress      every egress report has egress.verdict == "pass" (strace saw no attempt to
-            reach anything but loopback); at least the session report must be given
+egress      the shared egress verdict (_shared/README.md section 1) of the named steps is "pass":
+            strace saw no attempt to reach anything but loopback; at least the session step
 """
 
 import argparse
@@ -24,6 +25,8 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.environ.get("SHARED") or os.path.join(HERE, "..", "_shared"))
+import egress as shared_egress  # noqa: E402
 
 
 def load_log(path):
@@ -41,7 +44,8 @@ def main():
     ap.add_argument("--client-report", required=True)
     ap.add_argument("--mock-log", required=True)
     ap.add_argument("--mock-state", required=True)
-    ap.add_argument("--egress", action="append", default=[])
+    ap.add_argument("--egress-dir")
+    ap.add_argument("--egress-label", action="append", default=[])
     ap.add_argument("--post-body", default=os.path.join(HERE, "post_body.json"))
     ap.add_argument("--report")
     a = ap.parse_args()
@@ -87,13 +91,8 @@ def main():
         "other_api_requests": [(e["method"], e["path"], e["status"]) for e in log
                                if e not in get_hits and e not in post_hits][:20],
     }
-    eg = []
-    for path in a.egress:
-        r = json.load(open(path, encoding="utf-8"))
-        eg.append({"report": path, "command": r.get("command"), "verdict": r.get("egress", {}).get("verdict"),
-                   "attempts": r.get("egress", {}).get("egress_attempts"),
-                   "first_attempts": [x.get("line") for x in r.get("egress", {}).get("attempts", [])[:5]]})
-    egress = {"pass": bool(eg) and all(x["verdict"] == "pass" for x in eg), "reports": eg}
+    eg = shared_egress.step_verdicts(a.egress_dir, a.egress_label) if a.egress_dir and a.egress_label else []
+    egress = {"pass": bool(eg) and all(x["result"] == "pass" for x in eg), "steps": eg}
     out = {"tools_list": tools_list, "tool_calls": tool_calls, "egress": egress,
            "client_errors": rep.get("errors"), "mock_token": token}
     text = json.dumps(out, ensure_ascii=False, indent=2)

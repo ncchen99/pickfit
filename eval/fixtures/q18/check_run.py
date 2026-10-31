@@ -15,7 +15,10 @@ Per run (window = run start .. client end + 5 s, cut at the next run's start):
   in_time         not killed by the time limit, and the answer came within --limit
                   seconds (default 600): elapsed, or the last output when pty_drive
                   ended the session by --done / --done-file
-  egress          egress.py report for the same window (when --egress-dir given)
+  egress          the shared egress verdict (when --egress-dir given): the run's own
+                  traced step (label = run folder name) in full, every other step in
+                  that folder (config steps, leftovers) inside the window
+                  (eval/fixtures/_shared/egress.py window_verdict)
   login_hits      lines that mention login / sign-in / account (for the grader)
 L2-2 passes when at least 2 runs have tools_call, model_reply, transcript and
 in_time all true. L2-3 passes when every run's egress result is "pass".
@@ -30,6 +33,7 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+SHARED = os.environ.get("SHARED") or os.path.join(HERE, "..", "_shared")
 LOGIN = re.compile(r"(?i)\b(log ?in|sign ?in|sign ?up|create an account|account required|authenticat\w*|device code|subscription)\b")
 
 
@@ -110,10 +114,10 @@ def check_one(run, state, proxy_dir, limit, egress_mod, egress_dir, proxy_mod, s
     res["pass"] = bool(res["tools_call"] and res["model_reply"] and res["transcript"] and res["in_time"])
     if egress_dir:
         # egress window ends when the client ended (the egress stop that follows must not fall inside it)
-        rep = egress_mod.build_report(egress_dir, since=t0, until=min(t1, summ.get("end", t1)))
+        rep = egress_mod.window_verdict(egress_dir, res["run"], since=t0, until=min(t1, summ.get("end", t1)))
         res["egress"] = rep["result"]
-        res["egress_names"] = rep["layers"]["dns"]["names"]
-        res["egress_remotes"] = sorted(set(rep["layers"]["strace"]["remotes"] + rep["layers"]["poll"]["remotes"]))
+        res["egress_reason"] = rep["reason"]
+        res["egress_attempts"] = rep["first_attempts"]
     return res
 
 
@@ -128,7 +132,7 @@ def main():
     proxy_dir = a.proxy_dir or os.path.join(a.state_dir, "proxy")
     proxy_mod = load(os.path.join(HERE, "tools", "logging_proxy.py"), "logging_proxy")
     server_mod = load(os.path.join(HERE, "mcp_server", "project_code_server.py"), "project_code_server")
-    egress_mod = load(os.path.join(HERE, "egress", "egress.py"), "egress") if a.egress_dir else None
+    egress_mod = load(os.path.join(SHARED, "egress.py"), "egress") if a.egress_dir else None
     starts = sorted(json.load(open(os.path.join(r, "run.json"), encoding="utf-8"))["t_start"] for r in a.runs)
     results = []
     for r in a.runs:
@@ -140,7 +144,7 @@ def main():
     out = {"runs": results, "runs_passed": n_pass, "L2-2": "pass" if n_pass >= 2 else "fail"}
     if a.egress_dir:
         out["L2-3"] = "pass" if all(r.get("egress") == "pass" for r in results) else \
-            ("fail" if any(r.get("egress") == "fail" for r in results) else "incomplete")
+            ("fail" if any(r.get("egress") == "fail" for r in results) else "undetermined")
     print(json.dumps(out, indent=1))
     ok = out["L2-2"] == "pass" and out.get("L2-3", "pass") == "pass"
     return 0 if ok else 1

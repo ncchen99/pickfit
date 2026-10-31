@@ -47,19 +47,17 @@
 
 ## 2. 固定 OpenCC 與 SRT 解析器（評分端，沙盒外）
 
-在評分者自己的 venv 裝固定版本，記下：
+OpenCC 的字典檔照 [`_shared/calibration.md`](../_shared/calibration.md) 步驟 3（q11 用同一份，放在 `$OPENCC`）。SRT 解析器在評分者自己的 venv 裝固定版本，記下：
 
 | 項目 | 值 |
 |---|---|
-| OpenCC 套件與版本、wheel SHA-256 | |
 | srt 版本、wheel SHA-256 | |
-| 與 q11 是否共用同一個 OpenCC 版本與 `zh_score.py` | |
 
 然後：
 
 ```bash
-python3 eval/fixtures/q15/build_clip.py stats --clip eval/fixtures/q15/clip/clip.wav --ref eval/fixtures/q15/clip/reference.txt
-python3 eval/fixtures/q15/zh_score.py all --ref eval/fixtures/q15/clip/reference.txt --text eval/fixtures/q15/clip/reference.txt
+python3 eval/fixtures/q15/build_clip.py stats --clip eval/fixtures/q15/clip/clip.wav --ref eval/fixtures/q15/clip/reference.txt --dict-dir $OPENCC
+python3 eval/fixtures/q15/zh_score.py --dict-dir $OPENCC all --ref eval/fixtures/q15/clip/reference.txt --text eval/fixtures/q15/clip/reference.txt
 ```
 
 | 項目 | 條件 | 值 |
@@ -70,7 +68,7 @@ python3 eval/fixtures/q15/zh_score.py all --ref eval/fixtures/q15/clip/reference
 | 逐字稿自己的繁體比例（簡體來源先 s2tw） | 記錄 | |
 | 逐字稿裡被判為簡體的字（`simplified_chars`） | 記錄 | |
 
-逐字稿是人寫的繁體，若有字被判為簡體，多半是台灣常用的字形（例如「台」）。念誠在開跑前決定是否列入 `script_allow.txt`（每行一個字，`zh_score.py script --allow`），兩組一體適用；決定與理由記在這裡。沒有這種字就不建立這個檔。
+逐字稿是人寫的繁體；共用規則把兩種寫法都對的字（例如「台」）一律算成不計，所以不再有例外清單（原本的 `script_allow.txt` 拿掉）。若仍有字被判為簡體，記下來給念誠看。
 
 ## 3. 速度基準（openai-whisper small）
 
@@ -89,21 +87,21 @@ python3 eval/fixtures/q15/zh_score.py all --ref eval/fixtures/q15/clip/reference
 
 ## 4. 擋外連與外連監測（與 q14 相同）
 
-在擋住的沙盒裡（先 `apt-get install -y strace` 再擋）：
+在擋住的沙盒裡：
 
 ```bash
-python3 /eval/q15/egress_check.py probe --log /results/probe.json        # exit 0
-python3 /eval/q15/egress_check.py selftest --log /results/selftest.json  # ok: true
-python3 /eval/q15/egress_check.py run --log /results/quiet.json -- sleep 10   # attempt_count 0
+python3 $SHARED/egress.py probe --json /results/probe.json                 # exit 0
+python3 $SHARED/egress.py selftest --out /results/selftest                 # _shared/calibration.md 步驟 1，各題共用一次
+python3 $SHARED/egress.py run --out /results/quiet --label quiet -- sleep 10
+python3 $SHARED/egress.py report --out /results/quiet                      # pass
 ```
 
 | 項目 | 值 |
 |---|---|
 | 擋法與指令（受測與基準容器相同） | |
-| strace 版本 | |
-| `selftest` 的 monitor 與結果 | |
+| `selftest` 結果 | （記在 `_shared/calibration.md`） |
 
-`selftest` 不通過時，不改用 `/proc` 輪詢判過（它抓不到立刻失敗的連線）；請念誠決定替代做法並寫在這裡。
+`selftest` 不通過時，不改用 `/proc` 輪詢判過（它抓不到立刻失敗的連線）；照 `_shared/README.md` 第 1 節，請念誠決定替代做法並寫在這裡。
 
 ## 5. dev image 與自我測試
 

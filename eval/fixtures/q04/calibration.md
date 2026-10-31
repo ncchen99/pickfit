@@ -6,25 +6,7 @@ q04 的檢查項目沒有寫「at freeze」，但量測方式（追蹤、沙盒�
 
 ## 步驟 1：egress check 的追蹤方式
 
-與 q01 `calibration.md` 步驟 7 相同（同一份 `egress/` 檔案），另外加一個 q04 會遇到的情況：加解密工具可能啟動留在背景的金鑰 agent，追蹤不能因此卡住，也不能漏記它的連線。
-
-```sh
-F=/opt/eval/fixtures/q04/egress
-sh $F/run_traced.sh /tmp/c1.log 'true';                       python3 $F/egress_check.py /tmp/c1.log   # 預期 exit 0
-sh $F/run_traced.sh /tmp/c2.log 'getent ahosts example.com';  python3 $F/egress_check.py /tmp/c2.log   # 預期 exit 1
-time sh $F/run_traced.sh /tmp/c3.log '(sleep 2; getent ahosts example.com) & exit 0'
-python3 $F/egress_check.py /tmp/c3.log   # 預期約 2–3 秒回來；背景程序在 1 秒寬限內沒連線時 exit 0，記下實際結果
-python3 $F/egress_check.py --self-test   # 預期 PASS
-```
-
-c3 說明：`run_traced.sh` 在指令本身結束後等 1 秒，再讓 strace 脫離留在背景的程序。所以寬限之後才發生的背景連線不會被記到。記下這個限制；若要更長的寬限，在凍結前改 `run_traced.sh` 的 `sleep 1` 並在這裡登記。
-
-| 檢查 | 結果 | strace 版本 | 日期 |
-|---|---|---|---|
-| c1 | | | |
-| c2 | | | |
-| c3 | | | |
-| self-test | | | |
+照 [`_shared/calibration.md`](../_shared/calibration.md) 步驟 1（`egress.py selftest`，各題共用一次）。原本這裡要記的「背景金鑰 agent 在寬限後的連線記不到」已不存在：`egress.py run` 會繼續記錄留在背景的程序，直到 `egress.py stop`（selftest 的 `leftover` 那一項就是在驗證這件事）。
 
 ## 步驟 2：沙盒之間傳 repo
 

@@ -2,7 +2,7 @@
 """q11 fixture self-test (Python 3.8+ stdlib).
 
 Uses only the synthetic replies in samples/ and the hand-written TEST-ONLY
-character table in selftest_dict/ (not OpenCC data), so it runs without the
+character tables in ../_shared/selftest_dict/ (not OpenCC data), so it runs without the
 pinned OpenCC dictionaries. With --mac on macOS it also runs a 10-second
 footprint_watch.py check on a child process.
 
@@ -19,12 +19,13 @@ import tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "mac"))
-import opencc_scorer  # noqa: E402
+sys.path.insert(0, os.path.join(HERE, "..", "_shared"))
+import zh_script  # noqa: E402
 import scan_transcript  # noqa: E402
 import score_replies as sr  # noqa: E402
 
 failures = []
-TD = os.path.join(HERE, "selftest_dict")
+TD = os.path.join(HERE, "..", "_shared", "selftest_dict")
 S = os.path.join(HERE, "samples")
 
 
@@ -59,15 +60,15 @@ else:
     print("questions.yaml not found: skipping prompt check")
 
 # ---------------------------------------------------------------- OpenCC scorer logic
-sc = opencc_scorer.Scorer(TD)
+sc = zh_script.OpenCCTables(TD)
 check("scorer: neutral characters stay neutral (台后里干只内)",
       all(sc.classify(c) is None for c in "台后里干只内"))
 check("scorer: Traditional-only / Simplified-only", sc.classify("軟") == "traditional" and sc.classify("软") == "simplified")
-r = sc.score("軟體" * 10)
+r = sc.ratio("軟體" * 10)
 check("scorer: < 30 differing characters fails even at ratio 1.0", r["differing"] == 10 and not r["pass"])
-r = sc.score("網" * 95 + "网" * 5)
+r = sc.ratio("網" * 95 + "网" * 5)
 check("scorer: ratio exactly 0.95 passes", r["ratio"] == 0.95 and r["pass"])
-r = sc.score("網" * 94 + "网" * 6)
+r = sc.ratio("網" * 94 + "网" * 6)
 check("scorer: ratio 0.94 fails", not r["pass"])
 
 # ---------------------------------------------------------------- reply checks on samples

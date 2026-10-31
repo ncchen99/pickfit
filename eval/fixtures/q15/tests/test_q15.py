@@ -24,20 +24,8 @@ import build_clip  # noqa: E402
 import srt_check  # noqa: E402
 import zh_score  # noqa: E402
 
-S2T = {"这": "這", "里": "裡", "会": "會", "议": "議", "录": "錄", "开": "開", "说": "說", "们": "們", "时": "時",
-       "间": "間", "台": "臺", "发": "發", "后": "後"}
-TW = {"臺": "台", "裏": "裡"}  # Taiwan variants applied after s2t
-T2S = {v: k for k, v in S2T.items()}
-T2S.update({"裏": "里", "著": "着"})
-
-
-def _map(table):
-    return lambda s: "".join(table.get(c, c) for c in s)
-
-
-def fake_conv():
-    s2t = _map(S2T)
-    return zh_score.Converters(s2t, lambda s: _map(TW)(s2t(s)), _map(T2S), "fake")
+SHARED = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "_shared")
+DICT = os.path.join(SHARED, "selftest_dict")  # hand-written TEST-ONLY tables, not OpenCC data
 
 
 def srt_text(cues):
@@ -98,8 +86,10 @@ class SrtTest(unittest.TestCase):
 
 
 class ScoreTest(unittest.TestCase):
+    """The rules themselves are tested in _shared/test_shared.py; here only q15's use of them."""
+
     def setUp(self):
-        self.conv = fake_conv()
+        self.tables = zh_score.zh_script.OpenCCTables(DICT)
 
     def test_edit_distance(self):
         self.assertEqual(zh_score.edit_distance("kitten", "sitting"), 3)
@@ -107,48 +97,40 @@ class ScoreTest(unittest.TestCase):
         self.assertEqual(zh_score.edit_distance("會議", "會議"), 0)
 
     def test_cer_converts_both_sides(self):
-        ref = "這裡會開會，說好時間。"
-        hyp = "这里会开会 说好时间"
-        r = zh_score.cer(ref, hyp, self.conv)
+        ref = "這裡會開會，時間。"
+        hyp = "这里会开会 时间"
+        r = zh_score.cer(ref, hyp, self.tables)
         self.assertEqual(r["cer"], 0.0)
-        r = zh_score.cer(ref, "這裡開會", self.conv)
-        self.assertAlmostEqual(r["cer"], 5 / 9, places=3)
+        r = zh_score.cer(ref, "這裡開會", self.tables)
+        self.assertAlmostEqual(r["cer"], 3 / 7, places=3)
         self.assertFalse(r["passed"])
 
     def test_cer_nfkc_and_case(self):
-        r = zh_score.cer("ＡＢＣ１２３會議", "abc123 會議", self.conv)
+        r = zh_score.cer("ＡＢＣ１２３會議", "abc123 會議", self.tables)
         self.assertEqual(r["cer"], 0.0)
 
-    def test_script_ratio(self):
-        trad = "這裡會議錄開說們時間發後" * 3
-        s = zh_score.script_item(trad, self.conv)
-        self.assertEqual(s["simplified"], 0)
-        self.assertEqual(s["differing"], 36)
-        self.assertTrue(s["passed"])
-        simp = "这里会议录开说们时间发后" * 3
-        s = zh_score.script_item(simp, self.conv)
-        self.assertEqual(s["ratio"], 0.0)
-        self.assertFalse(s["passed"])
-
-    def test_taiwan_form_is_not_simplified(self):
-        s = zh_score.script_counts("台", self.conv)
-        self.assertEqual((s["simplified"], s["traditional"], s["neutral"]), (0, 0, 1))
-        s = zh_score.script_counts("裏著", self.conv)
-        self.assertEqual(s["traditional"], 2)
-
-    def test_needs_30_differing(self):
-        s = zh_score.script_item("這裡會議" + "人" * 100, self.conv)
-        self.assertEqual(s["ratio"], 1.0)
-        self.assertFalse(s["passed"])
-
-    def test_allow_list(self):
-        s = zh_score.script_counts("发", self.conv, allow="发")
-        self.assertEqual(s["simplified"], 0)
+    def test_script_ratio_is_the_shared_one(self):
+        r = self.tables.ratio("這會錄開時間網絡" * 4)
+        self.assertEqual((r["simplified"], r["differing"], r["pass"]), (0, 32, True))
+        r = self.tables.ratio("这会录开时间网络" * 4)
+        self.assertEqual((r["ratio"], r["pass"]), (0.0, False))
+        self.assertTrue(all(self.tables.classify(c) is None for c in "台后里"))
 
     def test_reference_stats(self):
-        r = zh_score.reference_stats("这里会议" * 20, self.conv)
+        r = zh_score.reference_stats("这会网络" * 20, self.tables)
         self.assertEqual(r["script_differing"], 80)
-        self.assertTrue(r["passed"])
+        self.assertTrue(r["pass"])
+
+    def test_cli_all(self):
+        with tempfile.TemporaryDirectory() as d:
+            ref = os.path.join(d, "ref.txt")
+            with open(ref, "w", encoding="utf-8") as fh:
+                fh.write("這裡會開會" * 10)
+            rc = zh_score.main(["--dict-dir", DICT, "all", "--ref", ref, "--text", ref, "--out", os.path.join(d, "o.json")])
+            with open(os.path.join(d, "o.json"), encoding="utf-8") as fh:
+                out = json.load(fh)
+            self.assertEqual(out["cer"]["cer"], 0.0)
+            self.assertEqual(rc, 0)
 
 
 def tone(seconds, lead=0.5, tail=0.5, amp=8000, freq=440):

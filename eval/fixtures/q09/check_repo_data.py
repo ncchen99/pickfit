@@ -10,16 +10,22 @@ changes at most 5 lines (Python 3.8+ stdlib + git).
       as binary.
 
   python3 check_repo_data.py diffsize REPO BEFORE
-      Run after closing one more task. Stages everything (`git add -A`, so new
-      and moved files count) and sums the added + deleted lines of
-      `git diff --cached -M --numstat BEFORE`, where BEFORE is the commit taken
-      just before the close (this also covers tools that commit by themselves).
-      Passes when the sum is at most 5 and no file is binary.
+      Run after closing one more task. Counts the changed lines against BEFORE,
+      the commit taken just before the close (this also covers tools that
+      commit by themselves), with the shared count of
+      eval/fixtures/_shared/git_diff_lines.py (_shared/README.md section 4:
+      everything staged, renames detected, per hunk max(removed, added),
+      summed). Passes when the count is at most 5, no change is binary, and
+      something changed.
 
 Exit status: 0 pass, 1 fail, 2 usage error.
 """
+import os
 import subprocess
 import sys
+
+sys.path.insert(0, os.environ.get("SHARED") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "_shared"))
+import git_diff_lines  # noqa: E402
 
 LIMIT = 5
 ALLOWED_CTRL = {0x09, 0x0A, 0x0C, 0x0D}
@@ -67,21 +73,15 @@ def text_check(repo, base):
 
 
 def diffsize(repo, before):
-    git(repo, "add", "-A")
-    out = git(repo, "diff", "--cached", "-M", "--numstat", before).decode("utf-8", "replace")
-    total, binary = 0, []
-    for line in out.splitlines():
-        a, d, path = line.split("\t", 2)
-        if a == "-" or d == "-":
-            binary.append(path)
-            continue
-        total += int(a) + int(d)
+    count = git_diff_lines.count(repo, before)
+    total, binary = count["changed_lines"], count["binary"]
     print(git(repo, "diff", "--cached", "-M", "--stat", before).decode("utf-8", "replace").rstrip())
-    print("lines changed (added + deleted): %d, limit %d" % (total, LIMIT))
+    print("changed lines (shared count): %s, limit %d (added %d, removed %d, renamed %s)"
+          % (total, LIMIT, count["added"], count["removed"], count["renamed"] or "none"))
     if binary:
         print("binary changes: %s" % ", ".join(binary))
-    ok = total <= LIMIT and not binary and out.strip() != ""
-    if out.strip() == "":
+    ok = total is not None and total <= LIMIT and not binary and bool(count["files"])
+    if not count["files"]:
         print("no change at all: the close was not written to the repository")
     print("L2-4 diff: %s" % ("PASS" if ok else "FAIL"))
     return 0 if ok else 1

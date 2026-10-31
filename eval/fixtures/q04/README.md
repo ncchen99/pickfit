@@ -12,7 +12,7 @@
 | `make_env.py` | 寫出 `.env`（5 個機密，`KEY=VALUE`）與一份值的清單（每行一個值，放在任何 git repo 之外）；`--version 2` 產生輪替後的新值 |
 | `check_history.sh` | 項目 1：每個機密值在所有 commit 都找不到、加密檔有 commit、`.env` 未追蹤且被忽略 |
 | `check_values.sh` | 項目 2、3：`present` 檢查解密結果含全部值；`absent` 檢查指定的目錄與輸出完全沒有任何值 |
-| `egress/run_traced.sh`、`egress/egress_check.py` | egress check（與 q01 相同的檔案） |
+| `../_shared/egress.py` | egress check（各題共用，[`_shared/README.md`](../_shared/README.md) 第 1 節） |
 | `needs.json` | 需要外部取得的東西（dev image 內容、strace） |
 | `calibration.md` | 第一次開跑前的校準步驟與紀錄表（待填） |
 
@@ -26,10 +26,10 @@
 
 ## 3. 共同設定
 
-- **環境**：三個獨立的沙盒 A、B、C，都用同一個 dev image（`needs.json`；需要 `git`、`python3`、`strace`）。每個沙盒都原樣執行答案的安裝步驟（安裝失敗時照 `eval/README.md` 9.1 節 C7，該題其餘 [L2] 項目都不過）。本資料夾複製到 `FIXTURE=/opt/eval/fixtures/q04`，評分紀錄與值的清單放 `/opt/eval/state/q04/`，傳遞用的檔案放 `/opt/eval/xfer/`（都不在任何 repo 裡）。
+- **環境**：三個獨立的沙盒 A、B、C，都用同一個 dev image（`needs.json`；需要 `git`、`python3`、`strace`）。每個沙盒都原樣執行答案的安裝步驟（安裝失敗時照 `eval/README.md` 9.1 節 C7，該題其餘 [L2] 項目都不過）。本資料夾複製到 `FIXTURE=/opt/eval/fixtures/q04`，共用工具複製到 `SHARED=/opt/eval/fixtures/_shared`，評分紀錄與值的清單放 `/opt/eval/state/q04/`，傳遞用的檔案放 `/opt/eval/xfer/`（都不在任何 repo 裡）。
 - **git 身分**：評分者在每個沙盒設定 `git config --global user.name "Developer A"`、`user.email dev-a@example.test`（B、C 同理）。這是環境設定，不算答案的步驟。
 - **原樣（verbatim）**：逐字執行答案的指令，只做 `eval/README.md` 第 5 節允許的調整（填版本號與佔位字，例如檔名、金鑰路徑、recipient；接受預設值）。不可以修正錯的指令或旗標、補上缺的步驟。
-- **egress check**：每一個加密與解密的指令都包在 `egress/run_traced.sh` 裡執行，strace 記下它和所有子程序（包括留在背景的金鑰 agent 之類的 daemon）的 `connect`、`sendto`、`sendmsg`、`sendmmsg`；`egress/egress_check.py` 把非 loopback 的 IPv4／IPv6 目的地、任何位址的 port 53（DNS）、其他能上網的 socket 家族都算成對外連線嘗試（失敗的也算）。exit 0＝過、1＝不過、2＝沒有追蹤成功的證據。
+- **egress check**：每一個加密與解密的指令都用 `$SHARED/egress.py run` 包起來執行，strace 記下它和它啟動的所有程序（包括留在背景的金鑰 agent 之類的 daemon，記到 `egress.py stop` 為止）的連線。什麼算一次對外連線嘗試、怎麼判定，見 [`_shared/README.md`](../_shared/README.md) 第 1 節（失敗的嘗試也算）。`egress.py report` exit 0＝過；1＝不過；2＝量測沒做好（紀錄缺漏、沒有 execve 或還沒 stop），不算答案的錯，修好後重跑。三個沙盒的 label 不重複（`a-encrypt-1`、`b-decrypt-1`、`c-decrypt-1`…），每個沙盒結束前都先 `egress.py stop`，再把 `/opt/eval/state/q04/egress/` 集中到同一個資料夾。
 
 ## 4. L2 項目
 
@@ -45,7 +45,7 @@
   cd /work/team-app
   # 依答案：初始化、把 A 與 B 設為可解密的人（B 的公開資料已複製到 /opt/eval/xfer/）、
   # 加密、git add、git commit。每一個加密指令都包 egress check：
-  sh $FIXTURE/egress/run_traced.sh /opt/eval/state/q04/egress-a-encrypt-1.log '<答案的加密指令>'
+  python3 $SHARED/egress.py run --out /opt/eval/state/q04/egress --label a-encrypt-1 --sh '<答案的加密指令>'
   sh $FIXTURE/check_history.sh /work/team-app /opt/eval/state/q04/values-v1.txt <答案產生的加密檔路徑>
   ```
   答案的步驟說要把 B 加入的時機（加密前或加密後再重新加密）照答案做。
@@ -66,14 +66,14 @@
   ```sh
   # 沙盒 B
   git clone /opt/eval/xfer/team-app.bundle /work/team-app && cd /work/team-app
-  sh $FIXTURE/egress/run_traced.sh /opt/eval/state/q04/egress-b-decrypt-1.log \
-    '<答案的解密指令，用 B 的金鑰>' > /opt/eval/state/q04/b1.out 2> /opt/eval/state/q04/b1.err
+  python3 $SHARED/egress.py run --out /opt/eval/state/q04/egress --label b-decrypt-1 \
+    --stdout /opt/eval/state/q04/b1.out --stderr /opt/eval/state/q04/b1.err --sh '<答案的解密指令，用 B 的金鑰>'
   sh $FIXTURE/check_values.sh present /opt/eval/state/q04/values-v1.txt <解密寫出的檔> /opt/eval/state/q04/b1.out
 
   # 沙盒 C（同樣的指令，用 C 的金鑰）
   git clone /opt/eval/xfer/team-app.bundle /work/team-app && cd /work/team-app
-  sh $FIXTURE/egress/run_traced.sh /opt/eval/state/q04/egress-c-decrypt-1.log \
-    '<答案的解密指令，用 C 的金鑰>' > /opt/eval/state/q04/c1.out 2> /opt/eval/state/q04/c1.err
+  python3 $SHARED/egress.py run --out /opt/eval/state/q04/egress --label c-decrypt-1 \
+    --stdout /opt/eval/state/q04/c1.out --stderr /opt/eval/state/q04/c1.err --sh '<答案的解密指令，用 C 的金鑰>'
   sh $FIXTURE/check_values.sh absent /opt/eval/state/q04/values-v1.txt \
     /work/team-app /opt/eval/state/q04/c1.out /opt/eval/state/q04/c1.err
   ```
@@ -90,15 +90,15 @@
      ```sh
      python3 $FIXTURE/make_env.py /work/team-app/.env /opt/eval/state/q04/values-v2.txt --version 2
      ```
-     然後照答案重新加密、commit（每個加密指令包 egress check，`egress-a-encrypt-2.log`），重建 bundle，複製到 B 的沙盒（連同 `values-v2.txt`）。
+     然後照答案重新加密、commit（每個加密指令包 egress check，label `a-encrypt-2`），重建 bundle，複製到 B 的沙盒（連同 `values-v2.txt`）。
   2. 沙盒 B，用 B 原本的環境（保留 B 之前拿到的一切）與一個全新的 clone 各試一次：
      ```sh
      cd /work/team-app && git pull --ff-only
-     sh $FIXTURE/egress/run_traced.sh /opt/eval/state/q04/egress-b-decrypt-2.log \
-       '<答案的解密指令，用 B 的金鑰>' > /opt/eval/state/q04/b2.out 2> /opt/eval/state/q04/b2.err
+     python3 $SHARED/egress.py run --out /opt/eval/state/q04/egress --label b-decrypt-2 \
+       --stdout /opt/eval/state/q04/b2.out --stderr /opt/eval/state/q04/b2.err --sh '<答案的解密指令，用 B 的金鑰>'
      git clone /opt/eval/xfer/team-app.bundle /work/team-app-fresh && cd /work/team-app-fresh
-     sh $FIXTURE/egress/run_traced.sh /opt/eval/state/q04/egress-b-decrypt-3.log \
-       '<答案的解密指令，用 B 的金鑰>' > /opt/eval/state/q04/b3.out 2> /opt/eval/state/q04/b3.err
+     python3 $SHARED/egress.py run --out /opt/eval/state/q04/egress --label b-decrypt-3 \
+       --stdout /opt/eval/state/q04/b3.out --stderr /opt/eval/state/q04/b3.err --sh '<答案的解密指令，用 B 的金鑰>'
      sh $FIXTURE/check_values.sh absent /opt/eval/state/q04/values-v2.txt \
        /work/team-app /work/team-app-fresh /opt/eval/state/q04/b2.out /opt/eval/state/q04/b2.err \
        /opt/eval/state/q04/b3.out /opt/eval/state/q04/b3.err
@@ -112,9 +112,9 @@
 > [L2] Egress check passes for encryption and decryption
 
 - **範圍**：所有加密與解密的指令：A 的兩次加密（項目 1、3），B 的三次解密（項目 2、3），C 的解密嘗試（項目 2）。產生金鑰、交換公開資料、git 操作與 bundle 傳遞不算。
-- **做法**：把三個沙盒的紀錄集中後：
+- **做法**：每個沙盒結束前先 `python3 $SHARED/egress.py stop --out /opt/eval/state/q04/egress`（金鑰 agent 之類的背景程序到這時都還在記錄），再把三個沙盒的 `egress/` 集中到同一個資料夾 `EG`：
   ```sh
-  python3 $FIXTURE/egress/egress_check.py egress-*.log --json q04-egress.json
+  python3 $SHARED/egress.py report --out $EG --json q04-egress.json
   ```
 - **判定**：exit 0 → 過；exit 1 → 不過，附上每一筆連線嘗試；exit 2 → 量測失敗，修好追蹤後在新沙盒重跑整個 q04 流程（答案原文不變），記錄原因。
 

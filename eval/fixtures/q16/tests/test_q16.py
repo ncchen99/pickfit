@@ -115,7 +115,7 @@ class FixtureTest(unittest.TestCase):
 class CheckTest(unittest.TestCase):
     def test_positive_control(self):
         with tempfile.TemporaryDirectory() as d:
-            rc, r = check(make_output(d), {"wall_seconds": 600, "timed_out": False, "exit_code": 0})
+            rc, r = check(make_output(d), {"duration_s": 600, "timed_out": False, "exit_code": 0})
         self.assertEqual(rc, 0, json.dumps(r["items"]))
         self.assertEqual(r["variant"]["pt_pt_count"], 5)
         self.assertTrue(r["files"]["passed"])
@@ -129,9 +129,9 @@ class CheckTest(unittest.TestCase):
 
     def test_time_limit(self):
         with tempfile.TemporaryDirectory() as d:
-            _, r = check(make_output(d), {"wall_seconds": 1801, "timed_out": False})
+            _, r = check(make_output(d), {"duration_s": 1801, "timed_out": False})
             self.assertFalse(r["items"]["files_within_30_min"])
-            _, r = check(d, {"wall_seconds": 100, "timed_out": True})
+            _, r = check(d, {"duration_s": 100, "timed_out": True})
             self.assertFalse(r["items"]["files_within_30_min"])
 
     def _tamper(self, fn):

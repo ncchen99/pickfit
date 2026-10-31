@@ -1,0 +1,28 @@
+[
+  {
+    "item": "strace in every Linux L2 box (egress.py)",
+    "why": "egress.py records execve, connect, sendto, sendmsg and sendmmsg with strace -f. ubuntu:24.04 does not ship it. It is a grader tool, never one of the answer's steps. When it is installed is part of open decision 6 (the Linux image content), one way for every question: baked into the dev image before any answer runs (the image proposed for item 4: python3, git, ca-certificates, curl, strace), or installed by the grader right after the answer's install steps (what the q09, q14 and q15 drafts assumed, so that the install check runs on an image without it).",
+    "candidates": [
+      {
+        "source": "Ubuntu 24.04 (noble) archive, package strace: https://packages.ubuntu.com/noble/strace",
+        "license": "LGPL-2.1-or-later",
+        "size": "about 1.5 MB installed",
+        "pin": "apt-get install strace=<noble version>; record `dpkg-query -W strace` and the image digest in calibration.md. calibration.md step 1 checks that ptrace works in the box (egress.py selftest)."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Pinned OpenCC dictionary files (zh_script.py; q11 and q15)",
+    "why": "eval/README.md section 5 fixes the script judgement to one pinned OpenCC version, character by character. zh_script.py reads OpenCC's own text dictionaries from one release tag: STCharacters.txt and TSCharacters.txt for the ratio, STPhrases.txt and TWVariants.txt for q15's conversion to Traditional before the CER. No OpenCC binary or Python package is needed. Not downloaded or committed here (third-party data).",
+    "candidates": [
+      {
+        "source": "https://github.com/BYVoid/OpenCC at one release tag (the latest at the pin date, e.g. ver.1.1.9): data/dictionary/STCharacters.txt, STPhrases.txt, TSCharacters.txt, TWVariants.txt",
+        "license": "Apache-2.0",
+        "size": "about 1 MB for the four files",
+        "pin": "Record the tag, the raw-file URLs at that tag and the SHA-256 of all four files in calibration.md step 3; keep them outside the repo (the grader's folder $OPENCC), or commit them with the Apache-2.0 notice only after checking the license terms."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  }
+]

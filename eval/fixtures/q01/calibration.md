@@ -86,26 +86,7 @@ gemini mcp add -s user fixture-echo python3 /opt/eval/fixtures/q01/server/fixtur
 
 ## 步驟 7：egress check 的追蹤方式
 
-在 dev image 的 L2 沙盒裡（Modal 用 gVisor，要確認 ptrace 可用）：
-
-```sh
-F=/opt/eval/fixtures/q01/egress
-sh $F/run_traced.sh /tmp/c1.log 'true';                         python3 $F/egress_check.py /tmp/c1.log   # 預期 exit 0
-sh $F/run_traced.sh /tmp/c2.log 'getent ahosts example.com';    python3 $F/egress_check.py /tmp/c2.log   # 預期 exit 1（port 53 或對外位址）
-sh $F/run_traced.sh /tmp/c3.log 'python3 -c "import socket; socket.create_connection((\"1.1.1.1\", 443), 5)"'; python3 $F/egress_check.py /tmp/c3.log   # 預期 exit 1
-time sh $F/run_traced.sh /tmp/c4.log 'sleep 30 & exit 0';       # 預期約 2–3 秒就回來（背景 daemon 不會卡住）
-python3 $F/egress_check.py --self-test                          # 預期 PASS
-```
-
-strace 在沙盒裡不能用時，改用的方式（例如封包擷取）寫在這裡並在凍結前 commit；不能只靠「封鎖網路後指令仍成功」判過，因為題目要的是記錄連線嘗試。
-
-| 檢查 | 結果 | strace 版本 | 日期 |
-|---|---|---|---|
-| c1 true | | | |
-| c2 DNS | | | |
-| c3 TCP | | | |
-| c4 daemon | | | |
-| self-test | | | |
+照 [`_shared/calibration.md`](../_shared/calibration.md) 步驟 1（`egress.py selftest`，各題共用一次）。在 q01 的 dev image 沙盒裡做過即可，結果記在那裡。
 
 ## 步驟 8：fixture server
 

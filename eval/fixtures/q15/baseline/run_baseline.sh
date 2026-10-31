@@ -42,7 +42,8 @@ time)
   out=${2:?usage: run_baseline.sh time OUT_DIR}
   mkdir -p "$out"
   cd "$out"
-  python3 "$here/egress_check.py" run --monitor none --log "$out/baseline_time.json" -- \
+  # timing only, the same wrapper as the answer's Run A (eval/fixtures/_shared/egress.py run --no-trace)
+  python3 "${SHARED:-$here/../_shared}/egress.py" run --out "$out" --label baseline --no-trace -- \
     "$venv/bin/whisper" "$here/clip/clip.wav" --model small
   ;;
 *)

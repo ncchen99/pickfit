@@ -9,8 +9,10 @@
 # With Q09_PRELUDE=FILE set, FILE is sourced first: it holds the answer's
 # session-only lines (export / source / eval) copied verbatim, so each new
 # shell behaves like the terminal the user installed in. With
-# EGRESS_LOG=FILE set, the whole thing runs under strace and every connect /
-# sendto / sendmsg / sendmmsg call is written to FILE (see egress_parse.py).
+# EGRESS_LOG=DIR/NAME.log set, the whole thing runs under the shared egress
+# check (eval/fixtures/_shared/egress.py run --out DIR --label NAME); its output
+# is printed afterwards. SHARED names the _shared folder (default: next to
+# this folder).
 #
 # Exit status: the command's exit status.
 set -eu
@@ -40,9 +42,16 @@ chmod 0644 "$cmdfile"
 run="LANG=C.UTF-8 TERM=xterm-256color exec bash -li $cmdfile"
 
 if [ -n "${EGRESS_LOG:-}" ]; then
-  command -v strace >/dev/null 2>&1 || { echo "strace not installed" >&2; exit 98; }
-  strace -f -qq -o "$EGRESS_LOG" -e trace=connect,sendto,sendmsg,sendmmsg -e signal=none \
-    su - "$user" -c "$run"
+  shared=${SHARED:-$(cd "$(dirname "$0")/../_shared" && pwd)}
+  eg_dir=$(dirname "$EGRESS_LOG")
+  eg_label=$(basename "$EGRESS_LOG" .log)
+  set +e
+  python3 "$shared/egress.py" run --out "$eg_dir" --label "$eg_label" -- su - "$user" -c "$run"
+  rc=$?
+  set -e
+  cat "$eg_dir/$eg_label.stdout"
+  cat "$eg_dir/$eg_label.stderr" >&2
+  exit "$rc"
 else
   su - "$user" -c "$run"
 fi
