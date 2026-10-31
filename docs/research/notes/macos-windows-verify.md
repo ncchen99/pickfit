@@ -424,7 +424,7 @@ GitHub Actions 沒有採用。改在念誠的 Windows 11 Home 筆電（i5-1135G7
   - `non_admin`：sbx 的 BUILTIN 只有 S-1-5-32-545、Medium integrity、沒有危險權限；對照：Administrator 被判出。
   - `no_encoded_commands_in_log`：events=214、encoded=0；對照：encoded=8。
   - `egress_ip_in_router_block`：這個網路的對外位址在 router 的 drop set 裡；它的 80／443／445 經 router 都逾時。
-- 9 款都在這個 base 上重新驗證，等級、版本、裝法都和 5.9 節相同，全部在全新 box 斷網重播通過，judge 都判 working。以下這組是要審的紀錄：
+- 9 款都在這個 base 上重新驗證，等級、版本、裝法都和 5.9 節相同，全部在全新 box 斷網重播通過，judge 都判 working。（這組已被 5.11 在 base `16ea69df29ff` 上的那組取代，要合併的是 5.11 那組；這些 run 留著當證據。）
 
   | 工具 | 等級 | 版本 | 裝法 | run |
   |---|---|---|---|---|
@@ -474,8 +474,22 @@ GitHub Actions 沒有採用。改在念誠的 Windows 11 Home 筆電（i5-1135G7
   - `non_admin_control`：Administrator 有 S-1-5-32-544，解析出的權限包括 SeDebug 與 SeBackup。
 - agent-database-cli：function，斷網重播通過，judge working（verify-agent-database-cli-20261031-213630-7d18）。
 - frugon：第一次重播碰到上面的 serial log 問題；修好後重跑，function，斷網重播通過，judge working（verify-frugon-20261031-214339-536c）。
-- 這台 Meta 累計 $0.290。
-- 5.10 表中其他 7 款的紀錄來自前一個 base `b76bdbf073ec`。那之後只改了建置期的掃描（canary）、HARDENED_CHECK 的群組列舉，以及 host 端的程式；guest 裡給 sbx 的環境沒有變。
+- 其餘 7 款也在這個 base 上重跑。**要合併的是這一組**（全部來自 base `16ea69df29ff`；5.10 在 `b76bdbf073ec` 上的那組留著當證據）：
+
+  | 工具 | 等級 | 版本 | 裝法 | run | 備註 |
+  |---|---|---|---|---|---|
+  | frugon | function | 0.2.6 | uv（uvx） | verify-frugon-20261031-214339-536c | |
+  | agent-database-cli | function | 0.4.1 | npm | verify-agent-database-cli-20261031-213630-7d18 | |
+  | agent-history | function | 0.16.0 | uv（git+） | verify-agent-history-20261031-220211-df28 | |
+  | nlm-memory | function | 0.21.20 | npm | verify-nlm-memory-20261031-220955-fd3d | |
+  | akm | function | 0.10.261022 | npm | verify-akm-20261031-221817-e9c3 | |
+  | martty | function | 0.3.3 | npm | verify-martty-20261031-222518-09bb | |
+  | aria-code | function | 0.165.0 | npm | verify-aria-code-20261031-223659-aa9c | **要審**：function 只靠 `aria update --check`（"You are up to date."，offline false）；`--help`、`--version` 只到 install。照協調 session 的規則（要網路的 smoke 不算 function），應該算 install。紀錄是 pipeline（合併 main 之後的版本）判的，我沒有改 |
+  | alysiscode | function | 0.15.2 | pipx | verify-alysiscode-20261031-224540-1927 | |
+  | labelize | function | 1.10.0 | binary | verify-labelize-20261031-230031-6dff | **要審**：這次裝的是 GitHub release 的官方 Windows 執行檔（labelize-x86_64-pc-windows-msvc.zip），不是之前的 npm wasm 套件；抽取的 install_methods 裡沒有這條（只有 brew、cargo、npm wasm、docker），算不算 README 的裝法由審查決定 |
+
+  - labelize 第一次（225314）判 unverified：agent 宣稱 service，但有一步的最後一條是 `echo`，蓋掉了前面的 exit code，log 支持不了這個宣稱。第二次通過。
+  - 這台 Meta 累計 $0.426。
 
 ---
 
