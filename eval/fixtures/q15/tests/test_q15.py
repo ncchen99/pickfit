@@ -272,7 +272,7 @@ def runs_of_zero(samples):
 
 class SqueezeTest(unittest.TestCase):
     R = build_clip.RATE
-    # a lead pause of 2.14 s (like the preamble's), then tones split by pauses of 0.2, 0.5, 0.52 and 1.0 s
+    # a lead pause of 2.14 s (like the one the real clip starts in), then tones split by pauses of 0.2, 0.5, 0.52 and 1.0 s
     PATTERN = [(2.0, 0.2), (1.0, 0.5), (1.5, 1.0), (0.8, 0.52), (2.2, 0.3)]
 
     def source(self):
