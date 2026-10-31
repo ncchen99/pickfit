@@ -22,6 +22,7 @@ from pickfit.verify.agent import (
     FinishArgs,
     VerifyAgent,
     render_task,
+    text_finish,
 )
 from pickfit.verify.box import Box, BoxError
 from pickfit.verify.plan import plan_for
@@ -189,6 +190,33 @@ def test_past_the_limit_only_finish_runs_and_silence_ends_the_run(task, ledger, 
     assert [c for c, _ in box.ran] == ["echo 1"]  # the call past the limit was refused, not run
     assert server.requests[2]["input"][-1]["output"].startswith("error: nothing else runs past the limit")
     assert server.requests[2]["tools"] == server.requests[0]["tools"]
+
+
+def markup(name: str, args: dict) -> str:
+    """A call written as text in Muse Spark Open's own tool-call markup, as seen on Baseten."""
+    params = "".join(f'<atem:parameter name="{k}">{v if isinstance(v, str) else json.dumps(v)}</atem:parameter>\n'
+                     for k, v in args.items())
+    return f'<atem:function_calls>\n<atem:invoke name="{name}">\n{params}</atem:invoke>\n</atem:function_calls>'
+
+
+def test_a_finish_written_as_markup_text_is_read_as_the_call(task, ledger, tmp_path):
+    _, args = finish(level="unverified", unverified_reason="other", summary="Ran out of commands.")
+    server = FakeServer(response("r1", run_cmd("echo 1")), response("r2", text=markup("finish", args)))
+    report = agent(task, FakeBox(), server, ledger, tmp_path, limits=AgentLimits(max_commands=1)).run()
+    assert report.stop_reason == "finished" and report.verdict["level"] == "unverified"
+    assert report.finish["summary"] == "Ran out of commands." and len(server.requests) == 2
+
+
+def test_markup_text_that_is_not_one_finish_is_not_a_call() -> None:
+    _, args = finish(level="function")
+    assert text_finish(markup("run_command", {"command": "rm -rf ~"})) is None
+    assert text_finish(markup("finish", args) + markup("finish", args)) is None
+    assert text_finish("I am done.") is None and text_finish(None) is None
+    call = text_finish(markup("finish", args))
+    assert call is not None and json.loads(call.arguments) == args
+    numbers = text_finish(markup("finish", {**args, "tool_version": "1.0", "failing_command_id": "3"}))
+    assert {k: json.loads(numbers.arguments)[k] for k in ("tool_version", "failing_command_id")} == {
+        "tool_version": "1.0", "failing_command_id": 3}
 
 
 def test_a_finish_in_the_spare_turn_still_counts(task, ledger, tmp_path):

@@ -201,6 +201,32 @@ def tools_for(box: Box) -> list[dict[str, Any]]:
     return tools
 
 
+# Muse Spark Open on Baseten sometimes writes a long finish as text in its own tool-call markup
+# (<atem:function_calls><atem:invoke name="finish"><atem:parameter name="level">...), which the server did
+# not turn into a function call. One complete finish written that way is read as the call it is; it still
+# goes through FinishArgs, the log verdict, the replay and the judges like any other finish.
+_TEXT_INVOKE = re.compile(r'<(\w+):invoke name="([\w-]+)">(.*?)</\1:invoke>', re.S)
+_TEXT_PARAM = re.compile(r'<(\w+):parameter name="(\w+)">(.*?)</\1:parameter>', re.S)
+
+
+def text_finish(text: str | None) -> ToolCall | None:
+    """The finish call a model wrote as text in tool-call markup, when it wrote exactly one and nothing else."""
+    invokes = _TEXT_INVOKE.findall(text or "")
+    if len(invokes) != 1 or invokes[0][1] != "finish":
+        return None
+    args: dict[str, Any] = {}
+    for _, name, value in _TEXT_PARAM.findall(invokes[0][2]):
+        try:
+            args[name] = json.loads(value)
+        except ValueError:
+            args[name] = value
+        field = FinishArgs.model_fields.get(name)
+        if isinstance(args[name], int | float) and not isinstance(args[name], bool) and field is not None \
+                and "int" not in str(field.annotation):
+            args[name] = value.strip()  # a version such as 1.0 is text
+    return ToolCall(call_id=None, name="finish", arguments=json.dumps(args)) if args else None
+
+
 class _ListDirArgs(BaseModel):
     path: str = "."
 
@@ -685,6 +711,12 @@ class VerifyAgent:
             if self.mode == "replay":
                 history.extend(result.output_items)
             pending = []
+            written = None if result.tool_calls else text_finish(result.text)
+            if written is not None:
+                self._say("  finish written as text in tool-call markup: read as the finish call")
+                if self._handle_calls([written], turn, [], can_retry=False, finish_only=True):
+                    self.report.stop_reason = "finished"
+                    return
             if not result.tool_calls:
                 if (wrap_up and not grace) or (not wrap_up and nudges >= MAX_NUDGES):
                     self._stop("no_finish")
