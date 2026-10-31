@@ -101,28 +101,35 @@ function namedWords(text: string): string[] {
   return out;
 }
 
-export function jobOf(corpus: readonly Entry[], text: string): Job {
-  let plain = text.replace(KIND, ' ').replace(OS_NAMES, ' ').replace(LABEL, ' ');
-  const reference = new Set(
-    [...plain.matchAll(REFERENCE)].map((m) => m[1] ?? m[2]).filter((w) => !NOT_THE_JOB_WORDS.includes(w.toLowerCase())).flatMap(terms).filter((t) => !SKIP.has(t)),
-  );
-  plain = dropNegated(plain);
-  for (const [pattern, word] of PHRASES) plain = plain.replace(pattern, ` ${word} `);
-  plain = plain.replace(NOT_THE_JOB, ' ');
+/**
+ * `text`: a need, whose negations are constraints. `asSaid`: find_alternatives'
+ * pain points, read first and as said: there "no dark mode" names what is wanted.
+ */
+export function jobOf(corpus: readonly Entry[], text: string, asSaid = ''): Job {
+  const clean = (part: string, negate: boolean) => {
+    let plain = part.replace(KIND, ' ').replace(OS_NAMES, ' ').replace(LABEL, ' ');
+    const reference = [...plain.matchAll(REFERENCE)].map((m) => m[1] ?? m[2]).filter((w) => !NOT_THE_JOB_WORDS.includes(w.toLowerCase()));
+    if (negate) plain = dropNegated(plain);
+    for (const [pattern, word] of PHRASES) plain = plain.replace(pattern, ` ${word} `);
+    return { plain: plain.replace(NOT_THE_JOB, ' '), reference };
+  };
+  const parts = [...(asSaid ? [clean(asSaid, false)] : []), clean(text, true)];
+  const plain = parts.map((part) => part.plain).join(' ');
+  const reference = new Set(parts.flatMap((part) => part.reference).flatMap(terms).filter((t) => !SKIP.has(t)));
   const index = relevanceIndex(corpus);
   // "my Node project", "Python code": where the job happens, an ordinary word rather than a product to work with.
   const context = new Set([...plain.matchAll(/\b([A-Z][\w.+-]*)\s+(?:projects?|codebases?|apps?|code|scripts?)\b/g)].flatMap((m) => terms(m[1])));
   const names = new Set([...namedWords(plain).flatMap(terms).filter((t) => !SKIP.has(t) && !context.has(t)), ...reference]);
   // An English term is one word; a Chinese word's synonyms are one word, and words sharing a term are merged.
   const candidate: string[][] = [];
-  for (const group of [...terms(plain).map((t) => [t]), ...zhWords(plain).map(terms)]) {
+  for (const group of [...terms(plain).map((t) => [t]), ...zhWords(plain, false).map(terms)]) {
     const g = [...new Set(group.filter((t) => !SKIP.has(t) && !/^\d+$/.test(t)))];
     const same = candidate.find((c) => c.some((t) => g.includes(t)));
     if (same) same.push(...g.filter((t) => !same.includes(t)));
     else if (g.length) candidate.push(g);
   }
   const said = new Map<string, string>();
-  for (const word of [...(plain.match(/[A-Za-z][\w+#.-]*/g) ?? []), ...zhWords(plain).join(' ').split(' ')]) {
+  for (const word of [...(plain.match(/[A-Za-z][\w+#.-]*/g) ?? []), ...zhWords(plain, false).join(' ').split(' ')]) {
     for (const term of terms(word)) if (!said.has(term)) said.set(term, word.toLowerCase().replace(/\.+$/, ''));
   }
   // A word counts when the catalog knows it or it names a product; other words (asides, labels) do not.

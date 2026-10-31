@@ -257,9 +257,9 @@ export function dropNegated(text: string): string {
 /** English words for the Chinese words in a text: at each position the longest dictionary word wins; negated words are left out. */
 export const zhToEnglish = (text: string): string => zhWords(text).join(' ');
 
-/** The dictionary's English for each Chinese word in a text, one string per word (its synonyms together), less negated words. */
-export function zhWords(text: string): string[] {
-  const plain = dropNegated(text);
+/** The dictionary's English for each Chinese word in a text, one string per word (its synonyms together), less negated words unless `negate` is false. */
+export function zhWords(text: string, negate = true): string[] {
+  const plain = negate ? dropNegated(text) : text;
   const out: string[] = [];
   for (let i = 0; i < plain.length; ) {
     const key = plain.charCodeAt(i) >= 0x2e80 ? ZH_KEYS.find((k) => plain.startsWith(k, i)) : undefined;
@@ -271,6 +271,9 @@ export function zhWords(text: string): string[] {
 
 /** The request's terms for rulesRelevance: its own English words and the dictionary's English for its Chinese ones, less negated words. */
 export const rulesTerms = (...texts: string[]) => queryTerms(...texts.map(dropNegated), ...texts.map(zhToEnglish));
+
+/** The same, with negated words kept as said: find_alternatives' pain points, where "no dark mode" names what is wanted. */
+export const termsAsSaid = (...texts: string[]) => queryTerms(...texts, ...texts.map((t) => zhWords(t, false).join(' ')));
 
 /**
  * Relevance without the model: BM25 where a generic word ("tool", "terminal",

@@ -5,7 +5,7 @@
  * the keyword call is answered from the saved file and the match call is
  * captured, then failed.
  *
- *   node bench/ai_path_same.ts <index.json> <needs.json> <keywords-en.json> <keywords-zh.json> <other worker/ dir> [--control] [--out diff.json]
+ *   node bench/ai_path_same.ts <index.json> <needs.json> <keywords-en.json> <keywords-zh.json> <other worker/ dir> [--control] [--out diff.json] [--alternatives]
  *
  * --control answers every keyword call with no keywords (the call failed), where
  * the rules scorer chooses the cards, so the requests are expected to differ.
@@ -13,12 +13,15 @@
  * first two cards), and the whole response is compared, rec_id aside.
  * --out writes each differing match request (both bodies) with the cards that
  * left or entered the shortlist, for a paid replay (scripts/replay_match.py).
+ * --alternatives sends each need as find_alternatives pain points instead
+ * (current tool "Ollama"), where the keyword call reads the same text.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const [indexPath, needsPath, kwEnPath, kwZhPath, otherDir, ...flags] = process.argv.slice(2);
 const control = flags.includes('--control');
+const alternatives = flags.includes('--alternatives');
 const outPath = flags.includes('--out') ? flags[flags.indexOf('--out') + 1] : null;
 const cardSlugs = (body: string) =>
   String(JSON.parse(body).input[1].content)
@@ -64,12 +67,14 @@ async function version(dir: string) {
     const run = async (match: (body: any) => Response) => {
       const h = helpers.harness((body: any) => (body.text.format.name === 'pickfit_keywords' ? helpers.metaResponse({ keywords: kw }) : match(body)));
       h.deps.catalog = catalog;
-      const out = await find.findSoftware(args, h.deps);
+      const out = alternatives
+        ? await find.findAlternatives({ current_software: 'Ollama', pain_points: args.need, ...(args.category ? { category: args.category } : {}) }, h.deps)
+        : await find.findSoftware(args, h.deps);
       return { h, out };
     };
     const failed = await run(() => new Response('{}', { status: 400 }));
     const answered = await run(picked);
-    const match = failed.h.requests.find((r: any) => r.body.text.format.name === 'pickfit_match');
+    const match = failed.h.requests.find((r: any) => ['pickfit_match', 'pickfit_alternatives'].includes(r.body.text.format.name));
     return {
       match: match ? String(match.init.body) : null,
       keywordCall: failed.h.requests.some((r: any) => r.body.text.format.name === 'pickfit_keywords'),

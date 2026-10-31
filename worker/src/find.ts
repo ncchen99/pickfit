@@ -31,7 +31,7 @@ import { hardFilter, MAX_CARDS, replacesCurrent, type Conditions } from './filte
 import { clip, guardPicks, guardWellKnown, NO_WELL_KNOWN, parseAnswer, type GuardedPick, type GuardedWellKnown } from './guard.ts';
 import { callMeta, estimateCostUsd, MATCH_MODEL, MetaCallError, requestBody } from './meta.ts';
 import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer, type ModelReason } from './prompt.ts';
-import { dropNegated, queryTerms, rulesRelevance, rulesTerms } from './relevance.ts';
+import { dropNegated, queryTerms, rulesRelevance, rulesTerms, termsAsSaid } from './relevance.ts';
 import { rankByRules, templateReasons } from './rules.ts';
 
 export interface FindInput extends Conditions {
@@ -299,7 +299,7 @@ function fromRules(
   const free = ranked.find((entry) => entry.pricing === 'free');
   const osSets = new Set(top.map((entry) => entry.platforms.slice().sort().join(',')));
   // Labels only: the fit decision never removes or reorders a pick.
-  const job = jobOf(corpus, req.rulesText);
+  const job = req.painPoints ? jobOf(corpus, req.painPoints.rest, req.painPoints.said) : jobOf(corpus, req.rulesText);
   const fitFor = (entry: Entry) => (replacesCurrent(entry, req.currentTool) ? replacing(req.currentTool!) : fitOf(entry, job));
   const fits = top.map(fitFor);
   const best = fits.find((f) => f.quality === 'good') ?? fits.find((f) => f.quality === 'partial');
@@ -404,8 +404,13 @@ interface MatchRequest {
   conditions: Conditions & { ui_language?: string; limit?: number };
   /** What the model reads inside <request>. */
   modelRequest: Record<string, unknown>;
-  /** Text the rules fallback ranks profiles against. */
+  /** Text the rules fallback ranks profiles against (the keyword call and the shortlist read it too). */
   rulesText: string;
+  /**
+   * find_alternatives: rulesText in two parts. In the pain points a negation names what the user wants
+   * ("no dark mode"), so the rules and the fit labels keep those words; what must be kept is negated as usual.
+   */
+  painPoints?: { said: string; rest: string };
   /** find_alternatives: the rules rank profiles that name this tool first. */
   currentTool?: string;
   /** Extra parsed conditions to log (never the user's words). */
@@ -419,7 +424,10 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   const limit = Math.min(Math.max(cond.limit ?? 3, 1), 3);
   const corpus = deps.catalog.entries;
   // Without Meta's keywords (rules only, the call failed, or no shortlist cut) the rules' scorer chooses and ranks.
-  let filtered = hardFilter(corpus, cond, { terms: rulesTerms(req.rulesText), current: req.currentTool, scorer: 'rules' });
+  // The rules' words: a negation is a constraint, except in pain points.
+  const ruleTerms = (...keywords: string[]) =>
+    req.painPoints ? [...new Set([...termsAsSaid(req.painPoints.said), ...rulesTerms(req.painPoints.rest, ...keywords)])] : rulesTerms(req.rulesText, ...keywords);
+  let filtered = hardFilter(corpus, cond, { terms: ruleTerms(), current: req.currentTool, scorer: 'rules' });
   // Only a shortlist that must cut needs the request in the profiles' words.
   let expansion: Expansion | null = null;
   if (filtered.passed > MAX_CARDS) {
@@ -436,7 +444,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   // The rules rank with their own scorer, adding Meta's keywords when there are some.
   const rulesScores = () =>
     expansion?.keywords
-      ? rulesRelevance(corpus, candidates, rulesTerms(req.rulesText, ...expansion.keywords))
+      ? rulesRelevance(corpus, candidates, ruleTerms(...expansion.keywords))
       : filtered.relevance;
   const entries = new Map(candidates.map((entry) => [entry.slug, entry]));
   const cards = new Map(candidates.map((entry) => [entry.slug, toCard(entry, cond.os, cond.arch)]));
@@ -613,6 +621,7 @@ export async function findAlternatives(input: AlternativesInput, deps: Deps): Pr
         ...sharedRequest(input),
       },
       rulesText: [input.pain_points, ...mustKeep].join(' '),
+      painPoints: { said: input.pain_points, rest: mustKeep.join(' ') },
       currentTool: input.current_software,
       logged: { current: { matched_slug: current.matched_slug, known: current.known } },
     },
