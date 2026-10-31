@@ -320,6 +320,61 @@ GitHub Actions 沒有採用。改在念誠的 Windows 11 Home 筆電（i5-1135G7
   - 其他 Windows 探測也都加了對照：Administrator 會被 `non_admin` 判出、Administrator 寫得進 harness、刻意設的 `*_TOKEN` 變數會被看到、短指令不會被當成逾時。
 - harness 的 Administrator 檢查改用 Windows PowerShell 5.1：box 裡只有 `sbx` 有桌面工作階段，MSIX 的 pwsh 對 Administrator 啟動不了。模型指令仍走 pwsh 7。pwsh 的套件路徑記在 harness 資料夾的 `pwsh.path`（`sbx` 只能讀）。
 
+### 5.9 Windows 實測結果與交接（2026-10-31）
+
+**base**：
+
+- build `42796005b373`（15:00）。
+- Windows 11 Enterprise LTSC Evaluation 24H2（26100.1742，EnterpriseSEval，Licensed）。
+- Windows Update 關閉。ISO SHA-256 `67cec586…5da68`。
+- VirtualBox 7.2.22 走 VT-x（主機已關 Hyper-V 與 Memory Integrity）。
+- 2 vCPU、6 GB RAM、64 GB 動態 VDI、host I/O cache。
+- 從零建置約 6 分鐘（不含 Windows 安裝本身）。box 從 `clean` 快照冷開機到 `sbx` 桌面約 80 秒。
+
+**`--limits-test` 41／41**（`runs/verify/limits-vbox-20261031-150054.json`，每一項都有對照）：
+
+- 帳號與憑證：
+  - 不是管理員（對照：Administrator 會被判出）。
+  - 改不了 harness（對照：Administrator 寫得進）。
+  - `no_logon_secret`（見 5.8）：sbx 看到 `autologon=1 user=sbx`、沒有 Winlogon 密碼、`lsa=denied`、沒有 answer file、沒有光碟。正向對照是 Administrator 讀得到 `readable len=24`；反向對照是把 DefaultPassword 寫回後探測判失敗。
+  - 環境變數沒有金鑰（對照：自設的 `*_TOKEN` 會被看到）。
+- 網路：
+  - 經 router 時，主機與 LAN 的埠、gateway、VirtualBox NAT 位址、metadata、私有網段、router SSH 全部逾時（對照：plain NAT 下主機的埠是 open）。
+  - router DNS 開著；mDNS、SSDP 沒有回應。
+  - 斷網後 HTTPS 失敗、localhost 照常，恢復後 PyPI 再通。
+- 指令：3 秒逾時被殺（對照：1 秒的指令正常結束）；exit code 0／1／3／93／94／1603 都正確傳回。
+
+**9 款工具**（Mac pipeline 匯出的 muse-spark-1.3 抽取結果；每款都在第二個從快照冷開機的 box 斷網重播通過，judge 都判 working。Meta 共 $0.114）：
+
+| 工具 | Windows 等級 | 版本 | 裝法 | 和 Linux（Modal gVisor）的差異 |
+|---|---|---|---|---|
+| frugon | function | 0.2.6 | `uv tool install frugon` | 相同 |
+| agent-database-cli | function | 0.4.1 | `npm install -g agent-database-cli` | 相同，多了 `list` |
+| nlm-memory | function | 0.21.20 | `npm install -g nlm-memory` | 相同 |
+| agent-history | function | 0.16.0 | `uv tool install git+…` | smoke 改成 `doctor` 與 `search --mode text`；沒有 Ollama 時 `index` 做不了，`search` 回 `(no matches)`；3 條裡 2 條離線 |
+| akm | function | 0.10.261022 | `npm install -g akm-cli` | 版本比 Linux 的 0.10.261019 新；另外跑了 `index`、`curate` |
+| martty | function | 0.3.3 | `npm install --global martty` | 用 `martty-cli`：`martty` 指令要第一次互動啟動才出現；`--demo` 要加 `--dump-frame` 才不需要 TTY；Linux 的 `--help` 要網路，這裡全部離線 |
+| aria-code | **install** | 0.165.0 | `npm install -g @artheras/aria-code` | Linux 是 function。Windows 只有 `--help`、`--version` 算進去，`aria update --check` 要網路，log 把等級降成 install |
+| alysiscode | function | 0.15.2 | `pipx install alysis-code` | 沒有 Docker Desktop，`sandbox doctor --smoke` 回 not ready（記為 note）；`doctor` 正常 |
+| labelize | function | 1.10.0 | `npm install @goodboy008/labelize-wasm` | 跟 Linux 一樣用 wasm 套件、node 腳本轉圖（PNG 8506 bytes，再轉回 ZPL）；cargo、docker 的裝法沒試 |
+
+紀錄與證據在這台的 `runs/verify/`（不進 git，沒有寫回 `data/software`），合併時再帶到 Mac。frugon 的第一筆 run（150518）image 標籤被截斷，以 151653 那筆為準。
+
+**每筆 Windows 紀錄合併時要加的 note**（協調 session 決定：指令照實際跑的原樣保留，PATH 前綴不拿掉）："On Windows, open a new terminal after installing so PATH includes the tool; the sandbox refreshed PATH in the same session instead."
+
+**已知限制**：
+
+- 主機要關掉 Hyper-V 與 Memory Integrity，VirtualBox 才走 VT-x。走 NEM 時多 vCPU 會凍住（見 5.8）。
+- 評估版授權 90 天（約到 2027-01-29），過期後每小時關機，要重建 base。Windows Update 關閉，所以快照停在 26100.1742，沒有累積更新，跟一般使用者的電腦不同。
+- winget 由 pickfit 從 GitHub release 安裝（LTSC 沒有 Store），版本與雜湊記在 manifest。只能從 Store 裝的工具記為 `needs_store` 未驗證。
+- 沒有 Docker：要 Docker 的功能驗證不到。
+- 沒有單一使用者的記憶體、程序數或檔案大小上限，VM 的 6 GB RAM 和磁碟就是上限。
+- 一次只能一個 box。每款工具 6–13 分鐘。
+- `run_background`：agent-history 用它在背景啟動 `serve`，75 秒後 VBoxManage 回 20，跟 sentinel 的 0 對不上，harness 判為不可信（方向是安全的），所以這款沒能宣稱 service 等級。要再查。
+- VirtualBox 安裝程式忽略了參數，裝上了 host-only 網卡與橋接 filter（VBoxNetLwf）。box 沒有用到，每次開機前檢查網卡會拒絕它們。
+- NAT hairpin：router 擋了主機自己的公網 IPv4（extra set），但家用路由器可能經 WAN 位址被打到，記為已知限制（跟 5.7 相同）。
+- 主機上還有一個舊的 Oracle Extension Pack 7.0.6（版本不合、無法載入，沒有用到），要不要移除由念誠決定。
+
 ---
 
 ## 6. 要念誠決定的事
