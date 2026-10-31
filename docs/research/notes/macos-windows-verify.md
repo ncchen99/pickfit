@@ -446,6 +446,37 @@ GitHub Actions 沒有採用。改在念誠的 Windows 11 Home 筆電（i5-1135G7
 
 **途中發現的問題**：改成 Windows PowerShell 跑探測後，.NET Framework 的 `TcpClient.ConnectAsync` 在斷網時可能直接丟例外，而不是回傳失敗的 task，那個目標就沒有結果，box 判「探測沒跑完」而停下（方向安全，但兩款工具的重播因此失敗）。68e5c30 改成把立即的例外也記成 `unreachable:<code>`，在主機的 Windows PowerShell 上驗證過 refused／timeout／open／error 四種結果都會輸出。
 
+### 5.11 1c01b33 的複審與修正（2026-10-31 夜）
+
+這次只有 low。修正在 ac11876、9ba1365。
+
+1. **IP**：5.9、5.10 的真實對外位址改成文字描述（新 commit，歷史不改寫）。在分支上 grep 過，沒有別處出現。
+2. **密碼進 traceback**：`VBox.__call__` 逾時時，原本會把 `TimeoutExpired` 串在後面，而它帶著整個 argv（包括 `--putenv PF_SECRET=…`）；prepare_base 沒有接住這個例外，traceback 會印到 console。
+   - 改成 `from None`。其他會帶 argv 的地方（`run_captured`、egress 的 curl）都沒有把 argv 串進例外或 log。
+   - 測試：帶 `--putenv` 而逾時，`traceback.format_exc()` 裡沒有那個值（舊碼會失敗）。
+   - Windows 上：搜尋 host 端 21 個 VirtualBox log（VM 的 `VBox.log*` 與 `VBoxSVC.log*`），兩個密碼（明文與 UTF-16）都沒出現。
+3. **close() 讀不到擁有者**：只有讀取成功、而且讀到另一個非空的 session，才把 VM 當成別人的。讀不到（試 3 次）或關不掉時，reaper、session 與鎖都保留，由 reaper 在期限到時關機；確認關機之後才清 session、停 reaper。各有測試。
+   - VM 上：**sbx 可以用 `shutdown /a` 取消 pickfit 在 guest 裡設的定時關機**（exit 0；第二次回 1116，表示已經沒有排定的關機）。所以 guest 裡的定時關機只是備援；真正的期限是 host 端的計時器與 reaper（lifetime 加寬限後直接 poweroff），sbx 碰不到。
+4. **兩個程序同時開 box**：在 state_dir 用獨佔的鎖檔（Windows 用 `msvcrt.locking`，其他用 `flock`），從 claim 一直持有到 close() 結束，鎖被占用就拒絕；程序死掉時 OS 會放開。`_attach`、`validate_containment`、`write_file` 都先檢查擁有權。有測試。
+5. **代理**：讀對外位址的 curl 加 `--noproxy '*'`，有測試。對外位址每個 box 只在啟動時讀一次。
+6. **掃描的對照**：掃描前，Administrator 先以 `powershell -EncodedCommand` 印出一個隨機 canary。掃描必須在 'Windows PowerShell' log 解碼後找到它，而且 scanned>0、events>0、兩個密碼都找不到，才算通過。最後的 CLEAR_PS_LOGS 會把它清掉。每個 log 只讀最新的 5000 筆。
+   - 重建結果：547 個檔案、29,478 筆事件；canary 在 8 筆 'Windows PowerShell' 事件裡找到；兩個密碼 0 命中。
+7. **權限改成允許清單**：sbx 的權限只能在 {SeChangeNotify, SeShutdown, SeUndock, SeIncreaseWorkingSet, SeTimeZone}Privilege 之內，而且必須有 SeChangeNotify；解析出空清單就判失敗。對照組要求 Administrator 的清單裡有 SeDebug 和 SeBackup。
+   - VM 上以 sbx 跑 `whoami /priv /fo csv` 的完整清單：SeShutdownPrivilege（Disabled）、SeChangeNotifyPrivilege（Enabled）、SeUndockPrivilege（Disabled）、SeIncreaseWorkingSetPrivilege（Disabled）、SeTimeZonePrivilege（Disabled）。
+8. **check_features**：VirtualBox 一定會印出的設定，缺了就拒絕；只有 `clipboard_file_transfers` 可以缺（只在編進共用剪貼簿檔案傳輸時才有）。加上 `accelerate3d=off`。在這台的 `showvminfo pickfit-win11 --machinereadable` 確認過，17 個 key 都有印出來，值都對。有測試。
+9. HARDENED_CHECK 列舉不了某個群組時判失敗。
+
+**途中發現的問題**：frugon 的重播 box 一次開不起來，「router did not report ready within 90s」。原因是 Router.reset 從 serial log 的舊大小往後讀；VirtualBox 在原地改寫檔案（不截斷）、寫進一樣長的 ready line 時（現在每個 box 送的位址清單都一樣），舊大小之後永遠沒有新內容。9ba1365 改成在 router 關機時由 host 先清空 serial log，檔案裡的 ready line 只可能是這次開機的。測試：原地改寫的 ready line 讀得到（舊碼會失敗）；舊的 ready line 不算數。
+
+**結果**（base `16ea69df29ff`，router `583d254c306d`）：
+- `--limits-test` **45／45**（`runs/verify/limits-vbox-20261031-213019.json`），冷開機 76 秒。
+  - `non_admin`：admin=False、builtin=S-1-5-32-545、integrity=S-1-16-8192、權限都在允許清單內。
+  - `non_admin_control`：Administrator 有 S-1-5-32-544，解析出的權限包括 SeDebug 與 SeBackup。
+- agent-database-cli：function，斷網重播通過，judge working（verify-agent-database-cli-20261031-213630-7d18）。
+- frugon：第一次重播碰到上面的 serial log 問題；修好後重跑，function，斷網重播通過，judge working（verify-frugon-20261031-214339-536c）。
+- 這台 Meta 累計 $0.290。
+- 5.10 表中其他 7 款的紀錄來自前一個 base `b76bdbf073ec`。那之後只改了建置期的掃描（canary）、HARDENED_CHECK 的群組列舉，以及 host 端的程式；guest 裡給 sbx 的環境沒有變。
+
 ---
 
 ## 6. 要念誠決定的事
