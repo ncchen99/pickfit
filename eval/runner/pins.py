@@ -39,7 +39,8 @@ NPM = [("claude-code", "@anthropic-ai/claude-code", "q01"), ("codex-cli", "@open
        ("gemini-cli", "@google/gemini-cli", "q01")]
 PYPI = [("openai", "openai", "q12, q14, q20", "py3-none-any"), ("srt", "srt", "q15", "py3-none-any"),
         ("openai-whisper", "openai-whisper", "q15 (baseline)", "sdist"),
-        ("fasttext", "fasttext", "q16", "cp312-cp312-manylinux_2_17_x86_64")]
+        ("fasttext", "fasttext", "q16", "cp312-cp312-manylinux_2_17_x86_64"),
+        ("fonttools", "fonttools", "q05 (static Regular and Bold instances of the variable font)", "py3-none-any")]
 OPENCC_FILES = ("STCharacters.txt", "STPhrases.txt", "TSCharacters.txt", "TWVariants.txt")
 OLLAMA_MODELS = [("llama3.2:3b", "q18, q19 (tool-calling fixture model)"), ("qwen2.5:0.5b", "q20 (small model)")]
 HF_FILES = [("mlx-community/Qwen2.5-1.5B-Instruct-4bit", None, "q12 (Mac, MLX fixture model)"),

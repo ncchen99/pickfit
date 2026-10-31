@@ -2,7 +2,7 @@
 
 校準與 L2 用的工具、模型、字典檔、字型等，一律從官方來源下載到沙盒，以版本號與 sha256 固定，**不 commit 進 repo**；這份清單與 sha256 才 commit。產生方式：`uv run python eval/runner/pins.py resolve`（讀官方的 metadata，記下來源公布的雜湊）→ `verify --confirm-spend`（在 Modal 的 dev image 沙盒裡下載每個檔、自己算 sha256、和公布的比對）→ `render`。選擇照各題 `needs.json` 的第一個（建議的）候選，版本取固定當天的最新版。原始資料在 [pins.json](pins.json)。
 
-metadata 讀取：2026-10-31T14:14:08+08:00
+metadata 讀取：2026-10-31T14:18:08+08:00
 
 | 項目 | 用在 | 版本 | sha256（沙盒內下載後算的） | 和來源公布的一致 | 大小 | 來源 |
 |---|---|---|---|---|---|---|
@@ -17,6 +17,7 @@ metadata 讀取：2026-10-31T14:14:08+08:00
 | `srt` | q15 | `3.5.3` | `4884315043a4f0740fd1f878ed6caa376ac06d70e135f306a6dc44632eed0cc0` | 是 | 28,296 | https://files.pythonhosted.org/packages/66/b7/4a1bc231e0681ebf339337b0cd05b91dc6a0d701fa852bb812e244b7a030/srt-3.5.3.tar.gz |
 | `openai-whisper` | q15 (baseline) | `20250625` | `37a91a3921809d9f44748ffc73c0a55c9f366c85a3ef5c2ae0cc09540432eb96` | 是 | 803,191 | https://files.pythonhosted.org/packages/35/8e/d36f8880bcf18ec026a55807d02fe4c7357da9f25aebd92f85178000c0dc/openai_whisper-20250625.tar.gz |
 | `fasttext` | q16 | `0.9.3` | `eb03f2ef6340c6ac9e4398a30026f05471da99381b307aafe2f56e4cd26baaef` | 是 | 73,439 | https://files.pythonhosted.org/packages/9f/3b/9a10b95eaf565358339162848863197c3f0a29b540ca22b2951df2d66a48/fasttext-0.9.3.tar.gz |
+| `fonttools` | q05 (static Regular and Bold instances of the variable font) | `4.68.0` | `d76f8fdcb6936f5e1045a0c9dd721a4bf11112e60d1e243bfa1d39f06a8b3104` | 是 | 1,248,357 | https://files.pythonhosted.org/packages/35/74/4ea331ecc65ba05a58b1e4e8ccd604c8a15565f876dfbf93fc2a2ea2e22b/fonttools-4.68.0-py3-none-any.whl |
 | `opencc-STCharacters.txt` | q11, q15 (shared OpenCC scorer) | `ver.1.4.2` | `a0ca1601c70648cf48b33c3c6210ccbecc5c7eead4b4c3daf76587ba2c03582b` | （來源沒公布） | 36,026 | https://raw.githubusercontent.com/BYVoid/OpenCC/ver.1.4.2/data/dictionary/STCharacters.txt |
 | `opencc-STPhrases.txt` | q11, q15 (shared OpenCC scorer) | `ver.1.4.2` | `f6eab5e5c6dd7640597878d3dfc6599ee1279d2bc91561eadd8e114194e2925a` | （來源沒公布） | 1,007,834 | https://raw.githubusercontent.com/BYVoid/OpenCC/ver.1.4.2/data/dictionary/STPhrases.txt |
 | `opencc-TSCharacters.txt` | q11, q15 (shared OpenCC scorer) | `ver.1.4.2` | `737c21c66f55a419dd6956cb3089476cdefc5a36877452631617696df1e5d925` | （來源沒公布） | 104,516 | https://raw.githubusercontent.com/BYVoid/OpenCC/ver.1.4.2/data/dictionary/TSCharacters.txt |
@@ -43,7 +44,7 @@ metadata 讀取：2026-10-31T14:14:08+08:00
 | `whisper-small.pt` | q15 (baseline) | `small` | `9ecf779972d90ba49c06d968637d720dd632c55bbf19d441fb42bf17a411e794` | 是 | 483,617,219 | https://openaipublic.azureedge.net/main/whisper/models/9ecf779972d90ba49c06d968637d720dd632c55bbf19d441fb42bf17a411e794/small.pt |
 | `fasttext-lid.176.ftz` | q16 (language identifier) | `lid.176.ftz` | `8f3472cfe8738a7b6099e8e999c3cbfae0dcd15696aac7d7738a8039db603e83` | （來源沒公布） | 938,013 | https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.ftz |
 
-下載與雜湊：2026-10-31T14:13:18+08:00，Modal sandbox sb-01M689CQ3ND7AVBXCJ55ZK1Q0X (pickfit-eval-l2-dev:4acdd7fff6ab)；2026-10-31T14:14:21+08:00，Modal sandbox sb-01M689GC9XRGNWFHQTMMS0D6YX (pickfit-eval-l2-dev:4acdd7fff6ab)。Docker 映像只記 Hub 公布的 digest（Mac 實跑時才 pull）。
+下載與雜湊：2026-10-31T14:13:18+08:00，Modal sandbox sb-01M689CQ3ND7AVBXCJ55ZK1Q0X (pickfit-eval-l2-dev:4acdd7fff6ab)；2026-10-31T14:14:21+08:00，Modal sandbox sb-01M689GC9XRGNWFHQTMMS0D6YX (pickfit-eval-l2-dev:4acdd7fff6ab)；2026-10-31T14:18:15+08:00，Modal sandbox sb-01M689QHT516JNBT55WW9AHRVA (pickfit-eval-l2-dev:4acdd7fff6ab)。Docker 映像只記 Hub 公布的 digest（Mac 實跑時才 pull）。
 
 備註：
 
@@ -52,6 +53,7 @@ metadata 讀取：2026-10-31T14:14:08+08:00
 - `srt`：srt-3.5.3.tar.gz
 - `openai-whisper`：openai_whisper-20250625.tar.gz
 - `fasttext`：fasttext-0.9.3.tar.gz
+- `fonttools`：fonttools-4.68.0-py3-none-any.whl
 - `ollama-linux-amd64`：zstd archive: unpacking needs zstd
 - `ollama-model-llama3.2:3b`：model layer, 2019377376 bytes; the manifest's other layers are templates and licenses
 - `ollama-model-qwen2.5:0.5b`：model layer, 397807936 bytes; the manifest's other layers are templates and licenses

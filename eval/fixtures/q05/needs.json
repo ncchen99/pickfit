@@ -1,27 +1,8 @@
 [
   {
     "item": "[L2] Frozen fixtures: a text-based PDF (CJK font embedded) ... (fixture.pdf)",
-    "why": "The PDF must embed a real Traditional Chinese font so its pages look like a normal spec document to every kind of converter (text-layer, layout-model or OCR based). No such font may be written by hand or copied in without a licence decision. make_pdf.py embeds only a subset (about 150 glyphs) and keeps the font's name table, which carries its copyright and licence notice; the font file itself is not committed. It needs TrueType outlines (a glyf table), static Regular and Bold files preferred.",
-    "candidates": [
-      {
-        "source": "https://github.com/google/fonts/tree/main/ofl/notosanstc (also offered as a family download on https://fonts.google.com/noto/specimen/Noto+Sans+TC)",
-        "license": "SIL Open Font License 1.1 (embedding in documents allowed)",
-        "size": "not downloaded; CJK TrueType files are typically several MB to tens of MB, record the real size",
-        "pin": "Use the static NotoSansTC-Regular.ttf and NotoSansTC-Bold.ttf if the download contains them. The repository file is a variable font, whose default instance may be a very light weight: make_pdf.py warns and prints the weight class. Record the google/fonts commit or download date and the sha256 of each .ttf in calibration.md."
-      },
-      {
-        "source": "https://github.com/ButTaiwan/genyog-font (GenYoGothic TW, a Traditional Chinese sans serif)",
-        "license": "SIL Open Font License 1.1",
-        "size": "not downloaded; record the real size",
-        "pin": "Pick a release tag; confirm after download that the Regular and Bold files have glyf outlines (make_pdf.py refuses CFF). Record tag and sha256 of each file."
-      },
-      {
-        "source": "https://github.com/justfont/open-huninn-font (jf open huninn, rounded sans serif)",
-        "license": "SIL Open Font License 1.1",
-        "size": "not downloaded; record the real size",
-        "pin": "Single weight: run make_pdf.py without --bold-font (headings then use fill+stroke bold). Record release tag and sha256."
-      }
-    ],
+    "why": "Settled by 9.3 B.4 (念誠, 2026-10-31: the first candidate): Noto Sans TC from google/fonts at commit 3be1884c48c3 (OFL-1.1). The repository has only the variable font, whose default instance is Thin, so static Regular (400) and Bold (700) instances are cut with fontTools 4.68.0 (build_pdf.sh). Hashes in eval/fixtures/PINS.md; fixture.pdf is committed (sha256 19b82c3a...913de), rebuilt twice identically.",
+    "candidates": [],
     "decision_needed_by": "念誠"
   },
   {

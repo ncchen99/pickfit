@@ -10,7 +10,8 @@
 |---|---|---|
 | `content.json` | 兩份測試文件的標準內容（依閱讀順序） | 手寫 |
 | `fixture.docx` | Word 測試檔（4.6 KB） | `python3 make_docx.py`，已 commit |
-| `fixture.pdf` | PDF 測試檔（約 50–100 KB） | `python3 make_pdf.py --font …`，**等念誠決定字型後產生再 commit**（見 `needs.json`） |
+| `fixture.pdf` | PDF 測試檔（55,678 bytes，sha256 `19b82c3a3ffdacf4abf9ffba47fd41971483740bb84fb1d3e0a222ab348913de`） | `sh build_pdf.sh WORKDIR`，已 commit。字型是 Noto Sans TC（google/fonts 固定 commit，OFL；只有可變字型，所以用固定版本的 fontTools 切出靜態 Regular 400、Bold 700），版本與 sha256 在 `../PINS.md`；2026-10-31 在 dev image 沙盒產生兩次，逐位元相同 |
+| `build_pdf.sh` | 重做 `fixture.pdf` 的完整步驟（下載固定版本的字型與 fontTools、核對 sha256、切靜態字重、`make_pdf.py`） | 手寫 |
 | `make_docx.py`、`make_pdf.py` | 產生上面兩個檔 | 手寫 |
 | `verify_fixtures.py` | 確認兩個檔的內容與 `content.json` 一致 | 手寫 |
 | `check_md.py` | **凍結的比對腳本**：檢查一份轉出來的 `.md` | 手寫 |

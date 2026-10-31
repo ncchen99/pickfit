@@ -13,7 +13,7 @@
 ```sh
 python3 _shared/test_shared.py
 (cd q01 && python3 server/selftest.py)
-(cd q05 && python3 test_check_md.py && python3 verify_fixtures.py)   # fixture.pdf 等字型決定後才產生
+(cd q05 && python3 test_check_md.py && python3 verify_fixtures.py)
 (cd q06 && python3 test_q06.py)
 (cd q07 && python3 test_q07.py)
 for q in q09 q10 q11 q12; do (cd $q && python3 selftest.py); done
@@ -39,4 +39,8 @@ for q in q17 q18 q19 q20; do (cd $q && sh selftest.sh); done
 | q16 | `build_manifest.py --check` | `manifest.json` | 相同 |
 | q17 | `verify_corpus.py --regenerate` | 55 個檔與 `SHA256SUMS` | 相同 |
 
-沒有重跑的：q05 `make_pdf.py`（要先決定 CJK 字型）、q15 `build_clip.py`（要先決定 CC0 錄音）。
+| q05 | `build_pdf.sh`（固定版本的 Noto Sans TC 與 fontTools，在 dev image 沙盒跑兩次） | 兩次的 `fixture.pdf` 逐位元相同，`verify_fixtures.py` OK | 相同 |
+
+沒有重跑的：q15 `build_clip.py`（錄音等念誠確認後才下載）。
+
+固定版本的工具、模型、字典檔、字型：[PINS.md](PINS.md)。Mac 題的步驟：[_mac/CHECKLIST.md](_mac/CHECKLIST.md)。
