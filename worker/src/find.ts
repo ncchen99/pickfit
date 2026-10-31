@@ -425,7 +425,10 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   if (filtered.passed > MAX_CARDS) {
     expansion = await englishKeywords(req.rulesText, deps, now, Math.min(EXPAND_TIMEOUT_MS, deps.settings.timeoutMs));
     if (expansion.keywords) {
-      const terms = queryTerms(dropNegated(req.rulesText), ...expansion.keywords);
+      // A need's negated words are constraints ("不需要 GPU"). Pain points stay as they are: there "no dark mode"
+      // names what the current tool lacks, so find_alternatives' shortlist is unchanged.
+      const own = req.kind === 'find' ? dropNegated(req.rulesText) : req.rulesText;
+      const terms = queryTerms(own, ...expansion.keywords);
       filtered = hardFilter(corpus, cond, { terms, current: req.currentTool });
     }
   }
