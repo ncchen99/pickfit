@@ -39,10 +39,9 @@ for q in q17 q18 q19 q20; do (cd $q && sh selftest.sh); done
 | q05 | `make_docx.py` | 與 commit 的 `fixture.docx` 逐位元相同 | 相同 |
 | q09 | `make_repo.sh` | commit id `56cc386237ac98db667679cfb869d19e4359950a` | 相同 |
 | q10 | `make_repo.sh`（三種模式各跑兩次） | 兩次的 HEAD commit id 相同 | 相同 |
+| q15 | `build_clip.py squeeze`（同一份解碼後的 WAV、從 39.02 秒起、念誠校正的逐字稿） | commit 的 `clip/clip.wav`、`warmup.wav`、`reference.txt` 逐位元相同；`SOURCE.json` 只有建立時間 `built_at` 不同 | 相同 |
 | q16 | `build_manifest.py --check` | `manifest.json` | 相同 |
 | q17 | `verify_corpus.py --regenerate` | 55 個檔與 `SHA256SUMS` | 相同 |
 | q05 | `build_pdf.sh`（固定版本的 Noto Sans TC 與 fontTools，在 dev image 沙盒跑兩次） | 兩次的 `fixture.pdf` 逐位元相同，`verify_fixtures.py` OK | 相同 |
-
-沒有重跑的：q15 `build_clip.py`（錄音等念誠確認後才下載）。
 
 固定版本的工具、模型、字典檔、字型：[PINS.md](PINS.md)。Mac 題的步驟：[_mac/CHECKLIST.md](_mac/CHECKLIST.md)。
