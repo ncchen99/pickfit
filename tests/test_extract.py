@@ -30,7 +30,7 @@ from pickfit.extract import (
 )
 from pickfit.ledger import Caps, Ledger
 from pickfit.meta import OPEN_MODEL
-from pickfit.schema import ExtractionResult, meta_strict_schema
+from pickfit.schema import _NO_MCP, ExtractionResult, meta_strict_schema
 
 README = """# tinyq
 
@@ -403,3 +403,18 @@ def test_select_candidates_orders_tools_first_and_interleaves_categories(tmp_pat
     add_candidate(db, 7, "a/notes-mcp", category="mcp_server")
     assert [c["full_name"] for c in select_candidates(db, model="m", limit=10, categories=["mcp_server"])] == [
         "a/notes-mcp"]
+
+
+def test_enum_lists_keep_known_values_in_any_case_and_drop_the_rest() -> None:
+    # Muse Spark Open on Baseten does not enforce the schema's enums.
+    data = extraction()
+    data["platforms"] = {"value": ["macOS", "Linux", "claude-code", "python", "linux"], "quote": "macOS and Linux"}
+    data["install_methods"][0]["platforms"] = ["Ubuntu", "Windows"]
+    data["mcp"] = {**json.loads(json.dumps(_NO_MCP)),
+                   "transports": {"value": ["stdio", "http", "streamable-http"], "quote": "stdio or HTTP"}}
+    result = ExtractionResult.model_validate(data)
+    assert result.platforms.value == ["macos", "linux"]
+    assert result.install_methods[0].platforms == ["windows"]
+    assert result.mcp.transports.value == ["stdio", "streamable_http"]
+    data["platforms"] = {"value": ["python"], "quote": "python"}
+    assert ExtractionResult.model_validate(data).platforms.value is None  # nothing left: unknown, not a guess
