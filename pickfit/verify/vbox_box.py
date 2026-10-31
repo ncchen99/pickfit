@@ -158,8 +158,12 @@ def encode_ps(command: str) -> str:
     return base64.b64encode(command.encode("utf-16-le")).decode("ascii")
 
 
+# PowerShell ends a single-quoted string at any of these, not only at the ASCII apostrophe.
+PS_QUOTES = "'‘’‚‛"
+
+
 def ps_quote(text: str) -> str:
-    return "'" + text.replace("'", "''") + "'"
+    return "'" + "".join(c + c if c in PS_QUOTES else c for c in text) + "'"
 
 
 def with_exit_code(command: str) -> str:
@@ -176,13 +180,18 @@ def with_exit_code(command: str) -> str:
 # at the deadline, prints the sentinel last and exits with the same code.
 # -Shell powershell (the harness's administrator checks): Windows PowerShell 5.1, because the MSIX pwsh starts
 # only for a user with a desktop session, and in a box only sbx has one.
-RUN_SCRIPT = r"""param([int]$Timeout, [string]$Cwd, [string]$Nonce, [string]$Enc, [string]$Shell = 'pwsh')
+# The command itself arrives in $env:PF_ENC (base64 UTF-16LE), never on a command line: Windows PowerShell logs
+# every command line (event 400/403 HostApplication) to a log a standard user can read. The shell runs a fixed
+# bootstrap that reads it, drops it from the environment (so nothing the command starts sees it) and runs it.
+PS_BOOT = ("$__pf=[Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($env:PF_ENC));"
+           "Remove-Item env:PF_ENC;Invoke-Expression $__pf")
+RUN_SCRIPT = r"""param([int]$Timeout, [string]$Cwd, [string]$Nonce, [string]$Shell = 'pwsh')
 $utf8 = New-Object System.Text.UTF8Encoding $false
 [Console]::OutputEncoding = $utf8
 $psi = New-Object System.Diagnostics.ProcessStartInfo
 if ($Shell -eq 'powershell') { $psi.FileName = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" }
 else { $psi.FileName = [IO.File]::ReadAllText('C:\ProgramData\pickfit\pwsh.path').Trim() }
-$psi.Arguments = '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand ' + $Enc
+$psi.Arguments = '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "{boot}"'
 $psi.WorkingDirectory = $Cwd
 $psi.UseShellExecute = $false
 try { $p = [System.Diagnostics.Process]::Start($psi) } catch {
@@ -194,12 +203,14 @@ else { & taskkill.exe /T /F /PID $p.Id *> $null; $rc = 137 }
 [Console]::Out.WriteLine("`n__PF_RC_${Nonce}=$rc")
 [Console]::Out.Flush()
 exit $rc
-"""
+""".replace("{boot}", PS_BOOT)
 
 # Containment probe, run as the administrator. Each target is name=host:port (TCP connect) and the result
 # is open (connected), refused (the packet arrived: RST), timeout (silently dropped) or unreachable (no
-# route / network down). Also: an HTTPS GET to the public URL, an mDNS and an SSDP query (answered or not).
-PROBE_SCRIPT = r"""param([string]$Targets, [int]$Ms = 3000, [string]$Url = '', [switch]$Multicast)
+# route / network down). Also: an HTTPS GET to the public URL. No mDNS/SSDP probe: in this guest a well-formed
+# query gets no answer even from Windows itself, so there is no positive control for it (measured 2026-10-31);
+# the router drops 224.0.0.0/4 anyway.
+PROBE_SCRIPT = r"""param([string]$Targets, [int]$Ms = 3000, [string]$Url = '')
 $ErrorActionPreference = 'Continue'
 $jobs = @()
 foreach ($t in ($Targets -split ',')) {
@@ -230,24 +241,6 @@ foreach ($j in $jobs) {
 if ($Url) {
   & "$env:SystemRoot\System32\curl.exe" -sS -m 15 -o NUL $Url 2>$null
   "probe public=curl$LASTEXITCODE"
-}
-if ($Multicast) {
-  foreach ($m in @(@('mdns', '224.0.0.251', 5353), @('ssdp', '239.255.255.250', 1900))) {
-    $u = New-Object System.Net.Sockets.UdpClient 0
-    $u.Client.ReceiveTimeout = 2500
-    if ($m[0] -eq 'mdns') {
-      $q = [byte[]](0,0,0,0,0,1,0,0,0,0,0,0) + [Text.Encoding]::ASCII.GetBytes("`t_services`a_dns-sd`u{4}_udp`u{5}local") + [byte[]](0,0,12,0,1)
-    } else {
-      $q = [Text.Encoding]::ASCII.GetBytes("M-SEARCH * HTTP/1.1`r`nHOST: 239.255.255.250:1900`r`nMAN: `"ssdp:discover`"`r`nMX: 1`r`nST: ssdp:all`r`n`r`n")
-    }
-    try {
-      $null = $u.Send($q, $q.Length, $m[1], $m[2])
-      $ep = New-Object System.Net.IPEndPoint ([System.Net.IPAddress]::Any), 0
-      $null = $u.Receive([ref]$ep)
-      "probe $($m[0])=answered:$($ep.Address)"
-    } catch { "probe $($m[0])=no-answer" }
-    $u.Close()
-  }
 }
 """
 
@@ -306,14 +299,15 @@ table inet pf {
 }
 """ % ", ".join(BLOCKED_V4)
 
-# At every boot: add the host's public addresses (passed in the DMI system serial as pf:a.b.c.d,...), then
-# report the rule set's hash and the router's state on the serial port, the only thing it says to the host.
+# At every boot: hash the whole rule set as installed (before anything per-box is added, no line left out),
+# add the host's public addresses (passed in the DMI system serial as pf:a.b.c.d,...), then report the hash,
+# the added set and the router's state on the serial port, the only thing it says to the host.
 ROUTER_START = r"""#!/bin/sh
+sum=$(nft -s list table inet pf | sha256sum | cut -c1-16)
 s=$(cat /sys/class/dmi/id/product_serial 2>/dev/null)
 case "$s" in
   pf:*) for ip in $(echo "${s#pf:}" | tr ',' ' '); do nft add element inet pf extra4 "{ $ip }" || echo "PF_BAD_EXTRA $ip" > /dev/ttyS0; done ;;
 esac
-sum=$(nft -s list table inet pf | sed '/elements = /d' | sha256sum | cut -c1-16)
 extra=$(nft list set inet pf extra4 | tr -d '\n\t ' | sed -n 's/.*elements={\([^}]*\)}.*/\1/p')
 fwd=$(cat /proc/sys/net/ipv4/ip_forward)
 v6=$(cat /proc/sys/net/ipv6/conf/all/disable_ipv6)
@@ -382,6 +376,11 @@ echo pickfit router installed
 # The only network adapters each VM may have ({slot: attachment types}); all other slots must be off.
 ROUTER_NICS = {1: {"intnet"}, 2: {"nat"}}
 GUEST_NICS = {True: {1: {"intnet"}}, False: {1: {"null", "none"}}}
+# showvminfo --machinereadable values the guest VM must have (a missing key counts as the value shown).
+GUEST_FEATURES_OFF = {"clipboard": "disabled", "clipboard_file_transfers": "off", "draganddrop": "disabled",
+                      "vrde": "off", "usb": "off", "ehci": "off", "xhci": "off", "audio": "none",
+                      "uart1": "off", "uart2": "off", "uart3": "off", "uart4": "off", "lpt1": "off", "lpt2": "off",
+                      "teleporterenabled": "off", "recording_enabled": "off"}
 
 READY = re.compile(r"PICKFIT_ROUTER_READY rules=(\w+) extra=(\S+) forward=(\d) ipv6_off=(\d) dnsmasq=(\w+) "
                    r"uplink=(\d+)")
@@ -403,6 +402,34 @@ def host_public_ipv4() -> list[str]:
         pass
     nets = [ipaddress.ip_network(n) for n in BLOCKED_V4]
     return sorted(ip for ip in found if not any(ipaddress.ip_address(ip) in n for n in nets))
+
+
+EGRESS_URL = "https://1.1.1.1/cdn-cgi/trace"
+
+
+def host_egress_ipv4() -> list[str]:
+    """The public address this network goes out from (the home router's WAN side, or the ISP's NAT). Through
+    the router a guest could reach it, and with it the home router's admin page or a hairpin NAT. Read with
+    curl, which uses the system's certificate store; fails closed when it cannot be learned."""
+    try:
+        out = subprocess.run(["curl.exe" if sys.platform == "win32" else "curl", "-sS", "-m", "15", EGRESS_URL],
+                             capture_output=True, text=True, timeout=30).stdout
+    except (OSError, subprocess.TimeoutExpired) as err:
+        raise BoxError(f"cannot learn the network's public address from {EGRESS_URL}: {err}") from err
+    m = re.search(r"^ip=(\S+)\s*$", out, re.M)
+    if m is None:
+        raise BoxError(f"cannot learn the network's public address from {EGRESS_URL}: {out.strip()[-200:]!r}")
+    ip = ipaddress.ip_address(m.group(1))
+    if ip.version != 4:
+        return []  # the router has no IPv6 path at all
+    nets = [ipaddress.ip_network(n) for n in BLOCKED_V4]
+    return [] if any(ip in n for n in nets) else [str(ip)]
+
+
+def blocked_host_addresses() -> list[str]:
+    """Addresses the router drops beyond its fixed private ranges: this PC's own public ones and the
+    network's egress address."""
+    return sorted(set(host_public_ipv4()) | set(host_egress_ipv4()))
 
 
 def host_lan_targets() -> dict[str, str]:
@@ -486,6 +513,15 @@ class VBox:
         if bad:
             raise BoxError(f"{vm} has unexpected network adapters ({', '.join(bad)}); refusing to run")
         return {k: v for k, v in info.items() if k.startswith(("nic", "intnet"))}
+
+    def check_features(self, vm: str) -> None:
+        """Refuse a guest that has any channel to the host besides guestcontrol: shared folders, clipboard,
+        drag and drop, remote display, USB, audio, serial or parallel ports, teleporting, recording."""
+        info = self.info(vm)
+        bad = [f"{k}={info.get(k)}" for k, want in GUEST_FEATURES_OFF.items() if info.get(k, want) != want]
+        bad += [f"shared folder {v}" for k, v in info.items() if k.startswith("SharedFolderName")]
+        if bad:
+            raise BoxError(f"{vm} has host channels turned on ({', '.join(bad)}); refusing to run")
 
     def restore(self, vm: str, snapshot: str = SNAPSHOT) -> None:
         self("snapshot", vm, "restore", snapshot, timeout_s=300)
@@ -638,10 +674,11 @@ class VBoxBox(Box):
             raise BoxError(f"base VM {self.base!r} is not hardened; rebuild it with --prepare-base")
         self.image = image_label(self.manifest, self.router_manifest)
         began = time.monotonic()
+        self._refuse_foreign_run()  # outside the try: a refused start must not tear down the other box
+        self.vbox("setextradata", self.base, "pickfit/session", self.session)
         try:
-            self._refuse_foreign_run()
             self.lan = host_lan_targets()
-            self.extra = host_public_ipv4()
+            self.extra = blocked_host_addresses()
             self.vbox.poweroff(self.base)
             self.vbox.restore(self.base)
             self.vbox("setextradata", self.base, "pickfit/session", self.session)
@@ -688,6 +725,7 @@ class VBoxBox(Box):
             self.vbox("modifyvm", self.base, *args)
             self.vbox("setextradata", self.base, "pickfit/started", str(int(time.time())))
         self.vbox.check_nics(self.base, GUEST_NICS[online])
+        self.vbox.check_features(self.base)
 
     def _wait_additions(self) -> None:
         deadline = time.monotonic() + ADDITIONS_WAIT_S
@@ -768,19 +806,28 @@ class VBoxBox(Box):
         self.close()
 
     def close(self) -> None:
-        """Power off and restore the clean snapshot (guest and router). Never raises."""
+        """Power off and restore the clean snapshot (guest and router), only if the VM is still this box's: a
+        box that lost it (or never got it) leaves the other box alone. Never raises."""
         with self._lock:
             self.started = False
             if self._timer is not None:
                 self._timer.cancel()
                 self._timer = None
-            for step in (lambda: self.vbox.poweroff(self.base), lambda: self.vbox.restore(self.base),
-                         lambda: self.vbox("setextradata", self.base, "pickfit/session", "")):
-                try:
-                    step()
-                except BoxError as err:
-                    self.log(f"vbox: close {self.base}: {err}")
-            self.router.stop()
+            try:
+                owned = self._owned()
+            except BoxError as err:
+                self.log(f"vbox: close {self.base}: {err}")
+                owned = False
+            if not owned:
+                self.log(f"vbox: close: {self.base} is not this box's (session {self.session}); left alone")
+            else:
+                for step in (lambda: self.vbox.poweroff(self.base), lambda: self.vbox.restore(self.base),
+                             lambda: self.vbox("setextradata", self.base, "pickfit/session", "")):
+                    try:
+                        step()
+                    except BoxError as err:
+                        self.log(f"vbox: close {self.base}: {err}")
+                self.router.stop()
             self._stop_reaper()
 
     # -- commands and files
@@ -796,13 +843,20 @@ class VBoxBox(Box):
                 "--wait-stdout", "--wait-stderr"]
         for key, value in WIN_ENV.items():
             args += ["--putenv", f"{key}={value}"]
+        args += ["--putenv", f"PF_ENC={encode_ps(with_exit_code(command))}"]  # see PS_BOOT
         shell = "powershell" if user == ADMIN_USER else "pwsh"
         return [*args, "--", "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
-                "-File", RUN_PS1, "-Timeout", str(int(timeout_s)), "-Cwd", cwd, "-Nonce", nonce,
-                "-Shell", shell, "-Enc", encode_ps(with_exit_code(command))]
+                "-File", RUN_PS1, "-Timeout", str(int(timeout_s)), "-Cwd", cwd, "-Nonce", nonce, "-Shell", shell]
+
+    def _owned(self) -> bool:
+        """Is the base VM still this box's (its session in the VM's extradata, which the guest cannot write)?"""
+        return self.vbox("getextradata", self.base, "pickfit/session", check=False).stdout.strip() == \
+            f"Value: {self.session}"
 
     def _run(self, user: str, command: str, timeout_s: int, cwd: str, *,
              head: int | None = None) -> tuple[int, str, str, bool, bool, float]:
+        if not self._owned():
+            raise BoxError(f"{self.base} is no longer this box's (session {self.session}); not running commands")
         nonce = secrets.token_hex(8)
         argv = self.run_argv(user, command, timeout_s, cwd, nonce)
         kw = {"head": head, "tail": 0} if head else {}
@@ -813,17 +867,18 @@ class VBoxBox(Box):
         if guest_code is None:
             if host_timeout:
                 guest_code = 124
-            elif re.search(r"VBoxManage(\.exe)?: error:", err):
-                raise BoxError(f"guestcontrol failed (the VM or its Guest Additions is gone): {err.strip()[-300:]}")
+            elif self.vbox.state(self.base) != "running":  # the host's view, not text the guest can print
+                raise BoxError(f"guestcontrol failed: {self.base} is {self.vbox.state(self.base)}")
             else:  # no trusted sentinel: fall back to VBoxManage's own code (0 or 1)
                 guest_code = 0 if code == 0 else 1
                 err += "\n" + (warning or "[pickfit: the command ended without its exit-code line]")
         return guest_code, out, err, host_timeout, truncated, seconds
 
     def _admin(self, script: str, timeout_s: int = 60) -> tuple[int, str, str]:
-        """Harness-only administrator command (checks, probes); never used for model commands."""
+        """Harness-only administrator command (checks, probes); never used for model commands. It runs in the
+        harness directory, which sbx cannot write (not C:\\Windows\\Temp, where sbx could plant a DLL)."""
         script = "$ProgressPreference = 'SilentlyContinue'\n" + script  # no progress CLIXML on stderr
-        code, out, err, _, _, _ = self._run(ADMIN_USER, script, timeout_s, r"C:\Windows\Temp")
+        code, out, err, _, _, _ = self._run(ADMIN_USER, script, timeout_s, HARNESS_DIR)
         return code, out, err
 
     def exec(self, command: str, timeout_s: int, *, cwd: str | None = None) -> ExecResult:
@@ -928,19 +983,18 @@ class VBoxBox(Box):
         targets["metadata"] = "169.254.169.254:80"
         targets["private"] = "10.255.255.1:80"
         targets["routerssh"] = f"{ROUTER_IP}:22"
-        for ip in self.extra:
-            targets[f"hostpublic{ip.replace('.', '_')}"] = f"{ip}:445"
+        for ip in self.extra:  # this PC's public addresses and the network's egress (WAN) address
+            for port in (80, 443, 445):
+                targets[f"wan{ip.replace('.', '_')}_{port}"] = f"{ip}:{port}"
         return targets
 
-    def _probe(self, targets: dict[str, str], *, url: str = "", multicast: bool = False,
-               ms: int = 3000) -> dict[str, str]:
+    def _probe(self, targets: dict[str, str], *, url: str = "", ms: int = 3000) -> dict[str, str]:
         arg = ",".join(f"{k}={v}" for k, v in targets.items())
         script = (f"& {ps_quote(PROBE_PS1)} -Targets {ps_quote(arg)} -Ms {ms}"
-                  + (f" -Url {ps_quote(url)}" if url else "") + (" -Multicast" if multicast else ""))
+                  + (f" -Url {ps_quote(url)}" if url else ""))
         code, out, err = self._admin(script, 90)
         found = {m.group(1): m.group(2) for m in PROBE_LINE.finditer(out)}
-        missing = [n for n in [*targets, *(["public"] if url else []), *(["mdns", "ssdp"] if multicast else [])]
-                   if n not in found]
+        missing = [n for n in [*targets, *(["public"] if url else [])] if n not in found]
         if missing:
             raise BoxError(f"containment probe could not run (no result for {', '.join(missing)}): "
                            f"{(out + err).strip()[-200:]}")
@@ -948,11 +1002,11 @@ class VBoxBox(Box):
 
     def _check_containment(self, *, online: bool) -> None:
         """Fail closed unless every must-drop target times out, the internet matches the mode, and (online)
-        multicast is not answered and the router's DNS port answers (the probe is not a no-op)."""
+        the router's DNS port answers (the probe is not a no-op)."""
         targets = self.probe_targets()
         if online:
             targets["routerdns"] = f"{ROUTER_IP}:53"
-        res = self._probe(targets, url=PUBLIC_URL, multicast=online)
+        res = self._probe(targets, url=PUBLIC_URL)
         bad: list[str] = []
         for name in self.probe_targets():
             got = res[name]
@@ -965,9 +1019,6 @@ class VBoxBox(Box):
                 bad.append(f"router DNS port {res['routerdns']} (the probe should see it open)")
             if res["public"] != "curl0":
                 bad.append(f"internet unreachable online ({res['public']})")
-            for name in ("mdns", "ssdp"):
-                if res[name] != "no-answer":
-                    bad.append(f"{name} {res[name]}")
         elif res["public"] == "curl0":
             bad.append("internet reachable with the network cut")
         if bad:
@@ -1004,25 +1055,35 @@ class VBoxBox(Box):
         time.sleep(3)
         host_targets = {f"hostlan{p}": f"{lan}:{p}" for p in HOST_PORTS} if lan else {}
         host_targets.update({f"vboxnathost{p}": f"{VBOX_NAT_HOST}:{p}" for p in (135, 445)})
-        pos = self._probe(host_targets)
-        reached = sorted(n for n, r in pos.items() if r in ("open", "refused"))
+        wan = {n: t for n, t in self.probe_targets().items() if n.startswith("wan")}
+        pos = self._probe({**host_targets, **wan})
+        reached = sorted(n for n in host_targets if pos[n] in ("open", "refused"))
         rec("probe_sees_host_without_router", bool(reached),
             "without the router (plain NAT) the probe reaches host ports (proves it is not a no-op)",
-            ", ".join(f"{n}={pos[n]}" for n in sorted(pos)))
+            ", ".join(f"{n}={pos[n]}" for n in sorted(host_targets)))
+        # The network's own public (WAN) address: blocked in the router whether or not anything answers there.
+        egress = host_egress_ipv4()
+        in_router = set(self.router.ready.get("extra", "").split(","))
+        rec("egress_ip_in_router_block", bool(egress) and set(egress) <= in_router,
+            "the network's public egress address is in the router's drop set (its own ready line)",
+            f"egress {','.join(egress) or '?'}; router extra {self.router.ready.get('extra', '?')}")
+        wan_reached = sorted(n for n in wan if pos[n] in ("open", "refused"))
+        self.log(f"vbox: egress ports without the router (positive control, informational): "
+                 f"{', '.join(f'{n}={pos[n]}' for n in sorted(wan)) or 'none'}"
+                 + ("" if wan_reached else " -- nothing answers there on this network, so this control cannot "
+                                           "show the drop; the router's drop set is the evidence"))
         # Back behind the router: the same targets and the rest must drop; the router's DNS answers.
         self._attach(online=True)
         self._admin("ipconfig /renew *> $null", 60)
         self._wait_network()
         targets = {**self.probe_targets(), "routerdns": f"{ROUTER_IP}:53"}
-        on = self._probe(targets, url=PUBLIC_URL, multicast=True)
+        on = self._probe(targets, url=PUBLIC_URL)
         for name in self.probe_targets():
             rec(f"{name}_dropped_online", on[name] == "timeout", "dropped by the router (connect times out)",
                 on[name])
         rec("router_dns_open", on["routerdns"] == "open", "the router's DNS port answers (probe sees open)",
             on["routerdns"])
         rec("internet_online", on["public"] == "curl0", "public HTTPS answers online", on["public"])
-        for name in ("mdns", "ssdp"):
-            rec(f"{name}_unanswered_online", on[name] == "no-answer", f"no {name} answer online", on[name])
         # Offline: the NIC is detached; nothing answers, not even the router.
         self._attach(online=False)
         self.network_enabled = False
@@ -1192,14 +1253,15 @@ cscript //nologo "$env:SystemRoot\System32\slmgr.vbs" /dli
 "edition=$((Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').EditionID)"
 """
 
-# sbx and the harness directory; {pw} is replaced by a single-quoted PowerShell literal.
+# sbx and the harness directory. sbx's password (new on every build, also a resumed one) is $env:PF_SECRET.
 PROVISION_USERS = r"""
 $ErrorActionPreference = 'Stop'
+$pw = ConvertTo-SecureString $env:PF_SECRET -AsPlainText -Force
+Remove-Item env:PF_SECRET
 if (-not (Get-LocalUser sbx -ErrorAction SilentlyContinue)) {
-  New-LocalUser sbx -Password (ConvertTo-SecureString {pw} -AsPlainText -Force) -PasswordNeverExpires `
-    -AccountNeverExpires -FullName 'pickfit sandbox' | Out-Null
+  New-LocalUser sbx -Password $pw -PasswordNeverExpires -AccountNeverExpires -FullName 'pickfit sandbox' | Out-Null
   Add-LocalGroupMember -SID S-1-5-32-545 -Member sbx
-}
+} else { Set-LocalUser sbx -Password $pw }
 $d = 'C:\ProgramData\pickfit'
 New-Item -ItemType Directory -Force $d | Out-Null
 icacls $d /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' | Out-Null
@@ -1362,9 +1424,15 @@ ANSWER_SCAN = ("$af = @(" + ", ".join(f"'{p}'" for p in ANSWER_FILES) + ")\n"
                "$found += @(Get-ChildItem 'C:\\Windows\\Panther\\Unattend' -Force -ErrorAction SilentlyContinue | "
                "ForEach-Object FullName)\n")
 
+# The PowerShell logs a standard user can read. Builds before the review put sbx's password into a command
+# line, which Windows PowerShell logs (event 400/403 HostApplication); the harness passes nothing secret there
+# now, and the logs are cleared when the base is hardened and again before its snapshot.
+PS_LOGS = ("Windows PowerShell", "Microsoft-Windows-PowerShell/Operational", "PowerShellCore/Operational")
+CLEAR_PS_LOGS = "".join(f"wevtutil cl '{log}' 2>$null\n" for log in PS_LOGS)
+
 # Last, as Administrator: auto logon only for sbx (from the LSA secret), no password left in any Winlogon
-# key, no answer files or install logs, UAC on.
-HARDEN = ANSWER_SCAN + r"""
+# key, no answer files or install logs, UAC on, the PowerShell logs empty.
+HARDEN = ANSWER_SCAN + CLEAR_PS_LOGS + r"""
 $wl = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
 Remove-ItemProperty $wl DefaultPassword, AutoLogonCount -ErrorAction SilentlyContinue
 Get-ChildItem Registry::HKEY_USERS -ErrorAction SilentlyContinue | ForEach-Object {
@@ -1379,12 +1447,21 @@ Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Syste
 'hardened-ok'
 """
 
-# After the hardened second boot, as Administrator with its password in $env:PF_SECRET: is it (plain, or as
-# an answer file encodes it) in any file sbx or setup could have left readable? Prints `pw_hits=` and paths.
+# After the hardened second boot, as Administrator, with its password in $env:PF_SECRET and sbx's in
+# $env:PF_SECRET2: is either (plain, or as an answer file encodes it) in a file sbx or setup could have left
+# readable, or in the event logs (their text, and any base64 command in it decoded)? Prints `pw_hits=` and
+# where.
 ADMIN_SECRET_SCAN = r"""
-$pw = $env:PF_SECRET; Remove-Item env:PF_SECRET
-$forms = @($pw) + @('Password', 'AdministratorPassword' | ForEach-Object {
-  [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($pw + $_)) })
+$pws = @($env:PF_SECRET, $env:PF_SECRET2); Remove-Item env:PF_SECRET, env:PF_SECRET2
+$forms = foreach ($pw in $pws) { $pw; foreach ($s in 'Password', 'AdministratorPassword') {
+  [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($pw + $s)) } }
+$events = @(Get-WinEvent -ListLog * -ErrorAction SilentlyContinue | Where-Object RecordCount |
+  ForEach-Object { Get-WinEvent -LogName $_.LogName -MaxEvents 5000 -ErrorAction SilentlyContinue })
+$logHits = foreach ($e in $events) {
+  $t = [string]$e.Message + ' ' + (($e.Properties | ForEach-Object { [string]$_.Value }) -join ' ')
+  foreach ($m in [regex]::Matches($t, '[A-Za-z0-9+/]{40,}={0,2}')) {
+    try { $t += ' ' + [Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($m.Value)) } catch {} }
+  foreach ($x in $forms) { if ($t.Contains($x)) { "event:$($e.LogName)#$($e.RecordId)"; break } } }
 $files = @()
 foreach ($r in 'C:\Windows\Panther', 'C:\Windows\System32\Sysprep', 'C:\Windows\Setup', 'C:\Windows\Temp',
                'C:\Users\Public', 'C:\Users\sbx', 'C:\ProgramData\pickfit') {
@@ -1396,20 +1473,22 @@ $hits = foreach ($f in $files) {
   $t8 = [Text.Encoding]::UTF8.GetString($b); $t16 = [Text.Encoding]::Unicode.GetString($b)
   foreach ($x in $forms) { if ($t8.Contains($x) -or $t16.Contains($x)) { $f.FullName; break } } }
 "scanned=$($files.Count)"
-"pw_hits=$(@($hits) -join ';')"
+"events=$($events.Count)"
+"pw_hits=$(@(@($hits) + @($logHits)) -join ';')"
 """
 
 
 def _raw_ps(vbox: VBox, vm: str, user: str, pwfile: Path, script: str, timeout_s: int = 600,
-            exe: str = WINPS, secret: str | None = None) -> tuple[int, str, str]:
-    """Bootstrap command before the harness scripts exist: powershell -EncodedCommand, no sentinel, so the
-    exit code is VBoxManage's mapped one turned back (exact for 0..93). `secret` reaches the script as
-    $env:PF_SECRET (the guest process environment), never in its command line or the script text."""
-    env = ["--putenv", f"PF_SECRET={secret}"] if secret is not None else []
+            exe: str = WINPS, env: dict[str, str] | None = None) -> tuple[int, str, str]:
+    """Bootstrap command before the harness scripts exist: no sentinel, so the exit code is VBoxManage's mapped
+    one turned back (exact for 0..93). The script travels in $env:PF_ENC (see PS_BOOT) and each secret as
+    $env:<name>: the guest process environment, never a command line (which Windows PowerShell logs where any
+    user can read it) or the script text."""
+    puts = [a for key, value in (env or {}).items() for a in ("--putenv", f"{key}={value}")]
     proc = vbox("guestcontrol", vm, "run", "--username", user, "--passwordfile", str(pwfile), "--exe", exe,
-                *env, "--timeout", str(timeout_s * 1000), "--wait-stdout", "--wait-stderr", "--",
-                "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
-                "-EncodedCommand", encode_ps(script), timeout_s=timeout_s + 60, check=False)
+                *puts, "--putenv", f"PF_ENC={encode_ps(script)}", "--timeout", str(timeout_s * 1000),
+                "--wait-stdout", "--wait-stderr", "--", "-NoLogo", "-NoProfile", "-NonInteractive",
+                "-ExecutionPolicy", "Bypass", "-Command", PS_BOOT, timeout_s=timeout_s + 60, check=False)
     code = proc.returncode
     guest = 0 if code == 0 else code - 32 if 33 <= code <= 125 else -1
     return guest, proc.stdout, proc.stderr
@@ -1443,7 +1522,7 @@ def _logon_as(vbox: VBox, vm: str, pw: dict[str, Path], user: str, log: Callable
     """Make `user` the one Windows logs on at boot, reboot, and wait until that user is on the desktop."""
     script = SBX_AUTOLOGON if user == WIN_USER else ADMIN_AUTOLOGON
     code, out, err = _raw_ps(vbox, vm, ADMIN_USER, pw[ADMIN_USER], script, 120,
-                             secret=pw[user].read_text(encoding="utf-8").strip())
+                             env={"PF_SECRET": pw[user].read_text(encoding="utf-8").strip()})
     if "logon-set" not in out:
         raise BoxError(f"cannot set the auto logon for {user} ({code}): {(out + err).strip()[-300:]}")
     time.sleep(30)  # the reboot is under way before the guest is asked again
@@ -1511,7 +1590,7 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
     if image is None:
         raise BoxError(f"cannot find image {image_index} in the ISO: {detect.strip()[-400:]}")
     log(f"vbox: {name}: {image.group(1)} from {Path(iso).name}")
-    Router(vbox, name=router, state_dir=state, log=log).reset(host_public_ipv4(), router_manifest)
+    Router(vbox, name=router, state_dir=state, log=log).reset(blocked_host_addresses(), router_manifest)
     if not exists:
         for path in pw.values():
             path.write_text(secrets.token_urlsafe(18), encoding="utf-8")
@@ -1528,8 +1607,9 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
                                 "product": image.group(1), "arch": "x86_64", "user": WIN_USER,
                                 "virtualbox": vbox("--version").stdout.strip()}
 
-    def admin(step: str, script: str, timeout_s: int, ok: Callable[[int, str], bool]) -> str:
-        code, out, err = _raw_ps(vbox, name, ADMIN_USER, pw[ADMIN_USER], script, timeout_s)
+    def admin(step: str, script: str, timeout_s: int, ok: Callable[[int, str], bool],
+              env: dict[str, str] | None = None) -> str:
+        code, out, err = _raw_ps(vbox, name, ADMIN_USER, pw[ADMIN_USER], script, timeout_s, env=env)
         log(f"vbox: {name}: {step} -> {code}")
         if not ok(code, out):
             raise BoxError(f"{step} failed ({code}): {(out + err).strip()[-800:]}")
@@ -1543,11 +1623,11 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
         raise BoxError(f"Windows did not activate: {out.strip()[-600:]}")
     manifest.update(windows=f"{info.get('display', '?')} (build {info.get('build', '?')})",
                     edition=info.get("edition"))
-    sbx_pw = pw[WIN_USER].read_text(encoding="utf-8").strip()
-    users = (PROVISION_USERS.replace("{pw}", ps_quote(sbx_pw))
-             .replace("{run}", base64.b64encode(RUN_SCRIPT.encode()).decode())
+    pw[WIN_USER].write_text(secrets.token_urlsafe(18), encoding="utf-8")  # a new one on every build
+    users = (PROVISION_USERS.replace("{run}", base64.b64encode(RUN_SCRIPT.encode()).decode())
              .replace("{probe}", base64.b64encode(PROBE_SCRIPT.encode()).decode()))
-    admin("sbx and harness", users, 300, lambda c, o: "users-ok" in o)
+    admin("sbx and harness", users, 300, lambda c, o: "users-ok" in o,
+          env={"PF_SECRET": pw[WIN_USER].read_text(encoding="utf-8").strip()})
     winget_script = (PROVISION_WINGET.replace("{release}", WINGET_RELEASE)
                      .replace("{assets}", ", ".join(ps_quote(a) for a in WINGET_ASSETS)))
     out = admin("winget", winget_script, 1200, lambda c, o: re.search(r"winget=v\d", o) is not None)
@@ -1585,16 +1665,19 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
     vbox("startvm", name, "--type", "headless", timeout_s=180)
     _wait_guest(vbox, name, pw[ADMIN_USER], log=log)
     check_box = VBoxBox(base=name, router=router, vboxmanage=vbox.argv0, state_dir=state, log=log)
+    vbox("setextradata", name, "pickfit/session", check_box.session)
     check_box._wait_sbx_logon()
     code, out, err = check_box._admin(HARDENED_CHECK, 180)
     if code != 0:
         raise BoxError(f"the hardened base fails its check: {(out + err).strip()[-400:]}")
     out = _raw_ps(vbox, name, ADMIN_USER, pw[ADMIN_USER], ADMIN_SECRET_SCAN, 900,
-                  secret=pw[ADMIN_USER].read_text(encoding="utf-8").strip())[1]
+                  env={"PF_SECRET": pw[ADMIN_USER].read_text(encoding="utf-8").strip(),
+                       "PF_SECRET2": pw[WIN_USER].read_text(encoding="utf-8").strip()})[1]
     scan = _kv(out)
-    log(f"vbox: {name}: Administrator password scan: {scan.get('scanned', '?')} files, hits: {scan.get('pw_hits')!r}")
+    log(f"vbox: {name}: password scan: {scan.get('scanned', '?')} files, {scan.get('events', '?')} log events, "
+        f"hits: {scan.get('pw_hits')!r}")
     if "pw_hits" not in scan or scan["pw_hits"]:
-        raise BoxError(f"the Administrator password is left in: {scan.get('pw_hits', out.strip()[-300:])}")
+        raise BoxError(f"a password is left in: {scan.get('pw_hits', out.strip()[-300:])}")
     # The build the snapshot really has (no cumulative updates are installed; Windows Update is off).
     final = _kv(check_box._admin(
         "$v = Get-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion'; "
@@ -1606,8 +1689,10 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
         raise BoxError(f"not ready for the snapshot: license {final.get('license')!r}, Windows Update {final.get('wu')!r}")
     manifest.update(windows=f"{final.get('display', '?')} (build {final.get('build', '?')})",
                     license_status=final.get("license"), windows_update="off")
-    admin("shutdown", "shutdown.exe /s /t 5 /f; 'bye'", 60, lambda c, o: True)
+    admin("clear the PowerShell logs and shut down", CLEAR_PS_LOGS + "shutdown.exe /s /t 5 /f; 'bye'", 60,
+          lambda c, o: True)
     vbox.wait_off(name, 300)
+    vbox("setextradata", name, "pickfit/session", "")
     while vbox("snapshot", name, "showvminfo", SNAPSHOT, check=False).returncode == 0:  # a rebuild replaces it
         vbox("snapshot", name, "delete", SNAPSHOT, timeout_s=600)
     vbox("snapshot", name, "take", SNAPSHOT, "--description", "pickfit Windows base, shut down by Windows")
@@ -1634,9 +1719,9 @@ def image_label(manifest: dict[str, Any], router: dict[str, Any]) -> str:
 # administrator, must be able to see: the positive control for the box user's `denied`).
 HARDENED_CHECK = LSA_TYPE + ANSWER_SCAN + r"""
 $bad = @()
-foreach ($g in 'S-1-5-32-544', 'S-1-5-32-555', 'S-1-5-32-580') {
-  $m = @(Get-LocalGroupMember -SID $g -ErrorAction SilentlyContinue | ForEach-Object { $_.Name.Split('\')[-1] })
-  if ($m -contains 'sbx') { $bad += "sbx is in $g" } }
+foreach ($g in Get-LocalGroup) {  # sbx in Users and nowhere else (Backup Operators can read the SECURITY hive)
+  $m = @(Get-LocalGroupMember -SID $g.SID -ErrorAction SilentlyContinue | ForEach-Object { $_.Name.Split('\')[-1] })
+  if ($m -contains 'sbx' -and $g.SID.Value -ne 'S-1-5-32-545') { $bad += "sbx is in $($g.Name) ($($g.SID))" } }
 if ((Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System').EnableLUA -ne 1) { $bad += 'UAC is off' }
 $wl = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
 if ($wl.AutoAdminLogon -ne '1' -or $wl.DefaultUserName -ne 'sbx') { $bad += "auto logon is not sbx's ($($wl.AutoAdminLogon) $($wl.DefaultUserName))" }
@@ -1648,7 +1733,8 @@ $lsa = [PfLsa]::Probe('DefaultPassword')
 if ($lsa -notlike 'readable len=*' -or $lsa -eq 'readable len=0') { $bad += "the auto-logon LSA secret is $lsa" }
 foreach ($f in $found) { $bad += "answer file left: $f" }
 if (@(Get-CimInstance Win32_CDROMDrive -ErrorAction SilentlyContinue).Count) { $bad += 'an optical drive is attached' }
-foreach ($p in 'C:\ProgramData\pickfit','C:\ProgramData\pickfit\run.ps1','C:\ProgramData\pickfit\probe.ps1') {
+foreach ($p in 'C:\ProgramData\pickfit','C:\ProgramData\pickfit\run.ps1','C:\ProgramData\pickfit\probe.ps1',
+               'C:\ProgramData\pickfit\pwsh.path') {
   if (-not (Test-Path $p)) { $bad += "$p missing"; continue }
   $acl = Get-Acl $p
   foreach ($a in $acl.Access) {

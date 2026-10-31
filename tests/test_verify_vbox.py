@@ -2,7 +2,7 @@
 
 The fake is a Python script run as [python, fake.py] (VBox takes an argv prefix), so these tests run on
 Windows and macOS alike. It keeps VM state in a JSON file, writes the router's ready line to its serial
-log on startvm, and answers guestcontrol runs by decoding the -Enc PowerShell the box sends.
+log on startvm, and answers guestcontrol runs by decoding the PowerShell the box sends in $env:PF_ENC.
 """
 
 from __future__ import annotations
@@ -59,6 +59,8 @@ if cmd == "showvminfo":
     for slot in range(1, 9):
         print(f'nic{slot}="{nics.get(str(slot), "none")}"')
     print(f'intnet1="{env("FAKE_INTNET", "pickfit-net")}"')
+    for key, value in json.loads(env("FAKE_SETTINGS", "{}")).items():
+        print(f'{key}="{value}"')
 elif cmd == "controlvm":
     v = vm(args[1]); what = args[2]
     if what == "poweroff":
@@ -101,7 +103,8 @@ elif cmd == "guestcontrol" and args[2] == "run":
     v = vm(args[1])
     rest = args[args.index("--") + 1:]
     user = args[args.index("--username") + 1]
-    script = base64.b64decode(rest[rest.index("-Enc") + 1]).decode("utf-16-le")
+    puts = dict(args[i + 1].split("=", 1) for i, a in enumerate(args) if a == "--putenv")
+    script = base64.b64decode(puts["PF_ENC"]).decode("utf-16-le")
     nonce = rest[rest.index("-Nonce") + 1]
     online = v["nic1"] == "intnet" and v["link"] == "on"
     nat = v["nic1"] == "nat"
@@ -129,9 +132,6 @@ elif cmd == "guestcontrol" and args[2] == "run":
             lines.append(f"probe {name}={r}")
         if "-Url" in script:
             lines.append("probe public=" + ("curl0" if online or nat or env("FAKE_OFFLINE_LEAK") else "curl6"))
-        if "-Multicast" in script:
-            lines.append("probe mdns=" + env("FAKE_MDNS", "no-answer"))
-            lines.append("probe ssdp=no-answer")
         out = "\n".join(lines)
     elif m := re.search(r"cmd /c exit (\d+)", script):
         code = int(m.group(1))
@@ -165,6 +165,7 @@ def fake(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(VBoxBox, "_start_reaper", lambda self: None)
     monkeypatch.setattr(vb, "host_lan_targets", lambda: {"hostlan": "192.168.1.20", "gateway": "192.168.1.1"})
     monkeypatch.setattr(vb, "host_public_ipv4", lambda: [])
+    monkeypatch.setattr(vb, "host_egress_ipv4", lambda: [])
     monkeypatch.setattr(vb.time, "sleep", lambda s: None)
 
     class Fake:
@@ -241,6 +242,11 @@ def test_run_argv_puts_no_password_or_argv0_after_the_separator(fake) -> None:
     assert rest[rest.index("-Timeout") + 1] == "30"
     puts = [argv[i + 1] for i, a in enumerate(argv) if a == "--putenv"]
     assert "CI=1" in puts and not any(re.search(r"KEY|TOKEN|SECRET", p) for p in puts)
+    # the command is in the environment, never on the command line Windows PowerShell logs
+    enc = next(p for p in puts if p.startswith("PF_ENC="))[len("PF_ENC="):]
+    assert "python --version" in base64.b64decode(enc).decode("utf-16-le")
+    assert "-Enc" not in rest and "-EncodedCommand" not in rest and enc not in rest
+    assert "-EncodedCommand" not in vb.RUN_SCRIPT and "-Command" in vb.RUN_SCRIPT and vb.PS_BOOT in vb.RUN_SCRIPT
 
 
 # -- lifecycle
@@ -259,8 +265,9 @@ def test_start_resets_router_then_guest_and_checks_containment(fake) -> None:
     assert first("snapshot pickfit-router restore") < first("startvm pickfit-router") < first("startvm pickfit-win11")
     nic = next(c for c in calls if c[0] == "modifyvm" and "--nic1" in c)
     assert nic[nic.index("--nic1") + 1] == "intnet" and nic[nic.index("--intnet1") + 1] == vb.INTNET
-    assert any(c[0] == "guestcontrol" and "probe.ps1" in base64.b64decode(
-        c[c.index("-Enc") + 1]).decode("utf-16-le") for c in calls if "-Enc" in c)
+    scripts = [base64.b64decode(c[i + 1][len("PF_ENC="):]).decode("utf-16-le")
+               for c in calls for i, a in enumerate(c) if a == "--putenv" and c[i + 1].startswith("PF_ENC=")]
+    assert any("probe.ps1" in s for s in scripts)
     assert box.started and box.network_enabled and box.image.startswith("Windows 11 Enterprise Eval 26H2 (28000.1)")
     real = vb.image_label({"product": "Windows 11 Enterprise LTSC Evaluation", "windows": "24H2 (build 26100.1742)",
                            "virtualbox": "7.2.22r175245", "base": "pickfit-win11", "build_id": "42796005b373"},
@@ -291,13 +298,17 @@ def test_admin_checks_use_windows_powershell_and_model_commands_pwsh(fake) -> No
 
 
 def test_logon_passwords_reach_the_guest_only_through_the_environment() -> None:
-    for script in (vb.SBX_AUTOLOGON, vb.ADMIN_AUTOLOGON, vb.ADMIN_SECRET_SCAN):
+    for script in (vb.SBX_AUTOLOGON, vb.ADMIN_AUTOLOGON, vb.ADMIN_SECRET_SCAN, vb.PROVISION_USERS):
         assert "$env:PF_SECRET" in script and "{pw}" not in script
     assert "[PfLsa]::Store('DefaultPassword'" in vb.SBX_AUTOLOGON
     assert "Remove-ItemProperty $wl DefaultPassword" in vb.SBX_AUTOLOGON
+    assert "Set-LocalUser sbx -Password" in vb.PROVISION_USERS  # a resumed build gives sbx a new one too
+    for log in ("Windows PowerShell", "Microsoft-Windows-PowerShell/Operational"):
+        assert f"wevtutil cl '{log}'" in vb.HARDEN
+    assert "$env:PF_SECRET2" in vb.ADMIN_SECRET_SCAN and "Get-WinEvent" in vb.ADMIN_SECRET_SCAN
 
 
-def test_raw_ps_puts_the_secret_in_putenv_not_the_command_line(tmp_path) -> None:
+def test_raw_ps_puts_the_script_and_secrets_in_the_environment_not_the_command_line(tmp_path) -> None:
     seen: list[list[str]] = []
 
     class Rec(vb.VBox):
@@ -305,11 +316,28 @@ def test_raw_ps_puts_the_secret_in_putenv_not_the_command_line(tmp_path) -> None
             seen.append(list(args))
             return subprocess.CompletedProcess(args, 0, "ok", "")
 
-    vb._raw_ps(Rec([sys.executable]), "vm", "Administrator", tmp_path / "pw", "'x'", 10, secret="s3cret-value")
+    vb._raw_ps(Rec([sys.executable]), "vm", "Administrator", tmp_path / "pw", "'x-script'", 10,
+               env={"PF_SECRET": "s3cret-value"})
     argv = seen[0]
-    assert argv[argv.index("--putenv") + 1] == "PF_SECRET=s3cret-value"
-    encoded = argv[argv.index("-EncodedCommand") + 1]
-    assert "s3cret-value" not in base64.b64decode(encoded).decode("utf-16-le")
+    puts = dict(argv[i + 1].split("=", 1) for i, a in enumerate(argv) if a == "--putenv")
+    assert puts["PF_SECRET"] == "s3cret-value"
+    assert base64.b64decode(puts["PF_ENC"]).decode("utf-16-le") == "'x-script'"
+    rest = argv[argv.index("--") + 1:]
+    assert rest[rest.index("-Command") + 1] == vb.PS_BOOT and "-EncodedCommand" not in rest
+    assert not any("s3cret-value" in a or "x-script" in a for a in rest)
+
+
+def test_ps_quote_escapes_every_quote_powershell_honours() -> None:
+    nasty = "a’; Write-Output INJECTED; ‘ b' ‚‛ $(Write-Output INJECTED) end"
+    quoted = vb.ps_quote(nasty)
+    for q in vb.PS_QUOTES:
+        assert q in quoted
+    if sys.platform == "win32":  # the real parser decides
+        out = subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand",
+                              vb.encode_ps("[Console]::OutputEncoding = [Text.Encoding]::UTF8; Write-Output "
+                                           + quoted)],
+                             capture_output=True, timeout=60)
+        assert out.stdout.decode("utf-8").strip() == nasty
 
 
 def test_logon_secret_probe_accepts_only_the_exact_clean_state() -> None:
@@ -333,6 +361,36 @@ def test_logon_secret_probe_accepts_only_the_exact_clean_state() -> None:
     for needle in ("HKCU:", "[PfLsa]::Probe('DefaultPassword')", "Win32_CDROMDrive", "autounattend.xml",
                    "Panther\\Unattend", "Sysprep\\unattend.xml"):
         assert needle in probe
+
+
+def test_standard_user_check_wants_users_only_medium_integrity_and_no_dangerous_privilege() -> None:
+    from pickfit.verify.box import ExecResult
+    from pickfit.verify.limits import _win_standard_user
+
+    def token(**kw: str) -> ExecResult:
+        t = {"admin": "False", "builtin": "S-1-5-32-545", "integrity": "S-1-16-8192",
+             "privileges": "SeChangeNotifyPrivilege,SeShutdownPrivilege"} | kw
+        return ExecResult(command="", exit_code=0, stdout="\n".join(f"{k}={v}" for k, v in t.items()) + "\n",
+                          stderr="", seconds=0.1, timed_out=False, truncated=False)
+
+    assert _win_standard_user(token())
+    for bad in ({"admin": "True"}, {"builtin": "S-1-5-32-545,S-1-5-32-551"}, {"builtin": "S-1-5-32-544,S-1-5-32-545"},
+                {"integrity": "S-1-16-12288"}, {"privileges": "SeChangeNotifyPrivilege,SeBackupPrivilege"},
+                {"privileges": "SeImpersonatePrivilege"}):
+        assert not _win_standard_user(token(**bad)), bad
+
+
+def test_encoded_command_probe_needs_a_readable_log_with_none_in_it() -> None:
+    from pickfit.verify.box import ExecResult
+    from pickfit.verify.limits import _no_encoded
+
+    def out(text: str) -> ExecResult:
+        return ExecResult(command="", exit_code=0, stdout=text, stderr="", seconds=0.1, timed_out=False,
+                          truncated=False)
+
+    assert _no_encoded(out("events=42 encoded=0"))
+    assert not _no_encoded(out("events=42 encoded=1"))
+    assert not _no_encoded(out("events=0 encoded=0"))  # an empty or unreadable log proves nothing
 
 
 def test_unhardened_base_is_refused(fake, monkeypatch) -> None:
@@ -380,10 +438,75 @@ def test_an_internal_network_other_than_pickfits_is_refused(fake, monkeypatch) -
         fake.box().start()
 
 
-def test_answered_multicast_fails(fake, monkeypatch) -> None:
-    monkeypatch.setenv("FAKE_MDNS", "answered:192.168.1.20")
-    with pytest.raises(BoxError, match="mdns"):
+@pytest.mark.parametrize("setting", [{"clipboard": "bidirectional"}, {"draganddrop": "hosttoguest"},
+                                     {"vrde": "on"}, {"usb": "on"}, {"audio": "hda"}, {"uart1": "0x3f8,4"},
+                                     {"SharedFolderNameMachineMapping1": "host"}])
+def test_a_guest_with_a_host_channel_is_refused_before_boot(fake, monkeypatch, setting: dict) -> None:
+    monkeypatch.setenv("FAKE_SETTINGS", json.dumps(setting))
+    with pytest.raises(BoxError, match="host channels"):
         fake.box().start()
+    assert not any(c[:2] == ["startvm", "pickfit-win11"] for c in fake.calls())
+
+
+def test_the_networks_egress_address_is_blocked_and_probed(fake, monkeypatch) -> None:
+    monkeypatch.setattr(vb, "host_egress_ipv4", lambda: ["198.51.200.7"])
+    monkeypatch.setenv("FAKE_ROUTER_EXTRA", "198.51.200.7")
+    box = fake.box()
+    box.start()
+    assert box.extra == ["198.51.200.7"]
+    assert {f"wan198_51_200_7_{p}" for p in (80, 443, 445)} <= set(box.probe_targets())
+    serial = fake.state()["pickfit-router"]["extra"]["VBoxInternal/Devices/pcbios/0/Config/DmiSystemSerial"]
+    assert serial == "pf:198.51.200.7"
+    box.close()
+
+
+def test_egress_address_comes_from_the_trace_and_fails_closed(monkeypatch) -> None:
+    def fake_run(out: str):
+        return lambda *a, **k: subprocess.CompletedProcess(a, 0, out, "")
+
+    monkeypatch.setattr(vb.subprocess, "run", fake_run("fl=1\nip=93.184.216.34\nts=1\n"))
+    assert vb.host_egress_ipv4() == ["93.184.216.34"]
+    monkeypatch.setattr(vb.subprocess, "run", fake_run("ip=10.1.2.3\n"))
+    assert vb.host_egress_ipv4() == []  # already in a blocked range
+    monkeypatch.setattr(vb.subprocess, "run", fake_run("<html>captive portal</html>"))
+    with pytest.raises(BoxError, match="public address"):
+        vb.host_egress_ipv4()
+
+
+def test_a_refused_start_leaves_the_other_boxs_vm_alone(fake) -> None:
+    other = fake.box()
+    other.start()
+    with pytest.raises(BoxError, match="already running for another box"):
+        fake.box().start()
+    st = fake.state()["pickfit-win11"]
+    assert st["VMState"] == "running" and st["extra"]["pickfit/session"] == other.session
+    other.close()
+
+
+def test_a_box_that_lost_its_vm_neither_runs_commands_nor_tears_it_down(fake) -> None:
+    box = fake.box()
+    box.start()
+    box.vbox("setextradata", box.base, "pickfit/session", "someone-else")
+    with pytest.raises(BoxError, match="no longer this box's"):
+        box.exec("Get-Location", 30)
+    restored = fake.state()["pickfit-win11"]["restored"]
+    box.close()
+    st = fake.state()["pickfit-win11"]
+    assert st["VMState"] == "running" and st["restored"] == restored
+
+
+def test_guest_text_that_looks_like_a_vboxmanage_error_is_just_output(fake) -> None:
+    box = fake.box()
+    box.start()
+    result = box.exec("Write-Error 'VBoxManage.exe: error: fake'; cmd /c exit 3", 30)
+    assert result.exit_code == 3  # no BoxError: the VM is still running, so this is the command's own output
+    box.close()
+
+
+def test_router_hashes_its_whole_rule_set_before_the_box_adds_anything() -> None:
+    start = vb.ROUTER_START
+    assert "sed '/elements" not in start
+    assert start.index("sum=$(nft -s list table inet pf | sha256sum") < start.index("nft add element")
 
 
 def test_probe_that_sees_nothing_open_fails(fake, monkeypatch) -> None:
@@ -512,7 +635,7 @@ def test_needs_store_is_a_reason_the_agent_can_give_and_the_record_keeps() -> No
 
 
 def test_hardened_check_covers_the_ways_to_admin() -> None:
-    for needle in ("S-1-5-32-544", "S-1-5-32-555", "S-1-5-32-580", "EnableLUA", "AutoAdminLogon",
+    for needle in ("Get-LocalGroup)", "-ne 'S-1-5-32-545'", "EnableLUA", "AutoAdminLogon", "pwsh.path",
                    "DefaultUserName -ne 'sbx'", "DefaultPassword", "HKEY_USERS", "[PfLsa]::Probe('DefaultPassword')",
                    "Panther\\Unattend", "autounattend.xml", "Win32_CDROMDrive", "fDenyTSConnections", "WinRM",
                    "pickfit\\run.ps1"):

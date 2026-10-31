@@ -235,13 +235,39 @@ def _not_admin(result: ExecResult) -> bool:
     return lines[:1] != ["0"] and "admin" not in groups and "sudo=0" not in result.stdout
 
 
-WIN_IS_ADMIN = ("([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent())"
-                ".IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator); whoami /groups /fo csv | "
-                "Select-String 'S-1-5-32-544|S-1-16-12288'")
+# The token, as whoami sees it: administrator role, every BUILTIN group (S-1-5-32-*), every privilege, and the
+# integrity level. The box user must be in BUILTIN\Users only (Backup Operators and the like can read the
+# SECURITY hive), hold none of the privileges that lead to SYSTEM, and run at Medium integrity.
+WIN_IS_ADMIN = (
+    "$g = whoami /groups /fo csv | ConvertFrom-Csv\n"
+    "\"admin=$(([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent())"
+    ".IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))\"\n"
+    "\"builtin=$(($g | Where-Object SID -like 'S-1-5-32-*' | ForEach-Object SID | Sort-Object) -join ',')\"\n"
+    "\"integrity=$(($g | Where-Object SID -like 'S-1-16-*' | ForEach-Object SID) -join ',')\"\n"
+    "\"privileges=$((whoami /priv /fo csv | ConvertFrom-Csv | ForEach-Object 'Privilege Name' | Sort-Object) "
+    "-join ',')\"\n")
+WIN_BAD_PRIVILEGES = ("SeBackupPrivilege", "SeRestorePrivilege", "SeDebugPrivilege", "SeImpersonatePrivilege",
+                      "SeTakeOwnershipPrivilege", "SeLoadDriverPrivilege")
+
+
+def _win_token(r: ExecResult) -> dict[str, str]:
+    return {m.group(1): m.group(2).strip() for m in re.finditer(r"^(\w+)=(.*)$", r.stdout, re.M)}
+
+
+def _win_standard_user(r: ExecResult) -> bool:
+    t = _win_token(r)
+    privileges = set(filter(None, t.get("privileges", "?").split(",")))
+    return (r.exit_code == 0 and t.get("admin") == "False" and t.get("builtin") == "S-1-5-32-545"
+            and t.get("integrity") == "S-1-16-8192" and "privileges" in t
+            and not privileges & set(WIN_BAD_PRIVILEGES))
+
+
 WIN_HARNESS_WRITE = ("foreach ($p in 'C:\\ProgramData\\pickfit\\run.ps1','C:\\ProgramData\\pickfit\\probe.ps1') { "
                      "try { [IO.File]::AppendAllText($p, '#'); \"writable $p\" } catch { \"locked $p\" } }; "
                      "try { New-Item -ItemType File C:\\ProgramData\\pickfit\\x.ps1 -ErrorAction Stop | Out-Null; "
                      "'writable dir' } catch { 'locked dir' }")
+
+
 def win_logon_secrets() -> str:
     """sbx logs on by itself (winget and the MSIX pwsh need a desktop session), so the probe is: the auto
     logon is sbx's and nobody else's; no password in Winlogon (HKLM or sbx's HKCU); the LSA secret that holds
@@ -277,6 +303,18 @@ def _as_admin(box: Box, name: str, script: str, expect: str, ok: Callable[[ExecR
     return ProbeResult(name, bool(ok(result)), expect, code, result.seconds, _detail(result))
 
 
+# Windows PowerShell logs each command line (events 400/403) where any user can read it; the harness passes
+# scripts and secrets in the environment, so no command line there carries one.
+WIN_ENCODED_IN_LOG = ("$e = @(Get-WinEvent -LogName 'Windows PowerShell' -ErrorAction Stop)\n"
+                      "\"events=$($e.Count) encoded=$(@($e | Where-Object Message -match "
+                      "'EncodedCommand|\\s-Enc\\s').Count)\"\n")
+
+
+def _no_encoded(r: ExecResult) -> bool:
+    m = re.search(r"events=(\d+) encoded=(\d+)", r.stdout)
+    return r.exit_code == 0 and m is not None and int(m.group(1)) > 0 and m.group(2) == "0"
+
+
 WIN_NEGATIVE_PASSWORD = "pickfit-negative-control"
 WIN_WINLOGON = "'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon'"
 
@@ -286,10 +324,13 @@ def _windows_probes(box: Box, add: Callable[[ProbeResult], None]) -> None:
     it can read, and the network policy (outside the guest) holds. Every probe has a control that shows it
     can see what it looks for (run as the administrator, or with the thing planted in this throwaway box).
     Windows has no per-user process, file-size or memory cap; the VM's own RAM and disk are the caps."""
-    is_user = lambda r: r.stdout.strip().splitlines()[:1] == ["False"] and "S-1-" not in r.stdout  # noqa: E731
-    add(_probe(box, "non_admin", WIN_IS_ADMIN, 60, "not an administrator, not elevated", is_user))
-    add(_as_admin(box, "non_admin_control", WIN_IS_ADMIN, "the same check flags the administrator",
-                  lambda r: r.exit_code == 0 and r.stdout.strip().splitlines()[:1] == ["True"] and not is_user(r)))
+    add(_probe(box, "non_admin", WIN_IS_ADMIN, 60,
+               "not an administrator; BUILTIN groups exactly Users; Medium integrity; none of "
+               + ", ".join(WIN_BAD_PRIVILEGES), _win_standard_user))
+    add(_as_admin(box, "non_admin_control", WIN_IS_ADMIN,
+                  "the same check flags the administrator (admin=True, S-1-5-32-544 in its groups)",
+                  lambda r: r.exit_code == 0 and _win_token(r).get("admin") == "True"
+                  and "S-1-5-32-544" in _win_token(r).get("builtin", "") and not _win_standard_user(r)))
     add(_probe(box, "harness_locked", WIN_HARNESS_WRITE, 60, "the box user cannot change the harness scripts",
                lambda r: "writable" not in r.stdout and r.stdout.count("locked") == 3))
     add(_probe(box, "no_logon_secret", win_logon_secrets(), 90,
@@ -313,6 +354,15 @@ def _windows_probes(box: Box, add: Callable[[ProbeResult], None]) -> None:
                "no API_KEY/TOKEN/SECRET/PASSWORD variables", no_secret_env))
     add(_probe(box, "no_secrets_in_env_control", "$env:PF_CONTROL_TOKEN = 'x'; (Get-ChildItem env:).Name -join ' '",
                60, "a planted *_TOKEN variable is seen", lambda r: not no_secret_env(r)))
+    add(_probe(box, "no_encoded_commands_in_log", WIN_ENCODED_IN_LOG, 90,
+               "the 'Windows PowerShell' log is readable and no command line in it carries a script",
+               _no_encoded))
+    planted_cmd = ("& \"$env:SystemRoot\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile "
+                   "-EncodedCommand VwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIABwAGYALQBjAG8AbgB0AHIAbwBsAA==")
+    _as_admin(box, "plant", planted_cmd, "", lambda r: True)  # Write-Output pf-control
+    add(_probe(box, "no_encoded_commands_in_log_control", WIN_ENCODED_IN_LOG, 90,
+               "after the administrator runs one -EncodedCommand (this box only), the probe sees it",
+               lambda r: r.exit_code == 0 and not _no_encoded(r)))
     try:
         for name, ok, expect, detail in box.validate_containment():
             add(ProbeResult(name, ok, expect, None, 0.0, detail))
