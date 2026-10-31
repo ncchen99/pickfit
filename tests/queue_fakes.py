@@ -82,10 +82,12 @@ def repo_item(repo_id: int, full_name: str, *, stars: int = 42, private: bool = 
 
 
 def passed_run(run_id: str, steps: list[str], *, level: str = "function", method: str = "pipx",
-               checked_at: str = "2026-10-30T12:00:00+08:00") -> VerificationRun:
+               checked_at: str = "2026-10-30T12:00:00+08:00", mcp: dict[str, Any] | None = None) -> VerificationRun:
     base = copy.deepcopy(next(r for r in EXAMPLE["verification"]["runs"] if r["os"] == "linux"))
     base.update(id=run_id, level=level, install_method=method, checked_at=checked_at,
                 steps=[{"command": c, "purpose": None} for c in steps], pitfalls=[])
+    if mcp:
+        base["mcp"] = mcp
     base["evidence"] = {"trace_path": f"runs/verify/{run_id}/trace.json", "log_path": None,
                         "screenshot_paths": [], "evidence_url": None}
     if level == "install":

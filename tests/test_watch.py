@@ -46,7 +46,7 @@ class Pipeline:
     def __init__(self, tmp_path: Path, *, repos: dict[str, dict[str, Any]] | None = None,
                  details: dict[str, dict[str, Any]] | None = None, keep: bool = True,
                  result: dict[str, Any] | None = None, extract_status: str = "ok",
-                 runs: list[Any] | None = None, score_error: str | None = None) -> None:
+                 runs: list[Any] | None = None, score_error: str | None = None, display: bool = False) -> None:
         repos = repos if repos is not None else {"someone/tinyq": repo_item(7, "someone/tinyq")}
         self.github = FakeGitHub(repos, details or {name: DETAILS for name in repos})
         self.keep = keep
@@ -56,6 +56,7 @@ class Pipeline:
                                              [passed_run("run-20261030-linux-7", ["cargo install tinyq"],
                                                          method="cargo")]))
         self.score_error = score_error
+        self.display = display
         self.calls: list[str] = []
 
     def steps(self) -> Steps:
@@ -76,7 +77,8 @@ class Pipeline:
             self.calls.append("score")
             return self.score_error
 
-        return Steps(github=self.github, prescreen=prescreen, extract=extract, verify=verify, score=score)
+        return Steps(github=self.github, prescreen=prescreen, extract=extract, verify=verify, score=score,
+                     display=self.display)
 
 
 @pytest.fixture
@@ -204,7 +206,7 @@ def test_prescreen_and_extraction_rejections(env: dict[str, Any]) -> None:
 
 @pytest.mark.parametrize("override, reason", [
     ({"kind": cited("library_sdk", "A tiny jq-like query tool")}, "reads as a library"),
-    ({"category": cited("other", "A tiny jq-like query tool for JSON Lines.")}, "outside both"),
+    ({"category": cited("other", "A tiny jq-like query tool for JSON Lines.")}, "MCP servers for now"),
 ])
 def test_records_outside_the_directory_are_refused(env: dict[str, Any], override: dict[str, Any],
                                                    reason: str) -> None:
@@ -513,3 +515,34 @@ def test_publish_lists_earlier_ready_records_too(env: dict[str, Any]) -> None:
     make(env, Pipeline(env["tmp"], repos=repos, runs=runs[1:]), publish=True, publish_fn=publish,
          live_sha=lambda: deployed.get("sha")).run(once=True)
     assert [submission(env["d1"], s)["status"] for s in ("sub_1", "sub_2")] == ["listed", "listed"]
+
+
+# --- the categories and kinds main's data has ----------------------------------------------
+
+
+def test_an_mcp_server_submission_is_verified_as_one(env: dict[str, Any]) -> None:
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    handshake = {"transport": "stdio", "launch": ["tinyq", "mcp"], "tools": ["query"], "tool_count": 1,
+                 "offline": True}
+    pipeline = Pipeline(env["tmp"], result=extraction(
+        kind=cited("mcp_server_or_agent_plugin", "A tiny jq-like query tool"),
+        category=cited("mcp_server", "A tiny jq-like query tool for JSON Lines.")),
+        runs=[passed_run("run-20261030-linux-7", ["cargo install tinyq"], method="cargo", mcp=handshake)])
+    [job] = run_once(env, pipeline)
+    assert job.result == "ready" and submission(env["d1"], "sub_1")["reason"] == READY_REASON
+    task = pipeline.verify.tasks[0]
+    assert task.category == "mcp_server"  # so the box gets pickfit's MCP probe
+    record = SoftwareRecord.model_validate_json((env["data"] / "tinyq.json").read_text())
+    assert (record.category, record.kind) == ("mcp_server", "mcp_server_or_agent_plugin")
+
+
+def test_a_gui_app_gets_a_display_box_when_there_is_one(env: dict[str, Any]) -> None:
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    gui = extraction(kind=cited("desktop_app", "A tiny jq-like query tool"))
+    # A GUI app passes at install level at most (main's rule: no action on its state is checked yet).
+    pipeline = Pipeline(env["tmp"], result=gui, display=True,
+                        runs=[passed_run("run-20261030-linux-7", ["cargo install tinyq"], method="cargo",
+                                         level="install")])
+    [job] = run_once(env, pipeline)
+    assert "verify" in pipeline.calls and job.result == "ready"
+    assert pipeline.verify.tasks[0].extraction.kind.value == "desktop_app"

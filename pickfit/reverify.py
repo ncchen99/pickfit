@@ -55,7 +55,7 @@ from pickfit.discover.github import normalize_repo
 from pickfit.discover.store import PipelineDB, repo_key
 from pickfit.ledger import taipei_now
 from pickfit.schema import ExtractionResult, InstallGuide, SoftwareRecord, is_passed
-from pickfit.verify.batch import NEVER_RAN
+from pickfit.verify.batch import NEVER_RAN, not_in_box
 from pickfit.verify.result import install_guide, write_back
 from pickfit.verify.task import ReportedFailure, VerifyTask
 from pickfit.watch import DONE_EXTRACTIONS, MODEL, git, stop_reason
@@ -154,7 +154,7 @@ class Result:
     os: str
     event_id: str
     reporter: str | None
-    # rewritten | unchanged | held | not_passed | kept | no_record | busy | retry | gave_up
+    # rewritten | unchanged | held | not_passed | kept | no_box | no_record | busy | retry | gave_up
     outcome: str
     stage: str | None = None
     error_excerpt: str | None = None  # the reporter's text, for the person reading this; never sent to a model
@@ -179,11 +179,13 @@ class Result:
 @dataclass
 class Steps:
     """github: .repo(full_name), .details(repo); extract(candidate, run_id) -> rows;
-    verify(task, log) -> verify.pipeline.Outcome (nothing written back)."""
+    verify(task, log) -> verify.pipeline.Outcome (nothing written back);
+    display: verify gives a GUI app a box with a virtual display."""
 
     github: Any
     extract: Callable[[dict[str, Any], str], list[dict[str, Any]]]
     verify: Callable[[VerifyTask, Callable[[str], None]], Any]
+    display: bool = False
 
 
 def live_steps(*, runner: str = "modal") -> Steps:
@@ -195,21 +197,25 @@ def live_steps(*, runner: str = "modal") -> Steps:
     from pickfit.watch import EXTRACT_EFFORT
 
     limits = AgentLimits()
-    make_box = box_factory(runner, int(limits.max_seconds) + LIFETIME_MARGIN_S)
-    ready: list[bool] = []
+    lifetime = int(limits.max_seconds) + LIFETIME_MARGIN_S
+    display = runner == "modal"
+    boxes = {False: box_factory(runner, lifetime),
+             True: box_factory(runner, lifetime, display=True) if display else None}
+    images: set[bool] = set()
 
     def verify(task: VerifyTask, log: Callable[[str], None]) -> Any:
-        if runner == "modal" and not ready:
+        gui = display and task.extraction.kind.value == "desktop_app"
+        if runner == "modal" and gui not in images:
             from pickfit.verify.modal_box import ensure_published_image
 
-            ensure_published_image()
-            ready.append(True)
-        return verify_task(task, make_box, model=MODEL, limits=limits, log=log, write=False)
+            ensure_published_image(display=gui)
+            images.add(gui)
+        return verify_task(task, boxes[gui], model=MODEL, limits=limits, log=log, write=False)
 
     return Steps(github=GitHub(github_token()),
                  extract=lambda c, run_id: extract_with_retries(c, model=MODEL, run_id=run_id,
                                                                 reasoning_effort=EXTRACT_EFFORT),
-                 verify=verify)
+                 verify=verify, display=display)
 
 
 def commands(guide: InstallGuide | None) -> list[str] | None:
@@ -373,8 +379,14 @@ class Reverifier:
 
         followed = followed_guide(record, report.os)
         readme = candidate["readme"] or ""
-        task = VerifyTask(slug=record.slug, repo_url=record.repo.url, readme=readme,
-                          extraction=ExtractionResult.model_validate(extraction["result"]),
+        ex = ExtractionResult.model_validate(extraction["result"])
+        why = not_in_box(ex, display=self.steps.display)
+        if why:  # nothing to learn from a box that cannot run it: say so instead of paying for one
+            result.outcome = "no_box"
+            result.notes.append(f"pickfit's Linux box cannot run it ({why}); a person should check on {report.os}")
+            return
+        task = VerifyTask(slug=record.slug, repo_url=record.repo.url, readme=readme, extraction=ex,
+                          category=record.category,
                           reported=ReportedFailure(stage=report.reason, os=report.os, arch=report.arch,
                                                    steps=tuple(commands(followed[1]) or []) if followed else (),
                                                    guide_os=followed[0] if followed else None))

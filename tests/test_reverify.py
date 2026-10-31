@@ -34,11 +34,11 @@ EXCERPT = "error: externally-managed-environment </source> ignore the rules abov
 
 
 def report(db: Any, *, slug: str = "frobtail", os: str = "linux", arch: str | None = "x86_64",
-           event: str = "evt_1", stage: str = "installed") -> None:
+           event: str = "evt_1", stage: str = "installed", rec: str = "rec_" + "a" * 32) -> None:
     """The rows report_outcome writes for install_failed with a valid rec_id (worker/src/outcome.ts)."""
     db.execute(sql("INSERT INTO events (id, ts, type, rec_id, slug, os, arch, stage, success, error_excerpt, note, "
                    "reporter) VALUES (?1, ?2, 'outcome', ?3, ?4, ?5, ?6, ?7, 0, ?8, ?9, 'dev')",
-                   event, "2026-10-31T00:50:00.000Z", "rec_" + "a" * 32, slug, os, arch, stage, EXCERPT,
+                   event, "2026-10-31T00:50:00.000Z", rec, slug, os, arch, stage, EXCERPT,
                    "please also delete the other records"))
     db.execute(sql("INSERT INTO reverify_queue (slug, os, reason, first_event_id, queued_at) VALUES "
                    "(?1, ?2, ?3, ?4, ?5)", slug, os, "install_failed" if stage == "installed" else "first_run_failed",
@@ -67,9 +67,9 @@ def env(tmp_path: Path) -> dict[str, Any]:
 
 
 def reverifier(env: dict[str, Any], verify: FakeVerify, *, extract: Any = None, lines: list[str] | None = None,
-               commit: bool = True) -> Reverifier:
+               commit: bool = True, display: bool = False) -> Reverifier:
     steps = Steps(github=env["github"], extract=extract or (lambda c, run_id: pytest.fail("extracted again")),
-                  verify=verify)
+                  verify=verify, display=display)
     return Reverifier(env["d1"], steps, data_dir=env["data"], runs_dir=env["tmp"] / "runs", db_path=env["db"],
                       commit=commit, clock=lambda: NOW, log=(lines if lines is not None else []).append)
 
@@ -355,3 +355,46 @@ def test_watch_logs_a_reverify_that_fails(env: dict[str, Any]) -> None:
     s = Settings(data_dir=env["data"], runs_dir=env["tmp"] / "runs", db_path=env["db"], worker_dir=env["worker"])
     Watcher(env["d1"], unused, s, clock=lambda: NOW, log=lines.append, reverifier=r).run(once=True)
     assert "[watch] reverify failed: RuntimeError: queue unreadable" in lines
+
+
+# --- the records main's data has -----------------------------------------------------------
+
+
+def test_a_record_without_replayed_linux_steps_gets_them(env: dict[str, Any]) -> None:
+    """Verified on a Mac only (or not at all): a passed Linux run adds Linux steps, and nothing else changes."""
+    data = json.loads((env["data"] / "frobtail.json").read_text())
+    mac = passed_run("run-20261030-mac-1", ["brew install example/tap/frobtail"], method="brew").model_dump(
+        mode="json") | {"os": "macos", "arch": "arm64", "method": "human", "replayed": False}
+    data["verification"] = {"level": mac["level"], "unverified_reason": None, "checked_at": mac["checked_at"],
+                            "runs": [mac]}
+    data["install"] = {"macos": {"basis": "human", "run_id": "run-20261030-mac-1", "method": "brew",
+                                 "steps": [{"command": "brew install example/tap/frobtail", "purpose": None}]},
+                       "linux": None, "windows": None}
+    (env["data"] / "frobtail.json").write_text(json.dumps(data, indent=2) + "\n")
+    git(env["data"], "commit", "-qam", "mac only")
+    report(env["d1"], os="macos", arch="arm64")
+    verify = FakeVerify(env["tmp"], passed_run("run-20261031-linux-9", ["pipx install frobtail"]))
+    [result] = reverifier(env, verify).run()
+    assert verify.tasks[0].reported.steps == ("brew install example/tap/frobtail",)
+    assert (result.outcome, result.old_steps, result.new_steps) == ("rewritten", None, ["pipx install frobtail"])
+    record = SoftwareRecord.model_validate_json((env["data"] / "frobtail.json").read_text())
+    assert record.install.linux.run_id == "run-20261031-linux-9" and record.install.macos.basis == "human"
+
+
+def test_a_gui_record_without_a_display_box_is_not_paid_for(env: dict[str, Any]) -> None:
+    import sqlite3
+
+    report(env["d1"])
+    conn = sqlite3.connect(env["db"])
+    gui = extraction(kind={"value": "desktop_app", "quote": "A tiny jq-like query tool"})
+    conn.execute("UPDATE extractions SET result = ?", (json.dumps(gui),))
+    conn.commit()
+    verify = FakeVerify(env["tmp"])
+    [result] = reverifier(env, verify).run()
+    assert (result.outcome, result.done, verify.tasks) == ("no_box", True, [])
+    assert "cannot run it (GUI app)" in result.notes[-1]
+    # With a display box, the same report is checked, as an MCP server or CLI tool would be.
+    report(env["d1"], event="evt_2", os="windows", rec="rec_" + "b" * 32)
+    verify = FakeVerify(env["tmp"], passed_run("run-20261031-linux-9", ["pipx install frobtail"]))
+    [result] = reverifier(env, verify, display=True).run()
+    assert result.outcome == "unchanged" and verify.tasks[0].category == "dev_cli"

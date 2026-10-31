@@ -61,13 +61,13 @@ from pickfit.discover.github import STARS, normalize_repo
 from pickfit.discover.rules import RULES_VERSION, classify
 from pickfit.discover.store import PipelineDB, repo_key
 from pickfit.ledger import TAIPEI, BudgetExceeded, Ledger, taipei_now
-from pickfit.schema import ExtractionResult, SoftwareRecord, is_passed
+from pickfit.schema import LISTED_CATEGORIES, ExtractionResult, SoftwareRecord, is_passed
 from pickfit.verify.batch import NEVER_RAN, not_in_box
 from pickfit.verify.task import VerifyTask
 
 MODEL = "muse-spark-1.3"
 EXTRACT_EFFORT = "minimal"
-COVERED = ("dev_cli", "local_ai")
+COVERED = LISTED_CATEGORIES  # dev_cli, local_ai, mcp_server
 STAR_MAX = int(STARS.split("..")[1])  # discovery's upper bound: pickfit lists lesser-known tools
 DEFAULT_INTERVAL_S = 60
 DEFAULT_CONCURRENCY = 2
@@ -230,6 +230,7 @@ class Steps:
     extract(candidate, run_id) -> extraction rows, one per attempt
     verify(task, data_dir, log) -> verify.pipeline.Outcome, written back into data_dir
     score(data_dir, slug) -> None, or the error that kept the record from being scored
+    display: verify gives a GUI app (kind desktop_app) a box with a virtual display
     """
 
     github: Any
@@ -237,6 +238,7 @@ class Steps:
     extract: Callable[[dict[str, Any], str], list[dict[str, Any]]]
     verify: Callable[[VerifyTask, Path, Callable[[str], None]], Any]
     score: Callable[[Path, str], str | None]
+    display: bool = False
 
 
 def live_steps(*, runner: str = "modal") -> Steps:
@@ -250,19 +252,23 @@ def live_steps(*, runner: str = "modal") -> Steps:
     from pickfit.verify.pipeline import verify_task
 
     limits = AgentLimits()
-    make_box = box_factory(runner, int(limits.max_seconds) + LIFETIME_MARGIN_S)
+    lifetime = int(limits.max_seconds) + LIFETIME_MARGIN_S
+    display = runner == "modal"
+    boxes = {False: box_factory(runner, lifetime),
+             True: box_factory(runner, lifetime, display=True) if display else None}
     image_lock = threading.Lock()
-    image_ready: list[bool] = []
+    images: set[bool] = set()
 
     def verify(task: VerifyTask, data_dir: Path, log: Callable[[str], None]) -> Any:
+        gui = display and task.extraction.kind.value == "desktop_app"
         if runner == "modal":
-            with image_lock:  # build or fetch the image once, not in every thread
-                if not image_ready:
+            with image_lock:  # build or fetch each image once, not in every thread
+                if gui not in images:
                     from pickfit.verify.modal_box import ensure_published_image
 
-                    ensure_published_image()
-                    image_ready.append(True)
-        return verify_task(task, make_box, model=MODEL, limits=limits, log=log, write=True, data_dir=data_dir)
+                    ensure_published_image(display=gui)
+                    images.add(gui)
+        return verify_task(task, boxes[gui], model=MODEL, limits=limits, log=log, write=True, data_dir=data_dir)
 
     def score(data_dir: Path, slug: str) -> str | None:
         from pickfit.discover.run import pipeline_db_path
@@ -274,7 +280,7 @@ def live_steps(*, runner: str = "modal") -> Steps:
                  prescreen=lambda c, run_id: screen_and_review(c, run_id=run_id),
                  extract=lambda c, run_id: extract_with_retries(c, model=MODEL, run_id=run_id,
                                                                 reasoning_effort=EXTRACT_EFFORT),
-                 verify=verify, score=score)
+                 verify=verify, score=score, display=display)
 
 
 def hourly_cap(worker_dir: Path) -> int:
@@ -538,13 +544,14 @@ class Watcher:
         self._status(job, "verifying")
 
         ex = ExtractionResult.model_validate(extraction["result"])
-        why = not_in_box(ex)
+        why = not_in_box(ex, display=self.steps.display)
         not_passed = f"pickfit's Linux sandbox cannot run it ({why})" if why else None
         if why:
             job.notes.append(f"not verified: {why}")
             log(f"no sandbox run: {why}")
         else:
-            task = VerifyTask(slug=job.slug, repo_url=record.repo.url, readme=candidate["readme"], extraction=ex)
+            task = VerifyTask(slug=job.slug, repo_url=record.repo.url, readme=candidate["readme"], extraction=ex,
+                              category=record.category)
             with self._stage(job, "verify"):
                 outcome = self.steps.verify(task, record_dir, log)
             job.run_id, job.level = outcome.run_id, outcome.run.level
@@ -644,7 +651,8 @@ class Watcher:
                 raise Rejected("pickfit could not tell from the README what the tool does.") from None
             raise Rejected("pickfit could not build a valid record from what the README says.") from None
         if record.category not in COVERED:
-            raise Rejected("pickfit lists developer CLI tools and local AI tools for now; this is outside both.")
+            raise Rejected("pickfit lists developer CLI tools, local AI tools and MCP servers for now; this is "
+                           "none of them.")
         if record_dir.exists():
             shutil.rmtree(record_dir)
         record_dir.mkdir(parents=True)
