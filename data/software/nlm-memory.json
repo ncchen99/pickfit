@@ -92,17 +92,20 @@
       "first_task": "nlm recall \"why did we change the database?\" 2>&1"
     },
     "windows": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-nlm-memory-20261031-220955-fd3d",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g nlm-memory",
-          "purpose": null
+          "purpose": "Install nlm-memory globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "nlm --version",
+        "expected_signal": "0.21.20"
+      },
       "first_task": "nlm recall \"why did we change the database?\""
     }
   },
@@ -121,7 +124,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:42:09.788620+08:00",
+    "checked_at": "2026-10-31T22:18:11.637159+08:00",
     "runs": [
       {
         "id": "verify-nlm-memory-20261031-033913-198b",
@@ -226,6 +229,79 @@
             "note": "its check passed in the agent's box but is too long for the record"
           }
         ]
+      },
+      {
+        "id": "verify-nlm-memory-20261031-220955-fd3d",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "windows",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "vbox",
+        "image": "Windows 11 Enterprise LTSC Eval 24H2 (26100.1742), VirtualBox 7.2.22 +pickfit-win11@16ea69df29ff router@583d254c306d",
+        "checked_at": "2026-10-31T22:18:11.637159+08:00",
+        "tool_version": "0.21.20",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g nlm-memory",
+            "purpose": "Install nlm-memory globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nlm --version",
+            "expected_signal": "0.21.20",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.21.20",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nlm --help",
+            "expected_signal": "recall",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "recall [options] <query> One-shot recall query (for shell debugging)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nlm recall \"why did we change the database?\"",
+            "expected_signal": "(no matches)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "(no matches)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "(Windows steps)",
+            "actually_needed": "pickfit ran these steps in PowerShell 7 (pwsh 7.6.9) as a standard user; the built-in Windows PowerShell 5.1 is not verified and does not run `&&`.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show nlm recall returning '(no matches)' and nlm --version returning '0.21.20', both with exit 0.",
+          "model": "muse-spark-1.3-contributor"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nlm-memory-20261031-220955-fd3d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nlm-memory-20261031-220955-fd3d/check-1-cmd3.judged.png",
+            "runs/verify/verify-nlm-memory-20261031-220955-fd3d/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3-contributor",
+        "cost_usd": 0.003353
       }
     ]
   },
@@ -605,5 +681,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:47:37+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T01:07:53.149485+08:00"
 }
