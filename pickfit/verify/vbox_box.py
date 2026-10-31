@@ -1118,8 +1118,10 @@ def prepare_router(*, iso: Path | None = None, name: str = ROUTER_VM, vboxmanage
 # The host is a 4-core/8-thread laptop with 16 GB; with 4 GB and 4 vCPUs (and no host I/O cache) setup froze
 # in its first phase on Hyper-V (an AHCI port reset, then no disk I/O for hours). 6 GB leaves the host ~1.5 GB.
 # More vCPUs than physical cores does not work here: with 6, the firmware hung in PciHostBridgeDxe and never booted.
+# With 4, OOBE sat idle for an hour with vCPU0's TSC ~35,000 s off the others (NEM SMP timekeeping); restarted on
+# 1 vCPU, the same install finished in minutes. So 1 until more is shown to be stable under NEM.
 WIN_MEMORY_MB = 6144
-WIN_CPUS = 4
+WIN_CPUS = 1
 WIN_DISK_MB = 65536  # Windows 11 setup requires 64 GB; the VDI is dynamic (about 25 GB used)
 
 PROVISION_SYSTEM = r"""
