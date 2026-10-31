@@ -16,13 +16,16 @@
 - gVisor (measured 2026-10-31): root has neither CAP_NET_ADMIN nor CAP_SYS_ADMIN and gVisor has no netfilter, so
   no rule, route or link change can close the resolver. Instead the box user never touches the box's own network:
   NET_UID makes a user and network namespace at start (root writes its maps: NET_UID is root inside it, the box user
-  and the display uid are themselves, nothing else is mapped), and every command of a uid other than root runs in
-  it. Its only way out is slirp4netns, run as NET_UID (seccomp on, no route to the box's loopback, MTU 1500: larger
-  frames stall TCP in gVisor); it carries the box user's traffic, DNS included, through the box's network and
+  is itself, nothing else is mapped, so NET_UID has no power over root's or the display uid's files and processes),
+  and every box-user command runs in it. Its only way out is slirp4netns, run as NET_UID (seccomp on, no route to
+  the box's loopback, MTU 65520 on both ends: a tap left at 1500 stalls TCP); it carries the box user's traffic, DNS included, through the box's network and
   Modal's allowlist. set_network(False) kills every NET_UID process except the namespace's holder and checks that
-  the uplink's device is gone: the box user then has loopback only, so localhost servers, including ones started
+  the uplink's device is gone and the holder holds nothing but its standard streams: the box user then has loopback
+  only, so localhost servers, including ones started
   online, still answer. The box user cannot enter another network namespace, change a route or signal NET_UID's
-  processes. About 100 MB/s through the uplink (150 MB/s direct).
+  processes. Downloads through it ran at the box's direct speed (CDNs 80-190 MB/s, a slow far server 1.2 MB/s
+  either way). Xvfb and the watcher stay outside (display uid):
+  the box user's apps reach Xvfb by its socket file, which a network namespace does not hide.
 - Image: built once from sandbox.Dockerfile and published as
   `pickfit-sbx:<Dockerfile hash>`; boxes start from that name, and only a
   missing name triggers the build. (`Image.from_name(...).hydrate()` is not
@@ -87,7 +90,8 @@ NET_UID = 1002  # gVisor: owns the box user's network namespace and runs its upl
 UPLINK = "/usr/bin/slirp4netns"
 TAP = "tap0"
 # slirp4netns's defaults: the namespace is 10.0.2.100/24, the gateway (slirp itself) 10.0.2.2.
-TAP_CONFIG = (f"/usr/bin/ip link set {TAP} up && /usr/bin/ip addr add 10.0.2.100/24 dev {TAP} && "
+UPLINK_MTU = 65520
+TAP_CONFIG = (f"/usr/bin/ip link set {TAP} mtu {UPLINK_MTU} up && /usr/bin/ip addr add 10.0.2.100/24 dev {TAP} && "
               f"/usr/bin/ip route add default via 10.0.2.2 dev {TAP}")
 UPLINK_LOG = "/var/log/pickfit-uplink.log"
 # Never reachable from a box: cloud metadata and link-local, private and shared address space.
@@ -202,12 +206,12 @@ def _drop_to(uid: int) -> list[str]:
 
 # The maps go in one write each: the kernel takes a map from a single write, and bash's printf writes per line.
 _MAP_PY = ("import sys\nfor name in ('uid_map', 'gid_map'):\n    with open(f'/proc/{sys.argv[1]}/{name}', 'w') as f:\n"
-           f"        f.write('0 {NET_UID} 1\\n{BOX_UID} {BOX_UID} 1\\n{DISPLAY_UID} {DISPLAY_UID} 1\\n')\n")
+           f"        f.write('0 {NET_UID} 1\\n{BOX_UID} {BOX_UID} 1\\n')\n")
 
 
 def netns_script() -> str:
     """Root (gVisor): NET_UID makes the box user's user and network namespace, kept by a holder process; root maps
-    NET_UID to root inside it and the box user and the display uid to themselves. Prints `netns_pid N`."""
+    NET_UID to root inside it and the box user to itself. Prints `netns_pid N`."""
     drop = " ".join(_drop_to(NET_UID))
     return (f"{{ /usr/bin/setsid {drop} /usr/bin/unshare --user --net -- /usr/bin/sleep infinity "
             "> /dev/null 2>&1 < /dev/null & }; P=$!; "
@@ -219,11 +223,12 @@ def netns_script() -> str:
 
 def uplink_script(netns_pid: int, enabled: bool) -> str:
     """Root (gVisor): start slirp4netns as NET_UID and route the namespace through it; or kill every NET_UID process
-    but the holder and check that the device is gone and nothing else of NET_UID's runs."""
+    but the holder and check that the device is gone, nothing else of NET_UID's runs and the holder holds only its
+    standard streams (no socket handed to it from outside the namespace)."""
     drop = " ".join(_drop_to(NET_UID))
     inside = f"{drop} /usr/bin/nsenter --target={netns_pid} --user --net --"
     if enabled:
-        return (f"{{ /usr/bin/setsid {drop} {UPLINK} --mtu=1500 --disable-host-loopback --enable-seccomp "
+        return (f"{{ /usr/bin/setsid {drop} {UPLINK} --mtu={UPLINK_MTU} --disable-host-loopback --enable-seccomp "
                 f"{netns_pid} {TAP} >> {UPLINK_LOG} 2>&1 < /dev/null & }}; "
                 f"for i in $(/usr/bin/seq 1 50); do {inside} /usr/bin/ip link show {TAP} > /dev/null 2>&1 && break; "
                 f"/usr/bin/sleep 0.1; done; {inside} /usr/bin/bash -c {shlex.quote(TAP_CONFIG)} || "
@@ -232,7 +237,9 @@ def uplink_script(netns_pid: int, enabled: bool) -> str:
             f"for i in $(/usr/bin/seq 1 50); do {inside} /usr/bin/ip link show {TAP} > /dev/null 2>&1 || break; "
             f"/usr/bin/sleep 0.1; done; {inside} /usr/bin/ip link show {TAP} > /dev/null 2>&1 && "
             f"{{ echo '{TAP} is still there'; exit 1; }}; left=\"$(/usr/bin/pgrep -u {NET_UID})\"; "
-            f"[ \"$left\" = {netns_pid} ] || {{ echo \"NET_UID processes left: $left\"; exit 1; }}")
+            f"[ \"$left\" = {netns_pid} ] || {{ echo \"NET_UID processes left: $left\"; exit 1; }}; "
+            f"fds=\"$(/usr/bin/ls /proc/{netns_pid}/fd)\"; [ \"$(echo $fds)\" = '0 1 2' ] || "
+            f"{{ echo \"the holder holds fds $(echo $fds)\"; exit 1; }}")
 
 
 class ModalBox(Box):
@@ -327,8 +334,7 @@ class ModalBox(Box):
         steps.append(("box setup", self._exec_raw(["/usr/bin/chown", "-R", f"{BOX_UID}:{BOX_UID}", BOX_HOME], 60,
                                                   as_root=True)))
         if self.display:  # root starts it as DISPLAY_UID: the box user can draw on it, not kill or replace it
-            xvfb = self._exec_raw(["/usr/bin/bash", "-c", xvfb_script(tuple(self.seccomp()), tuple(self.enter()))],
-                                  60, as_root=True)
+            xvfb = self._exec_raw(["/usr/bin/bash", "-c", xvfb_script(tuple(self.seccomp()))], 60, as_root=True)
             steps.append(("the virtual display", xvfb))
             pid = next((line.split()[1] for line in xvfb.stdout.splitlines() if line.startswith("xvfb_pid ")), "")
             self.xvfb_pid = int(pid) if pid.isdigit() else None
@@ -393,8 +399,8 @@ class ModalBox(Box):
                      stdin: bytes | None = None) -> ExecResult:
         """Run argv for pickfit itself: as root, or as `as_uid` with an empty environment (no box-user PATH)."""
         self._require_started()
-        if as_uid is not None:
-            argv = [*self.enter(), *_drop_to(as_uid), *self.seccomp(), "/usr/bin/env", "-i", f"PATH={HARNESS_PATH}",
+        if as_uid is not None:  # outside the box user's network namespace (the display uid is not mapped there)
+            argv = [*_drop_to(as_uid), *self.seccomp(), "/usr/bin/env", "-i", f"PATH={HARNESS_PATH}",
                     f"HOME={EVIDENCE_DIR}", "LANG=C.UTF-8", *argv]
         return self._exec_raw(argv, timeout_s, stdin=stdin, as_root=True)
 

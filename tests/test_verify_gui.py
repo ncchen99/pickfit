@@ -106,6 +106,8 @@ class GuiBox(FakeBox):
             return ExecResult("vsock", 0, "OPEN 2 52\nclosed 2 1024 ConnectionResetError 104\n", "", 0.5)
         if argv[-1:] == ["/proc/sys/user/max_user_namespaces"]:
             return ExecResult("cat", 0, "0\n", "", 0.1)
+        if argv[:1] == ["/usr/bin/ps"] and "Xvfb" in argv:  # root's view of the display server
+            return ExecResult("ps", 0, " 1001 Xvfb\n", "", 0.1)
         return ExecResult(" ".join(argv), 0, "", "", 0.1)
 
     def harness_read(self, path: str, max_bytes: int) -> bytes:
@@ -604,7 +606,7 @@ def test_a_display_box_that_cannot_start_its_server_fails(monkeypatch: pytest.Mo
     from pickfit.verify.box import BoxError
     from test_verify_modal import FakeSandbox
 
-    # gVisor: the network namespace, its uplink, the box setup, then Xvfb (in the namespace) fails.
+    # gVisor: the network namespace, its uplink, the box setup, then Xvfb fails.
     sandbox = FakeSandbox([(0, [b"netns_pid 4242\n"], []), (0, [b""], []), (0, [b""], []), (0, [b""], []),
                            (1, [b"no display\n"], [])])
     monkeypatch.setattr(modal.App, "lookup", lambda name, **kw: "app")
@@ -614,7 +616,7 @@ def test_a_display_box_that_cannot_start_its_server_fails(monkeypatch: pytest.Mo
         mb.ModalBox(display=True, client="client", log=lambda s: None).start()
     assert sandbox.terminated
     xvfb = sandbox.calls[-1][0][-1]
-    assert "/usr/bin/nsenter --target=4242 --user --net -- /usr/bin/setpriv --reuid=1001" in xvfb
+    assert "/usr/bin/setpriv --reuid=1001" in xvfb and "nsenter" not in xvfb  # outside the box user's namespace
 
 
 def test_a_gvisor_box_without_its_network_namespace_never_runs_the_box_user(monkeypatch: pytest.MonkeyPatch):
@@ -633,3 +635,20 @@ def test_a_gvisor_box_without_its_network_namespace_never_runs_the_box_user(monk
     assert sandbox.terminated and len(sandbox.calls) == 1
     with pytest.raises(BoxError, match="not set up"):
         box.user_argv("true", 10, "/home/sbx/work")
+
+
+@pytest.mark.parametrize("root, user, ok", [
+    (" 1001 Xvfb\n", " 1001 Xvfb\n", True),
+    (" 1001 Xvfb\n", " 65534 Xvfb\n", True),  # a gVisor box: the display uid is not mapped in the box user's namespace
+    (" 1000 Xvfb\n", " 1000 Xvfb\n", False),
+    ("", " 1001 Xvfb\n", False),  # root sees no Xvfb: undecided
+    (" 1001 Xvfb\n", " 1001 Xvfb\n 1000 Xvfb\n", False),  # the box user runs one too
+])
+def test_the_display_uid_probe_is_decided_by_roots_view(root: str, user: str, ok: bool):
+    from pickfit.verify.limits import _display_uid
+
+    class Box(GuiBox):
+        def harness_exec(self, argv, timeout_s, *, as_uid=None, stdin=None):
+            return ExecResult("ps", 0, root, "", 0.1)
+
+    assert _display_uid(Box({"-C Xvfb": (0, user, "")})).ok is ok

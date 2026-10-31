@@ -251,6 +251,20 @@ def _netns_held(result: ExecResult) -> bool:
             and not re.search(r"^(ROUTED|ENTERED|SIGNALS)", result.stdout, re.M))
 
 
+def _display_uid(box: Box) -> ProbeResult:
+    """Xvfb runs as the display uid as root sees it, and not as the box user as the box user sees it (a gVisor box's
+    namespace does not map the display uid: the box user sees 65534 there)."""
+    uid = str(gui.DISPLAY_UID)
+    result = box.exec("ps -o uid=,comm= -C Xvfb", 20)
+    try:
+        seen = box.harness_exec(["/usr/bin/ps", "-o", "uid=,comm=", "-C", "Xvfb"], 20).stdout.split()[::2]
+    except BoxError:
+        seen = []
+    ok = bool(seen) and all(u == uid for u in seen) and "1000" not in result.stdout.split()[::2]
+    return ProbeResult("display_server_uid", ok, f"Xvfb runs as uid {uid} (root's view), not the box user",
+                       result.exit_code, result.seconds, f"root sees uids {' '.join(seen) or 'none'}; {_detail(result)}")
+
+
 def _not_admin(result: ExecResult) -> bool:
     lines = result.stdout.splitlines()
     groups = lines[1].split() if len(lines) > 1 else ["?"]
@@ -302,9 +316,7 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
     if box.display:
         add(_probe(box, "display_up", f"DISPLAY={box.display} /usr/bin/xdpyinfo", 20, f"Xvfb answers on {box.display}",
                    lambda r: r.exit_code == 0 and "dimensions:" in r.stdout))
-        uid = str(gui.DISPLAY_UID)
-        add(_probe(box, "display_server_uid", "ps -o uid=,comm= -C Xvfb", 20, f"Xvfb runs as uid {uid}, not the box user",
-                   lambda r: bool(r.stdout.split()) and all(u == uid for u in r.stdout.split()[::2])))
+        add(_display_uid(box))
         add(_probe(box, "display_server_held",
                    f"p=$(pgrep -x Xvfb); echo \"before $p\"; kill -KILL $p 2>&1; timeout 5 Xvfb {box.display} -nolisten tcp "
                    f"2>&1 | grep -m1 -o 'already active'; sleep 1; echo \"after $(pgrep -x Xvfb)\"; "

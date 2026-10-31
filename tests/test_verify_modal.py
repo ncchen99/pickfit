@@ -286,19 +286,20 @@ def test_a_command_that_never_returns_is_given_up_on(monkeypatch: pytest.MonkeyP
         box.read_file("fifo")
 
 
-def test_a_gvisor_box_runs_every_uid_but_root_in_the_box_users_network_namespace():
+def test_a_gvisor_box_runs_only_the_box_user_in_its_network_namespace():
     from pickfit.verify import gui
 
     box = started(FakeSandbox())
     box.harness_exec(["/usr/local/bin/python3", "-I", "-S", "-"], 10, as_uid=gui.DISPLAY_UID)
     box.harness_exec(["/usr/bin/true"], 10)
     as_display, as_root = (argv for argv, _ in box.sandbox.calls)
-    assert as_display[:12] == tuple(box.enter()) and as_display[12:14] == ("/usr/bin/setpriv", "--reuid=1001")
+    # The display uid is not mapped in the namespace: NET_UID, root there, has no power over its evidence.
+    assert as_display[:2] == ("/usr/bin/setpriv", "--reuid=1001") and "/usr/bin/nsenter" not in as_display
     assert as_root == ("/usr/bin/true",)  # root keeps the box's own network
     assert ModalBox(runtime="vm", client=object()).enter() == []  # a VM closes DNS with nftables instead
 
 
-def test_the_namespace_maps_only_net_uid_the_box_user_and_the_display_uid():
+def test_the_namespace_maps_only_net_uid_and_the_box_user():
     script = mb.netns_script()
     assert "/usr/bin/setpriv --reuid=1002" in script and "/usr/bin/unshare --user --net --" in script
     ns: dict[str, Any] = {}
@@ -326,17 +327,18 @@ def test_the_namespace_maps_only_net_uid_the_box_user_and_the_display_uid():
     finally:
         sys.argv = argv
     # NET_UID is root inside (kuid 1002 outside: no more than it was), uid 0 itself is not mapped.
-    assert written == {f"/proc/4242/{m}": "0 1002 1\n1000 1000 1\n1001 1001 1\n" for m in ("uid_map", "gid_map")}
+    assert written == {f"/proc/4242/{m}": "0 1002 1\n1000 1000 1\n" for m in ("uid_map", "gid_map")}
 
 
 def test_the_uplink_runs_as_net_uid_and_its_cut_is_checked():
     up, down = mb.uplink_script(4242, True), mb.uplink_script(4242, False)
-    assert "/usr/bin/setpriv --reuid=1002" in up and "/usr/bin/slirp4netns --mtu=1500 --disable-host-loopback " \
-        "--enable-seccomp 4242 tap0" in up
+    assert "/usr/bin/setpriv --reuid=1002" in up and "/usr/bin/slirp4netns --mtu=65520 --disable-host-loopback " \
+        "--enable-seccomp 4242 tap0" in up and "ip link set tap0 mtu 65520 up" in up  # both ends: 1500 stalls TCP
     assert "ip route add default via 10.0.2.2 dev tap0" in up
     # Every NET_UID process but the holder is killed; the device must be gone and nothing else of NET_UID's left.
     assert '[ "$p" = 4242 ] || kill -KILL "$p"' in down and "tap0 is still there" in down
     assert "NET_UID processes left" in down and "slirp4netns " not in down
+    assert "/proc/4242/fd" in down and "the holder holds fds" in down  # no socket smuggled in from outside
 
 
 def test_a_failed_uplink_cut_stops_the_box_from_claiming_offline():
