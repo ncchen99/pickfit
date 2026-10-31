@@ -331,3 +331,95 @@ def test_compare_lists_what_changed() -> None:
     before = {"git_head": "1", "model": "m", "deployments": {"experimental": {"root": {"data_sha256": "aa"}, "latest_deployment": {"id": "v1"}}}}
     after = {"git_head": "2", "model": "m", "deployments": {"experimental": {"root": {"data_sha256": "aa"}, "latest_deployment": {"id": "v2"}}}}
     assert run.compare_records(before, after) == ["git_head: 1 -> 2", "experimental.deployment: v1 -> v2"]
+
+
+# --- 9.2 ---------------------------------------------------------------------------------
+
+
+def finish_9_1(base: Path) -> None:
+    """Markers that say every 9.1 run ended (the extra rounds wait for them)."""
+    run.write_marker("run1-complete", {}, base)
+    run.write_marker("reruns-complete", {}, base)
+
+
+def test_9_2_caps_are_the_registered_ones() -> None:
+    config = json.loads(run.CONFIG_PATH.read_text())
+    caps = config["caps_usd"]
+    assert (caps["run1"], caps["reruns"], caps["grading"], caps["haiku"], caps["bset"]) == (30.0, 100.0, 20.0, 15.0, 40.0)
+    assert caps["run1"] + caps["reruns"] + caps["grading"] + caps["haiku"] + caps["bset"] == 205.0  # 9.2 F
+    assert caps["baseten_grading"] == 5.0 and config["haiku_model"] == "claude-haiku-5-5"
+
+
+def test_b_ids_follow_the_b1_order_without_rules_only() -> None:
+    assert run.run1_order("b01") == ["control", "experimental", "rules_only"]
+    assert run.pair_order("b02") == ["experimental", "control"]
+    assert run.pair_order("q03") == ["control", "experimental"]
+
+
+def test_haiku_waits_for_9_1_then_runs_both_groups_with_only_the_model_changed(tmp_path: Path) -> None:
+    config = config_for(make_fake(tmp_path))
+    base = tmp_path / "runs"
+    run.write_marker("run1-complete", {}, base)
+    assert run.cmd_extra("haiku", None, config, QUESTIONS[:2], "k", base, quiet) == 2  # reruns not ended
+    run.write_marker("reruns-stopped", {"reason": "24-hour window ended"}, base)
+    assert run.cmd_extra("haiku", None, config, QUESTIONS[:2], "k", base, quiet) == 0
+    calls = [json.loads(line) for line in (tmp_path / "calls.log").read_text().splitlines()]
+    assert [c["mcp"] for c in calls] == [[], ["pickfit"], ["pickfit"], []]
+    meta = run.attempts("haiku", "q01", "control", base)[0]
+    assert meta["model"] == "claude-haiku-5-5" and meta["valid"] and meta["config_problems"] == []
+    assert "--model" in meta["argv"] and meta["argv"][meta["argv"].index("--model") + 1] == "claude-haiku-5-5"
+    assert not (base / "haiku" / "q01" / "rules_only").exists()
+    assert json.loads((base / "haiku-complete.json").read_text())["model"] == "claude-haiku-5-5"
+    assert run.cmd_check(argparse.Namespace(round="haiku"), config, base, quiet) == 0
+
+
+def test_haiku_round_flags_a_run_on_the_opus_model(tmp_path: Path) -> None:
+    config = config_for(make_fake(tmp_path), haiku_model="claude-haiku-5-5")
+    base = tmp_path / "runs"
+    finish_9_1(base)
+    mode(tmp_path, "wrong_model")
+    assert run.cmd_extra("haiku", None, config, QUESTIONS[:1], "k", base, quiet) == 1
+    assert (base / "haiku-control-misconfigured.json").exists()
+
+
+def test_bset_waits_for_haiku_unless_haiku_was_cut(tmp_path: Path) -> None:
+    config = config_for(make_fake(tmp_path))
+    base = tmp_path / "runs"
+    finish_9_1(base)
+    bq = [{"id": f"b{n:02d}", "prompt": f"public question {n}"} for n in range(1, 4)]
+    assert run.cmd_extra("bset", None, config, bq, "k", base, quiet) == 2
+    run.cmd_cut(argparse.Namespace(item="haiku", reason="time"), base, quiet)
+    assert run.cmd_extra("bset", None, config, bq, "k", base, quiet) == 0
+    assert run.attempts("bset", "b02", "experimental", base) and not run.attempts("run1", "b02", "control", base)
+    meta = run.attempts("bset", "b01", "control", base)[0]
+    assert meta["model"] == config["model"] and meta["round"] == "bset"
+    assert run.spent(["bset"], base) == pytest.approx(0.6)
+
+
+def test_extra_round_stops_at_its_own_cap(tmp_path: Path) -> None:
+    config = config_for(make_fake(tmp_path, cost=0.5))
+    config["caps_usd"] = dict(config["caps_usd"], bset=1.2)
+    base = tmp_path / "runs"
+    finish_9_1(base)
+    run.write_marker("haiku-complete", {}, base)
+    bq = [{"id": f"b{n:02d}", "prompt": "p"} for n in range(1, 5)]
+    assert run.cmd_extra("bset", None, config, bq, "k", base, quiet) == 1
+    stopped = json.loads((base / "bset-stopped.json").read_text())
+    assert stopped["question"] == "b02" and run.spent(["bset"], base) <= 1.2
+    assert len(run.all_metas(["bset"], base)) == 2
+
+
+def test_reruns_use_the_9_2_cap(tmp_path: Path) -> None:
+    config = config_for(make_fake(tmp_path, cost=1.2))
+    base = tmp_path / "runs"
+    run.cmd_run1(None, config, QUESTIONS, "k", base, quiet)
+    # 4 questions x 4 reruns x $1.2 = $19.2: under the 9.2 cap of $100, over the old $60 only at 20 questions
+    assert run.plan_reruns(config, base) == [2, 3]
+    assert run.plan_reruns(dict(config, caps_usd=dict(config["caps_usd"], reruns=60.0)), base) == [2, 3]
+    assert run.plan_reruns(dict(config, caps_usd=dict(config["caps_usd"], reruns=15.0)), base) == [2]
+
+
+def test_snapshot_records_and_compares_the_b_set() -> None:
+    before = {"questions_b_sha256": "a", "deployments": {}}
+    after = {"questions_b_sha256": "b", "deployments": {}}
+    assert run.compare_records(before, after) == ["questions_b_sha256: a -> b"]

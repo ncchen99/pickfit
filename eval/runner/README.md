@@ -1,6 +1,6 @@
 # 評測執行器
 
-照 [eval/README.md](../README.md) 第 4 節與第 9.1 節執行與核對。這個資料夾只有評測 session 讀；建資料與配對的 session 不讀 `eval/`。
+照 [eval/README.md](../README.md) 第 4 節、第 9.1 節與第 9.2 節執行與核對。這個資料夾只有評測 session 讀；建資料與配對的 session 不讀 `eval/`。
 
 ## 怎麼跑
 
@@ -10,7 +10,10 @@ uv run --with pyyaml==6.0.2 python eval/runner/run.py snapshot --label before   
 uv run --with pyyaml==6.0.2 python eval/runner/run.py run1             # B1、B2、B4
 uv run --with pyyaml==6.0.2 python eval/runner/run.py check --round run1        # B2 核對
 uv run --with pyyaml==6.0.2 python eval/runner/run.py reruns           # B3
-uv run --with pyyaml==6.0.2 python eval/runner/run.py snapshot --label after    # A3
+uv run --with pyyaml==6.0.2 python eval/runner/run.py haiku            # 9.2 C（9.1 全部結束後）
+uv run --with pyyaml==6.0.2 python eval/runner/run.py bset             # 9.2 E（9.2 C 之後）
+uv run --with pyyaml==6.0.2 python eval/runner/run.py check --round haiku       # 每一輪都核對（run1、run2、run3、haiku、bset）
+uv run --with pyyaml==6.0.2 python eval/runner/run.py snapshot --label after    # A3（所有輪都跑完之後）
 uv run --with pyyaml==6.0.2 python eval/runner/run.py compare          # A3：前後是否相同
 uv run python eval/runner/d5_check.py                                  # D5
 ```
@@ -35,10 +38,10 @@ uv run --with pyyaml==6.0.2 --with pytest python -m pytest eval/runner/tests -q
 | 項目 | 值 |
 |---|---|
 | Claude Code | 2.1.304（`~/.local/bin/claude`；評測期間 `DISABLE_AUTOUPDATER=1`） |
-| 模型 | `claude-opus-5-5`（Claude Code 對 API key 使用者的預設；念誠 2026-10-29 確認） |
+| 模型 | `claude-opus-5-5`（Claude Code 對 API key 使用者的預設；念誠 2026-10-29 確認）；9.2 C 的對照模型 `claude-haiku-5-5` |
 | 開場 | 第 4 節的原文 |
 | 每次執行上限 | 900 秒、$3 |
-| 花費上限 | 第 1 次 $30、補充重跑 $60、評分 $20（B4） |
+| 花費上限 | 第 1 次 $30、補充重跑 $100（9.2 A）、評分 $20（B4）、Haiku 對照 $15（9.2 C）、B 題組 $40（9.2 E），Anthropic 合計 $205（9.2 F）；Muse Spark 第三評分者 Baseten $5（9.2 B） |
 | 估算題 | q01、q02（B1、B4） |
 | 部署 | `pickfit-mcp-eval`（模型配對）、`pickfit-mcp-eval-rules`（只用規則），都是唯讀工具 |
 
@@ -53,9 +56,11 @@ uv run --with pyyaml==6.0.2 --with pytest python -m pytest eval/runner/tests -q
 | B1 順序 | `run1_order`：單號題對照組先、雙號題實驗組先、rules-only 最後；同一題各組接著跑，不並行 |
 | B2 無效執行 | `classify`：只有執行結束在 Anthropic API 錯誤（5xx、429、overloaded、回應途中的 server error），或執行器當掉、沒有最終答案，才算無效；立即重跑、最多 2 次，每次都保留。執行器中斷留下的資料夾補記為無效再續跑。逾時、金額上限照常評分。金鑰、帳號、額度錯誤不算一次執行：整個指令停下，修好再跑。每次有效執行後核對版本、模型（含中途換模型）、工具清單；某組設定錯誤就停下，`run.py void` 把該組那一輪整輪移到 `voided/`（保留、照報告）後重跑。pickfit 沒連上算 pickfit 的錯（照常評分，E 的 `tool_error`），不算設定錯誤 |
 | B3 補充重跑 | `cmd_reruns`：每題 C2、E2、E3、C3；從 q01 第 1 次開跑起 24 小時或花費到上限才停；截止時正在跑（含跑完時已過截止）的那題兩組記「未跑」 |
-| B4 花費 | 以結果訊息的 `total_cost_usd` 累加；沒有結果訊息（逾時）時，上限的計算保守地以每次上限計，預估則以平均單次花費計。q01、q02 跑完預估超過 $30 就停，要先 commit 9.2 才能繼續；補充重跑預估超過 $60 只跑第 2 次 |
+| B4 花費 | 以結果訊息的 `total_cost_usd` 累加；沒有結果訊息（逾時）時，上限的計算保守地以每次上限計，預估則以平均單次花費計。q01、q02 跑完預估超過 $30 就停，要先 commit 9.2 才能繼續；補充重跑預估超過 $100（9.2 A；原本 $60）只跑第 2 次 |
 | 第 4 節「同一個 24 小時」 | 第 1 次跑完時記下第一次開跑到最後結束是否在 24 小時內；超過時照實報告 |
-| G | 第 1 次預算吃緊時，先砍 rules-only（G 的第 6 項），對照組與實驗組照跑 |
+| G | 第 1 次預算吃緊時，先砍 rules-only（G 的第 6 項），對照組與實驗組照跑。其他砍除項目用 `run.py cut --item haiku|bset --reason ...` 記錄（9.2 F 的順序：VM 紀錄、Haiku、Muse Spark、B 題組），不會默默略過 |
+| 9.2 C Haiku 對照 | `run.py haiku`：要等 `reruns` 完成或停止；對照組與實驗組各跑 20 題一次，順序照 B1（不跑 rules-only），只換模型（`haiku_model`），其餘同第 1 次；B2 無效執行與設定核對同樣適用（核對的模型是 Haiku）；上限 $15，到了就停並記錄停在哪題。結果在 `runs/haiku/` |
+| 9.2 E B 題組 | `run.py bset`：要等 9.1 與 9.2 C 都結束（或 C 被砍，`cut --item haiku`）；`questions-b.yaml` 的 12 題，對照組與實驗組各一次，順序照 B1（`b01` 單號對照組先），其餘同第 1 次；上限 $40；結果在 `runs/bset/`，分開報告。A3 紀錄也記下 `questions-b.yaml` 的雜湊 |
 | D5 | `d5_check.py`：每一則 pickfit 回應的 (a)–(e) 主張逐一對照快照裡的沙盒原始紀錄，寫出每一筆主張與判定；原始紀錄要和清單、A3 紀錄的清單雜湊一致 |
 
 ## 開跑前還要做的
