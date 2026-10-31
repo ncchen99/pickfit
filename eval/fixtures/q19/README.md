@@ -41,7 +41,7 @@ agent（答案推薦的）──HTTP──> http://127.0.0.1:8000/v1  logging pr
 
 - dev image：needs.json（念誠決定）。下文假設 Ubuntu 24.04、使用者 `dev`（可免密碼 sudo）、`F=/opt/eval-fixtures/q19`、`W=/eval-work/q19/<組別>`。
 - q19 base image ＝ dev image ＋ `setup_pinned_ollama.sh` 裝好的伺服器與模型（建一次，記 digest）。
-- Modal Sandbox，4 vCPU、16 GiB、無 GPU。本題的檢查**不封鎖網路**，但全程量測 egress（L2-3）。
+- Modal Sandbox（`cpu=8`），8 vCPU、16 GiB、無 GPU；兩組相同。原本是 4 vCPU，固定模型的長提示在 4 vCPU 上要 758 秒、8 vCPU 上 348 秒，所以 q18–q20 開跑前一起改成 8 vCPU（calibration.md、9.3 C.4）；檢查項目本身沒寫 CPU 數。本題的檢查**不封鎖網路**，但全程量測 egress（L2-3）。
 - 佔位字（第 5 節允許填）：base URL → `http://127.0.0.1:8000/v1`；模型名 → `pins.env` 的 `FIXTURE_MODEL`（檢查項目指定「the frozen tool-calling fixture model」；9.3 C：檢查項目寫明用固定的測試模型，所以換成固定模型，每一處替換記在檢查紀錄（念誠 2026-10-31 決定））；專案路徑 → 該次的工作資料夾。
 - 金鑰：自架伺服器不驗證。agent 一定要填金鑰時，用答案寫的字面值；答案只寫「任何值」或「你的金鑰」時，用 `python3 $F/tools/gen_dummy_key.py` 當場產生（不 commit）。不提供任何真的雲端金鑰。
 

@@ -42,7 +42,7 @@ proxy 佔用 Ollama 的預設位址，原樣轉送所有請求（含串流），
 
 - dev image：needs.json（念誠決定）。下文假設 Ubuntu 24.04、使用者 `dev`（可免密碼 sudo）、`F=/opt/eval-fixtures/q18`、`W=/eval-work/q18/<組別>`。
 - q18 base image ＝ dev image ＋ `setup_pinned_ollama.sh` 裝好的固定 Ollama 與模型（建一次，記 digest；評測中不再拉模型）。
-- Modal Sandbox，4 vCPU、16 GiB、無 GPU（與 q17 相同）。本題的檢查**不封鎖網路**，但全程量測 egress（L2-3）。
+- Modal Sandbox（`cpu=8`），8 vCPU、16 GiB、無 GPU；兩組相同。原本是 4 vCPU，q19 的長提示在 4 vCPU 上要 758 秒，所以 q18–q20 開跑前一起改成 8 vCPU（9.3 C.4）；檢查項目本身沒寫 CPU 數。本題的檢查**不封鎖網路**，但全程量測 egress（L2-3）。
 - 佔位字（第 5 節允許填）：
   - 模型名稱 → `pins.env` 的 `FIXTURE_MODEL`（檢查項目指定「the frozen tool-calling fixture model」；答案寫的模型名視為「你的模型」的佔位字；9.3 C：檢查項目寫明用固定的測試模型，所以換成固定模型，每一處替換記在檢查紀錄（念誠 2026-10-31 決定））；
   - Ollama 位址 → 答案寫的值（Ollama 預設 `http://localhost:11434`，或其 OpenAI 相容的 `/v1`）；

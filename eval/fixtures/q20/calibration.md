@@ -40,3 +40,7 @@
 | 記錄人、時間、commit | 評測 session（eval-prep-74b711），2026-10-31，Modal 沙盒 `sb-01M68CERZX7G5BZ2NZTCB9134N`（cpu 4、16 GiB）；紀錄 `eval/results/calibration/q20/`；commit 同本檔 |
 
 第一次和 q18、q19 同一個沙盒跑時，C2 的 venv 沒建成（`calibrate.sh` 用 `dpkg-query -W` 判斷 `python3-venv` 已裝，但那只表示 dpkg 知道這個套件），沒有跑到 C3 以後；紀錄在 `eval/results/calibration/ollama-trio/q20-venv-failed/`。修正判斷後單獨重跑，就是上表。
+
+## 8 vCPU 重跑（2026-10-31）
+
+q18–q20 的 L2 沙盒（兩組）改成 8 vCPU、16 GiB（9.3 C.4），在 8 vCPU 重新校準（`eval/results/calibration/q18-q20-8cpu/q20/`，Modal 沙盒 `sb-01M68H40727S7JWQGHBQCGZKF0`，`nproc` 8）：C3 `Listening on 127.0.0.1:11434`；C4 三個都 exit 0（呼叫 0.83 秒）；C5 呼叫 pass（2.29 秒），呼叫時段內的 egress report `pass`（整份紀錄的 21 次仍全是 probe 的）；C6 同樣的錯誤訊息；C7 兩個 `0 failure(s)`，沒有 skip；模型 digest 與上表相同。

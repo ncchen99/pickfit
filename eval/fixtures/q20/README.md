@@ -29,6 +29,7 @@ L3（主要答案是否說不用另外裝 proxy／gateway）從答案原文判�
 
 - dev image：needs.json（念誠決定）。下文假設 Ubuntu 24.04、使用者 `dev`、`F=/opt/eval-fixtures/q20`、`W=/eval-work/q20/<組別>`。
 - q20 base image ＝ dev image ＋ 固定版本的 Ollama ＋ 凍結的小模型 ＋ `/opt/q20-venv`（固定版本的 openai）＋ `/home/dev/ask.py`（`script/ask.py` 的複本）。這些都是使用者**原本就有的**，不是答案要裝的。
+- Modal Sandbox（`cpu=8`），8 vCPU、16 GiB、無 GPU，兩組相同（q18–q20 一起，9.3 C.4）。
 - 兩個沙盒：**沙盒 A**（網路開）做 L2-1、L2-2；快照檔案系統；**沙盒 B** 用快照開機、封鎖網路（只留 localhost），做 L2-3。封鎖方式在 calibration.md 的 E 段校準。
 - 模型名：一律用 `pins.env` 的 `FIXTURE_MODEL`（檢查項目指定「the frozen small model pulled」；答案寫的模型名視為「你已經下載的模型」的佔位字；9.3 C：檢查項目寫明用固定的測試模型，所以換成固定模型，每一處替換記在檢查紀錄（念誠 2026-10-31 決定））。答案要求先 `ollama pull` 某個模型時，不照做，記 `model_substituted`。
 - 金鑰：不提供任何真的雲端金鑰。答案給了字面值（例如 `"ollama"`）就用字面值；答案只寫「任何值」時用 `python3 $F/tools/gen_dummy_key.py` 當場產生。

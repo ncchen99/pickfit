@@ -42,3 +42,7 @@
 先在 2 vCPU 的沙盒跑過一次（C4、C5 同樣 3/3，C6 發現上面的外連），因為題目寫 4 vCPU 而停掉重跑；那次的紀錄在 `eval/results/calibration/ollama-trio-2cpu/`。
 
 C4 的 `toolcall.json` 與 C6 的報告存到 `eval/results/`（或評分 session 決定的位置），和本檔同一個 commit。
+
+## 8 vCPU 重跑（2026-10-31）
+
+q19 的長提示在 4 vCPU 上太慢，q18–q20 的 L2 沙盒（兩組）改成 8 vCPU、16 GiB（9.3 C.4），所以在 8 vCPU 重新校準（`eval/results/calibration/q18-q20-8cpu/`，Modal 沙盒 `sb-01M68H40727S7JWQGHBQCGZKF0`，`nproc` 8）：C4 3/3（第一回合 1.50、0.37、0.41 秒）、C5 經 proxy 3/3、`requests.jsonl` 9 筆（同上）、C6 `pass`、C7 兩個 `0 failure(s)`；模型 digest 與上表相同。

@@ -38,7 +38,7 @@
 | q19 base image digest | 沒有另外建：每次照 C2 在 dev image 沙盒裡裝（核對 sha256 與 digest）後才跑答案的步驟。要存成映像時，由建評測部署的協調 session 記 digest |
 | OLLAMA_CONTEXT_LENGTH、記憶體用量 | 32768；載入 `qwen2.5:7b` 後 `free -m` used 6,367 MiB，C4、C5 後 6,701 MiB（16,384 內） |
 | C4 `passed_runs`、每次秒數（附 harness.json） | 3／3：16.94、8.39、7.89 秒（每次 2 回合：`write_file`，再一句說明；`hello.py` 印出 `Hello from the self-hosted model 4721`） |
-| C5 prefill 秒數與決定 | 757.52 秒（17,162 個提示 token，約每秒 22.7 個）。超過 600 秒；比它小的兩個候選都沒過 C4（下節），所以照下節的選法仍用 `qwen2.5:7b`。估計：系統提示約 10,000 token 的 coding agent，第一回合要約 440 秒；之後的回合 Ollama 會沿用已處理的相同開頭，只算新加的部分。真的 agent 可能來不及在 15 分鐘內完成，兩組條件相同，報告照實寫明 |
+| C5 prefill 秒數與決定 | 757.52 秒（17,162 個提示 token，約每秒 22.7 個）。超過 600 秒；比它小的兩個候選都沒過 C4（下節），所以照下節的選法仍用 `qwen2.5:7b`。估計：系統提示約 10,000 token 的 coding agent，第一回合要約 440 秒；之後的回合 Ollama 會沿用已處理的相同開頭，只算新加的部分。真的 agent 可能來不及在 15 分鐘內完成，兩組條件相同，報告照實寫明。→ 後來改在 8 vCPU 重跑：347.65 秒，q18–q20 改用 8 vCPU（文末「8 vCPU 重跑」） |
 | C6 伺服器紀錄 | 8 筆：`/v1/models` 1 筆、`/v1/chat/completions` 6 筆（3 次 × 2 回合，模型 `qwen2.5:7b`、`n_tools` 3）、長提示 1 筆 |
 | C7 report `result` | `pass`（no egress attempt） |
 | C8 git／head | git true，head `c6d8c979379ac0e649d5a9946ce81e11ef00a1ce`（三次校準都相同） |
@@ -63,3 +63,18 @@ C4 的 `harness.json` 與 C7 的報告存到 `eval/results/`（或評分 session
 | `qwen3:4b` | 2／3 | 470.19、522.08、第 3 次第一回合超過 900 秒被停掉 | 807.27 秒 | `pass` | 不過 |
 
 照上面的選法：順序上第一個 3/3 而且 C7 `pass` 的是 `qwen2.5:7b`；它的 C5 超過 600 秒，但沒有另一個 3/3 的候選可換，所以採用它。`qwen3:4b` 預設會先「思考」，在 CPU 上每一回合要幾分鐘，長提示也比 `qwen2.5:7b` 慢。`pins.env` 已改成 `qwen2.5:7b` 與它的 digest；兩個候選的 model layer 都在沙盒裡算過 sha256，與 Ollama registry 公布的相同（PINS.md）。
+
+## 8 vCPU 重跑（2026-10-31，協調 session 要求）
+
+`qwen2.5:7b` 的長提示在 4 vCPU 上 758 秒，超過 C5 的 600 秒參考線。協調 session 定的做法：同樣的模型、同樣 3 次與 harness，改在 8 vCPU、16 GiB 重跑；600 秒以內又 3/3，就把 q18–q20 的 L2 沙盒（兩組）都改成 8 vCPU；不然維持 4 vCPU、照實揭露。不再換模型。
+
+| 項目 | 結果（`eval/results/calibration/q19-8cpu/`，Modal 沙盒 `sb-01M68GHWVFNPAQ3EM8X6D2C1WH`，`cpu=8`、16 GiB） |
+|---|---|
+| C4 `passed_runs`、每次秒數 | 3／3：6.73、3.12、3.12 秒 |
+| C5 長提示 | **347.65 秒**（17,162 個提示 token，約每秒 49 個）→ 600 秒以內 |
+| C7 report `result` | `pass` |
+| C8 git／head | git true，head `c6d8c979379ac0e649d5a9946ce81e11ef00a1ce` |
+| C9 自我測試 | 兩個都 `0 failure(s)` |
+| 記憶體 | 載入後 used 6,369 MiB，C4、C5 後 6,705 MiB |
+
+**決定**：q18–q20 的 L2 沙盒改成 8 vCPU、16 GiB（兩組相同；README 的環境、9.3 C.4）。照估計，系統提示約 10,000 token 的 coding agent 第一回合約 200 秒。q18、q20 也在 8 vCPU 重新校準過（各自的 calibration.md）。

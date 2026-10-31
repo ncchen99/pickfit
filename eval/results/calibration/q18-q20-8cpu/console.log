@@ -1,0 +1,63 @@
+nproc 8
+8000000
+1000000
+MemTotal:       16777216 kB
+no nvidia-smi
+######## q18
+== C1-C2: pinned Ollama and model
+debconf: delaying package configuration, since apt-utils is not installed
+{"ollama_version": "0.40.13", "model": "llama3.2:3b", "digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72", "size": 2019393189}
+model layer dde5aa3fc5ffc171 present 2019377376
+{"id": "ollama-model-llama3.2:3b", "sha256": "dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff", "bytes": 2019377376, "at": "2026-10-31T16:27:55+08:00"}
+== C3: start, context, memory
+== C4: tool call through Ollama's own API, 3 runs
+C4 exit 0
+ "correct_runs": 3,
+ "pass": true
+}
+== C5: the same through the logging proxy
+C5 exit 0
+ "correct_runs": 3,
+ "pass": true
+}
+9
+9
+== C6: the fixture servers make no outbound connection (network open, traced)
+egress: PASS (no egress attempt in 1 trace(s))
+== C7: selftest
+0 failure(s)
+0 failure(s)
+######## q18 exit 0
+######## q20
+== C1-C2: pinned Ollama, model, the user's venv with openai
+{"ollama_version": "0.40.13", "model": "qwen2.5:0.5b", "digest": "a8b0c51577010a279d933d14c2a8ab4b268079d44c5c8830c0a93900f1827c67", "size": 397821319}
+model layer c5396e06af294bd1 present 397807936
+{"id": "ollama-model-qwen2.5:0.5b", "sha256": "c5396e06af294bd101b30dce59131a76d2b773e76950acc870eda801d3ab0515", "bytes": 397807936, "at": "2026-10-31T16:30:51+08:00"}
+debconf: delaying package configuration, since apt-utils is not installed
+openai==3.42.0
+== C3: the default address in use (OLLAMA_HOST unset)
+Listening on 127.0.0.1:11434
+== C4: reference setting, network open
+diff exit 0
+base_url exit 0
+{"pass": true, "exit_code": 0, "elapsed": 0.834, "timed_out": false}
+run_ask exit 0
+== C5: reference setting, network blocked (Ollama and the call in one namespace)
+egress: blocked exit=0 timed_out=False 4.7s tracer_running=False trace=/out/q20/eg/blocked.strace
+blocked run exit 0
+egress: FAIL (21 egress attempt(s))
+egress: PASS (no egress attempt in 1 trace(s))
+== C6: no key (only the model name changed)
+{"pass": false, "exit_code": 1, "elapsed": 0.507, "timed_out": false}
+nokey exit 1
+env/lib/python3.12/site-packages/openai/lib/_client_auth.py", line 188, in sync__init__
+    raise _sdk_client.OpenAIError(
+openai.OpenAIError: Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.
+
+== C7: selftest with the real openai package
+0 failure(s)
+0 failure(s)
+== OLLAMA_NO_CLOUD in the server log
+      3 OLLAMA_NO_CLOUD:true
+      3 cloud disabled: true
+######## q20 exit 0
