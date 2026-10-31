@@ -261,7 +261,11 @@ def test_start_resets_router_then_guest_and_checks_containment(fake) -> None:
     assert nic[nic.index("--nic1") + 1] == "intnet" and nic[nic.index("--intnet1") + 1] == vb.INTNET
     assert any(c[0] == "guestcontrol" and "probe.ps1" in base64.b64decode(
         c[c.index("-Enc") + 1]).decode("utf-16-le") for c in calls if "-Enc" in c)
-    assert box.started and box.network_enabled and box.image.startswith("Windows 11 Enterprise Evaluation 26H2")
+    assert box.started and box.network_enabled and box.image.startswith("Windows 11 Enterprise Eval 26H2 (28000.1)")
+    real = vb.image_label({"product": "Windows 11 Enterprise LTSC Evaluation", "windows": "24H2 (build 26100.1742)",
+                           "virtualbox": "7.2.22r175245", "base": "pickfit-win11", "build_id": "42796005b373"},
+                          {"build_id": "292c103299f8"})
+    assert real.endswith("router@292c103299f8") and len(real) <= 120, real
     box.close()
     st = fake.state()
     assert st["pickfit-win11"]["VMState"] == "poweroff" and st["pickfit-router"]["VMState"] == "poweroff"

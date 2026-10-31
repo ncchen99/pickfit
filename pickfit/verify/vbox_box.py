@@ -1620,10 +1620,13 @@ def prepare_base(*, iso: Path | None = None, name: str = BASE_VM, router: str = 
 
 
 def image_label(manifest: dict[str, Any], router: dict[str, Any]) -> str:
-    """What `VerificationRun.image` records: guest edition and build, base build id, router build id."""
-    return (f"{manifest.get('product', 'Windows 11 Enterprise Evaluation')} {manifest.get('windows', '?')} (VirtualBox "
-            f"{manifest.get('virtualbox', '?')}) +{manifest.get('base', BASE_VM)}@{manifest.get('build_id', 'nobuild')}"
-            f" router@{router.get('build_id', 'nobuild')}")[:120]
+    """What `VerificationRun.image` records: guest edition and build, base build id, router build id. The schema
+    allows 120 characters, so the words are short enough that the router's id is never cut off."""
+    product = manifest.get("product", "Windows 11 Enterprise Evaluation").replace("Evaluation", "Eval")
+    windows = manifest.get("windows", "?").replace("(build ", "(")
+    vbox = re.sub(r"r\d+$", "", manifest.get("virtualbox", "?"))
+    return (f"{product} {windows}, VirtualBox {vbox} +{manifest.get('base', BASE_VM)}@"
+            f"{manifest.get('build_id', 'nobuild')} router@{router.get('build_id', 'nobuild')}")[:120]
 
 
 # Every box runs this as the administrator (Windows PowerShell 5.1) before any model command; non-zero refuses
