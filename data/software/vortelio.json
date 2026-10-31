@@ -80,20 +80,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-vortelio-20261030-235800-75a1",
+      "run_id": "verify-vortelio-20261101-015459-964e",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install \"git+https://github.com/metiu1/Vortelio#subdirectory=vortelio-pip\" && vortelio --help",
-          "purpose": "install vortelio via uv tool from git"
+          "command": "uv tool install \"git+https://github.com/metiutek/Vortelio#subdirectory=vortelio-pip\" 2>&1",
+          "purpose": "install vortelio via uv tool from git subdirectory"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "vortelio --version",
-        "expected_signal": "vortelio version 0.4.6"
+        "command": "curl -s http://localhost:11500/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\":\"bartowski--smollm2-135m-instruct-gguf:q8-0\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"temperature\":0,\"max_tokens\":16}' 2>&1",
+        "expected_signal": "\"object\":\"chat.completion\""
       },
-      "first_task": "curl -s http://localhost:11500/api/status"
+      "first_task": "curl -s http://localhost:11500/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\":\"bartowski--smollm2-135m-instruct-gguf:q8-0\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"temperature\":0,\"max_tokens\":16}' 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -125,61 +125,37 @@
   "verification": {
     "level": "inference",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:02:41.150975+08:00",
+    "checked_at": "2026-11-01T01:58:03.466774+08:00",
     "runs": [
       {
-        "id": "verify-vortelio-20261030-235800-75a1",
+        "id": "verify-vortelio-20261101-015459-964e",
         "level": "inference",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:02:41.150975+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T01:58:03.466774+08:00",
         "tool_version": "0.4.6",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install \"git+https://github.com/metiu1/Vortelio#subdirectory=vortelio-pip\" && vortelio --help",
-            "purpose": "install vortelio via uv tool from git"
+            "command": "uv tool install \"git+https://github.com/metiutek/Vortelio#subdirectory=vortelio-pip\" 2>&1",
+            "purpose": "install vortelio via uv tool from git subdirectory"
           }
         ],
         "smoke_tests": [
           {
-            "command": "vortelio --version",
-            "expected_signal": "vortelio version 0.4.6",
+            "command": "curl -s http://localhost:11500/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\":\"bartowski--smollm2-135m-instruct-gguf:q8-0\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"temperature\":0,\"max_tokens\":16}' 2>&1",
+            "expected_signal": "\"object\":\"chat.completion\"",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "vortelio version 0.4.6",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "curl -s http://localhost:11500/api/status",
-            "expected_signal": "\"model_count\":1",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "{\"hardware\":\"CPU\",\"model_count\":1,\"name\":\"vortelio\",\"version\":\"0.4.6\"}",
+            "observed_excerpt": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"message\":{\"content\":\"Hello! I'm here to help you with all your math and science-related\",\"role\":\"assistant\"}}],\"created\":1793469476,\"id\":\"chatcmpl-1793469476329925015\",\"model\":\"bartowski--smollm2-135m-instruct-gguf:q8-0\",\"object\":\"chat.completion\",\"usa…",
             "setup": [
               {
-                "command": "vortelio serve --port 11500",
-                "background": true,
-                "port": 11500
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "curl -s http://localhost:11500/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\":\"llm/bartowski--smollm2-135m-instruct-gguf:q8-0\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hi\"}],\"temperature\":0,\"max_tokens\":16}'",
-            "expected_signal": "chat.completion",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"message\":{\"content\":\"Hello! How can I help you today?\",\"role\":\"assistant\"}}],\"created\":1793376156,\"id\":\"chatcmpl-1793376156323525451\",\"model\":\"bartowski--smollm2-135m-instruct-gguf:q8-0\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":0,\"prompt…",
-            "setup": [
-              {
-                "command": "vortelio pull llm/hf.co/bartowski/SmolLM2-135M-Instruct-GGUF:Q8_0",
+                "command": "vortelio pull \"llm/hf.co/bartowski/SmolLM2-135M-Instruct-GGUF:SmolLM2-135M-Instruct-Q8_0.gguf\" 2>&1",
                 "background": false,
                 "port": null
               },
@@ -194,48 +170,77 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "Install uv first via install.sh or pip install uv",
-            "actually_needed": "uv 0.13.6 already on PATH so skipped derived pipx/pip uv installs; went straight to candidate 1",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "vortelio pull llm/hf.co/unsloth/Qwen2.5-0.5B-Instruct-GGUF:Q4_K_M",
-            "actually_needed": "input llm/hf.co/bartowski/SmolLM2-135M-Instruct-GGUF:Q8_0 is stored/listed as llm/bartowski--smollm2-135m-instruct-gguf:q8-0 and API returns model bartowski--smollm2-135m-instruct-gguf:q8-0; use lowercased name for /v1/chat/completions",
-            "kind": "note"
+            "readme_said": "uv tool install \"git+https://github.com/metiu1/Vortelio#subdirectory=vortelio-pip\" (ranking used metiu1)",
+            "actually_needed": "canonical GitHub owner is metiutek, URL https://github.com/metiutek/Vortelio works; metiu1 typo fails",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show status with model_count 1, chat completion with greeting and chat.completion object, and CLI reporting version 0.4.6.",
+          "observed": "The screenshot shows a successful chat completion JSON response with assistant text and object type.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-vortelio-20261030-235800-75a1/report.json",
+          "trace_path": "runs/verify/verify-vortelio-20261101-015459-964e/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-vortelio-20261030-235800-75a1/check-1-cmd8.judged.png",
-            "runs/verify/verify-vortelio-20261030-235800-75a1/check-2-cmd12.judged.png",
-            "runs/verify/verify-vortelio-20261030-235800-75a1/check-3-cmd3.judged.png"
+            "runs/verify/verify-vortelio-20261101-015459-964e/check-1-cmd14.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.13025
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.076604,
+        "features": [
+          {
+            "feature": "run LLMs locally",
+            "status": "checked",
+            "smoke_tests": [
+              0
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "generate images with Stable Diffusion",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "Stable Diffusion image generation requires GPU and multi-GB model download, not feasible in box"
+          },
+          {
+            "feature": "transcribe audio with Whisper offline",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "Whisper large-v3 transcription requires large audio model download and audio input, not tested"
+          },
+          {
+            "feature": "generate video locally",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "Video generation WAN2.1 etc requires GPU and multi-GB models"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T01:58:03+08:00",
     "quality": {
-      "total": 96.8,
+      "total": 89.3,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -276,7 +281,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 62.24
+      "value": 57.42
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -639,5 +644,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:17+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T01:58:03.468417+08:00"
 }
