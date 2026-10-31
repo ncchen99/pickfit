@@ -10,6 +10,12 @@ committed: the list and the hashes are. Three steps:
   pins.py verify --confirm-spend      download every file once inside a Modal sandbox (the dev image),
                                       hash it there, compare with the published value, record bytes
   pins.py render                      write eval/fixtures/PINS.md from pins.json
+  pins.py add-ollama --used-by TEXT TAG...
+                                      add Ollama model tags to pins.json without re-resolving anything
+                                      else (a calibration swapping a fixture model)
+  pins.py record-layers --where TEXT FILE...
+                                      mark Ollama model layers verified from the JSON lines that
+                                      _shared/ollama_prepare.sh prints after hashing the pulled layer
 
 The choices follow each needs.json's first (recommended) candidate; versions are the latest
 at the pin date. Run with: uv run python eval/runner/pins.py ...
@@ -72,6 +78,17 @@ def item(id_: str, used_by: str, version: str, url: str, *, sha256: str | None =
             "verified_sha256": None, "bytes": None, "verified_at": None, "verified_in": None}
 
 
+def ollama_model(tag_: str, used: str, note: str = "") -> dict[str, Any]:
+    model, t = tag_.split(":")
+    man = getj(f"https://registry.ollama.ai/v2/library/{model}/manifests/{t}",
+               "application/vnd.docker.distribution.manifest.v2+json")
+    layer = next(layer for layer in man["layers"] if layer["mediaType"].endswith(".model"))
+    return item(f"ollama-model-{tag_}", used, tag_,
+                f"https://registry.ollama.ai/v2/library/{model}/blobs/{layer['digest']}",
+                sha256=layer["digest"].split(":", 1)[1], published_by="Ollama registry manifest layer digest",
+                note=f"model layer, {layer['size']} bytes; the manifest's other layers are templates and licenses" + note)
+
+
 def resolve() -> dict[str, Any]:
     """Fresh metadata; an item whose URL did not change keeps its earlier download check."""
     items = []
@@ -114,15 +131,7 @@ def resolve() -> dict[str, Any]:
     items.append(item("ollama-linux-amd64", "q18, q19, q20", rel["tag_name"], asset["browser_download_url"],
                       sha256=next(line.split()[0] for line in sums.splitlines() if line.rstrip().endswith(asset["name"])),
                       published_by="release sha256sum.txt", note="zstd archive: unpacking needs zstd"))
-    for tag_, used in OLLAMA_MODELS:
-        model, t = tag_.split(":")
-        man = getj(f"https://registry.ollama.ai/v2/library/{model}/manifests/{t}",
-                   "application/vnd.docker.distribution.manifest.v2+json")
-        layer = next(layer for layer in man["layers"] if layer["mediaType"].endswith(".model"))
-        items.append(item(f"ollama-model-{tag_}", used, tag_,
-                          f"https://registry.ollama.ai/v2/library/{model}/blobs/{layer['digest']}",
-                          sha256=layer["digest"].split(":", 1)[1], published_by="Ollama registry manifest layer digest",
-                          note=f"model layer, {layer['size']} bytes; the manifest's other layers are templates and licenses"))
+    items += [ollama_model(tag_, used) for tag_, used in OLLAMA_MODELS]
     for repo, filename, used in HF_FILES:
         meta = getj(f"https://huggingface.co/api/models/{repo}/revision/main?blobs=true")
         rev = meta["sha"]
@@ -267,7 +276,41 @@ def main(argv: list[str] | None = None) -> int:
     v = sub.add_parser("verify")
     v.add_argument("--confirm-spend", action="store_true")
     sub.add_parser("render")
+    o = sub.add_parser("add-ollama")
+    o.add_argument("--used-by", required=True)
+    o.add_argument("tags", nargs="+")
+    r = sub.add_parser("record-layers")
+    r.add_argument("--where", required=True, help="e.g. 'Modal sandbox sb-... (pickfit-eval-l2-dev:...)'")
+    r.add_argument("files", nargs="+", type=Path)
     a = p.parse_args(argv)
+    if a.command == "add-ollama":
+        pins = json.loads(PINS_JSON.read_text(encoding="utf-8"))
+        have = {i["id"] for i in pins["items"]}
+        at = max(n for n, i in enumerate(pins["items"]) if i["id"].startswith("ollama-model-")) + 1
+        for tag_ in a.tags:
+            if f"ollama-model-{tag_}" in have:
+                print(f"already pinned: {tag_}")
+                continue
+            pins["items"].insert(at, ollama_model(tag_, a.used_by, note=f"; added {now()} (pins.py add-ollama)"))
+            at += 1
+        PINS_JSON.write_text(json.dumps(pins, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        render()
+        return 0
+    if a.command == "record-layers":
+        pins = json.loads(PINS_JSON.read_text(encoding="utf-8"))
+        by_id = {i["id"]: i for i in pins["items"]}
+        for f in a.files:
+            for line in f.read_text(encoding="utf-8").splitlines():
+                if not line.startswith("{"):
+                    continue
+                got = json.loads(line)
+                it = by_id[got["id"]]
+                it.update(verified_sha256=got["sha256"], bytes=got["bytes"], verified_at=got["at"], verified_in=a.where,
+                          matches_published=got["sha256"] == it["published_sha256"])
+                print(it["id"], "matches" if it["matches_published"] else "DIFFERS", got["bytes"])
+        PINS_JSON.write_text(json.dumps(pins, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        render()
+        return 0
     if a.command == "resolve":
         fresh = resolve()
         old = {i["url"]: i for i in json.loads(PINS_JSON.read_text(encoding="utf-8"))["items"]} if PINS_JSON.exists() else {}
