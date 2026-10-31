@@ -127,7 +127,7 @@ GUI 桌面 app 的實跑另帶 `verification.gui`（`find_*` 的 pick 與 `get_i
 
 ## 花費上限與 `degraded`
 
-Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.sqlite` 分開）：每日 $3、總額 $20（10/31 由 $40 調降；`META_DAILY_CAP_USD`、`META_TOTAL_CAP_USD`）。`find_*` 呼叫前先用「這次最多花多少」檢查兩個上限，超過就不呼叫、回 `degraded: true`、`degraded_reason: "over_budget"`；呼叫後記實際花費；逾時的呼叫照上限計。查不到 D1 就不呼叫模型（`budget_unavailable`）。
+Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.sqlite` 分開）：每日 $3、總額 $15（10/31 由 $40 調降為 $20，同日再降為 $15、把 $5 移給管線的 MCP 擴充；`META_DAILY_CAP_USD`、`META_TOTAL_CAP_USD`）。`find_*` 呼叫前先用「這次最多花多少」檢查兩個上限，超過就不呼叫、回 `degraded: true`、`degraded_reason: "over_budget"`；呼叫後記實際花費；逾時的呼叫照上限計。查不到 D1 就不呼叫模型（`budget_unavailable`）。
 
 ### 重試（暫時性錯誤只重試一次）
 
