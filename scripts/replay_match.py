@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
 import sys
 from pathlib import Path
 from typing import Any
@@ -35,13 +36,13 @@ def picks(text: str | None) -> dict[str, Any]:
     return {"picks": [p.get("slug") for p in answer.get("picks", [])], "best_free": answer.get("best_free_slug")}
 
 
-def send(body_json: str, cap: float, label: str) -> tuple[dict[str, Any], float]:
+def send(body_json: str, cap: float, label: str, run_id: str = RUN_ID) -> tuple[dict[str, Any], float]:
     body = json.loads(body_json)
     effort = body.pop("reasoning")["effort"]
     max_output = body.pop("max_output_tokens")
     model = body.pop("model")
     result = call_meta("responses", body, stage=STAGE, public_data_only=True, max_output_tokens=max_output,
-                       model=model, reasoning_effort=effort, scope=STAGE, scope_cap_usd=cap, run_id=RUN_ID,
+                       model=model, reasoning_effort=effort, scope=STAGE, scope_cap_usd=cap, run_id=run_id,
                        cache=False)
     print(f"  {label}: ${result.cost_usd:.4f}", file=sys.stderr)
     return picks(result.text), result.cost_usd
@@ -53,6 +54,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=REPO_ROOT / "runs" / "match-replay" / "results.json")
     parser.add_argument("--cap", type=float, default=2.0)
     parser.add_argument("--limit", type=int, default=None, help="send at most this many requests this run")
+    parser.add_argument("--sample", type=int, default=None, help="pick this many requests at random (seed 1101) instead of the largest changes")
+    parser.add_argument("--run-id", default=RUN_ID, help="the run the --cap applies to")
     args = parser.parse_args(argv)
     chosen: dict[tuple[str, str], dict[str, Any]] = {}
     for d in json.loads(args.diff.read_text())["diffs"]:
@@ -63,13 +66,16 @@ def main(argv: list[str] | None = None) -> int:
     done = {(r["slug"], r["lang"]) for r in rows}
     spent = 0.0
     # Largest changes first, so a cap or --limit leaves out the requests whose shortlist moved least.
-    todo = sorted(((key, d) for key, d in chosen.items() if key not in done), key=lambda kd: -len(kd[1]["out"]))[: args.limit]
+    todo = sorted(((key, d) for key, d in chosen.items() if key not in done), key=lambda kd: -len(kd[1]["out"]))
+    if args.sample:
+        todo = random.Random(1101).sample(sorted(todo, key=lambda kd: kd[0]), min(args.sample, len(todo)))
+    todo = todo[: args.limit]
     for (slug, lang), d in todo:
         print(f"{slug} {lang}", file=sys.stderr)
         try:
-            old1, c1 = send(d["old"], args.cap, "old")
-            old2, c2 = send(d["old"], args.cap, "old again")
-            new, c3 = send(d["new"], args.cap, "new")
+            old1, c1 = send(d["old"], args.cap, "old", args.run_id)
+            old2, c2 = send(d["old"], args.cap, "old again", args.run_id)
+            new, c3 = send(d["new"], args.cap, "new", args.run_id)
         except Exception as err:  # the scope cap or the budget: keep what is done
             print(f"stopped: {err}", file=sys.stderr)
             break

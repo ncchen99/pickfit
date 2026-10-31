@@ -50,7 +50,10 @@ function mcpToolNames(entry: Entry): string[] {
   return OSES.flatMap((os) => entry.install[os]?.mcp?.tools ?? []);
 }
 
-/** Weight of the jobs field (scripts/tool_jobs.py), fixed on the tuning sets (0.25-2 were compared; 0.5 kept the most suitable tools in the 60). */
+/**
+ * Weight of the jobs field (scripts/tool_jobs.py), fixed on the tuning sets: 0.25 to 2 kept about the same
+ * share of suitable tools among the 60 cards; 0.5 left the rules-only fit labels closest to those without jobs.
+ */
 export const JOBS_WEIGHT = 0.5;
 
 /** BM25F-style field weights: a word in the name counts three times one in a use case. */
