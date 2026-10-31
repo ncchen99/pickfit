@@ -37,12 +37,14 @@ from typing import Any
 from pydantic import ValidationError
 
 from pickfit.ledger import TAIPEI, taipei_now
+from pickfit.meta import OPEN_MODEL
 from pickfit.schema import TOOL_KINDS, ExtractionResult, is_passed
 from pickfit.verify.plan import plan_for
 from pickfit.verify.task import VerifyTask
 
 DONE_STATUSES = ("ok", "quotes_dropped")
-MODEL_PREFERENCE = ("muse-spark-1.3", "muse-spark-1.3-contributor")
+# A muse-spark-1.3 extraction wins over a Muse Spark Open one of the same repo unless the batch asks for one.
+MODEL_PREFERENCE = ("muse-spark-1.3", "muse-spark-1.3-contributor", OPEN_MODEL)
 NOT_IN_BOX_KINDS = {"desktop_app": "GUI app", "browser_extension": "browser extension"}
 
 
@@ -170,8 +172,8 @@ def recheck_slugs(data_dir: Path, runs_dir: Path) -> set[str]:
 def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
                     categories: list[str] | None = None, skip_slugs: set[str] | None = None,
                     known_slugs: dict[str, str] | None = None, known_categories: dict[str, str] | None = None,
-                    gpu: bool = False, os: str = "linux", display: bool = False
-                    ) -> tuple[list[BatchItem], list[dict[str, Any]]]:
+                    gpu: bool = False, os: str = "linux", display: bool = False,
+                    extraction_model: str | None = None) -> tuple[list[BatchItem], list[dict[str, Any]]]:
     """Ranked batch items (at most `limit`) and the candidates set aside, with reasons.
 
     known_slugs (repo_id -> slug, from record_slugs) wins over a slug made from the name, and
@@ -179,6 +181,8 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
     gpu: the boxes have an NVIDIA GPU, so tools that require one are not set aside.
     os: what the boxes run (linux, or macos for TartBox).
     display: the boxes have a virtual display, so GUI apps are not set aside (Linux).
+    extraction_model: only extractions by this model id, e.g. to verify Muse Spark Open's reading of
+    repos muse-spark-1.3 also read.
     """
     skip_slugs = skip_slugs or set()
     known_slugs = known_slugs or {}
@@ -190,6 +194,8 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
             "ORDER BY e.id", DONE_STATUSES).fetchall()
     best: dict[str, sqlite3.Row] = {}
     for row in rows:  # ordered by id: a later extraction of an equally preferred model wins
+        if extraction_model and row["model"] != extraction_model:
+            continue
         held = best.get(row["repo_id"])
         if held is None or _model_rank(row["model"]) <= _model_rank(held["model"]):
             best[row["repo_id"]] = row

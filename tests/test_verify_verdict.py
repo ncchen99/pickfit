@@ -7,7 +7,16 @@ from typing import Any
 import pytest
 
 from pickfit.verify.agent import CommandRecord, FinishArgs
-from pickfit.verify.verdict import check_kind, log_verdict, masked_exit, split_last, unread_scripts, written_paths
+from pickfit.verify.verdict import (
+    check_kind,
+    local_installs,
+    log_verdict,
+    masked_exit,
+    modified_copy,
+    split_last,
+    unread_scripts,
+    written_paths,
+)
 
 
 @pytest.mark.parametrize("command", [
@@ -309,3 +318,52 @@ def test_files_that_are_not_downloaded_scripts():
     assert unread([rec(1, "curl -fL -o tool.tgz https://x.dev/tool.tgz && tar xzf tool.tgz", 0),
                    rec(2, "./tool --version", 0)]) == []
     assert unread([rec(1, "curl -fsSL https://x.dev/i.sh | bash", 0)], steps=[]) == []
+
+
+REPO = "https://github.com/acme/tinyq"
+
+
+@pytest.mark.parametrize("steps", [
+    ["git clone --depth 1 https://github.com/acme/tinyq.git /tmp/tinyq 2>&1", "pip install /tmp/tinyq"],
+    ["git clone https://github.com/acme/tinyq tq && cd tq && pip install -e .[dev]"],
+    ["rm -rf /tmp/x && git clone https://github.com/acme/tinyq /tmp/x && cp -r /tmp/x/. ./", "pip install -e ."],
+    ["curl -L -o /tmp/tinyq.tgz https://github.com/acme/tinyq/releases/download/v1/tinyq-1.0.tgz", "npm i -g /tmp/tinyq.tgz"],
+    ["pip install tinyq", "npm i -g @acme/tinyq", "uv tool install --from git+https://github.com/acme/tinyq tinyq"],
+    ["pip install -r /tmp/requirements.txt tinyq", "cargo install --git https://github.com/acme/tinyq --root ~/.local"],
+])
+def test_the_published_package_or_the_projects_own_source_is_what_a_user_installs(steps: list[str]):
+    assert modified_copy(steps, ["cat > /tmp/sample/main.go <<'EOF'\npackage main\nEOF"], REPO) == []
+
+
+@pytest.mark.parametrize("steps, checks, why", [
+    (["uv tool install /tmp/tinyq_fix --force 2>&1"], [], "local copy"),
+    (["git clone https://github.com/other/fork /tmp/tinyq", "pip install /tmp/tinyq"], [], "local copy"),
+    (["cd /tmp/scratch && pip install ."], [], "local copy"),
+    (["git clone https://github.com/acme/tinyq /tmp/tinyq && sed -i 's/x/y/' /tmp/tinyq/tinyq/cli.py",
+      "pip install /tmp/tinyq"], [], "patched"),
+    (["git clone https://github.com/acme/tinyq t && cd t && git apply /tmp/fix.diff && pip install ."], [], "patched"),
+    (["git clone https://github.com/acme/tinyq t && cat > t/tinyq/server.py <<'EOF'\nprint(1)\nEOF",
+      "pip install ./t"], [], "patched"),
+    (["npm i -g tinyq"], ["sed -i 's/a/b/' ~/.local/lib/node_modules/tinyq/index.js && tinyq --help"], "patched"),
+])
+def test_a_copy_the_box_made_or_edited_is_not(steps: list[str], checks: list[str], why: str):
+    problems = modified_copy(steps, checks, REPO)
+    assert problems and ("no cited step fetched" if why == "local copy" else "patched copy") in problems[0]
+
+
+def test_local_install_targets():
+    assert local_installs("python3 -m pip install -e ./pkg/core --no-deps") == ["./pkg/core"]
+    assert local_installs('pip install --user "./nexus-agent[all]"') == ["./nexus-agent"]
+    assert local_installs("cargo install --path . --locked") == ["."]
+    assert local_installs("pip install requests -t /tmp/target") == [] and local_installs("ls /tmp") == []
+
+
+def test_an_install_from_a_patched_copy_does_not_pass():
+    log = [rec(1, "git clone https://github.com/acme/tinyq /tmp/t && sed -i 's/bug/fix/' /tmp/t/tinyq/main.py", 0),
+           rec(2, "pip install /tmp/t", 0, "Successfully installed tinyq"),
+           rec(3, "tinyq --version", 0, "tinyq 1.0"), rec(4, "tinyq run demo", 0, "demo done")]
+    tests = [{"command_id": 3, "expected_signal": "1.0"}, {"command_id": 4, "expected_signal": "demo done"}]
+    verdict = log_verdict(claim("function", [1, 2], tests), log, repo_url=REPO)
+    assert verdict.level == "unverified" and any("patched copy" in p for p in verdict.problems)
+    clean = [rec(1, "git clone https://github.com/acme/tinyq /tmp/t", 0), *log[1:]]
+    assert log_verdict(claim("function", [1, 2], tests), clean, repo_url=REPO).level == "function"

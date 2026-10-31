@@ -28,7 +28,11 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--dry-run", action="store_true", help="batch: list what would run and why others are skipped")
     v.add_argument("--runner", choices=["docker", "modal", "tart"], default="docker",
                    help="local DockerBox (development), ModalBox (gVisor on Modal) or TartBox (macOS VM on this Mac)")
-    v.add_argument("--model", default=None, help='"dev", "prod", or a model id (default: PICKFIT_MODE)')
+    v.add_argument("--model", default=None,
+                   help='agent model: "dev", "prod", "open" (Muse Spark Open on Baseten) or a model id '
+                        '(default: PICKFIT_MODE); the judges stay on muse-spark-1.3 when it is "open"')
+    v.add_argument("--extraction-model", default=None,
+                   help='batch: verify only extractions by this model ("prod", "open" or an id)')
     v.add_argument("--mode", choices=["chain", "replay"], default=None,
                    help="carry history by previous_response_id (chain) or resend it (replay)")
     v.add_argument("--max-turns", type=int, default=None, help="turn limit (default 25)")
@@ -136,7 +140,7 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
         run_batch,
         verified_slugs,
     )
-    from pickfit.verify.pipeline import verify_task
+    from pickfit.verify.pipeline import judge_model_for, verify_task
     from pickfit.verify.result import DATA_DIR
 
     runs_dir = _runs_dir(None)
@@ -150,6 +154,7 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
         set() if args.force else verified_slugs(runs_dir, runner=runner)
     skip -= recheck_slugs(data_dir, runs_dir)  # a new release since the last attempt, which did not pass
     known = record_slugs(data_dir)
+    extraction_model = resolve_model(args.extraction_model) if args.extraction_model else None
     repos = [*(args.repo or []), *(known if args.records else [])] or None
     if args.records and not known:
         print(f"pickfit verify: no records in {data_dir}")
@@ -157,11 +162,14 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
     items, skipped = load_candidates(db, limit=args.batch, repos=repos, categories=args.category,
                                      skip_slugs=skip, known_slugs=known,
                                      known_categories=record_categories(data_dir), gpu=bool(args.gpu),
-                                     os="macos" if args.runner == "tart" else "linux", display=args.display)
+                                     os="macos" if args.runner == "tart" else "linux", display=args.display,
+                                     extraction_model=extraction_model)
     print(f"batch · {len(items)} to verify · {len(skipped)} set aside · {args.runner}"
           f"{' ' + args.runtime if args.runner == 'modal' else ''}{' + display' if args.display else ''}"
           f"{' + ' + args.gpu if args.gpu else ''} · "
-          f"concurrency {args.concurrency} · {resolve_model(args.model)}")
+          f"concurrency {args.concurrency} · agent {resolve_model(args.model)} · "
+          f"judges {resolve_model(judge_model_for(args.model))}"
+          f"{' · extractions by ' + extraction_model if extraction_model else ''}")
     for item in items:
         print(f"  {item.priority:+d} {item.task.slug:<28} {item.category:<9} {item.kind or '-':<12} "
               f"{item.full_name}")
@@ -181,6 +189,8 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
     summary = run_batch(items, verify, concurrency=args.concurrency, runs_dir=runs_dir,
                         meta={"db": str(db), "runner": args.runner, "runtime": args.runtime, "display": args.display,
                               "gpu": args.gpu, "model": resolve_model(args.model),
+                              "judge_model": resolve_model(judge_model_for(args.model)),
+                              "extraction_model": extraction_model,
                               "skipped": skipped})
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     return 0

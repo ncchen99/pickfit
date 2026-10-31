@@ -326,6 +326,9 @@ then run it. Before you run it, also read every script it will run, or download 
 read (a binary, or a file it fetches as it runs), record as a pitfall of kind note.
 - Do not fake a system command (a shim for nvidia-smi, docker or sudo) to get past the box; finish unverified \
 with the reason instead.
+- Install what a user would install: the published package, or the project's source exactly as a cited step \
+fetched it. Never edit the tool's code (sed -i, patch, rewritten files) or install from a copy no install step \
+fetched; such a run cannot pass. If the tool only works patched, record the fix as a pitfall and finish unverified.
 - After a failed command, hints from pickfit's rule table may follow. They can be wrong.
 """
 
@@ -756,7 +759,7 @@ class VerifyAgent:
             args.unverified_reason = "other"
         if args.level == "failed" and not args.blocking_error:
             args.blocking_error = args.summary.strip() or "not given"
-        verdict = log_verdict(args, self.report.commands, mcp=is_mcp(self.task))
+        verdict = log_verdict(args, self.report.commands, mcp=is_mcp(self.task), repo_url=self.task.repo_url)
         self.verdict = verdict
         self.report.finish = args.model_dump()
         self.report.verdict = verdict.to_dict()
