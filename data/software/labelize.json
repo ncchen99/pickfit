@@ -81,18 +81,25 @@
       "first_task": "labelize convert label.zpl && ls -l label.png && file label.png"
     },
     "windows": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "npm",
+      "basis": "replayed",
+      "run_id": "verify-labelize-20261031-230031-6dff",
+      "method": "binary",
       "steps": [
         {
-          "command": "npm install @goodboy008/labelize-wasm",
-          "purpose": null
+          "command": "curl.exe -sL -o labelize.zip https://github.com/GOODBOY008/labelize/releases/download/v1.10.0/labelize-x86_64-pc-windows-msvc.zip && dir labelize.zip && tar.exe -tf labelize.zip",
+          "purpose": "download Windows binary zip from Releases"
+        },
+        {
+          "command": "tar.exe -xf labelize.zip && dir labelize.exe && .\\labelize.exe --version",
+          "purpose": "extract labelize.exe from zip"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "labelize convert label.zpl"
+      "check": {
+        "command": "tar.exe -xf labelize.zip && dir labelize.exe && .\\labelize.exe --version",
+        "expected_signal": "labelize 1.10.0"
+      },
+      "first_task": "[System.IO.File]::WriteAllText('label.zpl', '^XA^FO50,50^A0N,40,40^FDHello World^FS^XZ') && .\\labelize.exe convert label.zpl && Write-Output CONVERT_OK"
     }
   },
   "pricing": {
@@ -110,7 +117,7 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:26:53.963158+08:00",
+    "checked_at": "2026-10-31T23:07:31.823042+08:00",
     "runs": [
       {
         "id": "verify-labelize-20261031-032510-09e1",
@@ -265,6 +272,93 @@
             "note": "its check passed, but the output does not show it: Output only shows health ok and HTML page served, not live preview rendering or zoom/themes in use."
           }
         ]
+      },
+      {
+        "id": "verify-labelize-20261031-230031-6dff",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "windows",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "vbox",
+        "image": "Windows 11 Enterprise LTSC Eval 24H2 (26100.1742), VirtualBox 7.2.22 +pickfit-win11@16ea69df29ff router@583d254c306d",
+        "checked_at": "2026-10-31T23:07:31.823042+08:00",
+        "tool_version": "1.10.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl.exe -sL -o labelize.zip https://github.com/GOODBOY008/labelize/releases/download/v1.10.0/labelize-x86_64-pc-windows-msvc.zip && dir labelize.zip && tar.exe -tf labelize.zip",
+            "purpose": "download Windows binary zip from Releases"
+          },
+          {
+            "command": "tar.exe -xf labelize.zip && dir labelize.exe && .\\labelize.exe --version",
+            "purpose": "extract labelize.exe from zip"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "tar.exe -xf labelize.zip && dir labelize.exe && .\\labelize.exe --version",
+            "expected_signal": "labelize 1.10.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "labelize 1.10.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": ".\\labelize.exe --help",
+            "expected_signal": "convert Convert a ZPL",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "convert Convert a ZPL/EPL/TSPL/CPCL/DPL file to PNG or PDF",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "[System.IO.File]::WriteAllText('label.zpl', '^XA^FO50,50^A0N,40,40^FDHello World^FS^XZ') && .\\labelize.exe convert label.zpl && Write-Output CONVERT_OK",
+            "expected_signal": "Converted label.zpl -> label.png",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Converted label.zpl -> label.png",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install labelize --features cli / cargo add labelize",
+            "actually_needed": "Skipped both cargo candidates: box has no Rust toolchain and installing one is forbidden, so cargo install/add cannot work here",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "npm install @goodboy008/labelize-wasm provides the labelize CLI",
+            "actually_needed": "Used README's Windows path (download labelize-x86_64-pc-windows-msvc.zip from GitHub Releases v1.10.0 and extract labelize.exe) because the ranked npm package installs only a WebAssembly library with no labelize binary on PATH",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "(Windows steps)",
+            "actually_needed": "pickfit ran these steps in PowerShell 7 (pwsh 7.6.9) as a standard user; the built-in Windows PowerShell 5.1 is not verified and does not run `&&`.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show Converted label.zpl -> label.png with CONVERT_OK and labelize 1.10.0 version output.",
+          "model": "muse-spark-1.3-contributor"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-labelize-20261031-230031-6dff/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-labelize-20261031-230031-6dff/check-1-cmd15.judged.png",
+            "runs/verify/verify-labelize-20261031-230031-6dff/check-2-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3-contributor",
+        "cost_usd": 0.033858
       }
     ]
   },
@@ -637,5 +731,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:29+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T01:07:53.511350+08:00"
 }

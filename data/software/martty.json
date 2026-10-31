@@ -92,18 +92,21 @@
       "first_task": "martty-cli --dump-frame"
     },
     "windows": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-martty-20261031-222518-09bb",
       "method": "npm",
       "steps": [
         {
           "command": "npm install --global martty",
-          "purpose": null
+          "purpose": "install martty globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "martty --demo"
+      "check": {
+        "command": "Get-Command martty-cli -ErrorAction Stop; martty-cli --version",
+        "expected_signal": "martty 0.3.3"
+      },
+      "first_task": "martty-cli harness list"
     }
   },
   "pricing": {
@@ -121,7 +124,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:20:50.697685+08:00",
+    "checked_at": "2026-10-31T22:36:54.803792+08:00",
     "runs": [
       {
         "id": "verify-martty-20261031-031844-cc6c",
@@ -283,6 +286,84 @@
             "note": "its check passed, but the output does not show it: Output shows a UI frame but gives no evidence it was composed from Cordis plugins."
           }
         ]
+      },
+      {
+        "id": "verify-martty-20261031-222518-09bb",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "windows",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "vbox",
+        "image": "Windows 11 Enterprise LTSC Eval 24H2 (26100.1742), VirtualBox 7.2.22 +pickfit-win11@16ea69df29ff router@583d254c306d",
+        "checked_at": "2026-10-31T22:36:54.803792+08:00",
+        "tool_version": "0.3.3",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install --global martty",
+            "purpose": "install martty globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "Get-Command martty-cli -ErrorAction Stop; martty-cli --version",
+            "expected_signal": "martty 0.3.3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "martty 0.3.3",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "martty-cli --help",
+            "expected_signal": "--demo scripted turns, no runtime / API key needed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "--demo scripted turns, no runtime / API key needed",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "martty-cli harness list",
+            "expected_signal": "Bundled DeepSeek Harness",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "○ Bundled DeepSeek Harness",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "martty --demo / martty --demo-skin as first examples",
+            "actually_needed": "use martty-cli on fresh global install (martty shim is only created on first start); verified with martty-cli --version / --help / harness list",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "(Windows steps)",
+            "actually_needed": "pickfit ran these steps in PowerShell 7 (pwsh 7.6.9) as a standard user; the built-in Windows PowerShell 5.1 is not verified and does not run `&&`.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show harness list containing Bundled DeepSeek Harness and version output martty 0.3.3.",
+          "model": "muse-spark-1.3-contributor"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-martty-20261031-222518-09bb/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-martty-20261031-222518-09bb/check-1-cmd10.judged.png",
+            "runs/verify/verify-martty-20261031-222518-09bb/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3-contributor",
+        "cost_usd": 0.017257
       }
     ]
   },
@@ -638,5 +719,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:22+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T01:07:53.295995+08:00"
 }

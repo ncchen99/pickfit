@@ -103,20 +103,21 @@
       "first_task": "alysis sandbox doctor --smoke 2>&1"
     },
     "windows": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-alysiscode-20261031-224540-1927",
       "method": "pipx",
       "steps": [
         {
           "command": "pipx install alysis-code",
-          "purpose": null
+          "purpose": "Install alysis-code via pipx as README instructs"
         }
       ],
-      "manual_steps": [
-        "Approve the code in your browser to use Alysis credits"
-      ],
-      "check": null,
-      "first_task": "alysis sandbox doctor --smoke"
+      "manual_steps": [],
+      "check": {
+        "command": "$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'); alysis --version",
+        "expected_signal": "0.15.2"
+      },
+      "first_task": "$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'); alysis sandbox doctor --smoke"
     }
   },
   "pricing": {
@@ -134,7 +135,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:22:31.672444+08:00",
+    "checked_at": "2026-10-31T22:53:09.792183+08:00",
     "runs": [
       {
         "id": "verify-alysiscode-20261031-032026-a05f",
@@ -261,6 +262,89 @@
             "note": "its check passed, but the output does not show it: Output only shows config JSON, not a plan turned into verified changes."
           }
         ]
+      },
+      {
+        "id": "verify-alysiscode-20261031-224540-1927",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "windows",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "vbox",
+        "image": "Windows 11 Enterprise LTSC Eval 24H2 (26100.1742), VirtualBox 7.2.22 +pickfit-win11@16ea69df29ff router@583d254c306d",
+        "checked_at": "2026-10-31T22:53:09.792183+08:00",
+        "tool_version": "0.15.2",
+        "install_method": "pipx",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pipx install alysis-code",
+            "purpose": "Install alysis-code via pipx as README instructs"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'); alysis --version",
+            "expected_signal": "0.15.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.15.2 (commit: unknown, built: unknown, dirty: yes, source: dev-default)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'); alysis --help",
+            "expected_signal": "Sandbox setup and diagnostics.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ sandbox Sandbox setup and diagnostics. │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'); alysis sandbox doctor --smoke",
+            "expected_signal": "Status: not ready",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "Status: not ready",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Sandboxed by default with a native sandbox on Windows x64; check with `alysis sandbox doctor --smoke`.",
+            "actually_needed": "On this Windows box without Docker, 'alysis sandbox doctor --smoke' prints the diagnostics table and exits 1 with 'Status: not ready' asking to 'Install Docker Desktop, open it, then run `alysis sandbox pull`', despite README describing a native sandbox on Windows x64.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "(Windows steps)",
+            "actually_needed": "pickfit ran these steps in PowerShell 7 (pwsh 7.6.9) as a standard user; the built-in Windows PowerShell 5.1 is not verified and does not run `&&`.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "(Windows steps)",
+            "actually_needed": "On Windows, open a new terminal after installing so PATH includes the tool; the sandbox refreshed PATH in the same session instead.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Sandbox doctor reports not ready with no backend, and --version output shows 0.15.2.",
+          "model": "muse-spark-1.3-contributor"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-alysiscode-20261031-224540-1927/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-alysiscode-20261031-224540-1927/check-1-cmd4.judged.png",
+            "runs/verify/verify-alysiscode-20261031-224540-1927/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3-contributor",
+        "cost_usd": 0.005977
       }
     ]
   },
@@ -688,5 +772,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T01:07:53.440325+08:00"
 }

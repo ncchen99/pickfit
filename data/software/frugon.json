@@ -94,18 +94,21 @@
       "first_task": "frugon analyze --demo"
     },
     "windows": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-frugon-20261031-214339-536c",
       "method": "uv",
       "steps": [
         {
-          "command": "uvx frugon analyze ./logs.jsonl",
-          "purpose": null
+          "command": "uvx frugon --version",
+          "purpose": "One-shot install and run via uvx (uvx frugon --version)"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "frugon analyze --demo"
+      "check": {
+        "command": "uvx frugon --version",
+        "expected_signal": "frugon 0.2.6"
+      },
+      "first_task": "uvx frugon analyze --demo"
     }
   },
   "pricing": {
@@ -123,7 +126,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:24:07.758861+08:00",
+    "checked_at": "2026-10-31T21:51:34.734584+08:00",
     "runs": [
       {
         "id": "verify-frugon-20261031-032243-ca13",
@@ -212,6 +215,78 @@
             "note": "needs OPENAI_API_KEY to sample candidates"
           }
         ]
+      },
+      {
+        "id": "verify-frugon-20261031-214339-536c",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "windows",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "vbox",
+        "image": "Windows 11 Enterprise LTSC Eval 24H2 (26100.1742), VirtualBox 7.2.22 +pickfit-win11@16ea69df29ff router@583d254c306d",
+        "checked_at": "2026-10-31T21:51:34.734584+08:00",
+        "tool_version": "0.2.6",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uvx frugon --version",
+            "purpose": "One-shot install and run via uvx (uvx frugon --version)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "uvx frugon --version",
+            "expected_signal": "frugon 0.2.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "frugon 0.2.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "uvx frugon --help",
+            "expected_signal": "Free, local, open-source LLM cost analyzer",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Free, local, open-source LLM cost analyzer.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "uvx frugon analyze --demo",
+            "expected_signal": "56,100 calls",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ Analyzed 56,100 calls · baseline gpt-5.5 (your current model) │",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "(Windows steps)",
+            "actually_needed": "pickfit ran these steps in PowerShell 7 (pwsh 7.6.9) as a standard user; the built-in Windows PowerShell 5.1 is not verified and does not run `&&`.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show demo cost analysis reporting 56,100 calls with savings and version output frugon 0.2.6.",
+          "model": "muse-spark-1.3-contributor"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-frugon-20261031-214339-536c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-frugon-20261031-214339-536c/check-1-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3-contributor",
+        "cost_usd": 0.005768
       }
     ]
   },
@@ -599,5 +674,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:52:01+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T01:07:52.935179+08:00"
 }

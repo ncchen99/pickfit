@@ -90,18 +90,21 @@
       "first_task": "timeout 25 aria health --json"
     },
     "windows": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-aria-code-20261031-223659-aa9c",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g @artheras/aria-code",
-          "purpose": null
+          "purpose": "Install Aria Code via npm global"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "aria-code --help"
+      "check": {
+        "command": "$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'); aria-code --help",
+        "expected_signal": "Aria Code — Open-source AI agent for coding"
+      },
+      "first_task": "aria update --check"
     }
   },
   "pricing": {
@@ -119,7 +122,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:24:53.894740+08:00",
+    "checked_at": "2026-10-31T22:45:35.286148+08:00",
     "runs": [
       {
         "id": "verify-aria-code-20261031-032050-c3a5",
@@ -214,6 +217,93 @@
             "note": "needs provider API credentials; logistics agent runs through the model"
           }
         ]
+      },
+      {
+        "id": "verify-aria-code-20261031-223659-aa9c",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "windows",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "vbox",
+        "image": "Windows 11 Enterprise LTSC Eval 24H2 (26100.1742), VirtualBox 7.2.22 +pickfit-win11@16ea69df29ff router@583d254c306d",
+        "checked_at": "2026-10-31T22:45:35.286148+08:00",
+        "tool_version": "0.165.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @artheras/aria-code",
+            "purpose": "Install Aria Code via npm global"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'); aria-code --help",
+            "expected_signal": "Aria Code — Open-source AI agent for coding",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Aria Code — Open-source AI agent for coding, financial analysis and logistics operations: numbers you can check, client data kept apart, actions a person approves",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "aria-code --version",
+            "expected_signal": "aria-code 0.165.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "aria-code 0.165.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "aria update --check",
+            "expected_signal": "You are up to date.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "You are up to date.",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "aria --version",
+            "expected_signal": "aria-code 0.165.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "aria-code 0.165.0",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "(Windows steps)",
+            "actually_needed": "pickfit ran these steps in PowerShell 7 (pwsh 7.6.9) as a standard user; the built-in Windows PowerShell 5.1 is not verified and does not run `&&`.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "(Windows steps)",
+            "actually_needed": "On Windows, open a new terminal after installing so PATH includes the tool; the sandbox refreshed PATH in the same session instead.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show 'You are up to date.' for update check and full help with the Aria Code open-source agent description.",
+          "model": "muse-spark-1.3-contributor"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-aria-code-20261031-223659-aa9c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-aria-code-20261031-223659-aa9c/check-1-cmd4.judged.png",
+            "runs/verify/verify-aria-code-20261031-223659-aa9c/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3-contributor",
+        "cost_usd": 0.006235
       }
     ]
   },
@@ -586,5 +676,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:46+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T01:07:53.368251+08:00"
 }
