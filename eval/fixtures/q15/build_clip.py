@@ -15,6 +15,13 @@ ffmpeg:
           2.5 s of padding, else the build stops: choose other clips).
   cut     one continuous recording: 60.000 s starting at --start; the
           reference text is written by hand for exactly that window.
+  squeeze one continuous recording from --start, with every pause longer
+          than 0.50 s shortened to 0.30 s (its first and last 0.15 s kept,
+          the middle dropped; shorter pauses and all speech untouched), cut
+          inside a pause and padded with silence to exactly 60.000 s
+          (calibration.md, "縮短長停頓"). Pauses are found with the same
+          20 ms frames and threshold as speech seconds, over the whole
+          source, frames aligned to its first sample.
   stats   duration, speech seconds (frames above the threshold), Han
           character count and, with the pinned OpenCC, the script-differing
           count the item needs (>= 60).
@@ -46,6 +53,9 @@ MAX_PAD_SECONDS = 2.5
 FRAME = 320  # 20 ms
 KEEP_FRAMES = 5  # 100 ms
 THRESHOLD_DB = 35.0
+LONG_PAUSE_FRAMES = 26  # more than 0.50 s
+PAUSE_TO = 4800  # 0.30 s: the first and last 0.15 s of a long pause are kept
+CUT_PAUSE_FRAMES = 5  # an untouched pause of at least 0.10 s may hold the end cut
 
 
 def sha256_file(path: str) -> str:
@@ -190,6 +200,80 @@ def cmd_cut(args) -> int:
     return 0
 
 
+def pauses(flags: list) -> list:
+    """Runs of silent frames as (first, end) frame indices."""
+    out, start = [], None
+    for i, voice in enumerate(flags + [True]):
+        if not voice and start is None:
+            start = i
+        elif voice and start is not None:
+            out.append((start, i))
+            start = None
+    return out
+
+
+def squeeze(samples: array.array, start: int):
+    """The calibration.md rule: returns the 60.000 s clip and what was done to make it."""
+    rms = frame_rms(samples)
+    peak = max(rms)
+    thr = max(peak * 10 ** (-THRESHOLD_DB / 20.0), 30.0)
+    out, shortened, cuts = array.array("h"), [], []
+    cursor = start
+    for a, b in pauses([r >= thr for r in rms]):
+        a, b = max(a * FRAME, start), b * FRAME
+        if b <= start:
+            continue
+        if b - a > LONG_PAUSE_FRAMES * FRAME - FRAME:  # longer than 0.50 s
+            half = PAUSE_TO // 2
+            out.extend(samples[cursor:a + half])
+            cuts.append((len(out), "long"))
+            shortened.append({"source_start": round(a / RATE, 3), "source_end": round(b / RATE, 3),
+                              "seconds": round((b - a) / RATE, 3), "new_seconds": PAUSE_TO / RATE,
+                              "clip_at": round((len(out) - half) / RATE, 3)})
+            cursor = b - half
+        elif b - a >= CUT_PAUSE_FRAMES * FRAME:
+            cuts.append((len(out) + (a + b) // 2 - cursor, "short"))
+        if len(out) + (a - cursor) > int(CLIP_SECONDS * RATE) + RATE:
+            break
+    total = int(CLIP_SECONDS * RATE)
+    fits = [(c, kind) for c, kind in cuts if c <= total and (kind == "short" or c <= len(out))]
+    long_cuts = [c for c, kind in fits if kind == "long" and total - c <= MAX_PAD_SECONDS * RATE]
+    if long_cuts:
+        cut, kind = long_cuts[-1], "long"
+    else:
+        cut, kind = max(c for c, k in fits if k == "short"), "short"
+    if cut > len(out):
+        out.extend(samples[cursor:cursor + cut - len(out)])
+    clip = out[:cut]
+    clip.extend([0] * (total - cut))
+    done = [p for p in shortened if p["clip_at"] * RATE < cut]
+    info = {"threshold_dbfs": round(20 * math.log10(thr / 32768.0), 2), "frame_ms": FRAME * 1000 // RATE,
+            "long_pause_over_seconds": (LONG_PAUSE_FRAMES - 1) * FRAME / RATE, "pause_to_seconds": PAUSE_TO / RATE,
+            "shortened": done, "removed_seconds": round(sum(p["seconds"] - p["new_seconds"] for p in done), 3),
+            "cut_kind": kind, "cut_clip_seconds": round(cut / RATE, 3), "padding_seconds": round((total - cut) / RATE, 3)}
+    return clip, info
+
+
+def cmd_squeeze(args) -> int:
+    samples = read_wav(args.wav)
+    start = int(round(args.start * RATE))
+    clip, info = squeeze(samples, start)
+    with open(args.text_file, encoding="utf-8") as fh:
+        lines = [ln for ln in fh.read().splitlines() if ln.strip()]
+    source = {}
+    if args.source_json:
+        with open(args.source_json, encoding="utf-8") as fh:
+            source = json.load(fh)
+    src = {"mode": "squeeze", "source": source, "input_sha256": sha256_file(args.wav), "start_seconds": args.start,
+           "squeeze": info}
+    res = write_outputs(args.out_dir, clip, lines, src)
+    sys.stderr.write("build_clip: %d pauses shortened (%.2f s removed), cut in a %s pause at %.3f s, %.3f s padding, "
+                     "speech %.2f s\n" % (len(info["shortened"]), info["removed_seconds"], info["cut_kind"],
+                                           info["cut_clip_seconds"], info["padding_seconds"],
+                                           res["stats"]["speech_seconds"]))
+    return 0
+
+
 def cmd_stats(args) -> int:
     clip = read_wav(args.clip)
     with open(args.ref, encoding="utf-8") as fh:
@@ -222,6 +306,13 @@ def main(argv=None) -> int:
     sp.add_argument("--source-json")
     sp.add_argument("--out-dir", required=True)
     sp.set_defaults(func=cmd_cut)
+    sp = sub.add_parser("squeeze")
+    sp.add_argument("--wav", required=True)
+    sp.add_argument("--start", type=float, required=True)
+    sp.add_argument("--text-file", required=True)
+    sp.add_argument("--source-json")
+    sp.add_argument("--out-dir", required=True)
+    sp.set_defaults(func=cmd_squeeze)
     sp = sub.add_parser("stats")
     sp.add_argument("--clip", required=True)
     sp.add_argument("--ref", required=True)
