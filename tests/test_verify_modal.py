@@ -62,7 +62,9 @@ class FakeSandbox:
 
     def exec(self, *argv: str, **kw: Any) -> FakeProc:
         self.calls.append((argv, kw))
-        reply = self.replies.pop(0) if self.replies else (0, [b"ok"], [])
+        # A gVisor box's first root command makes the box user's network namespace and names its holder.
+        default = (0, [b"netns_pid 4242\n"], []) if "unshare --user --net" in argv[-1] else (0, [b"ok"], [])
+        reply = self.replies.pop(0) if self.replies else default
         if isinstance(reply, Exception):
             raise reply
         proc = FakeProc(*reply)
@@ -78,7 +80,7 @@ class FakeSandbox:
 
 def started(sandbox: FakeSandbox, limits: BoxLimits = BoxLimits()) -> ModalBox:
     box = ModalBox(limits=limits, client=object(), log=lambda s: None)
-    box.sandbox, box.started = sandbox, True
+    box.sandbox, box.started, box.netns_pid = sandbox, True, 4242
     return box
 
 
@@ -121,10 +123,13 @@ def test_commands_run_as_the_box_user_with_limits_and_no_host_env(monkeypatch: p
     box = started(FakeSandbox([(0, [b"hel", b"lo\n"], [b"warn\n"])]), BoxLimits(pids=256, nofile=1024, home_mb=1536))
     result = box.exec("echo hello", 999)
     argv, kw = box.sandbox.calls[0]
-    assert argv[:7] == ("/usr/bin/setpriv", "--reuid=1000", "--regid=1000", "--clear-groups", "--inh-caps=-all",
-                        "--no-new-privs", "--")
+    # Into the box user's network namespace as NET_UID, then down to the box user.
+    assert argv[:12] == ("/usr/bin/setpriv", "--reuid=1002", "--regid=1002", "--clear-groups", "--inh-caps=-all",
+                         "--no-new-privs", "--", "/usr/bin/nsenter", "--target=4242", "--user", "--net", "--")
+    assert argv[12:19] == ("/usr/bin/setpriv", "--reuid=1000", "--regid=1000", "--clear-groups", "--inh-caps=-all",
+                           "--no-new-privs", "--")
     # Programs by absolute path: the box user's ~/.local/bin comes first on its own PATH.
-    assert argv[7:9] == ("/usr/bin/env", "-i") and set(a.split("=", 1)[0] for a in argv[9:9 + len(BOX_ENV)]) == \
+    assert argv[19:21] == ("/usr/bin/env", "-i") and set(a.split("=", 1)[0] for a in argv[21:21 + len(BOX_ENV)]) == \
         set(BOX_ENV)
     assert argv[-3:-1] == ("/usr/bin/bash", "-c")
     assert "LLM_123" not in " ".join(argv)
@@ -158,7 +163,7 @@ def test_files_go_through_stdin_with_the_path_as_an_argument():
     assert box.read_file("dir/a b.txt") == b"hello\n"
 
 
-def test_network_cut_and_restore_replace_the_allowlist():
+def test_network_cut_and_restore_replace_the_allowlist_and_the_uplink():
     box = started(FakeSandbox())
     box.set_network(False)
     box.set_network(False)  # no-op
@@ -166,6 +171,10 @@ def test_network_cut_and_restore_replace_the_allowlist():
     assert box.sandbox.policies == [
         {"outbound_cidr_allowlist": [], "outbound_domain_allowlist": []},
         {"outbound_cidr_allowlist": ONLINE_CIDRS, "outbound_domain_allowlist": []}]
+    # gVisor: root kills the uplink (and checks it is gone) before the cut, and starts it again after.
+    assert [argv[:2] for argv, _ in box.sandbox.calls] == [("/usr/bin/bash", "-c")] * 2
+    down, up = (argv[-1] for argv, _ in box.sandbox.calls)
+    assert down == mb.uplink_script(4242, False) and up == mb.uplink_script(4242, True)
     box.close()
     assert box.sandbox.terminated and not box.started
     with pytest.raises(BoxError, match="not started"):
@@ -191,12 +200,14 @@ def test_start_creates_the_sandbox_from_the_published_image(monkeypatch: pytest.
     assert created["args"] == ("sleep", "300") and created["app"] == "app:pickfit-verify"
     assert created["image"] == "image:pickfit-sbx:abc" and created["runtime"] == "gvisor"
     assert box.image == "pickfit-sbx:abc" and box.sandbox_id == "sb-test"
-    mkdir, chown = (call[0] for call in sandbox.calls[:2])
+    netns, uplink, mkdir, chown = (call[0] for call in sandbox.calls[:4])
+    assert netns[-1] == mb.netns_script() and uplink[-1] == mb.uplink_script(4242, True) and box.netns_pid == 4242
     assert mkdir[:2] == ("/usr/bin/mkdir", "-p") and chown[:3] == ("/usr/bin/chown", "-R", "1000:1000")
 
 
 def test_limits_test_reports_each_probe():
     script = {
+        "getaddrinfo": (0, "172.21.0.1 answered 90 bytes\ngetaddrinfo resolved 151.101.0.223\n", ""),
         "id -u": (0, "1000\nCapEff:\t0000000000000000\n", ""),
         "env |": (0, "HOME PATH GPG_KEY ", ""),
         "pypi.org": (0, "200", ""),
@@ -218,6 +229,8 @@ def test_limits_test_reports_each_probe():
             result = super().exec(command, timeout_s, cwd=cwd)
             if not self.network_enabled and ("pypi.org" in command or "1.1.1.1" in command):
                 result.stdout, result.exit_code = "000", 28
+                if "getaddrinfo" in command:
+                    result.stdout = "172.21.0.1 no answer (OSError)\ngetaddrinfo failed [Errno -3]\n"
             result.timed_out = result.exit_code == 137 and "sleep" in command
             return result
 
@@ -225,7 +238,7 @@ def test_limits_test_reports_each_probe():
     # A box with no root channel cannot run the controls those two probes need: undecided is a failure.
     assert [r.name for r in results if not r.ok] == ["no_userns", "vsock_closed"]
     assert [r.name for r in results][-1] == "memory_cap"
-    assert len(results) == 22
+    assert len(results) == 23
     assert "no control" in next(r for r in results if r.name == "vsock_closed").detail
 
 
@@ -271,3 +284,78 @@ def test_a_command_that_never_returns_is_given_up_on(monkeypatch: pytest.MonkeyP
     assert "start servers and daemons with run_background" in result.stderr
     with pytest.raises(BoxError, match="cannot read fifo"):
         box.read_file("fifo")
+
+
+def test_a_gvisor_box_runs_every_uid_but_root_in_the_box_users_network_namespace():
+    from pickfit.verify import gui
+
+    box = started(FakeSandbox())
+    box.harness_exec(["/usr/local/bin/python3", "-I", "-S", "-"], 10, as_uid=gui.DISPLAY_UID)
+    box.harness_exec(["/usr/bin/true"], 10)
+    as_display, as_root = (argv for argv, _ in box.sandbox.calls)
+    assert as_display[:12] == tuple(box.enter()) and as_display[12:14] == ("/usr/bin/setpriv", "--reuid=1001")
+    assert as_root == ("/usr/bin/true",)  # root keeps the box's own network
+    assert ModalBox(runtime="vm", client=object()).enter() == []  # a VM closes DNS with nftables instead
+
+
+def test_the_namespace_maps_only_net_uid_the_box_user_and_the_display_uid():
+    script = mb.netns_script()
+    assert "/usr/bin/setpriv --reuid=1002" in script and "/usr/bin/unshare --user --net --" in script
+    ns: dict[str, Any] = {}
+    written: dict[str, str] = {}
+
+    class File:
+        def __init__(self, path: str, mode: str) -> None:
+            self.path = path
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc: Any) -> None:
+            pass
+
+        def write(self, data: str) -> None:  # one write per map: the kernel reads a map from a single write
+            assert self.path not in written
+            written[self.path] = data
+
+    import sys
+    argv = sys.argv
+    sys.argv = ["-c", "4242"]
+    try:
+        exec(mb._MAP_PY, {"open": File, "__name__": "map"}, ns)
+    finally:
+        sys.argv = argv
+    # NET_UID is root inside (kuid 1002 outside: no more than it was), uid 0 itself is not mapped.
+    assert written == {f"/proc/4242/{m}": "0 1002 1\n1000 1000 1\n1001 1001 1\n" for m in ("uid_map", "gid_map")}
+
+
+def test_the_uplink_runs_as_net_uid_and_its_cut_is_checked():
+    up, down = mb.uplink_script(4242, True), mb.uplink_script(4242, False)
+    assert "/usr/bin/setpriv --reuid=1002" in up and "/usr/bin/slirp4netns --mtu=1500 --disable-host-loopback " \
+        "--enable-seccomp 4242 tap0" in up
+    assert "ip route add default via 10.0.2.2 dev tap0" in up
+    # Every NET_UID process but the holder is killed; the device must be gone and nothing else of NET_UID's left.
+    assert '[ "$p" = 4242 ] || kill -KILL "$p"' in down and "tap0 is still there" in down
+    assert "NET_UID processes left" in down and "slirp4netns " not in down
+
+
+def test_a_failed_uplink_cut_stops_the_box_from_claiming_offline():
+    box = started(FakeSandbox([(1, [b"tap0 is still there\n"], [])]))
+    with pytest.raises(BoxError, match="cutting the network uplink failed: tap0 is still there"):
+        box.set_network(False)
+    assert box.network_enabled and box.sandbox.policies == []
+
+
+@pytest.mark.parametrize("stdout, ok", [
+    ("net_uid 4242 sleep\n", True),
+    ("net_uid 4242 sleep\nnet_uid 4300 slirp4netns\n", False),  # the uplink still runs offline
+    ("", False),  # nothing to try: undecided
+    ("net_uid 4242 sleep\nENTERED the box's own namespace\n", False),
+    ("net_uid 4242 sleep\nSIGNALS 4242\n", False),
+    ("ROUTED\nnet_uid 4242 sleep\n", False),
+])
+def test_the_netns_probe_needs_the_holder_alone_and_no_way_out(stdout: str, ok: bool):
+    from pickfit.verify.box import ExecResult
+    from pickfit.verify.limits import _netns_held
+
+    assert _netns_held(ExecResult("netns", 0, stdout, "", 0.1)) is ok

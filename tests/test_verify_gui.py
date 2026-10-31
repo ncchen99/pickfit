@@ -524,7 +524,9 @@ def test_vm_commands_run_under_the_no_vsock_filter():
 
     vm = mb.ModalBox(runtime="vm", client=object()).user_argv("true", 10, "/home/sbx/work")
     assert vm[7:11] == ["/usr/local/bin/python3", "-I", "-S", mb.NO_VSOCK] and vm[11] == "/usr/bin/env"
-    assert mb.ModalBox(client=object()).user_argv("true", 10, "/home/sbx/work")[7] == "/usr/bin/env"
+    gvisor = mb.ModalBox(client=object())
+    gvisor.netns_pid = 4242
+    assert gvisor.user_argv("true", 10, "/home/sbx/work")[19] == "/usr/bin/env"  # no filter, in the namespace
     # The display uid's commands (the watcher) too; root's are not filtered.
     box = mb.ModalBox(runtime="vm", client=object(), log=lambda s: None)
     box.sandbox, box.started = FakeSandbox(), True
@@ -602,10 +604,32 @@ def test_a_display_box_that_cannot_start_its_server_fails(monkeypatch: pytest.Mo
     from pickfit.verify.box import BoxError
     from test_verify_modal import FakeSandbox
 
-    sandbox = FakeSandbox([(0, [b""], []), (0, [b""], []), (1, [b"no display\n"], [])])
+    # gVisor: the network namespace, its uplink, the box setup, then Xvfb (in the namespace) fails.
+    sandbox = FakeSandbox([(0, [b"netns_pid 4242\n"], []), (0, [b""], []), (0, [b""], []), (0, [b""], []),
+                           (1, [b"no display\n"], [])])
     monkeypatch.setattr(modal.App, "lookup", lambda name, **kw: "app")
     monkeypatch.setattr(modal.Sandbox, "create", lambda *a, **kw: sandbox)
     monkeypatch.setattr(modal.Image, "from_name", lambda name: f"image:{name}")
     with pytest.raises(BoxError, match="the virtual display failed: no display"):
         mb.ModalBox(display=True, client="client", log=lambda s: None).start()
     assert sandbox.terminated
+    xvfb = sandbox.calls[-1][0][-1]
+    assert "/usr/bin/nsenter --target=4242 --user --net -- /usr/bin/setpriv --reuid=1001" in xvfb
+
+
+def test_a_gvisor_box_without_its_network_namespace_never_runs_the_box_user(monkeypatch: pytest.MonkeyPatch):
+    import modal
+
+    from pickfit.verify.box import BoxError
+    from test_verify_modal import FakeSandbox
+
+    sandbox = FakeSandbox([(0, [b"unshare: Operation not permitted\n"], [])])  # no holder pid
+    monkeypatch.setattr(modal.App, "lookup", lambda name, **kw: "app")
+    monkeypatch.setattr(modal.Sandbox, "create", lambda *a, **kw: sandbox)
+    monkeypatch.setattr(modal.Image, "from_name", lambda name: f"image:{name}")
+    box = mb.ModalBox(client="client", log=lambda s: None)
+    with pytest.raises(BoxError, match="network namespace failed: unshare: Operation not permitted"):
+        box.start()
+    assert sandbox.terminated and len(sandbox.calls) == 1
+    with pytest.raises(BoxError, match="not set up"):
+        box.user_argv("true", 10, "/home/sbx/work")

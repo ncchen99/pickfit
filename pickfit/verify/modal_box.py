@@ -9,7 +9,20 @@
 - Network: created with an allowlist of public IPv4 ranges, so it can be
   tightened later; cloud metadata (169.254.0.0/16) and private ranges are
   never on it. set_network(False) replaces it with an empty allowlist
-  (`_experimental_set_outbound_network_policy`, Alpha).
+  (`_experimental_set_outbound_network_policy`, Alpha). Modal's resolver
+  172.21.0.1 still answers with an empty allowlist (both runtimes), and a
+  running box cannot be switched to Modal's blocked mode, so each runtime
+  closes DNS itself (below).
+- gVisor (measured 2026-10-31): root has neither CAP_NET_ADMIN nor CAP_SYS_ADMIN and gVisor has no netfilter, so
+  no rule, route or link change can close the resolver. Instead the box user never touches the box's own network:
+  NET_UID makes a user and network namespace at start (root writes its maps: NET_UID is root inside it, the box user
+  and the display uid are themselves, nothing else is mapped), and every command of a uid other than root runs in
+  it. Its only way out is slirp4netns, run as NET_UID (seccomp on, no route to the box's loopback, MTU 1500: larger
+  frames stall TCP in gVisor); it carries the box user's traffic, DNS included, through the box's network and
+  Modal's allowlist. set_network(False) kills every NET_UID process except the namespace's holder and checks that
+  the uplink's device is gone: the box user then has loopback only, so localhost servers, including ones started
+  online, still answer. The box user cannot enter another network namespace, change a route or signal NET_UID's
+  processes. About 100 MB/s through the uplink (150 MB/s direct).
 - Image: built once from sandbox.Dockerfile and published as
   `pickfit-sbx:<Dockerfile hash>`; boxes start from that name, and only a
   missing name triggers the build. (`Image.from_name(...).hydrate()` is not
@@ -19,8 +32,8 @@
   user runs anything (measured 2026-10-31): unprivileged user namespaces and io_uring are switched off; every
   box-user command runs under a seccomp filter that refuses AF_VSOCK sockets (the host's vsock port 52
   accepted the box user's connection); and while the network is off, an nftables rule drops the box user's
-  DNS (Modal's resolver 172.21.0.1 answers under both runtimes with an empty allowlist; gVisor has no
-  netfilter, so a gVisor box cannot close it). A VM gives 1 vCPU per requested core.
+  DNS (a VM has netfilter; with user namespaces off, the gVisor way is closed to it). A VM gives 1 vCPU per
+  requested core.
 - display=True adds GUI_PACKAGES to the image; root starts Xvfb as a separate uid (DISPLAY_UID), which the box
   user can draw on but cannot kill or replace. Evidence (window list, screenshot, its hash and copy) is made by
   root and DISPLAY_UID through harness_exec, by absolute path, in a directory the box user cannot open.
@@ -70,6 +83,13 @@ GIB_USD_PER_S = 0.00000667
 # tool's smoke test runs the smallest model it supports.
 GPU_USD_PER_S = {"T4": 0.59 / 3600, "L4": 0.80 / 3600, "A10": 1.10 / 3600}
 BOX_UID = 1000
+NET_UID = 1002  # gVisor: owns the box user's network namespace and runs its uplink; root only inside that namespace
+UPLINK = "/usr/bin/slirp4netns"
+TAP = "tap0"
+# slirp4netns's defaults: the namespace is 10.0.2.100/24, the gateway (slirp itself) 10.0.2.2.
+TAP_CONFIG = (f"/usr/bin/ip link set {TAP} up && /usr/bin/ip addr add 10.0.2.100/24 dev {TAP} && "
+              f"/usr/bin/ip route add default via 10.0.2.2 dev {TAP}")
+UPLINK_LOG = "/var/log/pickfit-uplink.log"
 # Never reachable from a box: cloud metadata and link-local, private and shared address space.
 BLOCKED_NETS = ("0.0.0.0/8", "10.0.0.0/8", "100.64.0.0/10", "169.254.0.0/16", "172.16.0.0/12",
                 "192.168.0.0/16", "224.0.0.0/4", "240.0.0.0/4")
@@ -180,6 +200,41 @@ def _drop_to(uid: int) -> list[str]:
             "--no-new-privs", "--"]
 
 
+# The maps go in one write each: the kernel takes a map from a single write, and bash's printf writes per line.
+_MAP_PY = ("import sys\nfor name in ('uid_map', 'gid_map'):\n    with open(f'/proc/{sys.argv[1]}/{name}', 'w') as f:\n"
+           f"        f.write('0 {NET_UID} 1\\n{BOX_UID} {BOX_UID} 1\\n{DISPLAY_UID} {DISPLAY_UID} 1\\n')\n")
+
+
+def netns_script() -> str:
+    """Root (gVisor): NET_UID makes the box user's user and network namespace, kept by a holder process; root maps
+    NET_UID to root inside it and the box user and the display uid to themselves. Prints `netns_pid N`."""
+    drop = " ".join(_drop_to(NET_UID))
+    return (f"{{ /usr/bin/setsid {drop} /usr/bin/unshare --user --net -- /usr/bin/sleep infinity "
+            "> /dev/null 2>&1 < /dev/null & }; P=$!; "
+            "for i in $(/usr/bin/seq 1 50); do "
+            "[ \"$(/usr/bin/readlink /proc/$P/ns/net)\" != \"$(/usr/bin/readlink /proc/self/ns/net)\" ] && break; "
+            "/usr/bin/sleep 0.1; done; "
+            f"{PYTHON} -I -S -c {shlex.quote(_MAP_PY)} $P && echo \"netns_pid $P\"")
+
+
+def uplink_script(netns_pid: int, enabled: bool) -> str:
+    """Root (gVisor): start slirp4netns as NET_UID and route the namespace through it; or kill every NET_UID process
+    but the holder and check that the device is gone and nothing else of NET_UID's runs."""
+    drop = " ".join(_drop_to(NET_UID))
+    inside = f"{drop} /usr/bin/nsenter --target={netns_pid} --user --net --"
+    if enabled:
+        return (f"{{ /usr/bin/setsid {drop} {UPLINK} --mtu=1500 --disable-host-loopback --enable-seccomp "
+                f"{netns_pid} {TAP} >> {UPLINK_LOG} 2>&1 < /dev/null & }}; "
+                f"for i in $(/usr/bin/seq 1 50); do {inside} /usr/bin/ip link show {TAP} > /dev/null 2>&1 && break; "
+                f"/usr/bin/sleep 0.1; done; {inside} /usr/bin/bash -c {shlex.quote(TAP_CONFIG)} || "
+                f"{{ /usr/bin/tail -5 {UPLINK_LOG}; exit 1; }}")
+    return (f"for p in $(/usr/bin/pgrep -u {NET_UID}); do [ \"$p\" = {netns_pid} ] || kill -KILL \"$p\"; done; "
+            f"for i in $(/usr/bin/seq 1 50); do {inside} /usr/bin/ip link show {TAP} > /dev/null 2>&1 || break; "
+            f"/usr/bin/sleep 0.1; done; {inside} /usr/bin/ip link show {TAP} > /dev/null 2>&1 && "
+            f"{{ echo '{TAP} is still there'; exit 1; }}; left=\"$(/usr/bin/pgrep -u {NET_UID})\"; "
+            f"[ \"$left\" = {netns_pid} ] || {{ echo \"NET_UID processes left: $left\"; exit 1; }}")
+
+
 class ModalBox(Box):
     """A Modal Sandbox (gVisor, or a VM) driven like a DockerBox."""
 
@@ -212,6 +267,7 @@ class ModalBox(Box):
         self.start_s: float | None = None
         self.network_enabled = True
         self.sandbox_id: str | None = None
+        self.netns_pid: int | None = None  # gVisor: the holder of the box user's network namespace
 
     # -- lifecycle
 
@@ -258,21 +314,34 @@ class ModalBox(Box):
         if self.runtime == "vm":
             steps.append(("VM hardening", self._exec_raw(["/usr/bin/bash", "-c", VM_HARDEN], 60, as_root=True,
                                                          stdin=NO_VSOCK_SOURCE.encode())))
+        else:  # before the box user runs anything: it never has the box's own network
+            netns = self._exec_raw(["/usr/bin/bash", "-c", netns_script()], 60, as_root=True)
+            pid = next((line.split()[1] for line in netns.stdout.splitlines() if line.startswith("netns_pid ")), "")
+            self.netns_pid = int(pid) if pid.isdigit() else None
+            steps.append(("the box user's network namespace", netns))
+            self._fail_on(steps, missing=self.netns_pid is None)
+            steps.append(("the network uplink", self._uplink(True)))
+        self._fail_on(steps)
         steps.append(("box setup", self._exec_raw(["/usr/bin/mkdir", "-p", BOX_WORKDIR, f"{BOX_HOME}/.local/bin"], 60,
                                                   as_root=True)))
         steps.append(("box setup", self._exec_raw(["/usr/bin/chown", "-R", f"{BOX_UID}:{BOX_UID}", BOX_HOME], 60,
                                                   as_root=True)))
         if self.display:  # root starts it as DISPLAY_UID: the box user can draw on it, not kill or replace it
-            xvfb = self._exec_raw(["/usr/bin/bash", "-c", xvfb_script(tuple(self.seccomp()))], 60, as_root=True)
+            xvfb = self._exec_raw(["/usr/bin/bash", "-c", xvfb_script(tuple(self.seccomp()), tuple(self.enter()))],
+                                  60, as_root=True)
             steps.append(("the virtual display", xvfb))
             pid = next((line.split()[1] for line in xvfb.stdout.splitlines() if line.startswith("xvfb_pid ")), "")
             self.xvfb_pid = int(pid) if pid.isdigit() else None
+        self._fail_on(steps, missing=bool(self.display and self.xvfb_pid is None))
+        self.start_s = round(time.monotonic() - began, 2)
+
+    def _fail_on(self, steps: list[tuple[str, ExecResult]], *, missing: bool = False) -> None:
+        """Close the box and raise if a setup step failed (or, with `missing`, if the last one gave nothing)."""
         failed = next(((what, r) for what, r in steps if r.exit_code != 0), None)
-        if failed or (self.display and self.xvfb_pid is None):
+        if failed or missing:
             self.close()
             what, r = failed or steps[-1]
             raise BoxError(f"{what} failed: {(r.stdout + r.stderr).strip()[-500:]}")
-        self.start_s = round(time.monotonic() - began, 2)
 
     def close(self) -> None:
         if not self.started:
@@ -299,19 +368,33 @@ class ModalBox(Box):
         guard = (f"ulimit -u {lim.pids} -n {lim.nofile} -f {lim.home_mb * 1024} && cd {shlex.quote(cwd)} && "
                  f"exec /usr/bin/timeout -s KILL {timeout_s} /usr/bin/bash -c {shlex.quote(command)}")
         env = [f"{key}={value}" for key, value in BOX_ENV.items()]
-        return [*_drop_to(BOX_UID), *self.seccomp(), "/usr/bin/env", "-i", *env, "/usr/bin/bash", "-c", guard]
+        return [*self.enter(), *_drop_to(BOX_UID), *self.seccomp(), "/usr/bin/env", "-i", *env, "/usr/bin/bash", "-c",
+                guard]
 
     def seccomp(self) -> list[str]:
         """The argv prefix that runs a command under the no-vsock, no-io_uring filter (a VM box; gVisor has
         neither vsock nor these host-kernel paths)."""
         return [PYTHON, "-I", "-S", NO_VSOCK] if self.runtime == "vm" else []
 
+    def enter(self) -> list[str]:
+        """The argv prefix that puts a command in the box user's network namespace, as NET_UID (root there) until
+        the next setpriv (a gVisor box; a VM closes DNS with nftables). Fails closed before the namespace exists."""
+        if self.runtime != "gvisor":
+            return []
+        if self.netns_pid is None:
+            raise BoxError("the box user's network namespace is not set up")
+        return [*_drop_to(NET_UID), "/usr/bin/nsenter", f"--target={self.netns_pid}", "--user", "--net", "--"]
+
+    def _uplink(self, enabled: bool) -> ExecResult:
+        assert self.netns_pid is not None
+        return self._exec_raw(["/usr/bin/bash", "-c", uplink_script(self.netns_pid, enabled)], 30, as_root=True)
+
     def harness_exec(self, argv: list[str], timeout_s: int, *, as_uid: int | None = None,
                      stdin: bytes | None = None) -> ExecResult:
         """Run argv for pickfit itself: as root, or as `as_uid` with an empty environment (no box-user PATH)."""
         self._require_started()
         if as_uid is not None:
-            argv = [*_drop_to(as_uid), *self.seccomp(), "/usr/bin/env", "-i", f"PATH={HARNESS_PATH}",
+            argv = [*self.enter(), *_drop_to(as_uid), *self.seccomp(), "/usr/bin/env", "-i", f"PATH={HARNESS_PATH}",
                     f"HOME={EVIDENCE_DIR}", "LANG=C.UTF-8", *argv]
         return self._exec_raw(argv, timeout_s, stdin=stdin, as_root=True)
 
@@ -426,6 +509,8 @@ class ModalBox(Box):
         self._require_started()
         if enabled == self.network_enabled:
             return
+        if not enabled and self.runtime == "gvisor":  # the box user's only way out, DNS included
+            self._check_rule(self._uplink(False), "cutting the network uplink")
         try:
             self.sandbox._experimental_set_outbound_network_policy(
                 outbound_cidr_allowlist=ONLINE_CIDRS if enabled else [], outbound_domain_allowlist=[])
@@ -434,5 +519,11 @@ class ModalBox(Box):
         self.network_enabled = enabled
         if self.runtime == "vm":  # Modal's resolver answers even with an empty allowlist; root closes it
             rule = self._exec_raw(["/usr/bin/bash", "-c", DNS_UNBLOCK if enabled else DNS_BLOCK], 30, as_root=True)
-            if rule.exit_code != 0:
-                raise BoxError(f"offline DNS rule failed: {(rule.stdout + rule.stderr).strip()[-300:]}")
+            self._check_rule(rule, "offline DNS rule")
+        elif enabled:
+            self._check_rule(self._uplink(True), "the network uplink")
+
+    @staticmethod
+    def _check_rule(result: ExecResult, what: str) -> None:
+        if result.exit_code != 0:
+            raise BoxError(f"{what} failed: {(result.stdout + result.stderr).strip()[-300:]}")
