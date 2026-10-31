@@ -312,7 +312,7 @@ GitHub Actions 沒有採用。改在念誠的 Windows 11 Home 筆電（i5-1135G7
   - 沒有光碟：安裝 ISO 與帶 Administrator 密碼的 aux ISO 在拍快照前拔掉。
   - Administrator 的自動登入只在建置時用（裝 winget 需要它），HARDEN 會移除。
 - 這跟 macOS 一致：macOS box 也讓 `sbx` 自動登入（guest agent 要靠它啟動），密碼放在只有 root 能讀的 `/etc/kcpassword`，limits 檢查 `kcpassword_unreadable`。Windows 的對應探測是 `no_logon_secret`：`sbx` 讀 LSA secret 要得到 `denied`。
-- 每次建 base 都隨機產生密碼。密碼只用 guestcontrol 的 `--putenv` 傳進 guest 程序的環境，不寫進指令列、腳本內容、log、manifest。
+- 每次建 base 都隨機產生密碼（`sbx` 的密碼在 resume 時也換新）。**更正（10/31 審查）**：c76bd01 以前，`sbx` 的密碼曾被寫進 `PROVISION_USERS` 的腳本內容，再以 `-EncodedCommand` 傳進 guest；Windows PowerShell 會把整條指令列記進 "Windows PowerShell" log（event 400/403 的 HostApplication），一般使用者讀得到。現在腳本與密碼都只放在 guestcontrol 的 `--putenv` 環境變數（`PF_ENC`、`PF_SECRET`），shell 以固定的 `-Command` 開機碼讀出後刪掉，指令列上沒有腳本也沒有密碼。HARDEN 與拍快照前都會清空 PowerShell 的三個 log。密碼也不寫進 host 的 log 或 manifest。
 - 拍快照前，Administrator 以自己的密碼掃描 Panther、Sysprep、Setup、Temp、Public、`C:\Users\sbx`、harness 資料夾與各磁碟根目錄的檔案（明文，以及 answer file 用的 base64 形式），有命中就不拍。
 - 對照：
   - 正向：同一個探測由 Administrator 跑時，LSA secret 是 `readable`。
@@ -340,7 +340,7 @@ GitHub Actions 沒有採用。改在念誠的 Windows 11 Home 筆電（i5-1135G7
   - 環境變數沒有金鑰（對照：自設的 `*_TOKEN` 會被看到）。
 - 網路：
   - 經 router 時，主機與 LAN 的埠、gateway、VirtualBox NAT 位址、metadata、私有網段、router SSH 全部逾時（對照：plain NAT 下主機的埠是 open）。
-  - router DNS 開著；mDNS、SSDP 沒有回應。
+  - router DNS 開著；mDNS、SSDP 沒有回應（10/31 審查後移除這兩項，見 5.10）。
   - 斷網後 HTTPS 失敗、localhost 照常，恢復後 PyPI 再通。
 - 指令：3 秒逾時被殺（對照：1 秒的指令正常結束）；exit code 0／1／3／93／94／1603 都正確傳回。
 
@@ -374,8 +374,55 @@ GitHub Actions 沒有採用。改在念誠的 Windows 11 Home 筆電（i5-1135G7
 - 一次只能一個 box。每款工具 6–13 分鐘。
 - `run_background`：agent-history 用它在背景啟動 `serve`，75 秒後 VBoxManage 回 20，跟 sentinel 的 0 對不上，harness 判為不可信（方向是安全的），所以這款沒能宣稱 service 等級。要再查。
 - VirtualBox 安裝程式忽略了參數，裝上了 host-only 網卡與橋接 filter（VBoxNetLwf）。box 沒有用到，每次開機前檢查網卡會拒絕它們。
-- NAT hairpin：router 擋了主機自己的公網 IPv4（extra set），但家用路由器可能經 WAN 位址被打到，記為已知限制（跟 5.7 相同）。
+- NAT hairpin：10/31 審查後，每次 box 啟動時 host 從 `https://1.1.1.1/cdn-cgi/trace` 讀出這個網路的公網 egress 位址，加進 router 的 drop set（讀不到就不開 box），並探測該位址的 80、443、445。這台所在的網路（39.14.65.90）不經 router 也連不到那個位址，所以「不經 router 連得到」的正向對照在這裡做不出來；能證明它被擋的是 router 自己回報的 drop set（`egress_ip_in_router_block`）。
+- tart_box 的 `_agent_failed` 也用 stderr 裡的文字（例如 "is the Tart Guest Agent running?"）判斷 VM 或 agent 是否還在，guest 印得出這些字，跟這次修掉的 vbox 問題一樣；這個分支沒動 tart_box，留待之後改成看 host 端狀態。
 - 主機上還有一個舊的 Oracle Extension Pack 7.0.6（版本不合、無法載入，沒有用到），要不要移除由念誠決定。
+
+### 5.10 c76bd01 的安全審查與修正（2026-10-31 晚）
+
+審查只看程式碼（沒有 high 等級的問題）。修正在 f8c7fc0、ed94e51、68e5c30。
+
+**Medium**
+
+1. **sbx 的密碼留在 PowerShell log**：在 VM 上確認過，sbx 讀得到 "Windows PowerShell" log，最近 500 筆裡有 349 筆帶 `EncodedCommand`。
+   - 修正：腳本與密碼只放在 guestcontrol 的 `--putenv` 環境變數，shell 用固定的 `-Command` 開機碼讀出 `PF_ENC` 後刪掉；`run.ps1` 的指令列不再帶腳本。
+   - 每次建 base（包括 resume）都給 sbx 新密碼。
+   - HARDEN 與拍快照前清空 PowerShell 的三個 log。
+   - 掃描兩個密碼：檔案，加上所有 event log 的內容（其中的 base64 也解開比對）。重建時掃了 539 個檔案、24,273 筆事件，0 命中。
+   - 新的 limits 探測 `no_encoded_commands_in_log`（sbx：log 讀得到、沒有任何 EncodedCommand；對照：Administrator 執行一次 `-EncodedCommand` 後探測看得到）。審查要求的 `Get-WinEvent -LogName 'Windows PowerShell' | ? Message -match EncodedCommand` 以 sbx 跑，結果 0 筆。
+2. **家用路由器的 WAN 位址**：見 5.9 已知限制裡的 NAT hairpin 一項。
+
+**Low**
+
+3. box 只在 VM 的 extradata `pickfit/session` 是自己的 session 時才動 VM：`_refuse_foreign_run()` 移到 try 之前；`close()` 與逾時停機遇到不是自己的 VM 會跳過；每個指令前也檢查。
+4. VM 是否還在，改看 host 端的 VM 狀態，不再看 guest 印得出的 "VBoxManage: error:"。tart_box 有同樣的問題，見 5.9。
+5. mDNS／SSDP 探測移除：原本的查詢封包在 PowerShell 5.1 下格式錯誤；改用正確格式後，這台 guest 連 Windows 自己都不回應，做不出正向對照，所以不再列為檢查項目（router 照樣丟 224.0.0.0/4）。
+6. 權限檢查變嚴：sbx 的 BUILTIN 群組必須剛好是 Users（S-1-5-32-545）、Medium integrity、沒有 SeBackup／SeRestore／SeDebug／SeImpersonate／SeTakeOwnership／SeLoadDriver；Administrator 的對照必須看到 S-1-5-32-544。HARDENED_CHECK 檢查所有本機群組，sbx 只能在 Users。實測 sbx：`builtin=S-1-5-32-545 integrity=S-1-16-8192 privileges=SeChangeNotifyPrivilege,SeIncreaseWorkingSetPrivilege,SeShutdownPrivilege,…`。
+7. `ps_quote` 把 `'` 與 U+2018–U+201B 都加倍，測試用真的 Windows PowerShell 解析確認。
+8. router 的規則雜湊改在加入 extra4 之前計算，不刪任何行；router 重建（rules `17b815a69afc5d17`，build `583d254c306d`）。
+
+**順便做的**
+
+- 每次啟動前檢查 VirtualBox 的 host 通道都關著：共用資料夾、剪貼簿、拖放、VRDE、USB、音效、序列埠與平行埠、teleporter、錄影。
+- harness 的 Administrator 指令（外層的 `run.ps1` 與內層 shell）都在 `C:\ProgramData\pickfit` 執行，不再用 `C:\Windows\Temp`。
+
+**VM 實測的 3 件事**
+
+- a. HGCM：sbx 打得開 `\\.\VBoxGuest`（Guest Additions 的驅動程式沒有擋一般使用者）。用 guestcontrol 直接執行 VBoxControl 的嘗試，sbx 與 Administrator 都在 guestcontrol 層失敗（VBOX_E_IPRT_ERROR），所以 sbx 能否以 HGCM 連上 guest control service、攔到 harness 帶的 Administrator 憑證或偽造 admin 輸出，**沒有驗證到**。這是開放的風險：Administrator 的憑證只在 host 與 VBoxService 之間傳；VBoxService（SYSTEM）從開機就佔著 master 角色。要排除，需要另外寫一支 HGCM client 實測。
+- b. guest property：sbx 與 Administrator 都沒能用 VBoxControl 寫入（host 讀不到 `/pickfit/*`）；快照還原後，host 端的 `LoggedInUsersList` 也變成沒有值（transient 屬性在還原時清掉）。harness 只讀 `GuestAdd/Version` 與 `LoggedInUsersList`，而且之後一定再以 sbx 實際跑一條指令確認，不只憑屬性。
+- c. 工作目錄：Administrator 的指令實測在 `C:\ProgramData\pickfit`，sbx 寫不進去；舊的 `C:\Windows\Temp` sbx 寫得進去，所以原本的 DLL 搜尋順序植入疑慮成立，現在已移開。
+
+**修正後的結果**：
+
+- base `b76bdbf073ec`（router `583d254c306d`），重建 474 秒；兩個密碼的掃描：543 個檔案、27,215 筆事件，0 命中。
+- `--limits-test` **45／45**（`runs/verify/limits-vbox-20261031-183951.json`），冷開機 75 秒。新增與改嚴的檢查與對照都通過：
+  - `non_admin`：sbx 的 BUILTIN 只有 S-1-5-32-545、Medium integrity、沒有危險權限；對照：Administrator 被判出。
+  - `no_encoded_commands_in_log`：events=214、encoded=0；對照：encoded=8。
+  - `egress_ip_in_router_block`：39.14.65.90 在 router 的 drop set 裡；80／443／445 經 router 都逾時。
+- frugon 與 agent-database-cli 在新 base 上重新驗證：都達 function、斷網重播通過、judge working（verify-frugon-20261031-183954-0b4c、verify-agent-database-cli-20261031-184831-4b85）。5.9 節其他 7 款是在修正前的 base（`42796005b373`）上驗證的。
+- 這台 Meta 累計 $0.146。
+
+**途中發現的問題**：改成 Windows PowerShell 跑探測後，.NET Framework 的 `TcpClient.ConnectAsync` 在斷網時可能直接丟例外，而不是回傳失敗的 task，那個目標就沒有結果，box 判「探測沒跑完」而停下（方向安全，但兩款工具的重播因此失敗）。68e5c30 改成把立即的例外也記成 `unreachable:<code>`，在主機的 Windows PowerShell 上驗證過 refused／timeout／open／error 四種結果都會輸出。
 
 ---
 
