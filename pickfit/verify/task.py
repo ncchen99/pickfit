@@ -26,6 +26,21 @@ README_MAX_BYTES = 512_000
 
 
 @dataclass(frozen=True)
+class ReportedFailure:
+    """A user's failed install or first run, queued by report_outcome for a fresh check (P5.3).
+
+    Only structured fields: anyone holding a rec_id can file a report, so its free text (the
+    error excerpt, the note) never reaches the model. The steps are pickfit's own recorded ones.
+    """
+
+    stage: str  # install_failed | first_run_failed
+    os: str
+    arch: str | None
+    steps: tuple[str, ...]  # the commands of the guide pickfit gave the user
+    guide_os: str | None  # where those steps were run
+
+
+@dataclass(frozen=True)
 class VerifyTask:
     slug: str
     repo_url: str
@@ -33,6 +48,7 @@ class VerifyTask:
     extraction: ExtractionResult
     readme_url: str | None = None
     files: dict[str, str] = field(default_factory=dict)  # relative path -> content
+    reported: ReportedFailure | None = None
     category: str | None = None  # the record's category when known; else the extraction's decides
 
 
