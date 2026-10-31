@@ -1,0 +1,534 @@
+{
+  "schema_version": "software.v1",
+  "slug": "bittune",
+  "repo_id": "gh:1326396952",
+  "name": "Bittune",
+  "summary": "Local agent that deploys and benchmarks vLLM/SGLang inference on your GPUs with auditable evidence.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "benchmarking",
+    "deployment",
+    "gpu",
+    "llm-agent",
+    "llm-inference",
+    "sglang",
+    "vllm"
+  ],
+  "use_cases": [
+    "Deploy Qwen model to vLLM and benchmark throughput",
+    "Inspect GPU machine and generate hardware snapshot",
+    "Compare benchmark results with deterministic deltas"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/bitcloud-ai/Bittune",
+    "full_name": "bitcloud-ai/Bittune",
+    "created_at": "2026-08-07T08:16:55Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Python >= 3.10",
+      "Node.js >= 22.19.0"
+    ],
+    "system_packages": [
+      "OpenSSL CLI"
+    ],
+    "gpu": "optional",
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": [
+      "BITTUNE_AGENT_LLM_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-bittune-20261031-002115-e22b",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone --depth 1 https://github.com/bitcloud-ai/Bittune bittune-src",
+          "purpose": "clone Bittune source"
+        },
+        {
+          "command": "cd bittune-src && npm ci && python3 -m venv .venv && .venv/bin/python -m pip install -e ./packages/bittune-core && .venv/bin/python -c \"import bittune_core; print('core ok')\"",
+          "purpose": "npm ci plus venv Python Core install"
+        },
+        {
+          "command": "cd bittune-src && npm run build:shell",
+          "purpose": "build portable dist bundle"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && printf '%s\\n' '#!/bin/sh' 'export BITTUNE_CORE_PYTHON=\"/home/sbx/work/bittune-src/.venv/bin/python\"' 'export BITTUNE_TEST_PYTHON=\"/home/sbx/work/bittune-src/.venv/bin/python\"' 'exec node \"/home/sbx/work/bittune-src/dist/bittune.js\" \"$@\"' > ~/.local/bin/bittune && chmod +x ~/.local/bin/bittune",
+          "purpose": "install bittune shim on PATH"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "bittune --help",
+        "expected_signal": "Usage:"
+      },
+      "first_task": "bittune version"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.1.0",
+    "published_at": "2026-08-28T08:59:03Z",
+    "url": "https://github.com/bitcloud-ai/Bittune/releases/tag/v0.1.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:24:20.752181+08:00",
+    "runs": [
+      {
+        "id": "verify-bittune-20261031-002115-e22b",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:24:20.752181+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/bitcloud-ai/Bittune bittune-src",
+            "purpose": "clone Bittune source"
+          },
+          {
+            "command": "cd bittune-src && npm ci && python3 -m venv .venv && .venv/bin/python -m pip install -e ./packages/bittune-core && .venv/bin/python -c \"import bittune_core; print('core ok')\"",
+            "purpose": "npm ci plus venv Python Core install"
+          },
+          {
+            "command": "cd bittune-src && npm run build:shell",
+            "purpose": "build portable dist bundle"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && printf '%s\\n' '#!/bin/sh' 'export BITTUNE_CORE_PYTHON=\"/home/sbx/work/bittune-src/.venv/bin/python\"' 'export BITTUNE_TEST_PYTHON=\"/home/sbx/work/bittune-src/.venv/bin/python\"' 'exec node \"/home/sbx/work/bittune-src/dist/bittune.js\" \"$@\"' > ~/.local/bin/bittune && chmod +x ~/.local/bin/bittune",
+            "purpose": "install bittune shim on PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "bittune --help",
+            "expected_signal": "Usage:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "bittune version",
+            "expected_signal": "Bittune 0.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Bittune 0.1.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "BITTUNE_AGENT_LLM_API_KEY=dummy bittune doctor",
+            "expected_signal": "Runtime assembled: 15 tools",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Runtime assembled: 15 tools (read, bash, edit, write, inspect_environment, inspect_service, plan_deployment, deploy_service, benchmark_service, benchmark_suite, export_deliverable, compare_results, write_report, inspect_records, investigate)",
+            "setup": [
+              {
+                "command": "bittune configure --base-url https://endpoint.example.com/v1 --model-id test-model",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "tar -xzf bittune-<version>-linux-x86_64.tar.gz; cd bundle; sudo ./install.sh",
+            "actually_needed": "Skipped ranked sudo ./install.sh and installed from source because the box has no root/sudo and install.sh installs to /usr/local/bin and /opt/bittune",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "npm ci; python3 -m venv .venv; pip install -e ./packages/bittune-core; npm run bittune",
+            "actually_needed": "After npm ci plus venv pip install, also ran npm run build:shell and installed a ~/.local/bin/bittune shim that sets BITTUNE_CORE_PYTHON/BITTUNE_TEST_PYTHON to the venv python and execs node dist/bittune.js; direct tsx entry fails outside the repo with Cannot find package 'tsx'",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "export BITTUNE_AGENT_LLM_API_KEY='your-api-key'; bittune configure --base-url https://endpoint.example.com/v1 --model-id your-tool-capable-model; bittune doctor",
+            "actually_needed": "bittune doctor exits 0 with a dummy OpenAI-compatible base-url and BITTUNE_AGENT_LLM_API_KEY=dummy, reporting Python Core and Runtime assembled without any real endpoint, Docker, GPU, or EvalScope",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show doctor reporting Runtime assembled: 15 tools and --help showing Usage with commands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-bittune-20261031-002115-e22b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-bittune-20261031-002115-e22b/check-1-cmd11.judged.png",
+            "runs/verify/verify-bittune-20261031-002115-e22b/check-2-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.175177
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:11:57+08:00",
+    "quality": {
+      "total": 64.0,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.476,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 46.5,
+      "signals": {
+        "stars": 127,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 9,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 84,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 34.24
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "f43a5520c26dbb32c334b9c7f7b53393006efd8ac8228f3b7ee8fe6d09be40b8",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Local-first engineering agent that deploys, benchmarks and tunes vLLM/SGLang inference services on your own GPUs, with auditable run evidence."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "任意 OpenAI-compatible Agent LLM endpoint 是启动 Bittune 的必需条件。"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "tar -xzf bittune-0.1.0-linux-x86_64.tar.gz"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "bittune configure --base-url https://endpoint.example.com/v1 --model-id your-tool-capable-model"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export BITTUNE_AGENT_LLM_API_KEY='your-api-key'"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Bittune 自有代码采用 [MIT License](LICENSE)。"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/bitcloud-ai/Bittune",
+      "fetched_at": "2026-10-30T23:49:06+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/bitcloud-ai/Bittune/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:55:54+08:00"
+    },
+    {
+      "id": "release:v0.1.0",
+      "kind": "release",
+      "url": "https://github.com/bitcloud-ai/Bittune/releases/tag/v0.1.0",
+      "fetched_at": "2026-10-30T23:55:54+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "release:v0.1.0",
+      "quote": "TUI 交互与会话恢复；可选接入管理员配置的只读 MCP 参考源。",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:38+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "sudo ./install.sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:38+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Local-first engineering agent that deploys, benchmarks and tunes vLLM/SGLang inference services on your own GPUs, with auditable run evidence.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:38+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Local-first engineering agent that deploys, benchmarks and tunes vLLM/SGLang inference services on your own GPUs, with auditable run evidence.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:38+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Bittune",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:38+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "源码开发需要 Python >= 3.10、OpenSSL CLI 与 Node.js >= 22.19.0",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:38+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/1",
+      "source_id": "readme",
+      "quote": "源码开发需要 Python >= 3.10、OpenSSL CLI 与 Node.js >= 22.19.0",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:38+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "源码开发需要 Python >= 3.10、OpenSSL CLI 与 Node.js >= 22.19.0",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:38+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "GPU、Docker、NVIDIA Container Toolkit、vLLM/SGLang、模型缓存和 EvalScope 都是按需能力；只有目标涉及对应操作时才需要准备。",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:38+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Bittune Local**（当前开源）：上面的全部能力，本地完成、离线可用。",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:38+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "export BITTUNE_AGENT_LLM_API_KEY='your-api-key'",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:38+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:06+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:06+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:06+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:06+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.1.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:55:54+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "你说：\"在这台机器上部署 Qwen 到 vLLM，压测看看吞吐\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:38+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "`inspect_environment` 一次性生成不可变 HardwareSnapshot（GPU、驱动、Docker、拓扑）。",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:38+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "`compare_results`：先校验模型/环境/workload hash 可比性，再给出确定性 delta 结论",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:38+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "sudo ./install.sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:38+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Bittune Local**（当前开源）：上面的全部能力，本地完成、离线可用。",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:38+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:30+08:00",
+  "updated_at": "2026-10-31T02:11:57+08:00"
+}

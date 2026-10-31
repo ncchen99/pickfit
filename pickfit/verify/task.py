@@ -14,8 +14,12 @@ import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pickfit.schema import ExtractionResult
+
+if TYPE_CHECKING:
+    from pickfit.verify.box import Box
 
 README_FETCH_TIMEOUT_S = 30
 README_MAX_BYTES = 512_000
@@ -45,6 +49,18 @@ class VerifyTask:
     readme_url: str | None = None
     files: dict[str, str] = field(default_factory=dict)  # relative path -> content
     reported: ReportedFailure | None = None
+    category: str | None = None  # the record's category when known; else the extraction's decides
+
+
+def prepare_box(box: Box, task: VerifyTask) -> None:
+    """What every box of a run starts with: the README, the sample files, and for an MCP server the probe."""
+    from pickfit.verify.mcp import is_mcp, write_probe
+
+    box.write_file("README.md", task.readme)
+    for name, content in task.files.items():
+        box.write_file(name, content)
+    if is_mcp(task):
+        write_probe(box)
 
 
 def fetch_readme(url: str) -> str:
@@ -67,4 +83,4 @@ def load_fixture(path: Path | str, fetch: Callable[[str], str] = fetch_readme) -
             raise ValueError(f"sample file {name!r} must be a relative path inside the work dir")
     return VerifyTask(slug=data["slug"], repo_url=data["repo_url"], readme=readme,
                       extraction=ExtractionResult.model_validate(data["extraction"]),
-                      readme_url=data.get("readme_url"), files=files)
+                      readme_url=data.get("readme_url"), files=files, category=data.get("category"))

@@ -1,5 +1,6 @@
 /**
- * The Worker's only model call: Meta Responses API, muse-spark-1.3.
+ * The Worker's model calls: Meta Responses API, muse-spark-1.3 (the match
+ * call, and English keywords when the shortlist must cut, expand.ts).
  *
  * User requests are private, so the model is fixed here: never the
  * -contributor models (their inputs may be used for training), and
@@ -97,8 +98,8 @@ export function costUsd(usage: Usage): number {
 }
 
 /** Upper bound for one call: ~3 characters per input token, every output token used. */
-export function estimateCostUsd(requestChars: number): number {
-  return ((requestChars / 3) * PRICE.input + MAX_OUTPUT_TOKENS * PRICE.output) / 1_000_000;
+export function estimateCostUsd(requestChars: number, maxOutputTokens = MAX_OUTPUT_TOKENS): number {
+  return ((requestChars / 3) * PRICE.input + maxOutputTokens * PRICE.output) / 1_000_000;
 }
 
 function readUsage(raw: any): Usage | null {
@@ -128,14 +129,17 @@ export interface StructuredRequest {
   input: string;
   schemaName: string;
   schema: Record<string, unknown>;
+  /** Defaults: the match call's low effort and MAX_OUTPUT_TOKENS. */
+  effort?: 'minimal' | 'low';
+  maxOutputTokens?: number;
 }
 
 export function requestBody(req: StructuredRequest): Record<string, unknown> {
   return {
     model: MATCH_MODEL,
     store: false,
-    reasoning: { effort: 'low' },
-    max_output_tokens: MAX_OUTPUT_TOKENS,
+    reasoning: { effort: req.effort ?? 'low' },
+    max_output_tokens: req.maxOutputTokens ?? MAX_OUTPUT_TOKENS,
     input: [
       { role: 'developer', content: req.instructions },
       { role: 'user', content: req.input },
@@ -200,6 +204,9 @@ function retryWait(err: MetaCallError, random: () => number): number | null {
   return err.retryAfterMs <= RETRY_AFTER_MAX_MS ? Math.max(err.retryAfterMs, jitter) : null;
 }
 
+const outputLimit = (body: Record<string, unknown>) =>
+  typeof body.max_output_tokens === 'number' ? body.max_output_tokens : MAX_OUTPUT_TOKENS;
+
 async function callOnce(
   apiKey: string,
   body: Record<string, unknown>,
@@ -219,7 +226,7 @@ async function callOnce(
   } catch (err) {
     const timedOut = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError');
     // A timed-out request may still be billed; charge the upper bound.
-    const charge = timedOut ? estimateCostUsd(JSON.stringify(body).length) : 0;
+    const charge = timedOut ? estimateCostUsd(JSON.stringify(body).length, outputLimit(body)) : 0;
     throw new MetaCallError(timedOut ? 'timeout' : 'network', String(err), { costUsd: charge });
   }
   const latencyMs = clock() - started;
@@ -240,7 +247,7 @@ async function callOnce(
     });
   }
   const usage = readUsage(raw);
-  const cost = usage ? costUsd(usage) : estimateCostUsd(JSON.stringify(body).length);
+  const cost = usage ? costUsd(usage) : estimateCostUsd(JSON.stringify(body).length, outputLimit(body));
   if (raw?.status !== 'completed') {
     throw new MetaCallError('incomplete', `response status ${raw?.status ?? 'missing'}`, { costUsd: cost, status });
   }

@@ -1,0 +1,578 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mini-infer",
+  "repo_id": "gh:1425772326",
+  "name": "mini-infer",
+  "summary": "Minimal educational LLM inference engine with continuous batching and paged KV-cache for Qwen2.5.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "continuous-batching",
+    "kv-cache",
+    "llm-inference",
+    "llm-serving",
+    "paged-attention",
+    "prefix-caching",
+    "pytorch",
+    "qwen2-5",
+    "speculative-decoding",
+    "vllm"
+  ],
+  "use_cases": [
+    "serve Qwen2.5 models via OpenAI-compatible streaming API",
+    "chat with codebase in terminal with persistent memory",
+    "generate token-budgeted AST skeleton for a codebase",
+    "serve coding model locally as editor backend"
+  ],
+  "alternatives_to": [
+    "vLLM",
+    "llama.cpp",
+    "HuggingFace Transformers"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://prajwal7-2002.github.io/mini-infer/",
+  "repo": {
+    "url": "https://github.com/Prajwal7-2002/mini-infer",
+    "full_name": "Prajwal7-2002/mini-infer",
+    "created_at": "2026-10-19T14:52:24Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "python 3.11+"
+    ],
+    "system_packages": [],
+    "gpu": "optional",
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install mini-infer",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "uvx mini-infer --help"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mini-infer-20261031-023118-31d1",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install mini-infer 2>&1",
+          "purpose": "Install mini-infer via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mini-infer --help 2>&1",
+        "expected_signal": "Minimal continuous-batching LLM inference engine"
+      },
+      "first_task": "mini-infer info 2>&1"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install mini-infer",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "uvx mini-infer --help"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.2.7",
+    "published_at": "2026-10-27T14:23:22Z",
+    "url": "https://github.com/Prajwal7-2002/mini-infer/releases/tag/v0.2.7"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T02:33:54.612199+08:00",
+    "runs": [
+      {
+        "id": "verify-mini-infer-20261031-023118-31d1",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:33:54.612199+08:00",
+        "tool_version": "0.2.7",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install mini-infer 2>&1",
+            "purpose": "Install mini-infer via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mini-infer --help 2>&1",
+            "expected_signal": "Minimal continuous-batching LLM inference engine",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Minimal continuous-batching LLM inference engine with paged KV-cache.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mini-infer info 2>&1",
+            "expected_signal": "mini-infer System Diagnostics",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mini-infer System Diagnostics",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/repodemo/src && printf 'class Foo:\\n    def bar(self, x: int) -> int:\\n        return x + 1\\n' > /tmp/repodemo/src/demo.py && mini-infer repomap /tmp/repodemo/src --max-tokens 1000 2>&1",
+            "expected_signal": "class Foo",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "class Foo:",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "uv run mini-infer info and uv run mini-infer serve --port 8000",
+            "actually_needed": "With isolated `uv tool install mini-infer`, invoke as `mini-infer info` / `mini-infer repomap ...` directly; the `uv run mini-infer ...` prefix in the README assumes a cloned source checkout with `uv sync`.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show help text, system diagnostics table, and AST repomap with class Foo succeeding with exit 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mini-infer-20261031-023118-31d1/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mini-infer-20261031-023118-31d1/check-1-cmd2.judged.png",
+            "runs/verify/verify-mini-infer-20261031-023118-31d1/check-2-cmd3.judged.png",
+            "runs/verify/verify-mini-infer-20261031-023118-31d1/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.062617
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:43:57+08:00",
+    "quality": {
+      "total": 78.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.68,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 40.9,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": 722,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 11,
+      "packages": [
+        "pypi:mini-infer"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 46.16
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:43:57.550284+08:00",
+      "sources_sha": "a3a44de5b4796b845f8b57a0f2a8c18107e7829d5cbf7aa90df813e4facca09f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A minimal, educational, and high-performance **continuous-batching LLM inference engine**"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "empowering every developer to run autonomous AI agents and personal LLMs 100% privately"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "**mini-infer requires NO C++ compilers, Visual Studio Build Tools, or CMake**"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install mini-infer"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "uv run mini-infer info"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "$env:OPENAI_API_BASE = \"http://127.0.0.1:8000/v1\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "<summary><b>1. Do I need an expensive GPU to run mini-infer?</b></summary>"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Apache 2.0 — Copyright (c) 2026 Prajwal Pujari."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Prajwal7-2002/mini-infer",
+      "fetched_at": "2026-10-30T23:51:23+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Prajwal7-2002/mini-infer/blob/main/README.md",
+      "fetched_at": "2026-10-31T02:06:33+08:00"
+    },
+    {
+      "id": "release:v0.2.7",
+      "kind": "release",
+      "url": "https://github.com/Prajwal7-2002/mini-infer/releases/tag/v0.2.7",
+      "fetched_at": "2026-10-31T02:06:33+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Start serving `Qwen2.5-0.5B-Instruct` (model weights will download automatically from Hugging Face on the first run):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "pip install mini-infer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "continuous-batching LLM inference engine with Paged KV-cache",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Minimal, educational continuous-batching LLM inference engine with Paged KV-cache, prefix caching, and speculative decoding for Qwen2.5 in pure PyTorch.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# mini-infer 🚀",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "# Windows\n.venv\\Scripts\\activate\n# Linux / macOS\nsource .venv/bin/activate",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "![Python](https://img.shields.io/badge/python-3.11%2B-blue)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "It also features automatic CPU fallback via `--device cpu`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "model weights will download automatically from Hugging Face on the first run",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:23+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:23+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:23+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:23+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:51:23+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.2.7",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T02:06:33+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Start serving `Qwen2.5-0.5B-Instruct` (model weights will download automatically from Hugging Face on the first run):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "mini-infer chat -c ./src --memory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "mini-infer repomap ./src --max-tokens 1000",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "mini-infer serve --model Qwen/Qwen2.5-Coder-1.5B-Instruct --kv-cache-dtype int8 --port 8000",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "| Feature | `mini-infer` | `vLLM` | `llama.cpp` | `HuggingFace Transformers` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "| Feature | `mini-infer` | `vLLM` | `llama.cpp` | `HuggingFace Transformers` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "| Feature | `mini-infer` | `vLLM` | `llama.cpp` | `HuggingFace Transformers` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "pip install mini-infer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "pip install mini-infer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "pip install mini-infer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "free of cost on everyday hardware",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "designed to run on a single consumer GPU (such as an entry-level 6 GB laptop GPU or a free Kaggle T4)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:17:04+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:49:06+08:00",
+  "updated_at": "2026-10-31T02:43:57+08:00"
+}

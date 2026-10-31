@@ -1,0 +1,530 @@
+{
+  "schema_version": "software.v1",
+  "slug": "prometheus",
+  "repo_id": "gh:1216470012",
+  "name": "Prometheus",
+  "summary": "AI agent daemon that runs on owned hardware and keeps working after you close the laptop.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": "beta",
+  "tags": [
+    "agent-harness",
+    "ai-agent",
+    "beacon",
+    "daemon",
+    "daemon-agent",
+    "llama-cpp",
+    "local-agent",
+    "local-ai",
+    "local-ai-agents",
+    "local-llm"
+  ],
+  "use_cases": [
+    "chat in the CLI",
+    "message on Telegram when a task finishes or fails",
+    "schedule cron jobs with cron syntax or plain English",
+    "run coding tasks in a sandboxed clone to green",
+    "recall facts from memory matched to each message"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://oara.ai/prometheus",
+  "repo": {
+    "url": "https://github.com/OAraLabs/Prometheus",
+    "full_name": "OAraLabs/Prometheus",
+    "created_at": "2026-04-21T00:05:05Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.11+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install 'oara-prometheus[full]'",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "oara doctor"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-prometheus-20261031-005236-d68c",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install 'oara-prometheus[full]'",
+          "purpose": "Install oara-prometheus full via pip"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "oara --version",
+        "expected_signal": "prometheus 0.9.17"
+      },
+      "first_task": "oara doctor"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.9.17",
+    "published_at": "2026-10-26T20:24:45Z",
+    "url": "https://github.com/OAraLabs/Prometheus/releases/tag/v0.9.17"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:55:09.989538+08:00",
+    "runs": [
+      {
+        "id": "verify-prometheus-20261031-005236-d68c",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:55:09.989538+08:00",
+        "tool_version": "0.9.17",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pip install 'oara-prometheus[full]'",
+            "purpose": "Install oara-prometheus full via pip"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "oara --version",
+            "expected_signal": "prometheus 0.9.17",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "◉ prometheus 0.9.17 · OAra Labs",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "oara --help",
+            "expected_signal": "Start always-on daemon",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "daemon Start always-on daemon",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "oara doctor",
+            "expected_signal": "RESULT: 3 error(s)",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "RESULT: 3 error(s), 4 warning(s)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8005/api/setup/status",
+            "expected_signal": "\"setup_mode\":true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"setup_mode\":true,\"configured\":false,\"pairing\":\"available\",\"version\":\"0.9.17\"}",
+            "setup": [
+              {
+                "command": "oara daemon --help; oara daemon",
+                "background": true,
+                "port": 8005
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "oara doctor runs diagnostics with expected non-zero exit, setup API returns setup_mode true, and --version prints prometheus 0.9.17.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-prometheus-20261031-005236-d68c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-prometheus-20261031-005236-d68c/check-1-cmd5.judged.png",
+            "runs/verify/verify-prometheus-20261031-005236-d68c/check-2-cmd11.judged.png",
+            "runs/verify/verify-prometheus-20261031-005236-d68c/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.142185
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 83.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.9,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 43.0,
+      "signals": {
+        "stars": 7,
+        "monthly_downloads": 820,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": 335,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 190,
+      "packages": [
+        "pypi:oara-prometheus"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 47.48
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "0609c896d9dd8652c6a09a005e9cc34d10a5ab40a4c46a0bb173566cea365830",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Prometheus is an AI agent that runs as a daemon on hardware you own, and keeps working after you close the laptop."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "pip install 'oara-prometheus[full]'   # Python 3.11+"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install 'oara-prometheus[full]'   # Python 3.11+\n# or, on Apple Silicon Macs only:\nbrew install oaralabs/tap/oara"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "oara setup          # auto-detects llama.cpp / Ollama / LM Studio / vLLM"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Keys are managed from Beacon's Models tab (paste once, live immediately, no restart) or the env file."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "If anything misbehaves: `oara doctor`."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "you can run as a systemd user service on Linux"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/OAraLabs/Prometheus",
+      "fetched_at": "2026-10-30T23:49:43+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/OAraLabs/Prometheus/blob/main/README.md",
+      "fetched_at": "2026-10-28T19:05:32+08:00"
+    },
+    {
+      "id": "release:v0.9.17",
+      "kind": "release",
+      "url": "https://github.com/OAraLabs/Prometheus/releases/tag/v0.9.17",
+      "fetched_at": "2026-10-28T19:05:32+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "an always-on Python agent runtime",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:45+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "oara                # chat in the CLI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:45+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "local-ai",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:45+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Prometheus is an AI agent that runs as a daemon on hardware you own, and keeps working after you close the laptop.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:45+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Prometheus",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:45+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "(macOS / Linux)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:45+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.11+",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:45+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:43+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:43+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:43+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:43+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:43+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.9.17",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-28T19:05:32+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "release:v0.9.17",
+      "quote": "Prometheus 0.9.17 — beta",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:45+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "oara                # chat in the CLI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:45+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "it messages you when a task finishes or fails",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:45+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Cron jobs take cron syntax or plain English (\"every weekday at noon\")",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:45+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "it iterates to green in a sandboxed clone and hands you a reviewable branch",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:45+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "passive recall that FTS-matches each message against the memory store",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:45+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "pip install 'oara-prometheus[full]'",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:45+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "pip install 'oara-prometheus[full]'",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:45+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "It talks to the inference servers you already run (llama.cpp, Ollama, LM Studio, vLLM), or to a cloud model on your own key.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-30T23:53:45+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-28T19:03:23+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}

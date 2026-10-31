@@ -1,0 +1,565 @@
+{
+  "schema_version": "software.v1",
+  "slug": "modeljars",
+  "repo_id": "gh:1296936472",
+  "name": "ModelJars",
+  "summary": "Community marker-JAR catalog for discovering and running local JVM AI models.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "gguf",
+    "java",
+    "jvm",
+    "maven",
+    "model-registry",
+    "models"
+  ],
+  "use_cases": [
+    "search the qualified model catalog",
+    "check what the current machine can run",
+    "download and verify model weights"
+  ],
+  "alternatives_to": [
+    "Ollama"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://modeljars.org",
+  "repo": {
+    "url": "https://github.com/ModelJars/modeljars",
+    "full_name": "ModelJars/modeljars",
+    "created_at": "2026-07-10T22:06:16Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Java 25 or newer"
+    ],
+    "system_packages": [],
+    "gpu": "optional",
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": [
+      "HF_TOKEN"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install integrallis/tap/modeljars",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "modeljars search gemma"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-modeljars-20261031-002132-ef7c",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/install.sh https://raw.githubusercontent.com/ModelJars/modeljars/main/install.sh && wc -c /tmp/install.sh && echo OK",
+          "purpose": "download install.sh for reading before running"
+        },
+        {
+          "command": "MODELJARS_CLI_VERSION=0.1.57 sh /tmp/install.sh",
+          "purpose": "install modeljars 0.1.57 via script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "modeljars version",
+        "expected_signal": "0.1.57"
+      },
+      "first_task": "modeljars version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "scoop install modeljars",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "modeljars search gemma"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.1.70",
+    "published_at": "2026-10-29T23:24:17Z",
+    "url": "https://github.com/ModelJars/modeljars/releases/tag/v0.1.70"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:22:57.348602+08:00",
+    "runs": [
+      {
+        "id": "verify-modeljars-20261031-002132-ef7c",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:22:57.348602+08:00",
+        "tool_version": "0.1.57",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/install.sh https://raw.githubusercontent.com/ModelJars/modeljars/main/install.sh && wc -c /tmp/install.sh && echo OK",
+            "purpose": "download install.sh for reading before running"
+          },
+          {
+            "command": "MODELJARS_CLI_VERSION=0.1.57 sh /tmp/install.sh",
+            "purpose": "install modeljars 0.1.57 via script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "modeljars version",
+            "expected_signal": "0.1.57",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.1.57",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "modeljars help",
+            "expected_signal": "Search and filter the qualified model catalog",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "search, available, models Search and filter the qualified model catalog.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "modeljars search gemma",
+            "expected_signal": "12 qualified models",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "12 qualified models",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "modeljars info",
+            "expected_signal": "Qualified models",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Qualified models 117",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/ModelJars/modeljars/main/install.sh | sh installs latest",
+            "actually_needed": "pin an older release with binaries, e.g. MODELJARS_CLI_VERSION=0.1.57 sh /tmp/install.sh (v0.1.57 is the newest release whose assets include modeljars-linux-x86_64; v0.1.58 through v0.1.70 publish zero assets so the default latest URL 404s)",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show search listing 12 gemma models, info listing 117 qualified models, and version printing 0.1.57.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-modeljars-20261031-002132-ef7c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-modeljars-20261031-002132-ef7c/check-1-cmd11.judged.png",
+            "runs/verify/verify-modeljars-20261031-002132-ef7c/check-2-cmd12.judged.png",
+            "runs/verify/verify-modeljars-20261031-002132-ef7c/check-3-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.069229
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 82.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.8,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.75,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 43.2,
+      "signals": {
+        "stars": 27,
+        "monthly_downloads": null,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 111,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 46.58
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "b49610ae09d6918a94ca7c8d35a91f197822d1c4262e06183bf0b8bc4feb4c8e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "ModelJars is a community-owned marker-JAR convention for local and remote model artifacts."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Applications use the stable JVM Runtime artifact and add one model dependency"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Applications using the JVM Runtime require Java 25 or newer."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install integrallis/tap/modeljars"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "Output: Paris"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export HF_TOKEN=hf_..."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "If an error says class-file version `69.0` but the runtime only recognizes up to `61.0`"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "builds native binaries for macOS, Linux, and Windows on their host architectures"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ModelJars/modeljars",
+      "fetched_at": "2026-10-30T23:48:39+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ModelJars/modeljars/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:55:39+08:00"
+    },
+    {
+      "id": "release:v0.1.70",
+      "kind": "release",
+      "url": "https://github.com/ModelJars/modeljars/releases/tag/v0.1.70",
+      "fetched_at": "2026-10-30T23:55:39+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "The `modeljars` CLI is a self-contained GraalVM native executable",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "modeljars search gemma",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Community-maintained JVM marker JAR catalog for local AI models",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "ModelJars is a community-owned marker-JAR convention for local and remote model artifacts.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# ModelJars",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "builds native binaries for macOS, Linux, and Windows on their host architectures",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Applications using the JVM Runtime require Java 25 or newer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "NVIDIA GPU acceleration is an explicit optional dependency:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Set `MODELJARS_CATALOG_OFFLINE=true` to suppress network refreshes explicitly.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "export HF_TOKEN=hf_...",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:39+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:39+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:39+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:39+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:48:39+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.1.70",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:55:39+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Search or filter the qualified catalog, inspect immutable provenance, prefetch weights",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "check what the current machine can actually run:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "modeljars pull qwen-0.6b",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "It follows the familiar local-model workflow used by tools such as Ollama:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install integrallis/tap/modeljars",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/ModelJars/modeljars/main/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "scoop install modeljars",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Production inference always runs in process through Models.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:03+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:11+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}

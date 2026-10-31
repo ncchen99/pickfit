@@ -1,0 +1,545 @@
+{
+  "schema_version": "software.v1",
+  "slug": "code-evolve",
+  "repo_id": "gh:1179482964",
+  "name": "code-evolve",
+  "summary": "Autonomous CLI that builds and improves a project from a vision and spec across scheduled sessions.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "ai-agent",
+    "automation",
+    "autonomous-agents",
+    "claude",
+    "claude-code",
+    "cli",
+    "code-generation",
+    "codex",
+    "developer-tools"
+  ],
+  "use_cases": [
+    "Generate vision document via guided interview",
+    "Convert existing spec document into code-evolve format",
+    "Run autonomous evolution engine on schedule",
+    "Run one evolution cycle manually",
+    "Check build progress with status"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://www.npmjs.com/package/code-evolve",
+  "repo": {
+    "url": "https://github.com/frankbria/code-evolve",
+    "full_name": "frankbria/code-evolve",
+    "created_at": "2026-03-12T04:21:57Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js >= 18",
+      "Python 3"
+    ],
+    "system_packages": [
+      "Git"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "ANTHROPIC_API_KEY",
+      "OPENAI_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-code-evolve-20261031-002542-61a7",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g code-evolve",
+          "purpose": "Install code-evolve globally via npm"
+        },
+        {
+          "command": "npm install -g @anthropic-ai/claude-code",
+          "purpose": "Install Claude CLI prerequisite for init dependency check"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "code-evolve --version",
+        "expected_signal": "0.2.0"
+      },
+      "first_task": "cd /tmp/evolve-test && code-evolve status"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.2.0",
+    "published_at": "2026-06-29T20:53:28Z",
+    "url": "https://github.com/frankbria/code-evolve/releases/tag/v0.2.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:27:35.513280+08:00",
+    "runs": [
+      {
+        "id": "verify-code-evolve-20261031-002542-61a7",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:27:35.513280+08:00",
+        "tool_version": "0.2.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g code-evolve",
+            "purpose": "Install code-evolve globally via npm"
+          },
+          {
+            "command": "npm install -g @anthropic-ai/claude-code",
+            "purpose": "Install Claude CLI prerequisite for init dependency check"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "code-evolve --version",
+            "expected_signal": "0.2.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.2.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "code-evolve --help",
+            "expected_signal": "Usage: code-evolve",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: code-evolve [options] [command]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/evolve-test && code-evolve status",
+            "expected_signal": "\"features\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"day\":2,\"started\":\"2026-10-30\",\"mode\":null,\"features\":{\"total\":0,\"done\":0,\"partial\":0,\"remaining\":0},\"schedule\":null,\"lastEntry\":\"## Day 2 — 00:24 — (auto-generated)\\n\\nSession commits: no commits made.\"}",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/evolve-test && cd /tmp/evolve-test && code-evolve init --agent claude",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/evolve-test && ce status",
+            "expected_signal": "\"features\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"day\":2,\"started\":\"2026-10-30\",\"mode\":null,\"features\":{\"total\":0,\"done\":0,\"partial\":0,\"remaining\":0},\"schedule\":null,\"lastEntry\":\"## Day 2 — 00:24 — (auto-generated)\\n\\nSession commits: no commits made.\"}",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/evolve-test && cd /tmp/evolve-test && code-evolve init --agent claude",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Requirements lists an AI coding agent but init enforcement and exit code 3 are undocumented.",
+            "actually_needed": "Install an agent CLI (e.g. npm install -g @anthropic-ai/claude-code provides `claude`) before init; otherwise init exits 3 with 'Missing required dependencies: <agent>'.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "README shows `code-evolve status` for checking progress without noting output format.",
+            "actually_needed": "In non-TTY run_command, `code-evolve status` prints JSON (e.g. {\"day\":...}) instead of the human-readable table.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show both status commands outputting JSON with features and --version printing 0.2.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-code-evolve-20261031-002542-61a7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-code-evolve-20261031-002542-61a7/check-1-cmd10.judged.png",
+            "runs/verify/verify-code-evolve-20261031-002542-61a7/check-2-cmd11.judged.png",
+            "runs/verify/verify-code-evolve-20261031-002542-61a7/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.108838
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:11:57+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.7,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 30.5,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": 16,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 230,
+      "packages": [
+        "npm:code-evolve"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 54.91
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "d4271ec897d6ba456c5f5a3b4c9b75b13f90f46e0c24db2dae918a93fa36abbc",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "code-evolve is an autonomous project builder. Give it a vision and a technical spec"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- Node.js >= 18\n- Python 3\n- Git"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npm install -g code-evolve"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "npx code-evolve init"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export ANTHROPIC_API_KEY=sk-...    # or the key for your chosen agent"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "code-evolve eject    # or: ce eject"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "[MIT](LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/frankbria/code-evolve",
+      "fetched_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/frankbria/code-evolve/blob/main/README.md",
+      "fetched_at": "2026-10-29T02:33:56+08:00"
+    },
+    {
+      "id": "release:v0.2.0",
+      "kind": "release",
+      "url": "https://github.com/frankbria/code-evolve/releases/tag/v0.2.0",
+      "fetched_at": "2026-10-29T02:33:56+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "All commands are available as both `code-evolve <cmd>` and `ce <cmd>`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:43+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "After installing globally (`npm install -g code-evolve`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:43+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "All commands are available as both `code-evolve <cmd>` and `ce <cmd>`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:43+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "code-evolve is an autonomous project builder. Give it a vision and a technical spec, and it builds your project from scratch",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:43+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# code-evolve",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:43+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Node.js >= 18",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:43+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/1",
+      "source_id": "readme",
+      "quote": "Python 3",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:43+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Git",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:43+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "export ANTHROPIC_API_KEY=sk-...    # or the key for your chosen agent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:43+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/1",
+      "source_id": "readme",
+      "quote": "(`ANTHROPIC_API_KEY` for Claude, `OPENAI_API_KEY` for Codex, the provider key for opencode)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:43+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:50:41+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.2.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-29T02:33:56+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "`vision` runs five rounds of Socratic questions",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:43+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "`code-evolve migrate spec ./docs/technical-spec.md`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:43+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "`code-evolve start`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:43+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "`code-evolve run`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:43+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Check progress — day count, features done, schedule",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:43+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Both run the same engine. Mix and match.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:43+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:29:31+08:00",
+  "updated_at": "2026-10-31T02:11:57+08:00"
+}

@@ -1,0 +1,607 @@
+{
+  "schema_version": "software.v1",
+  "slug": "navin",
+  "repo_id": "gh:1362634847",
+  "name": "Navin",
+  "summary": "Open source AI agent workspace that codes, researches, uses tools and carries context across sessions.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-memory",
+    "agent-skills",
+    "agentic-ai",
+    "agi",
+    "autonomous-agents",
+    "cli",
+    "coding-agent",
+    "desktop",
+    "harness-ai",
+    "heartbeat"
+  ],
+  "use_cases": [
+    "find cause of bug, fix it and run relevant tests",
+    "research competitors and create source-based report",
+    "explore repository, edit code and run tests",
+    "search web, scrape and extract structured data",
+    "watch project for changes and flag follow-ups"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://https//navin.live",
+  "repo": {
+    "url": "https://github.com/Navinspire-ia/navin",
+    "full_name": "Navinspire-ia/navin",
+    "created_at": "2026-09-09T12:12:54Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.11+",
+      "Node.js 18+"
+    ],
+    "system_packages": [
+      "Git",
+      "Make"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": [
+      "provider API key"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl https://navin.live/install -fsS | bash",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Configure a provider with API key or local model endpoint"
+      ],
+      "check": null,
+      "first_task": "navin-cli"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-navin-20261031-004422-bc8c",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl https://navin.live/install -fsS -o /tmp/navin-install.sh && wc -c /tmp/navin-install.sh && head -c 2000 /tmp/navin-install.sh",
+          "purpose": "Download installer script for inspection"
+        },
+        {
+          "command": "bash /tmp/navin-install.sh",
+          "purpose": "Run inspected Navin installer script"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "export PATH=\"$HOME/.local/bin:$PATH\" && navin --version",
+        "expected_signal": "navin v2.4.1"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm 'https://navin.live/install?win32=true' | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Configure a provider with API key or local model endpoint"
+      ],
+      "check": null,
+      "first_task": "navin-cli"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "AGPL-3.0",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v2.4.1",
+    "published_at": "2026-10-30T15:09:33Z",
+    "url": "https://github.com/Navinspire-ia/navin/releases/tag/v2.4.1"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:46:34.369597+08:00",
+    "runs": [
+      {
+        "id": "verify-navin-20261031-004422-bc8c",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:46:34.369597+08:00",
+        "tool_version": "2.4.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl https://navin.live/install -fsS -o /tmp/navin-install.sh && wc -c /tmp/navin-install.sh && head -c 2000 /tmp/navin-install.sh",
+            "purpose": "Download installer script for inspection"
+          },
+          {
+            "command": "bash /tmp/navin-install.sh",
+            "purpose": "Run inspected Navin installer script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && navin --version",
+            "expected_signal": "navin v2.4.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "navin v2.4.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && navin --help",
+            "expected_signal": "doctor",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ doctor Report what this installation can do and what is missing. │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && navin-cli --help",
+            "expected_signal": "Usage: navin tui",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: navin tui [OPTIONS] [path]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl https://navin.live/install -fsS | bash",
+            "actually_needed": "installer downloaded and installed a prebuilt binary package (~size shown during install, verified against SHA256SUMS.txt) which cannot be read as text before running; inspected the shell installer itself with read_file instead",
+            "kind": "note"
+          },
+          {
+            "readme_said": "example commands navin-cli / .venv/bin/navin-cli imply navin-cli entrypoint",
+            "actually_needed": "use `navin --version` (prints `navin v2.4.1`); `navin-cli --version` exits 2 with `No such option: --version`, use `navin-cli --help` which proxies to `navin tui --help`",
+            "kind": "note"
+          },
+          {
+            "readme_said": "cd your-project && navin-cli",
+            "actually_needed": "bare `navin-cli` launches an interactive TUI that requires configuring a provider API key or local model endpoint (Ctrl+G Settings), so it cannot be smoke-tested headless without keys",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows navin --version printing navin v2.4.1 with exit code 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-navin-20261031-004422-bc8c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-navin-20261031-004422-bc8c/check-1-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.05376
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 69.9,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.75,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 49.1,
+      "signals": {
+        "stars": 37,
+        "monthly_downloads": null,
+        "forks": 5,
+        "dependents": null,
+        "release_downloads": 276,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 51,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 35.58
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "bf653da37874a92bb8a8e3d5e731f1e0d07fdf575f2691dcd2b6d75433960e2d",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "An open source AI agent workspace that can code, research, use tools and carry context across sessions."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "| **Ship software** | Repository exploration, code editing, terminal commands, Git, browser preview, tests and review. |"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "install **Python 3.11+, Git, Make, Node.js 18+ and npm** first."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl https://navin.live/install -fsS | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "navin-cli"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Open **Settings** with **Ctrl+G** and configure a provider with your API key or a local model endpoint."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[AGPL-3.0](./LICENSE), with a [commercial licensing option](./COMMERCIAL_LICENSE.md) from Navinspire IA."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Navinspire-ia/navin",
+      "fetched_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Navinspire-ia/navin/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:56:25+08:00"
+    },
+    {
+      "id": "release:v2.4.1",
+      "kind": "release",
+      "url": "https://github.com/Navinspire-ia/navin/releases/tag/v2.4.1",
+      "fetched_at": "2026-10-30T23:56:25+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Open a terminal in your project, then launch:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Run it in your terminal, your browser or the desktop app.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Repository exploration, code editing, terminal commands, Git, browser preview, tests and review.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**An open source AI agent workspace that can code, research, use tools and carry context across sessions.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "alt=\"Navin\" width=\"64\" height=\"64\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Navin Desktop (Windows / macOS / Linux)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "install **Python 3.11+, Git, Make, Node.js 18+ and npm** first.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/1",
+      "source_id": "readme",
+      "quote": "install **Python 3.11+, Git, Make, Node.js 18+ and npm** first.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "install **Python 3.11+, Git, Make, Node.js 18+ and npm** first.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "install **Python 3.11+, Git, Make, Node.js 18+ and npm** first.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "When you choose a remote model or connected service, the relevant request data is sent to that service.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "configure a provider with your API key",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:49:35+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.4.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:56:25+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "\"Find the cause of this bug, fix it, run the relevant tests and explain the changes.\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "\"Research these competitors, compare their offers with sources and turn the findings into a report.\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Repository exploration, code editing, terminal commands, Git, browser preview, tests and review.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Web search, browser tools, scraping, structured extraction and source-based reports.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "\"Watch this project for actionable changes and tell me when something needs my attention.\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl https://navin.live/install -fsS | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl https://navin.live/install -fsS | bash",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm 'https://navin.live/install?win32=true' | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "The software is free to use under its open source license.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Local execution keeps your workspace on your machine. When you choose a remote model or connected service, the relevant request data is sent to that service.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:35:18+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-29T02:28:52+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}

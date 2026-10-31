@@ -1,0 +1,510 @@
+{
+  "schema_version": "software.v1",
+  "slug": "admina",
+  "repo_id": "gh:1244870961",
+  "name": "admina-org/admina",
+  "summary": "Open framework for governed AI with PII redaction, injection blocking, audit trails and EU AI Act checks.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-security",
+    "ai-compliance",
+    "ai-governance",
+    "ai-observability",
+    "ai-safety",
+    "crewai",
+    "data-sovereignty",
+    "eu-ai-act",
+    "forensic-logging",
+    "langchain"
+  ],
+  "use_cases": [
+    "redact PII such as email, SSN, IBAN, phone and IP in prompts",
+    "screen prompt injections at the proxy",
+    "validate agent tool calls before execution and audit them",
+    "run EU AI Act gap analysis and risk classification",
+    "record governance events in SHA-256 hash-chained audit trail"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://admina.org",
+  "repo": {
+    "url": "https://github.com/admina-org/admina",
+    "full_name": "admina-org/admina",
+    "created_at": "2026-05-20T17:21:43Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.11+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-admina-20261031-001858-0c6d",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install \"admina[proxy]\"",
+          "purpose": "Install admina with proxy extra via pip"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "admina --version",
+        "expected_signal": "admina, version 0.15.3"
+      },
+      "first_task": "admina plugin list"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.15.3",
+    "published_at": "2026-10-26T22:27:14Z",
+    "url": "https://github.com/admina-org/admina/releases/tag/v0.15.3"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:21:15.853048+08:00",
+    "runs": [
+      {
+        "id": "verify-admina-20261031-001858-0c6d",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:21:15.853048+08:00",
+        "tool_version": "0.15.3",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pip install \"admina[proxy]\"",
+            "purpose": "Install admina with proxy extra via pip"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "admina --version",
+            "expected_signal": "admina, version 0.15.3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "admina, version 0.15.3",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "admina --help",
+            "expected_signal": "Usage: admina [OPTIONS]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: admina [OPTIONS] [COMMAND] [ARGS]...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "admina plugin list",
+            "expected_signal": "Total: 19 plugin(s)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Total: 19 plugin(s)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "FORENSIC_BASE_DIR=/tmp/forensic-empty admina forensic verify",
+            "expected_signal": "\"valid\": true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"valid\": true,",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/forensic-empty",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:3000/health",
+            "expected_signal": "\"status\":\"healthy\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"healthy\",\"service\":\"admina-proxy\",\"version\":\"0.15.3\",\"mode\":\"enforce\",\"surfaces\":[\"gateway\",\"mcp\",\"integration\",\"compliance\",\"dashboard\"],\"ruleset_sha256\":\"f6150503c2da9ca561743563d9ac53cf33b084ba1655e96bf07a4afb0538974b\",\"forensic_writable\":null,\"forensic_chain\":null,\"engine\":{\"engine\":…",
+            "setup": [
+              {
+                "command": "admina init /tmp/admina-test-proj",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/admina-test-proj && admina dev --no-browser --port 3000",
+                "background": true,
+                "port": 3000
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "uv add \"admina[proxy]\" as first install line",
+            "actually_needed": "pip install works directly with no project; uv add needs a pyproject.toml (uv init first)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "admina forensic verify with no arguments",
+            "actually_needed": "pass --dir DIR or set FORENSIC_BASE_DIR; an empty dir verifies as valid with 0 records",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "admina dev",
+            "actually_needed": "run admina init PROJECT first to create admina.yaml, then cd into it before admina dev",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show plugin list totaling 19 plugins, forensic verification reporting valid true, and version 0.15.3.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-admina-20261031-001858-0c6d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-admina-20261031-001858-0c6d/check-1-cmd4.judged.png",
+            "runs/verify/verify-admina-20261031-001858-0c6d/check-2-cmd9.judged.png",
+            "runs/verify/verify-admina-20261031-001858-0c6d/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.108789
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:11:57+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6141,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 40.6,
+      "signals": {
+        "stars": 8,
+        "monthly_downloads": 160,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": 22,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 162,
+      "packages": [
+        "pypi:admina"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 40.99
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:11:57.084502+08:00",
+      "sources_sha": "fdb3c4bacaeb3776bcf7479ff281f324515002fa24a27d7930254f2bd435d352",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "The open framework for governed AI development: EU AI Act compliance, PII redaction, MCP proxy, prompt-injection firewall."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "To use the OllamaAdapter, install Ollama (https://ollama.ai)"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install \"admina[proxy]\""
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "admina init my-project     # Scaffold project with admina.yaml + docker-compose.yml"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "cp admina.yaml.example admina.yaml   # Copy and customize"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "To upgrade: `uv add --upgrade-package admina \"admina[proxy]\"`,"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "**Apache 2.0**"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/admina-org/admina",
+      "fetched_at": "2026-10-30T23:47:20+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/admina-org/admina/blob/main/README.md",
+      "fetched_at": "2026-10-30T23:54:37+08:00"
+    },
+    {
+      "id": "release:v0.15.3",
+      "kind": "release",
+      "url": "https://github.com/admina-org/admina/releases/tag/v0.15.3",
+      "fetched_at": "2026-10-30T23:54:37+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "admina init my-project   # Scaffold a governed AI project",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:57+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Install once, get governed AI.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:57+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "admina init my-project     # Scaffold project with admina.yaml + docker-compose.yml",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:57+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "The open framework for governed AI development: EU AI Act compliance, PII redaction, MCP proxy, prompt-injection firewall. Python + Rust, Apache 2.0",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:57+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "github_api",
+      "quote": "name: admina-org/admina",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:57+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.11+",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:57+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:47:20+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:47:20+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:47:20+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:47:20+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:47:20+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.15.3",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:54:37+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Redacted by default** — email, SSN, IBAN, phone, IP, names",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:57+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Screened at the proxy** — a heuristic signal, not a guarantee: regex patterns",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:57+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Validated pre-action + logged post-action** (forensic chain)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:57+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Gap analysis + risk classification** built-in",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:57+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "SHA-256 hash chain** — tamper-evident by design",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:14:57+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-28T19:03:31+08:00",
+  "updated_at": "2026-10-31T02:11:57+08:00"
+}

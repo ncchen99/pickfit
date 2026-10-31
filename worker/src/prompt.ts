@@ -24,6 +24,7 @@ Rules:
 What usually matters per category:
 - dev_cli: does it do the exact job, install method and required runtimes, works on the person's OS, scriptable output.
 - local_ai: runs fully offline after setup, RAM and GPU needs (Apple Silicon on Macs), model download, API compatibility with other tools.
+- mcp_server: whether its tools (mcp_tools) do the job for the person's AI client, the environment variables or accounts it needs (mcp_env_vars, api_keys), and whether it runs locally.
 
 Write every text field in plain, specific English without marketing words.`;
 
@@ -46,7 +47,7 @@ export function instructions(limit: number, kind: MatchKind = 'find'): string {
 }
 
 /** JSON whose text cannot close the surrounding <request>/<candidates> tags. */
-function safeJson(value: unknown): string {
+export function safeJson(value: unknown): string {
   return JSON.stringify(value).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 }
 
@@ -75,7 +76,7 @@ export function matchSchema(slugs: string[], kind: MatchKind = 'find'): Record<s
   return object({
     need: object({
       task: { type: 'string', description: 'The job in at most 12 English words; no personal details.' },
-      category: { type: 'string', enum: ['dev_cli', 'local_ai', 'other'] },
+      category: { type: 'string', enum: ['dev_cli', 'local_ai', 'mcp_server', 'other'] },
       os: { type: ['string', 'null'], enum: ['macos', 'linux', 'windows', null] },
       budget: { type: 'string', enum: ['free_only', 'free_or_paid', 'unknown'] },
       must_run_locally: { type: ['boolean', 'null'] },

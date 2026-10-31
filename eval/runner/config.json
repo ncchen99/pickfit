@@ -1,0 +1,50 @@
+{
+  "_comment": "Fixed before the first run (eval/README.md 9.1 A4). Change only before any group starts; after that, only through a new 9.x section.",
+  "claude_bin": "~/.local/bin/claude",
+  "claude_code_version": "2.1.304",
+  "model": "claude-opus-5-5",
+  "preamble": "Recommend only; do not run commands or change files on this machine. If something is unclear, state your assumption and answer anyway. Put your main recommendation first and include install and first-run steps.",
+  "timeout_s": 900,
+  "per_run_budget_usd": 3.0,
+  "caps_usd": {
+    "run1": 30.0,
+    "reruns": 60.0,
+    "grading": 20.0
+  },
+  "estimate_questions": ["q01", "q02"],
+  "rerun_window_hours": 24,
+  "invalid_retries": 2,
+  "groups": {
+    "control": {
+      "tools": ["WebFetch", "WebSearch"],
+      "mcp": {},
+      "expected_mcp_tools": []
+    },
+    "experimental": {
+      "tools": ["WebFetch", "WebSearch"],
+      "mcp": {
+        "pickfit": {"type": "http", "url": "https://pickfit-mcp-eval.ncchen99.workers.dev/mcp"}
+      },
+      "expected_mcp_tools": [
+        "mcp__pickfit__find_alternatives",
+        "mcp__pickfit__find_software",
+        "mcp__pickfit__get_install_guide"
+      ]
+    },
+    "rules_only": {
+      "tools": ["WebFetch", "WebSearch"],
+      "mcp": {
+        "pickfit": {"type": "http", "url": "https://pickfit-mcp-eval-rules.ncchen99.workers.dev/mcp"}
+      },
+      "expected_mcp_tools": [
+        "mcp__pickfit__find_alternatives",
+        "mcp__pickfit__find_software",
+        "mcp__pickfit__get_install_guide"
+      ]
+    }
+  },
+  "deployments": {
+    "experimental": {"env": "eval", "host": "pickfit-mcp-eval.ncchen99.workers.dev", "expect": {"tools": "readonly", "match_mode": "model"}},
+    "rules_only": {"env": "eval-rules", "host": "pickfit-mcp-eval-rules.ncchen99.workers.dev", "expect": {"tools": "readonly", "match_mode": "off"}}
+  }
+}

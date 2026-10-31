@@ -1,0 +1,526 @@
+{
+  "schema_version": "software.v1",
+  "slug": "martty",
+  "repo_id": "gh:1333365124",
+  "name": "Martty",
+  "summary": "Terminal UI ACP client to run and observe AI agents via DSH or other harnesses.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "acp",
+    "acp-protocol",
+    "agent",
+    "agent-client-protocol",
+    "agents",
+    "deepseek-harness",
+    "deepseek-harness-plugin",
+    "deepseek-harness-plugin-dev",
+    "deepseek-harness-plugins",
+    "dsh-plugin"
+  ],
+  "use_cases": [
+    "view streaming agent replies, reasoning and tool calls in terminal",
+    "select model and agent preset",
+    "switch harness and start a new session"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://martty.sh",
+  "repo": {
+    "url": "https://github.com/openma-ai/Martty",
+    "full_name": "openma-ai/Martty",
+    "created_at": "2026-08-13T17:19:18Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js 22.19+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install --global martty",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "martty --demo"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-martty-20261031-005126-2337",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "node --version && npm --version && npm install --global martty",
+          "purpose": "Install martty globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "martty --help",
+        "expected_signal": "martty — terminal-native ACP client UI"
+      },
+      "first_task": "martty --dump-frame"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install --global martty",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "martty --demo"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.3.3",
+    "published_at": "2026-10-17T15:00:41Z",
+    "url": "https://github.com/openma-ai/Martty/releases/tag/v0.3.3"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T00:53:55.279147+08:00",
+    "runs": [
+      {
+        "id": "verify-martty-20261031-005126-2337",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T00:53:55.279147+08:00",
+        "tool_version": "martty 0.3.3",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "node --version && npm --version && npm install --global martty",
+            "purpose": "Install martty globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "martty --help",
+            "expected_signal": "martty — terminal-native ACP client UI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "martty — terminal-native ACP client UI",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "martty-cli --version",
+            "expected_signal": "martty 0.3.3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "martty 0.3.3",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "martty --dump-frame",
+            "expected_signal": "describe what you want to build",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│❯ describe what you want to build… │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "martty --demo-skin --dump-frame",
+            "expected_signal": "describe what you want to build",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│❯ describe what you want to build… │",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "martty --demo and martty --demo-skin just show the UI",
+            "actually_needed": "interactive martty --demo / --demo-skin need a TTY (/dev/tty); without one they exit 1 with 'No such device or address (os error 6)'. Headless equivalent martty --dump-frame (and martty --demo-skin --dump-frame) renders the same scripted demo frame as text and exits 0; under 'script -qec' with a pt…",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show both dump-frame outputs containing the build prompt and help output with the expected header.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-martty-20261031-005126-2337/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-martty-20261031-005126-2337/check-1-cmd6.judged.png",
+            "runs/verify/verify-martty-20261031-005126-2337/check-2-cmd8.judged.png",
+            "runs/verify/verify-martty-20261031-005126-2337/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.082818
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:31:27+08:00",
+    "quality": {
+      "total": 94.8,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 70.9,
+      "signals": {
+        "stars": 81,
+        "monthly_downloads": 2181,
+        "forks": 9,
+        "dependents": null,
+        "release_downloads": 58,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 77,
+      "packages": [
+        "npm:martty"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 27.59
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:31:27.296666+08:00",
+      "sources_sha": "d9cd9a0154eb2940834d5132886f78ab8aa5b9948ccd923fd86071ae7964cbe2",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Unified Harness TUI (ACP client). Self-Improvement TUI plugin of DeepSeek Harness."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "需要 Rust stable 和 Node.js 22.19+："
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npm install --global martty"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "martty --demo"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "DSH_TUI_AGENT=\"<acp-command> [args...]\" martty"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "`npm rm -g @openma/deepseek-harness-tui` 不会误删新的 `martty`"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[MIT](LICENSE)。Martty 与 DeepSeek、xAI 无关联。"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/openma-ai/Martty",
+      "fetched_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/openma-ai/Martty/blob/main/README.md",
+      "fetched_at": "2026-10-31T00:06:26+08:00"
+    },
+    {
+      "id": "release:v0.3.3",
+      "kind": "release",
+      "url": "https://github.com/openma-ai/Martty/releases/tag/v0.3.3",
+      "fetched_at": "2026-10-31T00:06:26+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Unified Harness TUI (ACP client). Self-Improvement TUI plugin of DeepSeek Harness.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:15+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "全局安装后启动：",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:15+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Martty 在终端中呈现完整的 agent 工作过程",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:15+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Unified Harness TUI (ACP client). Self-Improvement TUI plugin of DeepSeek Harness.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:15+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1 align=\"center\">Martty</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:15+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "GitHub Actions 会构建 macOS arm64/x64、Linux arm64/x64 和 Windows x64 原生二进制",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:15+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "需要 Rust stable 和 Node.js 22.19+：",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:15+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "`harness find --refresh` 才联网刷新",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:15+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-30T23:42:22+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.3.3",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:06:26+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Martty 在终端中呈现完整的 agent 工作过程，包括流式回复、推理、工具调用、",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:15+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "`/model` · `/agent` | 选择模型和 Agent Preset |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:15+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "`/harness [id]` | 在 TUI 内切换 Harness 并启动新的空会话 |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:15+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npm install --global martty",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:15+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install --global martty",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:15+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install --global martty",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T00:16:15+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-30T23:42:22+08:00",
+  "updated_at": "2026-10-31T02:31:27+08:00"
+}

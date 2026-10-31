@@ -1,0 +1,617 @@
+{
+  "schema_version": "software.v1",
+  "slug": "bastra-recall",
+  "repo_id": "gh:1225075047",
+  "name": "Bastra Recall",
+  "summary": "Local-first memory that stores preferences and decisions as Markdown for AI assistants.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent",
+    "ai",
+    "anthropic",
+    "claude",
+    "claude-code",
+    "claude-desktop",
+    "cursor",
+    "llm",
+    "local-first",
+    "markdown"
+  ],
+  "use_cases": [
+    "keep preferences, decisions and fixes across chat sessions",
+    "store each decision and lesson as its own file",
+    "browse and search memories via local vault map"
+  ],
+  "alternatives_to": [
+    "CLAUDE.md",
+    "AGENTS.md"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://bastra.io",
+  "repo": {
+    "url": "https://github.com/n0mad-ai/bastra-recall",
+    "full_name": "n0mad-ai/bastra-recall",
+    "created_at": "2026-04-29T23:27:57Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Node 22-26"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npx bastra-recall install",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "bastra doctor"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-bastra-recall-20261031-014119-6f0b",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g bastra-recall",
+          "purpose": "Install bastra-recall globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "which bastra && bastra --version",
+        "expected_signal": "1.1.1"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g bastra-recall",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "bastra doctor"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.1.1",
+    "published_at": "2026-10-17T10:51:26Z",
+    "url": "https://github.com/n0mad-ai/bastra-recall/releases/tag/v1.1.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-10-31T01:47:38.498424+08:00",
+    "runs": [
+      {
+        "id": "verify-bastra-recall-20261031-014119-6f0b",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T01:47:38.498424+08:00",
+        "tool_version": "1.1.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g bastra-recall",
+            "purpose": "Install bastra-recall globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "which bastra && bastra --version",
+            "expected_signal": "1.1.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.1.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- node /home/sbx/.local/lib/node_modules/bastra-recall/node_modules/@bastra-recall/daemon/dist/mcp-forwarder.js",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /home/sbx/work/test-vault && BASTRA_VAULT_PATH=/home/sbx/work/test-vault python3 ~/.pickfit/mcp_probe.py --timeout 120 --call find_document --args '{\"query\":\"test\"}' -- node /home/sbx/.local/lib/node_modules/bastra-recall/node_modules/@bastra-recall/daemon/dist/mcp-forwarder.js",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=find_document content=text,text text_chars=56",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx bastra-recall install (no prior global install needed)",
+            "actually_needed": "npm install -g bastra-recall so `bastra` and the forwarder JS file persist on PATH for offline replay; the ranked-first `npx` launcher would re-fetch on each run",
+            "kind": "note"
+          },
+          {
+            "readme_said": "README documents install/doctor/map but no MCP launch command",
+            "actually_needed": "MCP stdio launch is `node /home/sbx/.local/lib/node_modules/bastra-recall/node_modules/@bastra-recall/daemon/dist/mcp-forwarder.js` (from FORWARDER_SCRIPT_PATH); no `bastra mcp` subcommand is documented",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "README examples assume an installed vault; probe calls need BASTRA_VAULT_PATH",
+            "actually_needed": "set BASTRA_VAULT_PATH to an existing directory (e.g. mkdir -p test-vault) before calling tools; bare `recall` with no vault returned a tools/call error, while `find_document` with the vault set returned hits:[]",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 15 tools, successful find_document call, and CLI version 1.1.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-bastra-recall-20261031-014119-6f0b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-bastra-recall-20261031-014119-6f0b/check-1-cmd13.judged.png",
+            "runs/verify/verify-bastra-recall-20261031-014119-6f0b/check-2-cmd15.judged.png",
+            "runs/verify/verify-bastra-recall-20261031-014119-6f0b/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.117938,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "node",
+            "/home/sbx/.local/lib/node_modules/bastra-recall/node_modules/@bastra-recall/daemon/dist/mcp-forwarder.js"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "bastra-recall-mcp",
+          "server_version": "1.1.1",
+          "tools": [
+            "recall",
+            "load_memory",
+            "save_memory",
+            "edit_memory",
+            "archive_memory",
+            "find_document",
+            "read_document",
+            "open_document",
+            "save_document",
+            "recategorize_document",
+            "move_document",
+            "save_product_doc",
+            "find_code",
+            "find_affected_files",
+            "review_draft"
+          ],
+          "tool_count": 15,
+          "called_tool": "find_document",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": null,
+    "client_configs": [],
+    "env_vars": [
+      {
+        "name": "BASTRA_TASKS",
+        "required": null,
+        "purpose": "enable proactive tasks preview"
+      }
+    ],
+    "tools": [
+      "find_code",
+      "validate_artifact"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v4",
+    "computed_at": "2026-10-31T02:03:51+08:00",
+    "quality": {
+      "total": 74.8,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6141,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 48.7,
+      "signals": {
+        "stars": 12,
+        "monthly_downloads": 664,
+        "forks": 7,
+        "dependents": null,
+        "release_downloads": 75,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 183,
+      "packages": [
+        "npm:bastra-recall"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 38.37
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:03:51.209846+08:00",
+      "sources_sha": "a9b4a144a99b4ce8fab995e7f7d22b5a4458618e83e4f40a24301f0999be523f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Local-first memory for AI assistants. Keep preferences, decisions and lessons across sessions and connected tools in readable Markdown files."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "best personal memory for everyday work with AI"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "macOS or Linux — with Node 22–26:"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://bastra.io/install | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Run `bastra doctor` to check the setup; `bastra doctor --fix` repairs registrations."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "To try them, set `BASTRA_TASKS=1` in daemon and clients/hooks, then restart them."
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "[Updates](https://github.com/n0mad-ai/bastra-recall/wiki/Updating) — update with `bastra update`, or opt into automatic updates."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "MIT — see [LICENSE](./LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/n0mad-ai/bastra-recall",
+      "fetched_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/n0mad-ai/bastra-recall/blob/main/README.md",
+      "fetched_at": "2026-10-31T01:04:20+08:00"
+    },
+    {
+      "id": "release:v1.1.1",
+      "kind": "release",
+      "url": "https://github.com/n0mad-ai/bastra-recall/releases/tag/v1.1.1",
+      "fetched_at": "2026-10-31T01:04:20+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "MCP is the protocol that lets an AI assistant use external tools such as this memory service.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "stores them as readable Markdown files on your computer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "MCP is the protocol that lets an AI assistant use external tools such as this memory service.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Local-first memory for AI assistants. Keep preferences, decisions and lessons across sessions and connected tools in readable Markdown files.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Bastra Recall",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "**macOS** (Apple Silicon and Intel) | Supported",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "macOS or Linux — with Node 22–26:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T00:50:21+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.1.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T01:04:20+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Keep your preferences, decisions and hard-won fixes available beyond a single chat.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Each decision and lesson is stored as its own file.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "`bastra map` opens the local vault map for browsing, search and memory care.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "A CLAUDE.md or AGENTS.md works well while it is small.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "A CLAUDE.md or AGENTS.md works well while it is small.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npx bastra-recall install",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npx bastra-recall install",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g bastra-recall",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Storage and keyword search are local.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "BASTRA_TASKS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "adds a `find_code` lookup so a symbol can be found by name instead of grepped for.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`validate_artifact` requires connected Recall MCP with the write/full tool surface.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:24:02+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T00:18:19+08:00",
+  "updated_at": "2026-10-31T02:03:51+08:00"
+}
