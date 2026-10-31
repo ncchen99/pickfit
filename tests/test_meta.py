@@ -508,6 +508,22 @@ def test_server_errors_give_up_after_three_tries(ledger: Ledger, runs: Path):
     assert ledger.spend_summary()["total_usd"] == pytest.approx(held, abs=1e-6)
 
 
+def test_a_404_model_not_found_is_released_and_retried(ledger: Ledger, runs: Path, isolated: list[float]):
+    not_found = {"error": {"message": "model not found", "type": "invalid_request_error"}}
+    server = FakeServer(status(404, not_found), status(404, not_found), ok(CHAT_OK))
+    result = call(server, ledger, model="prod")
+    assert len(server.requests) == 3 and result.attempts == 3 and len(isolated) == 2
+    assert [line["cost_usd"] for line in traces(runs)[:2]] == [0, 0]  # refused before generation
+    assert ledger.spend_summary()["total_usd"] == pytest.approx(result.cost_usd, abs=1e-6)
+
+
+def test_a_404_that_persists_gives_up(ledger: Ledger):
+    server = FakeServer(*[status(404)] * meta.NOT_FOUND_TRIES)
+    with pytest.raises(openai.NotFoundError):
+        call(server, ledger)
+    assert len(server.requests) == meta.NOT_FOUND_TRIES and ledger.spend_summary()["total_usd"] == 0
+
+
 def test_4xx_is_released(ledger: Ledger):
     server = FakeServer(status(429), status(400))
     with pytest.raises(openai.BadRequestError):

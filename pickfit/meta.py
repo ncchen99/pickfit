@@ -96,6 +96,10 @@ TOKENS_PER_WEB_SEARCH = 5_000
 RATE_LIMIT_TRIES = 6
 SERVER_ERROR_TRIES = 3
 RETRY_STATUSES = {500, 502, 503}
+# Meta's API has answered 404 "model not found" for a model it serves, on and off for minutes (10/29,
+# 11/1 01:46-01:49). A 404 is refused before generation, so it is released and tried again, backing off
+# for about two minutes in all; a model that is really gone fails after that.
+NOT_FOUND_TRIES = 8
 BACKOFF_BASE_S = 2.0
 BACKOFF_MAX_S = 60.0
 CLIENT_TIMEOUT_S = 600.0
@@ -623,6 +627,7 @@ class _Retry:
 
     rate_limited: int = 0
     server_errors: int = 0
+    not_found: int = 0
     stream: bool = False
 
     def after_http_error(self, err: openai.APIStatusError) -> bool:
@@ -636,6 +641,12 @@ class _Retry:
             return True
         if err.status_code in RETRY_STATUSES:
             return self.after_server_error()
+        if err.status_code == 404:
+            self.not_found += 1
+            if self.not_found >= NOT_FOUND_TRIES:
+                return False
+            sleep(_backoff_s(self.not_found))
+            return True
         if err.status_code == 504:
             return self.switch_to_stream()
         return False
