@@ -129,7 +129,7 @@ test('find_software conforms: picks, a clarifying question, empty, no candidates
   assert.ok(rules.clarifying_question); // no OS given, and the picks run on different ones
 });
 
-test('find_software conforms with the rules fit decision: good, partial, no good match; the model path has none of it', async () => {
+test('find_software conforms with the rules fit labels: good, partial, weak and none; the model path has none of it', async () => {
   const off = server({ MATCH_MODE: 'off' });
   const schemas = await validators(off);
   const call = (label: string, need: string) => conforming(off, schemas, label, 'find_software', { need });
@@ -141,8 +141,9 @@ test('find_software conforms with the rules fit decision: good, partial, no good
   assert.deepEqual(partial.picks[0].match, { quality: 'partial', covers: ['transcribe', 'audio'], missing: ['json', 'summary', 'git'] });
   assert.match(partial.picks[0].tradeoffs[0], /mentions transcribe, audio but not json, summary, git/);
   const none = await call('rules: no good match', 'search my Notion pages');
-  assert.deepEqual([none.match_quality, none.picks, none.best_free, none.clarifying_question], ['none', [], null, null]);
-  assert.match(none.coverage_note, /pickfit has no verified tool for this yet/);
+  assert.equal(none.match_quality, 'none');
+  assert.deepEqual(none.picks.map((p: any) => p.match.quality), ['weak', 'weak', 'weak']); // still listed
+  assert.match(none.coverage_note, /pickfit has no verified tool that clearly does this job/);
 
   const s = server({ MODEL_API_KEY: 'k', META_TIMEOUT_MS: '2000' });
   const modelSchemas = await validators(s);

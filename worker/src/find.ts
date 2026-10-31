@@ -26,7 +26,7 @@ import { ranSentence } from './evidence.ts';
 import type { Settings } from './env.ts';
 import { logEvent, logFailure, newId, type Reporter } from './events.ts';
 import { englishKeywords, EXPAND_TIMEOUT_MS, type Expansion } from './expand.ts';
-import { fitOf, jobOf, partialNote, type Fit, type FitQuality } from './fit.ts';
+import { fitNote, fitOf, jobOf, type Fit, type MatchQuality } from './fit.ts';
 import { hardFilter, MAX_CARDS, replacesCurrent, type Conditions } from './filter.ts';
 import { clip, guardPicks, guardWellKnown, NO_WELL_KNOWN, parseAnswer, type GuardedPick, type GuardedWellKnown } from './guard.ts';
 import { callMeta, estimateCostUsd, MATCH_MODEL, MetaCallError, requestBody } from './meta.ts';
@@ -92,7 +92,7 @@ export interface PickOut {
   repo: string;
   homepage: string | null;
   /** Rules only: how well the profile fits the request and which of its words it covers (fit.ts); absent when the model chose. */
-  match?: { quality: 'good' | 'partial'; covers: string[]; missing: string[] };
+  match?: Fit;
 }
 
 export interface FindOutput {
@@ -112,8 +112,8 @@ export interface FindOutput {
   well_known_option: { name: string; why: string; verified: false; how_we_know: string } | null;
   clarifying_question: string | null;
   coverage_note: string | null;
-  /** Rules only: good, partial or none (no picks: no verified tool fits); absent when the model chose. */
-  match_quality?: FitQuality;
+  /** Rules only: the best pick's label, or none when no pick reaches partial; absent when the model chose. */
+  match_quality?: MatchQuality;
 }
 
 export interface AlternativesOutput extends FindOutput {
@@ -206,7 +206,7 @@ function pickOut(
     },
     repo: entry.repo_url,
     homepage: entry.homepage,
-    ...(chosen.match ? { match: { ...chosen.match, quality: chosen.match.quality as 'good' | 'partial' } } : {}),
+    ...(chosen.match ? { match: chosen.match } : {}),
   };
 }
 
@@ -220,10 +220,14 @@ interface Choice {
   emptyByModel: boolean;
   keepCurrent: { recommended: boolean; reason: string } | null;
   wellKnown: GuardedWellKnown;
-  /** Rules only: the best fit among the candidates; "none" means no picks. */
-  matchQuality?: FitQuality;
-  /** Rules only, "none": the request's words the closest profile does not mention. */
-  unmatched?: string[];
+  /** Rules only: the best label among the picks; "none" when no pick reaches partial. */
+  matchQuality?: MatchQuality;
+  /** Rules only, partial or none: the request's words to name as missing. */
+  gaps?: string[];
+  /** Rules only, partial: the highest-ranked partial pick, whose gaps the note names. */
+  closest?: string;
+  /** Rules only, none: some tool past the picks reaches partial, so the note speaks of the picks only. */
+  fitsBeyond?: boolean;
 }
 
 const NO_CHOICE: Choice = {
@@ -289,31 +293,36 @@ function fromRules(
 ): Choice {
   const os = req.conditions.os;
   const ranked = rankByRules(candidates, relevance, os, req.currentTool);
-  // Only tools that fit: good ones in rank order, then partial ones; none at all when nothing fits.
+  const top = ranked.slice(0, limit);
+  const free = ranked.find((entry) => entry.pricing === 'free');
+  const osSets = new Set(top.map((entry) => entry.platforms.slice().sort().join(',')));
+  // Labels only: the fit decision never removes or reorders a pick.
   const job = jobOf(corpus, req.rulesText);
-  const fits = ranked.map((entry) => ({ entry, fit: replacesCurrent(entry, req.currentTool) ? replacing(req.currentTool!) : fitOf(entry, job) }));
-  const usable = [...fits.filter((x) => x.fit.quality === 'good'), ...fits.filter((x) => x.fit.quality === 'partial')];
-  const top = usable.slice(0, limit);
-  const free = usable.find((x) => x.entry.pricing === 'free')?.entry;
-  const osSets = new Set(top.map((x) => x.entry.platforms.slice().sort().join(',')));
+  const fitFor = (entry: Entry) => (replacesCurrent(entry, req.currentTool) ? replacing(req.currentTool!) : fitOf(entry, job));
+  const fits = top.map(fitFor);
+  const best = fits.find((f) => f.quality === 'good') ?? fits.find((f) => f.quality === 'partial');
+  // Words no pick mentions, else what the top pick does not mention.
+  const unmentioned = fits[0]?.missing.filter((word) => fits.every((f) => f.missing.includes(word))) ?? [];
   return {
-    picks: top.map(({ entry, fit }) => ({
+    picks: top.map((entry, i) => ({
       slug: entry.slug,
       fit: entry.summary,
       reasons: templateReasons(entry, cards.get(entry.slug)!, os),
-      tradeoffs: fit.quality === 'partial' ? [partialNote(fit)] : [],
+      tradeoffs: [fitNote(fits[i])].filter((note): note is string => note !== null),
       vs_well_known: null,
-      match: fit,
+      match: fits[i],
     })),
     bestFree: free ? { slug: free.slug, reason: 'The highest-ranked free tool by rules.' } : null,
     noInstall: null,
-    question: top.length && !os && osSets.size > 1 ? 'Which OS will you use it on: macOS, Linux or Windows?' : null,
+    question: !os && osSets.size > 1 ? 'Which OS will you use it on: macOS, Linux or Windows?' : null,
     parsedNeed: null,
     emptyByModel: false,
     keepCurrent: null, // rules cannot judge the current tool
     wellKnown: NO_WELL_KNOWN, // rules know only pickfit's data
-    matchQuality: top[0]?.fit.quality ?? 'none',
-    unmatched: top.length ? undefined : fits[0]?.fit.missing.slice(0, 5),
+    matchQuality: best ? (best.quality === 'good' ? 'good' : 'partial') : 'none',
+    gaps: (best ? best.missing : unmentioned.length ? unmentioned : (fits[0]?.missing ?? [])).slice(0, 5),
+    closest: best ? top[fits.indexOf(best)].slug : undefined,
+    fitsBeyond: !best && ranked.slice(limit).some((entry) => fitFor(entry).quality !== 'weak'),
   };
 }
 
@@ -466,13 +475,17 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   } else if (choice.emptyByModel) {
     notes.push(`None of the ${candidates.length} verified tools that meet the conditions fits this request.`);
   } else if (choice.matchQuality === 'none') {
-    const words = choice.unmatched?.length ? ` (the closest profile does not mention: ${choice.unmatched.join(', ')})` : '';
+    // Labels only: the picks stay listed; the note says how far they are from the request, not to drop them.
+    const gaps = choice.gaps?.length ? choice.gaps.join(', ') : 'the specific parts of the request';
     notes.push(
-      `pickfit has no verified ${what} for this yet: judging by their profiles, none of the ${passed} that meet the conditions does this job${words}. ` +
-        'pickfit lists only lesser-known tools, so a well-known one may still fit.',
+      choice.fitsBeyond
+        ? `None of the listed ${what}s clearly does this job: judging by their profiles, they do not mention ${gaps}. They are listed as the top-ranked ${what}s; each pick's match says what it covers.`
+        : `pickfit has no verified ${what} that clearly does this job. Judging by their profiles, the listed ${what}s are the closest it has, but they do not mention ${gaps}; each pick's match says what it covers. ` +
+            'pickfit lists only lesser-known tools, so a well-known one may still fit.',
     );
   } else if (choice.matchQuality === 'partial') {
-    notes.push(`No verified ${what} covers the whole request; each pick's tradeoffs say which part it covers.`);
+    const gaps = choice.gaps?.length ? `: the closest, ${choice.closest}, does not mention ${choice.gaps.join(', ')}` : '';
+    notes.push(`No listed ${what} covers the whole request${gaps}. Each pick's match says what it covers.`);
   }
   if (passed > MAX_CARDS) {
     notes.push(

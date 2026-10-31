@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Catalog, Entry } from '../src/catalog.ts';
-import { fitOf, jobOf } from '../src/fit.ts';
+import { fitNote, fitOf, jobOf } from '../src/fit.ts';
 import { findAlternatives, findSoftware } from '../src/find.ts';
 import { answer, fixtureCatalog, harness, metaResponse } from './helpers.ts';
 
@@ -44,14 +44,14 @@ test('jobOf: a Chinese word counts once whatever its synonyms; OS names, context
   assert.deepEqual([...jobOf(top, 'scan dependencies for Node').named], ['nod']);
 });
 
-test('fitOf: good covers most of the job, two words and every named product; partial a third and two words, or half; else none', () => {
+test('fitOf: good covers most of the job, two words and every named product; partial a third and two words, or half; else weak', () => {
   assert.equal(fit('renamer', 'bulk rename files with a regex').quality, 'good');
   const grep = fit('grepper', 'bulk rename files with a regex and preview the changes');
-  assert.equal(grep.quality, 'none'); // one shared word ("regex") of four is not enough
+  assert.equal(grep.quality, 'weak'); // one shared word ("regex") of four is not enough
   assert.deepEqual(grep.covers, ['regex']);
   assert.equal(fit('grepper', 'search my notes').quality, 'partial'); // one word, but half the request
   const notes = fit('vault', 'search and edit my Notion notes');
-  assert.equal(notes.quality, 'none'); // it covers most words, but not the product named
+  assert.equal(notes.quality, 'weak'); // it covers most words, but not the product named
   const sync = fit('notes-sync', 'search and edit my Notion notes');
   assert.deepEqual([sync.quality, sync.covers, sync.missing], ['partial', ['notion', 'notes'], ['search', 'edit']]); // half is not most
   const part = fit('notes-sync', 'search, edit and sync my Notion notes in a vault with a regex');
@@ -64,34 +64,55 @@ test('fitOf: good covers most of the job, two words and every named product; par
 test('fitOf: a product mentioned only as what the tool replaces counts only for a request to replace it', () => {
   const tools = [tool('plane', 'Plans work items from git history.', { tags: ['jira-alternative'] }), tool('jira-mcp', 'Creates and updates Jira tickets and items.')];
   const fits = (text: string) => tools.map((e) => fitOf(e, jobOf(tools, text)).quality);
-  assert.deepEqual(fits('manage my Jira tickets'), ['none', 'good']);
-  assert.deepEqual(fits('an alternative to Jira for work items'), ['good', 'none']);
+  assert.deepEqual(fits('manage my Jira tickets'), ['weak', 'good']);
+  assert.deepEqual(fits('an alternative to Jira for work items'), ['good', 'weak']);
 });
 
-test('fitOf: nothing specific asked is a good fit; only words the catalog never uses is none', () => {
+test('fitOf: nothing specific asked is a good fit; only words the catalog never uses is weak', () => {
   assert.equal(fit('vault', 'a free tool for my Mac').quality, 'good');
-  assert.deepEqual(fit('vault', 'defragment the hard drive').quality, 'none');
+  assert.deepEqual(fit('vault', 'defragment the hard drive').quality, 'weak');
 });
 
-test('no good match: no picks, no best_free, no question, and a note that says so', async () => {
-  const h = harness(null, { modelEnabled: false });
-  h.deps.catalog = catalog(corpus);
-  const out = await findSoftware({ need: 'manage my Jira tickets' }, h.deps);
-  await h.settle();
-  assert.deepEqual([out.match_quality, out.picks, out.best_free, out.clarifying_question], ['none', [], null, null]);
-  assert.match(out.coverage_note ?? '', /pickfit has no verified tool for this yet: .*none of the 6 that meet the conditions does this job \(the closest profile does not mention: jira\)/);
-  assert.equal(out.well_known_option, null);
-  const row = h.sqlite.prepare('SELECT need, results FROM events').get() as any;
-  assert.equal(JSON.parse(row.need).match_quality, 'none');
-  assert.deepEqual(JSON.parse(row.results), []);
-});
-
-test('good picks come first, then partial ones, in rank order; tools that do not fit are not shown', async () => {
+test('labels only: rules picks keep their rank order; each says what it covers', async () => {
   const h = harness(null, { modelEnabled: false });
   h.deps.catalog = catalog(corpus);
   const out = await findSoftware({ need: 'bulk rename files with a regex and preview them' }, h.deps);
   assert.equal(out.match_quality, 'good');
-  assert.deepEqual(out.picks.map((p) => [p.slug, p.match?.quality]), [['renamer', 'good']]);
+  assert.deepEqual(out.picks.map((p) => [p.slug, p.match?.quality]), [['renamer', 'good'], ['grepper', 'weak'], ['notes-sync', 'weak']]);
+  assert.deepEqual(out.picks[0].tradeoffs, []);
+  assert.deepEqual(out.picks[1].tradeoffs, ['Weak match: its profile mentions regex but not bulk, rename, preview.']);
+  assert.equal(out.coverage_note, null);
+});
+
+test('no pick reaches partial: the picks stay listed, and the note names what they miss without dismissing them', async () => {
+  const h = harness(null, { modelEnabled: false });
+  h.deps.catalog = catalog(corpus);
+  const out = await findSoftware({ need: 'manage my Jira tickets' }, h.deps);
+  await h.settle();
+  assert.equal(out.match_quality, 'none');
+  assert.equal(out.picks.length, 3);
+  assert.ok(out.picks.every((p) => p.match?.quality === 'weak'));
+  assert.ok(out.best_free);
+  assert.match(out.coverage_note ?? '', /^pickfit has no verified tool that clearly does this job\. .*the listed tools are the closest it has, but they do not mention jira; each pick's match says what it covers\./);
+  assert.doesNotMatch(out.coverage_note ?? '', /do not use|don't use|ignore|drop/i);
+  assert.equal(out.well_known_option, null);
+  const row = h.sqlite.prepare('SELECT need, results FROM events').get() as any;
+  assert.equal(JSON.parse(row.need).match_quality, 'none');
+  assert.equal(JSON.parse(row.results).length, 3);
+});
+
+test('the best pick is partial: the note names its gaps; a closer tool past the picks changes the none wording', async () => {
+  const h = harness(null, { modelEnabled: false });
+  h.deps.catalog = catalog(corpus);
+  const partial = await findSoftware({ need: 'search, edit and sync my Notion notes in a vault with a regex', limit: 3 }, h.deps);
+  assert.equal(partial.match_quality, 'partial');
+  // The top-ranked pick is weak (it does not name Notion); the second is partial and is named.
+  assert.deepEqual(partial.picks.map((p) => p.match?.quality), ['weak', 'partial', 'weak']);
+  assert.equal(partial.coverage_note, 'No listed tool covers the whole request: the closest, notes-sync, does not mention search, edit, vault, regex. Each pick\'s match says what it covers.');
+  assert.equal(fitNote({ quality: 'weak', covers: [], missing: ['jira'] }), 'Weak match: its profile mentions none of jira.');
+  const one = await findSoftware({ need: 'search, edit and sync my Notion notes in a vault with a regex', limit: 1 }, h.deps);
+  assert.deepEqual([one.picks.map((p) => p.slug), one.match_quality], [['vault'], 'none']);
+  assert.match(one.coverage_note ?? '', /^None of the listed tools clearly does this job: judging by their profiles, they do not mention sync, notion, regex\./);
 });
 
 test('find_alternatives: a tool that names the current one is a good fit, whatever the pain points say', async () => {

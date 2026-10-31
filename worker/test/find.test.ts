@@ -249,13 +249,9 @@ test('rules ranking puts request keywords and verification on the user OS first'
 
 test('rules ask for the OS when it is unknown and the picks differ', async () => {
   const h = harness(null, { modelEnabled: false });
-  const out = await findSoftware({ need: 'language models offline' }, h.deps);
-  assert.equal(out.picks[0].slug, 'fixture-llm-runner');
+  const out = await findSoftware({ need: 'query json in the terminal' }, h.deps);
+  assert.equal(out.picks[0].slug, 'fixture-json-query');
   assert.match(out.clarifying_question ?? '', /Which OS/);
-  // One fitting tool: nothing to choose between, so no question.
-  const one = await findSoftware({ need: 'query json in the terminal' }, h.deps);
-  assert.deepEqual(one.picks.map((p) => p.slug), ['fixture-json-query']);
-  assert.equal(one.clarifying_question, null);
 });
 
 test('no candidate after the hard filters: no model call, an honest note', async () => {

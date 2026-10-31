@@ -89,12 +89,14 @@ const pick = z.object({
   homepage: z.string().nullable(),
   match: z
     .object({
-      quality: z.enum(['good', 'partial']),
+      quality: z.enum(['good', 'partial', 'weak']),
       covers: z.array(z.string()).describe("The request's words this profile mentions"),
       missing: z.array(z.string()).describe("The request's words it does not mention"),
     })
     .optional()
-    .describe('Rules-only answers: how well the profile fits the request; absent when the model chose'),
+    .describe(
+      "Rules-only answers: how well the profile covers the request's specific words (good: most of them; partial: some; weak: less). A label only: every pick is still listed. Absent when the model chose",
+    ),
 });
 
 /** The user's conditions, shared by find_software and find_alternatives. */
@@ -159,7 +161,9 @@ const findOutput = z.object({
   match_quality: z
     .enum(['good', 'partial', 'none'])
     .optional()
-    .describe('Rules-only answers: none = pickfit has no verified tool that does this, so no picks; absent when the model chose'),
+    .describe(
+      'Rules-only answers: the best pick\'s label; none = no pick reaches partial (coverage_note names what they miss; the picks are still listed). Absent when the model chose',
+    ),
 });
 
 const alternativesOutput = findOutput.extend({
@@ -335,7 +339,8 @@ export function buildServer(deps: Deps): McpServer {
         'Before calling, ask at most one or two questions, and only if unknown: which OS, and whether it must be free or run fully offline. ' +
         'Returns up to 3 lesser-known tools whose install pickfit actually ran, ranked by fit (not popularity), each with reasons tied to its verified profile, trade-offs, verification evidence and separate quality/popularity scores, plus the best free option. ' +
         'If a well-known free tool pickfit does not list may fit better, well_known_option names it: tell the user pickfit has not verified it. ' +
-        'If clarifying_question is set, ask it and call again. Next: get_install_guide(slug, os, rec_id). Coverage: developer CLI tools, local AI/LLM tools and MCP servers.',
+        'If clarifying_question is set, ask it and call again. When matched_by is "rules", match_quality and each pick\'s match say how well the profiles cover the request; present partial or weak picks as such. ' +
+        'Next: get_install_guide(slug, os, rec_id). Coverage: developer CLI tools, local AI/LLM tools and MCP servers.',
       inputSchema: findInput,
       outputSchema: findOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },

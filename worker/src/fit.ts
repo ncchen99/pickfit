@@ -13,7 +13,10 @@
  * - partial: it mentions at least one named product (when the request names
  *   any) and at least PARTIAL_SHARE of the specific words: MIN_WORDS of them,
  *   or one when that is half the request or more;
- * - none: otherwise. A request answered only by "none" tools gets no picks.
+ * - weak: otherwise.
+ *
+ * Labels only: rules answers list the same tools in the same order either way;
+ * the labels say how well each listed profile covers the request.
  *
  * A profile names a product directly unless it mentions it only as what it
  * replaces ("jira-alternative", "an alternative to Notion"); such a mention
@@ -26,7 +29,9 @@ import { OSES, type Entry } from './catalog.ts';
 import { EN_PHRASES, GENERIC_WORDS, NOT_THE_JOB_WORDS, ZH_PHRASES } from './lexicon.ts';
 import { relevanceIndex, terms, zhWords } from './relevance.ts';
 
-export type FitQuality = 'good' | 'partial' | 'none';
+export type FitQuality = 'good' | 'partial' | 'weak';
+/** A whole rules answer: its best pick's label, or none when no pick reaches partial. */
+export type MatchQuality = 'good' | 'partial' | 'none';
 
 export interface Fit {
   quality: FitQuality;
@@ -123,7 +128,7 @@ export function jobOf(corpus: readonly Entry[], text: string): Job {
   }
   const said = new Map<string, string>();
   for (const word of [...(plain.match(/[A-Za-z][\w+#.-]*/g) ?? []), ...zhWords(plain).join(' ').split(' ')]) {
-    for (const term of terms(word)) if (!said.has(term)) said.set(term, word.toLowerCase());
+    for (const term of terms(word)) if (!said.has(term)) said.set(term, word.toLowerCase().replace(/\.+$/, ''));
   }
   // A word counts when the catalog knows it or it names a product; other words (asides, labels) do not.
   const known = (t: string) => index.df.has(t) || names.has(t);
@@ -167,10 +172,11 @@ export function fitOf(entry: Entry, job: Job): Fit {
   const said = (words: string[][]) => [...new Set(words.map((w) => job.said.get(w[0]) ?? w[0]))];
   const covered = job.words.filter((w) => w.some(has));
   const missing = job.words.filter((w) => !w.some(has));
-  const fit = (quality: FitQuality): Fit => ({ quality, covers: said(covered), missing: said(missing) });
+  // A word split in two ("real-time") that is half covered is listed as covered.
+  const fit = (quality: FitQuality): Fit => ({ quality, covers: said(covered), missing: said(missing).filter((w) => !said(covered).includes(w)) });
   if (job.words.length === 0) {
     // Only words no profile uses: nothing in the catalog speaks of this job.
-    if (job.unknown.length) return { quality: 'none', covers: [], missing: job.unknown };
+    if (job.unknown.length) return { quality: 'weak', covers: [], missing: job.unknown };
     // Nothing specific asked beyond the kind of tool, which the hard filters already settled.
     return fit('good');
   }
@@ -183,11 +189,17 @@ export function fitOf(entry: Entry, job: Job): Fit {
   if (namedCovered === named.length && share > GOOD_SHARE && enough) return fit('good');
   const some = covered.length >= MIN_WORDS || share >= GOOD_SHARE;
   if (some && (named.length === 0 || namedCovered > 0) && share >= PARTIAL_SHARE) return fit('partial');
-  return fit('none');
+  return fit('weak');
 }
 
-/** One sentence on what a partial match does and does not cover, from its profile. */
-export function partialNote(fit: Fit): string {
+/** One sentence on what a partial or weak pick does and does not cover, from its profile; none for a good one. */
+export function fitNote(fit: Fit): string | null {
   const list = (words: string[]) => words.slice(0, 5).join(', ');
-  return `Covers part of the request: its profile mentions ${list(fit.covers)} but not ${list(fit.missing)}.`;
+  if (fit.quality === 'partial') return `Covers part of the request: its profile mentions ${list(fit.covers)} but not ${list(fit.missing)}.`;
+  if (fit.quality === 'weak') {
+    return fit.covers.length
+      ? `Weak match: its profile mentions ${list(fit.covers)} but not ${list(fit.missing)}.`
+      : `Weak match: its profile mentions none of ${list(fit.missing)}.`;
+  }
+  return null;
 }
