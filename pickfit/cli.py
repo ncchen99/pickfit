@@ -43,9 +43,9 @@ def _discover(args: argparse.Namespace) -> int:
     except GitHubError as err:
         print(f"pickfit discover: {err}", file=sys.stderr)
         return 2
-    funnel = run_discover(token=token, per_query=args.per_query, pushed_days=args.pushed_days,
-                          categories=args.category, skip_details=args.skip_details,
-                          max_rate_wait_s=args.max_rate_wait)
+    funnel = run_discover(token=token, channel=args.channel, per_query=args.per_query,
+                          pushed_days=args.pushed_days, days=args.days, categories=args.category,
+                          skip_details=args.skip_details, max_rate_wait_s=args.max_rate_wait)
     print(json.dumps(funnel, ensure_ascii=False, indent=2))
     return 0
 
@@ -94,14 +94,20 @@ def _funnel(args: argparse.Namespace) -> int:
 
 def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     from pickfit.discover.github import PUSHED_DAYS, RATE_LIMIT_MAX_WAIT_S, TOPICS
-    from pickfit.discover.run import DEFAULT_PER_QUERY
+    from pickfit.discover.run import CHANNELS, DEFAULT_PER_QUERY
+    from pickfit.discover.showhn import DEFAULT_DAYS
     from pickfit.schema import LISTED_CATEGORIES
 
-    d = sub.add_parser("discover", help="search GitHub for candidates, fetch details, apply rules ($0)")
+    d = sub.add_parser("discover", help="find candidates (GitHub search or Show HN), fetch details, apply rules ($0)")
+    d.add_argument("--channel", choices=CHANNELS, default="github",
+                   help="github: topic searches per category (default); show_hn: recent Show HN posts "
+                        "that point to a GitHub repo")
+    d.add_argument("--days", type=int, default=DEFAULT_DAYS,
+                   help=f"show_hn: posts from the last N days (default {DEFAULT_DAYS})")
     d.add_argument("--per-query", type=int, default=DEFAULT_PER_QUERY,
-                   help=f"results to take from each search query (default {DEFAULT_PER_QUERY}, max 1000)")
+                   help=f"github: results to take from each search query (default {DEFAULT_PER_QUERY}, max 1000)")
     d.add_argument("--pushed-days", type=int, default=PUSHED_DAYS,
-                   help=f"only repos pushed in the last N days (default {PUSHED_DAYS})")
+                   help=f"github: only repos pushed in the last N days (default {PUSHED_DAYS})")
     d.add_argument("--category", action="append", choices=sorted(TOPICS),
                    help="limit to one category (repeatable; default all)")
     d.add_argument("--skip-details", action="store_true",

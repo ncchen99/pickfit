@@ -3,9 +3,10 @@
 One row per repository, keyed by `gh:<GitHub numeric repo id>` so a rename does
 not create a second candidate; earlier owner/name pairs go to `aliases`
 (architecture A.4). Each stage of the funnel writes its own columns or table:
-discovery (repo snapshot, which queries found it), details (README, releases,
-files), rules (label and reasons), extraction (one row per model call). Nothing
-here is the canonical data; data/software/ is written later from these rows.
+discovery (repo snapshot, which queries found it; for a channel other than GitHub
+search, such as Show HN, one `channel_hits` row per post), details (README,
+releases, files), rules (label and reasons), extraction (one row per model call).
+Nothing here is the canonical data; data/software/ is written later from these rows.
 """
 
 from __future__ import annotations
@@ -101,6 +102,26 @@ CREATE TABLE IF NOT EXISTS prescreens (
     latency_s REAL
 );
 CREATE INDEX IF NOT EXISTS prescreens_repo ON prescreens (repo_id, role, id);
+CREATE TABLE IF NOT EXISTS channel_hits (
+    channel TEXT NOT NULL,
+    item_id TEXT NOT NULL,
+    item_url TEXT NOT NULL,
+    title TEXT NOT NULL,
+    link TEXT,
+    points INTEGER,
+    comments INTEGER,
+    posted_at TEXT NOT NULL,
+    linked_repo TEXT,
+    repo_id TEXT,
+    categories TEXT NOT NULL DEFAULT '[]',
+    outcome TEXT NOT NULL,
+    known_before INTEGER,
+    run_id TEXT NOT NULL,
+    first_seen_at TEXT NOT NULL,
+    last_seen_at TEXT NOT NULL,
+    PRIMARY KEY (channel, item_id)
+);
+CREATE INDEX IF NOT EXISTS channel_hits_repo ON channel_hits (repo_id);
 """
 
 
@@ -176,6 +197,49 @@ class PipelineDB:
                 (repo["full_name"], _dumps([a for a in aliases if a != repo["full_name"]]),
                  _preferred(categories), _dumps(categories), _dumps(queries), _dumps(repo), now, key))
             return False
+
+    def names_index(self) -> dict[str, str]:
+        """Lowercased current and earlier owner/name of every candidate -> its repo_id."""
+        with self._connect() as conn:
+            rows = conn.execute("SELECT repo_id, full_name, aliases FROM candidates").fetchall()
+        out: dict[str, str] = {}
+        for row in rows:
+            for name in _loads(row["aliases"], []):
+                out.setdefault(name.lower(), row["repo_id"])
+        for row in rows:  # a current name wins over someone's earlier name
+            out[row["full_name"].lower()] = row["repo_id"]
+        return out
+
+    def save_channel_hit(self, *, channel: str, post: Any, repo_id: str | None, outcome: str,
+                         known_before: bool | None, run_id: str, seen_at: str | None = None) -> None:
+        """Record one post of a channel (Show HN) and what became of it; a post seen again is
+        refreshed (points, comments, outcome) but keeps whether its repo was known at first sight."""
+        now = seen_at or taipei_now().isoformat(timespec="seconds")
+        with self._write() as conn:
+            conn.execute(
+                "INSERT INTO channel_hits (channel, item_id, item_url, title, link, points, comments, posted_at, "
+                "linked_repo, repo_id, categories, outcome, known_before, run_id, first_seen_at, last_seen_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                "ON CONFLICT (channel, item_id) DO UPDATE SET points = excluded.points, "
+                "comments = excluded.comments, linked_repo = excluded.linked_repo, repo_id = excluded.repo_id, "
+                "categories = excluded.categories, outcome = excluded.outcome, run_id = excluded.run_id, "
+                "last_seen_at = excluded.last_seen_at",
+                (channel, post.item_id, post.hn_url, post.title, post.link, post.points, post.comments,
+                 post.posted_at, post.repo, repo_id, _dumps(post.categories), outcome,
+                 None if known_before is None else int(known_before), run_id, now, now))
+
+    def channel_hits(self, channel: str | None = None) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute("SELECT * FROM channel_hits WHERE ? IS NULL OR channel = ? "
+                                "ORDER BY posted_at, item_id", (channel, channel)).fetchall()
+        out = []
+        for row in rows:
+            hit = dict(row)
+            hit["categories"] = _loads(hit["categories"], [])
+            if hit["known_before"] is not None:
+                hit["known_before"] = bool(hit["known_before"])
+            out.append(hit)
+        return out
 
     def log_query(self, *, run_id: str, query_id: str, category: str, q: str, ran_at: str,
                   total_count: int | None, returned: int, new: int) -> None:
@@ -342,10 +406,18 @@ class PipelineDB:
         latest_by_model: dict[str, dict[str, dict[str, Any]]] = {}
         for e in all_extractions:
             latest_by_model.setdefault(e["model"], {})[e["repo_id"]] = e
+        hits = [h for h in self.channel_hits() if h["outcome"] == "candidate"]
         return {
             "discover": {
                 "candidates": len(cands),
                 "by_category": dict(Counter(c["category"] for c in cands)),
+                # A candidate found by any query of a channel; GitHub search ids are <category>:<topic>.
+                "by_channel": dict(Counter(ch for c in cands for ch in sorted(_channels(c["queries"])))),
+                "channel_posts": {ch: {"posts": sum(1 for h in hits if h["channel"] == ch),
+                                       "repos": len({h["repo_id"] for h in hits if h["channel"] == ch}),
+                                       "repos_new": len({h["repo_id"] for h in hits
+                                                         if h["channel"] == ch and h["known_before"] is False})}
+                                  for ch in sorted({h["channel"] for h in hits})},
                 "in_both_categories": sum(1 for c in cands if len(c["categories"]) > 1),
                 "renamed": sum(1 for c in cands if c["aliases"]),
                 "queries": queries,
@@ -421,6 +493,16 @@ class PipelineDB:
             "cost_by_model": {m: round(c, 6) for m, c in sorted(cost_by_model.items())},
             "cost_usd": round(sum(p["cost_usd"] for p in rows), 6),
         }
+
+
+_CHANNEL_PREFIXES = ("show_hn", "submission", "reverify")
+
+
+def _channels(query_ids: list[str]) -> set[str]:
+    """Which channels found a candidate, from its query ids: `show_hn:<category>`,
+    `submission:<id>`, `reverify:<id>`, or GitHub search's `<category>:<topic>`."""
+    return {q.split(":", 1)[0] if q.split(":", 1)[0] in _CHANNEL_PREFIXES else "github_search"
+            for q in query_ids}
 
 
 def _preferred(categories: list[str]) -> str:
