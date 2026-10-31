@@ -13,6 +13,7 @@ from typing import Any
 import pytest
 
 from pickfit.discover.store import PipelineDB
+from pickfit.meta import OPEN_MODEL
 from pickfit.verify.batch import (
     load_candidates,
     recheck_slugs,
@@ -93,6 +94,19 @@ def test_selection_filters_and_limits(db_path: Path):
     items, skipped = load_candidates(db_path, limit=10, skip_slugs={"graphtty"})
     assert "graphtty" not in [i.task.slug for i in items]
     assert {"slug": "graphtty", "reason": "already has a run (use --force)"}.items() <= skipped[0].items()
+
+
+def test_a_muse_spark_open_extraction_is_used_when_it_is_the_only_one_or_asked_for(db_path: Path):
+    db = PipelineDB(db_path)
+    add(db, 9, "other/graphtty", extraction(name={"value": "open", "quote": "# graphtty"}), model=OPEN_MODEL)
+    add(db, 11, "acme/openonly", extraction(), model=OPEN_MODEL)
+    items, _ = load_candidates(db_path, limit=10)
+    models = {i.full_name: (i.extraction_model, i.task.extraction.name.value) for i in items}
+    assert models["other/graphtty"] == ("muse-spark-1.3", "standard")  # 1.3 still wins by default
+    assert models["acme/openonly"][0] == OPEN_MODEL
+    items, _ = load_candidates(db_path, limit=10, extraction_model=OPEN_MODEL)
+    assert {i.full_name: i.task.extraction.name.value for i in items} == {
+        "other/graphtty": "open", "acme/openonly": "graphtty"}
 
 
 def test_gpu_tools_are_set_aside_unless_the_boxes_have_a_gpu(db_path: Path):

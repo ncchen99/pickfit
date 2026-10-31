@@ -38,7 +38,7 @@ import openai
 from pydantic import BaseModel, ValidationError
 
 from pickfit.env import REPO_ROOT, get_env, require_env
-from pickfit.ledger import BudgetExceeded, Ledger, default_ledger, taipei_date, taipei_now
+from pickfit.ledger import BudgetExceeded, Ledger, baseten_ledger, default_ledger, taipei_date, taipei_now
 
 Endpoint = Literal["chat", "responses"]
 
@@ -56,6 +56,11 @@ PROVIDERS: dict[str, Provider] = {
 
 # PICKFIT_MODE (default dev) picks the model when a Meta caller passes none.
 MODE_ALIASES = {"dev": "muse-spark-1.3-contributor", "prod": "muse-spark-1.3"}
+# "open" is Muse Spark Open on Baseten (the hackathon's open-weight model). The model id says which
+# provider serves it, so call_meta routes and bills it to Baseten without the caller passing provider.
+OPEN_MODEL = "meta-models/muse-spark-open-1026"
+OPEN_ALIASES = {"open": OPEN_MODEL}
+BASETEN_PREFIX = "meta-models/"
 
 
 @dataclass(frozen=True)
@@ -199,9 +204,11 @@ class MetaResult:
 
 
 def resolve_model(model: str | None, provider: str = "meta") -> str:
-    """Map "dev"/"prod" (or PICKFIT_MODE when None) to a model id."""
+    """Map "dev"/"prod" (or PICKFIT_MODE when None) and "open" to a model id."""
     if provider not in PROVIDERS:
         raise ValueError(f"unknown provider {provider!r}; expected one of {sorted(PROVIDERS)}")
+    if model in OPEN_ALIASES:
+        return OPEN_ALIASES[model]
     if provider == "baseten":
         if model is None or model in MODE_ALIASES:
             raise ModelRefused("baseten calls need an explicit model id, e.g. meta-models/muse-spark-open")
@@ -211,6 +218,16 @@ def resolve_model(model: str | None, provider: str = "meta") -> str:
         if model not in MODE_ALIASES:
             raise ValueError(f"PICKFIT_MODE must be one of {sorted(MODE_ALIASES)}, got {model!r}")
     return MODE_ALIASES.get(model, model)
+
+
+def provider_for(model: str) -> str:
+    """The provider that serves a model id: Baseten for its meta-models/ slugs, else Meta."""
+    return "baseten" if model.startswith(BASETEN_PREFIX) else "meta"
+
+
+def is_open_model(model: str | None) -> bool:
+    """True when `model` (an alias or an id) is served on Baseten rather than by Meta's API."""
+    return model is not None and provider_for(OPEN_ALIASES.get(model, model)) == "baseten"
 
 
 def price_for(provider: str, model: str) -> Price:
@@ -668,7 +685,7 @@ def call_meta(
     public_data_only: bool,
     max_output_tokens: int,
     model: str | None = None,
-    provider: str = "meta",
+    provider: str | None = None,
     reasoning_effort: str = "minimal",
     scope: str | None = None,
     scope_cap_usd: float | None = None,
@@ -688,8 +705,11 @@ def call_meta(
     `scope` may spend within `run_id` (e.g. "verify:<slug>" at 0.50 per verification run).
     `output_model` validates the text output as JSON into that pydantic model.
     `cache` defaults to PICKFIT_CACHE, else on for dev (contributor) models only.
+    `provider` defaults to the one serving the model (Baseten for "open" and meta-models/ ids), and
+    `ledger` to that provider's budget in the shared ledger.
     """
-    model = resolve_model(model, provider)
+    model = resolve_model(model, provider or "meta")
+    provider = provider or provider_for(model)
     _check_policy(provider, model, public_data_only, reasoning_effort, body, max_output_tokens)
     price = price_for(provider, model)
     request = build_request(endpoint, model, body, max_output_tokens, reasoning_effort)
@@ -707,7 +727,7 @@ def call_meta(
                           response_id=raw.get("id"), cache_hit=cache_hit, attempts=attempts,
                           request_hash=key, raw=raw, parsed=parsed, parse_error=parse_error, **read)
 
-    ledger = ledger or default_ledger()
+    ledger = ledger or (baseten_ledger() if provider == "baseten" else default_ledger())
     use_cache = _cache_enabled(cache, model)
     if use_cache:
         raw = _cache_read(runs, key)

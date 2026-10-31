@@ -29,6 +29,7 @@ from pickfit.extract import (
     select_candidates,
 )
 from pickfit.ledger import Caps, Ledger
+from pickfit.meta import OPEN_MODEL
 from pickfit.schema import ExtractionResult, meta_strict_schema
 
 README = """# tinyq
@@ -279,6 +280,25 @@ def test_run_extract_stores_results_and_spends_through_call_meta(tmp_path: Path,
     again = run_extract(limit=5, db_path=db_path, client=FakeMeta().client(), ledger=ledger,
                         runs_dir=tmp_path / "runs", log=lines.append)
     assert again["attempted"] == 0
+
+
+def test_run_extract_on_muse_spark_open_stores_its_model(tmp_path: Path, ledger: Ledger) -> None:
+    db_path = tmp_path / "pipeline.db"
+    db = PipelineDB(db_path)
+    add_candidate(db, 1, "someone/tinyq")
+    server = FakeMeta(ok(extraction()))
+    summary = run_extract(limit=5, model="open", db_path=db_path, client=server.client(), ledger=ledger,
+                          runs_dir=tmp_path / "runs", log=lambda line: None)
+    assert summary["model"] == OPEN_MODEL and summary["by_status"] == {"ok": 1}
+    (request,) = server.requests
+    assert request["model"] == OPEN_MODEL and request["text"]["format"]["strict"] is True
+    (row,) = db.extractions()
+    assert row["model"] == OPEN_MODEL
+    assert run_extract(limit=5, model="prod", db_path=db_path, client=FakeMeta().client(), ledger=ledger,
+                       runs_dir=tmp_path / "runs", log=lambda line: None, max_attempts=1)["attempted"] == 1
+    # Done by this model from the same sources: a second "open" run makes no call.
+    assert run_extract(limit=5, model="open", db_path=db_path, client=FakeMeta().client(), ledger=ledger,
+                       runs_dir=tmp_path / "runs", log=lambda line: None)["attempted"] == 0
 
 
 def test_run_extract_records_schema_errors_and_quote_failures(tmp_path: Path, ledger: Ledger) -> None:

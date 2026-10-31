@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import sqlite3
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -18,6 +19,7 @@ from pickfit import meta
 from pickfit.env import read_env
 from pickfit.ledger import BudgetExceeded, Caps, Ledger
 from pickfit.meta import (
+    OPEN_MODEL,
     PRICES,
     ModelRefused,
     PrivateDataRefused,
@@ -25,7 +27,10 @@ from pickfit.meta import (
     call_meta,
     cost_usd,
     estimate_input_tokens,
+    is_open_model,
     ping,
+    provider_for,
+    resolve_model,
 )
 
 FAKE_KEY = "sk-test-0123456789abcdef-SECRET"
@@ -373,6 +378,35 @@ def test_prod_allowed_for_non_public_data(ledger: Ledger, monkeypatch: pytest.Mo
     server = FakeServer(ok(CHAT_OK))
     call(server, ledger, public_data_only=False)
     assert server.requests[0]["model"] == "muse-spark-1.3"
+
+
+def test_open_alias_names_muse_spark_open_on_baseten():
+    assert resolve_model("open") == resolve_model("open", "baseten") == OPEN_MODEL
+    assert provider_for(OPEN_MODEL) == "baseten" and provider_for("muse-spark-1.3") == "meta"
+    assert is_open_model("open") and is_open_model(OPEN_MODEL)
+    assert not is_open_model("prod") and not is_open_model("muse-spark-1.3") and not is_open_model(None)
+
+
+def test_open_model_is_sent_to_baseten_and_billed_to_its_budget(tmp_path: Path, runs: Path):
+    server = FakeServer(ok({**RESPONSES_OK, "model": OPEN_MODEL}))
+    result = call_meta("responses", {"input": "README text", "store": False}, stage="test", public_data_only=True,
+                       max_output_tokens=1000, model="open", client=server.client())
+    assert server.requests[0]["model"] == OPEN_MODEL
+    assert (result.provider, result.model) == ("baseten", OPEN_MODEL)
+    assert result.cost_usd == pytest.approx(0.0031)  # Baseten's list price, same as muse-spark-1.3
+    with sqlite3.connect(tmp_path / "default-ledger.sqlite") as conn:  # PICKFIT_LEDGER (the isolated fixture)
+        assert conn.execute("SELECT budget, provider, model FROM calls").fetchall() == [
+            ("baseten", "baseten", OPEN_MODEL)]
+    assert (traces(runs)[0]["provider"], traces(runs)[0]["model"]) == ("baseten", OPEN_MODEL)
+
+
+def test_open_model_cannot_be_sent_to_meta(ledger: Ledger):
+    server = FakeServer()
+    with pytest.raises(ModelRefused):
+        call(server, ledger, "responses", {"input": "x"}, model="open", provider="meta")
+    with pytest.raises(ValueError, match="stateless"):
+        call(server, ledger, "responses", {"input": "x", "previous_response_id": "resp_1"}, model="open")
+    assert server.requests == []
 
 
 def test_unknown_model_refused(ledger: Ledger):
