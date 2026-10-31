@@ -415,6 +415,37 @@ def test_write_back_keeps_scores_and_refreshes_what_follows_the_run(tmp_path: Pa
     assert s.quality.components.install_docs == before.quality.components.install_docs
 
 
+def test_refresh_moves_scores_of_a_refreshable_formula_and_score_refresh_writes_only_scores(tmp_path: Path) -> None:
+    from pickfit.score import REFRESHABLE_FROM, refresh_records
+
+    db_path, out = setup_records(tmp_path)
+    score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW,
+                  grade=fake_grade())
+    path = out / "tinyq.json"
+    data = json.loads(path.read_text())
+    old = next(iter(REFRESHABLE_FROM))
+    data["scores"]["formula_version"] = old
+    data["verification"]["runs"][0]["pitfalls"] = [{"readme_said": "tool link", "actually_needed": "tool pair",
+                                                    "kind": "note"}]
+    path.write_text(json.dumps(data))
+    before = SoftwareRecord.model_validate_json(path.read_text()).model_dump(mode="json")
+    assert refresh_records(out, dry_run=True, now=LATER).written == ["tinyq"]
+    assert json.loads(path.read_text()) == data  # a dry run writes nothing
+    summary = refresh_records(out, now=LATER)
+    assert summary.written == ["tinyq"] and "moved from formula" in summary.rows[0]["note"]
+    after = json.loads(path.read_text())
+    assert {k for k in after if after[k] != before.get(k)} == {"scores", "updated_at"}
+    scores = SoftwareRecord.model_validate(after).scores
+    assert scores.formula_version == FORMULA_VERSION and scores.docs_rubric == SoftwareRecord.model_validate(
+        before).scores.docs_rubric  # other components kept as they were
+    assert scores.quality.components.sandbox_verification.score == 1.0  # a note is not a README fix
+    assert refresh_records(out, now=LATER).unchanged == ["tinyq"]
+    after["scores"]["formula_version"] = "q0"  # not refreshable: left for a full rescore, never cleared
+    path.write_text(json.dumps(after))
+    summary = refresh_records(out, now=LATER)
+    assert "tinyq" in summary.errors and json.loads(path.read_text())["scores"]["formula_version"] == "q0"
+
+
 def test_refresh_clears_scores_of_another_formula() -> None:
     data = {"scores": {"formula_version": "q0"}}
     assert "rescore" in refresh_scores(data, NOW) and data["scores"] is None

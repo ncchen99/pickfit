@@ -1,4 +1,4 @@
-"""Scores (P5.1, arch B.3): quality, popularity and treasure, kept apart, formula "b3.v4".
+"""Scores (P5.1, arch B.3): quality, popularity and treasure, kept apart, formula "b3.v5".
 
 quality (0-100) is a weighted mean of six components, each 0-1:
 
@@ -40,12 +40,15 @@ b3.v4 fixes what a review found: README fixes that were not, look-around assignm
 actions, missing download counts stored as 0, partial download sums, and HN stories matched on a
 bare personal or company domain. A rescore with --no-github or --no-registries keeps the stored
 responsiveness and registry signals.
+b3.v5: a pitfall tagged with a kind counts as a README fix only when it is readme_wrong; since only
+the record-derived parts changed, b3.v4 scores move to b3.v5 by refresh_scores, with no rescore.
 
 Inputs are the record, the GitHub snapshot it was built from (runs/pipeline.db; fetched live
 when the pipeline database does not hold the repo), one REST call for issues and the registry
 lookups. Ages are measured at the snapshot time, so the same snapshot gives the same quality.
-refresh_scores() recomputes the parts that follow verification and outcomes without any call;
-verification write-back and `pickfit profiles` use it.
+refresh_scores() recomputes the parts that follow verification and outcomes without any call, and
+moves scores of a REFRESHABLE_FROM formula to this one; verification write-back, `pickfit profiles`
+and `pickfit score --refresh` use it.
 """
 
 from __future__ import annotations
@@ -84,7 +87,12 @@ from pickfit.schema import (
     usage_outcomes_weight,
 )
 
-FORMULA_VERSION = "b3.v4"
+FORMULA_VERSION = "b3.v5"
+# Earlier formulas that differ from this one only in what refresh_scores recomputes from the record
+# (sandbox and usage components, cap, total, treasure). Their other components are still valid, so
+# their scores move to this formula instead of being cleared. b3.v5 changed only how README fixes
+# are counted: a tagged pitfall's kind decides.
+REFRESHABLE_FROM = frozenset({"b3.v4"})
 STAGE = "score-rubric"
 REASONING_EFFORT = "low"
 MAX_OUTPUT_TOKENS = 8_000  # reasoning shares it; at effort low one call used 4,000 and ran out
@@ -624,9 +632,10 @@ def refresh_scores(data: dict[str, Any], now: datetime) -> str | None:
     scores = data.get("scores")
     if not scores:
         return None
-    if scores.get("formula_version") != FORMULA_VERSION:
+    version = scores.get("formula_version")
+    if version != FORMULA_VERSION and version not in REFRESHABLE_FROM:
         data["scores"] = None
-        return f"scores cleared: formula {scores.get('formula_version')} is not {FORMULA_VERSION}; rescore"
+        return f"scores cleared: formula {version} is not {FORMULA_VERSION}; rescore"
     verification = Verification.model_validate(data["verification"])
     outcomes = Outcomes.model_validate(data.get("outcomes") or {})
     components = {name: c["score"] for name, c in scores["quality"]["components"].items()}
@@ -634,11 +643,14 @@ def refresh_scores(data: dict[str, Any], now: datetime) -> str | None:
     components["usage_outcomes"] = usage_score(outcomes)
     cap_reason = binding_cap(data["kind"], data["repo"]["archived"], verification.level)
     quality = compose_quality(components, usage_outcomes_weight(outcomes.external.total()), cap_reason)
-    if quality == scores["quality"]:
+    if quality == scores["quality"] and version == FORMULA_VERSION:
         return None
+    scores["formula_version"] = FORMULA_VERSION
     scores["quality"] = quality
     scores["treasure"] = treasure(quality["total"], scores["popularity"]["score"])
     scores["computed_at"] = now.isoformat(timespec="seconds")
+    if version != FORMULA_VERSION:
+        return f"scores moved from formula {version} to {FORMULA_VERSION}, refreshed from the record"
     return "scores refreshed from the record"
 
 
@@ -932,6 +944,45 @@ def score_records(data_dir: Path, *, db_path: Path | None, model: str, slugs: li
     return summary
 
 
+def refresh_records(data_dir: Path, *, slugs: list[str] | None = None, dry_run: bool = False,
+                    now: datetime | None = None, log: Callable[[str], None] | None = None) -> ScoreSummary:
+    """`pickfit score --refresh`: refresh_scores over the records, writing only scores and updated_at.
+    No GitHub, registry or model call. A record whose formula cannot be refreshed is left as it is
+    (a full `pickfit score` rescores it), never cleared."""
+    log = log or (lambda line: None)
+    now = now or taipei_now()
+    paths = sorted(data_dir.glob("*.json"))
+    if slugs:
+        paths = [p for p in paths if p.stem in set(slugs)]
+    summary = ScoreSummary()
+    for path in paths:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        before = data.get("scores")
+        version = (before or {}).get("formula_version")
+        row: dict[str, Any] = {"slug": path.stem, "cost_usd": 0.0, "rubric": "kept"}
+        if before and version != FORMULA_VERSION and version not in REFRESHABLE_FROM:
+            summary.errors[path.stem] = f"formula {version} cannot be refreshed; run pickfit score"
+            continue
+        old_quality = before["quality"]["total"] if before else None
+        old_treasure = before["treasure"]["is_treasure"] if before else None
+        note = refresh_scores(data, now)
+        after = data.get("scores")
+        row.update(status="written" if note else "unchanged", note=note, quality_before=old_quality,
+                   quality=after["quality"]["total"] if after else None, treasure_before=old_treasure,
+                   treasure=after["treasure"]["is_treasure"] if after else None)
+        if note:
+            data["updated_at"] = now.isoformat(timespec="seconds")
+            updated = SoftwareRecord.model_validate(data)
+            if not dry_run:
+                _write(path, _render(updated))
+            summary.written.append(path.stem)
+            log(f"  written   {path.stem:<26} Q {old_quality} -> {row['quality']} · {note}")
+        else:
+            summary.unchanged.append(path.stem)
+        summary.rows.append(row)
+    return summary
+
+
 def main_score(args: Any) -> int:
     """`pickfit score` entry point (wired in pickfit/cli.py)."""
     from pickfit.discover.github import GitHubError
@@ -940,6 +991,15 @@ def main_score(args: Any) -> int:
     from pickfit.profiles import DEFAULT_OUT
 
     started = time.monotonic()
+    if getattr(args, "refresh", False):
+        summary = refresh_records(Path(args.data_dir) if args.data_dir else DEFAULT_OUT, slugs=args.slug,
+                                  dry_run=args.dry_run, log=lambda line: print(line, file=sys.stderr))
+        out = summary.to_dict()
+        out["seconds"] = round(time.monotonic() - started, 1)
+        if not args.verbose:
+            out.pop("records")
+        print(json.dumps(out, ensure_ascii=False, indent=2))
+        return 0 if not summary.errors else 1
     try:
         summary = score_records(Path(args.data_dir) if args.data_dir else DEFAULT_OUT,
                                 db_path=Path(args.db) if args.db else pipeline_db_path(),
