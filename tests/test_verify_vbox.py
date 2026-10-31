@@ -292,9 +292,19 @@ def test_no_command_runs_before_sbx_is_on_the_desktop(fake, monkeypatch, logged_
 def test_admin_checks_use_windows_powershell_and_model_commands_pwsh(fake) -> None:
     box = fake.box()
     for user, shell in (("Administrator", "powershell"), ("sbx", "pwsh")):
-        rest = box.run_argv(user, "x", 30, r"C:\Windows\Temp", "n")
+        rest = box.run_argv(user, "x", 30, r"C:\Users\sbx\work", "n")
         assert rest[rest.index("-Shell") + 1] == shell
     assert "WindowsPowerShell" in vb.RUN_SCRIPT and "pwsh.path" in vb.RUN_SCRIPT
+
+
+def test_admin_commands_start_in_the_harness_directory_not_a_temp_dir_sbx_can_write(fake) -> None:
+    box = fake.box()
+    box.start()
+    admin_runs = [c for c in fake.calls() if c[:1] == ["guestcontrol"] and "run" in c
+                  and c[c.index("--username") + 1] == "Administrator"]
+    assert admin_runs and all(c[c.index("--cwd") + 1] == vb.HARNESS_DIR for c in admin_runs)
+    assert all(c[c.index("-Cwd") + 1] == vb.HARNESS_DIR for c in admin_runs)
+    box.close()
 
 
 def test_logon_passwords_reach_the_guest_only_through_the_environment() -> None:

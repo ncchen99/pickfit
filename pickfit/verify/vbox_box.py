@@ -839,8 +839,8 @@ class VBoxBox(Box):
     def run_argv(self, user: str, command: str, timeout_s: int, cwd: str, nonce: str) -> list[str]:
         """`guestcontrol run` argv for run.ps1 (tests check it). Arguments after `--` exclude argv[0]."""
         args = [*self.vbox.argv0, "guestcontrol", self.base, "run", "--username", user,
-                "--passwordfile", self._pwfile(user), "--exe", WINPS, "--timeout", str((timeout_s + 30) * 1000),
-                "--wait-stdout", "--wait-stderr"]
+                "--passwordfile", self._pwfile(user), "--exe", WINPS, "--cwd", cwd,
+                "--timeout", str((timeout_s + 30) * 1000), "--wait-stdout", "--wait-stderr"]
         for key, value in WIN_ENV.items():
             args += ["--putenv", f"{key}={value}"]
         args += ["--putenv", f"PF_ENC={encode_ps(with_exit_code(command))}"]  # see PS_BOOT
