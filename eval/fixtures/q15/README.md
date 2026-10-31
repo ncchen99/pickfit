@@ -28,7 +28,7 @@
 - **佔位字**：答案裡的輸入檔名、輸出位置、模型檔名是佔位字時，評分者填入（輸入一律是 `/work/meeting.wav`，由 `/eval/q15/clip/clip.wav` 複製；暖機用 `/eval/q15/clip/warmup.wav` 複製成同名檔）。
 - **照原樣（verbatim）**：評分者把答案的安裝指令依序、原封不動複製成 `/results/steps.sh`，在同一個 bash 裡逐條執行（`bash -x steps.sh 2>&1 | tee /results/install.log`）。只做第 5 節允許的調整：填版本號與佔位字、安裝程式詢問時接受預設值；替換記在 `/results/substitutions.json`。Ubuntu 擋下裸 `pip install` 時可以改在 venv 裡繼續（記 `needed_venv`）。修正指令或旗標、補步驟、換模型都不允許。
 - **答案的完整指令**：從音檔到最後交出的 SRT 為止的所有指令（轉檔、辨識、繁體轉換等後處理），照答案原樣寫成 `/results/run.sh`，用 `bash /results/run.sh` 一次執行。「最後交出的 SRT」是答案說要用的那一個（例如轉成繁體之後的檔）。
-- **擋外連（egress blocked）**：在 setup（安裝、模型下載、暖機）完成之後才擋。做法：從檔案系統快照開新沙盒、網路在沙盒層級關閉（首選）；或在同一個沙盒以 root 用 iptables／ip6tables 只放行 `lo`，其餘 REJECT。用哪一種記在 `calibration.md`；受測容器、基準容器、兩組、所有答案都用同一種。
+- **擋外連（egress blocked）**：照 9.3 B.3 與 [`_shared/README.md`](../_shared/README.md) 第 1 節：`egress.py run --block-network`（只有 loopback 的 network namespace，DNS 也查不到；在 Modal 的 gVisor 沙盒裡是 user＋network namespace，uid 照原樣對應，2026-10-31 實測）。在 setup（安裝、模型下載、暖機）完成之後才擋。要互相連線的步驟（啟動服務與送請求、檢查）寫進同一個腳本，用一次 `egress.py run --block-network --sh 'bash 腳本'` 跑完，因為每一次 `--block-network` 都是新的 namespace。兩組、所有答案都用同一種。
 - **外連檢查（egress check）**：定義與判定見 [`_shared/README.md`](../_shared/README.md) 第 1 節（共用工具在沙盒裡的 `$SHARED`）：
   1. 擋了之後、Run B 前後各跑一次 `egress.py probe`：直接連公開位址的 TCP 與送往公開 DNS 的 UDP 都失敗，才算「確實擋住」；透過沙盒 resolver 查名稱只記錄。
   2. Run B 用 `egress.py run` 包起來，strace 記錄指令與所有子程序的連線；目的地不是 loopback、未指定位址、沙盒自己的位址的，以及任何查名稱（DNS），都算一次外連嘗試（包括私有網段、`169.254.169.254`）。
@@ -45,7 +45,7 @@
 2. 照原樣執行安裝步驟（含答案寫的模型下載）。
 3. 暖機（可連網）：把 `warmup.wav` 複製成 `/work/meeting.wav`，執行一次 `bash /results/run.sh`，讓需要下載的東西下載完；結束後刪掉它產生的輸出。所有答案都做這一步，不論答案是否另有下載指令。
 4. L2-1：`sh /eval/q15/check_no_torch.sh / > /results/no-torch.txt`；暖機那次成功結束（exit 0 且產生 SRT）就是「CLI 可用」。
-5. 裝評分工具 `apt-get install -y strace`，然後擋外連。
+5. 擋外連（strace 已在 dev image 裡，9.3 B.2；不另外安裝）。
 6. 把 `clip.wav` 複製成 `/work/meeting.wav`，Run A（計時，不監測）：
    ```bash
    $EVAL_PY $SHARED/egress.py run --out /results/eg --label runA --no-trace --timeout 600 -- bash /results/run.sh

@@ -12,7 +12,7 @@ python3 $SHARED/egress.py selftest --out /tmp/egress-selftest
 
 | 項目 | 結果 | strace 版本（`strace -V`） | image digest | 日期 |
 |---|---|---|---|---|
-| selftest | | | | |
+| selftest | 通過：true、loopback 判 pass；TEST-NET、查 `.invalid`、背景程序 3 秒後的連線都判 fail（抓到）。parser 21／21 | strace 6.8（apt `6.8-0ubuntu2`） | `ubuntu:24.04@sha256:78d4744e…2044d`（linux/amd64）→ `pickfit-eval-l2-dev:4acdd7fff6ab`（im-ROzeGEcvY1kyYQCOgUO4Uf），Modal gVisor | 2026-10-31 |
 
 ## 步驟 2：擋外連的方式
 
@@ -26,7 +26,11 @@ python3 $SHARED/egress.py probe --json /tmp/probe.json   # 預期 exit 0（block
 
 | 方式 | probe 結果 | dns_resolves | 日期 |
 |---|---|---|---|
-| | | | |
+| 正向對照：網路開著，直接跑 `probe` | 1.1.1.1:443、8.8.8.8:53、9.9.9.9:443 連得到，UDP DNS 有回應（IPv6 沒有路由）；`blocked: false` | true | 2026-10-31 |
+| 反向對照：`run --block-network -- probe`（user＋network namespace，uid 全部對應） | 全部 `Network is unreachable`；`blocked: true`；`netns.ok: true`，只有 `lo`，loopback 自我測試成功 | false | 2026-10-31 |
+| 擋住時 strace 照樣記錄：`run --block-network` 裡查 example.com | 15 次 port 53 的 connect（172.21.0.1、1.1.1.1、8.8.8.8），都 ENETUNREACH，report 判 fail | — | 2026-10-31 |
+
+單純的 `unshare(CLONE_NEWNET)` 在這個沙盒是 EPERM（root 沒有 CAP_SYS_ADMIN），所以 `egress.py` 自動改用 user＋network namespace；namespace 裡 `su dev` 正常、uid 1001 的檔仍屬 1001。原始輸出在 `eval/results/l2-images.json` 的 `dev.inspected`。
 
 ## 步驟 3：OpenCC 字典
 

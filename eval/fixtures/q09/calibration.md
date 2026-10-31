@@ -20,7 +20,7 @@ id dev; sudo -n -u dev true && echo sudo-ok     # 依 needs.json 的決定
 ## 2. egress 檢查
 
 ```sh
-apt-get install -y strace        # L2-1 之後才裝，不影響安裝步驟的檢查
+# strace 已在 dev image 裡（9.3 B.2），不另外安裝；任何檢查都不把它算進答案
 python3 /fixtures/_shared/egress.py selftest --out /tmp/es
 ```
 

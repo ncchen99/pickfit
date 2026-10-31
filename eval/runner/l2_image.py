@@ -64,6 +64,18 @@ INSPECT = [
 ]
 
 
+EGRESS_IN_BOX = "/opt/eval/fixtures/_shared/egress.py"
+# The tracer and both network controls (9.3 B.3): online, a public name resolves and a public address
+# answers (positive control); inside --block-network both fail (negative control).
+EGRESS_CHECKS = [
+    ("egress_selftest", f"python3 {EGRESS_IN_BOX} selftest --out /tmp/es"),
+    ("probe_online", f"python3 {EGRESS_IN_BOX} probe --json -"),
+    ("probe_netns", f"python3 {EGRESS_IN_BOX} run --out /tmp/ns --label ns --block-network "
+                    f"--stdout /tmp/ns/probe.json -- python3 {EGRESS_IN_BOX} probe --json -; "
+                    f"echo \"run exit $?\"; cat /tmp/ns/probe.json /tmp/ns/ns.json"),
+]
+
+
 def now() -> str:
     return dt.datetime.now(TAIPEI).isoformat(timespec="seconds")
 
@@ -177,10 +189,12 @@ def inspect(variant: str, *, modal: Any = None, client: Any = None, record_path:
             seen[key] = proc.stdout.read()
         seen["dpkg_sha256"] = hashlib.sha256(seen["dpkg"].encode()).hexdigest()
         if variant == "dev":
-            put(sandbox, "/opt/eval/fixtures/_shared/egress.py", (SHARED / "egress.py").read_bytes())
-            proc = sandbox.exec("python3", "/opt/eval/fixtures/_shared/egress.py", "selftest", "--out", "/tmp/es")
-            proc.wait()
-            seen["egress_selftest"] = {"exit_code": proc.returncode, "output": proc.stdout.read()[-4000:]}
+            put(sandbox, EGRESS_IN_BOX, (SHARED / "egress.py").read_bytes())
+            for key, command in EGRESS_CHECKS:
+                proc = sandbox.exec("/bin/sh", "-c", command)
+                proc.wait()
+                seen[key] = {"exit_code": proc.returncode, "output": proc.stdout.read()[-6000:],
+                             "stderr": proc.stderr.read()[-2000:]}
     finally:
         sandbox.terminate()
     entry["inspected"] = seen

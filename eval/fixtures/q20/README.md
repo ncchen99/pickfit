@@ -47,7 +47,7 @@ L3（主要答案是否說不用另外裝 proxy／gateway）從答案原文判�
 
 **「egress check 通過」**＝ `egress.py report` 的 `result` 是 `pass`。`fail` 列出位址與原始紀錄行；`undetermined` 表示量測沒做好，不能判過、也不算答案的錯。Ollama 本身在封鎖網路時不外連，已在 calibration.md C5 確認。
 
-**「egress blocked (localhost allowed)」**＝ 沙盒 B 封鎖對外網路、loopback 可用（calibration.md E2 確認）；擋好後先跑 `egress.py probe`，必須 exit 0。
+**「egress blocked (localhost allowed)」**＝ 沙盒 B（A 的快照）裡，用 `egress.py run --block-network` 跑（9.3 B.3；只有 loopback，DNS 也查不到）。Ollama 的啟動與那一次呼叫要能互相連線，所以寫進同一個腳本、用一次 `--block-network` 跑完；腳本第一步是 `egress.py probe`，必須 exit 0。
 
 ## 2. 各 [L2] 項目
 

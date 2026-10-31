@@ -38,13 +38,13 @@ python3 $SHARED/egress.py report --out $EG --json $EG/report.json
 ```
 
 - `run` 在這一步自己的指令結束時就回來，exit code 就是那個指令的（逾時 124、設定失敗 125）。輸出寫在 `$EG/<label>.stdout`、`.stderr`（避免背景程序卡住呼叫端的 pipe），也可用 `--stdout`／`--stderr` 指定。
-- `--block-network`：在新的 network namespace 裡跑，只有 loopback（要 root）；有沒有成功記在 `<label>.json` 的 `netns`。
+- `--block-network`：在新的 network namespace 裡跑，只有 loopback，DNS 也查不到（要 root）。Modal 的 gVisor 沙盒裡 root 沒有 CAP_SYS_ADMIN，所以改建 user＋network namespace，由留在原本 namespace 的輔助程序把所有 uid、gid 對應成自己（uid 1000 在裡面仍是 1000）；用了哪一種、uid 怎麼對應、loopback 自我測試，記在 `<label>.netns.json`。**每一次 `--block-network` 都是新的 namespace**：要互相連線的步驟（啟動服務與送請求）要寫進同一個腳本，用一次 `--sh 'bash 腳本'` 跑完。
 - `--kill-leftovers`：這一步結束 2 秒後停掉它留下的程序。
 - `--no-trace`：同樣的包裝但不用 strace，只計時（例如 q15 比速度時，兩邊都不能有 strace 的額外負擔）；`report` 不納入它。
 - **判定**（`report`）：`pass`＝沒有任何嘗試、每份紀錄都有 execve（證明真的在 strace 下跑過）、沒有 tracer 還在跑（exit 0）；`fail`＝至少一次嘗試，報告列出每一筆與原始紀錄行（exit 1）；`undetermined`＝紀錄缺漏、沒有 execve，或還沒 `stop`：量測沒做好，不算答案的錯，修好後重跑該步驟（exit 2）。
 - `report` 與 `parse` 可以在評分者的電腦上跑（把 `$EG` 整個複製出來）。
 
-**擋外連**（題目寫 with egress blocked 時）：怎麼擋是第 6 項待決定的事（Linux image），在 `calibration.md` 記錄。不論用哪種方式，擋了之後先跑 `egress.py probe`：直接連公開位址的 TCP 與送到公開 DNS 的 UDP 都失敗才算擋住（exit 0）。透過沙盒自己的 resolver 查名稱，結果只記在 `dns_resolves`、不影響判定：Modal 的 resolver 在擋網路的沙盒裡仍會回答（2026-10-31 其他 session 實測），而受測步驟的任何查名稱都已經在 strace 紀錄裡算成一次嘗試。`probe` 顯示沒擋住是評分環境的問題：修好重跑，不記答案不過。
+**擋外連**（題目寫 with egress blocked 時）：用 `egress.py run --block-network`（9.3 B.3；2026-10-31 在 Modal 的 dev image 實測，結果在 `calibration.md`）。擋了之後先跑 `egress.py probe`：直接連公開位址的 TCP 與送到公開 DNS 的 UDP 都失敗才算擋住（exit 0）。透過沙盒自己的 resolver 查名稱，結果只記在 `dns_resolves`、不影響判定：Modal 的 resolver 在擋網路的沙盒裡仍會回答（2026-10-31 其他 session 實測），而受測步驟的任何查名稱都已經在 strace 紀錄裡算成一次嘗試。`probe` 顯示沒擋住是評分環境的問題：修好重跑，不記答案不過。
 
 **取代了什麼**：q01、q02、q04 的 `egress/run_traced.sh`＋`egress_check.py`；q05、q06、q07 的 `egress_run.py`；q09 的 `egress_parse.py`、`egress_selftest.sh`；q14、q15、q16 的 `egress_check.py`；q17–q20 的 `egress/egress.py`。統一後的差別：
 - q14–q16 原本只算非 loopback 位址：現在 loopback 上的 DNS 也算（與其他題一致）。

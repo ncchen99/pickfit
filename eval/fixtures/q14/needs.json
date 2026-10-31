@@ -20,21 +20,8 @@
   },
   {
     "item": "How egress is blocked in phase B",
-    "why": "The same method for every answer and both groups. Preferred: a fresh sandbox started from phase A's filesystem snapshot with networking turned off at the sandbox level. Alternative: iptables/ip6tables inside the sandbox as root (OUTPUT: accept lo, REJECT everything else so connects fail at once), which needs the iptables package and NET_ADMIN.",
-    "candidates": [
-      {
-        "source": "Modal Sandbox network blocking on a sandbox created from a filesystem snapshot (Modal docs for the SDK version in use)",
-        "license": "n/a",
-        "size": "n/a",
-        "pin": "Modal SDK version + the exact flag used, in calibration.md"
-      },
-      {
-        "source": "Ubuntu 24.04 package iptables (nft backend)",
-        "license": "GPL-2.0-or-later",
-        "size": "about 2 MB",
-        "pin": "package version from apt-cache policy on the pin date"
-      }
-    ],
+    "why": "Settled by 9.3 B.3 (念誠, 2026-10-31): a fresh sandbox from phase A's snapshot (so memory.peak covers phase B only), and the whole of phase B in one eval/fixtures/_shared/egress.py run --block-network (user + network namespace in Modal's gVisor box, tested 2026-10-31: loopback only, DNS fails).",
+    "candidates": [],
     "decision_needed_by": "念誠"
   },
   {

@@ -29,7 +29,7 @@
 - **佔位字**：答案裡的資料夾、輸出位置、模型檔名是佔位字時，評分者填入（輸入一律是 `/work/docs`）。
 - **照原樣（verbatim）**：評分者把答案的安裝指令依序、原封不動複製成 `/results/steps.sh`，在同一個 bash 裡逐條執行（`bash -x steps.sh 2>&1 | tee /results/install.log`）。答案給的膠水程式（題目允許最多 50 行）原封不動存成答案指定的檔名（沒指定時用答案提到的名稱或 `glue` 加上對應副檔名，記為佔位字替換），算安裝的一部分。只做第 5 節允許的調整：填版本號與佔位字、安裝程式詢問時接受預設值；替換記在 `/results/substitutions.json`。任何一條非 0 結束，或超過 20 分鐘，就是不過。Ubuntu 擋下裸 `pip install` 時可以改在 venv 裡繼續做後面的項目（記 `needed_venv`），但「照原樣成功」不過。修正指令或旗標、補步驟、改膠水程式、換模型都不允許。
 - **答案的翻譯指令**：把整個資料夾翻完所需的指令（含啟動本機模型服務），照答案原樣寫成 `/results/run.sh`，用 `bash /results/run.sh` 一次執行。答案要求在另一個終端機先啟動服務時，評分者用 `egress.py run`（同一個 `--out`、另一個 label，例如 `service`）另外包住那個服務，兩步都要通過外連檢查。
-- **擋外連（egress blocked）**：在 A 階段（安裝、模型下載、暖機）完成之後才擋。做法：從檔案系統快照開新沙盒、網路在沙盒層級關閉（首選）；或在同一個沙盒以 root 用 iptables／ip6tables 只放行 `lo`，其餘 REJECT。用哪一種記在 `calibration.md`；兩組、所有答案都用同一種。
+- **擋外連（egress blocked）**：照 9.3 B.3 與 [`_shared/README.md`](../_shared/README.md) 第 1 節：`egress.py run --block-network`（只有 loopback 的 network namespace，DNS 也查不到；在 Modal 的 gVisor 沙盒裡是 user＋network namespace，uid 照原樣對應，2026-10-31 實測）。在 A 階段（安裝、模型下載、暖機）完成之後才擋。要互相連線的步驟（啟動服務與送請求、檢查）寫進同一個腳本，用一次 `egress.py run --block-network --sh 'bash 腳本'` 跑完，因為每一次 `--block-network` 都是新的 namespace。兩組、所有答案都用同一種。
 - **外連檢查（egress check）**：定義與判定見 [`_shared/README.md`](../_shared/README.md) 第 1 節（共用工具在沙盒裡的 `$SHARED`）：
   1. 第 1 次翻譯前後各跑一次 `egress.py probe`：直接連公開位址的 TCP 與送往公開 DNS 的 UDP 都失敗，才算「確實擋住」；透過沙盒 resolver 查名稱只記錄。
   2. 翻譯指令用 `egress.py run` 包起來，strace 記錄指令與所有子程序（含留在背景的服務，記到 `egress.py stop` 為止）的連線；目的地不是 loopback、未指定位址、沙盒自己的位址的，以及任何查名稱（DNS），都算一次外連嘗試（包括私有網段、`169.254.169.254`）。
@@ -45,7 +45,7 @@
 1. 照 `sandbox.json` 開沙盒，確認 `nproc` 是 4、沒有 `nvidia-smi`。
 2. 照原樣執行安裝步驟（L2-1），含答案寫的模型下載。
 3. 暖機：把 `/eval/q16/warmup` 複製成 `/work/docs`，執行一次 `bash /results/run.sh`，讓需要下載的東西下載完；結束後刪掉 `/work/docs` 與它的輸出。所有答案都做這一步。
-4. 裝評分工具 `apt-get install -y strace`，然後擋外連。
+4. 擋外連（strace 已在 dev image 裡，9.3 B.2；不另外安裝）。
 
 ### B 階段（擋外連）
 

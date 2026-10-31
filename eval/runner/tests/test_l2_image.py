@@ -36,6 +36,7 @@ class FakeProc:
         self.args = args
         self.stdout = FakeStream("python3 /usr/bin/python3\n" if "command -v" in args[-1] else "out\n")
         self.stdin = FakeStream()
+        self.stderr = FakeStream()
         self.returncode = 0
 
     def wait(self) -> int:
@@ -130,7 +131,8 @@ def test_inspect_records_what_is_inside_and_runs_the_egress_selftest_on_dev(tmp_
     record = tmp_path / "r.json"
     l2_image.build("dev", DIGEST, None, modal=fake, client="c", record_path=record, log=lambda *_: None)
     seen = l2_image.inspect("dev", modal=fake, client="c", record_path=record, log=lambda *_: None)
-    assert set(seen) >= {"os_release", "arch", "dpkg", "runtimes", "versions", "dpkg_sha256", "egress_selftest"}
+    assert set(seen) >= {"os_release", "arch", "dpkg", "runtimes", "versions", "dpkg_sha256", "egress_selftest",
+                         "probe_online", "probe_netns"}
     uploaded = [p for p in fake.procs if p.stdin.written]
     assert uploaded and uploaded[0].stdin.written == (l2_image.SHARED / "egress.py").read_bytes()
     assert fake.calls[-1] == ("terminate",)

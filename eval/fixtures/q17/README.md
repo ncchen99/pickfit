@@ -51,7 +51,7 @@
 
 **「egress check 通過」**＝ `egress.py report` 的 `result` 是 `pass`。`fail` ＝ 有對外嘗試（報告列出位址與原始紀錄行）。`undetermined` ＝ 量測沒做好，**不能判過，也不算答案的錯**：修好量測後重做。
 
-**「egress blocked」**＝ 在沙盒 B（網路封鎖）做；擋好後先跑 `egress.py probe`，必須 exit 0。
+**「egress blocked」**＝ 沙盒 B（A 的快照）裡，用 `egress.py run --block-network` 跑（9.3 B.3；只有 loopback，DNS 也查不到）。背景服務與 5 次提問要能互相連線，所以寫進同一個腳本、用一次 `--block-network` 跑完（每次 `--block-network` 是新的 namespace）；腳本第一步是 `egress.py probe`，必須 exit 0。
 
 ### 金鑰
 

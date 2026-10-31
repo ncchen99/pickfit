@@ -29,7 +29,7 @@
 - **佔位字**：答案的 port、模型名稱、資料夾是佔位字時，評分者照答案填入（第 5 節允許）。答案的服務要求 API key 時，當場產生一把假的：`export Q14_API_KEY=$($EVAL_PY -c 'import secrets; print("eval-" + secrets.token_hex(16))')`，啟動指令與各檢查的 `--api-key-env Q14_API_KEY` 都用它；不寫進任何檔案。不要求時，`embed_check.py` 自己產生一次性的假 key（openai client 沒有 key 不肯啟動）。
 - **照原樣（verbatim）**：評分者把答案的安裝指令依序、原封不動複製成 `/results/steps.sh`，在同一個 bash 裡逐條執行（`bash -x steps.sh 2>&1 | tee /results/install.log`）。只做第 5 節允許的調整：填版本號與佔位字、安裝程式詢問時接受預設值；每一處替換記在 `/results/substitutions.json`。Ubuntu 擋下裸 `pip install` 時可以改在 venv 裡繼續（記 `needed_venv`）。修正指令或旗標、補步驟、換模型都不允許。本題沒有單獨的「照原樣」項目；安裝失敗時，照 9.1 節 C7，其餘 [L2] 項目都記不過。
 - **一個啟動指令**：答案給的「啟動服務」那一行指令（可以有參數、可以是設定檔路徑），評分者原樣執行一次，背景執行、記下 PID。答案需要兩個以上的啟動指令（例如兩個程序、兩個容器）才能提供兩個端點，L2-1 就不過；評分者不替答案合併。
-- **擋外連（egress blocked）**：在 A 階段安裝完成、模型下載完成之後才擋。做法：從 A 階段結束時的檔案系統快照開一個新沙盒，網路在沙盒層級關閉（首選）；或在同一個沙盒以 root 用 iptables／ip6tables 只放行 `lo`，其餘 REJECT（連線立刻失敗，不卡逾時）。用哪一種記在 `calibration.md`；兩組、所有答案都用同一種。本題首選新沙盒，因為這樣 `memory.peak` 只涵蓋 B 階段。
+- **擋外連（egress blocked）**：照 9.3 B.3 與 [`_shared/README.md`](../_shared/README.md) 第 1 節：`egress.py run --block-network`（只有 loopback 的 network namespace，DNS 也查不到；在 Modal 的 gVisor 沙盒裡是 user＋network namespace，uid 照原樣對應，2026-10-31 實測）。在 A 階段安裝完成、模型下載完成之後，從 A 階段結束時的檔案系統快照開新沙盒（網路照常，讓 `memory.peak` 只涵蓋 B 階段），B 階段的步驟才在擋住的 namespace 裡跑。要互相連線的步驟（啟動服務與送請求、檢查）寫進同一個腳本，用一次 `egress.py run --block-network --sh 'bash 腳本'` 跑完，因為每一次 `--block-network` 都是新的 namespace。兩組、所有答案都用同一種。
 - **外連檢查（egress check）**：定義與判定見 [`_shared/README.md`](../_shared/README.md) 第 1 節（共用工具在沙盒裡的 `$SHARED`）：
   1. 擋了之後、啟動服務前，和停止服務後，各跑一次 `egress.py probe`：直接連公開位址的 TCP 與送往公開 DNS 的 UDP 都失敗，才算「確實擋住」。透過沙盒自己的 resolver 查名稱只記錄（`dns_resolves`），不影響判定。
   2. 受測程序用 `egress.py run` 包起來，strace 記錄它與它所有子程序（含在背景跑的服務）的每一次連線；目的地不是 loopback、未指定位址、沙盒自己的位址的，以及任何查名稱（DNS），都算一次外連嘗試，包括私有網段與 `169.254.169.254`。
@@ -62,19 +62,24 @@
    $EVAL_PY /eval/q14/rerank_check.py --url <rerank URL> --shape <...> [--model ...] \
      --format-source answer|server-docs --out /results/rerank.json
    ```
-7. 停止服務。裝評分工具 `apt-get install -y strace`（答案的安裝已完成，這不算答案的步驟）。做檔案系統快照。
+7. 停止服務。做檔案系統快照（strace 已在 dev image 裡，9.3 B.2；不另外安裝）。
 
 ### B 階段（擋外連，新沙盒，同樣 4 vCPU、8 GiB）
 
-8. 從快照開新沙盒，網路關閉。`$EVAL_PY $SHARED/egress.py probe --json /results/probe-b.json` 必須 exit 0。
-9. 在背景跑記憶體取樣：`sh $SHARED/mem_peak.sh watch /results/mem-watch.json &`，記下 PID。
-10. 在監測下執行同一個啟動指令（背景）：
-    ```bash
-    $EVAL_PY $SHARED/egress.py run --out /results/egress --label start --sh '<答案的啟動指令>' &
-    ```
-11. 等就緒（同步驟 4，`--wait 600`，輸出 `/results/service-b.json`），然後再送一次步驟 5 與步驟 6（輸出 `embed-b.json`、`rerank-b.json`）。
-12. 停止服務與記錄：`$EVAL_PY $SHARED/egress.py stop --out /results/egress --kill`，再 `wait` 步驟 10 的背景工作；`kill -TERM` 步驟 9 的取樣。然後 `$EVAL_PY $SHARED/egress.py probe --json /results/probe-b-after.json` 必須 exit 0，`$EVAL_PY $SHARED/egress.py report --out /results/egress --json /results/egress.json`。
-13. `BELOW_BYTES=8589934592 sh $SHARED/mem_peak.sh read /results/mem.json /results/mem-watch.json`。
+8. 從快照開新沙盒（4 vCPU、8 GiB）。在背景跑記憶體取樣：`sh $SHARED/mem_peak.sh watch /results/mem-watch.json &`，記下 PID（取樣在 namespace 外面，看的是整個沙盒的 cgroup）。
+9. 把 B 階段寫成一個腳本 `/results/phase-b.sh`，整個在一次擋外連裡跑（服務與請求要在同一個 namespace 才連得到）：
+   ```bash
+   $EVAL_PY $SHARED/egress.py run --out /results/egress --label phase-b --block-network --timeout 2400 \
+     --sh 'bash /results/phase-b.sh'
+   ```
+   `phase-b.sh` 依序做：
+   1. `$EVAL_PY $SHARED/egress.py probe --json /results/probe-b.json`，不是 exit 0 就停（擋外連沒生效，是評分環境的問題）；
+   2. 背景執行答案的那一個啟動指令（原樣），記下 PID；
+   3. 等就緒（同步驟 4，`--wait 600`，輸出 `/results/service-b.json`），再送一次步驟 5 與步驟 6（輸出 `embed-b.json`、`rerank-b.json`）；
+   4. `$EVAL_PY $SHARED/egress.py probe --json /results/probe-b-after.json`；
+   5. `kill -TERM` 服務的程序群組。
+10. `$EVAL_PY $SHARED/egress.py stop --out /results/egress --kill`；`kill -TERM` 步驟 8 的取樣；`$EVAL_PY $SHARED/egress.py report --out /results/egress --json /results/egress.json`。
+11. `BELOW_BYTES=8589934592 sh $SHARED/mem_peak.sh read /results/mem.json /results/mem-watch.json`。
 
 ## 4. L2 項目
 

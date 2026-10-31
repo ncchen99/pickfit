@@ -30,7 +30,9 @@ run
   `stop`, so their later connections are in the trace too. --kill-leftovers
   instead stops them 2 seconds after the step exits.
   --block-network runs the step in a new network namespace with only loopback
-  up (needs root or CAP_SYS_ADMIN); the setup is checked and recorded.
+  (as root; where root lacks CAP_SYS_ADMIN, as in Modal's gVisor box, inside a
+  new user namespace too, every uid mapped to itself); the namespace, the uid
+  mapping and a loopback self-test are recorded in DIR/L.netns.json.
   --no-trace runs the step the same way without strace, for timing only (a
   speed comparison must not pay strace's overhead on one side): it writes no
   trace, and `report` leaves it out unless it is named with --labels.
@@ -295,30 +297,109 @@ def _killpg(pgid, sig):
 # ---------------------------------------------------------------- run / stop
 
 
-def _netns_exec(info_path, cmd):
-    """Internal: unshare the network namespace, bring lo up, record interfaces, exec CMD."""
+CLONE_NEWUSER, CLONE_NEWNET = 0x10000000, 0x40000000
+
+
+def _unshare(flags):
     import ctypes
-    import fcntl
+    if hasattr(os, "unshare"):
+        os.unshare(flags)
+        return
+    libc = ctypes.CDLL(None, use_errno=True)
+    if libc.unshare(flags) != 0:
+        err = ctypes.get_errno()
+        raise OSError(err, os.strerror(err))
+
+
+def _user_and_net_namespace():
+    """New user + network namespaces, every uid and gid mapped to itself.
+
+    For a box whose root lacks CAP_SYS_ADMIN (Modal's gVisor). A helper forked before the unshare
+    stays in the original user namespace, where it has CAP_SETUID, and writes this process's
+    maps; only then is uid 1000 still uid 1000 inside. Returns the mapping it got.
+    """
+    ready_r, ready_w = os.pipe()
+    done_r, done_w = os.pipe()
+    helper = os.fork()
+    if helper == 0:
+        os.close(ready_w)
+        os.close(done_r)
+        os.read(ready_r, 1)
+        parent = os.getppid()
+        result = b"full"
+        try:
+            for name in ("uid_map", "gid_map"):
+                with open("/proc/%d/%s" % (parent, name), "w") as fh:
+                    fh.write("0 0 4294967295\n")
+        except OSError:
+            result = b"none"
+        os.write(done_w, result)
+        os._exit(0)
+    os.close(ready_r)
+    os.close(done_w)
+    _unshare(CLONE_NEWUSER | CLONE_NEWNET)
+    os.write(ready_w, b"x")
+    mapping = os.read(done_r, 8).decode() or "none"
+    os.waitpid(helper, 0)
+    if mapping != "full":  # fall back to mapping only ourselves (root) from inside
+        with open("/proc/self/setgroups", "w") as fh:
+            fh.write("deny")
+        for name, ident in (("uid_map", os.getuid()), ("gid_map", os.getgid())):
+            with open("/proc/self/" + name, "w") as fh:
+                fh.write("0 %d 1\n" % ident)
+        mapping = "root only"
+    return mapping
+
+
+def _loopback_works():
+    srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        if hasattr(os, "unshare"):
-            os.unshare(0x40000000)  # CLONE_NEWNET
-        else:
-            libc = ctypes.CDLL(None, use_errno=True)
-            if libc.unshare(0x40000000) != 0:
-                err = ctypes.get_errno()
-                raise OSError(err, os.strerror(err))
+        srv.bind(("127.0.0.1", 0))
+        srv.listen(1)
+        cli = socket.create_connection(srv.getsockname(), timeout=3)
+        cli.close()
+        return True
+    except OSError:
+        return False
+    finally:
+        srv.close()
+
+
+def _netns_exec(info_path, cmd):
+    """Internal: a network namespace with only loopback, checked and recorded, then exec CMD.
+
+    A plain network namespace when this process may create one; otherwise (Modal's gVisor box:
+    root without CAP_SYS_ADMIN) a user namespace with it, every uid mapped to itself.
+    """
+    import fcntl
+    info = {"ok": False}
+    try:
+        try:
+            _unshare(CLONE_NEWNET)
+            info["namespaces"] = "net"
+        except PermissionError:
+            info["namespaces"] = "user+net"
+            info["uid_mapping"] = _user_and_net_namespace()
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        flags = struct.unpack("16sh", fcntl.ioctl(s.fileno(), 0x8913, struct.pack("16sh22x", b"lo", 0))[:18])[1]
-        fcntl.ioctl(s.fileno(), 0x8914, struct.pack("16sh22x", b"lo", flags | 0x1))  # SIOCSIFFLAGS IFF_UP
-        s.close()
-        names = sorted(n for _, n in socket.if_nameindex())
+        try:
+            flags = struct.unpack("16sh", fcntl.ioctl(s.fileno(), 0x8913, struct.pack("16sh22x", b"lo", 0))[:18])[1]
+            fcntl.ioctl(s.fileno(), 0x8914, struct.pack("16sh22x", b"lo", flags | 0x1))  # SIOCSIFFLAGS IFF_UP
+            info["lo_up"] = "set"
+        except OSError as exc:
+            info["lo_up"] = "ioctl refused (%s); loopback tested below" % exc.strerror
+        finally:
+            s.close()
+        info["interfaces"] = sorted(n for _, n in socket.if_nameindex())
+        info["loopback_works"] = _loopback_works()
     except Exception as exc:  # noqa: BLE001
-        write_json(info_path, {"ok": False, "error": repr(exc)})
+        info["error"] = repr(exc)
+        write_json(info_path, info)
         sys.stderr.write("egress: cannot create a network namespace: %r\n" % (exc,))
         os._exit(EXIT_SETUP)
-    write_json(info_path, {"ok": names == ["lo"], "interfaces": names})
-    if names != ["lo"]:
-        sys.stderr.write("egress: the namespace still has interfaces %r\n" % (names,))
+    info["ok"] = info["interfaces"] == ["lo"] and info["loopback_works"]
+    write_json(info_path, info)
+    if not info["ok"]:
+        sys.stderr.write("egress: the namespace is not loopback-only and working: %r\n" % (info,))
         os._exit(EXIT_SETUP)
     os.execvp(cmd[0], cmd)
 
