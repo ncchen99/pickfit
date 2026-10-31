@@ -23,6 +23,8 @@ for q in q17 q18 q19 q20; do (cd $q && sh selftest.sh); done
 
 2026-10-31 在 macOS（Python 3.9）全部通過。strace 與擋外連的實測在 L2 沙盒做過（2026-10-31，`_shared/calibration.md` 步驟 1、2）。
 
+各題要在 L2 沙盒做的校準（2026-10-31）：q01、q03、q14、q18、q19、q20 照各自的 `calibrate.sh` 經 `eval/runner/calibrate_box.py` 在新的 Modal 沙盒跑，結果填在各題 `calibration.md`，原始紀錄在 `eval/results/calibration/`；cgroup 計數在 `_shared/calibration.md` 步驟 4。
+
 ## 產生器重跑（2026-10-31）
 
 每個產生器重跑，與 commit 的檔案或記下的雜湊比對，結果都相同：
