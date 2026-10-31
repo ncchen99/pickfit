@@ -49,7 +49,7 @@ from pickfit.verify.plan import InstallPlan, plan_for
 from pickfit.verify.rules import RuleHit, error_signature, match_rules
 from pickfit.verify.mcp import GUIDE as MCP_GUIDE
 from pickfit.verify.mcp import is_mcp
-from pickfit.verify.task import VerifyTask, prepare_box
+from pickfit.verify.task import ReportedFailure, VerifyTask, prepare_box
 from pickfit.verify.verdict import LogVerdict, log_verdict
 
 HistoryMode = Literal["chain", "replay"]
@@ -397,6 +397,19 @@ def _cited(cited: Any) -> str | None:
     return None if cited is None or cited.value is None else str(cited.value)
 
 
+def render_report(report: ReportedFailure) -> list[str]:
+    """What a user reported, structured fields only (P5.3): no reporter text reaches the model."""
+    what = "the install failed" if report.stage == "install_failed" else "the first run failed"
+    system = f"{report.os}/{report.arch}" if report.arch else report.os
+    lines = [f"A user followed pickfit's recorded steps on {system} and {what}. Check whether those steps still "
+             "work here; if they do not, find steps that do, using only what the README, the repository and "
+             "its package registry show. Either way, finish with the steps that worked here."]
+    if report.steps:
+        lines.append(f"Steps pickfit gave the user (run before on {report.guide_os or 'an unknown system'}):")
+        lines += [f"- {command}" for command in report.steps]
+    return lines
+
+
 def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimits) -> str:
     """The first user message: what to verify, the box, ranked candidates and the README."""
     ex = task.extraction
@@ -429,6 +442,8 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
     if plan.skipped:
         lines.append("Not run in this box:")
         lines += [f"- [{s.method}] {s.command}: {s.reason}" for s in plan.skipped]
+    if task.reported:
+        lines += ["", *render_report(task.reported)]
     if ex.smoke_test_candidates:
         lines += ["", "Example commands from the README:"]
         for t in ex.smoke_test_candidates:
