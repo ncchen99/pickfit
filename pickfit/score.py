@@ -1,4 +1,4 @@
-"""Scores (P5.1, arch B.3): quality, popularity and treasure, kept apart, formula "b3.v4".
+"""Scores (P5.1, arch B.3): quality, popularity and treasure, kept apart, formula "b3.v5".
 
 quality (0-100) is a weighted mean of six components, each 0-1:
 
@@ -7,11 +7,11 @@ quality (0-100) is a weighted mean of six components, each 0-1:
   a dev CLI is fully checked at function, a local AI tool at inference). Step tiers: <=3 install
   actions 1.0, 4-6 0.85, more 0.7. Actions are counted inside the recorded steps, which chain
   commands with && (install_actions); looking around (ls, head, wc, --version, a VAR=$(...) that
-  only looks) is not an action, and heredoc lines are file content. A pitfall counts as a README
-  fix unless pickfit's box explains it (no root, no toolchains, scripts read first, no GPU,
-  Docker, keys or configuration...), it says the README was right or the tool did the step by
-  itself, it follows from a step the box blocked, or it is only about pickfit's --version/--help
-  check (readme_fixes).
+  only looks) is not an action, and heredoc lines are file content. A pitfall tagged with a kind
+  counts as a README fix only when it is readme_wrong. An untagged one counts unless pickfit's box
+  explains it (no root, no toolchains, scripts read first, no GPU, Docker, keys or
+  configuration...), it says the README was right or the tool did the step by itself, it follows
+  from a step the box blocked, or it is only about pickfit's --version/--help check (readme_fixes).
 - install_docs 25: muse-spark-1.3 grades the README against B.3's 8-item rubric (0/1/2 each,
   points / 16). Every item above 0 needs a verbatim quote; an item whose quote is not in the
   sources counts 0. The answer is kept in scores.docs_rubric and reused while the sources stay
@@ -40,12 +40,15 @@ b3.v4 fixes what a review found: README fixes that were not, look-around assignm
 actions, missing download counts stored as 0, partial download sums, and HN stories matched on a
 bare personal or company domain. A rescore with --no-github or --no-registries keeps the stored
 responsiveness and registry signals.
+b3.v5: a pitfall tagged with a kind counts as a README fix only when it is readme_wrong; since only
+the record-derived parts changed, b3.v4 scores move to b3.v5 by refresh_scores, with no rescore.
 
 Inputs are the record, the GitHub snapshot it was built from (runs/pipeline.db; fetched live
 when the pipeline database does not hold the repo), one REST call for issues and the registry
 lookups. Ages are measured at the snapshot time, so the same snapshot gives the same quality.
-refresh_scores() recomputes the parts that follow verification and outcomes without any call;
-verification write-back and `pickfit profiles` use it.
+refresh_scores() recomputes the parts that follow verification and outcomes without any call, and
+moves scores of a REFRESHABLE_FROM formula to this one; verification write-back, `pickfit profiles`
+and `pickfit score --refresh` use it.
 """
 
 from __future__ import annotations
@@ -85,7 +88,12 @@ from pickfit.schema import (
     usage_outcomes_weight,
 )
 
-FORMULA_VERSION = "b3.v4"
+FORMULA_VERSION = "b3.v5"
+# Earlier formulas that differ from this one only in what refresh_scores recomputes from the record
+# (sandbox and usage components, cap, total, treasure). Their other components are still valid, so
+# their scores move to this formula instead of being cleared. b3.v5 changed only how README fixes
+# are counted: a tagged pitfall's kind decides.
+REFRESHABLE_FROM = frozenset({"b3.v4"})
 STAGE = "score-rubric"
 REASONING_EFFORT = "low"
 MAX_OUTPUT_TOKENS = 8_000  # reasoning shares it; at effort low one call used 4,000 and ran out
@@ -291,7 +299,11 @@ _INSTALL_WORDS = re.compile(r"\b(?:npm|pnpm|bun|yarn|pip3?|pipx|uv|cargo|brew|go
 
 
 def readme_fix(pitfall: Pitfall) -> bool:
-    """B.3's "had to correct the README to succeed": a pitfall the box and pickfit's checks do not explain."""
+    """B.3's "had to correct the README to succeed". A pitfall tagged with a kind says so itself: only
+    readme_wrong is a fix; sandbox, tool_handled and note never are, so recording a note costs nothing.
+    An untagged (older) pitfall is a fix when the box and pickfit's checks do not explain its text."""
+    if pitfall.kind is not None:
+        return pitfall.kind == "readme_wrong"
     said, needed = pitfall.readme_said, pitfall.actually_needed
     if _BOX_PITFALL.search(f"{said} {needed}") or _NOT_A_FIX.search(needed):
         return False
@@ -305,13 +317,18 @@ def _command_key(text: str) -> str | None:
     return " ".join(words[:2]) if len(words) >= 2 else None
 
 
+def _box_caused(pitfall: Pitfall) -> bool:
+    if pitfall.kind is not None:
+        return pitfall.kind == "sandbox"
+    return bool(_BOX_PITFALL.search(f"{pitfall.readme_said} {pitfall.actually_needed}"))
+
+
 def readme_fixes(pitfalls: list[Pitfall]) -> int:
-    """README fixes in one run. A pitfall that only follows from a step the box blocked (`serve` fails
-    because `generate` needs a model server) is the box's too."""
-    blocked = {key for p in pitfalls if _BOX_PITFALL.search(f"{p.readme_said} {p.actually_needed}")
-               and (key := _command_key(p.readme_said))}
+    """README fixes in one run. An untagged pitfall that only follows from a step the box blocked (`serve`
+    fails because `generate` needs a model server) is the box's too; a tagged one keeps its kind."""
+    blocked = {key for p in pitfalls if _box_caused(p) and (key := _command_key(p.readme_said))}
     return sum(1 for p in pitfalls if readme_fix(p)
-               and not any(key in p.actually_needed.lower() for key in blocked))
+               and (p.kind is not None or not any(key in p.actually_needed.lower() for key in blocked)))
 
 
 # How much of the tool a passed run proved (C.3). A dev CLI is fully checked once a README example
@@ -629,9 +646,10 @@ def refresh_scores(data: dict[str, Any], now: datetime) -> str | None:
     scores = data.get("scores")
     if not scores:
         return None
-    if scores.get("formula_version") != FORMULA_VERSION:
+    version = scores.get("formula_version")
+    if version != FORMULA_VERSION and version not in REFRESHABLE_FROM:
         data["scores"] = None
-        return f"scores cleared: formula {scores.get('formula_version')} is not {FORMULA_VERSION}; rescore"
+        return f"scores cleared: formula {version} is not {FORMULA_VERSION}; rescore"
     verification = Verification.model_validate(data["verification"])
     outcomes = Outcomes.model_validate(data.get("outcomes") or {})
     components = {name: c["score"] for name, c in scores["quality"]["components"].items()}
@@ -639,11 +657,14 @@ def refresh_scores(data: dict[str, Any], now: datetime) -> str | None:
     components["usage_outcomes"] = usage_score(outcomes)
     cap_reason = binding_cap(data["kind"], data["repo"]["archived"], verification.level)
     quality = compose_quality(components, usage_outcomes_weight(outcomes.external.total()), cap_reason)
-    if quality == scores["quality"]:
+    if quality == scores["quality"] and version == FORMULA_VERSION:
         return None
+    scores["formula_version"] = FORMULA_VERSION
     scores["quality"] = quality
     scores["treasure"] = treasure(quality["total"], scores["popularity"]["score"])
     scores["computed_at"] = now.isoformat(timespec="seconds")
+    if version != FORMULA_VERSION:
+        return f"scores moved from formula {version} to {FORMULA_VERSION}, refreshed from the record"
     return "scores refreshed from the record"
 
 
@@ -751,8 +772,14 @@ class ScoreSummary:
                 "cost_usd": round(self.cost_usd, 6), "records": self.rows}
 
 
-def _render(record: SoftwareRecord) -> str:
-    return json.dumps(record.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n"
+def _with_scores(raw: dict[str, Any], scores: dict[str, Any] | None, updated_at: str) -> str:
+    """The record file with only scores and updated_at replaced. The whole record is validated, but the
+    other fields are written as they were read, so a schema default added since the record was written
+    (a pitfall's kind: null) does not show up as a change to them."""
+    raw = {**raw, "scores": scores, "updated_at": updated_at}
+    record = SoftwareRecord.model_validate(raw)
+    raw["scores"] = record.scores.model_dump(mode="json") if record.scores else None
+    return json.dumps(raw, ensure_ascii=False, indent=2) + "\n"
 
 
 def _write(path: Path, text: str) -> None:
@@ -851,12 +878,9 @@ def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: st
     if _same_scores(old.model_dump(mode="json") if old else None, scores):
         row["status"] = "unchanged"
         return row
-    data = record.model_dump(mode="json")
-    data["scores"] = scores
-    data["updated_at"] = now.isoformat(timespec="seconds")
-    updated = SoftwareRecord.model_validate(data)
+    text = _with_scores(json.loads(path.read_text(encoding="utf-8")), scores, now.isoformat(timespec="seconds"))
     if not dry_run:
-        _write(path, _render(updated))
+        _write(path, text)
     row["status"] = "written"
     return row
 
@@ -938,6 +962,44 @@ def score_records(data_dir: Path, *, db_path: Path | None, model: str, slugs: li
     return summary
 
 
+def refresh_records(data_dir: Path, *, slugs: list[str] | None = None, dry_run: bool = False,
+                    now: datetime | None = None, log: Callable[[str], None] | None = None) -> ScoreSummary:
+    """`pickfit score --refresh`: refresh_scores over the records, writing only scores and updated_at.
+    No GitHub, registry or model call. A record whose formula cannot be refreshed is left as it is
+    (a full `pickfit score` rescores it), never cleared."""
+    log = log or (lambda line: None)
+    now = now or taipei_now()
+    paths = sorted(data_dir.glob("*.json"))
+    if slugs:
+        paths = [p for p in paths if p.stem in set(slugs)]
+    summary = ScoreSummary()
+    for path in paths:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        before = data.get("scores")
+        version = (before or {}).get("formula_version")
+        row: dict[str, Any] = {"slug": path.stem, "cost_usd": 0.0, "rubric": "kept"}
+        if before and version != FORMULA_VERSION and version not in REFRESHABLE_FROM:
+            summary.errors[path.stem] = f"formula {version} cannot be refreshed; run pickfit score"
+            continue
+        old_quality = before["quality"]["total"] if before else None
+        old_treasure = before["treasure"]["is_treasure"] if before else None
+        note = refresh_scores(data, now)
+        after = data.get("scores")
+        row.update(status="written" if note else "unchanged", note=note, quality_before=old_quality,
+                   quality=after["quality"]["total"] if after else None, treasure_before=old_treasure,
+                   treasure=after["treasure"]["is_treasure"] if after else None)
+        if note:
+            text = _with_scores(data, data["scores"], now.isoformat(timespec="seconds"))
+            if not dry_run:
+                _write(path, text)
+            summary.written.append(path.stem)
+            log(f"  written   {path.stem:<26} Q {old_quality} -> {row['quality']} · {note}")
+        else:
+            summary.unchanged.append(path.stem)
+        summary.rows.append(row)
+    return summary
+
+
 def main_score(args: Any) -> int:
     """`pickfit score` entry point (wired in pickfit/cli.py)."""
     from pickfit.discover.github import GitHubError
@@ -946,6 +1008,15 @@ def main_score(args: Any) -> int:
     from pickfit.profiles import DEFAULT_OUT
 
     started = time.monotonic()
+    if getattr(args, "refresh", False):
+        summary = refresh_records(Path(args.data_dir) if args.data_dir else DEFAULT_OUT, slugs=args.slug,
+                                  dry_run=args.dry_run, log=lambda line: print(line, file=sys.stderr))
+        out = summary.to_dict()
+        out["seconds"] = round(time.monotonic() - started, 1)
+        if not args.verbose:
+            out.pop("records")
+        print(json.dumps(out, ensure_ascii=False, indent=2))
+        return 0 if not summary.errors else 1
     try:
         summary = score_records(Path(args.data_dir) if args.data_dir else DEFAULT_OUT,
                                 db_path=Path(args.db) if args.db else pipeline_db_path(),

@@ -186,6 +186,9 @@ def _add_score_command(sub: argparse._SubParsersAction) -> None:
     s.add_argument("--no-registries", action="store_true",
                    help="no npm, PyPI, crates.io, Homebrew or Hacker News lookups: keep the stored signals")
     s.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY, help="records at once")
+    s.add_argument("--refresh", action="store_true",
+                   help="recompute only what follows the record (sandbox, usage, cap, total, treasure) and move a "
+                        "refreshable older formula to this one; no GitHub, registry or model call")
     s.add_argument("--dry-run", action="store_true", help="compute and print; write nothing")
     s.add_argument("--verbose", action="store_true", help="print every record's scores")
     s.set_defaults(func=main_score)
