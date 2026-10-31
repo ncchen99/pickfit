@@ -133,7 +133,7 @@ test('find_software conforms with the rules fit decision: good, partial, no good
   const off = server({ MATCH_MODE: 'off' });
   const schemas = await validators(off);
   const call = (label: string, need: string) => conforming(off, schemas, label, 'find_software', { need });
-  const good = await call('rules: good match', 'run a language model offline');
+  const good = await call('rules: good match', 'run a language model offline on my laptop');
   assert.equal(good.match_quality, 'good');
   assert.equal(good.picks[0].match.quality, 'good');
   const partial = await call('rules: partial match', 'transcribe audio into a json summary for git');

@@ -32,20 +32,40 @@ test('jobOf: the specific words of the job, without the kind of tool, filler, co
   assert.deepEqual(job('keep an eye on my notes (secret-project-xyz)').terms, job('monitor my notes').terms);
   assert.deepEqual(job('類似 ChatGPT 的工具，用正規表示式找檔案').terms, ['regex']);
   assert.deepEqual(job('defragment my disk').unknown, ['defragment', 'disk']);
+  assert.deepEqual(job('text-to-speech without sending my notes to the cloud').terms, ['speech']); // to the end of the clause
 });
 
-test('fitOf: good covers half the job and every named product; partial a third and two words; else none', () => {
+test('jobOf: a Chinese word counts once whatever its synonyms; OS names, context and the kind of tool are not products', () => {
+  const top = [tool('top', 'Monitors CPU, memory and RAM usage.'), tool('enc', 'Converts text encoding.'), tool('scan', 'Scans Node and Python dependencies.')];
+  assert.deepEqual(jobOf(top, '監控記憶體').words, [['monitor'], ['memory', 'ram']]);
+  assert.deepEqual(jobOf(top, 'AI 編碼助手').terms, []); // a coding assistant, not text encoding
+  assert.deepEqual([...jobOf(top, 'a macOS tool to monitor memory').named], []);
+  assert.deepEqual([...jobOf(top, 'scan my Node project dependencies').named], []); // where the job happens
+  assert.deepEqual([...jobOf(top, 'scan dependencies for Node').named], ['nod']);
+});
+
+test('fitOf: good covers most of the job, two words and every named product; partial a third and two words, or half; else none', () => {
   assert.equal(fit('renamer', 'bulk rename files with a regex').quality, 'good');
   const grep = fit('grepper', 'bulk rename files with a regex and preview the changes');
-  assert.equal(grep.quality, 'none'); // one shared word ("regex") is not enough
+  assert.equal(grep.quality, 'none'); // one shared word ("regex") of four is not enough
   assert.deepEqual(grep.covers, ['regex']);
+  assert.equal(fit('grepper', 'search my notes').quality, 'partial'); // one word, but half the request
   const notes = fit('vault', 'search and edit my Notion notes');
   assert.equal(notes.quality, 'none'); // it covers most words, but not the product named
   const sync = fit('notes-sync', 'search and edit my Notion notes');
-  assert.deepEqual([sync.quality, sync.covers, sync.missing], ['good', ['notion', 'notes'], ['search', 'edit']]);
+  assert.deepEqual([sync.quality, sync.covers, sync.missing], ['partial', ['notion', 'notes'], ['search', 'edit']]); // half is not most
   const part = fit('notes-sync', 'search, edit and sync my Notion notes in a vault with a regex');
   assert.deepEqual([part.quality, part.covers], ['partial', ['sync', 'notion', 'notes']]);
-  assert.equal(fit('speaker', 'a text-to-speech tool that sounds natural').quality, 'good');
+  assert.equal(fit('speaker', 'a text-to-speech tool with natural voices').quality, 'good');
+  assert.equal(fit('speaker', 'a text-to-speech tool that sounds natural').quality, 'partial'); // one specific word
+  assert.equal(fit('notes-sync', 'a Notion MCP server').quality, 'good'); // one word, a product it names
+});
+
+test('fitOf: a product mentioned only as what the tool replaces counts only for a request to replace it', () => {
+  const tools = [tool('plane', 'Plans work items from git history.', { tags: ['jira-alternative'] }), tool('jira-mcp', 'Creates and updates Jira tickets and items.')];
+  const fits = (text: string) => tools.map((e) => fitOf(e, jobOf(tools, text)).quality);
+  assert.deepEqual(fits('manage my Jira tickets'), ['none', 'good']);
+  assert.deepEqual(fits('an alternative to Jira for work items'), ['good', 'none']);
 });
 
 test('fitOf: nothing specific asked is a good fit; only words the catalog never uses is none', () => {

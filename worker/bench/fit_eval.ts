@@ -6,7 +6,7 @@
  * helps), false negatives (no good match said when a tool does the job), and
  * Precision@5 of the picks shown. No model call.
  *
- *   node bench/fit_eval.ts <index.json> <queries.json>:<labels.json>:<dev|heldout> [...] [--show]
+ *   node bench/fit_eval.ts <index.json> <queries.json>:<labels.json>:<dev|heldout|all> [...] [--show]
  */
 import { readFileSync } from 'node:fs';
 import { loadCatalog } from '../src/catalog.ts';
@@ -38,7 +38,7 @@ let mismatches = 0;
 
 for (const set of sets) {
   const [qPath, lPath, split] = set.split(':');
-  const queries = JSON.parse(readFileSync(qPath, 'utf8')).queries.filter((q: any) => q.split === split);
+  const queries = JSON.parse(readFileSync(qPath, 'utf8')).queries.filter((q: any) => split === 'all' || q.split === split);
   const labels: Record<string, Record<string, number>> = JSON.parse(readFileSync(lPath, 'utf8')).labels;
   for (const q of queries) {
     const cond: Conditions = { ...(q.category !== 'any' ? { category: q.category } : {}), ...(q.os ? { os: q.os } : {}) };
