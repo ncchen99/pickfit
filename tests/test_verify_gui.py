@@ -531,11 +531,12 @@ def test_vm_commands_run_under_the_no_vsock_filter():
     assert gvisor.user_argv("true", 10, "/home/sbx/work")[19] == "/usr/bin/env"  # no filter, in the namespace
     # The display uid's commands (the watcher) too; root's are not filtered.
     box = mb.ModalBox(runtime="vm", client=object(), log=lambda s: None)
-    box.sandbox, box.started = FakeSandbox(), True
+    box.sandbox, box.started, box.display_netns_pid = FakeSandbox(), True, 4343
     box.harness_exec(["/usr/local/bin/python3", "-I", "-S", "-"], 10, as_uid=gui.DISPLAY_UID)
     box.harness_exec(["/usr/bin/true"], 10)
     as_display, as_root = (argv for argv, _ in box.sandbox.calls)
-    assert as_display[7:11] == ("/usr/local/bin/python3", "-I", "-S", mb.NO_VSOCK) and as_root == ("/usr/bin/true",)
+    assert as_display[:4] == ("/usr/bin/nsenter", "--target=4343", "--net", "--")  # the display's namespace
+    assert as_display[11:15] == ("/usr/local/bin/python3", "-I", "-S", mb.NO_VSOCK) and as_root == ("/usr/bin/true",)
 
 
 def _run_bpf(prog: list[tuple[int, int, int, int]], arch: int, nr: int, arg0: int) -> int:
@@ -585,13 +586,16 @@ def test_a_vm_display_box_hardens_the_kernel_then_starts_xvfb_as_the_display_uid
 
     from test_verify_modal import FakeSandbox
 
-    sandbox = FakeSandbox([(0, [b""], []), (0, [b""], []), (0, [b""], []), (0, [b"xvfb_pid 785\n"], [])])
+    sandbox = FakeSandbox([(0, [b""], []), (0, [b""], []), (0, [b""], []), (0, [b"netns_pid 4343\n"], []),
+                           (0, [b"xvfb_pid 785\n"], [])])
     monkeypatch.setattr(modal.App, "lookup", lambda name, **kw: "app")
     monkeypatch.setattr(modal.Sandbox, "create", lambda *a, **kw: sandbox)
     monkeypatch.setattr(modal.Image, "from_name", lambda name: f"image:{name}")
     box = mb.ModalBox(runtime="vm", display=True, client="client", log=lambda s: None)
     box.start()
-    harden, _, _, xvfb = (argv for argv, _ in sandbox.calls)
+    harden, _, _, held, xvfb = (argv for argv, _ in sandbox.calls)
+    assert held[-1] == mb.display_netns_script("vm") and box.display_netns_pid == 4343
+    assert "/usr/bin/nsenter --target=4343 --net -- /usr/bin/setpriv" in xvfb[-1]  # Xvfb has no network
     assert harden[0] == "/usr/bin/bash" and "user.max_user_namespaces=0" in harden[-1]
     assert sandbox.procs[0].stdin.data == mb.NO_VSOCK_SOURCE.encode()  # the filter goes in as root
     assert xvfb[0] == "/usr/bin/bash" and f"--reuid={gui.DISPLAY_UID}" in xvfb[-1]  # root starts it, as uid 1001
@@ -606,9 +610,9 @@ def test_a_display_box_that_cannot_start_its_server_fails(monkeypatch: pytest.Mo
     from pickfit.verify.box import BoxError
     from test_verify_modal import FakeSandbox
 
-    # gVisor: the network namespace, its uplink, the box setup, then Xvfb fails.
+    # gVisor: the box user's namespace, its uplink, the box setup, the display's namespace, then Xvfb fails.
     sandbox = FakeSandbox([(0, [b"netns_pid 4242\n"], []), (0, [b""], []), (0, [b""], []), (0, [b""], []),
-                           (1, [b"no display\n"], [])])
+                           (0, [b"netns_pid 4343\n"], []), (1, [b"no display\n"], [])])
     monkeypatch.setattr(modal.App, "lookup", lambda name, **kw: "app")
     monkeypatch.setattr(modal.Sandbox, "create", lambda *a, **kw: sandbox)
     monkeypatch.setattr(modal.Image, "from_name", lambda name: f"image:{name}")
@@ -616,7 +620,9 @@ def test_a_display_box_that_cannot_start_its_server_fails(monkeypatch: pytest.Mo
         mb.ModalBox(display=True, client="client", log=lambda s: None).start()
     assert sandbox.terminated
     xvfb = sandbox.calls[-1][0][-1]
-    assert "/usr/bin/setpriv --reuid=1001" in xvfb and "nsenter" not in xvfb  # outside the box user's namespace
+    # In the display's own namespace (no network), not the box user's.
+    assert "/usr/bin/nsenter --target=4343 --user --net -- /usr/bin/setpriv --reuid=1001" in xvfb
+    assert "--target=4242" not in xvfb
 
 
 def test_a_gvisor_box_without_its_network_namespace_never_runs_the_box_user(monkeypatch: pytest.MonkeyPatch):

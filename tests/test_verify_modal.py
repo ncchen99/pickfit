@@ -63,7 +63,7 @@ class FakeSandbox:
     def exec(self, *argv: str, **kw: Any) -> FakeProc:
         self.calls.append((argv, kw))
         # A gVisor box's first root command makes the box user's network namespace and names its holder.
-        default = (0, [b"netns_pid 4242\n"], []) if "unshare --user --net" in argv[-1] else (0, [b"ok"], [])
+        default = (0, [b"netns_pid 4242\n"], []) if "/usr/bin/unshare " in argv[-1] else (0, [b"ok"], [])
         reply = self.replies.pop(0) if self.replies else default
         if isinstance(reply, Exception):
             raise reply
@@ -80,7 +80,7 @@ class FakeSandbox:
 
 def started(sandbox: FakeSandbox, limits: BoxLimits = BoxLimits()) -> ModalBox:
     box = ModalBox(limits=limits, client=object(), log=lambda s: None)
-    box.sandbox, box.started, box.netns_pid = sandbox, True, 4242
+    box.sandbox, box.started, box.netns_pid, box.display_netns_pid = sandbox, True, 4242, 4343
     return box
 
 
@@ -293,10 +293,17 @@ def test_a_gvisor_box_runs_only_the_box_user_in_its_network_namespace():
     box.harness_exec(["/usr/local/bin/python3", "-I", "-S", "-"], 10, as_uid=gui.DISPLAY_UID)
     box.harness_exec(["/usr/bin/true"], 10)
     as_display, as_root = (argv for argv, _ in box.sandbox.calls)
-    # The display uid is not mapped in the namespace: NET_UID, root there, has no power over its evidence.
-    assert as_display[:2] == ("/usr/bin/setpriv", "--reuid=1001") and "/usr/bin/nsenter" not in as_display
+    # The display uid is not mapped in the box user's namespace (NET_UID, root there, has no power over its
+    # evidence); it runs in the display's own namespace, which has no network at all.
+    assert as_display[:7] == ("/usr/bin/nsenter", "--target=4343", "--user", "--net", "--", "/usr/bin/setpriv",
+                              "--reuid=1001") and "--target=4242" not in as_display
     assert as_root == ("/usr/bin/true",)  # root keeps the box's own network
     assert ModalBox(runtime="vm", client=object()).enter() == []  # a VM closes DNS with nftables instead
+    with pytest.raises(ValueError, match="go through exec"):  # never the box user outside its namespace
+        box.harness_exec(["/usr/bin/true"], 10, as_uid=1000)
+    box.display_netns_pid = None
+    with pytest.raises(BoxError, match="display's network namespace is not set up"):
+        box.harness_exec(["/usr/bin/true"], 10, as_uid=gui.DISPLAY_UID)
 
 
 def test_the_namespace_maps_only_net_uid_and_the_box_user():
@@ -321,13 +328,26 @@ def test_the_namespace_maps_only_net_uid_and_the_box_user():
 
     import sys
     argv = sys.argv
-    sys.argv = ["-c", "4242"]
+    sys.argv = ["-c", "4242", mb.NETNS_MAPS]
     try:
         exec(mb._MAP_PY, {"open": File, "__name__": "map"}, ns)
     finally:
         sys.argv = argv
     # NET_UID is root inside (kuid 1002 outside: no more than it was), uid 0 itself is not mapped.
     assert written == {f"/proc/4242/{m}": "0 1002 1\n1000 1000 1\n" for m in ("uid_map", "gid_map")}
+    assert "'0 1002 1,1000 1000 1'" in script
+
+
+def test_the_display_has_a_namespace_of_its_own_with_no_network():
+    gvisor, vm = mb.display_netns_script("gvisor"), mb.display_netns_script("vm")
+    # Root's on both: gVisor needs a user namespace (root has no CAP_SYS_ADMIN), a VM has them off.
+    assert "/usr/bin/setpriv" not in gvisor and "/usr/bin/unshare --user --net --" in gvisor
+    assert "'0 0 1,1000 1000 1,1001 1001 1'" in gvisor  # the watcher reads box-user uids from /proc
+    assert "/usr/bin/unshare --net --" in vm and "uid_map" not in vm
+    assert ModalBox(runtime="vm", client=object()).display_enter.__doc__  # exists on both runtimes
+    vm_box = ModalBox(runtime="vm", client=object())
+    vm_box.display_netns_pid = 7
+    assert vm_box.display_enter() == ["/usr/bin/nsenter", "--target=7", "--net", "--"]
 
 
 def test_the_uplink_runs_as_net_uid_and_its_cut_is_checked():
@@ -339,6 +359,9 @@ def test_the_uplink_runs_as_net_uid_and_its_cut_is_checked():
     assert '[ "$p" = 4242 ] || kill -KILL "$p"' in down and "tap0 is still there" in down
     assert "NET_UID processes left" in down and "slirp4netns " not in down
     assert "/proc/4242/fd" in down and "the holder holds fds" in down  # no socket smuggled in from outside
+    # A namespace that cannot be listed is an error, not "tap0 is gone".
+    assert "cannot list the box user's links" in down and "grep -q ' tap0[:@]'" in down
+    assert mb.SAME_NETNS_PY.splitlines()[0] in down and down.endswith(" 4242 1000")
 
 
 def test_a_failed_uplink_cut_stops_the_box_from_claiming_offline():
@@ -361,3 +384,41 @@ def test_the_netns_probe_needs_the_holder_alone_and_no_way_out(stdout: str, ok: 
     from pickfit.verify.limits import _netns_held
 
     assert _netns_held(ExecResult("netns", 0, stdout, "", 0.1)) is ok
+
+
+def _same_netns(procs: dict[str, tuple[str, str]], holder_ns: str = "net:[9]") -> tuple[int, str]:
+    """Run SAME_NETNS_PY on a fake /proc: pid -> (Uid line values, ns/net link); pid 4242 is the holder."""
+    import io
+    import types
+
+    procs = {"4242": ("1002 1002 1002 1002", holder_ns), **procs}
+    fake_os = types.SimpleNamespace(
+        listdir=lambda path: ["self", *procs],
+        readlink=lambda path: holder_ns if path == "/proc/4242/ns/net" else procs[path.split("/")[2]][1])
+
+    def fake_open(path: str):
+        uids, _ = procs[path.split("/")[2]]
+        return io.StringIO(f"Name:\tx\nState:\tS (sleeping)\nUid:\t{uids}\n")
+
+    real_import = __import__
+
+    def fake_import(name: str, *args: Any):
+        return fake_os if name == "os" else real_import(name, *args)
+
+    import sys
+    argv, sys.argv = sys.argv, ["-c", "4242", "1000"]
+    try:
+        exec(mb.SAME_NETNS_PY, {"__builtins__": {**__builtins__.__dict__, "__import__": fake_import, "open": fake_open}
+                                if hasattr(__builtins__, "__dict__") else {**__builtins__, "__import__": fake_import,
+                                                                           "open": fake_open}})
+    except SystemExit as stop:
+        return 1, str(stop)
+    finally:
+        sys.argv = argv
+    return 0, ""
+
+
+def test_the_cut_needs_every_box_user_process_in_the_holders_namespace():
+    assert _same_netns({"10": ("1000 1000 1000 1000", "net:[9]"), "11": ("0 0 0 0", "net:[2]")}) == (0, "")
+    code, why = _same_netns({"10": ("1000 1000 1000 1000", "net:[9]"), "12": ("1000 1000 1000 1000", "net:[2]")})
+    assert code == 1 and "12 is in net:[2]" in why
