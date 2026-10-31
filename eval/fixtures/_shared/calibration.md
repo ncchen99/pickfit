@@ -48,5 +48,7 @@ python3 $SHARED/egress.py probe --json /tmp/probe.json   # 預期 exit 0（block
 
 | 題 | cgroup | 有峰值計數 | 有 memory.current | 日期 |
 |---|---|---|---|---|
-| q03 | | | | |
-| q14 | | | | |
+| q03 | v1（cpu=4、不設上限；`q03-3a`） | 沒有（`peak_after` null；`memory.max_usage_in_bytes` 不存在） | 有：`memory.usage_in_bytes`（`max_current` 有值；不含 page cache，見 q03 步驟 3） | 2026-10-31 |
+| q14 | v1（cpu=4、8 GiB 硬上限，`limit_in_bytes` 8589934592；`q14-cgroup`、`cgroup-probe-4core`） | 沒有 | 有：配置 600 MiB 時 634,220,544、結束後 1,843,200 | 2026-10-31 |
+
+另外：沒有 `memory.stat`（所以 `max_anon` 是 null）、沒有 OOM 計數（`oom_kills` 是 null）。超過硬上限時整個 Modal 沙盒結束（returncode 137，q03 步驟 3b），那一步記為被 OOM kill；`eval/runner/calibrate_box.py` 在沙盒消失時仍寫下 `console.log` 與 `run.json`（含 `sandbox_returncode`）。Modal 的 `cpu=4` 給 4 個 CPU（`nproc` 4、CFS quota 4,000,000／1,000,000）；`cpu=2` 是 2 個。

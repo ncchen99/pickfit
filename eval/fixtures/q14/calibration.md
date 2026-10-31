@@ -17,12 +17,12 @@
 
 | 項目 | 值 |
 |---|---|
-| dev image digest | |
-| `nproc` | （必須是 4） |
-| 記憶體上限（`/sys/fs/cgroup/memory.max`） | （必須是 8589934592） |
+| dev image digest | `pickfit-eval-l2-dev:4acdd7fff6ab`（`ubuntu:24.04@sha256:78d4744e…2044d`，`eval/results/l2-images.json`） |
+| `nproc` | 4（Modal `cpu=4`；CFS quota 4,000,000／1,000,000；2026-10-31 `eval/results/calibration/cgroup-probe-4core/`） |
+| 記憶體上限（`/sys/fs/cgroup/memory.max`） | cgroup v1，沒有 `memory.max`；`/sys/fs/cgroup/memory/memory.limit_in_bytes` 是 8589934592（`--memory 8192` 設成 request＝limit），`MemTotal` 8388608 kB |
 | `nvidia-smi` | （必須不存在） |
 | CPU 型號 | |
-| `mem_peak.sh read` 的 method | （有 `memory.peak` 最好；沒有時記下，評分用 `watch` 的取樣；`_shared/calibration.md` 步驟 4） |
+| `mem_peak.sh read` 的 method | `sampled memory.current`：沒有峰值計數，評分用 `watch` 每 0.2 秒取樣的 `memory.usage_in_bytes`（不含 page cache；配置 600 MiB 時 634,220,544）。超過 8 GiB 硬上限時整個沙盒以 137 結束（q03 步驟 3b），記為 OOM kill（`_shared/calibration.md` 步驟 4） |
 
 ## 3. 擋外連與外連監測
 
