@@ -218,18 +218,21 @@ foreach ($t in ($Targets -split ',')) {
   $name, $hp = $t -split '=', 2
   $h, $port = $hp -split ':(?=\d+$)'
   $c = New-Object System.Net.Sockets.TcpClient
-  $jobs += ,@($name, $c, $c.ConnectAsync($h.Trim('[',']'), [int]$port))
+  # .NET Framework (Windows PowerShell) may throw here instead of returning a failed task (no route): keep it.
+  try { $task = $c.ConnectAsync($h.Trim('[',']'), [int]$port) } catch { $task = $_.Exception }
+  $jobs += ,@($name, $c, $task)
 }
 $deadline = [DateTime]::UtcNow.AddMilliseconds($Ms)
 foreach ($j in $jobs) {
   $left = [int][Math]::Max(0, ($deadline - [DateTime]::UtcNow).TotalMilliseconds)
   $task = $j[2]
   $done = $false
-  try { $done = $task.Wait($left) } catch { $done = $true }
+  if ($task -is [Exception]) { $done = $true }
+  else { try { $done = $task.Wait($left) } catch { $done = $true } }
   if (-not $done) { $r = 'timeout' }
-  elseif ($task.Status -eq 'RanToCompletion') { $r = 'open' }
+  elseif ($task -isnot [Exception] -and $task.Status -eq 'RanToCompletion') { $r = 'open' }
   else {
-    $e = $task.Exception.InnerException
+    $e = if ($task -is [Exception]) { $task } else { $task.Exception.InnerException }
     while ($e -and -not ($e -is [System.Net.Sockets.SocketException])) { $e = $e.InnerException }
     if ($e -and $e.SocketErrorCode -eq 'ConnectionRefused') { $r = 'refused' }
     elseif ($e -and $e.SocketErrorCode -eq 'TimedOut') { $r = 'timeout' }
