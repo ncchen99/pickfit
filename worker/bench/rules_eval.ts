@@ -3,7 +3,7 @@
  * labeled queries (scripts/rules_eval.py): this tree's code vs another
  * checkout's (e.g. main, extracted with `git archive`). No model call.
  *
- *   node bench/rules_eval.ts <index.json> <queries.json> <labels.json> <other worker/ dir> <dev|heldout> [--show]
+ *   node bench/rules_eval.ts <index.json> <queries.json> <labels.json> <other worker/ dir> <dev|heldout> [--show] [--before-rules]
  *
  * relevant = grade 2 ("does the main job"); lenient = grade 1 or 2.
  * P@5: share of the first 5 ranked tools that are relevant, over queries with
@@ -18,6 +18,7 @@ import type { Conditions } from '../src/filter.ts';
 
 const [indexPath, queriesPath, labelsPath, otherDir, split, ...flags] = process.argv.slice(2);
 const show = flags.includes('--show');
+const beforeRules = flags.includes('--before-rules');
 
 interface Version {
   name: string;
@@ -39,7 +40,8 @@ async function load(name: string, dir: string, proposed: boolean): Promise<Versi
   ]);
   const catalog = loadCatalog(JSON.parse(readFileSync(indexPath, 'utf8')));
   const rank = (entries: any[], cond: Conditions, text: string) => {
-    const f = proposed
+    // Both sides rank as the shipped rules path does; --before-rules compares with the ranking before it (queryTerms, BM25).
+    const f = proposed || !beforeRules
       ? filter.hardFilter(entries, cond, { terms: relevance.rulesTerms(text), scorer: 'rules' })
       : filter.hardFilter(entries, cond, { terms: relevance.queryTerms(text) });
     return { ranked: rules.rankByRules(f.candidates, f.relevance, cond.os), cards: new Set(f.candidates.map((e: any) => e.slug)), passed: f.passed };

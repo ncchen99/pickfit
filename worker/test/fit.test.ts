@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Catalog, Entry } from '../src/catalog.ts';
 import { fitNote, fitOf, jobOf } from '../src/fit.ts';
+import { rulesTerms, termsAsSaid } from '../src/relevance.ts';
 import { findAlternatives, findSoftware } from '../src/find.ts';
 import { answer, fixtureCatalog, harness, metaResponse } from './helpers.ts';
 
@@ -33,6 +34,10 @@ test('jobOf: the specific words of the job, without the kind of tool, filler, co
   assert.deepEqual(job('類似 ChatGPT 的工具，用正規表示式找檔案').terms, ['regex']);
   assert.deepEqual(job('defragment my disk').unknown, ['defragment', 'disk']);
   assert.deepEqual(job('text-to-speech without sending my notes to the cloud').terms, ['speech']); // to the end of the clause
+  const gpu = [tool('gpu-tts', 'Text-to-speech on a GPU.')];
+  assert.deepEqual(jobOf(gpu, 'a text-to-speech tool on a GPU').terms, ['speech', 'gpu']);
+  assert.deepEqual(jobOf(gpu, 'a text-to-speech tool, 不需要 GPU').terms, ['speech']); // a Chinese negation of an English word
+  assert.deepEqual([...job('不用 Notion 也能搜尋筆記').named], []); // a negated product is not required
 });
 
 test('jobOf: a Chinese word counts once whatever its synonyms; OS names, context and the kind of tool are not products', () => {
@@ -121,6 +126,19 @@ test('find_alternatives: a tool that names the current one is a good fit, whatev
   const out = await findAlternatives({ current_software: 'Balabolka', pain_points: 'the voices sound robotic' }, h.deps);
   assert.equal(out.picks[0].slug, 'tts-alt');
   assert.deepEqual(out.picks[0].match, { quality: 'good', covers: ['an alternative to Balabolka'], missing: [] });
+});
+
+test('find_alternatives: a pain point is read as said ("no dark mode" wants dark mode); what must be kept is negated as usual', async () => {
+  const h = harness(null, { modelEnabled: false });
+  const editors = [
+    tool('plain-edit', 'Terminal text editor for notes with an account sync.'),
+    tool('night-edit', 'Terminal text editor with a dark mode theme.'),
+  ];
+  h.deps.catalog = catalog(editors);
+  const out = await findAlternatives({ current_software: 'Vim', pain_points: 'no dark mode', must_keep: ['works without an account'] }, h.deps);
+  assert.equal(out.picks[0].slug, 'night-edit'); // the rules rank by dark and mode
+  assert.deepEqual(out.picks[0].match, { quality: 'good', covers: ['dark', 'mode'], missing: [] }); // account is not wanted
+  assert.ok(termsAsSaid('no dark mode').includes('dark') && !rulesTerms('no dark mode').includes('dark'));
 });
 
 test('the model path is untouched: no fit fields, picks as the model chose them', async () => {

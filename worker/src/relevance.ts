@@ -10,7 +10,7 @@
  * match more of what the request asks for.
  */
 import { OSES, type Entry } from './catalog.ts';
-import { GENERIC_WORDS, ZH_EN } from './lexicon.ts';
+import { GENERIC_WORDS, NEGATION_LISTS, NEGATION_STOPS, NEGATIONS, NOT_NEGATIONS, ZH_EN } from './lexicon.ts';
 
 const STOPWORDS = new Set(
   (
@@ -135,45 +135,145 @@ export const GENERIC_WEIGHT = 0.2;
 const OS_WORDS = ['mac', 'macos', 'osx', 'linux', 'ubuntu', 'windows'];
 const GENERIC = new Set([...GENERIC_WORDS, ...OS_WORDS].flatMap(terms));
 const ZH_KEYS = Object.keys(ZH_EN).sort((a, b) => b.length - a.length);
-/** "without internet", "no cloud": the word after names a constraint, not what the tool should do. */
-const EN_NEGATED = /\b(without|no)\s+(?:(?:a|an|the|any|my|to|being|having)\s+)*[A-Za-z][\w-]*/gi;
-const ZH_NEGATIONS = ['不需要', '不用', '不要', '不必', '無需', '无需', '免'];
 
-/** English words for the Chinese words in a text: at each position the longest dictionary word wins; a negated word is skipped. */
-export const zhToEnglish = (text: string): string => zhWords(text).join(' ');
+/** A negation's scope takes at most this many words ("without sending my code to the cloud": sending, code, cloud). */
+const NEGATED_WORDS = 4;
+const EN_NEGATIONS = NEGATIONS.en.map((phrase) => phrase.split(' ')).sort((a, b) => b.length - a.length);
+const ZH_NEGATION_SET = new Set(NEGATIONS.zh);
+const STOPS = { zh: new Set(NEGATION_STOPS.zh), en: new Set(NEGATION_STOPS.en) };
+const LISTS = new Set(NEGATION_LISTS);
+/** Chinese tokens, longest first: dictionary words and the words negation scopes are made of. */
+const ZH_TOKENS = [...new Set([...ZH_KEYS, ...NEGATIONS.zh, ...NOT_NEGATIONS, ...NEGATION_STOPS.zh, ...NEGATION_LISTS])]
+  .filter((k) => k.charCodeAt(0) >= 0x2e80)
+  .sort((a, b) => b.length - a.length);
+const CLAUSE_END = /[,.;:!?()[\]{}"“”‘’，。；：！？（）「」『』【】\n—–-]/;
+const EN_WORD = /[A-Za-z0-9](?:[\w+#'’-]|\.(?=[A-Za-z0-9]))*/y;
 
-/** The dictionary's English for each Chinese word in a text, one string per word (its synonyms together). */
-export function zhWords(text: string): string[] {
-  const out: string[] = [];
-  let negated = false;
+interface Token {
+  start: number;
+  end: number;
+  /** Lowercase English word, a Chinese token, or one punctuation character. */
+  text: string;
+  kind: 'en' | 'zh' | 'punct';
+}
+
+function tokenize(text: string): Token[] {
+  const out: Token[] = [];
   for (let i = 0; i < text.length; ) {
-    if (text.charCodeAt(i) < 0x2e80) {
-      if (!/[\w]/.test(text[i])) negated = false;
+    const ch = text[i];
+    if (/\s/.test(ch)) {
       i++;
-      continue;
-    }
-    const neg = ZH_NEGATIONS.find((k) => text.startsWith(k, i));
-    if (neg) {
-      negated = true;
-      i += neg.length;
-      continue;
-    }
-    const key = ZH_KEYS.find((k) => text.startsWith(k, i));
-    if (key) {
-      if (!negated) out.push(ZH_EN[key]);
-      negated = false;
+    } else if (/[A-Za-z0-9]/.test(ch)) {
+      EN_WORD.lastIndex = i;
+      const word = EN_WORD.exec(text)![0];
+      out.push({ start: i, end: i + word.length, text: word.toLowerCase().replace(/’/g, "'"), kind: 'en' });
+      i += word.length;
+    } else if (ch.charCodeAt(0) >= 0x2e80 && !CLAUSE_END.test(ch)) {
+      const key = ZH_TOKENS.find((k) => text.startsWith(k, i)) ?? ch;
+      out.push({ start: i, end: i + key.length, text: key, kind: 'zh' });
       i += key.length;
     } else {
-      if ('，。、；！？'.includes(text[i])) negated = false;
+      out.push({ start: i, end: i + 1, text: ch, kind: 'punct' });
       i++;
     }
   }
   return out;
 }
 
-/** The request's terms for rulesRelevance: its own English words (less negated ones) and the dictionary's English for its Chinese ones. */
-export const rulesTerms = (...texts: string[]) =>
-  queryTerms(...texts.map((t) => t.replace(EN_NEGATED, '$1 ')), ...texts.map(zhToEnglish));
+/** How many tokens a negation spans at tokens[i] ("不需要", "do not need"), or 0. */
+function negationAt(tokens: Token[], i: number): number {
+  if (tokens[i].kind === 'zh') return ZH_NEGATION_SET.has(tokens[i].text) ? 1 : 0;
+  const phrase = EN_NEGATIONS.find((words) => words.every((w, k) => tokens[i + k]?.kind === 'en' && tokens[i + k].text === w));
+  return phrase?.length ?? 0;
+}
+
+/** One or two Chinese characters outside the dictionary (or 用, 使用) right before the negated object, an English or dictionary word: how many, or 0. */
+function verbBefore(tokens: Token[], i: number): number {
+  let j = i;
+  while (j < i + 2 && tokens[j]?.kind === 'zh' && (tokens[j].text === '用' || tokens[j].text === '使用' || (!(tokens[j].text in ZH_EN) && tokens[j].text.length === 1 && !STOPS.zh.has(tokens[j].text) && !LISTS.has(tokens[j].text)))) j++;
+  const next = tokens[j];
+  const object = next?.kind === 'en' ? !STOPS.en.has(next.text) : next?.kind === 'zh' && next.text in ZH_EN && !STOPS.zh.has(next.text);
+  return j > i && object ? j - i : 0;
+}
+
+/**
+ * The text with what a negation rules out blanked, in Chinese and English
+ * alike ("不需要 GPU", "without a cloud account"): what follows is a
+ * constraint, not the job. The scope is one item, extended by a list ("GPU 和
+ * Docker", "an account or API key", "GPU/CUDA"): English words, or one Chinese
+ * dictionary word, optionally followed by English words (its object: "免安裝
+ * Docker"). It ends at punctuation, a stop (a contrast, a new positive verb,
+ * 的; see NEGATION_STOPS), a Chinese word after English ones ("不需要 GPU 轉錄"
+ * transcribes), any other character, or NEGATED_WORDS words.
+ */
+export function dropNegated(text: string): string {
+  const tokens = tokenize(text);
+  const blanked: Token[] = [];
+  let scope: { item: 'none' | 'zh' | 'en'; words: number; gerund: boolean } | null = null;
+  for (let i = 0; i < tokens.length; i++) {
+    const cue = negationAt(tokens, i);
+    if (cue) {
+      blanked.push(...tokens.slice(i, i + cue));
+      scope = { item: 'none', words: 0, gerund: false };
+      i += cue - 1;
+      continue;
+    }
+    if (!scope) continue;
+    const t = tokens[i];
+    if (LISTS.has(t.text)) {
+      blanked.push(t);
+      scope.item = 'none';
+      continue;
+    }
+    // A short verb before the object belongs to the negation ("不想裝 Python", "不需要用到 GPU", "不用把檔案上傳").
+    const verb = verbBefore(tokens, i);
+    if (scope.words === 0 && scope.item === 'none' && verb) {
+      blanked.push(...tokens.slice(i, i + verb));
+      i += verb - 1;
+      continue;
+    }
+    const english = t.kind === 'en' && !(STOPS.en.has(t.text) && !(t.text === 'to' && scope.gerund));
+    const chinese = t.kind === 'zh' && t.text in ZH_EN && !STOPS.zh.has(t.text) && scope.item === 'none';
+    if (!(english || chinese) || scope.words >= NEGATED_WORDS) {
+      scope = null;
+      continue;
+    }
+    blanked.push(t);
+    if (chinese || !STOPWORDS.has(t.text)) {
+      if (english && scope.words === 0) scope.gerund = t.text.endsWith('ing');
+      scope.words++;
+    }
+    scope.item = english ? 'en' : 'zh';
+  }
+  let out = '';
+  let last = 0;
+  for (const t of blanked) {
+    out += text.slice(last, t.start) + ' '.repeat(t.end - t.start);
+    last = t.end;
+  }
+  return out + text.slice(last);
+}
+
+/** English words for the Chinese words in a text: at each position the longest dictionary word wins; negated words are left out. */
+export const zhToEnglish = (text: string): string => zhWords(text).join(' ');
+
+/** The dictionary's English for each Chinese word in a text, one string per word (its synonyms together), less negated words unless `negate` is false. */
+export function zhWords(text: string, negate = true): string[] {
+  const plain = negate ? dropNegated(text) : text;
+  const out: string[] = [];
+  for (let i = 0; i < plain.length; ) {
+    const key = plain.charCodeAt(i) >= 0x2e80 ? ZH_KEYS.find((k) => plain.startsWith(k, i)) : undefined;
+    if (key) out.push(ZH_EN[key]);
+    i += key?.length ?? 1;
+  }
+  return out;
+}
+
+/** The request's terms for rulesRelevance: its own English words and the dictionary's English for its Chinese ones, less negated words. */
+export const rulesTerms = (...texts: string[]) => queryTerms(...texts.map(dropNegated), ...texts.map(zhToEnglish));
+
+/** The same, with negated words kept as said: find_alternatives' pain points, where "no dark mode" names what is wanted. */
+export const termsAsSaid = (...texts: string[]) => queryTerms(...texts, ...texts.map((t) => zhWords(t, false).join(' ')));
 
 /**
  * Relevance without the model: BM25 where a generic word ("tool", "terminal",
