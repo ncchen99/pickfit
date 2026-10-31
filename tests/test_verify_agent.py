@@ -114,7 +114,7 @@ def test_chain_mode_reads_the_error_fixes_it_and_finishes(task, ledger, tmp_path
     # Budget accounting: every turn is in the shared ledger under the run's scope.
     assert report.cost_usd > 0
     assert [t.reasoning_summary for t in report.turns][-1] == "validate exit 1 is right."
-    saved = json.loads(Path(report.report_path).read_text())
+    saved = json.loads(Path(report.report_path).read_text(encoding="utf-8"))
     assert saved["verdict"]["level"] == "function" and len(saved["turns"]) == 4
 
     # The terminal shows model, commands, exit codes and spend as they happen.
@@ -290,7 +290,7 @@ def test_run_background_waits_for_the_port(task, ledger, tmp_path):
 
 
 def local_ai(task: VerifyTask) -> VerifyTask:
-    data = json.loads((FIXTURES / "evnx.json").read_text())["extraction"]
+    data = json.loads((FIXTURES / "evnx.json").read_text(encoding="utf-8"))["extraction"]
     data["category"] = {"value": "local_ai", "quote": "runs GGUF models locally"}
     return VerifyTask(task.slug, task.repo_url, task.readme, ExtractionResult.model_validate(data))
 
@@ -350,7 +350,7 @@ def test_default_mode_is_replay(task, ledger, tmp_path):
 
 
 def test_sample_files_must_stay_in_the_work_dir(tmp_path):
-    data = json.loads((FIXTURES / "evnx.json").read_text())
+    data = json.loads((FIXTURES / "evnx.json").read_text(encoding="utf-8"))
     for bad in ("/etc/passwd", "../escape", "README.md"):
         path = tmp_path / "f.json"
         path.write_text(json.dumps({**data, "files": {bad: "x"}}))
@@ -383,7 +383,7 @@ def test_finish_accepts_the_string_null_for_nullable_fields():
 
 def test_fixtures_load_and_parse():
     for path in FIXTURES.glob("*.json"):
-        data = json.loads(path.read_text())
+        data = json.loads(path.read_text(encoding="utf-8"))
         ExtractionResult.model_validate(data["extraction"])
         assert data["readme_url"].startswith("https://raw.githubusercontent.com/")
         assert len(data["readme_url"].split("/")[5]) == 40  # pinned to a commit
